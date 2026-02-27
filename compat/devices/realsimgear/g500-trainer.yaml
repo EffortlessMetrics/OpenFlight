@@ -1,0 +1,56 @@
+# RealSimGear G500 Avionics Trainer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear G500 Trainer is a replica bezel for the Garmin G500/G500TXi
+# glass cockpit system. Exposes softkeys, knobs, and control buttons as USB HID.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF240 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G500 Avionics Trainer"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF240   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 22
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF240 is a community estimate for the G500. RealSimGear uses
+      VID 0x04D8 (Microchip); confirm PID with lsusb.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary knobs report as button increment/decrement pairs rather
+      than absolute axes. Map each step to the G500 software binding.
+  - id: SOFTKEY_MAPPING
+    description: >
+      12 softkeys along the top and bottom of the bezel correspond to
+      context-sensitive G500/G500TXi menu buttons in MSFS/X-Plane.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G500 Trainer — Garmin G500/G500TXi replica bezel.
+    VID 0x04D8 / PID 0xF240 are community estimates. Last reviewed: 2026-06.

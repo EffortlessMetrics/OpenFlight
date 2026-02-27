@@ -1,0 +1,56 @@
+# Fanatec ClubSport Wheel V2.5 Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Fanatec ClubSport Wheel V2.5 is a servo-driven direct-drive wheel base
+# (belt-driven). Occasionally used in flight sim setups for yoke-style input.
+# Updated version of the V2 with improved motor and force feedback precision.
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0005 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Wheel V2.5 Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: 0x0005   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 8
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is a community estimate for the CSW V2.5. Fanatec VID 0x0EB7
+      is confirmed; PID requires verification with lsusb.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      When used as a flight yoke, the wheel axis maps to roll. An axis scaling
+      profile is required to restrict effective travel to ~±60° of rotation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Wheel V2.5 — belt-driven servo base.
+    VID 0x0EB7 = Fanatec. PID 0x0005 unconfirmed. Last reviewed: 2026-06.

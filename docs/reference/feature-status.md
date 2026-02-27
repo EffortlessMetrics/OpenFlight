@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 585 |
-| ACs with tests | 585 |
-| ACs with Gherkin | 585 |
-| ACs with both tests + Gherkin | 585 |
-| Complete | 585 |
+| Total AC | 625 |
+| ACs with tests | 625 |
+| ACs with Gherkin | 625 |
+| ACs with both tests + Gherkin | 625 |
+| Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 0 |
+| Draft | 28 |
 | Incomplete | 0 |
-| Microcrates | 67 |
-| Microcrates with tests | 65 (97.0%) |
-| Microcrates with Gherkin | 65 (97.0%) |
-| Microcrates fully covered | 65 (97.0%) |
+| Microcrates | 71 |
+| Microcrates with tests | 65 (91.5%) |
+| Microcrates with Gherkin | 65 (91.5%) |
+| Microcrates fully covered | 65 (91.5%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -41,6 +41,7 @@
 | flight-ac7-protocol | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-ac7-telemetry | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-adapter-common | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
+| flight-aerofly | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-axis | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
@@ -51,6 +52,7 @@
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-device-common | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
+| flight-falcon-bms | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-moza | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -67,8 +69,9 @@
 | flight-hotas-vkb | 24 | 24 | 24 | 24 | 24 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
+| flight-il2 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
-| flight-ipc | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
+| flight-ipc | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-metrics | 19 | 19 | 19 | 19 | 19 | 100.0% | 100.0% | 100.0% |
@@ -80,10 +83,11 @@
 | flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-psx | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-replay | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-rules | 22 | 22 | 22 | 22 | 22 | 100.0% | 100.0% | 100.0% |
 | flight-scheduler | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-security | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-service | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-session | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
@@ -95,7 +99,7 @@
 | flight-ui | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 11 | 11 | 11 | 11 | 11 | 100.0% | 100.0% | 100.0% |
-| flight-virtual | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
+| flight-virtual | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
 | flight-vr-overlay | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -663,6 +667,9 @@
 | REQ-102 | AC-102.2 | WHEN any axis value is written to a virtual device THEN the reported output SHALL be within the device's valid range | specs/features/req_102_virtual_device.feature:11 | 2 | ✅ Complete |
 | REQ-102 | AC-102.3 | WHEN a disconnected virtual device is written to THEN the error SHALL be reported without a panic or memory-safety violation | specs/features/req_102_virtual_device.feature:17 | 1 | ✅ Complete |
 | REQ-102 | AC-102.4 | WHEN the OFP-1 handshake sequence is initiated THEN the emulator SHALL report successful capability negotiation | specs/features/req_102_virtual_device.feature:23 | 2 | ✅ Complete |
+| REQ-102 | AC-102.5 | WHEN a button state is written to a virtual device THEN the reported button output SHALL reflect the written state | specs/features/req_102_virtual_device.feature:29 | 1 | ✅ Complete |
+| REQ-102 | AC-102.6 | WHEN an emergency stop command is issued to the OFP-1 emulator THEN the emulator SHALL enter a safe stopped state without panicking | specs/features/req_102_virtual_device.feature:35 | 2 | ✅ Complete |
+| REQ-102 | AC-102.7 | WHEN a second virtual device with the same identifier is registered THEN the registration SHALL be rejected with an appropriate error | specs/features/req_102_virtual_device.feature:41 | 1 | ✅ Complete |
 | REQ-103 | AC-103.1 | WHEN a plain variable name is parsed as a condition THEN it SHALL produce a Boolean condition with negate=false | specs/features/req_103_105_rules_dsl.feature:7 | 2 | ✅ Complete |
 | REQ-103 | AC-103.2 | WHEN a numeric greater-than condition string is parsed THEN it SHALL produce a Compare condition with operator Greater | specs/features/req_103_105_rules_dsl.feature:14 | 2 | ✅ Complete |
 | REQ-103 | AC-103.3 | WHEN a rule schema contains an empty condition string THEN validation SHALL fail with a condition error | specs/features/req_103_105_rules_dsl.feature:21 | 1 | ✅ Complete |
@@ -692,3 +699,40 @@
 | REQ-107 | AC-107.3 | WHEN the publisher-level rate limiter suppresses a snapshot THEN none of the N registered subscribers (1-4) SHALL receive it | specs/features/req_107_bus_guarantees.feature:17 | 1 | ✅ Complete |
 | REQ-107 | AC-107.4 | WHEN a snapshot with arbitrary f32 bit patterns (NaN, Inf, subnormal) is published THEN the call SHALL return Ok or Err but SHALL NOT panic | specs/features/req_107_bus_guarantees.feature:23 | 3 | ✅ Complete |
 | REQ-107 | AC-107.5 | WHEN a subscriber is configured with a low per-subscriber max_rate_hz and a second snapshot is published before the minimum interval THEN the subscriber SHALL not receive it but the publish call SHALL succeed | specs/features/req_107_bus_guarantees.feature:29 | 1 | ✅ Complete |
+| REQ-108 | AC-108.1 | WHEN a client and service exchange protocol versions THEN negotiation SHALL succeed and the highest mutually compatible version SHALL be selected | specs/features/req_108_ipc_negotiation.feature:5 | 1 | ✅ Complete |
+| REQ-108 | AC-108.2 | WHEN a client version is incompatible with the service THEN the connection SHALL be rejected with a version-mismatch IPC error | specs/features/req_108_ipc_negotiation.feature:11 | 2 | ✅ Complete |
+| REQ-108 | AC-108.3 | WHEN a NegotiateFeatures message is serialized and deserialized THEN all feature flags SHALL be preserved across the round-trip | specs/features/req_108_ipc_negotiation.feature:17 | 1 | ✅ Complete |
+| REQ-109 | AC-109.1 | WHEN a ListDevices RPC response is serialized and deserialized THEN all registered devices SHALL be present in the decoded list | specs/features/req_109_device_list_rpc.feature:5 | 2 | ✅ Complete |
+| REQ-109 | AC-109.2 | WHEN a device is removed from the manager THEN it SHALL not appear in subsequent ListDevices responses | specs/features/req_109_device_list_rpc.feature:11 | 1 | ✅ Complete |
+| REQ-109 | AC-109.3 | WHEN a Device message with all capability and health fields is serialized and deserialized THEN all fields SHALL be preserved across the round-trip | specs/features/req_109_device_list_rpc.feature:17 | 1 | ✅ Complete |
+| REQ-110 | AC-110.1 | WHEN an IPC connection is made by a user listed in the ACL THEN the ACL check SHALL accept the connection | specs/features/req_110_ipc_access_control.feature:5 | 1 | ✅ Complete |
+| REQ-110 | AC-110.2 | WHEN an IPC connection is attempted by a user not listed in the ACL THEN the ACL check SHALL reject the connection | specs/features/req_110_ipc_access_control.feature:11 | 1 | ✅ Complete |
+| REQ-110 | AC-110.3 | WHEN a GetSecurityStatus RPC response is serialized and deserialized THEN all security status fields SHALL be preserved across the round-trip | specs/features/req_110_ipc_access_control.feature:17 | 1 | ✅ Complete |
+| REQ-111 | AC-111.1 | Normal brake input (left/right pedals) produces 0-100% unipolar output | specs/features/req_111_heusinkveld_sprint_pedals.feature:5<br>specs/features/req_111_heusinkveld_sprint_pedals.feature:11<br>specs/features/req_111_heusinkveld_sprint_pedals.feature:17 | 1 | ⚪ Draft |
+| REQ-111 | AC-111.2 | Toe brake differential is computed correctly from left and right brake positions | specs/features/req_111_heusinkveld_sprint_pedals.feature:24 | 1 | ⚪ Draft |
+| REQ-111 | AC-111.3 | Rudder axis combines left and right pedal positions into a bipolar [-1.0, 1.0] output | specs/features/req_111_heusinkveld_sprint_pedals.feature:30<br>specs/features/req_111_heusinkveld_sprint_pedals.feature:36 | 1 | ⚪ Draft |
+| REQ-111 | AC-111.4 | Calibration curves are applied to brake axes and output remains within [0.0, 1.0] | specs/features/req_111_heusinkveld_sprint_pedals.feature:42<br>specs/features/req_111_heusinkveld_sprint_pedals.feature:48 | 1 | ⚪ Draft |
+| REQ-111 | AC-111.5 | Zero pedal input produces no rudder deflection (rudder = 0.0) | specs/features/req_111_heusinkveld_sprint_pedals.feature:55 | 1 | ⚪ Draft |
+| REQ-112 | AC-112.1 | Rudder axis is derived from the left-right pedal differential and is bipolar [-1.0, 1.0] | specs/features/req_112_thrustmaster_tpr_rudder.feature:5<br>specs/features/req_112_thrustmaster_tpr_rudder.feature:11 | 1 | ⚪ Draft |
+| REQ-112 | AC-112.2 | Left and right toe brake axes are independently reported as unipolar [0.0, 1.0] | specs/features/req_112_thrustmaster_tpr_rudder.feature:17<br>specs/features/req_112_thrustmaster_tpr_rudder.feature:23 | 1 | ⚪ Draft |
+| REQ-112 | AC-112.3 | Calibration curves and deadzone configuration are applied to the rudder axis | specs/features/req_112_thrustmaster_tpr_rudder.feature:29<br>specs/features/req_112_thrustmaster_tpr_rudder.feature:35 | 1 | ⚪ Draft |
+| REQ-112 | AC-112.4 | Hardware center position maps to rudder 0.0 and output is always within [-1.0, 1.0] | specs/features/req_112_thrustmaster_tpr_rudder.feature:41<br>specs/features/req_112_thrustmaster_tpr_rudder.feature:47 | 1 | ⚪ Draft |
+| REQ-113 | AC-113.1 | Sidestick X/Y axes are bipolar [-1.0, 1.0] with a center detent that maps to 0.0 | specs/features/req_113_tca_airbus_pack.feature:5<br>specs/features/req_113_tca_airbus_pack.feature:11<br>specs/features/req_113_tca_airbus_pack.feature:17 | 1 | ⚪ Draft |
+| REQ-113 | AC-113.2 | Throttle lever gates (IDLE, CL, FLX/MCT, TOGA) are detected and reported correctly | specs/features/req_113_tca_airbus_pack.feature:24<br>specs/features/req_113_tca_airbus_pack.feature:30<br>specs/features/req_113_tca_airbus_pack.feature:36<br>specs/features/req_113_tca_airbus_pack.feature:42 | 1 | ⚪ Draft |
+| REQ-113 | AC-113.3 | Spoiler lever is reported as a unipolar [0.0, 1.0] axis | specs/features/req_113_tca_airbus_pack.feature:48 | 1 | ⚪ Draft |
+| REQ-113 | AC-113.4 | All button states are independently and correctly reported | specs/features/req_113_tca_airbus_pack.feature:54 | 1 | ⚪ Draft |
+| REQ-113 | AC-113.5 | The TCA Officer Pack reports no force-feedback capability (passive device only) | specs/features/req_113_tca_airbus_pack.feature:60 | 1 | ⚪ Draft |
+| REQ-114 | AC-114.1 | Rudder axis is derived from pedal differential and is bipolar [-1.0, 1.0] | specs/features/req_114_virpil_ace_pedals.feature:5<br>specs/features/req_114_virpil_ace_pedals.feature:11 | 1 | ⚪ Draft |
+| REQ-114 | AC-114.2 | Left and right toe brake axes are independent and unipolar [0.0, 1.0] | specs/features/req_114_virpil_ace_pedals.feature:17<br>specs/features/req_114_virpil_ace_pedals.feature:24 | 1 | ⚪ Draft |
+| REQ-114 | AC-114.3 | 14-bit axis ADC resolution is preserved and output spans the full normalised range | specs/features/req_114_virpil_ace_pedals.feature:31<br>specs/features/req_114_virpil_ace_pedals.feature:37 | 1 | ⚪ Draft |
+| REQ-114 | AC-114.4 | Center deadzone suppresses small inputs near mechanical center without affecting full travel | specs/features/req_114_virpil_ace_pedals.feature:43<br>specs/features/req_114_virpil_ace_pedals.feature:49 | 1 | ⚪ Draft |
+| REQ-115 | AC-115.1 | Button matrix decodes each button independently and all-buttons-pressed is reported correctly | specs/features/req_115_winwing_ufc_panel.feature:5<br>specs/features/req_115_winwing_ufc_panel.feature:12 | 1 | ⚪ Draft |
+| REQ-115 | AC-115.2 | LED set and clear commands encode the correct LED index and state in the output HID report | specs/features/req_115_winwing_ufc_panel.feature:18<br>specs/features/req_115_winwing_ufc_panel.feature:24 | 1 | ⚪ Draft |
+| REQ-115 | AC-115.3 | 7-segment display encoding is correct for all digits 0-9 | specs/features/req_115_winwing_ufc_panel.feature:30<br>specs/features/req_115_winwing_ufc_panel.feature:36 | 1 | ⚪ Draft |
+| REQ-115 | AC-115.4 | LED state read-back returns the state set by the last set_led command | specs/features/req_115_winwing_ufc_panel.feature:42 | 1 | ⚪ Draft |
+| REQ-115 | AC-115.5 | Button press events are published on the flight bus event stream | specs/features/req_115_winwing_ufc_panel.feature:48 | 1 | ⚪ Draft |
+| REQ-116 | AC-116.1 | Aircraft title containing 'Boeing 737' maps to the Boeing737 aircraft type | specs/features/req_116_simconnect_aircraft_detection.feature:5 | 1 | ⚪ Draft |
+| REQ-116 | AC-116.2 | Aircraft title containing 'Airbus A320' maps to the AirbusA320 aircraft type | specs/features/req_116_simconnect_aircraft_detection.feature:11 | 1 | ⚪ Draft |
+| REQ-116 | AC-116.3 | An unrecognised aircraft title returns the Generic aircraft type and the generic fallback profile | specs/features/req_116_simconnect_aircraft_detection.feature:17 | 1 | ⚪ Draft |
+| REQ-116 | AC-116.4 | An aircraft change event is published on the bus with the new aircraft title | specs/features/req_116_simconnect_aircraft_detection.feature:24 | 1 | ⚪ Draft |
+| REQ-116 | AC-116.5 | The profile cascade fires on aircraft type change and reverts to global profile for generic aircraft | specs/features/req_116_simconnect_aircraft_detection.feature:31<br>specs/features/req_116_simconnect_aircraft_detection.feature:38 | 1 | ⚪ Draft |

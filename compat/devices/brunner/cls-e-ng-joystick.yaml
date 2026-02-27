@@ -1,0 +1,64 @@
+# Brunner CLS-E NG Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Brunner CLS-E NG Joystick is the Next-Generation Brunner force-feedback
+# joystick variant, complementing the CLS-E NG Yoke (cls-e-ng-yoke.yaml).
+# Provides active FFB on the X/Y axes for realistic aerodynamic stick forces.
+# VID 0x25BB confirmed: Brunner Elektronik AG.
+# PID 0x0075 is a community estimate — confirm with lsusb or Brunner SDK.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E NG Joystick"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0075   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 16
+  buttons: 4
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0075 is a community estimate for the CLS-E NG Joystick. VID 0x25BB
+      = Brunner is confirmed; PID requires verification with lsusb or Brunner
+      SDK device enumeration documentation.
+  - id: CLS2SIM_COMPANION
+    description: >
+      FFB configuration requires the Brunner CLS2SIM companion software.
+      OpenFlight reads axis data directly via HID; FFB output requires CLS2SIM
+      API or direct USB output reports.
+  - id: DISTINCT_FROM_NG_YOKE
+    description: >
+      The CLS-E NG Joystick is distinct from the CLS-E NG Yoke (cls-e-ng-yoke.yaml).
+      The joystick variant uses a centre-gimbal design for traditional fighter-style
+      input, while the yoke uses a control column/wheel design.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E NG Joystick — NG force feedback centre-stick variant.
+    VID 0x25BB = Brunner. PID 0x0075 unconfirmed.
+    Related: cls-e-ng-yoke.yaml. Last reviewed: 2026-06.

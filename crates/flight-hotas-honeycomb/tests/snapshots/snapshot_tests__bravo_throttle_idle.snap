@@ -1,0 +1,19 @@
+---
+source: crates/flight-hotas-honeycomb/tests/snapshot_tests.rs
+assertion_line: 76
+expression: state
+---
+BravoInputState {
+    axes: BravoAxes {
+        throttle1: 0.0,
+        throttle2: 0.0,
+        throttle3: 0.0,
+        throttle4: 0.0,
+        throttle5: 0.0,
+        flap_lever: 0.0,
+        spoiler: 0.0,
+    },
+    buttons: BravoButtons {
+        mask: 0,
+    },
+}

@@ -1,0 +1,58 @@
+# GoFlight GF-EFIS Avionics Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The GoFlight GF-EFIS is an Electronic Flight Instrument System control panel
+# replicating EFIS mode selector and range knobs found in glass cockpit aircraft.
+# Distinct from the GF-EHSI (gf-ehsi.yaml) which targets the HSI display.
+# VID 0x0E9F confirmed: GoFlight Inc.
+# PID 0x000C is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-EFIS Avionics Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x000C   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000C is a community estimate. GoFlight PIDs follow a product
+      sequence; confirm with lsusb. Distinct from GF-EHSI (gf-ehsi.yaml).
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the GF
+      avionics family. Rotary encoders report relative delta button events.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Range and mode selector knobs report as button increment/decrement
+      pairs rather than absolute axis values.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-EFIS — EFIS mode/range selector panel. VID 0x0E9F = GoFlight.
+    PID 0x000C unconfirmed. Distinct from GF-EHSI (gf-ehsi.yaml).
+    Last reviewed: 2026-06.

@@ -12,3 +12,6 @@ readme = "README.md"
 categories.workspace = true
 keywords = ["flight-sim", "openflight", "metrics", "observability"]
 [dependencies]
+
+[dev-dependencies]
+proptest.workspace = true

@@ -1,0 +1,56 @@
+# Komodo Simulations Transponder Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Komodo Simulations Transponder Panel replicates an ATC transponder
+# (Mode A/C/S) for airliner cockpit simulation. Provides squawk code entry,
+# mode selector, and IDENT button as USB HID inputs.
+# VID and PID are community estimates — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "Komodo Simulations Transponder Panel"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology — community estimate for Komodo
+    product_id: 0xF8C5   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF8C5 is a community estimate for the Komodo Transponder Panel.
+      VID 0x04D8 (Microchip) is the community-estimated Komodo vendor.
+      Confirm both with lsusb on real hardware.
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x04D8 is a community estimate. Komodo may use a different USB
+      controller chip. Verify with lsusb.
+  - id: SQUAWK_ENTRY
+    description: >
+      Digit buttons (0–9) and IDENT/mode selector buttons map to transponder
+      code entry and mode switching. Bind to corresponding sim transponder events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Simulations Transponder Panel. Both VID and PID are unconfirmed estimates.
+    Related panels: mcp-panel.yaml, efis-panel.yaml. Last reviewed: 2026-06.

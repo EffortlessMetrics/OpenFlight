@@ -1,0 +1,53 @@
+# RealSimGear GI 275 Electronic Instrument Trainer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear GI 275 is a replica bezel for the Garmin GI 275 electronic
+# flight instrument system — an EFIS replacement for steam-gauge aircraft.
+# Exposes mode selector and softkey buttons as USB HID.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF250 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GI 275 Electronic Instrument Trainer"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF250   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 10
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF250 is a community estimate. RealSimGear uses VID 0x04D8
+      (Microchip); confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      The GI 275 outer rotary knob reports as button increment/decrement.
+      Map to baro/altitude reference adjustments in the sim profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GI 275 — Garmin GI 275 EFIS replacement bezel.
+    VID 0x04D8 / PID 0xF250 are community estimates. Last reviewed: 2026-06.

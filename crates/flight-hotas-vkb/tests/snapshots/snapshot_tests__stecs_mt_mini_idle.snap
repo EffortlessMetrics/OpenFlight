@@ -1,0 +1,18 @@
+---
+source: crates/flight-hotas-vkb/tests/snapshot_tests.rs
+assertion_line: 117
+expression: state
+---
+VkcStecsMtInputState {
+    variant: Mini,
+    axes: VkcStecsMtAxes {
+        throttle: 0.0,
+        mini_left: 0.0,
+        mini_right: 0.0,
+        rotary: 0.0,
+    },
+    buttons: VkcStecsMtButtons {
+        word0: 0,
+        word1: 0,
+    },
+}

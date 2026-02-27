@@ -1,0 +1,58 @@
+# Fanatec CSL DD Pro Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Fanatec CSL DD Pro is the 8 Nm (boost kit) variant of the CSL DD
+# (csl-dd.yaml). Bundled with a boost kit power supply enabling full 8 Nm torque.
+# Shares the same USB HID PID as the base CSL DD but reports max torque differently
+# via Fanatec proprietary protocol.
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0011 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL DD Pro Wheel Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: 0x0011   # Community estimate — may share PID with CSL DD
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 8
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0011 is a community estimate; the CSL DD Pro may share the base
+      CSL DD PID. Confirm with lsusb on boost-kit hardware.
+  - id: BOOST_KIT_REQUIRED
+    description: >
+      Full 8 Nm torque requires the 180W CSL DD Pro Boost Kit power supply.
+      Without the boost kit the base limits to ~5 Nm.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL DD Pro — 8 Nm direct-drive base with boost kit.
+    VID 0x0EB7 = Fanatec. PID 0x0011 unconfirmed.
+    Last reviewed: 2026-06.

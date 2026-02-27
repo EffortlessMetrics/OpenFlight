@@ -1,0 +1,56 @@
+# Logitech G920 Racing Wheel (Xbox/PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Logitech G920 is the Xbox One / PC variant of the G29 racing wheel.
+# Functionally identical to the G29 (g29-racing-wheel.yaml) but uses a
+# different USB PID for Xbox compatibility.
+# VID 0x046D confirmed: Logitech.
+# PID 0xC262 confirmed: G920 Racing Wheel (linux-hardware.org, multiple probes).
+schema_version: "1"
+
+device:
+  name: "Logitech G920 Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC262   # Confirmed: G920 Racing Wheel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 2.1
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: XBOX_VARIANT
+    description: >
+      G920 is the Xbox-compatible variant of the G29 (g29-racing-wheel.yaml).
+      Uses PID 0xC262 instead of 0xC24F. HID axis layout is otherwise identical.
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      900° steering wheel rotation mapped to full axis range. Flight use
+      requires axis scaling profile to restrict effective yoke travel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G920 Racing Wheel (Xbox/PC). VID 0x046D / PID 0xC262 confirmed.
+    Xbox-compatible variant of g29-racing-wheel.yaml. Last reviewed: 2026-06.

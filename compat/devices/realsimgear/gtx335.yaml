@@ -1,0 +1,59 @@
+# RealSimGear GTX 335 Transponder Trainer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear GTX 335 is a replica bezel for the Garmin GTX 335
+# ADS-B transponder. Exposes squawk code entry buttons and mode selector
+# as USB HID for transponder training in MSFS and X-Plane.
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF270 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTX 335 Transponder Trainer"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF270   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF270 is a community estimate for the GTX 335 trainer.
+      RealSimGear uses VID 0x04D8 (Microchip); confirm PID with lsusb.
+      Sibling to gtx327.yaml which covers the older GTX 327 model.
+  - id: ADSB_DISPLAY
+    description: >
+      The GTX 335 display (squawk code readout) requires USB HID output
+      reports from the host application to show the active transponder code.
+  - id: SQUAWK_ENTRY
+    description: >
+      Digit buttons (0–9) and IDENT, CLR, FUNC buttons map to transponder
+      squawk code entry. Bind to MSFS/X-Plane transponder input events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTX 335 — Garmin GTX 335 ADS-B transponder replica.
+    VID 0x04D8 / PID 0xF270 are community estimates.
+    Related: gtx327.yaml. Last reviewed: 2026-06.

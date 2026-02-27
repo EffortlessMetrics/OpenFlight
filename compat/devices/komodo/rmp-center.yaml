@@ -1,0 +1,60 @@
+# Komodo Simulations RMP Center Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Komodo Simulations RMP Center is the center pedestal Radio Management Panel,
+# complementing the RMP Left (rmp-left.yaml) and RMP Right (rmp-right.yaml) panels.
+# Used in airliner cockpit builds to provide a symmetric three-panel RMP stack.
+# VID and PID are community estimates — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "Komodo Simulations RMP Center"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology — community estimate for Komodo
+    product_id: 0xF8C6   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF8C6 is a community estimate for the RMP Center. Confirm with lsusb.
+      See rmp-left.yaml and rmp-right.yaml for the sibling panels.
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x04D8 is a community estimate. Confirm with lsusb.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary frequency knobs report as button increment/decrement events.
+      Map encoder steps to VHF COM frequency adjustments in the profile.
+  - id: THREE_PANEL_STACK
+    description: >
+      Designed to fill the center position in a 3-panel RMP stack:
+      rmp-left.yaml (captain) + rmp-center.yaml + rmp-right.yaml (first officer).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Simulations RMP Center — center pedestal radio management panel.
+    Both VID and PID are unconfirmed. Related: rmp-left.yaml, rmp-right.yaml.
+    Last reviewed: 2026-06.

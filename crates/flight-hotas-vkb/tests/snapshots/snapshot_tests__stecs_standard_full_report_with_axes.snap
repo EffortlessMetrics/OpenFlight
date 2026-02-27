@@ -1,0 +1,18 @@
+---
+source: crates/flight-hotas-vkb/tests/snapshot_tests.rs
+assertion_line: 105
+expression: state
+---
+StecsInterfaceState {
+    report_len: 14,
+    axes: Some(
+        StecsAxes {
+            rx: 0.0,
+            ry: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+    ),
+    buttons: 129,
+}

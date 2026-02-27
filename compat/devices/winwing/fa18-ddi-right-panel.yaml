@@ -1,0 +1,52 @@
+# WinWing F/A-18C DDI Right Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The WinWing F/A-18C DDI (Digital Display Indicator) Right Panel replicates the
+# 20-button pushbutton bezel surrounding the right MFD in the F/A-18C cockpit.
+# PID 0xBEE1 is a community estimate — confirm with lsusb on real hardware.
+# VID 0x4098 confirmed: WinWing.
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18C DDI Right Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEE1   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEE1 is a community estimate for the F/A-18 Right DDI panel.
+      Confirm with lsusb. Companion: fa18-ddi-left-panel.yaml.
+  - id: PAIRS_WITH_LEFT_DDI
+    description: >
+      Designed to pair symmetrically with the F/A-18C DDI Left Panel
+      (fa18-ddi-left-panel.yaml). Both use identical 20-button pushbutton bezels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C DDI Right Panel — 20-button pushbutton bezel for right MFD.
+    PID 0xBEE1 unconfirmed. Primary use: DCS World F/A-18C Hornet.
+    Last reviewed: 2026-06.

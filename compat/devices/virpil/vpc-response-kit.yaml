@@ -1,0 +1,55 @@
+# VIRPIL VPC Response Kit USB Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The VIRPIL VPC Response Kit is a small USB HID device that provides a
+# configurable set of buttons and a response-curve adjustment interface.
+# Used to retune spring cartridge behavior and mount extension tubes on
+# VIRPIL sticks. The USB portion enumerates as a button/encoder device.
+# VID 0x3344 confirmed: VIRPIL Controls.
+# PID 0x4190 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Response Kit"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4190   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4190 is a community estimate. The Response Kit may not expose a
+      full USB HID device on all firmware versions. Confirm with lsusb.
+  - id: CONFIGURATION_DEVICE
+    description: >
+      Primary function is mechanical adjustment (spring stiffness, cam profile).
+      The USB HID function provides auxiliary buttons only; main stick data
+      is still reported by the base/grip combination.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Response Kit — spring/cam configuration accessory with auxiliary USB buttons.
+    PID 0x4190 unconfirmed. Last reviewed: 2026-06.

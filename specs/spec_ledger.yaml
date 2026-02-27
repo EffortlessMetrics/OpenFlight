@@ -3897,3 +3897,158 @@ requirements:
         description: "WHEN a GetSecurityStatus RPC response is serialized and deserialized THEN all security status fields SHALL be preserved across the round-trip"
         tests:
           - flight-ipc::integration_tests::test_get_security_status_response_round_trip
+
+
+  # Product Requirement: Heusinkveld Sprint Pedals device support
+  - id: REQ-111
+    name: Heusinkveld Sprint Pedals device support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-111.1
+        description: "Normal brake input (left/right pedals) produces 0-100% unipolar output"
+        tests:
+          - feature:specs/features/req_111_heusinkveld_sprint_pedals.feature
+      - id: AC-111.2
+        description: "Toe brake differential is computed correctly from left and right brake positions"
+        tests:
+          - feature:specs/features/req_111_heusinkveld_sprint_pedals.feature
+      - id: AC-111.3
+        description: "Rudder axis combines left and right pedal positions into a bipolar [-1.0, 1.0] output"
+        tests:
+          - feature:specs/features/req_111_heusinkveld_sprint_pedals.feature
+      - id: AC-111.4
+        description: "Calibration curves are applied to brake axes and output remains within [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_111_heusinkveld_sprint_pedals.feature
+      - id: AC-111.5
+        description: "Zero pedal input produces no rudder deflection (rudder = 0.0)"
+        tests:
+          - feature:specs/features/req_111_heusinkveld_sprint_pedals.feature
+
+  # Product Requirement: Thrustmaster TPR Rudder Pedals device support
+  - id: REQ-112
+    name: Thrustmaster TPR Rudder Pedals device support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-112.1
+        description: "Rudder axis is derived from the left-right pedal differential and is bipolar [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_112_thrustmaster_tpr_rudder.feature
+      - id: AC-112.2
+        description: "Left and right toe brake axes are independently reported as unipolar [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_112_thrustmaster_tpr_rudder.feature
+      - id: AC-112.3
+        description: "Calibration curves and deadzone configuration are applied to the rudder axis"
+        tests:
+          - feature:specs/features/req_112_thrustmaster_tpr_rudder.feature
+      - id: AC-112.4
+        description: "Hardware center position maps to rudder 0.0 and output is always within [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_112_thrustmaster_tpr_rudder.feature
+
+  # Product Requirement: Thrustmaster TCA Officer Pack (Airbus) device support
+  - id: REQ-113
+    name: Thrustmaster TCA Officer Pack (Airbus) device support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-113.1
+        description: "Sidestick X/Y axes are bipolar [-1.0, 1.0] with a center detent that maps to 0.0"
+        tests:
+          - feature:specs/features/req_113_tca_airbus_pack.feature
+      - id: AC-113.2
+        description: "Throttle lever gates (IDLE, CL, FLX/MCT, TOGA) are detected and reported correctly"
+        tests:
+          - feature:specs/features/req_113_tca_airbus_pack.feature
+      - id: AC-113.3
+        description: "Spoiler lever is reported as a unipolar [0.0, 1.0] axis"
+        tests:
+          - feature:specs/features/req_113_tca_airbus_pack.feature
+      - id: AC-113.4
+        description: "All button states are independently and correctly reported"
+        tests:
+          - feature:specs/features/req_113_tca_airbus_pack.feature
+      - id: AC-113.5
+        description: "The TCA Officer Pack reports no force-feedback capability (passive device only)"
+        tests:
+          - feature:specs/features/req_113_tca_airbus_pack.feature
+
+  # Product Requirement: VIRPIL VPC Ace Interceptor Pedals device support
+  - id: REQ-114
+    name: VIRPIL VPC Ace Interceptor Pedals device support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-114.1
+        description: "Rudder axis is derived from pedal differential and is bipolar [-1.0, 1.0]"
+        tests:
+          - feature:specs/features/req_114_virpil_ace_pedals.feature
+      - id: AC-114.2
+        description: "Left and right toe brake axes are independent and unipolar [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_114_virpil_ace_pedals.feature
+      - id: AC-114.3
+        description: "14-bit axis ADC resolution is preserved and output spans the full normalised range"
+        tests:
+          - feature:specs/features/req_114_virpil_ace_pedals.feature
+      - id: AC-114.4
+        description: "Center deadzone suppresses small inputs near mechanical center without affecting full travel"
+        tests:
+          - feature:specs/features/req_114_virpil_ace_pedals.feature
+
+  # Product Requirement: WinWing UFC Panel device support
+  - id: REQ-115
+    name: WinWing UFC Panel device support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-115.1
+        description: "Button matrix decodes each button independently and all-buttons-pressed is reported correctly"
+        tests:
+          - feature:specs/features/req_115_winwing_ufc_panel.feature
+      - id: AC-115.2
+        description: "LED set and clear commands encode the correct LED index and state in the output HID report"
+        tests:
+          - feature:specs/features/req_115_winwing_ufc_panel.feature
+      - id: AC-115.3
+        description: "7-segment display encoding is correct for all digits 0-9"
+        tests:
+          - feature:specs/features/req_115_winwing_ufc_panel.feature
+      - id: AC-115.4
+        description: "LED state read-back returns the state set by the last set_led command"
+        tests:
+          - feature:specs/features/req_115_winwing_ufc_panel.feature
+      - id: AC-115.5
+        description: "Button press events are published on the flight bus event stream"
+        tests:
+          - feature:specs/features/req_115_winwing_ufc_panel.feature
+
+  # Product Requirement: SimConnect aircraft type detection and profile cascade
+  - id: REQ-116
+    name: SimConnect aircraft type detection and profile cascade
+    kind: product
+    status: draft
+    ac:
+      - id: AC-116.1
+        description: "Aircraft title containing 'Boeing 737' maps to the Boeing737 aircraft type"
+        tests:
+          - feature:specs/features/req_116_simconnect_aircraft_detection.feature
+      - id: AC-116.2
+        description: "Aircraft title containing 'Airbus A320' maps to the AirbusA320 aircraft type"
+        tests:
+          - feature:specs/features/req_116_simconnect_aircraft_detection.feature
+      - id: AC-116.3
+        description: "An unrecognised aircraft title returns the Generic aircraft type and the generic fallback profile"
+        tests:
+          - feature:specs/features/req_116_simconnect_aircraft_detection.feature
+      - id: AC-116.4
+        description: "An aircraft change event is published on the bus with the new aircraft title"
+        tests:
+          - feature:specs/features/req_116_simconnect_aircraft_detection.feature
+      - id: AC-116.5
+        description: "The profile cascade fires on aircraft type change and reverts to global profile for generic aircraft"
+        tests:
+          - feature:specs/features/req_116_simconnect_aircraft_detection.feature

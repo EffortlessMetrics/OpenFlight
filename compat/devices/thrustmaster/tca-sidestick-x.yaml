@@ -1,0 +1,55 @@
+# Thrustmaster TCA Sidestick X Airbus Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The TCA Sidestick X is the ~2024 revision of the TCA Sidestick Airbus Edition
+# (tca-sidestick-airbus.yaml). Revised button layout, improved twist-rudder axis,
+# and updated spring/damper cartridge system.
+# VID 0x044F confirmed: Thrustmaster.
+# PID 0xB694 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Sidestick X Airbus Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB694   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB694 is a community estimate for the TCA Sidestick X. Confirm
+      with lsusb. Distinct from original TCA Sidestick Airbus (0xB37E) and
+      TCA Sidestick Airbus Copilot.
+  - id: SIDESTICK_LEFT_HAND
+    description: >
+      Designed for left-hand use (Airbus-style fly-by-wire sidestick).
+      No centre detent by design. Right-hand users should use the
+      TCA Sidestick Airbus Copilot edition.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Sidestick X — updated Airbus sidestick (~2024).
+    PID 0xB694 unconfirmed. Original version: tca-sidestick-airbus.yaml.
+    Last reviewed: 2026-06.

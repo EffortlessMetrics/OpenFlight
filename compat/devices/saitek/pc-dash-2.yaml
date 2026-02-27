@@ -1,0 +1,54 @@
+# Saitek PC Dashboard 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Saitek PC Dashboard 2 is the second-generation Saitek dashboard panel
+# with an expanded button array and an improved LCD display for sim data.
+# Used in FSX, P3D, and MSFS home cockpit builds alongside the Pro Flight
+# panel series.
+# VID 0x06A3 confirmed: Saitek (now Logitech).
+# PID 0x0A01 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Saitek PC Dashboard 2"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0A01   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A01 is a community estimate. The Dashboard 2 may share a PID
+      with the Dashboard 1 or use a sequential value. Confirm with lsusb.
+  - id: LCD_OUTPUT
+    description: >
+      Expanded LCD display supports more data fields than the Dashboard 1.
+      Display updates require USB HID output reports from the host application.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek PC Dashboard 2 — expanded button/LCD panel. VID 0x06A3 = Saitek.
+    PID 0x0A01 unconfirmed. Predecessor: saitek/pc-dash-1.yaml.
+    Last reviewed: 2026-06.

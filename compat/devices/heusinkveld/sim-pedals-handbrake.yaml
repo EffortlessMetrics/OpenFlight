@@ -1,0 +1,57 @@
+# Heusinkveld Sim Pedals Handbrake
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Heusinkveld Sim Pedals Handbrake is a dedicated USB HID handbrake
+# accessory for sim racing and flight simulation, featuring a load-cell
+# sensor for pressure-based input. In flight sim use, typically mapped
+# to park brake or flap control.
+# VID 0x04D8 (Microchip Technology) is a community estimate for Heusinkveld.
+# PID 0xF6D5 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sim Pedals Handbrake"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF6D5   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [handbrake]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF6D5 is a community estimate. VID 0x04D8 (Microchip) is the
+      Heusinkveld community estimate. Confirm both with lsusb.
+  - id: SINGLE_AXIS_DEVICE
+    description: >
+      Reports a single handbrake axis. In flight sim use, map to parking
+      brake, flap axis, speed brake, or spoiler as appropriate.
+  - id: LOAD_CELL
+    description: >
+      Uses a load-cell for pressure-based input. Apply a non-linear curve
+      in the OpenFlight profile for park brake snap response.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sim Pedals Handbrake — single load-cell handbrake accessory.
+    VID 0x04D8 / PID 0xF6D5 unconfirmed. Last reviewed: 2026-06.

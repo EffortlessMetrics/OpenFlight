@@ -1,0 +1,57 @@
+# RealSimGear GNS 650Xi Trainer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The RealSimGear GNS 650Xi is a replica bezel for the Garmin GNS 650Xi
+# GPS/Nav/Com unit. Sibling to the GNS 530 (gns530.yaml) and GNS 480 (gns480.yaml).
+# VID 0x04D8 confirmed: Microchip Technology (used by RealSimGear).
+# PID 0xF248 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS 650Xi Trainer"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF248   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF248 is a community estimate for the GNS 650Xi. RealSimGear
+      uses VID 0x04D8 (Microchip); confirm PID with lsusb.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      COM/NAV tuning knobs (outer/inner concentric) report as button pairs.
+      Map each step to corresponding MSFS/X-Plane frequency bindings.
+  - id: UPGRADED_GNS430_LINE
+    description: >
+      The GNS 650Xi is an Xi-series update to the GNS 480/530W line, featuring
+      a larger colour display. Pairs with gns430.yaml and gns530.yaml in
+      dual-stack avionics setups.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNS 650Xi — Garmin GNS 650Xi replica bezel.
+    VID 0x04D8 / PID 0xF248 are community estimates. Last reviewed: 2026-06.

@@ -53,3 +53,6 @@ insta = { workspace = true }
 [[test]]
 name = "integration_tests"
 required-features = ["integration-tests", "serde"]
+
+[[test]]
+name = "adapter_integration_tests"

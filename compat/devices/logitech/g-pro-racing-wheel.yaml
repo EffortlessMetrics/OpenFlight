@@ -1,0 +1,60 @@
+# Logitech G PRO Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Logitech G PRO Racing Wheel (2022) is Logitech's top-tier direct-drive
+# racing wheel, featuring up to 11 Nm torque and TRUEFORCE FFB. Occasionally
+# used in flight sim builds for yoke-axis and force-feedback input.
+# VID 0x046D confirmed: Logitech.
+# PID 0xC272 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Logitech G PRO Racing Wheel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC272   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, periodic, friction]
+    max_update_rate_hz: 500
+    torque_limit_nm: 11
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC272 is a community estimate for the G PRO Racing Wheel.
+      Confirm with lsusb. May differ from Xbox-compatible variant.
+  - id: TRUEFORCE_FFB
+    description: >
+      Supports Logitech TRUEFORCE high-frequency FFB via proprietary extension.
+      Standard DirectInput spring/damper/constant effects work without TRUEFORCE SDK.
+  - id: WHEEL_AXIS_RANGE
+    description: >
+      Full-range wheel rotation mapped to HID axis. Flight use requires an
+      axis scaling profile to limit effective yoke travel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G PRO Racing Wheel (2022) — 11 Nm direct-drive, TRUEFORCE FFB.
+    VID 0x046D / PID 0xC272 unconfirmed. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# Fanatec CSL Pedals Load Cell Kit (LC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Fanatec CSL Pedals Load Cell Kit is an upgrade accessory for the CSL Pedals
+# (csl-pedals.yaml) that replaces the rubber-cone brake with a load-cell sensor.
+# The LC kit changes the brake axis behavior but may use the same USB PID as the
+# base CSL Pedals — confirm whether a separate PID is assigned.
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0030 is a community estimate — confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Pedals Load Cell Kit"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7
+    product_id: 0x0030   # Community estimate — may share PID with base CSL Pedals
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0030 is a community estimate. The CSL Pedals LC kit may share the
+      base CSL Pedals PID. Confirm with lsusb on upgraded hardware.
+  - id: BRAKE_LOAD_CELL
+    description: >
+      Brake axis uses a load cell after LC kit installation. Provides pressure-
+      based input with configurable force threshold via Fanatec Wheel Property Page.
+  - id: UPGRADE_KIT
+    description: >
+      The LC kit is an add-on for the base CSL Pedals (csl-pedals.yaml).
+      Throttle and clutch axes remain potentiometer-based.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Pedals LC — load cell upgrade kit. VID 0x0EB7 = Fanatec GmbH.
+    PID 0x0030 unconfirmed; may share base CSL Pedals PID.
+    Last reviewed: 2026-06.

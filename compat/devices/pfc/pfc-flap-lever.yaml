@@ -1,0 +1,58 @@
+# PFC Flap Lever
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The PFC (Precision Flight Controls) Flap Lever is a standalone USB HID
+# axis device replicating a multi-position flap handle for general aviation
+# and transport-category aircraft simulations.
+# VID 0x0E8F is used by PFC (via their USB HID implementation).
+# PID 0x0010 is a community estimate — confirm with lsusb on hardware.
+schema_version: "1"
+
+device:
+  name: "PFC Flap Lever"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x0E8F    # PFC / community estimate — confirm with lsusb
+    product_id: 0x0010   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [flap_lever]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0010 is a community estimate. VID 0x0E8F may not be the correct
+      PFC vendor ID — confirm both VID and PID with lsusb on real hardware.
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x0E8F is a community estimate for PFC. Some PFC products use a
+      different USB chip (e.g., 0x04B4 Cypress). Verify with lsusb.
+  - id: DETENTED_POSITIONS
+    description: >
+      The flap lever has discrete detented positions corresponding to standard
+      flap settings (0, 10, 15, 20, 30, 40°). The axis value steps between
+      these positions; apply a custom axis curve or detent map in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Flap Lever — standalone USB flap handle. Both VID and PID unconfirmed.
+    Related PFC devices: pfc-cessna-yoke.yaml, pfc-rudder-pedals.yaml.
+    Last reviewed: 2026-06.
