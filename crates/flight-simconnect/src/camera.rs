@@ -56,21 +56,12 @@ impl CameraChannel {
 }
 
 /// Configuration for camera injection.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CameraConfig {
     /// Whether camera injection is enabled.
     pub enabled: bool,
     /// SimConnect channel identifier for camera events.
     pub channel_id: u32,
-}
-
-impl Default for CameraConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            channel_id: 0,
-        }
-    }
 }
 
 /// Format camera channel values into SimConnect SimVar name/value pairs.
