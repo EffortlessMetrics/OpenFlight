@@ -22,8 +22,8 @@ fn writers_dir() -> PathBuf {
 
 fn read_writer_json(filename: &str) -> serde_json::Value {
     let path = writers_dir().join(filename);
-    let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("failed to read {filename}: {e}"));
+    let content =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to read {filename}: {e}"));
     serde_json::from_str(&content)
         .unwrap_or_else(|e| panic!("{filename} contains invalid JSON: {e}"))
 }
@@ -74,7 +74,10 @@ async fn apply_ini_section_diff_produces_expected_output() {
     applier.apply_diff(&diff, &backup_path).await.unwrap();
 
     let output = std::fs::read_to_string(&target).unwrap();
-    assert!(output.contains("[CONTROLS]"), "section header must be present");
+    assert!(
+        output.contains("[CONTROLS]"),
+        "section header must be present"
+    );
     assert!(
         output.contains("UseLinearCurves=1"),
         "UseLinearCurves setting must be written"
@@ -142,7 +145,9 @@ fn msfs_writer_contains_critical_control_curve_settings() {
         "UseLinearCurves must be present in MSFS diff changes; got: {all_change_keys:?}"
     );
     assert!(
-        all_change_keys.iter().any(|k| k == "DisableNonLinearControls"),
+        all_change_keys
+            .iter()
+            .any(|k| k == "DisableNonLinearControls"),
         "DisableNonLinearControls must be present in MSFS diff changes; got: {all_change_keys:?}"
     );
 }
@@ -166,10 +171,7 @@ fn all_writer_json_files_parse_without_error() {
         }
     }
 
-    assert!(
-        checked > 0,
-        "must find at least one .json file in writers/"
-    );
+    assert!(checked > 0, "must find at least one .json file in writers/");
 }
 
 // ── 6. Serialization golden test (WriterConfig round-trip) ────────────────────

@@ -1,0 +1,28 @@
+---
+source: crates/flight-writers/tests/golden_tables.rs
+expression: value
+---
+{
+  "description": "Disable MSFS built-in control curves",
+  "diffs": [
+    {
+      "changes": {
+        "DisableNonLinearControls": "1",
+        "UseLinearCurves": "1"
+      },
+      "file": "MSFS/UserCfg.opt",
+      "operation": "Set",
+      "section": "[CONTROLS]"
+    }
+  ],
+  "sim": "msfs",
+  "verification_tests": [
+    {
+      "description": "Verify linear curves are enabled",
+      "expected_result": "UseLinearCurves=1",
+      "name": "check_linear_curves",
+      "test_type": "FileContains"
+    }
+  ],
+  "version": "1.36.0"
+}
