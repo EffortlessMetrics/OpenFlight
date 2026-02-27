@@ -1,0 +1,59 @@
+# CH Products FlightStick Pro USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x068E (CH Products Ltd.), PID 0x00F2.
+# The FlightStick Pro USB is CH Products' classic 4-axis + hat joystick,
+# positioned between the Combat Stick and Fighterstick in their product line.
+# PID 0x00F2 from Linux kernel hid-ids.h pattern (Fighterstick = 0x00F3).
+
+schema_version: "1"
+
+device:
+  name: "CH FlightStick Pro USB"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00F2   # From Linux kernel hid-ids.h family pattern
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: OS_MEDIATED_HID
+    description: >
+      CH Products devices use OS-mediated HID parsing (no raw report ID).
+      Report format is OS-decoded via the HID descriptor.
+  - id: CALIBRATION_SOFTWARE
+    description: >
+      CH Control Manager software may be required for full axis calibration
+      on Windows. Generic HID provides basic 10-bit axis access.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x00F2 is inferred from the Linux kernel hid-ids.h pattern.
+      CH Fighterstick uses 0x00F3; the FlightStick Pro is estimated adjacent.
+      Confirm with lsusb or Windows Device Manager before deployment.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products FlightStick Pro USB: classic 4-axis joystick with 16 buttons
+    and one hat. Distinguished from CH Fighterstick (PID 0x00F3) and CH Combat
+    Stick by button layout and mounting style. PID 0x00F2 is estimated from
+    kernel hid-ids.h — confirm before deployment. Last reviewed: 2026-02.

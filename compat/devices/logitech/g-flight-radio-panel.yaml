@@ -1,0 +1,63 @@
+# Logitech G Flight Radio Panel (rebadged Saitek Pro Flight Radio Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC), PID 0x0D05.
+# Logitech acquired Saitek in 2016 and re-released the Pro Flight Radio Panel
+# under the Logitech G Flight branding. The hardware and USB identifiers are
+# identical to the original Saitek version (see saitek/pro-flight-radio-panel.yaml).
+# PID 0x0D05 confirmed via linux-hardware.org ("Pro Flight Radio Panel").
+
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Radio Panel"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC (shared VID)
+    product_id: 0x0D05      # Confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: DUAL_7SEG_DISPLAY
+    description: >
+      Has two 5-digit 7-segment displays (active/standby frequencies). Display
+      updates require USB HID output reports targeting the radio active/standby
+      frequency fields.
+  - id: ROTARY_ENCODERS_RADIO
+    description: >
+      Outer and inner frequency knobs are rotary encoders (relative delta). The
+      flip button swaps active/standby. Protocol mirrors the Multi Panel encoder
+      scheme.
+  - id: SAITEK_ALIAS
+    description: >
+      VID 0x06A3 / PID 0x0D05 was originally released under Saitek branding.
+      Logitech re-released with identical USB identifiers after the 2016
+      acquisition. Both vendor names refer to the same physical product.
+      The Saitek version is documented in saitek/pro-flight-radio-panel.yaml.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0D05 confirmed via linux-hardware.org ("Pro Flight Radio Panel").
+    Dual-screen nav/com radio simulation panel matching Boeing/Airbus com layouts.
+    Often used alongside Multi Panel (0x0D06) and Switch Panel (0x0D67).
+    Last reviewed: 2026-02.

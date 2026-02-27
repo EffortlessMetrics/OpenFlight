@@ -1,0 +1,62 @@
+# RealSimGear GNS530W Nav/Com Bezel Replica
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology, used by RealSimGear).
+# PID 0xF238 — community estimate; G1000 PFD uses 0xF236, MFD uses 0xF235.
+# GNS530W replica provides nav/com frequency control, GPS waypoint entry,
+# and CDI/OBS for IFR operations.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS530W Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF238      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40               # Volume/squelch, nav/com flip, GPS keypad, CDI/OBS buttons
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF238 is a community estimate in the RealSimGear range.
+      G1000 PFD uses 0xF236, MFD uses 0xF235. GNS530W is estimated at 0xF238.
+      Verify with lsusb or Windows Device Manager. PID may vary by firmware.
+  - id: ROTARY_ENCODERS_GPS
+    description: >
+      GPS nav page selector and frequency knobs are incremental rotary encoders.
+      Each detent produces a button press (CW or CCW). OpenFlight maps encoder
+      detents as encoder-delta inputs.
+  - id: PID_VARIES_BY_FIRMWARE
+    description: >
+      RealSimGear ships devices with PID variants depending on firmware version
+      and hardware revision. Verify with Device Manager on the target unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x04D8 (Microchip Technology) confirmed as RealSimGear's USB vendor
+    from G1000 PFD/MFD manifests. PID 0xF238 is a community estimate for the
+    GNS530W — confirm with lsusb or Windows Device Manager.
+    Designed to pair with GNS430W (second radio stack) for twin-stack GA setups.
+    Primarily used with MSFS and X-Plane Cessna 172/Piper Archer.
+    Last reviewed: 2026-02.

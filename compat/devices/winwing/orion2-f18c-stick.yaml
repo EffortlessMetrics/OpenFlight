@@ -1,0 +1,46 @@
+# WinWing Orion 2 Joystick Base + F/A-18C Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBE63 confirmed from cross-references in this repo:
+#   orion2-throttle.yaml notes: "Orion 2 F/A-18C Stick (PID 0xBE63) and
+#     TFRP Rudder (PID 0xBE64) are tracked separately."
+#   orion1-f18-stick.yaml notes: "Distinct from the second-generation
+#     Orion 2 F/A-18C Stick (PID 0xBE63)."
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 F/A-18C Stick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE63
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Second-generation Orion 2 joystick base with F/A-18C Hornet replica grip.
+    PID 0xBE63 confirmed from cross-references in orion2-throttle.yaml and
+    orion1-f18-stick.yaml. Typically paired with the Orion 2 F/A-18C Throttle
+    (PID 0xBE62, see orion2-throttle.yaml). Distinct from the first-generation
+    Orion 1 + F/A-18 Grip (PID 0xBE11, see orion1-f18-stick.yaml).

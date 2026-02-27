@@ -1,0 +1,54 @@
+# WinWing AH-64D George AI Controller Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBF12 — community estimate; WinWing helicopter panel range.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing AH-64D George AI Controller"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF12    # Community estimate — unconfirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF12 is a community estimate and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture.
+      Update this manifest when a confirmed PID becomes available.
+  - id: GEORGE_AI_MODE
+    description: >
+      The George AI controller is used in DCS AH-64D to control the AI
+      copilot/gunner system. Buttons map to George AI commands (target
+      acquisition, weapon selection, altitude hold). OpenFlight provides
+      rule bindings for the DCS George menu system.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    AH-64D replica George AI Controller panel for DCS World Apache simulation.
+    Provides dedicated controls for the AI copilot/gunner George system.
+    PID 0xBF12 is a community estimate — confirm with lsusb before deployment.

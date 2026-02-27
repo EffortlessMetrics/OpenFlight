@@ -1,0 +1,61 @@
+# VKB Sim Pedals Ultra (premium rudder pedals with magnetic brakes)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Community-reported: VID 0x231D (VKB), PID 0x0062 — VKB Sim Pedals Ultra.
+# Premium pedal set with magnetic resistance on toe brakes and adjustable
+# mechanical resistance. Not confirmed from linux-hardware.org probe database.
+
+schema_version: "1"
+
+device:
+  name: "VKB Sim Pedals Ultra"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0062   # Community-reported; verify against hardware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_toe_brake, right_toe_brake]
+    resolution_bits: 15   # 15-bit effective on Ultra variant
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0062 is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. The Sim Pedals
+      Pro uses 0x0060; the Ultra is estimated adjacent at 0x0062.
+      Update when a confirmed PID becomes available.
+  - id: MAGNETIC_TOE_BRAKES
+    description: >
+      The Ultra variant uses magnetic (contactless) resistance on the toe brake
+      axes rather than spring resistance. The resistance force is fixed in
+      hardware; software cannot adjust it. Apply a small deadzone if axes drift.
+  - id: HIGHER_RESOLUTION
+    description: >
+      The Ultra reports 15-bit axis resolution (32768 positions) versus 12-bit
+      on the standard Sim Pedals Pro. Axis maximum raw value is 32767.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Sim Pedals Ultra: premium hall-effect rudder pedals with magnetic
+    resistance toe brakes and higher axis resolution than the Sim Pedals Pro
+    (PID 0x0060, see sim-pedals-pro.yaml). Distinct from T-Rudder Mk.IV
+    (PID 0x0126, see t-rudder-mk4.yaml).
+    PID 0x0062 is community-reported — confirm with lsusb or VKBDevCfg.

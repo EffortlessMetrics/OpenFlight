@@ -1,0 +1,54 @@
+# WinWing F/A-18 IFEI (In-Flight Engine Indicator) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBF08 — community estimate; ICP (F-16) uses 0xBF06, IFEI adjacent.
+# Not yet confirmed via linux-hardware.org or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 IFEI Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF08    # Community estimate — F-16 ICP uses 0xBF06
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF08 is a community estimate. The F-16 ICP uses 0xBF06;
+      the IFEI is estimated adjacent. Not confirmed from linux-hardware.org
+      or USB descriptor capture. Update when confirmed.
+  - id: OUTPUT_DISPLAY
+    description: >
+      The IFEI panel includes a small numeric/alphanumeric display for engine
+      parameters (FF, OIL, RPM, EGT). Display updates require HID output
+      reports separate from the button input path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    F/A-18 IFEI replica panel: In-Flight Engine Indicator displaying fuel flow,
+    oil pressure, RPM, and EGT for the F/A-18C left/right engine instruments.
+    Complements the UFC1+HUD1 panel (PID 0xBEDE, see ufc1-hud1-panel.yaml).
+    PID 0xBF08 is a community estimate — confirm with lsusb before deployment.
