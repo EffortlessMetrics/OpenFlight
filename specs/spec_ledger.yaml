@@ -3659,6 +3659,19 @@ requirements:
         tests:
           - flight_virtual::ofp1_emulator::tests::test_emulator_creation
           - flight_virtual::ofp1_emulator::tests::test_emulator_capabilities
+      - id: AC-102.5
+        description: "WHEN a button state is written to a virtual device THEN the reported button output SHALL reflect the written state"
+        tests:
+          - flight_virtual::device::tests::test_button_control
+      - id: AC-102.6
+        description: "WHEN an emergency stop command is issued to the OFP-1 emulator THEN the emulator SHALL enter a safe stopped state without panicking"
+        tests:
+          - flight_virtual::ofp1_emulator::tests::test_emulator_emergency_stop
+          - flight_virtual::ofp1_emulator::tests::test_emulator_interlock
+      - id: AC-102.7
+        description: "WHEN a second virtual device with the same identifier is registered THEN the registration SHALL be rejected with an appropriate error"
+        tests:
+          - flight_virtual::integration_tests::test_shared_device_manager_rejects_duplicates
 
   # Product Requirement: Rules DSL Condition Parsing
   - id: REQ-103
@@ -3825,3 +3838,62 @@ requirements:
         description: "WHEN a subscriber is configured with a low per-subscriber max_rate_hz and a second snapshot is published before the minimum interval THEN the subscriber SHALL not receive it but the publish call SHALL succeed"
         tests:
           - flight-bus::publisher::tests::test_subscriber_rate_limiting
+
+  # Infrastructure Requirement: IPC Protocol Negotiation
+  - id: REQ-108
+    name: IPC Protocol Negotiation
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-108.1
+        description: "WHEN a client and service exchange protocol versions THEN negotiation SHALL succeed and the highest mutually compatible version SHALL be selected"
+        tests:
+          - flight-ipc::integration_tests::test_version_compatibility
+      - id: AC-108.2
+        description: "WHEN a client version is incompatible with the service THEN the connection SHALL be rejected with a version-mismatch IPC error"
+        tests:
+          - flight-ipc::integration_tests::test_ipc_error_version_mismatch_display
+          - flight-ipc::integration_tests::test_grpc_status_codes_propagate_correctly
+      - id: AC-108.3
+        description: "WHEN a NegotiateFeatures message is serialized and deserialized THEN all feature flags SHALL be preserved across the round-trip"
+        tests:
+          - flight-ipc::integration_tests::test_negotiate_features_response_round_trip
+
+  # Infrastructure Requirement: Device List and Status RPC
+  - id: REQ-109
+    name: Device List and Status RPC
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-109.1
+        description: "WHEN a ListDevices RPC response is serialized and deserialized THEN all registered devices SHALL be present in the decoded list"
+        tests:
+          - flight-ipc::integration_tests::test_list_devices_response_round_trip
+          - flight-ipc::integration_tests::test_device_manager_unit
+      - id: AC-109.2
+        description: "WHEN a device is removed from the manager THEN it SHALL not appear in subsequent ListDevices responses"
+        tests:
+          - flight-ipc::integration_tests::test_device_manager_unit
+      - id: AC-109.3
+        description: "WHEN a Device message with all capability and health fields is serialized and deserialized THEN all fields SHALL be preserved across the round-trip"
+        tests:
+          - flight-ipc::integration_tests::test_maximal_device_round_trip
+
+  # Product Requirement: IPC Access Control
+  - id: REQ-110
+    name: IPC Access Control
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-110.1
+        description: "WHEN an IPC connection is made by a user listed in the ACL THEN the ACL check SHALL accept the connection"
+        tests:
+          - cmd:cargo test -p flight-security
+      - id: AC-110.2
+        description: "WHEN an IPC connection is attempted by a user not listed in the ACL THEN the ACL check SHALL reject the connection"
+        tests:
+          - cmd:cargo test -p flight-security
+      - id: AC-110.3
+        description: "WHEN a GetSecurityStatus RPC response is serialized and deserialized THEN all security status fields SHALL be preserved across the round-trip"
+        tests:
+          - flight-ipc::integration_tests::test_get_security_status_response_round_trip

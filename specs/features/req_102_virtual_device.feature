@@ -24,3 +24,21 @@ Feature: Virtual device and OFP-1 integration
     Given an OFP-1 protocol emulator
     When the handshake sequence is initiated
     Then the emulator SHALL report successful capability negotiation
+
+  @AC-102.5
+  Scenario: Button state written to a virtual device is correctly reported
+    Given a virtual device with button controls registered
+    When a button state is written to the device
+    Then the reported button output SHALL reflect the written state
+
+  @AC-102.6
+  Scenario: OFP-1 emulator handles an emergency stop without panicking
+    Given an initialised OFP-1 emulator
+    When an emergency stop command is issued
+    Then the emulator SHALL enter a safe stopped state without panicking
+
+  @AC-102.7
+  Scenario: Duplicate virtual device registration is rejected
+    Given a device manager with a virtual device already registered
+    When a second device with the same identifier is registered
+    Then the registration SHALL be rejected with an appropriate error
