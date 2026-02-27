@@ -169,6 +169,11 @@ impl AuditLog {
         self.entries.len()
     }
 
+    /// Returns `true` if the audit log contains no entries.
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
     /// Serialize all entries to a JSON array string.
     pub fn export_json(&self) -> String {
         use std::fmt::Write;

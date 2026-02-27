@@ -8,16 +8,10 @@
 //! on the hot path.
 
 /// Configuration for effect ramping behaviour.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct RampConfig {
     /// Number of ticks over which to ramp. 0 = immediate transition.
     pub duration_ticks: u32,
-}
-
-impl Default for RampConfig {
-    fn default() -> Self {
-        Self { duration_ticks: 0 }
-    }
 }
 
 /// Linear magnitude ramp between two values over a fixed number of ticks.

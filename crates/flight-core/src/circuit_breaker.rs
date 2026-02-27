@@ -74,12 +74,13 @@ impl CircuitBreaker {
         match self.state {
             CircuitState::Closed | CircuitState::HalfOpen => CallResult::Allowed,
             CircuitState::Open => {
-                if let Some(last) = self.last_failure_time {
-                    if last.elapsed() >= self.config.timeout {
-                        self.state = CircuitState::HalfOpen;
-                        self.success_count = 0;
-                        return CallResult::Allowed;
-                    }
+                if self
+                    .last_failure_time
+                    .is_some_and(|last| last.elapsed() >= self.config.timeout)
+                {
+                    self.state = CircuitState::HalfOpen;
+                    self.success_count = 0;
+                    return CallResult::Allowed;
                 }
                 self.total_rejections += 1;
                 CallResult::Rejected

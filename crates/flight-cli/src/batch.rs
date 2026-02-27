@@ -79,7 +79,7 @@ pub struct BatchCommand {
 /// A failure in one operation does **not** prevent subsequent operations from
 /// running.
 pub fn execute_batch(ops: &[BatchOp]) -> BatchResult {
-    let results = ops.iter().map(|op| execute_single(op)).collect();
+    let results = ops.iter().map(execute_single).collect();
     BatchResult { results }
 }
 

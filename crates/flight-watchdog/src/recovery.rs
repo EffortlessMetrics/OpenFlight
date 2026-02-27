@@ -61,8 +61,7 @@ impl RecoveryPolicy {
     pub fn evaluate(&self, component: &str, failure_count: u32) -> RecoveryAction {
         self.policies
             .iter()
-            .filter(|r| r.component == component && failure_count >= r.on_failure_count)
-            .last()
+            .rfind(|r| r.component == component && failure_count >= r.on_failure_count)
             .map(|r| r.action.clone())
             .unwrap_or(RecoveryAction::NoAction)
     }
