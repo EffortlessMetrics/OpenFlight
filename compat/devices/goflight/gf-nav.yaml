@@ -1,0 +1,43 @@
+# GoFlight GF-NAV Navigation Radio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight GF-NAV — VOR/ILS navigation radio tuning panel with active/standby
+# frequency selectors, NAV/ILS mode buttons, and OBS knob.
+# VID 0x0E9F confirmed. PID 0x000E is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-NAV Navigation Radio Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x000E   # Community estimate — GF-NAV
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 3
+    names: [freq_mhz, freq_khz, obs]
+    resolution_bits: 8
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x000E is a community estimate for the GF-NAV. Update when confirmed."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "GoFlight GF-NAV navigation radio panel. PID unconfirmed. VID 0x0E9F confirmed. Last reviewed: 2026-02."

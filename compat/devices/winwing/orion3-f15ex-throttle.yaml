@@ -1,0 +1,61 @@
+# WinWing Orion 3 F-15EX Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing Orion 3 throttle with F-15EX dual-handle grip assembly.
+# Companion to the Orion 3 F-15EX Stick (orion3-f15ex-stick.yaml, PID 0xBD38).
+# Orion 3 throttle PIDs observed in community: F-16EX throttle = 0xBD48,
+# F-18EX throttle = 0xBD50 (estimate), F-15EX throttle estimated at 0xBD42.
+# PID 0xBD42 is a community estimate — verify via linux-hardware.org lsusb.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 F-15EX Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD42   # Community estimate — F-15EX throttle for Orion 3 base
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad (WinWing reports as Gamepad)
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 48
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD42 is a community estimate for the F-15EX throttle variant.
+      Orion 3 F-16EX throttle = 0xBD48 (confirmed); F-18EX = 0xBD50 (estimate).
+      Update when confirmed via linux-hardware.org lsusb probe.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers report as separate axes.
+      OpenFlight exposes them individually and can derive a combined throttle
+      virtual axis by averaging them.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to axis positions or discrete commands.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    WinWing Orion 3 F-15EX dual-handle throttle. PID 0xBD42 is a community
+    estimate. Typically paired with orion3-f15ex-stick.yaml (PID 0xBD38).
+    Last reviewed: 2026-02.

@@ -1,0 +1,51 @@
+# RealSimGear GTX 327 Transponder Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear GTX 327 — replica transponder bezel for the Garmin GTX 327
+# Mode C transponder. Adds 4-digit squawk entry, IDENT, and mode selector
+# buttons to a G1000-based or standalone GA cockpit.
+# VID 0x04D8 confirmed for RealSimGear (Microchip Technology firmware).
+# PID 0xF250 is a community estimate in the RealSimGear range.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTX 327 Transponder Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF250   # Community estimate — GTX 327
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF250 is a community estimate. RealSimGear PIDs are in the 0xF2xx range
+      (GNS430=~0xF240, GNS530=~0xF244, GTN650=~0xF246, GTN750=0xF248).
+      Update when confirmed via lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTX 327 transponder bezel. PID 0xF250 is unconfirmed.
+    VID 0x04D8 confirmed for RealSimGear platform.
+    Pairs with G1000 panels (g1000-pfd.yaml, g1000-mfd.yaml). Last reviewed: 2026-02.

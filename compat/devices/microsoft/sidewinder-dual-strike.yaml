@@ -1,0 +1,46 @@
+# Microsoft SideWinder Dual Strike
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The SideWinder Dual Strike (1999–2001) is a dual-grip gamepad with twist
+# action on the left grip, used for flight simulation on PC. Distinct from
+# the SideWinder 3D Pro in that it has dual thumb-grip form factor.
+# VID 0x045E confirmed. PID 0x0020 is from usb.ids (community-reported).
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Dual Strike"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x0020   # From usb.ids community listing
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, slider, throttle]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0020 is from the usb.ids community list; verify against hardware."
+  - id: OS_MEDIATED_HID
+    description: "May use legacy HID compatibility layer on Windows 10/11."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Microsoft SideWinder Dual Strike gamepad. PID from usb.ids. VID 0x045E confirmed. Last reviewed: 2026-02."

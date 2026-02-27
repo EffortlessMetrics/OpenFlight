@@ -1,0 +1,47 @@
+# RealSimGear GNS 480 GPS/Nav/Com Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear GNS 480 — replica bezel for the Garmin GNS 480 (formerly CNX80)
+# GPS/Nav/Com unit. Provides physical button/knob controls for the GNS 480
+# flight plan and radio functions.
+# VID 0x04D8 confirmed for RealSimGear. PID 0xF252 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNS 480 Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF252   # Community estimate — GNS 480
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [outer_knob, inner_knob]
+    resolution_bits: 12
+  buttons: 20
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF252 is a community estimate. Update when confirmed via lsusb.
+      RealSimGear PIDs are in the 0xF2xx range.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "RealSimGear GNS 480 bezel. PID 0xF252 unconfirmed. VID 0x04D8 confirmed. Last reviewed: 2026-02."

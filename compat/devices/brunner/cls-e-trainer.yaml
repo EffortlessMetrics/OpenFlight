@@ -1,0 +1,56 @@
+# Brunner CLS-E Trainer Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLS-E Trainer — aviation training variant of the CLS-E yoke,
+# typically integrated into FAA-qualified AATD or BATD simulator devices.
+# Features enhanced FFB range for aerobatic and unusual attitude training.
+# VID 0x25BB confirmed. PID 0x0067 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Trainer Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0067   # Community estimate — Trainer variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0067 is a community estimate for the CLS-E Trainer. Full CLS-E = 0x0063,
+      Compact = 0x0065 (both estimated). Update when confirmed from Brunner.
+  - id: FFB_CHANNEL
+    description: >
+      Force feedback uses Brunner's proprietary protocol. Enhanced torque range
+      in Trainer variant allows aerobatic and stick-shaker simulation.
+  - id: TRAINING_DEVICE_ONLY
+    description: >
+      Typically integrated into a complete Brunner simulator package; not sold as
+      a standalone consumer unit. Connection may be via internal USB hub.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E Trainer yoke for FAA-qualified aviation training devices.
+    PID 0x0067 is unconfirmed. VID 0x25BB confirmed. Last reviewed: 2026-02.

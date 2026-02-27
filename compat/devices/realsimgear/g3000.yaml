@@ -1,0 +1,47 @@
+# RealSimGear G3000 Integrated Avionics Bezel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear G3000 — replica bezel for the Garmin G3000 integrated avionics
+# suite (used in TBM 930, HondaJet, Cirrus SF50, etc.). Provides touchscreen
+# bezel button controls for the G3000 GTC and PFD displays.
+# VID 0x04D8 confirmed for RealSimGear. PID 0xF258 is a community estimate.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3000 Avionics Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF258   # Community estimate — G3000
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [outer_knob, inner_knob]
+    resolution_bits: 12
+  buttons: 24
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0xF258 is a community estimate for the G3000. Update when confirmed."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G3000 bezel for TBM/HondaJet/Cirrus SF50 cockpit builds.
+    PID 0xF258 unconfirmed. VID 0x04D8 confirmed. Last reviewed: 2026-02.

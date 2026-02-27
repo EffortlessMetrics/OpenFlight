@@ -1,0 +1,57 @@
+# Leo Bodnar BU0836A USB Joystick Interface (Rev A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Leo Bodnar BU0836A — revised "A" version of the BU0836 (bu0836.yaml).
+# The BU0836A adds analog input conditioning improvements and additional
+# breakout header options vs the original BU0836.
+# VID 0x1DD2 confirmed (Leo Bodnar Ltd). PID is a community estimate;
+# BU0836 uses 0x000A. The BU0836A likely uses 0x000B or 0x000C.
+# PID 0x000B is an estimate — verify via devicehunt.com or lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BU0836A USB Joystick Interface (Rev A)"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2
+    product_id: 0x000B   # Community estimate; BU0836 = 0x000A
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 12
+    names: [a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000B is a community estimate for the BU0836A revision.
+      BU0836 (original) uses 0x000A. Update when confirmed from Leo Bodnar
+      documentation or lsusb on real hardware.
+  - id: DIY_BOARD
+    description: >
+      The BU0836A is a DIY joystick interface board; axis count and button
+      count depend on what is wired to the board. This manifest describes
+      the maximum hardware capability (12 axes, 32 buttons).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BU0836A — revised 12-axis/32-button DIY joystick interface.
+    PID 0x000B is a community estimate. VID 0x1DD2 confirmed.
+    Last reviewed: 2026-02.

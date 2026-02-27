@@ -1,0 +1,55 @@
+# WinWing Orion 2 F/A-18C Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing Orion 2 throttle fitted with F/A-18C dual-handle grip assembly.
+# The Orion 2 F/A-18C stick is PID 0xBE63 (confirmed, see orion2-f18c-stick.yaml).
+# The Orion 2 TFRP Rudder is 0xBE64 (noted in orion2-f18c-stick.yaml).
+# The F/A-18C throttle for the Orion 2 base is estimated at PID 0xBE6A;
+# the F-16 Orion 2 throttle uses 0xBE68 (confirmed, see orion2-f16-throttle.yaml).
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 2 F/A-18C Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE6A   # Community estimate — F/A-18C throttle for Orion 2
+  hid:
+    usage_page: 0x01
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 40
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE6A is a community estimate for the Orion 2 F/A-18C throttle.
+      F-16 Orion 2 throttle = 0xBE68 (confirmed). Update when confirmed.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers are separate axes.
+  - id: ENCODER_AS_BUTTON
+    description: "Encoders generate HID button events for increment/decrement."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    WinWing Orion 2 F/A-18C throttle. PID 0xBE6A is a community estimate.
+    Pairs with orion2-f18c-stick.yaml (PID 0xBE63). Last reviewed: 2026-02.

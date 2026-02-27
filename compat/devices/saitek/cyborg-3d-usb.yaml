@@ -1,0 +1,50 @@
+# Saitek Cyborg 3D USB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Saitek Cyborg 3D USB — entry-level joystick predating the Cyborg Evo line.
+# Released circa 2001–2004, popular for budget flight simulation setups.
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0412 is reported in community USB ID databases for the Cyborg 3D USB.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg 3D USB Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0412   # Community-reported from USB ID databases
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0412 is from community USB ID databases. Update when confirmed
+      via linux-hardware.org or kernel hid-ids.h for the Cyborg 3D USB.
+  - id: OS_MEDIATED_HID
+    description: "May use a legacy HID compatibility layer on Windows 10/11."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg 3D USB — predecessor to the Cyborg Evo (cyborg-evo.yaml, 0x0460).
+    PID 0x0412 is community-reported. VID 0x06A3 confirmed. Last reviewed: 2026-02.

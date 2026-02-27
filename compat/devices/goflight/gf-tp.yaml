@@ -1,0 +1,44 @@
+# GoFlight GF-TP Transponder Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight GF-TP — desktop transponder panel replicating a Mode C/S transponder
+# with 4-digit squawk entry, IDENT button, and mode selector.
+# VID 0x0E9F (GoFlight Inc.) confirmed from gf-mcp.yaml.
+# PID 0x0009 is a community estimate based on the GoFlight product range.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-TP Transponder Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0009   # Community estimate — GF-TP
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0009 is a community estimate for the GF-TP. Update when confirmed."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "GoFlight GF-TP transponder panel. PID unconfirmed. VID 0x0E9F confirmed. Last reviewed: 2026-02."

@@ -1,0 +1,49 @@
+# WinWing F/A-18C Kneeboard Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F/A-18C kneeboard-area panel — additional button/switch panel
+# mounted in the lower cockpit area of an F/A-18C sim pit, covering systems
+# such as fuel, ECS, and miscellaneous switches not on the UFC/ICP.
+# PID is a community estimate. PID 0xBE82 is an estimate — verify via lsusb.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18C Kneeboard Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE82   # Community estimate — F/A-18C kneeboard panel
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE82 is a community estimate. Update when confirmed via
+      linux-hardware.org or WinWing community sources.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C kneeboard panel. PID 0xBE82 is unconfirmed.
+    Complements f18-pre-flight-panel.yaml and f18-combat-ready-panel.yaml.
+    Last reviewed: 2026-02.

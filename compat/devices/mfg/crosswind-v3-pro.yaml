@@ -1,0 +1,55 @@
+# MFG Crosswind V3 Pro Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MFG Crosswind V3 Pro — "Pro" upgrade variant of the Crosswind V3 pedals
+# (crosswind-v3.yaml, PID 0x0003) with heavier spring assembly and metal
+# damping cylinder for improved centre force and load feel on toe brakes.
+# VID 0x1551 confirmed (see crosswind-v3.yaml). PID 0x0004 is an estimate
+# (V1=0x0001, V2=0x0002 confirmed, V3=0x0003 estimated in crosswind-v3.yaml).
+# The Pro upgrade may share PID 0x0003 or use 0x0004 — field verification needed.
+
+schema_version: "1"
+
+device:
+  name: "MFG Crosswind V3 Pro Rudder Pedals"
+  vendor: "MFG (Milan Folcan)"
+  usb:
+    vendor_id: 0x1551
+    product_id: 0x0004   # Community estimate — V3 Pro (V3 standard = 0x0003)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0004 is a community estimate for the V3 Pro upgrade.
+      The V3 Pro is a hardware upgrade to the V3; it may share PID 0x0003
+      with the standard V3 rather than using a distinct PID.
+      Update when confirmed via linux-hardware.org or MFG community sources.
+  - id: DIFFERENTIAL_TOE_BRAKES
+    description: "Left and right toe brakes are independent axes."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MFG Crosswind V3 Pro — heavy-spring upgrade variant of the V3 pedals.
+    May share PID 0x0003 with standard V3 (crosswind-v3.yaml). PID unconfirmed.
+    VID 0x1551 confirmed. Last reviewed: 2026-02.

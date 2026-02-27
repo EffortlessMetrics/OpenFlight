@@ -1,0 +1,56 @@
+# Brunner CLS-E Compact Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner CLS-E Compact — a smaller form-factor version of the Brunner CLS-E
+# force feedback yoke (cls-e.yaml), designed for home simulator installations
+# where space is limited. Uses the same VID 0x25BB (Brunner Elektronik AG).
+# PID is a community estimate; the full CLS-E uses 0x0063 (confirmed).
+# PID 0x0065 is an estimate — verify via the-sz.com USB ID database.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Compact Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0065   # Community estimate; full CLS-E = 0x0063
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 16
+  buttons: 6
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0065 is a community estimate for the CLS-E Compact.
+      Full CLS-E uses 0x0063 (confirmed). Update when confirmed from
+      Brunner documentation or the-sz.com USB ID database.
+  - id: FFB_CHANNEL
+    description: >
+      Force feedback uses Brunner's proprietary flight dynamics protocol
+      over the USB HID interface. The standard HID axis/button data is
+      read independently of the FFB channel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E Compact — reduced form factor version of the CLS-E yoke.
+    PID 0x0065 is unconfirmed. VID 0x25BB confirmed.
+    Last reviewed: 2026-02.

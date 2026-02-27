@@ -1,0 +1,52 @@
+# WinWing SIMAPP Pro NAV Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing SIMAPP Pro NAV — navigation management panel add-on for the
+# SIMAPP Pro cockpit ecosystem (companion to FCU, EFIS, and VSD panels).
+# PID is a community estimate in the SIMAPP Pro family range.
+# PID 0xBE90 is an estimate — verify via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SIMAPP Pro NAV Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBE90   # Community estimate — SIMAPP Pro NAV
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [obs1, obs2]
+    resolution_bits: 12
+  buttons: 24
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE90 is a community estimate for the SIMAPP Pro NAV panel.
+      Update when confirmed via linux-hardware.org lsusb probe.
+  - id: ENCODER_AS_BUTTON
+    description: "OBS encoder knobs generate HID button events (increment/decrement)."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SIMAPP Pro NAV panel. PID 0xBE90 is unconfirmed.
+    Pairs with simapp-pro-fcu.yaml and simapp-pro-fcu-efis-combo.yaml.
+    Last reviewed: 2026-02.

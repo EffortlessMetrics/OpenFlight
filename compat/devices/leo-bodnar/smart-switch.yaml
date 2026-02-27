@@ -1,0 +1,51 @@
+# Leo Bodnar Smart Switch USB Encoder Board
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Leo Bodnar Smart Switch board — USB HID encoder/button interface designed
+# for rotary encoders and push-button switches in DIY sim panels.
+# Supports up to 8 rotary encoders (as button pairs) and additional digital
+# inputs. VID 0x1DD2 confirmed. PID is a community estimate at 0x0012.
+
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar Smart Switch USB Encoder Board"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2
+    product_id: 0x0012   # Community estimate — Smart Switch board
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0012 is a community estimate. Update when confirmed via lsusb."
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders connected to the board report as button pairs
+      (clockwise = odd button, counter-clockwise = even button). Map
+      encoder pairs to axis increments or discrete commands in the profile.
+  - id: DIY_BOARD
+    description: "Button count depends on attached hardware; manifest shows board maximum."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Leo Bodnar Smart Switch encoder board. PID unconfirmed. VID 0x1DD2 confirmed. Last reviewed: 2026-02."

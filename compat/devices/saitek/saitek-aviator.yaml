@@ -1,0 +1,54 @@
+# Saitek Aviator Joystick (PC/Mac)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Saitek Aviator — dual-throttle joystick released circa 2008–2012,
+# designed specifically for flight simulation with twin-engine capability.
+# Features two independent throttle levers plus a rudder twist axis.
+# VID 0x06A3 confirmed. PID 0x0BAC is reported in community USB databases.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Aviator Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0BAC   # Community-reported PID for the Aviator
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle_l, throttle_r]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0BAC is from community USB databases; update when confirmed via
+      linux-hardware.org or Saitek community archives.
+  - id: SPLIT_THROTTLE
+    description: >
+      Left and right throttle levers report as separate axes (throttle_l, throttle_r).
+      Both report [0, max]; OpenFlight provides an optional combined throttle virtual axis.
+  - id: THROTTLE_NOT_CENTERED
+    description: "Both throttle axes report [0, max]; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Aviator — dual-throttle joystick for twin-engine sim setups.
+    PID 0x0BAC is community-reported. VID 0x06A3 confirmed. Last reviewed: 2026-02.

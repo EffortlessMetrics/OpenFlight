@@ -1,0 +1,49 @@
+# WinWing F-16 DDI Panel (Left)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing F-16 DDI (Digital Data Indicator) panel — left-side MFD surround
+# panel with OSB (On-Screen Button) bezel buttons for the F-16 cockpit.
+# PID is a community estimate; WinWing F-18 DDI panels use PIDs in the
+# 0xBExxx/0xBDxxx range. PID 0xBD30 is an estimate — verify via lsusb.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 DDI Panel (Left)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBD30   # Community estimate — F-16 DDI Left
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD30 is a community estimate for the F-16 DDI Left panel.
+      Update when confirmed via linux-hardware.org or WinWing community sources.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 DDI (Digital Data Indicator) left panel — 20 OSB buttons for
+    MFD control in F-16 cockpit setup. PID 0xBD30 is unconfirmed.
+    Pairs with f16-ddi-r-panel.yaml. Last reviewed: 2026-02.

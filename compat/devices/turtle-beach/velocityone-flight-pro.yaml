@@ -1,0 +1,53 @@
+# Turtle Beach VelocityOne Flight Pro (Yoke)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Turtle Beach VelocityOne Flight Pro — premium yoke variant in the
+# VelocityOne Flight ecosystem, with increased axis resolution and
+# additional button count vs the standard VelocityOne FlightDeck
+# (velocityone-flightdeck.yaml). PID is a community estimate.
+# VelocityOne FlightDeck uses a PID in the 0x02xx range (estimate);
+# Flight Pro likely uses an adjacent PID.
+
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Flight Pro"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x10F5   # Turtle Beach Corporation
+    product_id: 0x0210  # Community estimate — VelocityOne Flight Pro
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, rudder]
+    resolution_bits: 12
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0210 is a community estimate for the VelocityOne Flight Pro.
+      Update when confirmed via linux-hardware.org or USB enumeration.
+  - id: THROTTLE_NOT_CENTERED
+    description: "Throttle axis reports [0, max]; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Flight Pro yoke. PID 0x0210 is unconfirmed.
+    Pairs with velocityone-rudder.yaml for a complete setup.
+    Last reviewed: 2026-02.
