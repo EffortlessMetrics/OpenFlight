@@ -1,0 +1,45 @@
+# GoFlight Annunciator Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight). PID 0x0083 estimated for Annunciator Panel.
+schema_version: "1"
+
+device:
+  name: "GoFlight Annunciator Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0083
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: ANNUNCIATOR_LEDS
+    description: >
+      Annunciator panel with LED indicators driven by USB HID output
+      reports. Host must push aircraft warning/caution state to
+      illuminate correct annunciator lights.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight Annunciator Panel. PID 0x0083 estimated.
+    VID 0x0E9F (GoFlight). Last reviewed: 2026-06.

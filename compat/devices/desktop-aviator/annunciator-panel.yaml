@@ -1,0 +1,44 @@
+# Desktop Aviator Annunciator Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0018 estimated for DAV Annunciator Panel.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator Annunciator Panel"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0018
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: ANNUNCIATOR_LEDS
+    description: >
+      LED annunciator panel with push-to-test buttons. Six illuminated
+      annunciator windows driven by USB HID output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator Annunciator Panel. PID 0x0018 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

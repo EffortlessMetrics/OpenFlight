@@ -1,0 +1,50 @@
+# Saitek Pro Flight Multi Panel V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek). PID 0x0D07 estimated for Multi Panel V2.
+# Updated revision of the Saitek Pro Flight Multi Panel.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Multi Panel V2"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0D07
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: MULTI_PANEL_V2
+    description: >
+      V2 revision of the Multi Panel with autopilot controls.
+      Rotary encoders for altitude, VS, heading, course, and IAS.
+      LED readout for selected autopilot values. Trim wheel included.
+  - id: SAITEK_PANEL_PROTOCOL
+    description: >
+      Uses Saitek proprietary HID panel protocol shared across the
+      panel family (Switch Panel, Radio Panel, etc.).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Multi Panel V2. PID 0x0D07 estimated.
+    VID 0x06A3 (Saitek/Logitech). Last reviewed: 2026-06.

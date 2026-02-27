@@ -1,0 +1,46 @@
+# Generic USB Force Sensing Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xF500 estimated.
+# Generic USB force sensing (non-deflection) joystick.
+schema_version: "1"
+
+device:
+  name: "Generic USB Force Sensing Stick"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF500
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 14
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: FORCE_SENSING
+    description: >
+      Non-moving force sensing joystick. Load cells measure applied
+      force rather than stick deflection. Minimal dead zone with
+      high-resolution force measurement.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB Force Sensing Stick. PID 0xF500 estimated.
+    Non-deflection force sensing input. Last reviewed: 2026-06.

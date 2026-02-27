@@ -1,0 +1,51 @@
+# Brunner CLS-E FFB Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2098 (Brunner). PID 0x5760 estimated for CLS-E FFB Pro.
+# Professional force feedback joystick with high-torque motors.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E FFB Pro Joystick"
+  vendor: "Brunner Elektronik"
+  usb:
+    vendor_id: 0x2098
+    product_id: 0x5760
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: CLS_E_FFB_PRO
+    description: >
+      Professional CLS-E FFB joystick with high-torque brushless motors.
+      Direct-drive force feedback on X and Y axes. Requires Brunner
+      CLS2Sim software for FFB effect configuration and trim settings.
+  - id: FFB_SAFETY_INTERLOCK
+    description: >
+      Hardware safety interlock cuts motor power if USB communication
+      is lost for more than 100ms. Software watchdog in CLS2Sim
+      provides additional protection layer.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E FFB Pro Joystick with force feedback.
+    PID 0x5760 estimated. VID 0x2098 (Brunner). Last reviewed: 2026-06.

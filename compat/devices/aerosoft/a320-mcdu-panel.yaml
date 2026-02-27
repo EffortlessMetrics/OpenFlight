@@ -1,0 +1,46 @@
+# Aerosoft A320 MCDU Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xCE02 estimated for A320 MCDU.
+# Airbus A320-series MCDU panel for FMGS operation.
+schema_version: "1"
+
+device:
+  name: "Aerosoft A320 MCDU Panel"
+  vendor: "Aerosoft"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xCE02
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 56
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: A320_MCDU_LAYOUT
+    description: >
+      Airbus A320 MCDU layout with alphanumeric keypad, line-select
+      keys, and Airbus-specific function keys (INIT, PERF, F-PLN, etc.).
+      Integrated LCD display for FMGS page rendering.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Aerosoft A320 MCDU Panel. PID 0xCE02 estimated.
+    Last reviewed: 2026-06.

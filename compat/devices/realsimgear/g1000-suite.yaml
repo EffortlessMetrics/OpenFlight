@@ -1,0 +1,50 @@
+# RealSimGear G1000 PFD/MFD Suite
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino-based). PID 0xEF90 estimated for G1000 Suite.
+# Combined G1000 PFD and MFD panels as integrated suite.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 PFD/MFD Suite"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0xEF90
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: G1000_SUITE
+    description: >
+      Integrated G1000 PFD and MFD panel set. Shared USB connection for
+      both panels. All rotary encoders and softkeys replicated. Backlit
+      bezel with realistic Garmin G1000 layout.
+  - id: DUAL_SCREEN
+    description: >
+      Suite uses two display outputs for PFD and MFD screens. Each display
+      shows the corresponding sim instrument via RealSimGear Air Manager plugin.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 PFD/MFD Suite. PID 0xEF90 estimated.
+    Integrated dual-panel G1000 set. Last reviewed: 2026-06.

@@ -1,0 +1,46 @@
+# OpenCockpits LCD Display Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x040A estimated for LCD Display Card.
+# USB LCD display controller for cockpit instrument readouts.
+schema_version: "1"
+
+device:
+  name: "OpenCockpits LCD Display Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x040A
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: LCD_OUTPUT_CARD
+    description: >
+      Output-only LCD display card. Drives character LCD or 7-segment
+      displays for cockpit readouts (radio frequencies, altimeter,
+      heading, etc.). Part of IOCards ecosystem.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits LCD Display Card. PID 0x040A estimated.
+    Part of IOCards ecosystem. Last reviewed: 2026-06.

@@ -1,0 +1,46 @@
+# Skalarki FCU V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0BCC estimated for Skalarki FCU V2.
+# Second-generation Airbus FCU panel with improved displays.
+schema_version: "1"
+
+device:
+  name: "Skalarki FCU V2"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0BCC
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: FCU_V2_AIRBUS
+    description: >
+      V2 Airbus FCU with improved 7-segment LED displays and more
+      accurate rotary encoder detent feel. Speed, heading, altitude,
+      and VS selectors with push/pull knobs for managed/selected modes.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki FCU V2. PID 0x0BCC estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

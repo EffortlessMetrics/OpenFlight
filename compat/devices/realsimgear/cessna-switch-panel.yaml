@@ -1,0 +1,46 @@
+# RealSimGear Cessna Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino-based). PID 0xEF80 estimated.
+# Cessna-specific switch panel with realistic toggle switches.
+schema_version: "1"
+
+device:
+  name: "RealSimGear Cessna Switch Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0xEF80
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: CESSNA_SWITCHES
+    description: >
+      Cessna 172/182 specific switch panel with magneto key switch,
+      master battery/alternator, fuel pump, pitot heat, and avionics
+      master. Realistic toggle switch feel.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Cessna Switch Panel. PID 0xEF80 estimated.
+    Last reviewed: 2026-06.

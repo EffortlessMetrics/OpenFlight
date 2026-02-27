@@ -1,0 +1,46 @@
+# SimGears Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xB200 estimated.
+# Full overhead panel with switches, rotaries, and annunciators.
+schema_version: "1"
+
+device:
+  name: "SimGears Overhead Panel"
+  vendor: "SimGears"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xB200
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [dimmer1, dimmer2]
+    resolution_bits: 8
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: OVERHEAD_PANEL
+    description: >
+      Full overhead panel with toggle switches, rotary selectors,
+      guard switches, and LED annunciators. Dimmer axes for panel
+      lighting control. Multiple USB endpoints for large button count.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimGears Overhead Panel. PID 0xB200 estimated.
+    Last reviewed: 2026-06.

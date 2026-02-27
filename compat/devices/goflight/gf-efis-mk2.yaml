@@ -1,0 +1,46 @@
+# GoFlight GF-EFIS Mk2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight). PID 0x0082 estimated for GF-EFIS Mk2.
+# Second-generation EFIS control panel.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-EFIS Mk2"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0082
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: EFIS_MK2_PANEL
+    description: >
+      Mk2 EFIS panel with updated rotary selectors for range, mode,
+      and barometric pressure setting. Improved LCD contrast for
+      baro readout display.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-EFIS Mk2. PID 0x0082 estimated.
+    VID 0x0E9F (GoFlight). Last reviewed: 2026-06.

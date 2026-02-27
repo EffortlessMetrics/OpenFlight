@@ -1,0 +1,46 @@
+# RealSimGear Annunciator Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino-based). PID 0xEF81 estimated.
+# Generic annunciator panel with configurable LED indicators.
+schema_version: "1"
+
+device:
+  name: "RealSimGear Annunciator Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0xEF81
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: ANNUNCIATOR_OUTPUT
+    description: >
+      LED annunciator panel with configurable indicators. Each LED
+      is driven by USB HID output reports. Supports red, amber, and
+      green LED colors for warning/caution/advisory states.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Annunciator Panel. PID 0xEF81 estimated.
+    Last reviewed: 2026-06.
