@@ -18,12 +18,20 @@ use serde_json::json;
 use std::process;
 
 #[cfg(feature = "cli")]
+mod axis_monitor;
+#[cfg(feature = "cli")]
 mod client_manager;
 #[cfg(feature = "cli")]
 mod commands;
 mod completions;
 #[cfg(feature = "cli")]
+mod device_list;
+#[cfg(feature = "cli")]
 mod output;
+#[cfg(feature = "cli")]
+mod profile_diff;
+#[cfg(feature = "cli")]
+mod version_check;
 
 #[cfg(feature = "cli")]
 use client_manager::ClientManager;
