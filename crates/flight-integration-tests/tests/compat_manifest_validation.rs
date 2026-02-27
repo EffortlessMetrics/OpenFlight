@@ -65,8 +65,24 @@ fn compat_manifest_all_parse_as_valid_yaml() {
     }
 }
 
+/// Returns true when a manifest represents a virtual bundle or pack-level logical
+/// entry (e.g. VIRTUAL_BUNDLE, MFD pack). These entries intentionally have no
+/// single USB product_id; the real PIDs are listed in component manifests.
+fn is_virtual_bundle(doc: &serde_yaml::Value) -> bool {
+    let virtual_quirk_ids = ["VIRTUAL_BUNDLE", "MFD_PACK_SHARED_USB_HUB"];
+    if let Some(quirks) = doc["quirks"].as_sequence() {
+        return quirks.iter().any(|q| {
+            q["id"]
+                .as_str()
+                .map(|id| virtual_quirk_ids.contains(&id))
+                .unwrap_or(false)
+        });
+    }
+    false
+}
+
 /// Every manifest must have the required fields: device.name, device.usb.vendor_id,
-/// device.usb.product_id, support.tier, and support.test_coverage.
+/// device.usb.product_id (unless virtual bundle), support.tier, and support.test_coverage.
 #[test]
 fn compat_manifest_required_fields_present() {
     let mut errors: Vec<String> = Vec::new();
@@ -90,8 +106,9 @@ fn compat_manifest_required_fields_present() {
             errors.push(format!("{label}: missing device.usb.vendor_id"));
         }
 
-        // device.usb.product_id must be present
-        if doc["device"]["usb"]["product_id"].is_null() {
+        // device.usb.product_id must be present unless this is a virtual bundle/pack
+        // whose component PIDs live in separate manifests.
+        if doc["device"]["usb"]["product_id"].is_null() && !is_virtual_bundle(&doc) {
             errors.push(format!("{label}: missing device.usb.product_id"));
         }
 

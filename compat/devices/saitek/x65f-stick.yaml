@@ -1,0 +1,65 @@
+# Saitek X65F Combat Control System — Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0261 is a community estimate for the X65F stick component.
+# The X65F is Saitek's ultra-premium HOTAS released in 2009, featuring
+# metal construction and an integrated MFD on the stick. The stick and
+# throttle enumerate as separate USB HID devices.
+schema_version: "1"
+
+device:
+  name: "Saitek X65F Combat Control System Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0261      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, slider]
+    resolution_bits: 12
+  buttons: 31
+  hats: 2
+  mfd:
+    type: monochrome_lcd
+    resolution: [128, 43]
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0261 is a community estimate for the X65F joystick component.
+      No independent hardware probe has confirmed this value. Confirm with
+      lsusb or USBView on real hardware. The throttle unit uses a separate PID
+      (see x65f-throttle.yaml).
+  - id: INTEGRATED_MFD
+    description: >
+      The X65F stick includes a 128×43 monochrome LCD MFD. The MFD is accessed
+      via a vendor-specific HID report separate from axis/button data.
+      OpenFlight reads axis/button data from the standard HID path and delegates
+      MFD control to the Saitek/Logitech driver if present.
+  - id: METAL_SPRING_CENTERING
+    description: >
+      The X65F uses metal spring centering with an adjustable force setting.
+      No software deadzone is typically required; the hardware center is precise.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek's 2009 ultra-premium HOTAS. Stick and throttle are separate USB devices.
+    PID 0x0261 is unconfirmed — update when verified with lsusb. MFD feature
+    requires vendor-specific HID path. See x65f-throttle.yaml for the throttle.
+    Last reviewed: 2026-02.

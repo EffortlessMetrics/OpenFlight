@@ -1,0 +1,60 @@
+# Thrustmaster eSwap X Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster/ThrustMaster Inc.).
+# PID 0x0402 is a community estimate; not confirmed via hardware probe.
+# The eSwap X Pro is a modular Xbox-compatible controller used with MSFS
+# via the Xbox game input path. Swappable modules include a D-pad, joystick,
+# and cross modules.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster eSwap X Pro Controller"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # Thrustmaster (ThrustMaster Inc.)
+    product_id: 0x0402    # Community estimate — confirm with USBView or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 16
+  buttons: 17
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0402 is a community estimate. The eSwap X Pro may enumerate
+      under a different PID depending on firmware revision. Confirm with
+      USBView on Windows or lsusb on Linux before enabling production matching.
+  - id: XBOX_INPUT_PATH
+    description: >
+      On Windows, the eSwap X Pro is typically accessed via the Xbox game input
+      (XInput) path rather than raw HID. Raw HID access requires the controller
+      to be in DirectInput compatibility mode.
+  - id: MODULAR_THUMBSTICK
+    description: >
+      The eSwap X Pro supports swappable modules (thumbstick, D-pad, cross).
+      The HID report layout is consistent regardless of which modules are installed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    The eSwap X Pro is a gaming controller, not a dedicated flight device.
+    It is commonly listed in flight sim compatibility databases for use with
+    MSFS via Xbox game input. PID 0x0402 is unconfirmed — update when verified.
+    Last reviewed: 2026-02.
