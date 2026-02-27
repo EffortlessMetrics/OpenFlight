@@ -68,7 +68,6 @@ fn test_mongoost_stick_center_snapshot() {
 #[test]
 fn test_warbrd_center_snapshot() {
     let report = virpil_report([8192; 5], [0x00, 0x00, 0x00, 0xF0]);
-    let state =
-        parse_warbrd_report(&report, WarBrdVariant::Original).expect("valid report");
+    let state = parse_warbrd_report(&report, WarBrdVariant::Original).expect("valid report");
     insta::assert_debug_snapshot!("warbrd_center", state);
 }
