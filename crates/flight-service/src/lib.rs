@@ -56,8 +56,8 @@ mod integration_tests;
 mod test_service;
 
 pub use aircraft_auto_switch_service::{
-    AdapterConfigs, AdapterMetrics, AircraftAutoSwitchService, AircraftAutoSwitchServiceConfig,
-    BusSubscriptionConfig, ServiceMetrics,
+    AdapterConfigs, AdapterMetrics, AdapterState, AircraftAutoSwitchService,
+    AircraftAutoSwitchServiceConfig, BusSubscriptionConfig, ServiceMetrics,
 };
 pub use capability_service::{
     AxisCapabilityStatus, CapabilityService, CapabilityServiceConfig, SetCapabilityResult,

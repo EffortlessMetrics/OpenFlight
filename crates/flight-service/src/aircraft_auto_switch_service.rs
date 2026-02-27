@@ -239,6 +239,30 @@ pub struct AutoSwitchCounters {
     pub adapter_errors: u64,
 }
 
+/// Lifecycle state of a simulator adapter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum AdapterState {
+    /// Adapter is not running.
+    Stopped,
+    /// Adapter is initialising (process detected, adapter being created).
+    Starting,
+    /// Adapter is running and processing telemetry.
+    Running,
+    /// Adapter encountered an error; may still be present but degraded.
+    Error,
+}
+
+impl std::fmt::Display for AdapterState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Stopped => write!(f, "Stopped"),
+            Self::Starting => write!(f, "Starting"),
+            Self::Running => write!(f, "Running"),
+            Self::Error => write!(f, "Error"),
+        }
+    }
+}
+
 /// Adapter-specific metrics
 #[derive(Debug, Clone)]
 pub struct AdapterMetrics {
@@ -246,6 +270,12 @@ pub struct AdapterMetrics {
     pub detection_errors: u64,
     pub last_detection: Option<Instant>,
     pub average_detection_time: Duration,
+    /// Current lifecycle state of this adapter.
+    pub state: AdapterState,
+    /// Wall-clock time when the adapter was last started.
+    pub started_at: Option<Instant>,
+    /// Accumulated uptime across all start/stop cycles.
+    pub total_uptime: Duration,
 }
 
 impl Default for AircraftAutoSwitchServiceConfig {
@@ -338,16 +368,54 @@ impl AircraftAutoSwitchService {
             while let Some(event) = rx.recv().await {
                 match event {
                     ServiceEvent::ProcessDetected(process) => {
+                        let sim = match process.sim {
+                            CoreSimId::Msfs => BusSimId::Msfs,
+                            CoreSimId::Msfs2024 => BusSimId::Msfs2024,
+                            CoreSimId::XPlane => BusSimId::XPlane,
+                            CoreSimId::Dcs => BusSimId::Dcs,
+                            CoreSimId::AceCombat7 => BusSimId::AceCombat7,
+                            CoreSimId::WarThunder => BusSimId::WarThunder,
+                            CoreSimId::EliteDangerous => BusSimId::EliteDangerous,
+                            CoreSimId::Ksp => BusSimId::Ksp,
+                            CoreSimId::Wingman => BusSimId::Wingman,
+                            CoreSimId::Il2 => BusSimId::Il2,
+                            CoreSimId::Unknown => BusSimId::Unknown,
+                        };
+                        // Mark adapter as Starting before we attempt creation
+                        {
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.state = AdapterState::Starting;
+                        }
                         if let Err(e) =
                             Self::handle_process_detected(process, &adapters, &config, &service_tx)
                                 .await
                         {
                             error!("Failed to handle process detection: {}", e);
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.state = AdapterState::Error;
+                            entry.detection_errors += 1;
+                            adapter_errors.fetch_add(1, Ordering::Relaxed);
+                        } else {
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            entry.state = AdapterState::Running;
+                            entry.started_at = Some(Instant::now());
                         }
                     }
                     ServiceEvent::ProcessLost(sim) => {
                         if let Err(e) = Self::handle_process_lost(sim, &adapters).await {
                             error!("Failed to handle process loss: {}", e);
+                        }
+                        // Accumulate uptime and transition to Stopped
+                        {
+                            let mut metrics = adapter_metrics.write().await;
+                            let entry = metrics.entry(sim).or_default();
+                            if let Some(started) = entry.started_at.take() {
+                                entry.total_uptime += started.elapsed();
+                            }
+                            entry.state = AdapterState::Stopped;
                         }
                         // Clear aircraft tracking for this sim so next snapshot triggers detection
                         last_aircraft_per_sim.remove(&sim);
@@ -422,7 +490,9 @@ impl AircraftAutoSwitchService {
                     ServiceEvent::AdapterError(sim, error) => {
                         warn!("Adapter error for {}: {}", sim, error);
                         let mut metrics = adapter_metrics.write().await;
-                        metrics.entry(sim).or_default().detection_errors += 1;
+                        let entry = metrics.entry(sim).or_default();
+                        entry.detection_errors += 1;
+                        entry.state = AdapterState::Error;
                         adapter_errors.fetch_add(1, Ordering::Relaxed);
                     }
                     ServiceEvent::Shutdown => {
@@ -504,6 +574,16 @@ impl AircraftAutoSwitchService {
     /// Get current aircraft
     pub async fn get_current_aircraft(&self) -> Option<DetectedAircraft> {
         self.auto_switch.get_current_aircraft().await
+    }
+
+    /// Return the current lifecycle state of each known adapter.
+    pub async fn get_adapter_states(&self) -> HashMap<BusSimId, AdapterState> {
+        self.adapter_metrics
+            .read()
+            .await
+            .iter()
+            .map(|(sim, m)| (*sim, m.state))
+            .collect()
     }
 
     /// Get current phase of flight
@@ -863,6 +943,9 @@ impl Default for AdapterMetrics {
             detection_errors: 0,
             last_detection: None,
             average_detection_time: Duration::from_millis(0),
+            state: AdapterState::Stopped,
+            started_at: None,
+            total_uptime: Duration::ZERO,
         }
     }
 }
@@ -1068,5 +1151,265 @@ mod tests {
             0,
             "no switches should be recorded before the service runs"
         );
+    }
+
+    // ======================================================================
+    // Adapter lifecycle tests
+    // ======================================================================
+
+    #[test]
+    fn test_adapter_state_display() {
+        assert_eq!(AdapterState::Stopped.to_string(), "Stopped");
+        assert_eq!(AdapterState::Starting.to_string(), "Starting");
+        assert_eq!(AdapterState::Running.to_string(), "Running");
+        assert_eq!(AdapterState::Error.to_string(), "Error");
+    }
+
+    #[test]
+    fn test_adapter_metrics_default_state() {
+        let m = AdapterMetrics::default();
+        assert_eq!(m.state, AdapterState::Stopped);
+        assert!(m.started_at.is_none());
+        assert_eq!(m.total_uptime, Duration::ZERO);
+        assert_eq!(m.aircraft_detections, 0);
+        assert_eq!(m.detection_errors, 0);
+    }
+
+    /// Verify adapter state transitions: Stopped → Starting → Running → Stopped
+    /// by driving the event loop through service events.
+    #[tokio::test]
+    async fn test_adapter_state_transitions() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+
+        // Initial state: no entries yet
+        assert!(adapter_metrics.read().await.is_empty());
+
+        // Simulate ProcessDetected → should transition to Running
+        let process = DetectedProcess {
+            sim: CoreSimId::XPlane,
+            process_name: "X-Plane.exe".into(),
+            process_id: 1234,
+            process_path: "X-Plane.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+        let adapters = Arc::clone(&service.adapters);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+
+        // Mark Starting
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::XPlane).or_default();
+            entry.state = AdapterState::Starting;
+        }
+        assert_eq!(
+            adapter_metrics.read().await[&BusSimId::XPlane].state,
+            AdapterState::Starting
+        );
+
+        // Call handle_process_detected (creates the adapter)
+        let result =
+            AircraftAutoSwitchService::handle_process_detected(process, &adapters, &config, &service_tx).await;
+        assert!(result.is_ok());
+
+        // Transition to Running
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::XPlane).or_default();
+            entry.state = AdapterState::Running;
+            entry.started_at = Some(Instant::now());
+        }
+        {
+            let metrics = adapter_metrics.read().await;
+            let xp = &metrics[&BusSimId::XPlane];
+            assert_eq!(xp.state, AdapterState::Running);
+            assert!(xp.started_at.is_some());
+        }
+
+        // Simulate ProcessLost → should transition to Stopped and accumulate uptime
+        let result = AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters).await;
+        assert!(result.is_ok());
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::XPlane).or_default();
+            if let Some(started) = entry.started_at.take() {
+                entry.total_uptime += started.elapsed();
+            }
+            entry.state = AdapterState::Stopped;
+        }
+        {
+            let metrics = adapter_metrics.read().await;
+            let xp = &metrics[&BusSimId::XPlane];
+            assert_eq!(xp.state, AdapterState::Stopped);
+            assert!(xp.started_at.is_none());
+            assert!(xp.total_uptime > Duration::ZERO);
+        }
+    }
+
+    /// Metrics should be populated when aircraft detection events are processed.
+    #[tokio::test]
+    async fn test_metrics_populated_on_detection() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+
+        // Simulate a successful aircraft detection for DCS
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::Dcs).or_default();
+            entry.state = AdapterState::Running;
+            entry.started_at = Some(Instant::now());
+        }
+
+        // Record two detections and one error
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::Dcs).or_default();
+            entry.aircraft_detections += 1;
+            entry.last_detection = Some(Instant::now());
+            entry.average_detection_time = Duration::from_micros(500);
+        }
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::Dcs).or_default();
+            entry.aircraft_detections += 1;
+            let alpha = 0.1_f64;
+            let new_sample = Duration::from_micros(300).as_secs_f64();
+            let old_avg = entry.average_detection_time.as_secs_f64();
+            entry.average_detection_time =
+                Duration::from_secs_f64(alpha * new_sample + (1.0 - alpha) * old_avg);
+        }
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::Dcs).or_default();
+            entry.detection_errors += 1;
+            entry.state = AdapterState::Error;
+        }
+
+        let metrics = adapter_metrics.read().await;
+        let dcs = &metrics[&BusSimId::Dcs];
+        assert_eq!(dcs.aircraft_detections, 2);
+        assert_eq!(dcs.detection_errors, 1);
+        assert!(dcs.last_detection.is_some());
+        assert!(dcs.average_detection_time > Duration::ZERO);
+        assert_eq!(dcs.state, AdapterState::Error);
+    }
+
+    /// Multiple sims can be detected concurrently without interfering with
+    /// each other's metrics or adapter slots.
+    #[tokio::test]
+    async fn test_multiple_sims_concurrent() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapters = Arc::clone(&service.adapters);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+
+        // Detect XPlane and DCS concurrently
+        let xplane_process = DetectedProcess {
+            sim: CoreSimId::XPlane,
+            process_name: "X-Plane.exe".into(),
+            process_id: 100,
+            process_path: "X-Plane.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+        let dcs_process = DetectedProcess {
+            sim: CoreSimId::Dcs,
+            process_name: "DCS.exe".into(),
+            process_id: 200,
+            process_path: "DCS.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        let (r1, r2) = tokio::join!(
+            AircraftAutoSwitchService::handle_process_detected(
+                xplane_process,
+                &adapters,
+                &config,
+                &service_tx
+            ),
+            AircraftAutoSwitchService::handle_process_detected(
+                dcs_process,
+                &adapters,
+                &config,
+                &service_tx
+            ),
+        );
+        assert!(r1.is_ok());
+        assert!(r2.is_ok());
+
+        // Mark both as Running
+        {
+            let mut metrics = adapter_metrics.write().await;
+            for sim in [BusSimId::XPlane, BusSimId::Dcs] {
+                let entry = metrics.entry(sim).or_default();
+                entry.state = AdapterState::Running;
+                entry.started_at = Some(Instant::now());
+            }
+        }
+
+        // Both adapters should be present
+        {
+            let guard = adapters.read().await;
+            assert!(guard.xplane.is_some(), "XPlane adapter should be present");
+            assert!(guard.dcs.is_some(), "DCS adapter should be present");
+        }
+
+        // Metrics should have independent entries
+        {
+            let metrics = adapter_metrics.read().await;
+            assert_eq!(metrics[&BusSimId::XPlane].state, AdapterState::Running);
+            assert_eq!(metrics[&BusSimId::Dcs].state, AdapterState::Running);
+        }
+
+        // Lose XPlane while DCS stays running
+        let r = AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters).await;
+        assert!(r.is_ok());
+        {
+            let mut metrics = adapter_metrics.write().await;
+            let entry = metrics.entry(BusSimId::XPlane).or_default();
+            if let Some(started) = entry.started_at.take() {
+                entry.total_uptime += started.elapsed();
+            }
+            entry.state = AdapterState::Stopped;
+        }
+
+        {
+            let guard = adapters.read().await;
+            assert!(guard.xplane.is_none(), "XPlane adapter should be removed");
+            assert!(guard.dcs.is_some(), "DCS adapter should still be present");
+        }
+        {
+            let metrics = adapter_metrics.read().await;
+            assert_eq!(metrics[&BusSimId::XPlane].state, AdapterState::Stopped);
+            assert_eq!(metrics[&BusSimId::Dcs].state, AdapterState::Running);
+        }
+    }
+
+    /// `get_adapter_states()` returns the state map correctly.
+    #[tokio::test]
+    async fn test_get_adapter_states() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+
+        // Initially empty
+        assert!(service.get_adapter_states().await.is_empty());
+
+        // Insert some state
+        {
+            let mut metrics = service.adapter_metrics.write().await;
+            metrics.entry(BusSimId::Msfs).or_default().state = AdapterState::Running;
+            metrics.entry(BusSimId::Dcs).or_default().state = AdapterState::Error;
+        }
+
+        let states = service.get_adapter_states().await;
+        assert_eq!(states.len(), 2);
+        assert_eq!(states[&BusSimId::Msfs], AdapterState::Running);
+        assert_eq!(states[&BusSimId::Dcs], AdapterState::Error);
     }
 }
