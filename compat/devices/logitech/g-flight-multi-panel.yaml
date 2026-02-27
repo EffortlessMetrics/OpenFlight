@@ -1,0 +1,72 @@
+# Logitech G Flight Multi Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 is shared by Saitek and Logitech (Logitech acquired Saitek in 2016).
+# PID 0x0D06 — G Flight Multi Panel (autopilot / avionics panel with LCD).
+# Originally sold under Saitek branding; re-released under Logitech branding
+# after the 2016 acquisition with unchanged VID/PID.
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Multi Panel"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D06      # G Flight Multi Panel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+  buttons: 17
+  hats: 0
+  force_feedback: false
+  lcd:
+    lines: 2
+    chars_per_line: 8
+    backlight: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: ROTARY_ENCODER_AS_BUTTONS
+    description: >
+      The central selector knob (AP / HDG / VS / ALT / IAS / CRS) reports
+      rotate-up and rotate-down as paired momentary button events, not as
+      an analog axis. Each detent produces a single button-press event on
+      the corresponding direction input.
+  - id: FIVE_WAY_SELECTOR
+    description: >
+      A 5-way push-and-rock selector (UP / DOWN / LEFT / RIGHT / PUSH)
+      accounts for five of the 17 reported button inputs. All five
+      directions are independent momentary events.
+  - id: LCD_OUTPUT_REPORT
+    description: >
+      The 2×8-character LCD is driven by USB HID output reports using a
+      vendor-specific report format. Text strings must be written with a
+      panel-specific framing header; the device does not accept raw ASCII
+      writes. OpenFlight uses the pre-built Saitek/Logitech panel protocol
+      for all LCD updates.
+  - id: SAITEK_ALIAS
+    description: >
+      PID 0x0D06 / VID 0x06A3 was originally released under Saitek branding.
+      Logitech re-released it with identical USB identifiers after the 2016
+      acquisition. Both vendor names refer to the same physical product.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VID 0x06A3 / PID 0x0D06. Autopilot panel with 2×8 LCD, 13 AP/mode
+    buttons, and a 5-way selector. Widely used in home cockpit builds.
+    Button count and LCD format are community-documented.
+    HIL verification pending.
+    Last validated: 2026-02.

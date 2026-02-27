@@ -306,6 +306,10 @@ async fn cache_invalidation_followed_by_redetect() {
 }
 
 /// Sending telemetry that consistently describes ground phase sets current PoF.
+///
+/// The PoF tracker requires N+1 calls to confirm a transition with
+/// `consecutive_frames_required = N` (first call queues the candidate,
+/// subsequent calls accumulate the counter).  We send 3 frames to be safe.
 #[tokio::test]
 async fn telemetry_update_sets_phase_of_flight() {
     let mut config = fixture_config();
@@ -317,13 +321,17 @@ async fn telemetry_update_sets_phase_of_flight() {
     auto_switch.start().await.unwrap();
 
     let snap = ground_snapshot();
-    auto_switch.on_telemetry_update(snap).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    // Send multiple frames: the first queues the candidate; subsequent ones
+    // satisfy the consecutive-frames requirement.
+    for _ in 0..3 {
+        auto_switch.on_telemetry_update(snap.clone()).await.unwrap();
+    }
+    tokio::time::sleep(Duration::from_millis(150)).await;
 
     let pof = auto_switch.get_current_pof().await;
     assert!(
         pof.is_some(),
-        "phase of flight should be set after telemetry update"
+        "phase of flight should be set after telemetry updates"
     );
     assert_eq!(pof, Some(PhaseOfFlight::Ground));
 }

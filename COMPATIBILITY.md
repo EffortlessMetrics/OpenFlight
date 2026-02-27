@@ -31,6 +31,10 @@
 | Leo Bodnar USB Joystick | 0x1DD2 | 0x0009 | 2 | 8 | ✗ | 3 |
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | 4 | 12 | ✗ | 2 |
 | Logitech Force 3D Pro | 0x046D | 0xC286 | 6 | 12 | ✓ | 2 |
+| Logitech G Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 17 | ✗ | 2 |
+| Logitech G Flight Switch Panel | 0x06A3 | 0x0D67 | 0 | 20 | ✗ | 2 |
+| Logitech G Flight Throttle Quadrant | 0x046D | 0xC25A | 3 | 6 | ✗ | 2 |
+| Logitech G Flight Yoke System | 0x046D | 0xC259 | 6 | 20 | ✗ | 2 |
 | Logitech G Pro Flight Rudder Pedals | 0x046D | 0xC263 | 3 | 0 | ✗ | 2 |
 | Logitech Flight System G940 | 0x046D | 0xC287 | 11 | 31 | ✓ | 3 |
 | Logitech X52 Pro Flight Control System | 0x06A3 | 0x0762 | 7 | 39 | ✗ | 2 |

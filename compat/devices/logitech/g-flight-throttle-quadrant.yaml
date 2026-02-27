@@ -1,0 +1,65 @@
+# Logitech G Flight Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Confirmed: VID 0x046D (Logitech), PID 0xC25A — linux-hardware.org.
+# Standalone throttle quadrant add-on for the G Flight Yoke System.
+# Can also be used independently with any yoke or joystick.
+# Three levers are freely assignable to throttle / propeller / mixture
+# or any custom axis role via the OpenFlight profile.
+schema_version: "1"
+
+device:
+  name: "Logitech G Flight Throttle Quadrant"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (Logitech Inc.)
+    product_id: 0xC25A  # G Flight Throttle Quadrant — confirmed via linux-hardware.org
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [z, rz, slider]
+    resolution_bits: 12
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEVER_AXIS_NAMES
+    description: >
+      The three levers report on Z, Rz, and Slider axes in HID order.
+      By convention left-to-right maps to throttle (Z), propeller pitch
+      (Rz), and mixture (Slider), matching the standard GA power-lever
+      order. Custom single- or twin-engine assignments are done via
+      OpenFlight axis-role mappings; no firmware reconfiguration is needed.
+  - id: LEVER_DETENTS
+    description: >
+      Each lever has a physical detent notch at the full-forward (max)
+      and full-reverse (min) positions; they do not have a spring return.
+      Map the detent positions to feather, cutoff, or idle-cutoff marks
+      using OpenFlight curve snappoints.
+  - id: BASE_BUTTONS
+    description: >
+      Six momentary pushbuttons are mounted on the baseplate below the
+      levers. They are commonly used for flap increments, speed brake,
+      or trim assignments but carry no special firmware meaning.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PID 0xC25A confirmed from linux-hardware.org.
+    Typically used as an add-on to the G Flight Yoke (PID 0xC259) but
+    enumerates as a fully independent USB HID device and may be used
+    alongside any stick or yoke.
+    Last validated: 2026-02.
