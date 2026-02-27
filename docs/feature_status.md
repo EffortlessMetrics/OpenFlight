@@ -16,12 +16,12 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 417 |
-| ACs with tests | 417 |
-| ACs with Gherkin | 398 |
-| ACs with both tests + Gherkin | 398 |
-| Complete | 398 |
-| Needs Gherkin | 19 |
+| Total AC | 433 |
+| ACs with tests | 433 |
+| ACs with Gherkin | 399 |
+| ACs with both tests + Gherkin | 399 |
+| Complete | 399 |
+| Needs Gherkin | 34 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
@@ -30,8 +30,8 @@
 | Microcrates with Gherkin | 58 (86.6%) |
 | Microcrates fully covered | 58 (86.6%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 95.4% |
-| Test + Gherkin coverage | 95.4% |
+| Gherkin coverage | 92.1% |
+| Test + Gherkin coverage | 92.1% |
 
 ## BDD Microcrate Matrix
 
@@ -71,11 +71,11 @@
 | flight-ipc | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
-| flight-metrics | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-metrics | 19 | 19 | 3 | 3 | 3 | 100.0% | 15.8% | 15.8% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-open-hardware | 13 | 13 | 9 | 9 | 9 | 100.0% | 69.2% | 69.2% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
-| flight-panels-core | 4 | 4 | 3 | 3 | 3 | 100.0% | 75.0% | 75.0% |
+| flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-saitek | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
@@ -466,7 +466,7 @@
 | REQ-30 | AC-30.1 | WHEN LED state is set THEN on, off, and blink modes SHALL be applied correctly | specs/features/req_30_panel_led.feature:5<br>specs/features/req_30_panel_led.feature:11<br>specs/features/req_30_panel_led.feature:17 | 3 | ✅ Complete |
 | REQ-30 | AC-30.2 | WHEN LED updates are rate limited THEN updates SHALL not be sent more frequently than the minimum interval | specs/features/req_30_panel_led.feature:23 | 2 | ✅ Complete |
 | REQ-30 | AC-30.3 | WHEN bytecode rules are evaluated THEN LED state SHALL be updated according to the rule's logic | specs/features/req_30_panel_led.feature:29<br>specs/features/req_30_panel_led.feature:35 | 3 | ✅ Complete |
-| REQ-30 | AC-30.4 | WHEN LED targets, brightness bounds, and state transitions are exercised THEN target equality SHALL hold, brightness SHALL be clamped to [0,1], and state sequences SHALL be correct | - | 5 | 🟡 Needs Gherkin |
+| REQ-30 | AC-30.4 | WHEN LED targets, brightness bounds, and state transitions are exercised THEN target equality SHALL hold, brightness SHALL be clamped to [0,1], and state sequences SHALL be correct | specs/features/req_30_panel_led.feature:41<br>specs/features/req_30_panel_led.feature:47<br>specs/features/req_30_panel_led.feature:53 | 5 | ✅ Complete |
 | REQ-31 | AC-31.1 | WHEN tactile effects are triggered THEN intensity SHALL be validated and expired effects SHALL be discarded | specs/features/req_31_tactile_feedback.feature:5<br>specs/features/req_31_tactile_feedback.feature:11 | 2 | ✅ Complete |
 | REQ-31 | AC-31.2 | WHEN flight events are detected THEN touchdown, stall buffet, and ground roll effects SHALL fire | specs/features/req_31_tactile_feedback.feature:17<br>specs/features/req_31_tactile_feedback.feature:23<br>specs/features/req_31_tactile_feedback.feature:29 | 3 | ✅ Complete |
 | REQ-31 | AC-31.3 | WHEN the SimShaker bridge is configured THEN packets SHALL be created and sent with correct channel values | specs/features/req_31_tactile_feedback.feature:35<br>specs/features/req_31_tactile_feedback.feature:41 | 3 | ✅ Complete |
@@ -524,3 +524,19 @@
 | REQ-69 | AC-69.4 | WHEN NullRenderer methods are called THEN backend display SHALL round-trip, opacity SHALL be clamped to [0,1], and show/hide SHALL toggle the renderer's visible flag | - | 3 | 🟡 Needs Gherkin |
 | REQ-69 | AC-69.5 | WHEN OverlayService is spawned THEN it SHALL start and shut down cleanly, toggle_visible SHALL flip visibility, and notify SHALL deliver a command to the service | - | 3 | 🟡 Needs Gherkin |
 | REQ-69 | AC-69.6 | WHEN OverlayState is constructed and mutated THEN default state SHALL have expected values, set_sim and with_profile SHALL update fields, and serde round-trip SHALL preserve all state | - | 6 | 🟡 Needs Gherkin |
+| REQ-70 | AC-70.1 | WHEN MetricsRegistry is used as a MetricsCollector trait object THEN collect() SHALL return all recorded metrics and produce the same result as snapshot() | - | 2 | 🟡 Needs Gherkin |
+| REQ-70 | AC-70.2 | WHEN MetricsCollector::reset() is called via the trait THEN all counters, gauges, and histograms SHALL be cleared | - | 1 | 🟡 Needs Gherkin |
+| REQ-70 | AC-70.3 | WHEN a custom MetricsCollector implementation is provided THEN it SHALL be usable as a boxed trait object and its collect/reset methods SHALL be dispatched correctly | - | 4 | 🟡 Needs Gherkin |
+| REQ-71 | AC-71.1 | WHEN simulator metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all SimMetrics fields including frames_total, errors_total, data_rate_hz, last_packet_age_ms, profile_switches_total, and frame latency histogram | - | 2 | 🟡 Needs Gherkin |
+| REQ-71 | AC-71.2 | WHEN FFB metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all FfbMetrics fields including effects_applied_total, envelope_clamp_total, emergency_stop_total, fault_count_total, torque gauges, and effect latency histogram | - | 2 | 🟡 Needs Gherkin |
+| REQ-71 | AC-71.3 | WHEN real-time scheduler metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate RtMetrics including ticks_total, missed_deadlines_total, and the jitter histogram with correct min/max/mean | - | 2 | 🟡 Needs Gherkin |
+| REQ-71 | AC-71.4 | WHEN no metrics have been recorded or only unknown metric names appear THEN MetricsDashboard::from_snapshot SHALL return default values without panicking and all histograms SHALL be absent | - | 3 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.1 | WHEN a gauge is set and read back via gauge_value() THEN the stored value SHALL equal the written value; reading a nonexistent gauge SHALL return None | - | 2 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.2 | WHEN a counter is incremented multiple times THEN each delta SHALL be accumulated and the total SHALL appear in the next snapshot | - | 1 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.3 | WHEN NaN or infinite values are observed into a histogram THEN they SHALL be silently dropped and only finite samples SHALL be included in the summary | - | 1 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.4 | WHEN histogram observations exceed the configured capacity THEN the oldest samples SHALL be evicted and the summary count SHALL not exceed the capacity limit | - | 1 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.5 | WHEN a snapshot is taken after recording counters, gauges, and histogram observations THEN all three metric types SHALL be present in the result | - | 1 | 🟡 Needs Gherkin |
+| REQ-72 | AC-72.6 | WHEN reset() is called multiple times in succession THEN each call SHALL succeed without panic and the registry SHALL remain empty | - | 1 | 🟡 Needs Gherkin |
+| REQ-73 | AC-73.1 | WHEN the sim.connection_state gauge equals exactly 0.5 THEN the dashboard SHALL report connected=true; values below 0.5 or equal to 0.0 SHALL report connected=false | - | 3 | 🟡 Needs Gherkin |
+| REQ-73 | AC-73.2 | WHEN duplicate counter entries for the same metric name appear in a raw snapshot slice THEN the last entry in the slice SHALL take precedence in the dashboard view | - | 1 | 🟡 Needs Gherkin |
+| REQ-73 | AC-73.3 | WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow | - | 1 | 🟡 Needs Gherkin |

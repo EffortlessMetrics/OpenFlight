@@ -1,0 +1,62 @@
+# GoFlight GF-T8 Multi-Purpose Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0002 (estimated from USB device registry).
+# 8-lever motorised-capable throttle quadrant for multi-engine and GA aircraft.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-T8 Throttle Quadrant"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0002      # Estimated — GF-T8
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (axis-bearing device)
+
+capabilities:
+  axes:
+    count: 8
+    names:
+      - "Throttle 1"
+      - "Throttle 2"
+      - "Throttle 3"
+      - "Throttle 4"
+      - "Mixture 1"
+      - "Mixture 2"
+      - "Prop 1"
+      - "Prop 2"
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: CONFIGURABLE_LEVER_ASSIGNMENT
+    description: >
+      The 8 levers have no fixed function assignment. Throttle, mixture,
+      prop, condition, and flap assignments are configured in the host
+      driver or sim binding. Default axis ordering follows physical
+      left-to-right lever position.
+  - id: DETENT_BUTTONS
+    description: >
+      Each lever pair has a detent gate that fires a button event when
+      the lever passes through the idle/cutoff or TOGA notch. Button
+      indices 0–7 correspond to detent events for levers 1–8 respectively.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0002 is an estimate based on GoFlight USB device registry ordering.
+    Suitable for GA twin and heavy multi-engine aircraft cockpit builds.
+    Axis count and naming are configurable via FSUIPC GoFlight plugin.
+    Last reviewed: 2026-02.

@@ -2700,3 +2700,107 @@ requirements:
           - flight-vr-overlay::state::tests::test_sim_connection_display
           - flight-vr-overlay::state::tests::test_state_serde_round_trip
           - flight-vr-overlay::state::tests::test_with_profile
+
+  # Product Requirement: Metrics Collector Trait
+  - id: REQ-70
+    name: Metrics Collector Trait
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-70.1
+        description: "WHEN MetricsRegistry is used as a MetricsCollector trait object THEN collect() SHALL return all recorded metrics and produce the same result as snapshot()"
+        tests:
+          - flight-metrics::collector::tests::registry_collect_via_trait_returns_recorded_counter
+          - flight-metrics::collector::tests::registry_collect_equals_snapshot
+      - id: AC-70.2
+        description: "WHEN MetricsCollector::reset() is called via the trait THEN all counters, gauges, and histograms SHALL be cleared"
+        tests:
+          - flight-metrics::collector::tests::registry_reset_via_trait_clears_all_metrics
+      - id: AC-70.3
+        description: "WHEN a custom MetricsCollector implementation is provided THEN it SHALL be usable as a boxed trait object and its collect/reset methods SHALL be dispatched correctly"
+        tests:
+          - flight-metrics::collector::tests::custom_collector_usable_as_dyn_trait
+          - flight-metrics::collector::tests::custom_collector_returns_supplied_metrics
+          - flight-metrics::collector::tests::custom_collector_reset_flag_is_set
+          - flight-metrics::collector::tests::custom_collector_empty_collect_returns_empty_vec
+
+  # Product Requirement: Metrics Dashboard Snapshot
+  - id: REQ-71
+    name: Metrics Dashboard Snapshot
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-71.1
+        description: "WHEN simulator metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all SimMetrics fields including frames_total, errors_total, data_rate_hz, last_packet_age_ms, profile_switches_total, and frame latency histogram"
+        tests:
+          - flight-metrics::dashboard::tests::dashboard_sim_fields
+          - flight-metrics::dashboard::tests::sim_last_packet_age_ms_populated
+      - id: AC-71.2
+        description: "WHEN FFB metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all FfbMetrics fields including effects_applied_total, envelope_clamp_total, emergency_stop_total, fault_count_total, torque gauges, and effect latency histogram"
+        tests:
+          - flight-metrics::dashboard::tests::dashboard_ffb_fields
+          - flight-metrics::dashboard::tests::ffb_emergency_stop_and_fault_count_populated
+      - id: AC-71.3
+        description: "WHEN real-time scheduler metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate RtMetrics including ticks_total, missed_deadlines_total, and the jitter histogram with correct min/max/mean"
+        tests:
+          - flight-metrics::dashboard::tests::dashboard_rt_fields
+          - flight-metrics::dashboard::tests::rt_jitter_histogram_mean_and_bounds
+      - id: AC-71.4
+        description: "WHEN no metrics have been recorded or only unknown metric names appear THEN MetricsDashboard::from_snapshot SHALL return default values without panicking and all histograms SHALL be absent"
+        tests:
+          - flight-metrics::dashboard::tests::empty_snapshot_yields_defaults
+          - flight-metrics::dashboard::tests::histogram_absent_when_no_samples_observed
+          - flight-metrics::dashboard::tests::unknown_metrics_do_not_panic_and_leave_defaults
+
+  # Product Requirement: Metrics Registry Edge Cases
+  - id: REQ-72
+    name: Metrics Registry Edge Cases
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-72.1
+        description: "WHEN a gauge is set and read back via gauge_value() THEN the stored value SHALL equal the written value; reading a nonexistent gauge SHALL return None"
+        tests:
+          - flight-metrics::registry::tests::test_gauge_value_set_and_read
+          - flight-metrics::registry::tests::test_gauge_value_missing_returns_none
+      - id: AC-72.2
+        description: "WHEN a counter is incremented multiple times THEN each delta SHALL be accumulated and the total SHALL appear in the next snapshot"
+        tests:
+          - flight-metrics::registry::tests::test_counter_accumulates
+      - id: AC-72.3
+        description: "WHEN NaN or infinite values are observed into a histogram THEN they SHALL be silently dropped and only finite samples SHALL be included in the summary"
+        tests:
+          - flight-metrics::registry::tests::test_histogram_non_finite_ignored
+      - id: AC-72.4
+        description: "WHEN histogram observations exceed the configured capacity THEN the oldest samples SHALL be evicted and the summary count SHALL not exceed the capacity limit"
+        tests:
+          - flight-metrics::registry::tests::test_histogram_saturation_at_capacity
+      - id: AC-72.5
+        description: "WHEN a snapshot is taken after recording counters, gauges, and histogram observations THEN all three metric types SHALL be present in the result"
+        tests:
+          - flight-metrics::registry::tests::test_snapshot_contains_all_metric_types
+      - id: AC-72.6
+        description: "WHEN reset() is called multiple times in succession THEN each call SHALL succeed without panic and the registry SHALL remain empty"
+        tests:
+          - flight-metrics::registry::tests::test_reset_is_idempotent
+
+  # Product Requirement: Connection-State Threshold and Counter Boundary Conditions
+  - id: REQ-73
+    name: Connection-State Threshold and Counter Boundary Conditions
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-73.1
+        description: "WHEN the sim.connection_state gauge equals exactly 0.5 THEN the dashboard SHALL report connected=true; values below 0.5 or equal to 0.0 SHALL report connected=false"
+        tests:
+          - flight-metrics::dashboard::tests::connection_state_exactly_at_threshold_is_connected
+          - flight-metrics::dashboard::tests::connection_state_just_below_threshold_is_disconnected
+          - flight-metrics::dashboard::tests::disconnected_gauge_zero
+      - id: AC-73.2
+        description: "WHEN duplicate counter entries for the same metric name appear in a raw snapshot slice THEN the last entry in the slice SHALL take precedence in the dashboard view"
+        tests:
+          - flight-metrics::dashboard::tests::duplicate_counter_last_value_wins
+      - id: AC-73.3
+        description: "WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow"
+        tests:
+          - flight-metrics::dashboard::tests::large_counter_value_stored_correctly

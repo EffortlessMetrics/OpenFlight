@@ -1,0 +1,60 @@
+# GoFlight GF-LGT Landing Gear & Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0006 (estimated from USB device registry).
+# Landing gear lever, gear position annunciators, and trim wheel controls.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-LGT Landing Gear & Trim Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0006      # Estimated — GF-LGT
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 2
+    names:
+      - "Elevator Trim"
+      - "Rudder Trim"
+    resolution_bits: 10
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 30
+
+quirks:
+  - id: GEAR_LEVER_THREE_POSITION
+    description: >
+      The gear lever has three detented positions (UP / NEUTRAL / DOWN).
+      Each position transition fires a discrete button event rather than
+      holding a sustained button state. Host logic must track lever position.
+  - id: GEAR_ANNUNCIATOR_LEDS
+    description: >
+      Nose, left, and right gear position LEDs (red/green) are driven by
+      USB HID output reports. The host must synchronise LED state with sim
+      gear position flags; LEDs do not self-update.
+  - id: TRIM_WHEEL_ENCODER
+    description: >
+      Elevator trim is implemented as a rotary encoder (relative delta)
+      in addition to or instead of an absolute axis on some hardware
+      revisions. Verify trim behaviour against the specific unit revision.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0006 is an estimate based on GoFlight USB device registry ordering.
+    Widely used in home cockpit gear/trim replication for GA and airliner builds.
+    Gear LED feedback requires active sim telemetry integration to be functional.
+    Last reviewed: 2026-02.

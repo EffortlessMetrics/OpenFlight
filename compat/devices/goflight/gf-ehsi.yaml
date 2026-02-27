@@ -1,0 +1,57 @@
+# GoFlight GF-EHSI Electronic Horizontal Situation Indicator
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0007 (estimated from USB device registry).
+# Electronic HSI panel with course, heading, and nav source selector controls.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-EHSI Electronic HSI Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0007      # Estimated — GF-EHSI
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: COURSE_HEADING_ENCODERS
+    description: >
+      Course (CRS) and heading bug (HDG) selectors are rotary encoders
+      sending relative-delta button events. Host must accumulate deltas
+      to maintain absolute course and heading bug values.
+  - id: NAV_SOURCE_ANNUNCIATORS
+    description: >
+      NAV source selector buttons (VOR1, VOR2, ILS, ADF, GPS) include
+      LED annunciators driven by USB HID output reports. The host must
+      synchronise active-source LED state with sim nav mode flags.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the
+      GF avionics panel family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0007 is an estimate based on GoFlight USB device registry ordering.
+    Used in home cockpit instrument panel builds for GA and airliner aircraft.
+    Bidirectional HID required for NAV source annunciator LED synchronisation.
+    Last reviewed: 2026-02.
