@@ -1,0 +1,62 @@
+# GoFlight GF-39 Radio/Comm Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.).
+# PID 0x0002 — community estimate for GF-39.
+# The GF-39 is a dedicated radio/comm HF/VHF control panel featuring two
+# frequency windows, tuning encoders, and mode selection buttons. It
+# replicates the communication radio head found in light GA and transport
+# aircraft cockpits. Part of the GoFlight modular avionics panel range.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-39 Radio/Comm Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0002    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x00           # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0002 is a community estimate. GoFlight uses VID 0x0E9F; PID
+      assignments follow device model ordering. The GF-46 uses an estimated
+      PID 0x0004 (gf-46.yaml); the GF-39 is estimated lower in the range.
+      Confirm with lsusb on real hardware.
+  - id: DUAL_FREQUENCY_DISPLAY
+    description: >
+      The GF-39 has two frequency display windows (active/standby). Display
+      updates require USB HID output reports using the GoFlight panel protocol.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight's proprietary HID panel protocol shared across the
+      GF avionics panel family (GF-46, GF-EHSI, GF-MCP, etc.).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-39 Radio/Comm Panel for GA and transport cockpit simulation.
+    PID 0x0002 is a community estimate. Suitable for MSFS and X-Plane radio
+    control setups. Last reviewed: 2026-02.

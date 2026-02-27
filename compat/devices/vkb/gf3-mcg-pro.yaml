@@ -1,0 +1,61 @@
+# VKB GF3 MCG Pro (Gladiator NXT with MCG Pro grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim).
+# PID 0x0210 — community estimate for GF3 + MCG Pro grip combination.
+# The GF3 MCG Pro pairs the Gladiator NXT (3rd-generation) base with
+# the MCG Pro (Modular Combat Grip Pro) — a high-density grip module
+# featuring additional thumb buttons, a removable pinky lever, and a
+# side hat. The combined unit enumerates as a single USB HID device.
+
+schema_version: "1"
+
+device:
+  name: "VKB GF3 MCG Pro"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0210    # Community estimate — confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 42
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0210 is a community estimate for the GF3 + MCG Pro combination.
+      VKB assigns PIDs per base+grip combo. Confirm with VKBDevCfg or lsusb.
+  - id: MODULAR_GRIP
+    description: >
+      The MCG Pro grip is a modular accessory that mounts on the GF3 NXT
+      base. The grip adds a pinky lever (extra axis or buttons per VKBDevCfg
+      configuration) and a 4-way side hat. Button numbering depends on the
+      VKBDevCfg profile active on the device.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis assignment configurable in VKBDevCfg. The pinky lever may be
+      mapped to slider1 or reported as buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB GF3 MCG Pro: Gladiator NXT (3rd gen) base with MCG Pro modular grip.
+    Higher button density than standard NXT EVO. PID 0x0210 is a community
+    estimate; confirm with VKBDevCfg or lsusb. Last reviewed: 2026-02.

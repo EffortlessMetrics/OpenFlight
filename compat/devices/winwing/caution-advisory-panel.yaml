@@ -1,0 +1,56 @@
+# WinWing F-16 Caution/Advisory Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBF20 — community estimate.
+# Replicates the F-16C Caution/Advisory Panel (CAP) located on the left
+# console: a grid of labelled warning and caution indicator lights that
+# can also be pressed to acknowledge or reset caution states.
+# Each light is a backlit momentary button; output reports update LEDs.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 Caution/Advisory Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF20    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF20 is a community estimate. Confirm with lsusb or Windows
+      Device Manager. Update when a confirmed PID is available.
+  - id: LED_OUTPUT_REPORTS
+    description: >
+      Each caution/advisory indicator light is controllable via HID output
+      reports. Simulators that emit caution states can drive individual
+      LEDs. OpenFlight forwards sim caution data to the panel LEDs in
+      real-time when the appropriate sim adapter is active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 Caution/Advisory Panel (CAP). Grid of 32 backlit pushbuttons
+    matching the F-16C caution light array. Pairs with Orion 3 F-16EX HOTAS.
+    PID 0xBF20 is a community estimate. Last reviewed: 2026-02.

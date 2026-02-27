@@ -1,0 +1,62 @@
+# Saitek Pro Flight Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC).
+# PID 0x0763 — community estimate for Pro Flight Trim Panel.
+# The Pro Flight Trim Panel provides three trim wheels (aileron, elevator,
+# rudder trim) plus trim indicator lights, replicating the trim controls
+# found in GA aircraft. Complements the Multi Panel (0x0D06) and
+# Switch Panel (0x0D67) in multi-panel cockpit builds.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Trim Panel"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0763      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 3
+    names: [aileron_trim, elevator_trim, rudder_trim]
+    resolution_bits: 8
+  buttons: 3               # Trim wheel detent indicators (left/right/centre clicks)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0763 is a community estimate. Saitek Pro Flight panel PIDs span
+      0x0D05–0x0D67; the Trim Panel may use a separate range. Confirm with
+      lsusb or Windows Device Manager before deployment.
+  - id: TRIM_WHEEL_AXES
+    description: >
+      Each trim wheel reports as a continuous 8-bit axis. OpenFlight maps
+      trim wheel position to the corresponding simulator trim axis (not as
+      relative increments). Centre position is 0x80.
+  - id: SAITEK_PANEL_ECOSYSTEM
+    description: >
+      Integrates with the Saitek Pro Flight panel ecosystem (Multi Panel,
+      Switch Panel, Radio Panel). All panels enumerate as independent USB
+      HID devices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Trim Panel: three continuous trim wheels for aileron,
+    elevator, and rudder trim. PID 0x0763 is a community estimate.
+    Last reviewed: 2026-02.

@@ -1,0 +1,72 @@
+# Brunner CLX Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x25BB (Brunner Elektronik AG — registered USB vendor ID).
+# PID 0x0070 — community estimate for the CLX model.
+# The CLX is Brunner's next-generation FFB yoke, featuring a redesigned
+# dual-motor drive for independent roll and pitch resistance, an
+# integrated yoke column, and native MSFS/X-Plane plugin support.
+# Higher torque output and improved firmware compared to the CLS-E family.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLX Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0070    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [roll, pitch, rudder_input]
+    resolution_bits: 16
+  buttons: 24
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction, inertia]
+    max_update_rate_hz: 500
+    torque_limit_nm: null   # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0070 is a community estimate for the Brunner CLX. Brunner
+      registered VID 0x25BB; PID allocation above the CLS-E family (0x006x)
+      is inferred. Confirm with lsusb on real hardware.
+  - id: CLS2SIM_COMPANION
+    description: >
+      The CLX requires Brunner CLS2SIM companion software for FFB
+      configuration. OpenFlight reads axis data via HID; FFB forces must
+      be applied via CLS2SIM API or USB HID output reports.
+  - id: DUAL_MOTOR_DRIVE
+    description: >
+      The CLX uses independent motors for roll and pitch axes, allowing
+      asymmetric force profiles (e.g., differential aileron stiffness).
+      OpenFlight exposes both axes as independent FFB channels when the
+      CLX plugin is active.
+  - id: INTEGRATED_COLUMN
+    description: >
+      Unlike the CLS-E which accepts an aftermarket column, the CLX ships
+      with an integrated yoke column. The rudder_input axis reflects optional
+      rudder twist on some configurations.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Brunner CLX: next-generation dual-motor FFB yoke. Higher torque and
+    polling rate than CLS-E family. PID 0x0070 is a community estimate.
+    Requires CLS2SIM companion software for FFB. Last reviewed: 2026-02.

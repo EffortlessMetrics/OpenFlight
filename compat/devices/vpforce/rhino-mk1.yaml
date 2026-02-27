@@ -1,0 +1,65 @@
+# VPforce Rhino FFB Joystick Mk.I (first generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics — used by VPforce devices).
+# PID 0xA1BF — community estimate for the original Rhino (Mk.I / v1).
+# The Rhino Mk.I was VPforce's first production unit; the current Rhino
+# uses PID 0xA1C0 (v2) and 0xA1C1 (v3) — see rhino.yaml.
+# Rhino Mk.I units may be found in the used/enthusiast market and should
+# be enumerated separately to allow profile differentiation.
+
+schema_version: "1"
+
+device:
+  name: "VPforce Rhino FFB Joystick Mk.I"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (device MCU vendor)
+    product_id: 0xA1BF      # Community estimate for Rhino Mk.I (v1)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, sine, square, triangle, sawtooth_up, sawtooth_down, constant]
+    max_update_rate_hz: 500
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA1BF is a community estimate for the Rhino Mk.I. Current Rhino
+      v2 uses 0xA1C0 and v3 uses 0xA1C1 (see rhino.yaml). If your device
+      reports a different PID, use rhino.yaml instead. Confirm with lsusb.
+  - id: STM_VID
+    description: >
+      VID 0x0483 belongs to STMicroelectronics (the MCU manufacturer).
+      This is normal for VPforce devices and does not indicate a generic device.
+  - id: OLDER_FIRMWARE
+    description: >
+      Rhino Mk.I units may run older VPforce firmware. Ensure the companion
+      app version matches the device firmware. FFB effect support is
+      identical to later Rhino versions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VPforce Rhino Mk.I (first-generation). Shares FFB capabilities with
+    Rhino v2/v3 (rhino.yaml). PID 0xA1BF is a community estimate; confirm
+    with lsusb. For current Rhino, see rhino.yaml. Last reviewed: 2026-02.

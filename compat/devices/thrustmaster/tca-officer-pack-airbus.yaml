@@ -1,0 +1,62 @@
+# Thrustmaster TCA Officer Pack Airbus (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# This is a VIRTUAL combined-device note documenting the Thrustmaster TCA
+# Officer Pack Airbus bundle. It is NOT a real USB device — the sidestick
+# and quadrant enumerate as two independent USB HID devices on the host.
+# Component manifests:
+#   - tca-sidestick-airbus.yaml   (captain's sidestick)
+#   - tca-quadrant-airbus.yaml    (throttle quadrant)
+#   - tca-quadrant-airbus-addon.yaml (optional addon levers)
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Officer Pack Airbus (Virtual)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~    # Virtual bundle entry — no real USB PID; see component manifests
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6            # Combined: 2 sidestick (x/y) + 4 quadrant axes
+    names: [x, y, throttle, spoiler, flap, toga_toggle]
+    resolution_bits: 12
+  buttons: 28           # Approx. 14 sidestick + 14 quadrant
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest documents the TCA Officer Pack Airbus bundle as sold by
+      Thrustmaster. The sidestick and quadrant enumerate as separate USB HID
+      devices. OpenFlight merges their axis and button namespaces into a single
+      logical HOTAS device in the active profile using the combined-device
+      binding. See tca-sidestick-airbus.yaml and tca-quadrant-airbus.yaml for
+      the individual device manifests.
+  - id: ADDON_OPTIONAL
+    description: >
+      The TCA Quadrant Airbus Addon (tca-quadrant-airbus-addon.yaml) is sold
+      separately and attaches to the quadrant base. When present it enumerates
+      as a third independent USB device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Virtual bundle entry for the Thrustmaster TCA Officer Pack Airbus.
+    Components enumerate independently: TCA Sidestick Airbus (tca-sidestick-airbus.yaml)
+    and TCA Quadrant Airbus (tca-quadrant-airbus.yaml). Axis counts are combined
+    totals across both physical devices. Last reviewed: 2026-02.

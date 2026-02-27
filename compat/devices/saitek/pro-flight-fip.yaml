@@ -1,0 +1,62 @@
+# Saitek Pro Flight Instrument Panel (FIP)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC).
+# PID 0x0D46 — community-reported for the FIP LCD instrument panel.
+# The Pro Flight Instrument Panel (FIP) is a 3.5-inch LCD display unit
+# that renders virtual flight instruments (attitude, HSI, ASI, etc.)
+# driven by the Saitek FIP plugin. The USB interface provides button
+# inputs (6 soft buttons along the LCD bezel) and the LCD output channel.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Instrument Panel (FIP)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0D46      # Community-reported PID for the FIP
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (display + button device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6               # Soft buttons along the bottom of the LCD bezel
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: LCD_DISPLAY_OUTPUT
+    description: >
+      The FIP LCD accepts raw frame data via USB bulk/HID output transfers.
+      Rendering virtual instruments requires the Saitek FIP DirectOutput
+      plugin (Windows DLL) or a compatible open-source driver. OpenFlight
+      forwards instrument state variables to the FIP renderer when active.
+  - id: MULTIPLE_FIP_UNITS
+    description: >
+      Up to three FIP panels can be daisy-chained on a single USB hub.
+      Each unit enumerates with the same VID/PID; OpenFlight differentiates
+      them by USB bus address.
+  - id: PID_COMMUNITY_REPORTED
+    description: >
+      PID 0x0D46 is community-reported. The FIP uses a different HID class
+      than the Multi/Radio/Switch panels. Confirm with lsusb if unsure.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Instrument Panel (FIP): 3.5" LCD with 6 bezel buttons.
+    PID 0x0D46 is community-reported. LCD output requires DirectOutput or
+    compatible FIP driver. Last reviewed: 2026-02.

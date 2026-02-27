@@ -1,0 +1,57 @@
+# WinWing F-16 Emergency/Landing Panel (EL Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBF10 — community estimate.
+# The EL Panel replicates the F-16C/D emergency / gear / landing-light
+# section on the main instrument console: landing gear lever, gear warning
+# override, arresting hook, and emergency jettison controls.
+# Designed to pair with the Orion 2/3 F-16EX stick and throttle.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 Emergency/Landing Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBF10    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF10 is a community estimate. Confirm with lsusb or Windows
+      Device Manager. Update when a confirmed PID is available.
+  - id: GUARDED_EMERGENCY_SWITCHES
+    description: >
+      Emergency jettison and gear override switches are physically guarded.
+      OpenFlight reports the guard state and the switch state as separate
+      HID button IDs; profiles should gate emergency bindings on the guard
+      being open.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 Emergency/Landing Panel: gear lever, gear warning override,
+    arresting hook and emergency jettison controls. Companion to the Orion 2/3
+    F-16EX stick and throttle. PID 0xBF10 is a community estimate.
+    Last reviewed: 2026-02.

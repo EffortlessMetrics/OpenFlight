@@ -1,0 +1,66 @@
+# Brunner CLS-E Mk.2 Force Feedback Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x25BB (Brunner Elektronik AG — registered USB vendor ID).
+# PID 0x0065 — community estimate for CLS-E Mk.2 (revised model).
+# The CLS-E Mk.2 is an updated revision of the CLS-E yoke (PID 0x0063,
+# see cls-e.yaml). It features an improved motor drive stage, higher
+# torque output, and revised USB HID descriptor with expanded button count.
+# Requires CLS2SIM companion software for FFB configuration.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E Mk.2 Force Feedback Yoke"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x25BB
+    product_id: 0x0065    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 16
+  buttons: 20
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, friction]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM companion software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0065 is a community estimate adjacent to CLS-E (0x0063).
+      Confirm with lsusb on real hardware. The original CLS-E uses PID
+      0x0063 (cls-e.yaml); the CLS-E NG uses a different PID (cls-e-ng-yoke.yaml).
+  - id: CLS2SIM_COMPANION
+    description: >
+      Requires Brunner CLS2SIM companion software for FFB configuration and
+      yoke calibration. OpenFlight reads axis data directly via HID but FFB
+      effects must be sent via the CLS2SIM API or USB HID output reports.
+  - id: EXPANDED_BUTTON_COUNT
+    description: >
+      The Mk.2 revision adds 4 additional buttons (total 20 vs 16 on Mk.1)
+      via an extended HID button report. Ensure profiles target the Mk.2
+      PID to use the extra buttons.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Brunner CLS-E Mk.2: updated motor drive, higher torque, and extended
+    button count over the original CLS-E (cls-e.yaml). PID 0x0065 is a
+    community estimate. Requires CLS2SIM for FFB. Last reviewed: 2026-02.

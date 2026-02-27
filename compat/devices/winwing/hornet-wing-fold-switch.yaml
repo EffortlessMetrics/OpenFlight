@@ -1,0 +1,58 @@
+# WinWing F/A-18C Wing Fold / Hook Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBEA0 — community estimate.
+# The Wing Fold & Hook Panel replicates the dedicated switches on the
+# F/A-18C port console: wing fold, hook bypass, and associated guarded
+# safety switches. Typically paired with the Orion 2 F/A-18C stick.
+# Not yet confirmed via linux-hardware.org probe or USB descriptor capture.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18C Wing Fold / Hook Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEA0    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad (WinWing reports panels as Gamepad)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEA0 is a community estimate. Confirm with lsusb or Windows
+      Device Manager before deploying. Update this manifest when a confirmed
+      PID is available.
+  - id: GUARDED_SWITCHES
+    description: >
+      Several switches on this panel are guarded (require lifting a cover
+      before actuation). OpenFlight exposes both the guard and the underlying
+      switch as independent HID buttons so profiles can require the guard to
+      be lifted first.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C Wing Fold & Hook Panel replicating the port console
+    switches. Designed to accompany the Orion 2 F/A-18C or Orion 3 F/A-18
+    stick in a full Hornet cockpit build. PID 0xBEA0 is a community estimate.
+    Last reviewed: 2026-02.

@@ -1,0 +1,57 @@
+# VKB Gladiator NXT EVO Pro (Right-hand)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim).
+# PID 0x0202 — community estimate for Gladiator NXT EVO Pro R.
+# The NXT EVO Pro adds a denser button arrangement and additional hat
+# switches over the standard NXT EVO (PID 0x0200). Both use the same
+# Hall-effect gimbal. Left-hand Pro variant: PID 0x0203 (see
+# gladiator-nxt-evo-pro-left.yaml).
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO Pro"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0202    # Community estimate — confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 40
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0202 is a community estimate adjacent to NXT EVO R (0x0200) and
+      NXT EVO L (0x0201). Confirm with VKBDevCfg or lsusb. Update this
+      manifest when a confirmed PID is available.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis assignment is configurable in VKBDevCfg. OpenFlight reads the
+      reported axes; align VKBDevCfg with OpenFlight axis assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO Pro (right-hand). Enhanced-button version of the
+    NXT EVO (PID 0x0200). Shares Hall-effect gimbal with standard NXT EVO.
+    Left variant: gladiator-nxt-evo-pro-left.yaml (est. PID 0x0203).
+    PID 0x0202 is a community estimate. Last reviewed: 2026-02.

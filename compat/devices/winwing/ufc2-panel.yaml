@@ -1,0 +1,62 @@
+# WinWing UFC2 Upfront Control Panel (2nd generation)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBEF0 — community estimate.
+# The UFC2 is the second-generation WinWing Upfront Controller, featuring
+# a larger scratchpad display, revised push-button layout, and improved
+# encoder response compared to the UFC1 (PID in ufc1-hud1-panel.yaml).
+# Suitable for F/A-18C and F-16 UFC replication in MSFS, DCS, and X-Plane.
+
+schema_version: "1"
+
+device:
+  name: "WinWing UFC2 Upfront Control Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBEF0    # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBEF0 is a community estimate for the UFC2. The UFC1/HUD1 combo
+      uses a different PID (see ufc1-hud1-panel.yaml). Confirm with lsusb
+      on real hardware.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement).
+      OpenFlight maps encoder steps to discrete commands or axis slews
+      based on the active profile.
+  - id: DISPLAY_OUTPUT
+    description: >
+      The UFC2 scratchpad display accepts USB HID output reports for
+      frequency/waypoint data. Display formatting differs from the UFC1.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing UFC2 Upfront Control Panel (2nd generation). Revised layout
+    vs. UFC1 (ufc1-hud1-panel.yaml); improved encoder resolution and
+    larger scratchpad display. PID 0xBEF0 is a community estimate.
+    Last reviewed: 2026-02.

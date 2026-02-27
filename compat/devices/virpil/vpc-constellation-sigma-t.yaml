@@ -1,0 +1,59 @@
+# VIRPIL VPC Constellation SIGMA T (Throttle Grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x4390 — community estimate for Constellation SIGMA T grip when
+# mounted on a VIRPIL throttle base.
+# The Constellation SIGMA T is the throttle-optimised variant of the
+# SIGMA grip (constellation-sigma.yaml), featuring a reshaped base and
+# additional side buttons suited to throttle operation.
+# Mounts on VPC CM2/CM3 throttle bases.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation SIGMA T"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4390    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [z, slider1]
+    resolution_bits: 14
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4390 is a community estimate. VIRPIL grip+base combos use the
+      0x43xx PID range. Confirm with lsusb on real hardware. Compare with
+      vpc-constellation-alpha-t.yaml (ALPHA T grip) and
+      constellation-sigma.yaml (stick-oriented SIGMA).
+  - id: THROTTLE_GRIP_ORIENTATION
+    description: >
+      Designed for throttle use; buttons and hat positioned for left-hand
+      throttle operation. Different button layout from the stick-oriented
+      SIGMA (constellation-sigma.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation SIGMA T: throttle-optimised SIGMA grip for CM2/CM3
+    bases. PID 0x4390 is a community estimate. VIRPIL VID=0x3344.
+    Last reviewed: 2026-02.

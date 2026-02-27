@@ -1,0 +1,64 @@
+# VKB Sim Pedals Standard
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim).
+# PID 0x0131 — community estimate for Sim Pedals Standard.
+# The Sim Pedals Standard is the entry-level member of VKB's pedal line,
+# sitting below the Sim Pedals Pro (PID in sim-pedals-pro.yaml) and Ultra.
+# Uses Hall effect sensors on the rudder axis; toe brakes are optional
+# add-on modules on this variant.
+#
+# See also: sim-pedals-pro.yaml (PID 0x0132), sim-pedals-ultra.yaml.
+
+schema_version: "1"
+
+device:
+  name: "VKB Sim Pedals Standard"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0131    # Community estimate — confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0131 is a community estimate adjacent to the Sim Pedals Pro.
+      Confirm with VKBDevCfg or lsusb. Update when a confirmed PID is
+      available.
+  - id: HALL_EFFECT_RUDDER
+    description: >
+      Rudder axis uses a contactless Hall effect sensor. No mechanical wear.
+      Curve shaping should be done in OpenFlight or the simulator — no
+      firmware curve is applied.
+  - id: NO_TOE_BRAKES_STANDARD
+    description: >
+      The Standard variant does not include toe-brake axes by default. The
+      Sim Pedals Pro (sim-pedals-pro.yaml) and Ultra add independent
+      left/right toe-brake Hall effect sensors.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Sim Pedals Standard: entry-level Hall-effect rudder pedals, single
+    rudder axis only. PID 0x0131 is a community estimate. For toe brakes,
+    see sim-pedals-pro.yaml. Last reviewed: 2026-02.

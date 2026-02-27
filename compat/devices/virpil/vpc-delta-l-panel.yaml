@@ -1,0 +1,60 @@
+# VIRPIL VPC Delta L Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x025D — community estimate for VPC Delta L Panel (left-side companion
+# to the VPC Delta R Panel, PID 0x025C, vpc-delta-r-panel.yaml).
+# The Delta L Panel is a left-hand desk-mount button box with rotary encoders,
+# guarded toggle switches, and push buttons for left-console cockpit controls.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Delta L Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025D    # Community estimate adjacent to Delta R (0x025C)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x025D is a community estimate adjacent to the Delta R (0x025C).
+      VIRPIL panel PIDs are in the 0x025x range. Confirm with lsusb on
+      real hardware before deploying.
+  - id: NO_AXES
+    description: >
+      The VPC Delta L Panel is a pure button/encoder panel with no analogue
+      axes. All rotary encoders generate button-press events (increment/decrement).
+  - id: LEFT_SIDE_COMPANION
+    description: >
+      Designed as the left-side companion to the VPC Delta R Panel
+      (vpc-delta-r-panel.yaml). Both can be used simultaneously, each
+      enumerating as an independent USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Delta L Panel: left-hand companion to Delta R (vpc-delta-r-panel.yaml).
+    PID 0x025D is a community estimate in the VIRPIL panel PID range (0x025x).
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.
