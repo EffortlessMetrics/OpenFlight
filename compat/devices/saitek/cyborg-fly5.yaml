@@ -1,0 +1,52 @@
+# Saitek Cyborg FLY5 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID is community-estimated; the FLY5
+# was a budget entry in the Cyborg range with a distinctive curved body design.
+# Marketed for flight simulation use on Windows XP through 7.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg FLY5"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3     # Saitek / Logitech PLC
+    product_id: 0x0764    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0764 is a community estimate and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+  - id: TWIST_AXIS_RZ
+    description: >
+      The rz axis is a twist-grip rudder. The Z axis is the throttle lever
+      on the base. Map Z unipolar [0, 1] for throttle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg FLY5: budget entry-level flight stick with curved design.
+    PID 0x0764 community-estimated. Primarily a Windows XP–7 era device.
+    Last reviewed: 2026-02.

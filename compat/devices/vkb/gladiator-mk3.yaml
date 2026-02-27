@@ -1,0 +1,68 @@
+# VKB Gladiator Mk.III
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). The Gladiator Mk.III is the third generation of VKB's
+# budget-oriented Gladiator joystick, released before the Gladiator NXT line.
+# Differs from the Mk.II (gladiator-mk2.yaml) in improved spring mechanism
+# and revised grip ergonomics. PID is community-estimated.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator Mk.III"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0127   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0127 is a community estimate. Confirm from lsusb or VKBDevCfg
+      USB descriptor capture when hardware is available. Distinct from the
+      Gladiator Mk.II (gladiator-mk2.yaml) and Gladiator NXT (gladiator-nxt.yaml).
+  - id: LEGACY_12BIT_AXES
+    description: >
+      12-bit axis resolution (4096 steps). Predecessor to the 15-bit
+      Gladiator NXT line. Apply light smoothing if needed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator Mk.III: third-generation Gladiator joystick. Predecessor to
+    the Gladiator NXT. PID 0x0127 community-estimated. See gladiator-mk2.yaml
+    and gladiator-nxt.yaml for adjacent models.
+    VID 0x231D = VKBsim. Last reviewed: 2026-02.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software recommended for firmware updates and calibration.
+    Device enumerates as standard HID for basic use.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Plug and play with DCS built-in bindings."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; all axes and buttons recognised automatically."

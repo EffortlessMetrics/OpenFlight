@@ -1,0 +1,70 @@
+# VKB Modern Combat Grip Standard (standalone grip module)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). The VKB Modern Combat Grip Standard is the entry-level
+# variant of the MCG range, sold as a grip module that mounts on VKB Gunfighter
+# or Gladiator bases. PID is community-estimated; the MCG Pro uses a different
+# PID (see gf3-mcg-pro.yaml).
+schema_version: "1"
+
+device:
+  name: "VKB Modern Combat Grip Standard"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0222   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0222 is a community estimate. The MCG Pro (see gf3-mcg-pro.yaml)
+      uses a different PID. Confirm from lsusb or VKBDevCfg USB descriptor
+      capture when hardware is available.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKBDevCfg software. OpenFlight reads
+      whatever the device reports; align VKB config with OpenFlight axis
+      assignments.
+  - id: BASE_REQUIRED
+    description: >
+      The MCG Standard is a grip module; it requires a VKB Gunfighter Mk.3+
+      or Gladiator NXT base. The base provides the USB HID interface. This
+      manifest covers the grip+base combination.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Standard grip module. Entry-level variant of the Modern Combat Grip
+    range. PID 0x0222 community-estimated. See gf3-mcg-pro.yaml for the Pro
+    variant. VID 0x231D = VKBsim. Last reviewed: 2026-02.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software required for firmware updates, axis calibration, and
+    axis remapping.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Compatible with DCS built-in bindings on supported Gunfighter/Gladiator bases."

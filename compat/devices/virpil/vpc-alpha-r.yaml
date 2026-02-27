@@ -1,0 +1,77 @@
+# VIRPIL VPC Alpha-R Premium Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID is community-estimated; the Alpha-R is VIRPIL's premium right-hand
+# grip with additional axes (mini-stick, triggers) compared to the standard
+# Constellation Alpha. Compatible with WarBRD-D and MongoosT-50CM3 bases.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Alpha-R Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4148   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, sz, scx, scy, slider]
+    resolution_bits: 14
+  buttons: 30
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+hid_report:
+  format: "report_id(1) + axes_u16le(14) + buttons_lsb(4)"
+  total_bytes: 19
+  axis_max_raw: 16384
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4148 is a community estimate. Confirm from lsusb or VPC Configurator
+      USB descriptor capture when hardware is available.
+  - id: BASE_PROVIDES_USB
+    description: >
+      The Alpha-R grip mounts on the WarBRD-D or MongoosT-50CM3 base via the
+      internal connector. The base supplies the USB HID interface; the grip
+      buttons and axes are reported through the base PID. This manifest covers
+      the grip+base combination when the Alpha-R is detected.
+  - id: SCX_SCY_CENTER
+    description: >
+      SCX/SCY are spring-return thumb-stick axes; they center at raw 8192.
+      All other axes are full-range.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Alpha-R premium grip. Compatible with WarBRD-D and MongoosT-50CM3
+    bases. PID 0x4148 community-estimated — confirm with VPC Configurator.
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-02.
+
+driver:
+  type: virpil_vpc
+  notes: >
+    VPC Config Tool required for axis calibration and button remapping.
+    Device enumerates as standard HID after configuration.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; thumb-stick provides additional axes for hat/trim control."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; additional axes and buttons recognised automatically."

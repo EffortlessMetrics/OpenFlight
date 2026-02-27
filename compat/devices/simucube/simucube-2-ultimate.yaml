@@ -1,0 +1,77 @@
+# Simucube 2 Ultimate Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: usb.ids lists as "MCS Electronics" (Granite Devices).
+# PID 0x0D62 is a community estimate; not yet confirmed from linux-hardware.org
+# or USB descriptor capture.
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Ultimate"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D62   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 24
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 32.0   # Ultimate rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D62 is a community estimate. Confirm from lsusb or Simucube
+      True Drive USB descriptor capture before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Simucube 2 Ultimate base exposes only the rotation axis. A flight
+      grip adapter mounts on the shaft and enumerates as a separate USB HID
+      device.
+  - id: HIGH_TORQUE_SAFETY
+    description: >
+      At 32 Nm peak, hardware torque limits must be configured in Simucube
+      True Drive before use. OpenFlight enforces software torque caps via the
+      FFB safety envelope (ADR-009); ensure hardware limits are also set.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Ultimate: 32 Nm peak direct-drive base (top of the Simucube 2
+    range). VID 0x16D0 = Granite Devices. PID 0x0D62 community-estimated.
+    Safety: hardware torque limits must be set in True Drive before enabling
+    FFB. Last reviewed: 2026-02.
+
+driver:
+  type: simucube2_torque
+  notes: >
+    Same torque-command HID protocol as Simucube 2 Sport and Pro.
+    Hardware torque limits must be configured in Simucube True Drive.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Used with flight grip adapter; maximum available FFB torque."

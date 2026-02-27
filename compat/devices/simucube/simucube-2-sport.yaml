@@ -1,0 +1,83 @@
+# Simucube 2 Sport Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: usb.ids lists as "MCS Electronics" (Granite Devices).
+# PID 0x0D60 is a community estimate; not yet confirmed from linux-hardware.org
+# or USB descriptor capture.
+#
+# The Simucube 2 is a direct-drive servo base primarily used in sim racing,
+# but it is also used in combined race+flight setups via grip adapters (e.g.
+# VKB MCG, VIRPIL Alpha-R) that mount on the Simucube 2 shaft.
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Sport"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D60   # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 24  # High-resolution BISS-C encoder
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 17.0   # Sport rated peak (Nm)
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D60 is a community estimate. Confirm from lsusb or Simucube
+      True Drive USB descriptor capture before production deployment.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types. The flight-ffb Simucube2 adapter
+      synthesises waveforms and sends the result as a torque value.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The Simucube 2 Sport base exposes only the rotation axis. A flight grip
+      adapter (e.g. VKB MCG or VIRPIL Alpha-R) is mounted on the shaft; the
+      grip enumerates as a separate USB HID device. Map both devices in the
+      OpenFlight profile for a complete flight control setup.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Sport: 17 Nm peak direct-drive base. Used in combined race+flight
+    setups with flight grip adapters. VID 0x16D0 = Granite Devices.
+    PID 0x0D60 community-estimated — confirm before production deployment.
+    Last reviewed: 2026-02.
+
+driver:
+  type: simucube2_torque
+  notes: >
+    Requires Simucube True Drive for initial calibration and firmware updates.
+    After setup, operates as a standard HID torque actuator. The OpenFlight
+    Simucube2 driver translates FFB effects into raw torque commands
+    (vendor report ID 0x60).
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Used with flight grip adapter for combined race/flight setup."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Single rotation axis; map to aileron or elevator with adapter grip."

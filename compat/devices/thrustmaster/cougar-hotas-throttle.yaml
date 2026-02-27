@@ -1,0 +1,67 @@
+# Thrustmaster HOTAS Cougar Throttle (standalone USB interface)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster / Guillemot Corp). The HOTAS Cougar throttle
+# enumerates as a separate USB HID device from the stick (see cougar-hotas-stick.yaml
+# and hotas-cougar.yaml). When both devices are connected via the included
+# USB hub, each presents its own PID. PID is community-estimated.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar Throttle"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # Thrustmaster / Guillemot Corp
+    product_id: 0x0404    # Community estimate — confirm from lsusb capture
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle_left, throttle_right, scx, scy, antenna]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0404 is a community estimate for the Cougar throttle USB interface.
+      The hotas-cougar.yaml (PID from linux-hardware.org) covers the combined
+      system. Confirm this throttle-only PID from lsusb capture.
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      The Cougar throttle provides left and right throttle levers that can be
+      split or joined mechanically. In split mode both levers report independently
+      on throttle_left and throttle_right. In joined mode both report the same
+      value. Map independently in OpenFlight for dual-engine aircraft.
+  - id: CASTLE_HAT_ENCODING
+    description: >
+      Both hat switches use a directional encoding compatible with standard
+      HID. The castle-grip hat encodes 8-way direction in the high nibble of
+      the hat byte.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster HOTAS Cougar throttle USB interface (standalone enumeration).
+    The Cougar HOTAS separates stick and throttle onto distinct USB HID nodes
+    when connected via the internal hub. PID 0x0404 community-estimated.
+    See also hotas-cougar.yaml and cougar-hotas-stick.yaml.
+    Last reviewed: 2026-02.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Dual throttle levers ideal for F-15, F/A-18, and other twin-engine DCS modules."
