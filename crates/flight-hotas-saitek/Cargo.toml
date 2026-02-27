@@ -18,7 +18,7 @@ keywords = ["flight-sim", "openflight", "hotas", "saitek"]
 [features]
 default = []
 # Enable experimental MFD support (unverified protocol)
-x52-mfd-experimental = []
+x52-mfd-experimental = ["dep:hidapi"]
 # Enable experimental LED support (unverified protocol)
 x52-led-experimental = []
 # Enable experimental X56 RGB support (unverified protocol)
@@ -28,5 +28,6 @@ x56-rgb-experimental = []
 flight-hid-support = { path = "../flight-hid-support" }
 thiserror.workspace = true
 tracing.workspace = true
+hidapi = { workspace = true, optional = true }
 
 [dev-dependencies]

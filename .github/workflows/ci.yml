@@ -1040,6 +1040,24 @@ jobs:
           cargo +nightly fuzz run fuzz_profile_merge -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
+      - name: Smoke fuzz flight-axis config parsing (5s)
+        run: |
+          cd crates/flight-axis
+          cargo +nightly fuzz run fuzz_axis_config -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-axis RT pipeline (5s)
+        run: |
+          cd crates/flight-axis
+          cargo +nightly fuzz run fuzz_axis_pipeline -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-hid descriptor parsing (5s)
+        run: |
+          cd crates/flight-hid
+          cargo +nightly fuzz run fuzz_hid_descriptor -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
@@ -1258,6 +1276,24 @@ jobs:
         run: |
           cd crates/flight-writers
           cargo +nightly fuzz run fuzz_diff_apply -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-axis config parsing (60s)
+        run: |
+          cd crates/flight-axis
+          cargo +nightly fuzz run fuzz_axis_config -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-axis RT pipeline (60s)
+        run: |
+          cd crates/flight-axis
+          cargo +nightly fuzz run fuzz_axis_pipeline -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-hid descriptor parsing (60s)
+        run: |
+          cd crates/flight-hid
+          cargo +nightly fuzz run fuzz_hid_descriptor -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
   # ──────────────────────────────────────────────────────────────────────────────
