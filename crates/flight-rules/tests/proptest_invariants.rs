@@ -373,4 +373,9 @@ fn wrong_schema_versions_always_fail_validation() {
             defaults: None,
         };
         assert!(
-            s
+            schema.validate().is_err(),
+            "version {:?} should fail validation",
+            version
+        );
+    }
+}

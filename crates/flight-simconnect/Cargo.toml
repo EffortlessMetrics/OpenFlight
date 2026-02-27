@@ -48,6 +48,7 @@ integration-tests = []
 [dev-dependencies]
 tempfile = { workspace = true }
 proptest = { workspace = true }
+insta = { workspace = true }
 
 [[test]]
 name = "integration_tests"
