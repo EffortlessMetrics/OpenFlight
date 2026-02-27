@@ -20,19 +20,25 @@
 //! - Clear UI messaging when features are unavailable
 
 pub mod adapter;
+pub mod aircraft_db;
 pub mod auto_deploy;
+pub mod control_injection;
 pub mod export_lua;
 pub mod installer;
 pub mod mission_state;
 pub mod mp_detection;
+pub mod protocol;
 pub mod socket_bridge;
 pub mod tcp;
 
 pub use adapter::{DcsAdapter, DcsAdapterConfig, DcsAdapterError};
+pub use aircraft_db::{AircraftCategory, AxesProfile, DcsAircraftInfo};
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
+pub use control_injection::{DcsControlCommand, DcsControlInjector};
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use installer::{DcsInstaller, InstallResult, InstallStatus};
 pub use mission_state::{MissionPhase, MissionStateMachine, MissionTelemetry};
 pub use mp_detection::{MpSession, SessionType};
+pub use protocol::{DcsExportEntry, DcsFlightData, DcsTelemetryPacket, ParseError};
 pub use socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
