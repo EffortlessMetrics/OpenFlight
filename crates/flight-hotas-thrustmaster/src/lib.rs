@@ -7,6 +7,7 @@
 //! - T.Flight HOTAS 4 and HOTAS One controllers
 //! - T.16000M FCS joystick and TWCS Throttle
 
+pub mod cougar;
 pub mod detents;
 pub mod health;
 pub mod input;
@@ -17,6 +18,10 @@ pub mod tfrp;
 pub mod tpr;
 pub mod warthog;
 
+pub use cougar::{
+    COUGAR_MIN_REPORT_BYTES, COUGAR_STICK_PID, CougarAxes, CougarButtons, CougarHat,
+    CougarInputState, CougarParseError, parse_cougar,
+};
 pub use detents::{DetentEvent, ThrottleDetentConfig, ThrottleDetentTracker};
 pub use flight_hid_support::device_support::{
     AxisMode, T_RUDDER_PID, T16000M_JOYSTICK_PID, T16000mModel, TCA_QUADRANT_BOEING_ENG12_PID,
