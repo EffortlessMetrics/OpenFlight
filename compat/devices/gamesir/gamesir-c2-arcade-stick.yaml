@@ -1,0 +1,43 @@
+# GameSir C2 Arcade Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "GameSir C2 Arcade Stick"
+  vendor: "GameSir"
+  usb:
+    vendor_id: 0x1949       # Confirmed
+    product_id: 0x0410      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x5             # Game Pad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1949 estimated (GameSir). PID 0x0410 estimated for C2 Arcade Stick in USB mode. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GameSir C2 Arcade Stick adapted for flight sim button-box use. Limited axes but extensive button layout.
+    Wave-96 addition. Last reviewed: 2026-07.

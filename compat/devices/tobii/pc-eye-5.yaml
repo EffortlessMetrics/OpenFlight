@@ -1,0 +1,43 @@
+# Tobii PC Eye 5 (Gaze Control)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "Tobii PC Eye 5 (Gaze Control)"
+  vendor: "Tobii"
+  usb:
+    vendor_id: 0x2104       # Confirmed
+    product_id: 0x0420      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 2
+    names: [gaze_x, gaze_y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2104 confirmed (Tobii). PID 0x0420 estimated for PC Eye 5. Verify with lsusb.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Tobii PC Eye 5 — gaze-tracking accessibility device. Maps eye position to virtual axes for hands-free view control.
+    Wave-98 addition. Last reviewed: 2026-07.

@@ -1,0 +1,43 @@
+# LiDAR Gesture Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "LiDAR Gesture Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x0010      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 3
+    names: [gesture_x, gesture_y, gesture_depth]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x0010 are placeholders for LiDAR gesture controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    LiDAR gesture controller — depth-sensing gesture input for 3D cockpit interaction. Time-of-flight based tracking.
+    Wave-100 addition. Last reviewed: 2026-07.

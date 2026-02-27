@@ -1,0 +1,43 @@
+# Ultrasonic Gesture Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Ultrasonic Gesture Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x0006      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 3
+    names: [gesture_x, gesture_y, gesture_z]
+    resolution_bits: 10
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x0006 are placeholders for ultrasonic gesture controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Ultrasonic gesture controller — touchless 3D hand position tracking for contactless sim panel manipulation.
+    Wave-100 addition. Last reviewed: 2026-07.

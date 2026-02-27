@@ -1,0 +1,43 @@
+# BETAFPV LiteRadio 3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-97 addition.
+schema_version: "1"
+
+device:
+  name: "BETAFPV LiteRadio 3"
+  vendor: "BETAFPV"
+  usb:
+    vendor_id: 0x1781       # Confirmed
+    product_id: 0x089D      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 (community HID VID). PID 0x089D estimated for LiteRadio 3. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    BETAFPV LiteRadio 3 — ultra-budget FPV RC transmitter with USB joystick mode for sim training.
+    Wave-97 addition. Last reviewed: 2026-07.

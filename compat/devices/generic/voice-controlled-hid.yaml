@@ -1,0 +1,43 @@
+# Voice-Controlled HID Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "Voice-Controlled HID Adapter"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF01       # Community estimate
+    product_id: 0x000B      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF01 / PID 0x000B are placeholders for voice-controlled HID adapters.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Voice-controlled HID adapter — speech-to-button mapper for sim commands. Maps spoken phrases to HID button presses.
+    Wave-98 addition. Last reviewed: 2026-07.

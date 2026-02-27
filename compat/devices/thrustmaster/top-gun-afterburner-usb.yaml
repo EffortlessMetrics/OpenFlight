@@ -1,0 +1,43 @@
+# Thrustmaster Top Gun Afterburner USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Top Gun Afterburner USB"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Confirmed
+    product_id: 0xB302      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x044F confirmed (Thrustmaster). PID 0xB302 estimated for Top Gun Afterburner USB variant. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Top Gun Afterburner USB — movie tie-in joystick with throttle lever. Budget stick from early 2000s.
+    Wave-99 addition. Last reviewed: 2026-07.

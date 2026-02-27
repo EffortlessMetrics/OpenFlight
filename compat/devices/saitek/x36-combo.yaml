@@ -1,0 +1,43 @@
+# Saitek X36 HOTAS Combo
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Saitek X36 HOTAS Combo"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Confirmed
+    product_id: 0x0255      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 8
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x06A3 confirmed (Saitek). PID 0x0255 estimated for X36 HOTAS combo. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X36 HOTAS combo — early 2000s USB HOTAS with programmable shift states. Pioneering consumer HOTAS design.
+    Wave-99 addition. Last reviewed: 2026-07.

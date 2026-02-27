@@ -1,0 +1,43 @@
+# Strain Gauge Force-Sensing Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Strain Gauge Force-Sensing Yoke"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x000C      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [pitch_force, roll_force, pitch_rate, roll_rate]
+    resolution_bits: 16
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x000C are placeholders for strain gauge yoke controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Strain gauge force-sensing yoke — measures applied force rather than deflection for true fly-by-wire simulation.
+    Wave-100 addition. Last reviewed: 2026-07.

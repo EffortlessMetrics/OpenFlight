@@ -1,0 +1,43 @@
+# Saitek ST110 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Saitek ST110 Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Confirmed
+    product_id: 0x0160      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x06A3 confirmed (Saitek). PID 0x0160 estimated for ST110. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek ST110 — budget USB joystick from early 2000s. 3 axes with twist rudder and 6 buttons.
+    Wave-99 addition. Last reviewed: 2026-07.

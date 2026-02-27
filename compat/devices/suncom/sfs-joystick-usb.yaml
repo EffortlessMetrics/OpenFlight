@@ -1,0 +1,43 @@
+# Suncom SFS USB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Suncom SFS USB Joystick"
+  vendor: "Suncom"
+  usb:
+    vendor_id: 0x0543       # Confirmed
+    product_id: 0x00A5      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0543 confirmed (Suncom). PID 0x00A5 estimated for SFS USB joystick. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Suncom SFS USB Joystick — Suncom branded stick from the late 1990s. Simple 3-axis design with hat switch.
+    Wave-99 addition. Last reviewed: 2026-07.

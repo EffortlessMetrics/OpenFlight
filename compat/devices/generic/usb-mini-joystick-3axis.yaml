@@ -1,0 +1,43 @@
+# Generic USB Mini 3-Axis Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-96 addition.
+schema_version: "1"
+
+device:
+  name: "Generic USB Mini 3-Axis Joystick"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF00       # Community estimate
+    product_id: 0x0099      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF00 / PID 0x0099 are placeholders for mini joysticks. Verify actual IDs with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB mini 3-axis joystick. Compact form factor suitable for secondary axis control.
+    Wave-96 addition. Last reviewed: 2026-07.

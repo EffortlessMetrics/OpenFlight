@@ -1,0 +1,43 @@
+# Flex Sensor Array Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Flex Sensor Array Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x0004      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [flex1, flex2, flex3, flex4, flex5, flex6, flex7, flex8]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x0004 are placeholders for flex sensor array controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flex sensor array controller — wearable bend sensors mapped to 8 analog axes for gesture-based flight control.
+    Wave-100 addition. Last reviewed: 2026-07.

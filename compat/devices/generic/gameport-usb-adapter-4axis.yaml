@@ -1,0 +1,43 @@
+# Gameport-to-USB Adapter (4-Axis)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Gameport-to-USB Adapter (4-Axis)"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x0810       # Confirmed
+    product_id: 0x0002      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0810 estimated (common gameport adapter OEM). PID 0x0002 estimated. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic gameport-to-USB adapter for 4-axis legacy joysticks. Supports dual-stick or HOTAS gameport setups.
+    Wave-99 addition. Last reviewed: 2026-07.

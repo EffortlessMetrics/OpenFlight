@@ -1,0 +1,43 @@
+# Accessibility Foot Pedal Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "Accessibility Foot Pedal Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF01       # Community estimate
+    product_id: 0x0007      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [pedal_left, pedal_center, pedal_right]
+    resolution_bits: 10
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF01 / PID 0x0007 are placeholders for accessibility foot pedal controllers.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic accessibility foot pedal controller — 3-pedal setup for hands-free rudder and brake control.
+    Wave-98 addition. Last reviewed: 2026-07.
