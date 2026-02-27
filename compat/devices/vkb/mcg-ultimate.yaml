@@ -1,0 +1,67 @@
+# VKB MCG Ultimate Grip (Standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKB Sim, confirmed). PID 0x0221 is a community estimate for the
+# MCG Ultimate grip when purchased as a standalone controller or mounted on a
+# non-Gunfighter base. The Gunfighter Mk.IV + MCG Ultimate bundle uses PID 0x0220
+# (see gunfighter-mk4-mcg-ultimate.yaml). The MCG Ultimate features a full
+# metal construction, 3-axis hat, multiple thumb buttons, and magnetic sensors.
+schema_version: "1"
+
+device:
+  name: "VKB MCG Ultimate Grip"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x0221      # Community estimate — MCG Ultimate standalone; confirm with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0221 is a community estimate for the MCG Ultimate standalone grip.
+      The Gunfighter Mk.IV MCG Ultimate bundle uses PID 0x0220. VKB uses
+      sequential PID allocation per base+grip combination. Confirm with
+      VKBDevCfg → USB Info tab or lsusb.
+  - id: GRIP_BASE_VARIANTS
+    description: >
+      The MCG Ultimate grip can be mounted on Gunfighter Mk.III, Mk.IV, or
+      the STECS throttle base. Each base+grip combination may enumerate with
+      a different PID. This manifest targets the grip used standalone or with
+      an unrecognised base.
+  - id: HALL_EFFECT_AXES
+    description: >
+      All primary axes use VKB contactless magnetic sensors (Hall-effect).
+      15-bit resolution with no mechanical wear. Twist axis (Rz) is optional
+      depending on base configuration.
+  - id: MINISTICK
+    description: >
+      The MCG Ultimate includes a 2-axis ministick on the grip that maps
+      to Rx/Ry axes. Used for trim, view panning, or TDC slew in DCS.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB MCG Ultimate grip (standalone). VID 0x231D confirmed; PID 0x0221 is a
+    community estimate. For the Gunfighter Mk.IV bundle, see
+    gunfighter-mk4-mcg-ultimate.yaml. 15-bit Hall-effect sensors, 3 hat switches.
+    Last reviewed: 2026-06.

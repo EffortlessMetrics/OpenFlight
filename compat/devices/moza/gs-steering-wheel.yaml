@@ -1,0 +1,57 @@
+# MOZA GS Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Gudsen Technology / MOZA Racing, confirmed). PID 0x0022 is a
+# community estimate for the MOZA GS GT-style steering wheel rim with integrated
+# colour display. Compatible with MOZA DD bases. Display output is managed by
+# MOZA Pit House software.
+schema_version: "1"
+
+device:
+  name: "MOZA GS Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E    # Moza (Gudsen Technology)
+    product_id: 0x0022   # Community estimate -- MOZA GS rim
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 15
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0022 is a community estimate. Confirm with lsusb when MOZA GS
+      is attached to a base before enabling production device matching.
+  - id: WHEEL_ACCESSORY
+    description: >
+      MOZA GS is a steering wheel rim -- it requires a MOZA DD base; it
+      connects via MOZA's DIN connector, not directly via USB.
+  - id: INTEGRATED_DISPLAY
+    description: >
+      The GS wheel includes a small integrated colour display for telemetry
+      output via the MOZA Pit House software. Display output is handled by MOZA
+      firmware and is not configurable via OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA GS Steering Wheel rim -- GT-style, 15 buttons, 2 hats, integrated
+    display. VID 0x346E confirmed; PID 0x0022 is a community estimate.
+    Requires a MOZA DD base. Last reviewed: 2026-06.

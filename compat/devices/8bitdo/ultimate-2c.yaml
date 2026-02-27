@@ -1,0 +1,57 @@
+# 8BitDo Ultimate 2C Controller (USB Wired)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x6004: community estimate for the Ultimate 2C in USB wired mode.
+# The Ultimate 2C Wireless receiver uses PID 0x6002 (see ultimate-2c-wireless.yaml).
+# The Ultimate 2C is a budget variant of the Ultimate series with hall-effect sticks.
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate 2C (USB Wired)"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6004  # Ultimate 2C wired — community estimate; confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x6004 is a community estimate for the wired Ultimate 2C.
+      The wireless receiver variant uses PID 0x6002. Confirm with lsusb.
+  - id: HALL_EFFECT_STICKS
+    description: >
+      Ultimate 2C uses hall-effect sensors on both analog sticks, providing
+      lower drift and longer lifespan than potentiometer-based sticks.
+  - id: XINPUT_ON_WINDOWS
+    description: >
+      On Windows, the Ultimate 2C uses XInput mode by default, providing
+      full rumble and 16-bit axis support. DirectInput mode is available
+      via the 8BitDo Ultimate Software toggle.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Ultimate 2C wired. VID 0x2DC8 confirmed; PID 0x6004 is a community
+    estimate. Hall-effect sticks, USB wired. See ultimate-2c-wireless.yaml for
+    the wireless receiver variant. Last reviewed: 2026-06.

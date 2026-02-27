@@ -1,0 +1,52 @@
+# WinWing URSA MINOR F-16 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 (WinWing). PID 0xBD20 is a community estimate for the URSA MINOR
+# F-16 throttle grip. The URSA MINOR range provides lower-cost fighter-style
+# controls; the F-16 throttle variant includes a mini-stick and mode switches
+# replicating the F-16C throttle quadrant layout.
+schema_version: "1"
+
+device:
+  name: "WinWing URSA MINOR F-16 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098    # WinWing
+    product_id: 0xBD20   # Community estimate — URSA MINOR F-16 throttle
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, x, y]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBD20 is a community estimate. Confirm with lsusb or Windows Device
+      Manager on hardware before enabling production device matching.
+  - id: MINI_STICK_AXES
+    description: >
+      The F-16 throttle grip includes a mini-stick (X/Y axes) on the throttle
+      body for radar/cursor slew. These map to rx/ry in flight sim profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing URSA MINOR F-16 throttle. VID 0x4098 confirmed WinWing; PID 0xBD20
+    is a community estimate. Part of the URSA MINOR entry-level fighter range.
+    Last reviewed: 2026-06.

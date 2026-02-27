@@ -1,0 +1,47 @@
+# Turtle Beach VelocityOne Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1432 (Turtle Beach), PID 0xB301 — community estimate. The VelocityOne
+# Stick is the joystick unit from Turtle Beach's VelocityOne flight sim range,
+# designed to pair with the VelocityOne FlightDeck or be used standalone.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Stick"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x1432    # Turtle Beach Corporation
+    product_id: 0xB301   # Community estimate — VelocityOne Stick
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB301 is a community estimate. Confirm with Windows Device Manager
+      or lsusb on hardware before enabling production device matching.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Stick. VID 0x1432 confirmed Turtle Beach; PID
+    0xB301 is a community estimate. Designed to pair with the VelocityOne
+    FlightDeck throttle/panel unit. Last reviewed: 2026-06.

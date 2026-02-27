@@ -1,0 +1,57 @@
+# Logitech G Pro Flight Combo Pack (virtual bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual bundle combining the Logitech G Flight Yoke System (g-flight-yoke.yaml),
+# G Flight Throttle Quadrant (g-flight-throttle-quadrant.yaml), and Cessna Rudder
+# Pedals (cessna-rudder-pedals.yaml) as the most common full Logitech flight sim
+# setup. No single USB product_id -- each component enumerates separately.
+schema_version: "1"
+
+device:
+  name: "Logitech G Pro Flight Combo Pack"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: ~          # Virtual bundle -- no single PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest represents the common pairing of the G Flight Yoke
+      (g-flight-yoke.yaml), G Flight Throttle Quadrant
+      (g-flight-throttle-quadrant.yaml), and Cessna Rudder Pedals
+      (cessna-rudder-pedals.yaml). Each device enumerates separately. Configure
+      each via its individual manifest; use this entry only for profile-level
+      bundle documentation.
+  - id: TWO_USB_DEVICES
+    description: >
+      The bundle occupies two or more USB HID entries. Axis count and button
+      count are the sum of the individual components. See component manifests
+      for accurate capability details.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech G Pro Flight Combo Pack -- virtual bundle documentation entry.
+    Component manifests: g-flight-yoke.yaml + g-flight-throttle-quadrant.yaml
+    + cessna-rudder-pedals.yaml. Last reviewed: 2026-06.

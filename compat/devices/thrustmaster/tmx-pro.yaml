@@ -1,0 +1,56 @@
+# Thrustmaster TMX PRO Force Feedback Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB673 confirmed from SDL2 source:
+# MAKE_VIDPID(0x044f, 0xb673) "Thrustmaster TMX PRO". Upgraded version of
+# the TMX with metal pedals and enhanced pedal set. Belt-drive FFB wheel.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TMX PRO"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F    # Thrustmaster (confirmed)
+    product_id: 0xB673   # TMX PRO -- SDL2 source MAKE_VIDPID(0x044f, 0xb673)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 16
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, sine, spring, damper]
+    max_update_rate_hz: 500
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      Steering wheel axis layout: X = steering, Z = throttle pedal,
+      Rz = brake pedal. Map accordingly in the OpenFlight profile when
+      used for flight simulation.
+  - id: BELT_DRIVE_FFB
+    description: >
+      Belt-drive force feedback mechanism. FFB effects are transmitted via
+      DirectInput / Thrustmaster driver. Not a direct-drive unit; maximum
+      torque is lower than DD bases.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TMX PRO. PID 0xB673 confirmed from SDL2 source. Belt-drive
+    FFB racing wheel with enhanced metal pedals. Last reviewed: 2026-06.

@@ -1,0 +1,62 @@
+# Logitech Formula Force RX Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech Inc.), PID 0xC291 from the Linux kernel
+# drivers/hid/hid-ids.h (USB_DEVICE_ID_LOGITECH_FORMULA_FORCE). The Formula
+# Force RX (2003) is the belt-driven predecessor to the Driving Force series.
+# Supports spring and constant-force FFB via Logitech's LG Gaming FF protocol.
+schema_version: "1"
+
+device:
+  name: "Logitech Formula Force RX"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc. (confirmed)
+    product_id: 0xC291      # Confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_LOGITECH_FORMULA_FORCE)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, z, rz]
+    resolution_bits: 10
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: RACING_WHEEL_AXIS_LAYOUT
+    description: >
+      X = steering (270° range); Z = accelerator (unipolar); Rz = brake
+      (unipolar). In flight sim, X maps to rudder/nose-wheel steering;
+      Z/Rz to throttle/toe-brake.
+  - id: LGFF_DRIVER
+    description: >
+      Uses Logitech LG Gaming FF protocol. Linux support via ff-lg kernel
+      module. Windows requires Logitech WingMan Profiler or legacy Logitech
+      Gaming Software. Spring and constant-force effects work for rudder
+      centering use in flight sim.
+  - id: LEGACY_DEVICE
+    description: >
+      Legacy device (circa 2003). Single-motor belt-drive FFB. Some systems
+      require the Logitech WingMan Profiler for full FFB functionality.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Formula Force RX. VID/PID 0x046D:0xC291 confirmed from Linux kernel
+    hid-ids.h. Belt-drive FFB wheel, 270° rotation. Legacy device; spring/constant
+    force effects usable for flight sim rudder centering. Last reviewed: 2026-06.

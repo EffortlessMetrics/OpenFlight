@@ -1,0 +1,54 @@
+# Raspberry Pi Pico / RP2040 USB HID Joystick (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2E8A (Raspberry Pi). PID 0x4001 is the TinyUSB default HID example
+# PID; builder-dependent -- many builders use this or assign a custom PID
+# via the TinyUSB device descriptor. Common platform for DIY joystick and
+# multi-axis controllers using PicoJoystick or TinyUSB firmware.
+schema_version: "1"
+
+device:
+  name: "Raspberry Pi Pico / RP2040 USB HID Joystick (DIY)"
+  vendor: "Raspberry Pi"
+  usb:
+    vendor_id: 0x2E8A    # Raspberry Pi (confirmed)
+    product_id: 0x4001   # TinyUSB HID example default -- builder-dependent
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      RP2040 VID 0x2E8A is Raspberry Pi. PID 0x4001 is the TinyUSB HID example
+      default -- most builders use this or assign a custom PID via the TinyUSB
+      device descriptor.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Axis count, button count, and report
+      layout vary by builder. The values listed represent a typical 6-axis
+      joystick configuration using PicoJoystick or TinyUSB firmware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic RP2040 / Raspberry Pi Pico DIY joystick. VID 0x2E8A confirmed.
+    PID 0x4001 is the TinyUSB example default; builder-dependent. Report layout
+    varies by firmware. Last reviewed: 2026-06.

@@ -1,0 +1,54 @@
+# Generic Arduino Pro Micro USB Trim Wheel (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC). PID 0x8037 confirmed for the Arduino Pro Micro
+# from arduino.cc USB PID assignment table. Common DIY trim wheel for flight
+# simulators using Arduino Pro Micro running the MHeironimus Joystick library.
+# The actual HID report layout depends on the sketch loaded by the builder.
+schema_version: "1"
+
+device:
+  name: "Arduino Pro Micro USB Trim Wheel (DIY)"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341    # Arduino LLC (confirmed)
+    product_id: 0x8037   # Arduino Pro Micro -- confirmed from arduino.cc
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      Arduino Pro Micro VID 0x2341 / PID 0x8037 is confirmed for the Pro Micro
+      bootloader. The HID application firmware (e.g. Joystick library by
+      MHeironimus) uses the same VID/PID. Actual report layout depends on
+      the sketch loaded.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Axis count, button count, and report
+      layout vary by builder. The values listed represent a typical single-axis
+      trim wheel configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Arduino Pro Micro DIY trim wheel. VID 0x2341 / PID 0x8037 confirmed
+    for the Pro Micro. Report layout builder-defined. Last reviewed: 2026-06.

@@ -1,0 +1,21 @@
+[package]
+homepage.workspace = true
+name = "flight-hotas-sony"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Sony PlayStation DualShock/DualSense controller adapter for OpenFlight"
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "sony", "dualshock", "dualsense"]
+categories = ["hardware-support"]
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }

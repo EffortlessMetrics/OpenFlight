@@ -1,0 +1,62 @@
+# VPforce Rhino Mk.4 FFB Joystick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics MCU, used by VPforce). PID 0xA1C4 is a
+# community estimate following the Rhino PID sequence (Mk2=0xA1C0, Mk3=0xA1C3,
+# Mk4=0xA1C4 estimated). Mid-travel direct-drive FFB joystick; confirm PID
+# from lsusb when Mk4 hardware is available.
+schema_version: "1"
+
+device:
+  name: "VPforce Rhino FFB Joystick Mk.4"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (VPforce USB VID)
+    product_id: 0xA1C4   # Community estimate -- Rhino Mk.4
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, sine, square, triangle, sawtooth_up, sawtooth_down,
+              constant]
+    max_update_rate_hz: 1000
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: STM_VID
+    description: >
+      VID 0x0483 is the STMicroelectronics VID used by all VPforce products.
+      Distinguish from generic STM32 devices by PID range 0xA1Cxx.
+  - id: UNVERIFIED_PID
+    description: >
+      PID 0xA1C4 is a community estimate for the Mk4; confirm from lsusb or
+      USB descriptor when hardware is available.
+  - id: FFB_COMPANION_APP
+    description: >
+      FFB torque profile and response curves are configured via VPforce
+      companion software. OpenFlight sends standard DirectInput FFB effects
+      which the VPforce firmware translates to torque commands.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VPforce Rhino Mk.4. PID 0xA1C4 is a community estimate; confirm from lsusb.
+    VID 0x0483 = STM32 USB. High-end direct-drive FFB joystick. See rhino-mk3.yaml
+    for previous revision. Last reviewed: 2026-06.

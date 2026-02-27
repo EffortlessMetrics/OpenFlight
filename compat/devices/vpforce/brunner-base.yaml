@@ -1,0 +1,59 @@
+# VPForce-Compatible Brunner CLS-E Collaboration Note
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0xA1C5 is a community estimate --
+# unverified. Speculative entry for a collaborative VPForce-equipped
+# Brunner-style base discussed in VPForce community forums. No production
+# device has been confirmed. PID 0xA1C5 is a placeholder.
+schema_version: "1"
+
+device:
+  name: "VPForce-Compatible Brunner Base (speculative)"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (VPforce USB VID)
+    product_id: 0xA1C5   # Community estimate -- unverified placeholder
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, sine, triangle]
+    max_update_rate_hz: 500
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: SPECULATIVE_PRODUCT
+    description: >
+      This manifest represents a rumoured VPForce-Brunner collaborative base
+      discussed in VPForce community channels. No production device has been
+      confirmed. PID 0xA1C5 is a placeholder -- do not use in device matching
+      until PID is confirmed from lsusb.
+  - id: UNVERIFIED_PID
+    description: >
+      PID 0xA1C5 is a community estimate and placeholder. Do not enable
+      production device matching until confirmed from lsusb or official
+      VPForce firmware documentation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VPForce-Brunner collaborative base (speculative). PID 0xA1C5 unconfirmed
+    placeholder. VID 0x0483 = STM32 USB. Do not use for device matching until
+    confirmed. Last reviewed: 2026-06.

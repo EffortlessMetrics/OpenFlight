@@ -1,0 +1,57 @@
+# GoFlight GF-46 COM/NAV Radio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0106 — community estimate. The GF-46
+# COM/NAV panel provides a dedicated COM/NAV radio stack with dual-concentric
+# tuning knobs and frequency swap/transfer buttons for GA cockpit simulation.
+# This entry (gf-46-comnav) documents the COM/NAV-specific variant naming;
+# the underlying hardware may match gf-46.yaml (PID 0x0004) on some units.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-46 COM/NAV Radio Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F    # GoFlight Inc.
+    product_id: 0x0106   # Community estimate — GF-46 COM/NAV variant
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0106 is a community estimate. May match gf-46.yaml (PID 0x0004)
+      on some hardware revisions. Confirm with lsusb or Windows Device Manager.
+  - id: DUAL_CONCENTRIC_TUNING_KNOBS
+    description: >
+      Inner/outer concentric knobs tune COM and NAV frequencies independently.
+      Each detent fires a button press event (CW or CCW direction).
+  - id: FREQUENCY_DISPLAY_OUTPUT
+    description: >
+      Frequency readouts require USB HID output reports to update the onboard
+      display segments.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-46 COM/NAV radio panel. PID 0x0106 community estimate. See also
+    gf-46.yaml for the MCP/NAV variant entry. Used in GA home cockpit builds
+    with MSFS and X-Plane. Last reviewed: 2026-06.

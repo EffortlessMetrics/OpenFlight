@@ -1,0 +1,52 @@
+# Nacon GC-200XS PC Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x146B (Nacon). PID 0x0E05 is a community estimate for the Nacon
+# GC-200XS compact wired PC gamepad. Entry-level compact gamepad with
+# standard dual-analogue layout.
+schema_version: "1"
+
+device:
+  name: "Nacon GC-200XS"
+  vendor: "Nacon"
+  usb:
+    vendor_id: 0x146B    # Nacon (confirmed VID)
+    product_id: 0x0E05   # Community estimate -- GC-200XS
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0E05 is a community estimate. Confirm with lsusb on GC-200XS
+      hardware before enabling production device matching.
+  - id: LEGACY_GAMEPAD
+    description: >
+      Compact entry-level gamepad with 8-bit axis resolution (256 steps).
+      Suitable for basic sim use; limited axis precision compared to modern
+      controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Nacon GC-200XS compact wired PC gamepad. PID 0x0E05 community estimate;
+    confirm with lsusb. 4-axis, 14 buttons, 8-bit resolution.
+    Last reviewed: 2026-06.

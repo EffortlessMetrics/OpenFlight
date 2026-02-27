@@ -1,0 +1,57 @@
+# Generic USB Foot Pedal Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0C45 (Microdia / generic HID VID used by many inexpensive USB pedal
+# controllers). PID 0x7401 is a community estimate; actual PID varies by
+# manufacturer. Common 3-pedal USB foot controller repurposed for flight sim
+# rudder and toe-brake use.
+schema_version: "1"
+
+device:
+  name: "Generic USB Foot Pedal Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x0C45    # Microdia / common generic HID VID
+    product_id: 0x7401   # Community estimate -- varies by manufacturer
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [lt, ct, rt]
+    resolution_bits: 8
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x7401 is a community estimate. The actual PID varies by manufacturer.
+      Verify with lsusb on the specific hardware before enabling device matching.
+  - id: GENERIC_HID
+    description: >
+      This manifest represents a class of inexpensive generic USB pedal
+      controllers. VID/PID varies by manufacturer.
+  - id: DIY_HARDWARE
+    description: >
+      Commonly repurposed for flight sim use as rudder / toe-brake inputs.
+      Map lt -> left toe brake, ct -> rudder axis, rt -> right toe brake, or
+      assign per-aircraft in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB 3-pedal foot controller. VID 0x0C45 / PID 0x7401 community
+    estimate; actual VID/PID varies. Used for rudder/toe-brake in flight sim.
+    Last reviewed: 2026-06.

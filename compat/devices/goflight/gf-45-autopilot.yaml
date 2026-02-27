@@ -1,0 +1,52 @@
+# GoFlight GF-45 Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight Inc.), PID 0x0105 — community estimate. The GF-45
+# autopilot panel replicates a generic GA autopilot with mode buttons (HDG, NAV,
+# APR, ALT, VS) and up/down increment controls for altitude and vertical-speed
+# targets, for use with MSFS and X-Plane GA aircraft.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-45 Autopilot Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F    # GoFlight Inc.
+    product_id: 0x0105   # Community estimate — GF-45 autopilot panel
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0105 is a community estimate. May match gf-45.yaml on some hardware
+      revisions. Confirm with lsusb or Windows Device Manager.
+  - id: AUTOPILOT_MODE_BUTTONS
+    description: >
+      Autopilot mode buttons (HDG, NAV, APR, ALT, VS) are discrete momentary
+      inputs. AP engagement and mode selection require sim-side integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-45 autopilot panel. PID 0x0105 community estimate. See also
+    gf-45.yaml for the related entry. Used in GA home cockpit builds with MSFS
+    and X-Plane. Last reviewed: 2026-06.

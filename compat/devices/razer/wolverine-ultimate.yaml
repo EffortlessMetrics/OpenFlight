@@ -1,0 +1,56 @@
+# Razer Wolverine Ultimate Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 (Razer Inc.). PID 0x0A21 is a community estimate for the Razer
+# Wolverine Ultimate; confirm with lsusb (Wolverine TE is 0x0A14, Tournament
+# Edition distinct from Ultimate). Xbox-layout gamepad with 6 additional
+# remappable buttons and Chroma lighting.
+schema_version: "1"
+
+device:
+  name: "Razer Wolverine Ultimate"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532    # Razer Inc. (confirmed)
+    product_id: 0x0A21   # Community estimate -- Wolverine Ultimate
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0A21 is a community estimate. Confirm with lsusb; Wolverine TE
+      is 0x0A14. Verify PID before enabling production device matching.
+  - id: RAZER_SYNAPSE_OPTIONAL
+    description: >
+      Extra buttons and Chroma lighting require Razer Synapse software; the
+      core gamepad axes and buttons work without it through standard HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Wolverine Ultimate. PID 0x0A21 community estimate; confirm with lsusb.
+    Xbox-layout gamepad, 6 extra remappable buttons, dual-motor rumble.
+    Last reviewed: 2026-06.

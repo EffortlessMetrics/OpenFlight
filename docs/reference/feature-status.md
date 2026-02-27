@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1088 |
-| ACs with tests | 1088 |
+| Total AC | 1196 |
+| ACs with tests | 1196 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 491 |
+| Draft | 599 |
 | Incomplete | 0 |
-| Microcrates | 75 |
-| Microcrates with tests | 65 (86.7%) |
-| Microcrates with Gherkin | 65 (86.7%) |
-| Microcrates fully covered | 65 (86.7%) |
+| Microcrates | 78 |
+| Microcrates with tests | 65 (83.3%) |
+| Microcrates with Gherkin | 65 (83.3%) |
+| Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 79.9% |
-| Test + Gherkin coverage | 79.9% |
+| Gherkin coverage | 72.7% |
+| Test + Gherkin coverage | 72.7% |
 
 ## BDD Microcrate Matrix
 
@@ -66,7 +66,9 @@
 | flight-hotas-microsoft | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-simucube | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-hotas-sony | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-thrustmaster | 33 | 33 | 33 | 33 | 33 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-turtlebeach | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-virpil | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vkb | 24 | 24 | 24 | 24 | 24 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
@@ -83,6 +85,7 @@
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-panels-goflight | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -1203,3 +1206,111 @@
 | REQ-182 | AC-182.4 | Each GoFlight module on the same USB hub SHALL operate independently without cross-talk or command misrouting when multiple modules are connected | specs/features/req_182_goflight_panels.feature:23 | 1 | ⚪ Draft |
 | REQ-182 | AC-182.5 | GoFlight panel state SHALL remain consistent throughout a simulator pause cycle without requiring re-initialisation when the sim is paused and unpaused | specs/features/req_182_goflight_panels.feature:29 | 1 | ⚪ Draft |
 | REQ-182 | AC-182.6 | The simulator integer variable SHALL change by the configured delta per encoder step when a GoFlight encoder mapped to that variable is rotated | specs/features/req_182_goflight_panels.feature:35 | 1 | ⚪ Draft |
+| REQ-183 | AC-183.1 | The Tobii Eye Tracker 5 SHALL be detected and registered as a gaze input device when connected | - | 1 | ⚪ Draft |
+| REQ-183 | AC-183.2 | The gaze vector SHALL be normalized to the range [-1.0, 1.0] as a view offset per axis when the user looks across the trackable area | - | 1 | ⚪ Draft |
+| REQ-183 | AC-183.3 | Gaze tracking SHALL operate at 30-90Hz without overloading the RT spine when the Eye Tracker 5 is active | - | 1 | ⚪ Draft |
+| REQ-183 | AC-183.4 | The 6DOF head position from the Tobii Eye Tracker SHALL be available as a separate axis set distinct from the gaze vector | - | 1 | ⚪ Draft |
+| REQ-183 | AC-183.5 | When gaze tracking is lost the view offset SHALL return to center gracefully without abrupt jumps | - | 1 | ⚪ Draft |
+| REQ-183 | AC-183.6 | The Tobii SDK integration SHALL be isolated behind an OpenFlight port trait with no SDK types leaking into core | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.1 | The DualShock 4 SHALL be detected by VID 0x054C with PID 0x05C4 or 0x09CC when connected via USB | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.2 | The DualSense PS5 controller SHALL be detected by VID 0x054C with PID 0x0CE6 when connected via USB | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.3 | Analog stick axes SHALL be normalized to the range [-1.0, 1.0] when moved across their full range of motion | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.4 | The L2 and R2 trigger axes SHALL be normalized to the range [0.0, 1.0] when depressed across their full travel | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.5 | A button event SHALL be emitted for a touchpad click when the touchpad is clicked | - | 1 | ⚪ Draft |
+| REQ-184 | AC-184.6 | The controller's rumble actuators SHALL accept and execute FFB commands from an OpenFlight force feedback profile | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.1 | A linear scale factor SHALL be applied uniformly to the axis output across the full input range | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.2 | A cubic expo (S-curve) response SHALL reduce sensitivity near centre relative to a linear response | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.3 | A custom lookup-table curve SHALL interpolate smoothly between defined control points | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.4 | Multiple curve stages (deadzone, expo, scale) SHALL be applicable in a defined chain order | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.5 | Curve configuration SHALL be active for subsequent axis inputs after a hot-swap profile reload without a service restart | - | 1 | ⚪ Draft |
+| REQ-185 | AC-185.6 | The curve output SHALL always be bounded to the range [-1.0, 1.0] regardless of the input value | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.1 | A profile SHALL support binding multiple device types to named roles with all bound devices available for axis mapping | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.2 | The primary_stick role SHALL take priority over the secondary_stick role when both devices produce the same axis input simultaneously | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.3 | Device role assignments SHALL persist across a device disconnect and reconnect without requiring a profile reload | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.4 | A conflict warning SHALL be emitted when two devices are assigned to the same named role in a profile | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.5 | Profile migration SHALL succeed and preserve valid role assignments when device role fields are added or removed between schema versions | - | 1 | ⚪ Draft |
+| REQ-186 | AC-186.6 | The flightctl status command SHALL display the current device-to-role assignments for all active roles | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.1 | Running flightctl diag bundle SHALL create a zip artifact at the path reported by the CLI | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.2 | A generated diagnostic bundle SHALL include the current profile, connected device list, and axis counters | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.3 | A generated diagnostic bundle SHALL contain at least the last 1000 lines of the structured log | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.4 | A generated diagnostic bundle SHALL include OS version, driver versions, and CPU affinity configuration | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.5 | Credentials and hardware serial numbers SHALL be redacted from all contents of a generated diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-187 | AC-187.6 | A diagnostic bundle SHALL be fully generated and written within 5 seconds on normal hardware | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.1 | HTTP GET /health SHALL return status 200 when the service is running and the RT spine is ticking normally | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.2 | The /health response body SHALL include the current RT spine tick rate and p99 jitter metric | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.3 | The /health response body SHALL include the connection status of each configured simulator adapter | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.4 | HTTP GET /health/ready SHALL return status 503 until the RT spine has completed its first tick | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.5 | The watchdog SHALL initiate a service restart after 3 consecutive non-200 responses from /health when querying every 5 seconds | - | 1 | ⚪ Draft |
+| REQ-188 | AC-188.6 | HTTP GET /metrics SHALL return health metrics in Prometheus exposition format | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.1 | Filters SHALL be applied in the declared pipeline order: raw → deadzone → expo → scale → output | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.2 | Removing a filter stage from the chain SHALL pass values through that position unchanged | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.3 | The filter chain SHALL process each axis within 1 µs at 250Hz tick rate | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.4 | Filter chain state such as EMA accumulators SHALL persist correctly between consecutive ticks | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.5 | The profile SHALL specify the filter chain per axis by name | - | 1 | ⚪ Draft |
+| REQ-189 | AC-189.6 | An invalid filter chain configuration SHALL be rejected at profile load time, not at runtime | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.1 | The dashboard SHALL update at ≥30Hz with current axis values sourced from the event bus | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.2 | A histogram of RT spine tick jitter SHALL be visible in the dashboard | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.3 | Device connection and disconnection events SHALL appear in the dashboard event log | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.4 | Per-axis FFB force output SHALL be visible in the dashboard when an FFB device is connected | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.5 | The dashboard SHALL be accessible in text mode via flightctl monitor | - | 1 | ⚪ Draft |
+| REQ-190 | AC-190.6 | Dashboard telemetry data SHALL be exportable to a JSON document for external monitoring tools | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.1 | A profile SHALL be exportable as a TOML file containing all axis configurations and device mappings | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.2 | A profile exported on one machine SHALL import cleanly on a different machine with compatible hardware | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.3 | Schema validation SHALL be performed before an imported profile is applied | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.4 | Unknown fields in an imported profile SHALL generate warnings and SHALL NOT cause the import to fail | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.5 | An exported profile SHALL include version and schema identifier fields | - | 1 | ⚪ Draft |
+| REQ-191 | AC-191.6 | The CLI command flightctl profile export --file out.toml SHALL work end-to-end | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.1 | The active profile SHALL be persisted atomically to disk at least every 30 seconds | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.2 | On restart after a crash the last known persisted profile SHALL be loaded automatically | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.3 | A crash report containing a stack trace SHALL be generated and stored locally on unexpected exit | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.4 | The watchdog SHALL restart the service within 5 seconds of an unexpected exit | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.5 | In-progress profile edits that were not committed before a crash SHALL be discarded on restart | - | 1 | ⚪ Draft |
+| REQ-192 | AC-192.6 | After 3 crashes within 60 seconds the watchdog SHALL cease restart attempts to prevent a boot loop | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.1 | A newly connected USB HID device SHALL be detected within 500ms of connection | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.2 | A USB HID device removal SHALL be detected within 500ms of disconnection | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.3 | Profile bindings SHALL reattach automatically to a reconnected device without a profile reload | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.4 | A hot-plug event SHALL be emitted to the event bus for downstream consumers on connect or disconnect | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.5 | The RT spine SHALL continue processing axes from remaining devices without interruption during a device swap | - | 1 | ⚪ Draft |
+| REQ-193 | AC-193.6 | Hot-plug detection SHALL correctly identify devices connected or disconnected via a USB HID hub | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.1 | A Criterion benchmark SHALL exist covering the 250Hz axis pipeline processing loop | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.2 | Benchmark runs SHALL report and compare p50, p95, and p99 latency against a stored baseline | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.3 | A p99 latency regression exceeding 20% SHALL cause the nightly CI benchmark job to fail | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.4 | Benchmark result data SHALL be stored as a downloadable artifact in CI | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.5 | A flamegraph SHALL be generated and saved when a benchmark run is executed with profiling enabled | - | 1 | ⚪ Draft |
+| REQ-194 | AC-194.6 | The benchmark SHALL measure and enforce zero heap allocations per tick on the RT hot path | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.1 | Axis invert flag SHALL flip the sign of the output so that an input of 0.8 produces an output of -0.8 | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.2 | Deadband SHALL be configurable per axis as a fraction of the full range between 0.0 and 1.0 | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.3 | Axis inputs whose absolute value falls within the deadband SHALL be mapped to exactly 0.0 | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.4 | Axis inputs outside the deadband SHALL be rescaled so that the edge-of-deadband maps to 0.0 and maximum input maps to 1.0 | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.5 | Deadband and invert SHALL be combinable and the final output SHALL not depend on the order in which the two transforms are applied | - | 1 | ⚪ Draft |
+| REQ-195 | AC-195.6 | Profile validation SHALL reject deadband values outside the range [0.0, 0.5] and report a descriptive error | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.1 | A panel button event SHALL be mapped to a SimConnect variable write as declared in the profile | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.2 | The sim variable write SHALL occur within 50 milliseconds of the originating button press | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.3 | Sim variable write failures SHALL be logged but SHALL NOT crash or restart the service | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.4 | Write-back SHALL be disabled while the sim adapter is in a disconnected state | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.5 | Per-variable write-back frequency SHALL be rate-limited to avoid overloading the simulator | - | 1 | ⚪ Draft |
+| REQ-196 | AC-196.6 | Button-to-variable mappings SHALL be declared declaratively in the profile without requiring code changes | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.1 | MSFS and X-Plane SHALL each be operable simultaneously with separate independent profiles | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.2 | Each sim adapter SHALL operate independently on the event bus without interference between adapters | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.3 | Per-sim device axis assignments SHALL be specifiable in the profile and honoured at runtime | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.4 | The RT spine SHALL process outputs from all active simulators within a single 250Hz tick | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.5 | Switching the active simulator SHALL complete without requiring a service restart | - | 1 | ⚪ Draft |
+| REQ-197 | AC-197.6 | OpenFlight SHALL emit a conflict warning when the same device is bound to more than one simulator in the profile | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.1 | Each profile save to the cloud SHALL assign a monotonically increasing version number | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.2 | The 10 most recent profile versions SHALL be retained locally after each cloud sync | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.3 | A profile diff between any two retained versions SHALL enumerate changed axes and mappings | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.4 | The CLI SHALL provide a rollback command that restores any locally retained profile version | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.5 | Version metadata SHALL include the save timestamp, device list, and sim target | - | 1 | ⚪ Draft |
+| REQ-198 | AC-198.6 | When a local profile version conflicts with a cloud version, the user SHALL be prompted to choose which version to keep | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.1 | Accessibility mode SHALL reduce axis sensitivity to compensate for tremor | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.2 | Button hold time SHALL be configurable in the range 0.1s to 2.0s to prevent accidental presses | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.3 | An axis assistance filter SHALL smooth rapid input jitter without introducing perceptible latency | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.4 | Single-axis fly-by-wire mode SHALL allow stable one-hand flight control | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.5 | Accessibility settings SHALL be stored in the user profile and SHALL NOT appear in the device profile | - | 1 | ⚪ Draft |
+| REQ-199 | AC-199.6 | Accessibility mode SHALL be togglable at runtime without requiring a service restart | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.1 | A smoke test SHALL start the service, connect a fake HID device, and verify axis events appear on the bus | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.2 | A smoke test SHALL load a profile, update the deadzone, and verify the axis behaviour changes | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.3 | A smoke test SHALL connect a fake simulator adapter, inject telemetry, and verify the snapshot on the bus | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.4 | A smoke test SHALL trigger a watchdog restart and verify the service recovers and resumes normal operation | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.5 | The full smoke test suite SHALL complete in less than 60 seconds on a standard CI runner | - | 1 | ⚪ Draft |
+| REQ-200 | AC-200.6 | A failing smoke test SHALL block PR merge in the CI pipeline | - | 1 | ⚪ Draft |

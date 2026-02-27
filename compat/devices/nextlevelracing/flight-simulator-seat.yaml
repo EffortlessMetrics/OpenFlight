@@ -1,0 +1,44 @@
+# Next Level Racing Flight Simulator Seat (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Next Level Racing Flight Simulator Seat is a dedicated flight sim cockpit
+# seat/frame with adjustable rudder pedal, stick, and throttle mounting positions.
+# It does not enumerate as a USB/HID device. It is modelled here as a
+# virtual_bundle to document physical flight sim rig configurations in OpenFlight.
+schema_version: "1"
+
+device:
+  name: "Next Level Racing Flight Simulator Seat"
+  vendor: "Next Level Racing"
+  is_virtual: true
+  usb:
+    vendor_id: ~    # Not a USB device — physical cockpit seat/frame
+    product_id: ~
+  type: virtual_bundle
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+quirks:
+  - id: NOT_A_HID_DEVICE
+    description: >
+      The Flight Simulator Seat is a physical cockpit frame with no USB
+      interface. OpenFlight models this as a virtual_bundle entry to document
+      the physical rig configuration and mounted device relationships.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle entry for the Next Level Racing Flight Simulator Seat cockpit
+    frame. No USB interface. Use in OpenFlight rig configuration profiles to
+    document the physical cockpit layout. Last reviewed: 2026-06.

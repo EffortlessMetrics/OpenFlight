@@ -1,0 +1,53 @@
+# Thrustmaster WRC Rally Wheel Add-On
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB66D is a community estimate for the
+# Thrustmaster Rally Race Gear Sparco Mod Add-On (WRC Rally Wheel rim).
+# Compatible with T300RS, T248, and TX Racing Wheel bases. The rim does not
+# connect to USB independently; confirm PID with lsusb when attached to a base.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster WRC Rally Wheel Add-On"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F    # Thrustmaster (confirmed)
+    product_id: 0xB66D   # Community estimate -- WRC Rally Wheel rim
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB66D is a community estimate. Confirm with lsusb when the WRC
+      rim is attached to a Thrustmaster base before enabling device matching.
+  - id: WHEEL_ADD_ON
+    description: >
+      This is a steering wheel rim add-on accessory -- it requires a Thrustmaster
+      force-feedback base (T300RS, T248, TX) to function; the rim does not
+      connect to USB independently. Map to the base device's capabilities.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster WRC Rally Wheel rim add-on. PID 0xB66D is a community estimate;
+    confirm with lsusb on hardware. Requires a Thrustmaster FFB base to function.
+    Last reviewed: 2026-06.

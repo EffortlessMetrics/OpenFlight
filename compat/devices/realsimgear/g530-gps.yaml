@@ -1,0 +1,58 @@
+# RealSimGear G530 GPS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xF250 — community
+# estimate. The RealSimGear G530 replicates the Garmin GNS 530 GPS/NAV/COM unit.
+# Provides the full front-panel control set: dual-concentric large/small tuning
+# knobs, flip/transfer buttons, alphanumeric keypad, and softkeys for direct
+# waypoint entry in GA aircraft simulations.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G530 GPS Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (used by RealSimGear)
+    product_id: 0xF250   # Community estimate — G530 GPS panel
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF250 is a community estimate. Confirm with lsusb or Windows Device
+      Manager. May differ across firmware revisions.
+  - id: DUAL_CONCENTRIC_KNOBS
+    description: >
+      Large and small concentric tuning knobs produce incremental encoder events.
+      Each detent fires a CW or CCW button press. OpenFlight maps these as
+      encoder-delta inputs.
+  - id: GPS_KEYPAD
+    description: >
+      Alphanumeric keypad buttons for direct waypoint entry require per-sim
+      keyboard mapping integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G530 GPS panel replicating Garmin GNS 530. PID 0xF250 community
+    estimate. Used in GA home cockpit builds with MSFS and X-Plane.
+    Last reviewed: 2026-06.

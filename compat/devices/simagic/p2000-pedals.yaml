@@ -1,0 +1,51 @@
+# Simagic P2000 Sim Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EBC (Simagic Technology, community-reported). PID 0x2000 is a
+# community estimate for the Simagic P2000 pedal unit. The P2000 provides
+# three load-cell pedal axes (throttle, brake, clutch) at 14-bit resolution.
+schema_version: "1"
+
+device:
+  name: "Simagic P2000 Sim Pedals"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0EBC    # Simagic Technology (community-reported)
+    product_id: 0x2000   # Community estimate -- P2000 pedal unit
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2000 is a community estimate. Confirm with lsusb on Simagic P2000
+      hardware before enabling production device matching.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The P2000 uses load-cell sensors on the brake axis for pressure-based
+      input. In flight sim use, map the brake axis to toe-brake or differential
+      braking in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic P2000 Sim Pedals -- 3-axis load-cell pedal unit (14-bit). VID 0x0EBC
+    community-reported; PID 0x2000 is a community estimate. Last reviewed: 2026-06.

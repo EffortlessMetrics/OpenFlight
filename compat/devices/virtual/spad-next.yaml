@@ -1,0 +1,54 @@
+# SPAD.neXt Virtual Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1234, PID 0xBEAD -- SPAD.neXt uses the same vJoy VID/PID scheme.
+# SPAD.neXt is a Windows software that routes sim data to hardware panels and
+# creates virtual HID input devices using vJoy as the underlying virtual HID
+# driver. See vjoy.yaml for the underlying driver manifest.
+schema_version: "1"
+
+device:
+  name: "SPAD.neXt Virtual Joystick"
+  vendor: "SPAD.neXt"
+  is_virtual: true
+  usb:
+    vendor_id: 0x1234    # vJoy USB vendor (matches vJoy by design)
+    product_id: 0xBEAD   # vJoy virtual device PID
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 15
+  buttons: 128
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      SPAD.neXt creates virtual HID output devices for panel integration. The
+      axis and button layout is configured in SPAD.neXt settings and is not
+      fixed. Values listed represent a typical vJoy-backed configuration.
+  - id: VJOY_DEPENDENCY
+    description: >
+      SPAD.neXt virtual joystick output requires vJoy (vjoy.yaml) to be
+      installed as the underlying virtual HID driver.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    SPAD.neXt Virtual Joystick -- Windows software virtual HID device backed
+    by vJoy. VID 0x1234 / PID 0xBEAD shared with vJoy. Axis/button layout
+    configured in SPAD.neXt. Last reviewed: 2026-06.

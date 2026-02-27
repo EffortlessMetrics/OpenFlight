@@ -1,0 +1,61 @@
+# Thrustmaster T.Flight HOTAS X (PS3/PS4 Variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (ThrustMaster Inc.). PID 0xB109 is a community estimate for the
+# PlayStation 3/PS4 variant of the T.Flight HOTAS X. The PC version uses
+# PID 0xB108 (see tflight-hotas-x.yaml). The PS3/PS4 variant ships with a
+# PS-logo mode switch and may enumerate differently on PC via its "PC mode"
+# hardware toggle. Confirm PID with lsusb in PC-mode.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS X (PS3/PS4)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F     # ThrustMaster Inc.
+    product_id: 0xB109    # Community estimate — PS3/PS4 variant in PC mode; confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, z, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB109 is a community estimate for the PS3/PS4 variant in PC mode.
+      The PC-only version uses PID 0xB108 (see tflight-hotas-x.yaml). Confirm
+      the actual PID with lsusb or USB device manager when the mode switch is
+      in "PC" position.
+  - id: PC_PS_MODE_SWITCH
+    description: >
+      A hardware toggle on the base selects PC mode (XInput/DirectInput) vs
+      PS3/PS4 mode. Only PC mode is supported by OpenFlight's DirectInput path.
+      The device may not be recognised at all in PS3/PS4 mode on a PC host.
+  - id: SHARED_AXIS_LAYOUT
+    description: >
+      Axis layout mirrors the PC HOTAS X: X/Y = stick, Rz = twist/rudder,
+      Z = throttle lever, Slider = second mini-throttle on stick base.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight HOTAS X PS3/PS4 variant. VID 0x044F confirmed;
+    PID 0xB109 is a community estimate — needs verification with lsusb in PC mode.
+    PC and PS3/PS4 variants share identical hardware; only firmware mode differs.
+    Last reviewed: 2026-06.

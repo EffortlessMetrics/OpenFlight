@@ -1,0 +1,60 @@
+# Generic USB HID Button Matrix / Button Box (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0x5760 is a community estimate for
+# generic STM32 button matrix / button box firmware. Commonly used as DIY
+# cockpit panel for flight simulators. Note: VID 0x0483 is also used by
+# VPForce (see vpforce manifests) and stm32-hid-panel.yaml; distinguished
+# here by PID 0x5760.
+schema_version: "1"
+
+device:
+  name: "Generic STM32 USB HID Button Matrix (DIY)"
+  vendor: "STMicroelectronics"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (confirmed)
+    product_id: 0x5760   # Community estimate -- STM32 button matrix
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Generic (button box, not a joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: STM_VID
+    description: >
+      VID 0x0483 is the STMicroelectronics VID shared by STM32 USB devices
+      including VPForce products. Distinguish from vpforce manifests and
+      stm32-hid-panel.yaml by PID 0x5760.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Button count and report layout are
+      defined by the STM32 firmware loaded by the builder. Values listed
+      represent a typical 64-button matrix.
+  - id: FIRMWARE_CONFIGURABLE
+    description: >
+      Button count and HID report layout are defined by the STM32 firmware.
+      Verify actual capabilities against the specific firmware version before
+      mapping in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic STM32 DIY USB HID button matrix / button box. VID 0x0483 confirmed;
+    PID 0x5760 is a community estimate. Button layout firmware-defined.
+    Last reviewed: 2026-06.

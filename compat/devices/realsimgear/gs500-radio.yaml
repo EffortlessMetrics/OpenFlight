@@ -1,0 +1,52 @@
+# RealSimGear GS500 Radio Stack Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xF260 — community
+# estimate. The RealSimGear GS500 replicates the Garmin SL30/SL40-style
+# NAV/COM radio stack for single-engine GA aircraft. Provides COM and NAV
+# frequency tuning knobs, flip/transfer buttons, and squelch/volume controls.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GS500 Radio Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8    # Microchip Technology (used by RealSimGear)
+    product_id: 0xF260   # Community estimate — GS500 radio panel
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x00          # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF260 is a community estimate. Confirm with lsusb or Windows Device
+      Manager on target hardware.
+  - id: DUAL_CONCENTRIC_RADIO_KNOBS
+    description: >
+      COM and NAV inner/outer tuning knobs produce incremental encoder events.
+      Frequency display updates require USB HID output reports.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GS500 radio panel. PID 0xF260 community estimate. Used in
+    single-engine GA home cockpit builds with MSFS and X-Plane.
+    Last reviewed: 2026-06.

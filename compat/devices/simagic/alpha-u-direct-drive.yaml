@@ -1,0 +1,57 @@
+# Simagic Alpha-U Direct Drive Wheel Base (Standalone Entry)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EBC (Simagic Technology, community-reported). PID 0x1021 is a
+# community estimate for the Alpha-U in direct-drive standalone mode. This entry
+# describes the Alpha-U as a direct-drive base without the Alpha Ultimate
+# branding — some firmware versions enumerate under a distinct PID.
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha-U Direct Drive Base"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0EBC    # Simagic Technology (community-reported)
+    product_id: 0x1021   # Community estimate -- Alpha-U direct-drive mode
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x08          # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 17
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 17.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1021 is a community estimate; the Alpha-U may enumerate under the
+      same PID as the Alpha Ultimate (0x1020) depending on firmware version.
+      Confirm with lsusb before enabling production device matching.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      Flight sim use requires a dedicated grip adapter. The base provides only
+      the wheel rotation axis; all other inputs come from the grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha-U direct drive wheel base (17 Nm peak). VID 0x0EBC
+    community-reported; PID 0x1021 is a community estimate. See also
+    alpha-u-base.yaml for the Alpha Ultimate variant. Last reviewed: 2026-06.

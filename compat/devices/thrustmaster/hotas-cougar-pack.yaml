@@ -1,0 +1,55 @@
+# Thrustmaster HOTAS Cougar Complete Pack (virtual bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Virtual bundle combining the HOTAS Cougar stick (cougar-hotas-stick.yaml)
+# with the HOTAS Cougar throttle (cougar-hotas-throttle.yaml). Each component
+# enumerates separately. No single USB product_id for the bundle.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar Complete Pack"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~          # Virtual bundle -- no single PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      This manifest represents the common pairing of the HOTAS Cougar stick
+      (cougar-hotas-stick.yaml) with the HOTAS Cougar throttle
+      (cougar-hotas-throttle.yaml). Both devices enumerate separately. Configure
+      each via its individual manifest; use this entry only for profile-level
+      bundle documentation.
+  - id: TWO_USB_DEVICES
+    description: >
+      The bundle occupies two USB HID entries. Axis count and button count are
+      the sum of the individual components. See component manifests for accurate
+      capability details.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Thrustmaster HOTAS Cougar Complete Pack -- virtual bundle documentation entry.
+    Component manifests: cougar-hotas-stick.yaml + cougar-hotas-throttle.yaml.
+    Last reviewed: 2026-06.

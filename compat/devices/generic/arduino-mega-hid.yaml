@@ -1,0 +1,61 @@
+# Generic Arduino Mega HID Joystick Controller (DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC). PID 0x0010 is assigned to custom HID devices
+# flashed with LUFA or similar USB HID firmware on Arduino hardware.
+# The Mega 2560 does not natively enumerate as HID; a secondary ATmega16U2
+# USB-interface chip running custom firmware (e.g., Hoodloader2 or LUFA)
+# exposes it as a generic HID joystick. Common in DIY cockpit trim-wheel and
+# switch panel builds.
+schema_version: "1"
+
+device:
+  name: "Arduino Mega HID Joystick (DIY)"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341   # Arduino LLC (confirmed)
+    product_id: 0x0010  # Generic Arduino HID — PID assigned by Hoodloader2 / custom LUFA firmware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      VID 0x2341 / PID 0x0010 depends on the firmware flashed onto the
+      ATmega16U2 USB interface. Hoodloader2 and LUFA-based sketches may use
+      different PIDs. The axis/button layout is entirely user-defined by the
+      Arduino sketch. Values here represent a typical 6-axis DIY panel build.
+  - id: DIY_HARDWARE
+    description: >
+      This is a DIY hardware platform. Axis count, button count, names, and
+      report descriptor vary per builder. Treat all capability values as
+      representative defaults only.
+  - id: USB_FS_ONLY
+    description: >
+      Arduino Mega is USB full-speed (12 Mbit/s). Maximum poll rate of 1000 Hz
+      is achievable with correct firmware; default is 125 Hz.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic Arduino Mega HID joystick via custom USB firmware. VID 0x2341
+    confirmed (Arduino LLC); PID 0x0010 is firmware-defined. Axis/button layout
+    is builder-configurable. Common DIY cockpit platform. Last reviewed: 2026-06.

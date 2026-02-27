@@ -1,0 +1,64 @@
+# Honeycomb Alpha XL Flight Controls (Large Yoke)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb Aeronautical). PID 0x1905 is a community estimate for
+# the Alpha XL variant. The standard Alpha yoke uses PID 0x1900 (confirmed),
+# the Bravo Throttle Quadrant uses PID 0x1901 (confirmed). The Alpha XL is
+# a larger-format yoke with a wider throw range and heavier construction.
+# Confirm PID with lsusb or USB device manager.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Alpha XL Flight Controls"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B     # Honeycomb Aeronautical (confirmed)
+    product_id: 0x1905    # Community estimate — Alpha XL; confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]         # Yoke roll and pitch; no integrated throttle
+    resolution_bits: 12
+  buttons: 36
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1905 is a community estimate for the Alpha XL. Confirmed PIDs in
+      the Honeycomb 0x294B range: 0x1900 (Alpha standard/XPC), 0x1901 (Bravo),
+      0x1902 (Alpha FlySystem). The XL variant likely uses a later PID in this
+      sequence. Confirm with lsusb.
+  - id: MAGNETO_AS_BUTTONS
+    description: >
+      Like the standard Alpha, magneto switch positions are reported as discrete
+      buttons. OpenFlight rule engine maps button combos to magneto state.
+  - id: LARGER_THROW
+    description: >
+      The Alpha XL has a wider physical throw range (approximately ±25° roll,
+      ±20° pitch) compared to the standard Alpha. Axis calibration should
+      account for the larger physical travel.
+  - id: NO_RUDDER_AXIS
+    description: >
+      No rudder axis; pair with separate rudder pedal device such as the
+      Honeycomb Charlie or MFG Crosswind.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Alpha XL large-format yoke. VID 0x294B confirmed; PID 0x1905 is
+    a community estimate. Standard Alpha uses 0x1900; XL is a later product.
+    Verify PID before marking tier 2. Last reviewed: 2026-06.
