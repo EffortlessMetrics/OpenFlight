@@ -1,0 +1,60 @@
+# PDP Victrix Pro FS Arcade Fight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Victrix Pro FS is a professional-grade arcade fightstick for PS4/PS5/PC.
+# It features modular button and joystick replacement, touchpad pass-through,
+# and a tournament-lock switch. Used in flight sims for large-format cockpit
+# panel button assignments (MFD, UFC, CDU emulation).
+# VID 0x0E6F confirmed: Performance Designed Products LLC.
+# PID 0x0201 is an estimate for the Victrix Pro FS — PID_UNCONFIRMED.
+
+schema_version: "1"
+
+device:
+  name: "PDP Victrix Pro FS Arcade Fight Stick"
+  vendor: "Performance Designed Products LLC"
+  usb:
+    vendor_id: 0x0E6F
+    product_id: 0x0201   # Estimate: Victrix Pro FS — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0201 is an estimate. Victrix Pro FS variants (FS, FS Plus, FS Air)
+      may have different PIDs. Match by USB string descriptor containing
+      "Victrix" if the PID does not match.
+  - id: ARCADE_STICK_AXES
+    description: >
+      Arcade joystick reports as digital X/Y axes (-1, 0, +1).
+      Not suitable for analog flight control. Use for discrete cockpit inputs.
+  - id: TOURNAMENT_LOCK
+    description: >
+      The touchpad and Share/Options buttons can be locked via hardware
+      toggle switch. Ensure the lock is off when using in OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PDP Victrix Pro FS. VID 0x0E6F / PID 0x0201 estimated.
+    Used as a large button panel for cockpit sim builds.
+    Last reviewed: 2026-06.

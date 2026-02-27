@@ -74,6 +74,7 @@
 mod proptest_tests;
 
 pub mod blackbox;
+pub mod calibration;
 pub mod combine;
 pub mod compiler;
 pub mod conflict;
@@ -87,6 +88,7 @@ pub mod smoothing;
 pub mod trim;
 
 pub use blackbox::{BlackboxAnnotator, BlackboxEvent, ConflictData, ResolutionDetails};
+pub use calibration::{AxisCalibration, CalibrationBank};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
 pub use conflict::{

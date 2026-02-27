@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 1268 |
-| ACs with tests | 1268 |
+| Total AC | 1340 |
+| ACs with tests | 1340 |
 | ACs with Gherkin | 869 |
 | ACs with both tests + Gherkin | 869 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 671 |
+| Draft | 743 |
 | Incomplete | 0 |
 | Microcrates | 78 |
 | Microcrates with tests | 65 (83.3%) |
 | Microcrates with Gherkin | 65 (83.3%) |
 | Microcrates fully covered | 65 (83.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 68.5% |
-| Test + Gherkin coverage | 68.5% |
+| Gherkin coverage | 64.9% |
+| Test + Gherkin coverage | 64.9% |
 
 ## BDD Microcrate Matrix
 
@@ -1386,3 +1386,75 @@
 | REQ-212 | AC-212.4 | Gamepad works without FFB hardware (gracefully degrades) | - | 1 | ⚪ Draft |
 | REQ-212 | AC-212.5 | Button hold mapped to repeated trim increment/decrement | - | 1 | ⚪ Draft |
 | REQ-212 | AC-212.6 | Profile supports multiple gamepad models without manual rebinding | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.1 | Exponential moving average (EMA) filter configurable per axis with alpha in [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.2 | Alpha=1.0 produces no smoothing (passthrough); Alpha=0.1 is heavy smoothing | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.3 | EMA filter state preserved across ticks (stateful filter) | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.4 | Filter latency measurable as 1/(1-alpha) ticks at 250Hz | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.5 | Smoothing can be enabled/disabled via profile without service restart | - | 1 | ⚪ Draft |
+| REQ-213 | AC-213.6 | Combined deadzone + smoothing + rate-limit chain produces stable output | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.1 | Profile auto-selected when new aircraft detected from any connected sim | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.2 | Profile hierarchy: aircraft-specific > sim-specific > global default | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.3 | Auto-switch event logged with aircraft ICAO, sim, and profile applied | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.4 | User-locked profile prevents auto-switch until unlocked | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.5 | No-match falls back to global default profile cleanly | - | 1 | ⚪ Draft |
+| REQ-214 | AC-214.6 | Auto-switch latency < 500ms from aircraft detection to profile active | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.1 | Prometheus-format metrics at /metrics endpoint | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.2 | Metric: openflight_tick_rate_hz gauge | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.3 | Metric: openflight_tick_jitter_us histogram (p50, p95, p99) | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.4 | Metric: openflight_device_connected counter per VID/PID | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.5 | Metric: openflight_axis_clamp_total counter per axis | - | 1 | ⚪ Draft |
+| REQ-215 | AC-215.6 | Metrics reset on service restart; monotonic counters labeled as such | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.1 | MSI installs flightd service and flightctl CLI to correct paths | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.2 | Installer creates Windows service with DEMAND_START | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.3 | SimConnect integration optionally installed (checkbox) | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.4 | Uninstall removes all installed files but preserves user config | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.5 | Installer signed with code signing certificate | - | 1 | ⚪ Draft |
+| REQ-216 | AC-216.6 | Installation log captures all installed files for audit | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.1 | Deb package installs binaries to /usr/bin and udev rules to /etc/udev/rules.d | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.2 | Postinst adds current user to 'input' group and reloads udev rules | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.3 | Systemd user unit installed and user can enable without root | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.4 | Prerm script stops service before uninstall | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.5 | Postrm cleans up udev rules and systemd unit on purge | - | 1 | ⚪ Draft |
+| REQ-217 | AC-217.6 | Package metadata includes correct SPDX license identifier | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.1 | ZIP contains flightd, flightctl, default config, and README | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.2 | Service starts from extracted directory without PATH modification | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.3 | Config directory defaults to user home on first run if not found | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.4 | Portable mode does not write to system paths | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.5 | Checksum file included for artifact integrity verification | - | 1 | ⚪ Draft |
+| REQ-218 | AC-218.6 | Portable build produced as CI artifact on every release tag | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.1 | Hat switch 8-directional positions decoded from HID value 0-8 (8=released) | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.2 | Hat switch can map to button events (N/NE/E/SE/S/SW/W/NW) | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.3 | Hat switch can map to virtual X/Y axis pair (view control) | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.4 | Multiple hat switches on same device handled independently | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.5 | Hat switch mapping configurable per axis in profile | - | 1 | ⚪ Draft |
+| REQ-219 | AC-219.6 | Hat switch state emitted on bus as both raw value and decoded direction | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.1 | Macro defined as sequence of events with optional delays | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.2 | Macro triggered on button press (not repeat, not release) | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.3 | Maximum macro length: 32 steps | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.4 | Macro in progress can be cancelled by a second press | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.5 | Macros isolated per profile (no cross-profile bleeding) | - | 1 | ⚪ Draft |
+| REQ-220 | AC-220.6 | Macro execution does not block RT spine tick | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.1 | DCS Export.lua script configured automatically on first sim connection | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.2 | Altitude, airspeed, AoA, gear state telemetry received from DCS | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.3 | FFB forces from DCS translated to OpenFlight FFB pipeline | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.4 | Module name (aircraft type) detected from DCS telemetry | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.5 | Reconnection after DCS crash handled without service restart | - | 1 | ⚪ Draft |
+| REQ-221 | AC-221.6 | DCS adapter tested with multiple module families (F-16, F/A-18, A-10) | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.1 | Axis inputs written to MSFS via SimConnect within 20ms | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.2 | MSFS telemetry (altitude, airspeed, attitude) published to bus | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.3 | MSFS aircraft ICAO type detected and used for auto-profile | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.4 | SimConnect reconnect after MSFS restart handled automatically | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.5 | MSFS simulator pause state reflected in adapter status | - | 1 | ⚪ Draft |
+| REQ-222 | AC-222.6 | MSFS 2020 and MSFS 2024 both supported with same adapter | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.1 | X-Plane dataref telemetry received over UDP (port 49000 default) | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.2 | Axis inputs sent to X-Plane via UDP (DREF/CMND protocol) | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.3 | Aircraft type detected from X-Plane ACFT dataref | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.4 | X-Plane 11 and X-Plane 12 both supported | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.5 | X-Plane UDP reconnect handled within 2s of connection loss | - | 1 | ⚪ Draft |
+| REQ-223 | AC-223.6 | X-Plane network address configurable in service config file | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.1 | Service runs without administrator/root privileges on both Windows and Linux | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.2 | HID access controlled via udev rules (Linux) or WinUSB (Windows) | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.3 | Config files stored in user-scoped directory (not system-wide writable) | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.4 | IPC channel authenticated (local socket with filesystem permissions) | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.5 | Plugin WASM sandbox cannot access filesystem or network | - | 1 | ⚪ Draft |
+| REQ-224 | AC-224.6 | Security model documented in SECURITY.md | - | 1 | ⚪ Draft |

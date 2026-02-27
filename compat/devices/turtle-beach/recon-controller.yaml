@@ -1,0 +1,65 @@
+# Turtle Beach Recon Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Turtle Beach Recon Controller is a wired Xbox-licensed gamepad for
+# Xbox One/Series/PC, notable for its programmable button remapping and
+# audio controls (headset jack with audio mixing). It is sometimes used in
+# flight sim setups for auxiliary cockpit button assignments.
+# VID 0x10F5 confirmed: Turtle Beach Corporation.
+# PID 0x7060 is an estimate for the Recon Controller — PID_UNCONFIRMED.
+
+schema_version: "1"
+
+device:
+  name: "Turtle Beach Recon Controller"
+  vendor: "Turtle Beach Corporation"
+  usb:
+    vendor_id: 0x10F5
+    product_id: 0x7060   # Estimate: Recon Controller — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x7060 is an estimate. Match by USB string descriptor containing
+      "Recon Controller" if the PID does not match.
+  - id: XINPUT_PREFERRED
+    description: >
+      Xbox-licensed XInput-compatible gamepad. Direct HID access provides
+      standard gamepad layout. XInput is preferred on Windows for full
+      trigger rumble support.
+  - id: PROGRAMMABLE_BUTTONS
+    description: >
+      The Recon Controller has onboard button remapping via the SuperAmp
+      software. Remapping state is stored on the controller. Ensure
+      default layout is active before mapping in OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach Recon Controller. VID 0x10F5 / PID 0x7060 estimated.
+    Used for auxiliary button assignments in flight sim profiles.
+    Last reviewed: 2026-06.

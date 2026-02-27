@@ -111,12 +111,14 @@
 | Arduino Pro Micro USB Trim Wheel (DIY) | 0x2341 | 0x8037 | 1 | 4 | ✗ | 3 |
 | Blue Pill STM32 HID Joystick (DIY) | 0x1EAF | 0x0024 | 6 | 24 | ✗ | 3 |
 | Generic Chinese OEM HOTAS (DragonRise / No-Brand) | 0x0079 | 0x0006 | 5 | 12 | ✗ | 3 |
+| DIY Yoke (Arduino HID) | 0x2341 | 0x8036 | 4 | 12 | ✗ | 3 |
 | ESP32 USB HID Joystick | 0x303A | 0x4001 | 6 | 32 | ✗ | 3 |
 | Gladiator M4 Pro Flight Stick | 0x0079 | 0x1800 | 4 | 12 | ✗ | 3 |
 | Generic USB HID Game Controller | 0x0000 | 0x0000 | 4 | 10 | ✗ | 3 |
 | Arduino Pro Micro HID Button Box (Generic) | 0x1B4F | 0x9205 | 0 | 32 | ✗ | 3 |
 | Raspberry Pi Pico HID Controller (RP2040) | 0x2E8A | 0x0005 | 8 | 32 | ✗ | 3 |
 | Raspberry Pi Pico / RP2040 USB HID Joystick (DIY) | 0x2E8A | 0x4001 | 6 | 16 | ✗ | 3 |
+| DIY Load Cell Rudder Pedals | 0x1209 | 0x0000 | 3 | 0 | ✗ | 3 |
 | STM32 USB HID Joystick | 0x0483 | 0x5710 | 8 | 32 | ✗ | 3 |
 | STM32-based USB HID Panel Controller (DIY) | 0x0483 | 0x5750 | 0 | 32 | ✗ | 3 |
 | Teensy 4.1 USB HID Joystick (DIY) | 0x16C0 | 0x0486 | 8 | 32 | ✗ | 3 |
@@ -129,6 +131,7 @@
 | Generic USB HID Trim Wheel | 0x2341 | 0x8036 | 1 | 2 | ✗ | 3 |
 | Generic USB MIDI Interface | 0x1235 | 0x0001 | 8 | 16 | ✗ | 3 |
 | Generic USB Numeric Keypad (Button Box) | ? | ? | 0 | 21 | ✗ | 5 |
+| WinWing-Compatible DIY Controller | 0x4098 | 0x0000 | 8 | 32 | ✗ | 3 |
 | GoFlight GF-100 Boeing 737 MCP | 0x0E9F | 0x000A | 0 | 48 | ✗ | 3 |
 | GoFlight GF-166 Radio Stack Module | 0x0E9F | 0x0008 | 0 | 20 | ✗ | 2 |
 | GoFlight GF-177 Boeing Autopilot Extended Panel | 0x0E9F | 0x000B | 0 | 36 | ✗ | 3 |
@@ -189,6 +192,7 @@
 | Honeycomb Echo Gyroplane Controller | 0x294B | 0x1904 | 4 | 12 | ✗ | 3 |
 | Hori Ace Combat 7 HOTAS Flight Stick | 0x0F0D | 0x0103 | 6 | 20 | ✗ | 2 |
 | HORI Ace Combat HOTAS (PS5) | 0x0F0D | 0x0152 | 5 | 16 | ✗ | 3 |
+| HORI Fight Commander 6 | 0x0F0D | 0x00F6 | 4 | 14 | ✗ | 3 |
 | HORI Flight Stick Alpha for PS5 | 0x0F0D | 0x0171 | 5 | 19 | ✗ | 3 |
 | Hori Flight Stick Alpha | 0x0F0D | 0x00EE | 5 | 16 | ✗ | 2 |
 | Hori HoriPad Ultimate | 0x0F0D | 0x00EF | 6 | 14 | ✓ | 3 |
@@ -201,6 +205,7 @@
 | Hori PS4 Flight Stick (PS4-113E) | 0x0F0D | 0x00F6 | 5 | 17 | ✗ | 3 |
 | HORI Racing Wheel Apex (PS5/PC) | 0x0F0D | 0x0150 | 4 | 12 | ✗ | 2 |
 | HORI Real Arcade Pro Jet | 0x0F0D | 0x006E | 2 | 10 | ✗ | 3 |
+| HORI Real Arcade Pro V Kai | 0x0F0D | 0x0063 | 2 | 14 | ✗ | 3 |
 | HORI VF-2 Ace Combat Flight Stick (Legacy) | 0x0F0D | 0x0011 | 3 | 10 | ✗ | 3 |
 | Komodo Sim Autopilot Panel | 0x04D8 | 0x0303 | 3 | 24 | ✗ | 3 |
 | Komodo Sim EFIS Panel | 0x04D8 | 0x0304 | 2 | 16 | ✗ | 3 |
@@ -351,15 +356,20 @@
 | Next Level Racing Wheel Stand Pro | ? | ? | 0 | 0 | ✗ | 3 |
 | Nintendo Switch Joy-Con (L) | 0x057E | 0x2006 | 2 | 11 | ✓ | 3 |
 | Nintendo Switch Joy-Con (R) | 0x057E | 0x2007 | 2 | 12 | ✓ | 3 |
+| Nintendo Switch Joy-Con Charging Grip | 0x057E | 0x200E | 4 | 16 | ✓ | 3 |
 | Nintendo Switch Online N64 Controller | 0x057E | 0x2019 | 2 | 14 | ✓ | 3 |
 | Nintendo Switch Pro Controller | 0x057E | 0x2009 | 4 | 16 | ✓ | 3 |
 | DIY MFD Panel (Generic OpenCockpit) | 0x2341 | 0x8036 | 0 | 32 | ✗ | 3 |
 | DIY Throttle Quadrant (Generic OpenCockpit) | 0x2341 | 0x8036 | 4 | 8 | ✗ | 3 |
+| OpenHornet Caution Advisory Panel | 0x2341 | 0x8043 | 0 | 0 | ✗ | 3 |
+| OpenHornet ODU (Option Display Unit) | 0x2341 | 0x8042 | 0 | 5 | ✗ | 3 |
 | Opencockpits IOCard USB | 0x1000 | 0x0001 | 0 | 64 | ✗ | 3 |
 | Opencockpits MCP Boeing 737 Card | 0x1000 | 0x0001 | 0 | 48 | ✗ | 3 |
 | Opencockpits Rotary Encoder Card | 0x1000 | 0x0004 | 0 | 32 | ✗ | 3 |
 | Opencockpits SIOC USB Interface Card | 0x1000 | 0x0002 | 0 | 64 | ✗ | 3 |
 | Opencockpits USB Expansion Card | 0x1000 | 0x0003 | 0 | 32 | ✗ | 3 |
+| PDP Afterglow AG 9 Wireless | 0x0E6F | 0x02A1 | 6 | 14 | ✓ | 3 |
+| PDP Victrix Pro FS Arcade Fight Stick | 0x0E6F | 0x0201 | 2 | 16 | ✗ | 3 |
 | PFC Boeing 737 Control Column | 0x04D8 | 0x0120 | 2 | 8 | ✗ | 3 |
 | PFC Cirrus Training Yoke | 0x04D8 | 0x0110 | 2 | 6 | ✗ | 3 |
 | PFC Beechcraft Baron/Bonanza Yoke | 0x04D8 | 0x0135 | 2 | 10 | ✗ | 3 |
@@ -389,8 +399,10 @@
 | PXN T6 Pro Joystick | 0x0E8F | 0x1012 | 4 | 12 | ✗ | 3 |
 | PXN V4 Joystick | 0x3820 | 0x0004 | 4 | 12 | ✗ | 3 |
 | Quickshot Defender Joystick | 0x0079 | 0x0006 | 2 | 4 | ✗ | 3 |
+| Razer Kishi Mobile Gamepad | 0x1532 | 0x0900 | 6 | 14 | ✗ | 3 |
 | Razer Raiju Mobile | 0x1532 | 0x0B00 | 6 | 18 | ✓ | 2 |
 | Razer Raiju Tournament Edition | 0x1532 | 0x0B04 | 6 | 19 | ✓ | 2 |
+| Razer Raion Fightpad for PS4 | 0x1532 | 0x0401 | 4 | 14 | ✓ | 3 |
 | Razer Wolverine Ultimate | 0x1532 | 0x0A21 | 6 | 20 | ✓ | 3 |
 | Razer Wolverine V2 Chroma | 0x1532 | 0x0A29 | 6 | 20 | ✓ | 2 |
 | Razer Wolverine V2 Pro | 0x1532 | 0x0BF6 | 6 | 22 | ✓ | 3 |
@@ -589,6 +601,7 @@
 | Trust GXT 24 Gaming Joystick | 0x145F | 0x01B3 | 4 | 12 | ✗ | 3 |
 | Trust GXT 540 Gaming Flight Stick | 0x0EFF | 0x0001 | 4 | 12 | ✗ | 3 |
 | Trust GXT 570 Vigil Flight Stick | 0x145F | 0x0238 | 4 | 12 | ✗ | 3 |
+| Turtle Beach Recon Controller | 0x10F5 | 0x7060 | 6 | 16 | ✓ | 3 |
 | Turtle Beach VelocityOne Flight Pro | 0x10F5 | 0x0210 | 4 | 18 | ✗ | 3 |
 | Turtle Beach VelocityOne Flight Universal | 0x10F5 | 0x1073 | 6 | 32 | ✗ | 3 |
 | Turtle Beach VelocityOne Flightdeck | 0x10F5 | 0x1050 | 6 | 63 | ✗ | 2 |
@@ -596,6 +609,10 @@
 | Turtle Beach VelocityOne Race Wheel | 0x10F5 | 0x7012 | 5 | 14 | ✓ | 3 |
 | Turtle Beach VelocityOne Rudder | 0x10F5 | 0x1051 | 3 | 0 | ✗ | 2 |
 | Turtle Beach VelocityOne Stick | 0x1432 | 0xB301 | 6 | 24 | ✗ | 3 |
+| Valve Index Controller (Left) | 0x28DE | 0x2300 | 5 | 5 | ✓ | 3 |
+| Valve Index Controller (Right) | 0x28DE | 0x2301 | 5 | 5 | ✓ | 3 |
+| Valve Steam Controller | 0x28DE | 0x1102 | 6 | 16 | ✗ | 3 |
+| Valve Steam Deck Gamepad | 0x28DE | 0x1205 | 8 | 24 | ✓ | 3 |
 | Varjo XR-4 Enterprise VR HMD | 0x0C45 | 0x1B40 | 6 | 0 | ✗ | 3 |
 | VIRPIL VPC ACE-1 Rudder Pedals | 0x3344 | 0x0200 | 3 | 4 | ✗ | 2 |
 | VIRPIL VPC ACE-2 Torque Rudder Pedals | 0x3344 | 0x0201 | 5 | 4 | ✗ | 3 |

@@ -1,0 +1,61 @@
+# WinWing-Compatible DIY Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing uses a proprietary HID-over-USB protocol for their HOTAS products.
+# Some community members build DIY panels and controllers that emulate the
+# WinWing USB descriptor format, allowing use with WinWing's SimAppPro software.
+# No fixed VID/PID — typically uses the original WinWing VID/PID or a generic
+# HID VID. This manifest covers WinWing-protocol DIY implementations.
+# VID/PID not fixed: match by USB product string or protocol.
+
+schema_version: "1"
+
+device:
+  name: "WinWing-Compatible DIY Controller"
+  vendor: "Community DIY"
+  usb:
+    vendor_id: 0x4098   # WinWing VID (used by some firmware clones) — PID_UNCONFIRMED
+    product_id: 0x0000  # Protocol-match only — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider0, slider1]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      DIY builds vary widely. Some emulate the WinWing VID 0x4098 with a
+      custom PID; others use generic HID VIDs (e.g., 0x0483 STMicro).
+      Match by USB product string (e.g., "WinWing DIY" or "HOTAS DIY").
+  - id: DIY_HARDWARE
+    description: >
+      Build quality, axis resolution, button count, and polling rate depend
+      entirely on the DIY implementation. Firmware is typically based on
+      Arduino/STM32/RP2040 with WinWing-compatible HID descriptors.
+  - id: SIMAPPPRO_COMPATIBLE
+    description: >
+      Designed to work with WinWing SimAppPro software. When used with
+      OpenFlight, configure axes and buttons via standard HID mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing-protocol DIY controller. VID/PID firmware-dependent.
+    Community project; see WinWing forums and r/hotas for build guides.
+    Last reviewed: 2026-06.

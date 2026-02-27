@@ -14,18 +14,20 @@
 
 ## Summary
 
-- **Total Checks:** 13
-- **Passed:** 11
-- **Failed:** 2
+- **Total Checks:** 15
+- **Passed:** 15
+- **Failed:** 0
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ✅ Pass | AC total: 1268, tests: 1268 (100.0%), gherkin: 869 (68.5%), microcrates fully covered: 65 / 78 (83.3%), complete: 597, needs_gherkin: 0, needs_tests: 0, draft: 671, incomplete: 0 |
+| BDD Feature Status | ✅ Pass | AC total: 1340, tests: 1340 (100.0%), gherkin: 869 (64.9%), microcrates fully covered: 65 / 78 (83.3%), complete: 597, needs_gherkin: 0, needs_tests: 0, draft: 743, incomplete: 0 |
 | Schema Validation | ✅ Pass | - |
-| Cross-Reference Validation | ❌ Fail | 36 error(s) found |
-| Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
+| Cross-Reference Validation | ✅ Pass | - |
+| Formatting | ✅ Pass | - |
+| Clippy | ✅ Pass | - |
+| Unit Tests | ✅ Pass | - |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
 | QG-SANITY-GATE | ✅ Pass | - |
@@ -35,193 +37,4 @@
 | QG-BDD-MATRIX-COMPLETE | ✅ Pass | - |
 | QG-CRATE-METADATA | ✅ Pass | - |
 | Public API | ✅ Pass | Skipped (cargo-public-api not installed) |
-
-## Cross-Reference Issues
-
-Found 36 cross-reference error(s):
-
-### Invalid Gherkin Tags (features → ledger)
-
-```
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:3
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:7
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:11
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:15
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:19
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_213_input_smoothing.feature:23
-  Tag: @REQ-213
-  Suggestion: Verify that REQ-213 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:3
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:7
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:11
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:15
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:19
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_214_auto_profile_selection.feature:23
-  Tag: @REQ-214
-  Suggestion: Verify that REQ-214 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:3
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:7
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:11
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:15
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:19
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_215_service_metrics_api.feature:23
-  Tag: @REQ-215
-  Suggestion: Verify that REQ-215 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:3
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:7
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:11
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:15
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:19
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_216_windows_installer.feature:23
-  Tag: @REQ-216
-  Suggestion: Verify that REQ-216 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:3
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:7
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:11
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:15
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:19
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_217_linux_package.feature:23
-  Tag: @REQ-217
-  Suggestion: Verify that REQ-217 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:3
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:7
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:11
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:15
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:19
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-[ERROR] INF-XREF-003: Invalid Gherkin tag
-  File: specs/features\req_218_portable_distribution.feature:23
-  Tag: @REQ-218
-  Suggestion: Verify that REQ-218 exists in specs/spec_ledger.yaml or remove the tag
-
-```
 

@@ -1,0 +1,63 @@
+# OpenHornet ODU (Option Display Unit) Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenHornet is a community open-source full-scale F/A-18C cockpit project.
+# The ODU (Option Display Unit) sits below the UFC on the center console and
+# provides 5 option select buttons (OSBs) with 5-digit option display windows.
+# Firmware typically runs on Arduino/AVR and presents as a USB HID button box.
+# VID/PID are board-dependent (Arduino SA VID 0x2341 is common).
+
+schema_version: "1"
+
+device:
+  name: "OpenHornet ODU (Option Display Unit)"
+  vendor: "OpenHornet Project (DIY)"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder — board-dependent)
+    product_id: 0x8042  # OpenHornet ODU firmware — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 5              # OSB 1–5 option select buttons
+  hats: 0
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 25            # 5 windows × 5 digits
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      OpenHornet ODU uses various Arduino-compatible boards. VID 0x2341
+      (Arduino SA) and PID 0x8042 are placeholders. Actual VID/PID depend
+      on firmware build. Match by USB string descriptor "OpenHornet ODU".
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      The ODU includes 5 five-digit 7-segment display windows for option
+      labels. Display state is driven by HID output reports from DCS-BIOS
+      or OpenFlight.
+  - id: MULTI_PANEL_SYSTEM
+    description: >
+      A full OpenHornet pit includes 10–20 separate USB panels. This panel
+      enumerates independently. See openhornet-ufc.yaml for the UFC panel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenHornet ODU open-source F/A-18C DIY panel. Board/firmware dependent VID/PID.
+    See github.com/OpenHornet. Companion: openhornet-ufc.yaml, openhornet-console.yaml.
+    Last reviewed: 2026-06.

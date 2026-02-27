@@ -7330,3 +7330,178 @@ requirements:
         description: "Portable build produced as CI artifact on every release tag"
         tests:
           - feature:specs/features/req_218_portable_distribution.feature
+
+  - id: REQ-219
+    name: Hat switches and POV controls map to discrete events or view axis pairs
+    kind: product
+    status: draft
+    ac:
+      - id: AC-219.1
+        description: "Hat switch 8-directional positions decoded from HID value 0-8 (8=released)"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+      - id: AC-219.2
+        description: "Hat switch can map to button events (N/NE/E/SE/S/SW/W/NW)"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+      - id: AC-219.3
+        description: "Hat switch can map to virtual X/Y axis pair (view control)"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+      - id: AC-219.4
+        description: "Multiple hat switches on same device handled independently"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+      - id: AC-219.5
+        description: "Hat switch mapping configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+      - id: AC-219.6
+        description: "Hat switch state emitted on bus as both raw value and decoded direction"
+        tests:
+          - feature:specs/features/req_219_hat_switch_mapping.feature
+  - id: REQ-220
+    name: Button macros allow single button to trigger complex action sequences
+    kind: product
+    status: draft
+    ac:
+      - id: AC-220.1
+        description: "Macro defined as sequence of events with optional delays"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+      - id: AC-220.2
+        description: "Macro triggered on button press (not repeat, not release)"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+      - id: AC-220.3
+        description: "Maximum macro length: 32 steps"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+      - id: AC-220.4
+        description: "Macro in progress can be cancelled by a second press"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+      - id: AC-220.5
+        description: "Macros isolated per profile (no cross-profile bleeding)"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+      - id: AC-220.6
+        description: "Macro execution does not block RT spine tick"
+        tests:
+          - feature:specs/features/req_220_button_macros.feature
+  - id: REQ-221
+    name: DCS World adapter provides full telemetry and control injection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-221.1
+        description: "DCS Export.lua script configured automatically on first sim connection"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+      - id: AC-221.2
+        description: "Altitude, airspeed, AoA, gear state telemetry received from DCS"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+      - id: AC-221.3
+        description: "FFB forces from DCS translated to OpenFlight FFB pipeline"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+      - id: AC-221.4
+        description: "Module name (aircraft type) detected from DCS telemetry"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+      - id: AC-221.5
+        description: "Reconnection after DCS crash handled without service restart"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+      - id: AC-221.6
+        description: "DCS adapter tested with multiple module families (F-16, F/A-18, A-10)"
+        tests:
+          - feature:specs/features/req_221_dcs_full_integration.feature
+  - id: REQ-222
+    name: MSFS SimConnect adapter provides full bidirectional control and telemetry
+    kind: product
+    status: draft
+    ac:
+      - id: AC-222.1
+        description: "Axis inputs written to MSFS via SimConnect within 20ms"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+      - id: AC-222.2
+        description: "MSFS telemetry (altitude, airspeed, attitude) published to bus"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+      - id: AC-222.3
+        description: "MSFS aircraft ICAO type detected and used for auto-profile"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+      - id: AC-222.4
+        description: "SimConnect reconnect after MSFS restart handled automatically"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+      - id: AC-222.5
+        description: "MSFS simulator pause state reflected in adapter status"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+      - id: AC-222.6
+        description: "MSFS 2020 and MSFS 2024 both supported with same adapter"
+        tests:
+          - feature:specs/features/req_222_msfs_full_integration.feature
+  - id: REQ-223
+    name: X-Plane UDP adapter provides full telemetry and axis output
+    kind: product
+    status: draft
+    ac:
+      - id: AC-223.1
+        description: "X-Plane dataref telemetry received over UDP (port 49000 default)"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+      - id: AC-223.2
+        description: "Axis inputs sent to X-Plane via UDP (DREF/CMND protocol)"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+      - id: AC-223.3
+        description: "Aircraft type detected from X-Plane ACFT dataref"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+      - id: AC-223.4
+        description: "X-Plane 11 and X-Plane 12 both supported"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+      - id: AC-223.5
+        description: "X-Plane UDP reconnect handled within 2s of connection loss"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+      - id: AC-223.6
+        description: "X-Plane network address configurable in service config file"
+        tests:
+          - feature:specs/features/req_223_xplane_full_integration.feature
+  - id: REQ-224
+    name: OpenFlight enforces platform security model for device and config access
+    kind: infra
+    status: draft
+    ac:
+      - id: AC-224.1
+        description: "Service runs without administrator/root privileges on both Windows and Linux"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature
+      - id: AC-224.2
+        description: "HID access controlled via udev rules (Linux) or WinUSB (Windows)"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature
+      - id: AC-224.3
+        description: "Config files stored in user-scoped directory (not system-wide writable)"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature
+      - id: AC-224.4
+        description: "IPC channel authenticated (local socket with filesystem permissions)"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature
+      - id: AC-224.5
+        description: "Plugin WASM sandbox cannot access filesystem or network"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature
+      - id: AC-224.6
+        description: "Security model documented in SECURITY.md"
+        tests:
+          - feature:specs/features/req_224_platform_security_model.feature

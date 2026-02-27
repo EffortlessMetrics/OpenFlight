@@ -1,0 +1,64 @@
+# DIY Yoke (Arduino HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DIY USB yokes are built by the flight sim community using Arduino or
+# compatible microcontrollers with potentiometers or hall-effect sensors for
+# roll, pitch, and optional yaw axes. They present as USB HID joystick devices.
+# Common microcontroller boards: Arduino Leonardo/Micro (ATmega32u4),
+# Arduino Pro Micro, Teensy 2.0/LC. VID/PID are board-dependent.
+
+schema_version: "1"
+
+device:
+  name: "DIY Yoke (Arduino HID)"
+  vendor: "Community DIY"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (Leonardo/Micro — ATmega32u4)
+    product_id: 0x8036  # Arduino Leonardo HID — example; firmware-dependent
+  hid:
+    usage_page: 0x01
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, rudder_twist]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_PID_BOARD_DEFINED
+    description: >
+      VID 0x2341 (Arduino SA) with PID 0x8036 is specific to Arduino Leonardo
+      in HID mode. Arduino Pro Micro uses PID 0x9206; Teensy uses VID 0x16C0.
+      Match by USB product string (e.g., "DIY Yoke", "Arduino HID Joystick").
+  - id: FIRMWARE_CONFIGURABLE
+    description: >
+      Axis count, names, and button layout are defined in firmware (typically
+      Arduino Joystick Library by MHeironimus). Adjust this manifest to match
+      your specific firmware build.
+  - id: MECHANICAL_VARIATION
+    description: >
+      Yoke mechanisms vary from 3D-printed gimbals to repurposed aircraft
+      hardware. Potentiometer quality directly affects axis resolution and noise.
+  - id: DIY_HARDWARE
+    description: >
+      Popular DIY yoke designs: OpenFlightYoke, DIY-Sim projects. Axis
+      calibration and deadzone tuning in OpenFlight is recommended.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic DIY yoke via Arduino HID. VID/PID board-dependent.
+    Popular community build for general aviation and airliner simulation.
+    Last reviewed: 2026-06.

@@ -1,0 +1,56 @@
+# HORI Real Arcade Pro V Kai
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The HORI Real Arcade Pro V Kai is a tournament-grade arcade fightstick for
+# PS3/PS4/PC. It features a Hayabusa joystick, 8 Kuro buttons, and a
+# dedicated Home/Share/Options/Touchpad panel. Used in flight sims for
+# large-format button panel assignments (MFD, CDU emulation).
+# VID 0x0F0D confirmed: Hori Co., Ltd.
+# PID 0x0063 confirmed: Real Arcade Pro V Kai (PS3/PS4/PC).
+
+schema_version: "1"
+
+device:
+  name: "HORI Real Arcade Pro V Kai"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D
+    product_id: 0x0063   # Confirmed: Real Arcade Pro V Kai
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: ARCADE_STICK_AXES
+    description: >
+      The Hayabusa joystick reports as X/Y digital axes (8-direction gate).
+      There is no analog output — axis values are -1, 0, or +1 per direction.
+      Do not use for analog flight control. Use for discrete panel button inputs.
+  - id: PS3_PS4_SWITCH
+    description: >
+      A physical PS3/PS4 mode switch on the underside affects the HID
+      report descriptor. Use PS4 mode for best PC compatibility.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI Real Arcade Pro V Kai. VID 0x0F0D / PID 0x0063 confirmed.
+    Used as a large button panel for cockpit sim builds.
+    Last reviewed: 2026-06.

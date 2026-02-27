@@ -1,0 +1,55 @@
+# HORI Fight Commander 6
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The HORI Fight Commander 6 is a fighting game gamepad with a 6-button
+# arcade layout and PS4/PS5 compatibility. It is used in flight sims for
+# button-dense cockpit panel profiles.
+# VID 0x0F0D confirmed: Hori Co., Ltd.
+# PID 0x00F6 confirmed: Fight Commander 6 for PS4/PS5/PC.
+
+schema_version: "1"
+
+device:
+  name: "HORI Fight Commander 6"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D
+    product_id: 0x00F6   # Confirmed: Fight Commander 6
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_BUTTON_LAYOUT
+    description: >
+      The Fight Commander 6 uses a Sega-style 6-button layout (A/B/C/X/Y/Z).
+      On PC the six face buttons map to standard HID buttons 1–6.
+      Configure button mappings in OpenFlight profiles as needed.
+  - id: TURBO_HARDWARE
+    description: >
+      Hardware turbo buttons are present. When active, a single button press
+      generates rapid repeat HID events. Disable turbo for flight sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HORI Fight Commander 6. VID 0x0F0D / PID 0x00F6 confirmed.
+    Used for button panel assignments in flight sim profiles.
+    Last reviewed: 2026-06.

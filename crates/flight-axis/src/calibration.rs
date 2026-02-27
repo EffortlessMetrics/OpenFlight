@@ -252,14 +252,20 @@ mod tests {
         // 14-bit device: 0..16383, center 8191
         let cal = AxisCalibration::new(0, 16383, 8191);
         let at_center = cal.normalize(8191);
-        assert!(at_center.abs() < 1e-3, "center should be ~0, got {at_center}");
+        assert!(
+            at_center.abs() < 1e-3,
+            "center should be ~0, got {at_center}"
+        );
         let at_max = cal.normalize(16383);
         assert_eq!(at_max, 1.0);
         let at_min = cal.normalize(0);
         assert_eq!(at_min, -1.0);
         // midpoint above center ~ 12287
         let mid_high = cal.normalize(12287);
-        assert!((mid_high - 0.5).abs() < 0.01, "expected ~0.5, got {mid_high}");
+        assert!(
+            (mid_high - 0.5).abs() < 0.01,
+            "expected ~0.5, got {mid_high}"
+        );
     }
 
     #[test]
@@ -267,7 +273,10 @@ mod tests {
         // 8-bit: 0..255, center 127
         let cal = AxisCalibration::new(0, 255, 127);
         let at_center = cal.normalize(127);
-        assert!(at_center.abs() < 1e-3, "center should be ~0, got {at_center}");
+        assert!(
+            at_center.abs() < 1e-3,
+            "center should be ~0, got {at_center}"
+        );
         assert_eq!(cal.normalize(255), 1.0);
         assert_eq!(cal.normalize(0), -1.0);
     }
@@ -339,10 +348,10 @@ mod tests {
             let cal = AxisCalibration::new(raw_min, raw_max, center);
             // raw above max
             let above = raw_max + 1;
-            prop_assert_eq!(cal.normalize(above), 1.0, "raw={above} > max={raw_max}");
+            prop_assert_eq!(cal.normalize(above), 1.0, "raw={} > max={}", above, raw_max);
             // raw below min
             let below = raw_min - 1;
-            prop_assert_eq!(cal.normalize(below), -1.0, "raw={below} < min={raw_min}");
+            prop_assert_eq!(cal.normalize(below), -1.0, "raw={} < min={}", below, raw_min);
         }
     }
 }

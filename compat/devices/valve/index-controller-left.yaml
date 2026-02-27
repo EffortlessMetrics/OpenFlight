@@ -1,0 +1,66 @@
+# Valve Index Controller — Left
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Valve Index Controllers ("Knuckles") are SteamVR hand controllers with
+# finger-tracking capacitive sensors, analog grip, trigger, stick, and trackpad.
+# They communicate via SteamVR Lighthouse radio protocol; USB is used only for
+# charging and firmware updates. HID gamepad mode is not standard.
+# VID 0x28DE confirmed: Valve Corporation.
+# PID 0x2300 is an estimate for the left Index Controller USB charging endpoint.
+
+schema_version: "1"
+
+device:
+  name: "Valve Index Controller (Left)"
+  vendor: "Valve Corporation"
+  usb:
+    vendor_id: 0x28DE
+    product_id: 0x2300   # Estimate: Index Controller left — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [stick_x, stick_y, trigger, grip_force, trackpad_x]
+    resolution_bits: 16
+  buttons: 5
+  hats: 0
+  gyro: true
+  force_feedback: true
+  ffb:
+    effects: [haptic_pulse]
+    max_update_rate_hz: 250
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: STEAMVR_ONLY
+    description: >
+      Index Controllers are designed exclusively for SteamVR use over
+      Lighthouse radio. USB enumeration is for charging and firmware updates
+      only. OpenFlight can only access these via SteamVR Input API, not
+      raw HID. This manifest documents the USB charging descriptor.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2300 is an estimate. Actual USB charging PID may differ.
+      Match by USB string descriptor containing "Index Controller" if needed.
+  - id: FINGER_TRACKING
+    description: >
+      Capacitive finger sensors report individual finger proximity/force —
+      accessible only through SteamVR SDK, not raw HID.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Valve Index Controller left hand. VID 0x28DE / PID 0x2300 estimated.
+    SteamVR-only device; raw HID access limited to USB charging descriptor.
+    Last reviewed: 2026-06.

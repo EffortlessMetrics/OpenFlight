@@ -1,0 +1,59 @@
+# Razer Raion PS4 Fightpad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Razer Raion Fightpad is a gamepad designed for fighting games on PS4,
+# featuring a 6-button arcade layout, d-pad, and Share/Options buttons.
+# Sometimes used for button-heavy cockpit panel assignments in flight sims.
+# VID 0x1532 confirmed: Razer Inc.
+# PID 0x0401 confirmed: Razer Raion Fightpad for PS4 (razer.com device list).
+
+schema_version: "1"
+
+device:
+  name: "Razer Raion Fightpad for PS4"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532
+    product_id: 0x0401   # Confirmed: Razer Raion Fightpad PS4
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+    torque_limit_nm: null
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PS4_MODE_REQUIRED
+    description: >
+      Designed for PS4; operates as a standard HID gamepad on PC.
+      The 6-button arcade layout (LP/MP/HP/LK/MK/HK) maps to face buttons
+      and shoulder triggers. Configure button remapping in OpenFlight profiles.
+  - id: TOUCHPAD_ABSENT
+    description: >
+      The Raion is a fightpad with no touchpad. Share and Options buttons
+      are accessible as standard HID buttons.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Raion PS4 Fightpad. VID 0x1532 / PID 0x0401 confirmed (razer.com).
+    Used for button panel assignments in flight sim profiles.
+    Last reviewed: 2026-06.
