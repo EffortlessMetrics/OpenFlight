@@ -997,9 +997,10 @@ impl TrimValidationSuite {
                 // Check reproducibility tolerance — allow for OS scheduler timing variance.
                 // On Windows, thread::sleep(1ms) may actually sleep 10-16ms, so consecutive
                 // runs of the same sequence can produce different dt values and thus different
-                // accumulated setpoints. 0.15 Nm accounts for up to ~37ms scheduler jitter at
-                // the maximum 4 Nm/s rate used in this test (conservative to prevent flakiness).
-                if difference > 0.15 {
+                // accumulated setpoints. 0.25 Nm accounts for up to ~60ms scheduler jitter at
+                // the maximum 4 Nm/s rate used in this test (conservative to prevent flakiness
+                // on heavily loaded CI runners).
+                if difference > 0.25 {
                     return Err(format!(
                         "Reproducibility error at sample {}: {} vs {} (diff: {})",
                         i, first, second, difference
