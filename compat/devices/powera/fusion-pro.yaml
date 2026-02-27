@@ -1,0 +1,49 @@
+# PowerA FUSION Pro Wired Controller (Xbox)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x24C6 confirmed: PowerA / Performance Designed Products (PDP).
+# PID 0x5B00: community-confirmed for FUSION Pro wired Xbox controller.
+# Four mappable back paddles and hair-trigger locks. Used in some flight
+# sim setups as secondary panel controller.
+
+schema_version: "1"
+
+device:
+  name: "PowerA FUSION Pro (Xbox)"
+  vendor: "PowerA / PDP"
+  usb:
+    vendor_id: 0x24C6   # PowerA / PDP (confirmed)
+    product_id: 0x5B00  # FUSION Pro — confirmed from community HID reports
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 10
+  buttons: 18
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: BACK_PADDLES
+    description: "Four mappable back paddles report as additional buttons (B15-B18)."
+  - id: HAIR_TRIGGER_LOCKS
+    description: "Physical trigger locks reduce travel to ~25% of full range."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PowerA FUSION Pro Xbox wired controller. VID 0x24C6 confirmed; PID 0x5B00
+    community-confirmed. Back paddles useful for cockpit panel shortcuts.
+    Last reviewed: 2026-06.

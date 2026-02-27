@@ -1,0 +1,51 @@
+# DIY USB Button Box (Generic)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Generic DIY USB button box — a community term for any custom-built HID
+# panel with buttons, toggles, encoders, and/or small displays, typically
+# built on an Arduino, Teensy, or similar MCU. Common in sim racing and
+# flight sim cockpit setups. VID/PID board-dependent.
+
+schema_version: "1"
+
+device:
+  name: "DIY USB Button Box (Generic)"
+  vendor: "DIY / Community"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (placeholder — board-dependent)
+    product_id: 0x8036  # Generic HID joystick — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [encoder_1, encoder_2, encoder_3, potentiometer_1]
+    resolution_bits: 8
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID entirely board/firmware dependent. No single confirmed VID/PID."
+  - id: DIY_CALIBRATION_REQUIRED
+    description: "Potentiometer ranges vary across builds. Calibrate per-device."
+  - id: PANEL_DEVICE
+    description: "Typically used as a panel/button controller, not a primary flight axis device."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Generic DIY USB button box. Covers common Arduino/Teensy-based builds.
+    VID/PID firmware-dependent. See also arduino-hid-joystick.yaml,
+    teensy-hid.yaml, mmjoy2-controller.yaml. Last reviewed: 2026-06.

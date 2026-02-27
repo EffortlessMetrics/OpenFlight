@@ -1,0 +1,47 @@
+# Gravis BlackHawk Digital Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 confirmed: Advanced Gravis Computer Technology Ltd (now Kensington).
+# PID 0x8003: confirmed from kernel HID table for Gravis BlackHawk Digital.
+# Classic late-1990s USB joystick with twist rudder and 8-button layout.
+
+schema_version: "1"
+
+device:
+  name: "Gravis BlackHawk Digital Joystick"
+  vendor: "Gravis / Kensington"
+  usb:
+    vendor_id: 0x0428   # Gravis / Kensington (confirmed)
+    product_id: 0x8003  # BlackHawk Digital — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rudder_twist]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: LEGACY_DEVICE
+    description: >
+      Late-1990s joystick. Drivers are built into OS HID stack. No special
+      quirks beyond standard low-resolution axes (8-bit).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Gravis BlackHawk Digital joystick. VID 0x0428, PID 0x8003 confirmed from
+    kernel HID tables. Legacy device; 8-bit axis resolution. Last reviewed: 2026-06.

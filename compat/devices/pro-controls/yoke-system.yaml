@@ -1,0 +1,45 @@
+# Pro Controls Yoke System (Cockpit Builder OEM)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Pro Controls OEM yoke system for home cockpit builders — complementary
+# to the Pro Controls throttle quadrant (throttle-quadrant.yaml). Standard
+# column-and-wheel yoke with pitch/roll axes. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Pro Controls Yoke System"
+  vendor: "Pro Controls"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip common in OEM HW)
+    product_id: 0xFF11      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Pro Controls uses various USB bridge chips."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pro Controls OEM yoke system. Pairs with throttle-quadrant.yaml for
+    Boeing/Airbus home cockpit builds. VID/PID unconfirmed. Last reviewed: 2026-06.

@@ -1,0 +1,52 @@
+# WinWing F/A-18 Combat Ready Collar
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing Combat Ready Collar — a guard/collar accessory that wraps around
+# the F/A-18 Orion2 throttle grip to replicate the real-aircraft throttle
+# guard switches. Enumerates as a separate USB HID device from the throttle.
+# VID 0x4098 confirmed (WinWing). PID community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing F/A-18 Combat Ready Collar"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing (confirmed)
+    product_id: 0xBE06  # Combat Ready Collar — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE06 is a placeholder. The Combat Ready Collar typically enumerates
+      alongside the Orion2 F/A-18 throttle; verify PID against real hardware.
+  - id: PANEL_DEVICE
+    description: "Pure panel device — switch/guard buttons only, no axes."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18 Combat Ready Collar accessory. Button-only panel device
+    adding throttle guard switches to the Orion2 F/A-18 throttle setup.
+    VID 0x4098 confirmed; PID unconfirmed. See also f18-combat-ready-panel.yaml.
+    Last reviewed: 2026-06.

@@ -1,0 +1,46 @@
+# DHC Rudder Pedals (Cockpit Builder OEM)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DHC cockpit builder OEM rudder pedals — complementary to the DHC Yoke
+# System (yoke-system.yaml). Replicates various aircraft pedal geometries
+# (Piper, Cessna, etc.) with differential toe brake axes. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "DHC Rudder Pedals"
+  vendor: "DHC"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0xFF21      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. DHC uses various USB bridge chips across product runs."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DHC OEM rudder pedals with differential toe brakes. Pairs with
+    yoke-system.yaml for a complete DHC ATD setup. VID/PID unconfirmed.
+    Last reviewed: 2026-06.

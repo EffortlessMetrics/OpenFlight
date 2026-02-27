@@ -5311,3 +5311,218 @@ requirements:
         description: "The session identifier SHALL conform to the RFC 4122 UUID format"
         tests:
           - feature:specs/features/req_152_session_management.feature
+
+  - id: REQ-153
+    name: Honeycomb Alpha yoke full integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-153.1
+        description: "The decoded X and Y axis values SHALL each be 0.0 when both roll and pitch axes are at mechanical centre"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.2
+        description: "The decoded X axis value SHALL be 1.0 when the roll axis is deflected to its rightmost stop"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.3
+        description: "The decoded Y axis SHALL reach -1.0 for pitch up and 1.0 for pitch down at the extreme stops"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.4
+        description: "Each of the 23 button events SHALL carry the correct button index and pressed state"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.5
+        description: "Each landing-gear switch position change SHALL be reported as a distinct button event"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.6
+        description: "The avionics master switch toggle SHALL produce a button event reflecting the new switch state"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.7
+        description: "Each flap switch position SHALL produce a unique button index event"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+      - id: AC-153.8
+        description: "A device with VID 0x294B and PID 0x1901 SHALL be identified as the Honeycomb Alpha yoke"
+        tests:
+          - feature:specs/features/req_153_honeycomb_alpha_full.feature
+  - id: REQ-154
+    name: Honeycomb Bravo throttle full integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-154.1
+        description: "Each decoded throttle axis value SHALL be 0.0 when all six throttle levers are at idle"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.2
+        description: "Each decoded throttle axis value SHALL be 1.0 when all six throttle levers are at full forward"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.3
+        description: "Each throttle axis SHALL report its own independent decoded value when levers are at different positions"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.4
+        description: "Each prop lever SHALL map to a distinct decoded axis"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.5
+        description: "Each mixture lever SHALL map to a distinct decoded axis"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.6
+        description: "Each gear lever position SHALL be reported as a discrete axis or button event"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.7
+        description: "An LED illumination command SHALL activate the corresponding annunciator LED via the HID output report"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+      - id: AC-154.8
+        description: "A device with VID 0x294B and PID 0x1905 SHALL be identified as the Honeycomb Bravo throttle"
+        tests:
+          - feature:specs/features/req_154_honeycomb_bravo_full.feature
+  - id: REQ-155
+    name: VKB Gladiator NXT EVO full integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-155.1
+        description: "The decoded X and Y axis values SHALL each be 0.0 with 14-bit precision when both axes are at centre"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.2
+        description: "The decoded X axis value SHALL be 1.0 when the roll axis is deflected to its rightmost stop"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.3
+        description: "The decoded Rz axis SHALL traverse the range -1.0 to 1.0 across the full twist travel"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.4
+        description: "Each of the 8 hat switch positions SHALL produce a distinct decoded hat direction event"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.5
+        description: "Each of the 20 button events SHALL carry the correct button index and pressed state"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.6
+        description: "The decoded throttle axis SHALL report values across the full range as the lever is moved"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.7
+        description: "Each Companion Hat direction SHALL produce a distinct decoded event"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+      - id: AC-155.8
+        description: "A device with VID 0x231D matching the Gladiator NXT EVO PID SHALL be identified as a VKB Gladiator NXT EVO stick"
+        tests:
+          - feature:specs/features/req_155_vkb_gladiator_full.feature
+  - id: REQ-156
+    name: VIRPIL MongoosT-50CM3 full integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-156.1
+        description: "The decoded X and Y axis values SHALL each be 0.0 with 14-bit precision when both axes are at centre"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.2
+        description: "The decoded roll axis value SHALL be 1.0 when deflected to its physical maximum"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.3
+        description: "The decoded throttle axis SHALL report values across the full range as the lever is moved"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.4
+        description: "The side throttle SHALL map to a distinct decoded axis"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.5
+        description: "Each of the 46 button events SHALL carry the correct button index and pressed state"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.6
+        description: "Each mode selector position SHALL produce a distinct decoded axis or button event"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.7
+        description: "Each of the 5 China Hat directions SHALL produce a distinct decoded button event"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+      - id: AC-156.8
+        description: "A device with VID 0x3344 matching the MongoosT-50CM3 PID SHALL be identified as a VIRPIL MongoosT-50CM3 stick"
+        tests:
+          - feature:specs/features/req_156_virpil_mongoost_full.feature
+  - id: REQ-157
+    name: Stream Deck integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-157.1
+        description: "A key-press event SHALL be raised with the correct key index when a physical key is pressed"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.2
+        description: "Image data SHALL be transmitted via the USB HID output report when a key image write command is issued"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.3
+        description: "The device SHALL receive the corresponding brightness HID report for boundary values 0 and 100"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.4
+        description: "Each simultaneous key-press SHALL produce an independent event when multiple keys are pressed at once"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.5
+        description: "The driver SHALL re-initialise the device and resume normal operation without error after disconnect and reconnect"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.6
+        description: "Key counts SHALL be 15 for Stream Deck Original, 32 for XL, and 6 for Mini"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.7
+        description: "An all-key batch image update SHALL complete within the allowed HID write budget"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+      - id: AC-157.8
+        description: "Key images on the Stream Deck SHALL be updated to reflect the new profile when the active profile is switched"
+        tests:
+          - feature:specs/features/req_157_stream_deck_integration.feature
+  - id: REQ-158
+    name: Tactile feedback device
+    kind: product
+    status: draft
+    ac:
+      - id: AC-158.1
+        description: "The device SHALL receive the corresponding low-frequency signal output when a frequency envelope is submitted"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature
+      - id: AC-158.2
+        description: "The device output amplitude SHALL scale proportionally when the intensity parameter is varied across its full range"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature
+      - id: AC-158.3
+        description: "Each tactile zone SHALL reproduce its assigned effect independently when distinct effects are sent simultaneously"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature
+      - id: AC-158.4
+        description: "The effect SHALL cease and no further output commands SHALL be issued when the device is disconnected"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature
+      - id: AC-158.5
+        description: "Signals below 100 Hz SHALL be prioritised in the output rendering when a mix of frequencies is submitted"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature
+      - id: AC-158.6
+        description: "The device SHALL be assigned to the correct output channel based on its identifier during the binding process"
+        tests:
+          - feature:specs/features/req_158_tactile_feedback.feature

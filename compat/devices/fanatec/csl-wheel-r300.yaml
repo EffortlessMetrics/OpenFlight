@@ -1,0 +1,52 @@
+# Fanatec CSL Steering Wheel R300 V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec / Endor AG (registered USB vendor).
+# PID 0x020C: community-confirmed for CSL Wheel R300 V2.
+# Round 300mm wheel rim that attaches to Fanatec CSL DD / Podium bases.
+# Used in some flight sim setups as a primary yoke/column surrogate.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec CSL Steering Wheel R300 V2"
+  vendor: "Fanatec / Endor AG"
+  usb:
+    vendor_id: 0x0EB7   # Fanatec / Endor AG (confirmed)
+    product_id: 0x020C  # CSL Wheel R300 V2 — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 1
+    names: [steering]
+    resolution_bits: 14
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x020C is a community estimate. Verify against real hardware."
+  - id: WHEEL_REQUIRES_BASE
+    description: >
+      The R300 wheel rim requires a Fanatec wheelbase (CSL DD, Podium DD1/DD2,
+      or ClubSport V2.5) to function. The rim itself does not connect directly
+      to USB; the wheelbase provides the USB interface.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec CSL Steering Wheel R300 V2 rim. VID 0x0EB7 confirmed; PID unconfirmed.
+    Requires Fanatec wheelbase. See csl-dd.yaml, podium-dd1.yaml for bases.
+    Last reviewed: 2026-06.

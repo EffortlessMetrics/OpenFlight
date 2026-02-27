@@ -18,13 +18,13 @@ pub mod sidewinder_ffb;
 pub mod sidewinder_precision;
 
 pub use flight_hid_support::device_support::{
-    MICROSOFT_VENDOR_ID, SIDEWINDER_FFB2_PID, SIDEWINDER_FFB_PRO_PID, SIDEWINDER_PRECISION_2_PID,
+    MICROSOFT_VENDOR_ID, SIDEWINDER_FFB_PRO_PID, SIDEWINDER_FFB2_PID, SIDEWINDER_PRECISION_2_PID,
     SidewinderModel, is_sidewinder_device, sidewinder_model,
 };
 pub use sidewinder_ffb::{
     SIDEWINDER_FFB_MIN_REPORT_BYTES, SidewinderFfbAxes, SidewinderFfbButtons, SidewinderFfbHat,
-    SidewinderFfbInputState, SidewinderFfbParseError, parse_sidewinder_ffb2,
-    parse_sidewinder_ffb_pro,
+    SidewinderFfbInputState, SidewinderFfbParseError, parse_sidewinder_ffb_pro,
+    parse_sidewinder_ffb2,
 };
 pub use sidewinder_precision::{
     SIDEWINDER_P2_MIN_REPORT_BYTES, SidewinderP2Axes, SidewinderP2Buttons, SidewinderP2Hat,

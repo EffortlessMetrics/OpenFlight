@@ -1,0 +1,46 @@
+# CPFlight EFIS Panel (First Officer Side)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight (Italy) Boeing 737 EFIS panel — first officer side, mirrors the
+# captain EFIS panel (efis-captain.yaml) in layout. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight EFIS Panel (First Officer)"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1781   # VID_UNCONFIRMED
+    product_id: 0x0B02  # EFIS FO — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [range_selector, mins_knob]
+    resolution_bits: 8
+  buttons: 18
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against CPFlight hardware documentation."
+  - id: PANEL_DEVICE
+    description: "Mirror of efis-captain.yaml on the first-officer side."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight B737 EFIS first-officer panel. VID/PID unconfirmed. Pairs with
+    efis-captain.yaml and mcp-pro.yaml. Last reviewed: 2026-06.

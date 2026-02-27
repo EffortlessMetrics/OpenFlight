@@ -1,0 +1,48 @@
+# Brunner CLS-E NG Collective (Helicopter)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Brunner Elektronik CLS-E NG Collective — USB collective stick for
+# helicopter simulation. Provides collective pitch axis plus throttle twist
+# and panel switches. Pairs with CLS-E NG cyclic (cls-e-ng-joystick.yaml)
+# and CLS-P Pedals (cls-p-pedals.yaml). VID/PID from Brunner HID exports.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E NG Collective"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781   # Brunner Elektronik — VID_UNCONFIRMED (community estimate)
+    product_id: 0x0A10  # CLS-E NG Collective — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, throttle_twist, friction]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Brunner uses custom firmware; verify via Brunner documentation."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Collective axis is unipolar [0, max]; map to [0.0, 1.0]."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E NG helicopter collective. Pairs with cls-e-ng-joystick.yaml
+    and cls-p-pedals.yaml. VID/PID unconfirmed. Last reviewed: 2026-06.

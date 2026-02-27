@@ -1,0 +1,54 @@
+# 3Dconnexion SpaceMouse Pro Wireless (USB Receiver)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed: 3Dconnexion (registered USB vendor).
+# PID 0xC635: confirmed from linux-hardware.org probes and 3Dconnexion
+# open-source driver for SpaceMouse Pro Wireless USB receiver.
+# Used in some flight sim setups for 6DOF camera control and view panning.
+
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Pro Wireless (USB)"
+  vendor: "3Dconnexion"
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion (confirmed)
+    product_id: 0xC635  # SpaceMouse Pro Wireless receiver — confirmed
+  hid:
+    usage_page: 0xFF00   # Vendor-defined
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 14
+  buttons: 15
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: VENDOR_HID_PROTOCOL
+    description: >
+      3Dconnexion uses a vendor-defined HID protocol. Axis data is in
+      device reports using a custom format. The 3Dconnexion SDK or
+      spacenavd provides a standard interface.
+  - id: SIX_DOF_AXES
+    description: >
+      Six simultaneous axes (3 translation + 3 rotation). Maps well to
+      flight sim view pan/tilt or camera rotation.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    3Dconnexion SpaceMouse Pro Wireless USB receiver. VID 0x256F, PID 0xC635
+    confirmed. 6DOF for camera/view control in MSFS/DCS/X-Plane.
+    See space-mouse-pro.yaml for wired variant. Last reviewed: 2026-06.

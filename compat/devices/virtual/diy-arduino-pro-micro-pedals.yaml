@@ -1,0 +1,55 @@
+# DIY Rudder Pedals (Arduino Pro Micro)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Common DIY rudder pedal build using an Arduino Pro Micro (ATmega32U4)
+# running the joystick library. VID 0x2341 confirmed: Arduino SA (or
+# 0x1B4F for SparkFun clone). PID varies with board and firmware but
+# 0x8037 is the Pro Micro HID joystick PID per joystick library sources.
+# Separate from arduino-hid-joystick.yaml (generic Arduino HID).
+
+schema_version: "1"
+
+device:
+  name: "DIY Rudder Pedals (Arduino Pro Micro)"
+  vendor: "DIY / Community"
+  usb:
+    vendor_id: 0x2341   # Arduino SA (confirmed); clones may use 0x1B4F
+    product_id: 0x8037  # Pro Micro Joystick — PID_UNCONFIRMED (firmware-dependent)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, toe_brake_l, toe_brake_r]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID varies with the joystick library version and board type. Common values
+      are 0x8037 (Pro Micro), 0x8038 (Leonardo), or firmware-assigned values.
+      Filter by VID and axis count in profile.
+  - id: DIY_CALIBRATION_REQUIRED
+    description: >
+      Raw potentiometer ranges vary across builds. Calibration in the axis
+      profile is strongly recommended.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    DIY rudder pedals using Arduino Pro Micro and joystick library. VID 0x2341
+    (Arduino SA). PID firmware-dependent. See arduino-hid-joystick.yaml for
+    generic Arduino HID template. Last reviewed: 2026-06.

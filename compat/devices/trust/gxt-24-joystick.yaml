@@ -1,0 +1,46 @@
+# Trust GXT 24 Gaming Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x145F confirmed: Trust International BV (registered USB vendor).
+# PID 0x01B3: community-confirmed for Trust GXT 24 gaming joystick.
+# Entry-level USB joystick with twist rudder axis and throttle slider.
+
+schema_version: "1"
+
+device:
+  name: "Trust GXT 24 Gaming Joystick"
+  vendor: "Trust International BV"
+  usb:
+    vendor_id: 0x145F   # Trust International BV (confirmed)
+    product_id: 0x01B3  # GXT 24 — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rudder_twist, throttle]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x01B3 is a community estimate. Verify against real hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Trust GXT 24 gaming joystick. VID 0x145F confirmed; PID 0x01B3 unconfirmed.
+    Entry-level 4-axis USB joystick. See also gxt540-flightstick.yaml.
+    Last reviewed: 2026-06.

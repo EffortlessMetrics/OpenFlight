@@ -807,6 +807,79 @@ pub const BRUNNER_CLS_E_NG_YOKE_PID: u16 = 0x006D;
 /// Product name inferred from Brunner shop catalogue; part number confirmed from USB registry.
 pub const BRUNNER_CLS_E_RUDDER_PID: u16 = 0x006B;
 
+/// USB Vendor ID for Microsoft Corporation.
+///
+/// Confirmed: VID 0x045E — USB Implementers Forum vendor registry;
+/// used by the SideWinder joystick family and many other Microsoft peripherals.
+pub const MICROSOFT_VENDOR_ID: u16 = 0x045E;
+
+/// USB Product ID for the Microsoft SideWinder Force Feedback Pro.
+///
+/// Confirmed: VID 0x045E (Microsoft), PID 0x001B — Linux kernel `hid-microsoft.c`
+/// (USB_DEVICE_ID_MICROSOFT_SIDEWINDER_FFB) and linux-hardware.org hardware probes.
+/// Three-axis FFB joystick (~1998); 10-bit X/Y, 8-bit Rz/Throttle, 9 buttons, hat.
+pub const SIDEWINDER_FFB_PRO_PID: u16 = 0x001B;
+
+/// USB Product ID for the Microsoft SideWinder Force Feedback 2.
+///
+/// Confirmed: VID 0x045E (Microsoft), PID 0x001C — Linux kernel `hid-microsoft.c`
+/// (USB_DEVICE_ID_MICROSOFT_SIDEWINDER_FFB2). Revised FFB joystick (~2000);
+/// shares the identical 7-byte HID report layout with the FFB Pro (0x001B).
+pub const SIDEWINDER_FFB2_PID: u16 = 0x001C;
+
+/// USB Product ID for the Microsoft SideWinder Precision 2.
+///
+/// Confirmed: VID 0x045E (Microsoft), PID 0x002B — linux-hardware.org (multiple
+/// probes, USB string "Microsoft SideWinder Precision 2"). Non-FFB budget joystick
+/// (~2000); same 7-byte HID report layout as the FFB variants.
+pub const SIDEWINDER_PRECISION_2_PID: u16 = 0x002B;
+
+/// Microsoft SideWinder product family models.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SidewinderModel {
+    /// SideWinder Force Feedback Pro. VID 0x045E, PID 0x001B.
+    FfbPro,
+    /// SideWinder Force Feedback 2. VID 0x045E, PID 0x001C.
+    Ffb2,
+    /// SideWinder Precision 2 (no force feedback). VID 0x045E, PID 0x002B.
+    Precision2,
+}
+
+impl SidewinderModel {
+    /// Human-readable product name for this model.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::FfbPro => "Microsoft SideWinder Force Feedback Pro",
+            Self::Ffb2 => "Microsoft SideWinder Force Feedback 2",
+            Self::Precision2 => "Microsoft SideWinder Precision 2",
+        }
+    }
+
+    /// Returns `true` if this model has a force feedback motor.
+    pub fn has_ffb(self) -> bool {
+        matches!(self, Self::FfbPro | Self::Ffb2)
+    }
+}
+
+/// Returns `true` if this VID/PID combination belongs to a known SideWinder joystick.
+pub fn is_sidewinder_device(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == MICROSOFT_VENDOR_ID
+        && matches!(
+            product_id,
+            SIDEWINDER_FFB_PRO_PID | SIDEWINDER_FFB2_PID | SIDEWINDER_PRECISION_2_PID
+        )
+}
+
+/// Returns the [`SidewinderModel`] for a known PID, or `None` for unknown PIDs.
+pub fn sidewinder_model(product_id: u16) -> Option<SidewinderModel> {
+    match product_id {
+        SIDEWINDER_FFB_PRO_PID => Some(SidewinderModel::FfbPro),
+        SIDEWINDER_FFB2_PID => Some(SidewinderModel::Ffb2),
+        SIDEWINDER_PRECISION_2_PID => Some(SidewinderModel::Precision2),
+        _ => None,
+    }
+}
+
 pub const USAGE_PAGE_GENERIC_DESKTOP: u16 = 0x01;
 pub const USAGE_PAGE_BUTTON: u16 = 0x09;
 

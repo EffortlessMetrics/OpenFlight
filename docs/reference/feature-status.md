@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 887 |
-| ACs with tests | 887 |
+| Total AC | 933 |
+| ACs with tests | 933 |
 | ACs with Gherkin | 714 |
 | ACs with both tests + Gherkin | 714 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 290 |
+| Draft | 336 |
 | Incomplete | 0 |
-| Microcrates | 72 |
-| Microcrates with tests | 65 (90.3%) |
-| Microcrates with Gherkin | 65 (90.3%) |
-| Microcrates fully covered | 65 (90.3%) |
+| Microcrates | 73 |
+| Microcrates with tests | 65 (89.0%) |
+| Microcrates with Gherkin | 65 (89.0%) |
+| Microcrates fully covered | 65 (89.0%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 80.5% |
-| Test + Gherkin coverage | 80.5% |
+| Gherkin coverage | 76.5% |
+| Test + Gherkin coverage | 76.5% |
 
 ## BDD Microcrate Matrix
 
@@ -63,6 +63,7 @@
 | flight-hotas-ch | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-honeycomb | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-logitech | 26 | 26 | 26 | 26 | 26 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-microsoft | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-thrustmaster | 33 | 33 | 33 | 33 | 33 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
@@ -999,3 +1000,49 @@
 | REQ-152 | AC-152.6 | Each session log entry SHALL include a UTC timestamp | - | 1 | ⚪ Draft |
 | REQ-152 | AC-152.7 | The session SHALL release all resources and flush logs before exit when the service stop command is issued | - | 1 | ⚪ Draft |
 | REQ-152 | AC-152.8 | The session identifier SHALL conform to the RFC 4122 UUID format | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.1 | The decoded X and Y axis values SHALL each be 0.0 when both roll and pitch axes are at mechanical centre | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.2 | The decoded X axis value SHALL be 1.0 when the roll axis is deflected to its rightmost stop | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.3 | The decoded Y axis SHALL reach -1.0 for pitch up and 1.0 for pitch down at the extreme stops | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.4 | Each of the 23 button events SHALL carry the correct button index and pressed state | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.5 | Each landing-gear switch position change SHALL be reported as a distinct button event | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.6 | The avionics master switch toggle SHALL produce a button event reflecting the new switch state | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.7 | Each flap switch position SHALL produce a unique button index event | - | 1 | ⚪ Draft |
+| REQ-153 | AC-153.8 | A device with VID 0x294B and PID 0x1901 SHALL be identified as the Honeycomb Alpha yoke | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.1 | Each decoded throttle axis value SHALL be 0.0 when all six throttle levers are at idle | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.2 | Each decoded throttle axis value SHALL be 1.0 when all six throttle levers are at full forward | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.3 | Each throttle axis SHALL report its own independent decoded value when levers are at different positions | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.4 | Each prop lever SHALL map to a distinct decoded axis | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.5 | Each mixture lever SHALL map to a distinct decoded axis | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.6 | Each gear lever position SHALL be reported as a discrete axis or button event | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.7 | An LED illumination command SHALL activate the corresponding annunciator LED via the HID output report | - | 1 | ⚪ Draft |
+| REQ-154 | AC-154.8 | A device with VID 0x294B and PID 0x1905 SHALL be identified as the Honeycomb Bravo throttle | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.1 | The decoded X and Y axis values SHALL each be 0.0 with 14-bit precision when both axes are at centre | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.2 | The decoded X axis value SHALL be 1.0 when the roll axis is deflected to its rightmost stop | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.3 | The decoded Rz axis SHALL traverse the range -1.0 to 1.0 across the full twist travel | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.4 | Each of the 8 hat switch positions SHALL produce a distinct decoded hat direction event | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.5 | Each of the 20 button events SHALL carry the correct button index and pressed state | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.6 | The decoded throttle axis SHALL report values across the full range as the lever is moved | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.7 | Each Companion Hat direction SHALL produce a distinct decoded event | - | 1 | ⚪ Draft |
+| REQ-155 | AC-155.8 | A device with VID 0x231D matching the Gladiator NXT EVO PID SHALL be identified as a VKB Gladiator NXT EVO stick | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.1 | The decoded X and Y axis values SHALL each be 0.0 with 14-bit precision when both axes are at centre | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.2 | The decoded roll axis value SHALL be 1.0 when deflected to its physical maximum | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.3 | The decoded throttle axis SHALL report values across the full range as the lever is moved | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.4 | The side throttle SHALL map to a distinct decoded axis | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.5 | Each of the 46 button events SHALL carry the correct button index and pressed state | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.6 | Each mode selector position SHALL produce a distinct decoded axis or button event | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.7 | Each of the 5 China Hat directions SHALL produce a distinct decoded button event | - | 1 | ⚪ Draft |
+| REQ-156 | AC-156.8 | A device with VID 0x3344 matching the MongoosT-50CM3 PID SHALL be identified as a VIRPIL MongoosT-50CM3 stick | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.1 | A key-press event SHALL be raised with the correct key index when a physical key is pressed | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.2 | Image data SHALL be transmitted via the USB HID output report when a key image write command is issued | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.3 | The device SHALL receive the corresponding brightness HID report for boundary values 0 and 100 | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.4 | Each simultaneous key-press SHALL produce an independent event when multiple keys are pressed at once | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.5 | The driver SHALL re-initialise the device and resume normal operation without error after disconnect and reconnect | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.6 | Key counts SHALL be 15 for Stream Deck Original, 32 for XL, and 6 for Mini | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.7 | An all-key batch image update SHALL complete within the allowed HID write budget | - | 1 | ⚪ Draft |
+| REQ-157 | AC-157.8 | Key images on the Stream Deck SHALL be updated to reflect the new profile when the active profile is switched | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.1 | The device SHALL receive the corresponding low-frequency signal output when a frequency envelope is submitted | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.2 | The device output amplitude SHALL scale proportionally when the intensity parameter is varied across its full range | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.3 | Each tactile zone SHALL reproduce its assigned effect independently when distinct effects are sent simultaneously | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.4 | The effect SHALL cease and no further output commands SHALL be issued when the device is disconnected | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.5 | Signals below 100 Hz SHALL be prioritised in the output rendering when a mix of frequencies is submitted | - | 1 | ⚪ Draft |
+| REQ-158 | AC-158.6 | The device SHALL be assigned to the correct output channel based on its identifier during the binding process | - | 1 | ⚪ Draft |

@@ -1,0 +1,47 @@
+# PowerA FUSION Pro 2 Wired Controller (Xbox)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x24C6 confirmed: PowerA / Performance Designed Products (PDP).
+# PID 0x5B01: community estimate for FUSION Pro 2 — second generation
+# with improved analog sticks and additional customisation options.
+
+schema_version: "1"
+
+device:
+  name: "PowerA FUSION Pro 2 (Xbox)"
+  vendor: "PowerA / PDP"
+  usb:
+    vendor_id: 0x24C6   # PowerA / PDP (confirmed)
+    product_id: 0x5B01  # FUSION Pro 2 — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 10
+  buttons: 20
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x5B01 is a community estimate for FUSION Pro 2. Verify against hardware."
+  - id: BACK_PADDLES
+    description: "Four back paddles report as additional buttons."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PowerA FUSION Pro 2 Xbox wired controller. VID 0x24C6 confirmed; PID 0x5B01
+    unconfirmed. See fusion-pro.yaml for first-gen. Last reviewed: 2026-06.

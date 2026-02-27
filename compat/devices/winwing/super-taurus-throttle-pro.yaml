@@ -1,0 +1,48 @@
+# WinWing SuperTaurus Throttle Pro (Enhanced Edition)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing SuperTaurus Throttle Pro — enhanced variant of the SuperTaurus
+# throttle (super-taurus-throttle.yaml) with additional programmable axes
+# and thumb-wheel controls. VID 0x4098 confirmed; PID community estimate.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SuperTaurus Throttle Pro"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing (confirmed)
+    product_id: 0xBD65  # SuperTaurus Pro — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 7
+    names: [throttle_l, throttle_r, thumb_wheel_l, thumb_wheel_r, mini_stick_x, mini_stick_y, fuel_flow]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0xBD65 is a community estimate. Verify against real SuperTaurus Pro hardware."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Throttle levers are unipolar. See super-taurus-throttle.yaml for base model."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SuperTaurus Throttle Pro with extra axes and thumb wheels.
+    VID 0x4098 confirmed; PID unconfirmed. See super-taurus-throttle.yaml
+    for the standard model. Last reviewed: 2026-06.

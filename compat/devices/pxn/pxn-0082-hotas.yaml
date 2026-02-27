@@ -1,0 +1,45 @@
+# PXN 0082 HOTAS Flight System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3285 confirmed: PXN / Shenzhen PXN Technology Ltd.
+# PID 0x0082: confirmed from community HID reports for PXN 0082 HOTAS.
+# Budget HOTAS with separate stick and throttle, used as an entry-level
+# flight sim controller.
+
+schema_version: "1"
+
+device:
+  name: "PXN 0082 HOTAS"
+  vendor: "PXN / Shenzhen PXN Technology"
+  usb:
+    vendor_id: 0x3285   # PXN / Shenzhen PXN Technology (confirmed)
+    product_id: 0x0082  # 0082 HOTAS — confirmed from community reports
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z_rotate, throttle, slider_l, slider_r]
+    resolution_bits: 10
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks: []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    PXN 0082 HOTAS flight system. VID 0x3285, PID 0x0082 confirmed.
+    Entry-level HOTAS. See pxn-v9.yaml for joystick-only variant.
+    Last reviewed: 2026-06.

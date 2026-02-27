@@ -69,6 +69,7 @@ members = [
     "crates/flight-hotas-virpil",
     "crates/flight-hotas-brunner",
     "crates/flight-hotas-vpforce",
+    "crates/flight-hotas-microsoft",
     "crates/flight-integration-tests",
     "crates/flight-ffb-moza",
     "crates/flight-macos-hid",

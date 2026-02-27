@@ -1,0 +1,51 @@
+# Skalarki Electronics A320 Overhead Panel (Section A)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics A320 overhead panel section A (forward/upper section)
+# — replica of the Airbus A320 overhead with pushbuttons, guards, and
+# rotary switches for electrical, hydraulic, pneumatic systems.
+# VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki A320 Overhead Panel (Section A)"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x0483   # STMicroelectronics (placeholder — VID_UNCONFIRMED)
+    product_id: 0x5741  # Overhead-A — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+  led_outputs: 32
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against Skalarki hardware documentation."
+  - id: PANEL_DEVICE
+    description: "Overhead panel with pushbuttons, guards, LED annunciators, and rotary switches."
+  - id: GUARDED_SWITCHES
+    description: "Several critical system switches have protective covers."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki A320 overhead panel section A. High-fidelity airline cockpit hardware.
+    VID/PID unconfirmed. Last reviewed: 2026-06.
