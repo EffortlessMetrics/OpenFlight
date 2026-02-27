@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Waveshare"
+  name: "RP2040-Zero USB HID Controller"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x000A"
+  type: "joystick"
+capabilities:
+  axes: 6
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Waveshare RP2040-Zero compact HID controller board."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "RP2040-based; PID depends on firmware."
+tested_games: ["msfs", "xplane", "dcs"]

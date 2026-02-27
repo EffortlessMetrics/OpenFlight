@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "DIY/Arduino"
+  name: "DIY Arduino Button Box 32"
+  usb:
+    vid: "0x2341"
+    pid: "0x8037"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "DIY Arduino-based 32-button box for flight sim."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "VID/PID may vary based on Arduino board and firmware."
+tested_games: ["msfs", "xplane", "dcs"]

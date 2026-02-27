@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Logitech"
+  name: "Logitech G29 Driving Force Racing Wheel"
+  usb:
+    vid: "0x046D"
+    pid: "0xC24F"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 16
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Logitech G29 racing wheel used for flight sim rudder control."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

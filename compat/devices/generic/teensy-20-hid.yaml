@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "PJRC"
+  name: "Teensy 2.0 USB HID Controller"
+  usb:
+    vid: "0x16C0"
+    pid: "0x0482"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Teensy 2.0 microcontroller in USB HID joystick mode."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "PID depends on firmware configuration."
+tested_games: ["msfs", "xplane", "dcs"]

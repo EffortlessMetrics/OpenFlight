@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Eyeware Tech"
+  name: "Eyeware Beam"
+  usb:
+    vid: "0x0000"
+    pid: "0x0000"
+  type: "eye_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Eyeware Beam phone-based eye and head tracking app."
+  driver: "software protocol"
+quirks:
+  - id: SOFTWARE_ONLY
+    description: "Uses iPhone TrueDepth camera; streams via network."
+tested_games: ["msfs", "xplane", "dcs"]

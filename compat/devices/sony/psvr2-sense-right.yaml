@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Sony Interactive Entertainment"
+  name: "PlayStation VR2 Sense Controller (Right)"
+  usb:
+    vid: "0x054C"
+    pid: "0x0E46"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 8
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "PS VR2 Sense right controller for PC VR flight sim."
+  driver: "SteamVR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires PS VR2 PC adapter and SteamVR."
+tested_games: ["msfs", "xplane", "dcs"]

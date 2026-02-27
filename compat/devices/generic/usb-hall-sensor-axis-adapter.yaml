@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "USB Hall Sensor Axis Adapter"
+  usb:
+    vid: "0x1B4F"
+    pid: "0x9321"
+  type: "joystick"
+capabilities:
+  axes: 4
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "USB adapter for Hall effect sensors to USB HID axes."
+  driver: "built-in HID"
+quirks:
+  - id: GENERIC_HID
+    description: "Converts Hall effect sensor output to USB HID axis data."
+tested_games: ["msfs", "xplane", "dcs"]

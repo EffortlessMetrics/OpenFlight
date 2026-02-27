@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "APEM"
+  name: "APEM HF45 Industrial Joystick"
+  usb:
+    vid: "0x1B67"
+    pid: "0x0001"
+  type: "joystick"
+capabilities:
+  axes: 2
+  buttons: 4
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "APEM HF45 industrial-grade joystick adapted for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

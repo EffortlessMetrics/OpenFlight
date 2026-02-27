@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Meta Platforms"
+  name: "Meta Quest Pro Touch Controller"
+  usb:
+    vid: "0x2833"
+    pid: "0x0187"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 10
+  hats: 0
+  ffb: true
+support:
+  tier: 2
+  notes: "Meta Quest Pro Touch controller with pressure sensors."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires SteamVR or OpenXR runtime for input access."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "EDTracker"
+  name: "EDTracker Pro"
+  usb:
+    vid: "0x2341"
+    pid: "0x8042"
+  type: "head_tracker"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "EDTracker Pro gyro-based head tracker."
+  driver: "built-in HID"
+quirks:
+  - id: GYRO_ONLY
+    description: "Provides 3DOF rotation only via gyroscope; no positional tracking."
+tested_games: ["msfs", "xplane", "dcs"]

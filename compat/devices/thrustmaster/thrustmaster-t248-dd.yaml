@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Thrustmaster"
+  name: "Thrustmaster T248 Direct Drive"
+  usb:
+    vid: "0x044F"
+    pid: "0xB6A0"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 25
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Thrustmaster T248 hybrid direct drive racing wheel for flight sim rudder use."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

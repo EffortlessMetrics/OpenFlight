@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Espressif"
+  name: "ESP32-S3 USB HID Joystick"
+  usb:
+    vid: "0x303A"
+    pid: "0x1001"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "ESP32-S3 with native USB configured as HID joystick."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "ESP32-S3 has native USB; PID depends on firmware."
+tested_games: ["msfs", "xplane", "dcs"]

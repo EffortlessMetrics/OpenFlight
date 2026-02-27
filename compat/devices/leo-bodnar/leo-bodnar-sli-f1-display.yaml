@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Leo Bodnar"
+  name: "Leo Bodnar SLI-F1 Display"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x0016"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Leo Bodnar SLI-F1 LED display for sim racing and flight."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

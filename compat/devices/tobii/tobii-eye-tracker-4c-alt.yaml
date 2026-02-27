@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Tobii AB"
+  name: "Tobii Eye Tracker 4C (alt PID)"
+  usb:
+    vid: "0x2104"
+    pid: "0x0119"
+  type: "eye_tracker"
+capabilities:
+  axes: 4
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Tobii Eye Tracker 4C alternate product revision."
+  driver: "Tobii SDK"
+quirks:
+  - id: PROPRIETARY_SDK
+    description: "Requires Tobii Experience software; not raw HID."
+tested_games: ["msfs", "xplane", "dcs"]

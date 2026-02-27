@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Thrustmaster"
+  name: "Thrustmaster T818 Direct Drive"
+  usb:
+    vid: "0x044F"
+    pid: "0xB6A1"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 20
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Thrustmaster T818 direct drive wheelbase for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Leo Bodnar"
+  name: "Leo Bodnar GPS Reference Clock"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x0022"
+  type: "accessory"
+capabilities:
+  axes: 0
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Leo Bodnar GPS reference clock for USB timing."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

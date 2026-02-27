@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "HTC Corporation"
+  name: "HTC Vive Wand Controller (2018)"
+  usb:
+    vid: "0x0BB4"
+    pid: "0x2C88"
+  type: "vr_controller"
+capabilities:
+  axes: 3
+  buttons: 4
+  hats: 0
+  ffb: true
+support:
+  tier: 2
+  notes: "Revised 2018 Vive Wand with updated firmware."
+  driver: "SteamVR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Lighthouse-tracked; requires SteamVR."
+tested_games: ["msfs", "xplane", "dcs"]

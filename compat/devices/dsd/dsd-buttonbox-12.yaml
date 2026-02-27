@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Derek Speare Designs"
+  name: "DSD Button Box 12"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF6B0"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DSD 12-button USB button box for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

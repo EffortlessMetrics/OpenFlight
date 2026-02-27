@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "John Googas"
+  name: "SmoothTrack Phone Head Tracker"
+  usb:
+    vid: "0x0000"
+    pid: "0x0000"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "SmoothTrack phone-based head tracking via UDP to opentrack."
+  driver: "UDP protocol"
+quirks:
+  - id: SOFTWARE_ONLY
+    description: "Phone app sends head tracking data via UDP; no USB device."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Pimax Innovation"
+  name: "Pimax Crystal Controller (Right)"
+  usb:
+    vid: "0x0483"
+    pid: "0x0402"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 8
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "Pimax Crystal right hand controller."
+  driver: "SteamVR/OpenXR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires Pimax Client and SteamVR."
+tested_games: ["msfs", "xplane", "dcs"]

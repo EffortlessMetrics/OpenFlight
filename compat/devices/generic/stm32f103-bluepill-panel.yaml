@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "STMicroelectronics"
+  name: "STM32F103 Blue Pill Panel Controller"
+  usb:
+    vid: "0x1EAF"
+    pid: "0x0004"
+  type: "button_box"
+capabilities:
+  axes: 4
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "STM32F103 Blue Pill board configured as USB HID panel."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "Blue Pill with custom HID firmware; common in DIY panels."
+tested_games: ["msfs", "xplane", "dcs"]

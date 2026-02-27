@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Logitech"
+  name: "Logitech G920 Driving Force Racing Wheel"
+  usb:
+    vid: "0x046D"
+    pid: "0xC262"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 11
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "Logitech G920 racing wheel for Xbox/PC flight sim use."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "APEM"
+  name: "APEM HT Series Thumbstick"
+  usb:
+    vid: "0x1B67"
+    pid: "0x0002"
+  type: "joystick"
+capabilities:
+  axes: 2
+  buttons: 2
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "APEM HT series miniature thumbstick for panel integration."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Arduino"
+  name: "Arduino Due USB HID Joystick"
+  usb:
+    vid: "0x2341"
+    pid: "0x003E"
+  type: "joystick"
+capabilities:
+  axes: 8
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "Arduino Due native USB HID joystick mode."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "Due has native USB; PID depends on firmware."
+tested_games: ["msfs", "xplane", "dcs"]
