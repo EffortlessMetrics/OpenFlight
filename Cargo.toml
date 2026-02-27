@@ -72,6 +72,8 @@ members = [
     "crates/flight-hotas-microsoft",
     "crates/flight-integration-tests",
     "crates/flight-ffb-moza",
+    "crates/flight-trackir",
+    "crates/flight-hotas-simucube",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",
     "examples",

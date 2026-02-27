@@ -1,0 +1,62 @@
+# Generic USB HID Rudder Pedals (OEM Template)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Template manifest for OEM no-name USB HID rudder pedals that enumerate
+# as Generic Desktop / Joystick (Usage 0x04) but do not match any known
+# vendor manifest. Covers budget pedal sets sold under various house brands
+# using generic Dragonrise / CH-compatible HID chipsets.
+# Device-specific manifests are preferred when a VID/PID match is available.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB HID Rudder Pedals (OEM)"
+  vendor: "Unknown / OEM"
+  usb:
+    vendor_id: 0x0079   # Dragonrise Inc. — most common OEM pedal chipset
+    product_id: 0x0011  # Community estimate — budget OEM pedals
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [rz, slider]   # left pedal, right pedal (or yaw + differential brake)
+    resolution_bits: 8
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: OEM_GENERIC_CHIPSET
+    description: >
+      VID 0x0079 (Dragonrise Inc.) covers a wide range of no-name OEM pedal
+      sets. PID 0x0011 is the most common for 2-axis budget pedals. Exact
+      PID varies; check lsusb output to confirm.
+  - id: AXIS_CALIBRATION_REQUIRED
+    description: >
+      Budget potentiometers typically have ≥5% mechanical deadzone at centre
+      and non-linearity at extremes. Run the OpenFlight axis calibration wizard
+      and apply a 5% software deadzone before use in flight.
+  - id: TOE_BRAKE_ABSENT
+    description: >
+      OEM budget pedal sets typically lack independent toe-brake axes. The
+      two axes map to left/right rudder differential. For aircraft requiring
+      independent toe brakes, a device-specific manifest with toe-brake axes
+      should be used.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic OEM USB HID rudder pedals template. VID 0x0079 (Dragonrise) /
+    PID 0x0011 community estimate. Fallback for budget pedal sets.
+    Last reviewed: 2026-06.

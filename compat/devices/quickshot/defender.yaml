@@ -1,0 +1,56 @@
+# Quickshot Defender Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Quickshot was a budget-tier peripheral brand (Spectravideo International).
+# The Defender was a basic 2-axis 4-button joystick sold in the early 2000s
+# for budget flight and combat simulation. USB versions used generic OEM HID
+# chipsets (commonly Dragonrise Inc., VID 0x0079) with varying PIDs by batch.
+# This manifest serves as a community template for matching Quickshot Defender
+# hardware probes.
+
+schema_version: "1"
+
+device:
+  name: "Quickshot Defender Joystick"
+  vendor: "Quickshot (Spectravideo)"
+  usb:
+    vendor_id: 0x0079   # Dragonrise Inc. — common OEM USB HID controller chip
+    product_id: 0x0006  # Community estimate — OEM budget 2-axis joystick chipset
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0079 / PID 0x0006 is the most commonly reported combination for
+      Dragonrise-chipset budget joysticks of this era. The exact PID varies
+      by production batch and OEM revision. Verify from lsusb on real hardware.
+  - id: OEM_GENERIC_CHIPSET
+    description: >
+      Budget OEM chipset; axis calibration is typically poor from factory.
+      Apply a 5–10% software deadzone and linear recalibration in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Quickshot Defender budget joystick (circa 2001–2005). Uses generic
+    Dragonrise OEM chipset; VID/PID vary by production run. Tier 3
+    best-effort support. Last reviewed: 2026-06.

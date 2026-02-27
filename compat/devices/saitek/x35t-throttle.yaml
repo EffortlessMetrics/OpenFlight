@@ -1,0 +1,55 @@
+# Saitek X35T Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech PLC). PID 0x010C is a community estimate
+# from legacy USB ID databases and forum reports. The X35T was the companion
+# throttle unit to the X36 joystick, sold together as the "X35 HOTAS" pair
+# circa 2000–2003. Features a linear throttle axis, slider, and mode buttons.
+
+schema_version: "1"
+
+device:
+  name: "Saitek X35T Throttle"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x010C      # Community estimate — X35T throttle; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [z, slider]
+    resolution_bits: 10
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x010C is a community estimate. The X36 joystick uses PID 0x0109;
+      the X35T throttle is assumed to use an adjacent PID from the same
+      production series. Verify with lsusb on real hardware.
+  - id: LEGACY_10BIT_AXES
+    description: >
+      10-bit axis resolution (1024 steps). Apply light smoothing in the axis
+      pipeline to reduce steppy response at fine throttle deflections.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X35T Throttle (circa 2000–2003). Companion to the X36 joystick;
+    together forming the "X35 HOTAS" set. PID 0x010C community estimate.
+    Legacy device; standard HID continues to work on modern Windows.
+    Last reviewed: 2026-06.

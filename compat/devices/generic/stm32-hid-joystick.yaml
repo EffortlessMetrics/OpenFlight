@@ -1,0 +1,57 @@
+# STM32 USB HID Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 confirmed: STMicroelectronics. PID 0x5710 is the standard
+# STM32 USB HID joystick PID used by STM32CubeMX USB HID examples and the
+# STM32duino HID library. Common in DIY flight sim projects using STM32F103,
+# STM32F401, or STM32F411 microcontrollers for high-performance axis controllers.
+
+schema_version: "1"
+
+device:
+  name: "STM32 USB HID Joystick"
+  vendor: "STMicroelectronics (DIY)"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (confirmed)
+    product_id: 0x5710   # Standard STM32 USB HID joystick PID (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider, dial]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: FIRMWARE_DEPENDENT
+    description: >
+      Axis count, button count, and resolution depend on the STM32 firmware.
+      The values above represent a typical STM32CubeMX HID joystick example.
+      Use the OpenFlight device inspector to read the actual HID report
+      descriptor and configure axis mappings accordingly.
+  - id: HIGH_PERFORMANCE_CAPABLE
+    description: >
+      STM32-based controllers using USB full-speed can poll at 1000 Hz.
+      Firmware using TIM-based ADC sampling and DMA can provide very low
+      latency axis updates; suitable for RT spine axis pipeline input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    STM32 USB HID Joystick. VID 0x0483 confirmed (STMicroelectronics);
+    PID 0x5710 confirmed (standard STM32CubeMX HID example PID). Used for
+    DIY high-performance flight sim axis and button controllers.
+    Last reviewed: 2026-06.

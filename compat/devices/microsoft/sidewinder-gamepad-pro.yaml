@@ -1,0 +1,55 @@
+# Microsoft SideWinder Game Pad Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation. PID 0x0007 confirmed from the
+# Linux kernel drivers/input/joystick/sidewinder.c (SideWinder Game Pad Pro).
+# The Game Pad Pro (1999–2002) was Microsoft's digital D-pad gamepad with
+# analogue triggers; used in early flight sim setups as an auxiliary controller.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Game Pad Pro"
+  vendor: "Microsoft Corporation"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation (confirmed)
+    product_id: 0x0007   # SideWinder Game Pad Pro — Linux kernel sidewinder.c (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [lx, ly]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIDEWINDER_PROTOCOL
+    description: >
+      The Game Pad Pro uses Microsoft's early SideWinder USB protocol. The
+      Linux sidewinder.c driver handles this device natively. On modern Windows
+      it enumerates via the standard HID stack without requiring the legacy
+      SideWinder driver.
+  - id: DIGITAL_DPAD
+    description: >
+      The D-pad is digital (8-way hat switch), not analogue. Analogue triggers
+      may not be exposed correctly without the legacy driver on some systems.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Game Pad Pro (1999–2002). VID/PID confirmed from Linux
+    kernel sidewinder.c. Digital D-pad gamepad with analogue triggers. Used as
+    an auxiliary input in early flight sim setups. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# NaturalPoint TrackIR 5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed: NaturalPoint Inc. PID 0x0155 confirmed from
+# linux-hardware.org USB device probes for the TrackIR 5 head-tracking camera
+# (usb:131d:0155). The TrackIR 5 is the most widely used head-tracking device
+# in PC flight simulation; it provides 6DoF head orientation data to supported
+# sims via the TrackIR software or opentrack.
+
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 5"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc. (confirmed)
+    product_id: 0x0155   # TrackIR 5 — linux-hardware.org probe (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]   # 6DoF: translation X/Y/Z + rotation yaw/pitch/roll
+    resolution_bits: 16
+  buttons: 3
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 2
+
+quirks:
+  - id: PROPRIETARY_PROTOCOL
+    description: >
+      The TrackIR 5 uses NaturalPoint's proprietary USB protocol. Head
+      orientation data is NOT exposed directly as standard HID axes. OpenFlight
+      reads TrackIR data via the TrackIR SDK or via opentrack's UDP protocol.
+      The USB device is used for camera data transfer, not HID joystick input.
+  - id: OPENTRACK_ALTERNATIVE
+    description: >
+      opentrack (see opentrack.yaml) can receive TrackIR 5 output and relay it
+      to sims via freetrack or UDP protocols, removing dependency on the
+      NaturalPoint software. This is the recommended path for non-MSFS sims.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 5. VID/PID confirmed from linux-hardware.org probes.
+    Head-tracking camera providing 6DoF orientation; most widely used head
+    tracker in PC flight sim. Protocol is proprietary; integration via
+    TrackIR SDK or opentrack. Last reviewed: 2026-06.

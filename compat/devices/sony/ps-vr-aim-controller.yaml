@@ -1,0 +1,55 @@
+# Sony PlayStation VR Aim Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment. PID 0x0BA0 confirmed
+# from linux-hardware.org USB device probes (usb:054c:0ba0 — "Aim Controller
+# (PS VR)"). The PS VR Aim Controller is a gun-shaped tracking peripheral;
+# on PC via USB it enumerates as a standard HID device with analogue sticks
+# and buttons accessible without PSVR hardware.
+
+schema_version: "1"
+
+device:
+  name: "Sony PlayStation VR Aim Controller"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment (confirmed)
+    product_id: 0x0BA0   # PS VR Aim Controller — linux-hardware.org probe (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: USB_MODE_LIMITED
+    description: >
+      In USB-only mode (no PSVR headset connected), the Aim Controller operates
+      as a standard gamepad without motion tracking. Analogue sticks and buttons
+      function normally; orientation axes require PSVR hardware.
+  - id: GUN_FORM_FACTOR
+    description: >
+      Gun-shaped form factor; trigger maps to R2, grip to L2. Some flight sim
+      users map the trigger to weapon release and grip to PTT.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony PS VR Aim Controller. VID/PID confirmed via linux-hardware.org probe.
+    Used as a novel auxiliary input device in some flight sim setups.
+    Last reviewed: 2026-06.

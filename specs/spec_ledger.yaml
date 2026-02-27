@@ -5922,3 +5922,359 @@ requirements:
         description: "A diagnostic bundle SHALL be automatically exported before safe-mode isolation takes effect when the system enters safe mode due to a fault"
         tests:
           - feature:specs/features/req_170_diagnostic_bundle.feature
+  - id: REQ-171
+    name: Axis combine differential implementation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-171.1
+        description: "The rudder axis output SHALL be +1.0 when left pedal is 1.0 and right pedal is 0.0 under a differential combine mapping"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.2
+        description: "The rudder axis output SHALL be -1.0 when left pedal is 0.0 and right pedal is 1.0 under a differential combine mapping"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.3
+        description: "The rudder axis output SHALL be 0.0 when both pedals are at the same position under a differential combine mapping"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.4
+        description: "The combined axis output SHALL be clamped to the range [-1.0, 1.0] when both pedals are at their physical maximum"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.5
+        description: "The combine_average output SHALL equal the input value V when both input axes have the same value V"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.6
+        description: "The split_bipolar operation SHALL return positive channel 1.0 and negative channel 0.0 when the input is +1.0"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+      - id: AC-171.7
+        description: "The split_bipolar operation SHALL return positive channel 0.0 and negative channel 1.0 when the input is -1.0"
+        tests:
+          - feature:specs/features/req_171_axis_combine_differential.feature
+  - id: REQ-172
+    name: Nintendo Switch controller HID support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-172.1
+        description: "Both left stick X and Y axes SHALL be decoded and mapped to configured flight control axes when the Nintendo Switch Pro Controller left stick is moved"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+      - id: AC-172.2
+        description: "The ZL and ZR trigger axis values SHALL be normalized to the range [0, 1] when the Nintendo Switch Pro Controller triggers are fully depressed"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+      - id: AC-172.3
+        description: "The Joy-Con (L) horizontal axis value SHALL be decoded and available as a normalized flight input when the stick is moved"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+      - id: AC-172.4
+        description: "The Joy-Con (R) vertical axis value SHALL be decoded and available as a normalized flight input when the stick is moved"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+      - id: AC-172.5
+        description: "Gyro rate data SHALL be available as optional axis inputs when the Nintendo Switch Pro Controller gyroscope is enabled in the profile"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+      - id: AC-172.6
+        description: "A HID device with vendor ID 0x057E and product ID 0x2009 SHALL be identified as a Nintendo Switch Pro Controller during enumeration"
+        tests:
+          - feature:specs/features/req_172_nintendo_switch.feature
+  - id: REQ-173
+    name: Logitech G25/G27 racing wheel in flight sim
+    kind: product
+    status: draft
+    ac:
+      - id: AC-173.1
+        description: "The Logitech G25 16-bit wheel axis value SHALL be normalized to the range [-1, 1] when the steering wheel is moved across its full range"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+      - id: AC-173.2
+        description: "The Logitech G27 16-bit wheel axis value SHALL be normalized to the range [-1, 1] when the steering wheel is moved across its full range"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+      - id: AC-173.3
+        description: "The G25 pedal axis value SHALL be normalized to the range [0, 1] when a pedal is fully depressed"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+      - id: AC-173.4
+        description: "Three separate normalized axis values SHALL be available for accelerator, brake, and clutch when G27 pedals are depressed independently"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+      - id: AC-173.5
+        description: "The G25/G27 wheel axis SHALL drive the configured bank and pitch flight axes when a remapping profile is loaded"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+      - id: AC-173.6
+        description: "A HID device with vendor ID 0x046D matching a G25 or G27 product ID SHALL be identified as a Logitech racing wheel during enumeration"
+        tests:
+          - feature:specs/features/req_173_logitech_racing_wheel_sim.feature
+  - id: REQ-174
+    name: TrackIR head tracking integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-174.1
+        description: "A HID device with the TrackIR 5 vendor ID and product ID SHALL be identified as a TrackIR 5 head tracker during enumeration"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+      - id: AC-174.2
+        description: "All six degrees of freedom (X, Y, Z, yaw, pitch, roll) SHALL be decoded from each TrackIR 5 tracking frame"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+      - id: AC-174.3
+        description: "View axis values SHALL be updated at a rate of 120 Hz when TrackIR 5 head tracking data is sampled"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+      - id: AC-174.4
+        description: "The view axis output SHALL be zero when the head is within the configured neutral deadzone region"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+      - id: AC-174.5
+        description: "The system SHALL detect and report the lost-tracking condition when N consecutive frames pass without a valid tracking update"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+      - id: AC-174.6
+        description: "The yaw channel SHALL drive the configured view offset axis when a profile remapping TrackIR yaw to a view offset axis is loaded"
+        tests:
+          - feature:specs/features/req_174_trackir_head_tracking.feature
+  - id: REQ-175
+    name: Logitech G502 and G Pro gaming peripherals as flight inputs
+    kind: product
+    status: draft
+    ac:
+      - id: AC-175.1
+        description: "Each extra programmable button on the Logitech G502 SHALL be decoded as an individual HID input event when pressed"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+      - id: AC-175.2
+        description: "The configured axis value SHALL increment or decrement when the Logitech G502 scroll wheel is rotated and mapped to an axis increment in the profile"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+      - id: AC-175.3
+        description: "All Logitech G Pro Racing Wheel axis values SHALL be normalized to their correct output ranges when moved across their full ranges"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+      - id: AC-175.4
+        description: "The trim axis SHALL change by the configured increment per scroll detent when a gaming mouse scroll wheel is mapped to a trim axis in the profile"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+      - id: AC-175.5
+        description: "Supported Logitech gaming peripherals SHALL be accessible via the standard HID interface without requiring a custom driver"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+      - id: AC-175.6
+        description: "The corresponding simulator command SHALL be triggered when a G502 button mapped to a sim command in the profile is pressed"
+        tests:
+          - feature:specs/features/req_175_logitech_gaming_peripherals.feature
+  - id: REQ-176
+    name: Fanatec DD direct-drive base integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-176.1
+        description: "The Fanatec DD1 wheel axis SHALL be decoded and available as a normalized flight control axis when the steering wheel is rotated"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.2
+        description: "The Fanatec CSL DD wheel axis output SHALL be zero when the steering wheel is held at its center position"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.3
+        description: "The wheel axis normalization SHALL use the configured angle range when a profile specifying a custom steering angle range is loaded"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.4
+        description: "All three Fanatec ClubSport V3 pedal axes SHALL be decoded and available as normalized inputs when the pedals are depressed"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.5
+        description: "A Fanatec shifter module SHALL be enumerated and accessible as a separate HID device when connected alongside the DD base"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.6
+        description: "Force effects SHALL be transmitted to the Fanatec DD base via the Fanatec proprietary FFB protocol when FFB is enabled in the profile"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+      - id: AC-176.7
+        description: "The profile settings for the connected wheel rim SHALL be automatically applied when a specific Fanatec wheel rim is connected to the DD base"
+        tests:
+          - feature:specs/features/req_176_fanatec_dd_base.feature
+  - id: REQ-177
+    name: TrackIR head tracking updates head position in real time
+    kind: product
+    status: draft
+    ac:
+      - id: AC-177.1
+        description: "The system SHALL receive and parse TrackIR position packets on the NaturalPoint protocol when the head tracker transmits a position packet"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+      - id: AC-177.2
+        description: "Each yaw, pitch, and roll axis value from TrackIR SHALL be normalized to the range [-1.0, 1.0] when the device is active"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+      - id: AC-177.3
+        description: "Head tracking SHALL stop delivering updates while paused and resume delivering updates after a resume command without restarting the service"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+      - id: AC-177.4
+        description: "The system SHALL mark TrackIR data as stale and surface a timeout event when no new position packet is received for 500 ms"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+      - id: AC-177.5
+        description: "The axis engine SHALL expose TrackIR yaw, pitch, and roll values on dedicated virtual head-tracking axes when head tracking is enabled in the profile"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+      - id: AC-177.6
+        description: "Both TrackIR and flight stick input streams SHALL be processed independently without interfering with each other when both devices are active"
+        tests:
+          - feature:specs/features/req_177_trackir_head_tracking.feature
+  - id: REQ-178
+    name: Simucube 2 DD base delivers accurate force feedback
+    kind: product
+    status: draft
+    ac:
+      - id: AC-178.1
+        description: "A Simucube 2 Sport, Pro, or Ultimate base SHALL be identified by its USB VID/PID and reported as a supported device when connected"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+      - id: AC-178.2
+        description: "Force feedback effects SHALL be delivered to the Simucube 2 base via the Granity/IONI protocol when FFB is enabled and an effect is requested"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+      - id: AC-178.3
+        description: "The output torque SHALL be clamped to the rated limit for the connected Simucube 2 model when a force feedback command exceeds that limit"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+      - id: AC-178.4
+        description: "The steering wheel position SHALL be reported at the full 22-bit or 24-bit encoder resolution without precision loss when the wheel is rotated"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+      - id: AC-178.5
+        description: "Spring, damper, friction, and constant-force effect types SHALL each be transmitted and produce the corresponding force on the Simucube 2 wheel"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+      - id: AC-178.6
+        description: "The torque output to the Simucube 2 base SHALL be cut to zero immediately when an emergency stop signal is issued"
+        tests:
+          - feature:specs/features/req_178_simucube2_dd_wheel.feature
+  - id: REQ-179
+    name: Fanatec direct-drive base integrates with OpenFlight FFB pipeline
+    kind: product
+    status: draft
+    ac:
+      - id: AC-179.1
+        description: "A Fanatec CSL DD base SHALL be identified by USB VID 0x0EB7 and reported as a supported device when connected"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+      - id: AC-179.2
+        description: "The Fanatec CSL DD wheel angle SHALL be reported in high resolution using the profile-configured steering lock as the normalization range"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+      - id: AC-179.3
+        description: "The FFB pipeline SHALL translate flight simulator force output into appropriate Fanatec CSL DD wheel torque commands when FFB is enabled"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+      - id: AC-179.4
+        description: "Fanatec-specific HID protocol extensions SHALL be parsed without errors or dropped data when the driver processes extended device reports"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+      - id: AC-179.5
+        description: "Axis and button inputs from the Fanatec CSL DD SHALL be accessible under both PC mode and console mode configurations"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+      - id: AC-179.6
+        description: "The system SHALL engage safe-mode on all axes associated with the Fanatec wheel and log the event when the wheel signal is lost unexpectedly"
+        tests:
+          - feature:specs/features/req_179_fanatec_csl_dd.feature
+  - id: REQ-180
+    name: MOZA Racing DD base integrates with OpenFlight as FFB device
+    kind: product
+    status: draft
+    ac:
+      - id: AC-180.1
+        description: "A MOZA R5, R9, or R12 base SHALL be identified by USB VID 0x346E and reported as a supported device when connected"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+      - id: AC-180.2
+        description: "The MOZA base SHALL report steering angle, angular velocity, and angular acceleration each at 1 kHz when the steering wheel is in motion"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+      - id: AC-180.3
+        description: "The FFB pipeline SHALL translate simulator force output into MOZA-compatible torque commands when FFB is enabled and force data is received"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+      - id: AC-180.4
+        description: "The MOZA firmware version SHALL be queried from the device and written to the service log when the device is initialised at startup"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+      - id: AC-180.5
+        description: "Each connected MOZA base SHALL be tracked independently with its own axis and FFB context when multiple MOZA bases are present"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+      - id: AC-180.6
+        description: "The system SHALL halt force output to the affected MOZA base and log an overheat warning when the base signals a thermal shutdown event"
+        tests:
+          - feature:specs/features/req_180_moza_racing_dd.feature
+  - id: REQ-181
+    name: Turtle Beach VelocityOne devices operate as first-class controllers
+    kind: product
+    status: draft
+    ac:
+      - id: AC-181.1
+        description: "All VelocityOne Flightdeck yoke axes SHALL be detected and mapped to their correct flight control functions when the device is connected"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+      - id: AC-181.2
+        description: "VelocityOne Rudder pedal axes SHALL be normalized to the range [-1.0, 1.0] when the pedals are moved across their full travel"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+      - id: AC-181.3
+        description: "The VelocityOne Stick SHALL be detected and registered as a joystick input device with all axes available when connected"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+      - id: AC-181.4
+        description: "The left_brake and right_brake axes from the VelocityOne Rudder SHALL be reported as separate independent axes when the toe brakes are applied"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+      - id: AC-181.5
+        description: "The VelocityOne Rudder toe-brake axes SHALL use the configured sensitivity settings when a profile that overrides them is loaded"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+      - id: AC-181.6
+        description: "All connected VelocityOne devices SHALL be processed simultaneously without interference or axis conflicts when inputs are generated on each device"
+        tests:
+          - feature:specs/features/req_181_turtle_beach_velocityone.feature
+  - id: REQ-182
+    name: GoFlight module panels integrate with OpenFlight's panel engine
+    kind: product
+    status: draft
+    ac:
+      - id: AC-182.1
+        description: "The GoFlight GF-46 COM/NAV radio panel SHALL be detected and its knobs and buttons registered with the panel engine when connected via USB"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature
+      - id: AC-182.2
+        description: "Knob and button inputs from the GoFlight GF-45 autopilot panel SHALL be routed through the panel engine for profile-defined action dispatch"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature
+      - id: AC-182.3
+        description: "The GoFlight GF-LGT LEDs SHALL reflect the state commanded by the profile when LED mappings are defined and a state change is triggered"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature
+      - id: AC-182.4
+        description: "Each GoFlight module on the same USB hub SHALL operate independently without cross-talk or command misrouting when multiple modules are connected"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature
+      - id: AC-182.5
+        description: "GoFlight panel state SHALL remain consistent throughout a simulator pause cycle without requiring re-initialisation when the sim is paused and unpaused"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature
+      - id: AC-182.6
+        description: "The simulator integer variable SHALL change by the configured delta per encoder step when a GoFlight encoder mapped to that variable is rotated"
+        tests:
+          - feature:specs/features/req_182_goflight_panels.feature

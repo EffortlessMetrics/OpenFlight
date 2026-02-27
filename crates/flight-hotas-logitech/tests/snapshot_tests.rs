@@ -7,7 +7,9 @@
 //! known input values.  Any change to the struct layout, normalization formula,
 //! or enum variant naming will surface as a diff before it reaches users.
 
-use flight_hotas_logitech::{parse_g_flight_yoke, parse_g940_joystick, parse_g940_throttle};
+use flight_hotas_logitech::{
+    parse_g_flight_yoke, parse_g27, parse_g29, parse_g940_joystick, parse_g940_throttle,
+};
 
 // ── G940 report builders ──────────────────────────────────────────────────────
 
@@ -137,4 +139,114 @@ fn snapshot_g_flight_yoke_full_deflection() {
     let report = yoke_report(4095, 0, 255, 255, 255, 0x0FFF, 0);
     let state = parse_g_flight_yoke(&report).expect("valid report");
     insta::assert_debug_snapshot!("g_flight_yoke_full_deflection", state);
+}
+
+// ── G27 report builder ────────────────────────────────────────────────────────
+
+/// Build an 8-byte G27 report from logical field values.
+///
+/// `wheel` is 16-bit big-endian; center ≈ 32768.
+/// `buttons` covers 20 bits (bits 0-19); `dpad`: 0=N … 7=NW, 8-15=center.
+fn g27_report(
+    wheel: u16,
+    accelerator: u8,
+    brake: u8,
+    clutch: u8,
+    buttons: u32,
+    dpad: u8,
+) -> [u8; 8] {
+    let buttons = buttons & 0x000F_FFFF;
+    let dpad = dpad & 0x0F;
+    let [hi, lo] = wheel.to_be_bytes();
+    let mut d = [0u8; 8];
+    d[0] = hi;
+    d[1] = lo;
+    d[2] = accelerator;
+    d[3] = brake;
+    d[4] = clutch;
+    d[5] = buttons as u8;
+    d[6] = (buttons >> 8) as u8;
+    d[7] = ((buttons >> 16) as u8 & 0x0F) | (dpad << 4);
+    d
+}
+
+// ── G29 report builder ────────────────────────────────────────────────────────
+
+/// Build an 8-byte G29/G920 report from logical field values.
+///
+/// `wheel` is 16-bit little-endian; center ≈ 32768.
+/// `dpad`: lower nibble, 0=N … 7=NW, 8-15=center.
+fn g29_report(
+    wheel: u16,
+    dpad: u8,
+    accelerator: u8,
+    brake: u8,
+    clutch: u8,
+    buttons: u16,
+) -> [u8; 8] {
+    let [lo, hi] = wheel.to_le_bytes();
+    let mut d = [0u8; 8];
+    d[0] = lo;
+    d[1] = hi;
+    d[2] = dpad & 0x0F;
+    d[3] = accelerator;
+    d[4] = brake;
+    d[5] = clutch;
+    d[6] = buttons as u8;
+    d[7] = (buttons >> 8) as u8;
+    d
+}
+
+// ── G27 snapshots ─────────────────────────────────────────────────────────────
+
+/// Pin the parsed G27 state at the default (idle) position.
+///
+/// Wheel centered (32768), all pedals released, no buttons, dpad centered.
+#[test]
+fn test_g27_default_report_snapshot() {
+    let report = g27_report(32768, 0, 0, 0, 0, 8);
+    let state = parse_g27(&report).expect("valid report");
+    insta::assert_debug_snapshot!("g27_default_report", state);
+}
+
+/// Pin the parsed G27 state at full-left steer, brake fully depressed.
+///
+/// Wheel at minimum (0 = full left), brake at maximum, dpad centered.
+#[test]
+fn test_g27_full_left_steer_snapshot() {
+    let report = g27_report(0, 0, 0, 0, 0, 8);
+    let state = parse_g27(&report).expect("valid report");
+    insta::assert_debug_snapshot!("g27_full_left_steer", state);
+}
+
+/// Pin the parsed G27 state with brake pedal fully depressed.
+///
+/// Wheel centered, brake at maximum (255), dpad centered.
+#[test]
+fn test_g27_brake_pedal_snapshot() {
+    let report = g27_report(32768, 0, 255, 0, 0, 8);
+    let state = parse_g27(&report).expect("valid report");
+    insta::assert_debug_snapshot!("g27_brake_pedal", state);
+}
+
+// ── G29 snapshots ─────────────────────────────────────────────────────────────
+
+/// Pin the parsed G29 state at the default (idle) position.
+///
+/// Wheel centered (32768), all pedals released, no buttons, dpad centered.
+#[test]
+fn test_g29_default_report_snapshot() {
+    let report = g29_report(32768, 8, 0, 0, 0, 0);
+    let state = parse_g29(&report).expect("valid report");
+    insta::assert_debug_snapshot!("g29_default_report", state);
+}
+
+/// Pin the parsed G29 state at full-right steer.
+///
+/// Wheel at maximum (65535 = full right), all pedals released, dpad centered.
+#[test]
+fn test_g29_full_right_steer_snapshot() {
+    let report = g29_report(65535, 8, 0, 0, 0, 0);
+    let state = parse_g29(&report).expect("valid report");
+    insta::assert_debug_snapshot!("g29_full_right_steer", state);
 }

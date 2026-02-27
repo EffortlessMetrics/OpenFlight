@@ -1,0 +1,54 @@
+# Hori HoriPad Ultimate Wired Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: HORI CO., LTD. PID 0x00EF confirmed from the SDL2
+# GameControllerDB (MAKE_VIDPID(0x0F0D, 0x00EF) — "HORIPAD Ultimate").
+# The HoriPad Ultimate is a licensed Xbox controller with full analogue sticks
+# and triggers; used in flight sim as a secondary controller for view control
+# and auxiliary inputs.
+
+schema_version: "1"
+
+device:
+  name: "Hori HoriPad Ultimate"
+  vendor: "HORI CO., LTD."
+  usb:
+    vendor_id: 0x0F0D    # HORI CO., LTD. (confirmed)
+    product_id: 0x00EF   # HoriPad Ultimate — SDL2 GameControllerDB (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XBOX_COMPATIBLE
+    description: >
+      The HoriPad Ultimate is XInput-compatible. On Windows it may enumerate
+      via XInput rather than DirectInput/HID. OpenFlight uses the HID path
+      (via ViGEm passthrough if needed) for consistent cross-platform access.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori HoriPad Ultimate. VID/PID confirmed from SDL2 GameControllerDB.
+    Full-featured licensed Xbox gamepad. Used for view control and secondary
+    inputs in flight sim. Last reviewed: 2026-06.

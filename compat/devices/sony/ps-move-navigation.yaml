@@ -1,0 +1,58 @@
+# Sony PlayStation Move Navigation Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment. PID 0x042F confirmed
+# from the Linux kernel drivers/hid/hid-sony.c
+# (USB_DEVICE_ID_SONY_NAVIGATION_CONTROLLER) and linux-hardware.org USB probes.
+# The Navigation Controller is the left-hand companion to the PS Move; it
+# provides an analogue stick, D-pad, and face buttons for one-handed use.
+
+schema_version: "1"
+
+device:
+  name: "Sony PlayStation Move Navigation Controller"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment (confirmed)
+    product_id: 0x042F   # Navigation Controller — Linux kernel hid-sony.c (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [lx, ly]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: LEFT_HAND_ONLY
+    description: >
+      Navigation Controller provides only left-side controls (analogue stick,
+      D-pad, L1/L2, face buttons). Used in flight sim as a one-handed auxiliary
+      input device for trim, comms panels, or mode selection.
+  - id: WINDOWS_DRIVER_REQUIRED
+    description: >
+      On Windows, DsHidMini is recommended for HID passthrough. Without it,
+      the Navigation Controller may not enumerate as a standard HID joystick.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony PlayStation Move Navigation Controller. VID/PID confirmed from Linux
+    kernel hid-sony.c. Used as auxiliary left-hand input in some flight sim
+    setups. DsHidMini recommended on Windows. Last reviewed: 2026-06.

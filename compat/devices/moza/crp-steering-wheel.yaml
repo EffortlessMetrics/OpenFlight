@@ -1,0 +1,55 @@
+# Moza CRP Steering Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E confirmed: Moza (Gudsen Technology). PID 0x0015 is a community
+# estimate following the Moza PID sequence (AB9 = 0x0005, R5 base = 0x0009).
+# The Moza CRP is a carbon-trim rally-style steering wheel rim for Moza
+# R-series direct-drive bases. Inputs are relayed through the base USB device.
+
+schema_version: "1"
+
+device:
+  name: "Moza CRP Steering Wheel"
+  vendor: "Moza"
+  usb:
+    vendor_id: 0x346E     # Moza (Gudsen Technology — confirmed)
+    product_id: 0x0015    # Community estimate — CRP rim; confirm from lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12
+  hats: 1
+  force_feedback: false   # FFB from base, not rim
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0015 is a community estimate. The CRP rim relays inputs through
+      the Moza base USB device; actual PID is the base's PID and may vary.
+      Confirm with lsusb on real hardware.
+  - id: RIM_ADDON
+    description: >
+      The CRP is a wheel rim requiring a Moza R-series base (R3, R5, R9, R12,
+      R16, R21). All button and encoder inputs are relayed via the base HID
+      reports. No independent USB enumeration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Moza CRP Steering Wheel rim. VID 0x346E confirmed; PID 0x0015 community
+    estimate. Requires Moza R-series base. Inputs relayed through base USB.
+    Last reviewed: 2026-06.

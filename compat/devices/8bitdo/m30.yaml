@@ -1,0 +1,55 @@
+# 8Bitdo M30 Wireless Controller (USB Mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8Bitdo Technology HK Limited. PID 0x2100 is a
+# community estimate for the M30's USB wired/receiver mode. The M30 is a
+# 6-button layout gamepad inspired by the Sega Genesis/Mega Drive controller;
+# used in some flight sim cockpits for auxiliary panel button input.
+
+schema_version: "1"
+
+device:
+  name: "8Bitdo M30 Wireless Controller"
+  vendor: "8Bitdo Technology"
+  usb:
+    vendor_id: 0x2DC8    # 8Bitdo Technology HK Limited (confirmed)
+    product_id: 0x2100   # Community estimate — M30 USB mode; confirm from lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 2
+    names: [lx, ly]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2100 is a community estimate for the M30 in USB connection mode.
+      Bluetooth mode uses a different PID. Verify from lsusb on the specific
+      firmware version in use.
+  - id: DPAD_AS_HAT
+    description: >
+      The M30 D-pad reports as a hat switch in HID mode. Some firmware versions
+      can switch the D-pad to report as individual axis inputs; use the
+      8Bitdo Ultimate Software to configure.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    8Bitdo M30 Wireless Controller. VID 0x2DC8 confirmed; PID 0x2100 community
+    estimate for USB mode. 6-button layout; used as auxiliary panel input in
+    flight sim setups. Last reviewed: 2026-06.

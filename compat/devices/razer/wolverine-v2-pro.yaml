@@ -1,0 +1,64 @@
+# Razer Wolverine V2 Pro Wireless Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 confirmed: Razer Inc. PID 0x0BF6 is a community estimate from
+# USB ID databases for the Wolverine V2 Pro wireless controller. The V2 Pro
+# (2022) is Razer's top-tier gamepad with 6 remappable buttons, hair-trigger
+# locks, and optical micro-switches. Used in flight sim as an auxiliary
+# controller for complex panel/weapon system inputs.
+
+schema_version: "1"
+
+device:
+  name: "Razer Wolverine V2 Pro"
+  vendor: "Razer Inc."
+  usb:
+    vendor_id: 0x1532    # Razer Inc. (confirmed)
+    product_id: 0x0BF6   # Community estimate — Wolverine V2 Pro; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 10
+  buttons: 22
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right, rumble_trigger_l, rumble_trigger_r]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0BF6 is a community estimate. Verify with lsusb on actual hardware.
+      Razer devices may require Razer Synapse for full feature access; basic
+      HID input works without it.
+  - id: REMAPPABLE_BUTTONS
+    description: >
+      The Wolverine V2 Pro has 6 additional remappable buttons (M1–M6). These
+      map to buttons 17–22 in the HID report. Profile them to secondary flight
+      controls (weapon select, mode changes, comms).
+  - id: HAIR_TRIGGER_LOCKS
+    description: >
+      Hardware hair-trigger locks physically limit trigger travel for shorter
+      actuation distance. Disable locks for full analogue range when using
+      triggers as throttle or toe-brake axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Wolverine V2 Pro (2022). VID 0x1532 confirmed; PID 0x0BF6 community
+    estimate. High-end gamepad with remappable buttons. Used for complex
+    secondary inputs in flight sim. Last reviewed: 2026-06.

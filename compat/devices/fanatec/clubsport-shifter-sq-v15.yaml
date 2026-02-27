@@ -1,0 +1,59 @@
+# Fanatec ClubSport Shifter SQ V1.5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH. PID 0x0005 is user-reported from
+# hardware captures of the ClubSport Shifter SQ V1.5. The SQ V1.5 is an
+# H-pattern + sequential 7-speed shifter for Fanatec wheel setups. In flight
+# sim it is used as a gear/condition lever or mixture control.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Shifter SQ V1.5"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0005   # User-reported capture — ClubSport Shifter SQ V1.5
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]             # H-pattern lever X/Y analogue sense
+    resolution_bits: 12
+  buttons: 14                 # 7 gears × 2 modes + reverse + sequential up/down
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is user-reported. Multiple hardware captures suggest this
+      value, but no independent linux-hardware.org probe is available.
+      Verify with lsusb on actual hardware before enabling production matching.
+  - id: DUAL_MODE_SHIFTER
+    description: >
+      The SQ V1.5 operates in H-pattern or sequential mode, switchable via
+      a physical lever on the unit. OpenFlight maps button signals from
+      whichever mode is active.
+  - id: ANALOG_SENSE_AXES
+    description: >
+      X and Y axes report the analogue position of the gear shift lever in
+      H-pattern mode. Profile can use these for fine shift-point detection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Shifter SQ V1.5. VID 0x0EB7 confirmed; PID 0x0005
+    user-reported. H-pattern + sequential shifter for combined race+flight
+    cockpits. Last reviewed: 2026-06.

@@ -1,0 +1,55 @@
+# Hori Mini Wired Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed: HORI CO., LTD. PID 0x0092 confirmed from the SDL2
+# GameControllerDB ("HORI CO.,LTD. HORI Pad Mini"). The Hori Mini Wired
+# Gamepad is a compact USB gamepad compatible with Nintendo Switch; on PC it
+# enumerates as a standard HID device. Used in flight sim setups where a
+# compact form factor is needed for kneeboard or secondary panel inputs.
+
+schema_version: "1"
+
+device:
+  name: "Hori Mini Wired Gamepad"
+  vendor: "HORI CO., LTD."
+  usb:
+    vendor_id: 0x0F0D    # HORI CO., LTD. (confirmed)
+    product_id: 0x0092   # Hori Pad Mini — SDL2 GameControllerDB (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: COMPACT_FORM_FACTOR
+    description: >
+      Reduced-size form factor; suitable as a secondary controller for
+      kneeboard panels or compact cockpit auxiliary inputs where a full-size
+      controller would be unwieldy.
+  - id: SWITCH_COMPATIBLE
+    description: >
+      Designed for Nintendo Switch in wired mode but enumerates as standard
+      HID on PC. No proprietary driver required.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori Mini Wired Gamepad. VID/PID confirmed from SDL2 GameControllerDB.
+    Compact HID gamepad; used for secondary panel inputs in flight sim setups.
+    Last reviewed: 2026-06.

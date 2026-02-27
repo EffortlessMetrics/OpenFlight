@@ -1,0 +1,63 @@
+# Simucube 1 Sport Direct Drive Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 confirmed: Granite Devices. PID 0x0D5D is a community estimate
+# for the Simucube 1 Sport variant. The SC1 Sport is the entry-level SC1
+# (10 Nm peak), based on the IONI Pro servo drive and Simucube 1 firmware.
+# All SC1 variants share the same USB protocol; this manifest documents the
+# Sport's lower torque limit vs. the Pro (20 Nm) and Ultimate (30 Nm).
+
+schema_version: "1"
+
+device:
+  name: "Simucube 1 Sport"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0    # Granite Devices (confirmed)
+    product_id: 0x0D5D   # Community estimate — SC1 Sport variant
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 22  # SC1 IONI encoder resolution
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 500
+    torque_limit_nm: 10.0   # SC1 Sport peak Nm
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5D is a community estimate for the SC1 Sport. SC1 variants
+      may share a single USB PID; SC2 series uses 0x0D60–0x0D62. Verify
+      from lsusb on SC1 Sport hardware.
+  - id: LEGACY_SC1_PROTOCOL
+    description: >
+      SC1 uses the IONI servo drive protocol — distinct from the SC2 True Drive
+      interface. OpenFlight uses the legacy SC1 FFB adapter for this device.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      The SC1 exposes only the rotation axis. A flight grip adapter is required
+      for button inputs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 1 Sport — entry-level SC1 (10 Nm peak). VID 0x16D0 confirmed;
+    PID 0x0D5D community estimate. Legacy first-generation direct-drive base.
+    Last reviewed: 2026-06.

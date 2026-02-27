@@ -1,16 +1,16 @@
 [package]
 homepage.workspace = true
-name = "flight-hotas-microsoft"
+name = "flight-hotas-simucube"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Microsoft SideWinder Force Feedback and Precision joystick drivers for OpenFlight."
+description = "Simucube 2 FFB wheel/stick driver for OpenFlight — encoder parsing, torque command builder, and model detection."
 readme = "README.md"
-categories = ["hardware-support"]
-keywords = ["flight-sim", "openflight", "microsoft", "sidewinder", "joystick"]
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "simucube", "ffb", "direct-drive"]
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
 
@@ -18,9 +18,8 @@ keywords = ["flight-sim", "openflight", "microsoft", "sidewinder", "joystick"]
 default = []
 
 [dependencies]
-flight-hid-support = { path = "../flight-hid-support" }
 thiserror.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
-proptest.workspace = true
-insta = { workspace = true }
+proptest = { workspace = true }

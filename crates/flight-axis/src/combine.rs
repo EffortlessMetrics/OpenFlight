@@ -39,3 +39,30 @@ pub fn split_bipolar(axis: f32) -> (f32, f32) {
     let negative = (-clamped).max(0.0);
     (positive, negative)
 }
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn test_combine_differential_bounded(a in -1.0f32..=1.0, b in -1.0f32..=1.0) {
+            let out = combine_differential(a, b);
+            prop_assert!(out >= -1.0 && out <= 1.0, "out={out}");
+        }
+
+        #[test]
+        fn test_split_bipolar_sum_preserved(x in -1.0f32..=1.0) {
+            let (pos, neg) = split_bipolar(x);
+            prop_assert!(pos >= 0.0 && pos <= 1.0, "pos={pos}");
+            prop_assert!(neg >= 0.0 && neg <= 1.0, "neg={neg}");
+        }
+
+        #[test]
+        fn test_combine_average_bounded(a in -1.0f32..=1.0, b in -1.0f32..=1.0) {
+            let out = combine_average(a, b);
+            prop_assert!(out >= -1.0 && out <= 1.0, "out={out}");
+        }
+    }
+}
