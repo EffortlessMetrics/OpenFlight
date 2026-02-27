@@ -67,6 +67,7 @@ pub mod client;
 #[cfg(test)]
 mod fd_safety_tests;
 pub mod negotiation;
+pub mod rate_limiter;
 pub mod server;
 pub mod transport;
 

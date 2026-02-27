@@ -19,6 +19,7 @@ pub use flight_hid_support::device_support;
 mod fd_safety_tests;
 pub use flight_hid_support::hid_descriptor;
 pub mod calibration;
+pub mod health_monitor;
 pub mod hid_writer;
 pub mod hotplug;
 pub mod ofp1;
