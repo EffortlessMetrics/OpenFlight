@@ -1,0 +1,58 @@
+# Leo Bodnar BU0836LC USB Joystick Controller (Low-Cost)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 confirmed (Leo Bodnar Ltd — leobodnar.com).
+# PID 0x000C is a community estimate for the BU0836LC.
+# The BU0836LC is a simplified, low-cost variant of the BU0836 joystick
+# controller board. Provides 8 analogue axes and up to 32 buttons.
+# Unlike the BU0836X (PID 0x000B), it lacks the LCD and some advanced features.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BU0836LC USB Joystick Controller"
+  vendor: "Leo Bodnar Ltd."
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd.
+    product_id: 0x000C      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000C is a community estimate for the BU0836LC. Leo Bodnar BU0836
+      uses PID 0x000A; BU0836X uses 0x000B; BU0836LC may use 0x000C. Confirm
+      with lsusb or the Leo Bodnar utility on real hardware.
+  - id: DIY_JOYSTICK_INTERFACE
+    description: >
+      The BU0836LC is a bare PCB; users solder their own potentiometers, buttons,
+      and hat switches. The HID descriptor is fixed at 8 axes / 32 buttons / 1 hat.
+  - id: NO_LCD
+    description: >
+      Unlike the BU0836X, the BU0836LC does not include an LCD display for
+      axis calibration readout. Calibration is done via the Leo Bodnar utility.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BU0836LC — simplified DIY joystick controller. PID 0x000C is
+    unconfirmed. 8-axis / 32-button / 1-hat HID layout. Lacks LCD of the BU0836X.
+    Popular for DIY HOTAS and yoke builds. Last reviewed: 2026-02.

@@ -1,0 +1,62 @@
+# GoFlight GF-166 Radio Stack Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed (GoFlight Inc.).
+# PID 0x0008 is a community estimate for the GF-166.
+# The GoFlight GF-166 is a radio stack module with dual COM/NAV tuning and a
+# built-in LCD display. Used with X-Plane and MSFS for realistic radio management.
+# Part of the GoFlight modular avionics system.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-166 Radio Stack Module"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x0008      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 20               # Frequency toggle, direct entry, flip-flop
+  hats: 0
+  encoders: 4               # COM1 outer/inner, NAV1 outer/inner
+  force_feedback: false
+  display:
+    type: lcd_segment
+    digits: 12              # Two 6-digit frequency displays
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0008 is a community estimate for the GF-166. GoFlight uses
+      sequential PIDs; confirmed PIDs include 0x0003 (GF-MCP) and 0x0004 (GF-46).
+      Confirm 0x0008 with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      COM/NAV tuning knobs (outer and inner) are reported as button increment/
+      decrement events. Map each step to the corresponding frequency tuning
+      binding in the sim avionics profile.
+  - id: LCD_VIA_HID_REPORT
+    description: >
+      The LCD frequency display is updated via a vendor-specific HID output
+      report. OpenFlight writes display data from the sim avionics state machine
+      to the device output endpoint.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-166 radio stack module with LCD display. PID 0x0008 is unconfirmed.
+    Part of the GoFlight modular panel system. Pairs with GF-MCP (gf-mcp.yaml)
+    and GF-46 (gf-46.yaml). Last reviewed: 2026-02.

@@ -1,0 +1,59 @@
+# GoFlight GF-TQ6 Throttle Quadrant Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F confirmed (GoFlight Inc.).
+# PID 0x000A is a community estimate for the GF-TQ6.
+# The GoFlight GF-TQ6 is a 6-axis throttle quadrant with individual levers
+# and reverse-thrust detents. Designed for airliner and twin-engine GA use
+# in X-Plane and MSFS. Part of the GoFlight modular panel system.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-TQ6 Throttle Quadrant"
+  vendor: "GoFlight Inc."
+  usb:
+    vendor_id: 0x0E9F       # GoFlight Inc.
+    product_id: 0x000A      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, throttle3, throttle4, flaps, spoiler]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000A is a community estimate for the GF-TQ6. GoFlight sequential
+      PIDs: 0x0003 (GF-MCP), 0x0004 (GF-46). Confirm 0x000A with lsusb.
+  - id: REVERSE_THRUST_DETENT
+    description: >
+      Each throttle lever has a reverse-thrust detent gate. Raw axis values
+      below the detent position correspond to reverse thrust range. OpenFlight
+      translates the bipolar lever range to sim thrust with reverse via a
+      two-segment curve map.
+  - id: FOUR_ENGINE_CAPABLE
+    description: >
+      6-axis layout exposes 4 independent throttle levers plus flap and spoiler
+      axes. Suitable for 4-engine airliners (B747, A340). For twin-engine use
+      levers 3 and 4 are typically unused or remapped.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-TQ6 6-axis throttle quadrant with reverse-thrust detents. PID 0x000A
+    is unconfirmed. 4-engine airliner capable. Last reviewed: 2026-02.

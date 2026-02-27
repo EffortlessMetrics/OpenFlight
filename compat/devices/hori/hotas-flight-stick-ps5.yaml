@@ -1,0 +1,59 @@
+# Hori HOTAS Flight Stick for PlayStation 5 / PC
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0F0D confirmed (Hori Co., Ltd.).
+# PID 0x0192 is a community estimate for the PS5/PC variant.
+# The Hori HOTAS Flight Stick PS5 is an updated version of the PS4 HOTAS,
+# compatible with PlayStation 5 and PC. Features full HOTAS layout with
+# stick and integrated throttle. Distinct from the PS4 variant (PID 0x0101).
+schema_version: "1"
+
+device:
+  name: "Hori HOTAS Flight Stick for PlayStation 5"
+  vendor: "Hori Co., Ltd."
+  usb:
+    vendor_id: 0x0F0D       # Hori Co., Ltd.
+    product_id: 0x0192      # Community estimate — PS5/PC variant; confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, throttle]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0192 is a community estimate for the PS5/PC HOTAS variant. The PS4
+      HOTAS (hotas-flight-stick-ps4.yaml) uses PID 0x0101. Confirm with lsusb
+      on real hardware.
+  - id: PS5_PC_COMPATIBLE
+    description: >
+      The PS5/PC variant includes a mode switch for PlayStation 5 and PC (DirectInput)
+      compatibility. Ensure the switch is in PC/DirectInput mode for use with
+      MSFS and X-Plane.
+  - id: INTEGRATED_THROTTLE
+    description: >
+      The throttle axis is part of the combined HOTAS unit; there is no separate
+      throttle component. The throttle lever is on the left side of the base.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Hori HOTAS Flight Stick PS5/PC (updated for PS5 compatibility). PID 0x0192
+    is unconfirmed. PS4 variant documented in hotas-flight-stick-ps4.yaml.
+    Last reviewed: 2026-02.

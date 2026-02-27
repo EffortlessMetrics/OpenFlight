@@ -1,0 +1,54 @@
+# 3Dconnexion SpaceMouse Compact
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed (3Dconnexion GmbH).
+# PID 0xC618 confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_3DCONNEXION_SPACEMOUSE_COMPACT),
+# spacenavd daemon (FreeSpacenav/spacenavd), and usb-ids.gowdy.us.
+# The SpaceMouse Compact is a small-form-factor 6-DOF controller with 2 buttons.
+# Shares the same puck design as the SpaceNavigator but in a more compact body.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Compact"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion GmbH
+    product_id: 0xC618  # SpaceMouse Compact — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck. Same functional capability as the SpaceNavigator
+      (PID 0xC635) but in a smaller housing with USB-C connector on newer revisions.
+      HID report format is compatible with the SpaceNavigator.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      Not a dedicated flight controller. Useful for MSFS cockpit navigation,
+      camera panning, and drone control. Map Tz to elevation and Rx/Ry to pan/tilt.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC618 confirmed from Linux kernel hid-ids.h and spacenavd.
+    Compact form factor; same 6-DOF puck as the SpaceNavigator. Compatible
+    HID report format. Used with MSFS for camera control. Last reviewed: 2026-02.

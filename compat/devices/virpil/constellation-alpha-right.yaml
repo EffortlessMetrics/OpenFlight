@@ -1,0 +1,62 @@
+# VIRPIL VPC Constellation Alpha Right (Standard)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID for the right-hand standard Constellation Alpha is a community estimate.
+# The left-hand standard Constellation Alpha uses PID 0x838F (CM3 revision).
+# The Prime variants use 0x0138 (Left) and 0x4139 (Right). This manifest
+# covers the standard (non-Prime) right-hand grip for the CM3 stick base.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Alpha Right (CM3)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x438F    # Community estimate — right-hand standard Alpha; confirm with lsusb
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 14
+  buttons: 24
+  hats: 2
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x438F is a community estimate for the right-hand standard Constellation
+      Alpha. The left-hand standard uses 0x838F; the Prime Right uses 0x4139.
+      Confirm with lsusb or the VIRPIL Configurator software on real hardware.
+  - id: RIGHT_HAND_GRIP
+    description: >
+      Right-hand ergonomic grip variant. Axis polarity may differ from the
+      left-hand Alpha; verify button/hat positions against real hardware before
+      enabling a default profile.
+  - id: SHARED_BASE_COMPATIBILITY
+    description: >
+      Mounts on VIRPIL stick bases (MongoosT-50CM3, WarBRD-D) via the internal
+      connector. The base supplies the USB interface; the PID is reported by
+      the grip, not the base.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Standard (non-Prime) right-hand Constellation Alpha grip. PID 0x438F is a
+    community estimate; update when confirmed. Left-hand standard uses 0x838F
+    (constellation-alpha-left.yaml). Prime variants documented separately.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

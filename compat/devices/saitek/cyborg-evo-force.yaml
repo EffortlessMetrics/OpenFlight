@@ -1,0 +1,64 @@
+# Saitek Cyborg Evo Force Joystick (Force Feedback)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0462 reported via USB ID databases for the Cyborg Evo Force.
+# The Cyborg Evo Force is the force-feedback variant of the Cyborg Evo.
+# It uses the same physical form factor but adds FFB motors for spring,
+# damper, and constant force effects. Distinct from the non-FFB Evo (PID 0x0460).
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Evo Force Joystick"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0462      # Cyborg Evo Force — USB ID database
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine]
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0462 is from USB ID database listings. Linux-hardware.org has
+      limited probe data for the Evo Force. Confirm with lsusb on real hardware
+      to distinguish from the standard Evo (PID 0x0460).
+  - id: FFB_DIRECTINPUT
+    description: >
+      Force feedback is exposed via the DirectInput FFB interface on Windows.
+      On Linux, the hid-saitek or generic HID FF driver may be used.
+  - id: ADJUSTABLE_HANDLE
+    description: >
+      Same adjustable handle as the standard Cyborg Evo; handle angle can be
+      set for left- or right-hand orientation without affecting HID output.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. Z axis is the throttle slider
+      on the stick base.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg Evo Force — FFB variant of the Cyborg Evo (cyborg-evo.yaml).
+    PID 0x0462 from USB ID databases; confirm on hardware. FFB requires DirectInput
+    on Windows. Last reviewed: 2026-02.

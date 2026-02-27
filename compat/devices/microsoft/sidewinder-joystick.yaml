@@ -1,0 +1,59 @@
+# Microsoft SideWinder Standard Joystick (USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x0034 is a community estimate for the SideWinder standard joystick
+# USB revision. The base SideWinder joystick was a low-cost entry-level device
+# sold alongside the Precision Pro and 3D Pro lines. Distinct from the
+# Precision 2 (0x0038), 3D Pro (0x001A), and FFB variants.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Standard Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x0034  # Community estimate — SideWinder standard USB; confirm with lsusb
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0034 is a community estimate for the SideWinder base joystick USB
+      version. Multiple early Microsoft joystick variants exist in the 0x0030–
+      0x003F PID range. Confirm with lsusb or USBView on real hardware.
+  - id: NO_TWIST_AXIS
+    description: >
+      Unlike the Precision 2 and 3D Pro, the standard SideWinder does not have
+      a twist (Rz) rudder axis. Only X, Y, and Z (throttle) are exposed.
+  - id: ENTRY_LEVEL
+    description: >
+      Entry-level device; 10-bit ADC resolution with a basic 3-axis layout.
+      No force feedback. Suitable for basic flight sim use; apply a small
+      software deadzone for the spring-centred X/Y axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Standard Joystick — entry-level USB joystick (late 1990s).
+    PID 0x0034 is unconfirmed. Lacks twist axis; 3-axis layout. Superseded by
+    the Precision 2 line. Last reviewed: 2026-02.

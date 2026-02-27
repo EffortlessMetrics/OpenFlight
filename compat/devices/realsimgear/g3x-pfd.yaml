@@ -1,0 +1,60 @@
+# RealSimGear G3X Touch PFD (Primary Flight Display Bezel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 confirmed (Microchip Technology Inc. — used by RealSimGear).
+# PID is a community estimate; verify with lsusb on real hardware.
+# The RealSimGear G3X Touch PFD is a replica front-panel bezel for the
+# Garmin G3X Touch primary flight display. Exposes all physical buttons
+# and knobs as HID events. Distinct from the G3X Touch bezel (g3x-touch.yaml),
+# which may share the same hardware revision.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G3X Touch PFD Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology Inc. (used by RealSimGear firmware)
+    product_id: 0xF242      # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 16
+  hats: 0
+  encoders: 2               # PFD volume/brightness knob + map zoom knob
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF242 is a community estimate. RealSimGear products use Microchip
+      VID 0x04D8. Confirm with lsusb on real hardware. See g3x-touch.yaml for
+      a related G3X Touch device variant.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary encoders are reported as button increment/decrement events,
+      not as analogue axes. Map each encoder step to the appropriate PFD
+      binding in the sim profile.
+  - id: RELATED_TO_G3X_TOUCH
+    description: >
+      The G3X Touch PFD bezel and the G3X Touch bezel (g3x-touch.yaml) may
+      share hardware but report different PIDs depending on firmware revision.
+      Verify on hardware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G3X Touch PFD replica bezel. PID 0xF242 is unconfirmed.
+    Related to g3x-touch.yaml (full touchscreen bezel). All controls are HID
+    buttons/encoders; no analogue axes. Last reviewed: 2026-02.

@@ -1,0 +1,60 @@
+# 3Dconnexion SpaceMouse Wireless (USB Receiver)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed (3Dconnexion GmbH).
+# PID 0xC652 confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_3DCONNEXION_SPACEMOUSE_WIRELESS_RECV),
+# spacenavd daemon (FreeSpacenav/spacenavd), and 3Dconnexion Linux driver.
+# The SpaceMouse Wireless is a cordless 6-DOF controller. The USB receiver
+# dongle (PID 0xC652) enumerates as the HID device; the puck communicates via
+# 2.4 GHz RF. Separate wired USB mode uses PID 0xC62E.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Wireless (USB Receiver)"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion GmbH
+    product_id: 0xC652  # SpaceMouse Wireless receiver — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8        # Slightly higher jitter over 2.4 GHz RF
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck. All axes are spring-centred and return to
+      zero when released. Same HID report format as the wired SpaceNavigator.
+  - id: WIRELESS_RECEIVER
+    description: >
+      PID 0xC652 is the USB receiver dongle, not the puck itself. The puck
+      communicates via 2.4 GHz RF with the receiver. Wired USB mode (cable
+      connected directly to puck) uses PID 0xC62E.
+  - id: RF_LATENCY
+    description: >
+      RF wireless adds ~2–4 ms of additional input latency vs. wired. For
+      camera control in MSFS this is imperceptible; for direct control inputs
+      prefer wired mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC652 (receiver) confirmed from Linux kernel hid-ids.h and spacenavd.
+    Wired mode (PID 0xC62E) may need a separate manifest. Used with MSFS for
+    camera control. Last reviewed: 2026-02.

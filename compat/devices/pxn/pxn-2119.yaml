@@ -1,0 +1,57 @@
+# PXN-2119 Budget Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (PXN / Gaoyi Electronics Technology Co., Ltd.).
+# PID 0x2119 is a community estimate — the product number is often used as
+# the USB product ID for PXN peripherals. Not yet confirmed via hardware probe.
+# The PXN-2119 is a budget USB joystick with integrated throttle lever,
+# popular in emerging markets and as an entry-level flight sim controller.
+schema_version: "1"
+
+device:
+  name: "PXN-2119 USB Joystick"
+  vendor: "PXN (Gaoyi Electronics)"
+  usb:
+    vendor_id: 0x0E8F   # PXN / Gaoyi Electronics Technology Co., Ltd.
+    product_id: 0x2119  # Community estimate — product number as PID; confirm with lsusb
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x2119 is a community estimate based on the model number convention
+      used by PXN peripherals. No hardware probe has confirmed this value.
+      Confirm with lsusb on real hardware before enabling production device matching.
+  - id: ENTRY_LEVEL_ADC
+    description: >
+      10-bit ADC resolution is typical for budget PXN joysticks. Apply a 3–5%
+      software deadzone on X/Y/Rz axes to compensate for centre noise.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. Integrated throttle is the Z axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN-2119 — budget entry-level joystick, widely sold in Asia and emerging markets.
+    VID 0x0E8F is PXN/Gaoyi's registered vendor ID. PID 0x2119 is unconfirmed.
+    Common in MSFS community as a beginner flight controller. Last reviewed: 2026-02.

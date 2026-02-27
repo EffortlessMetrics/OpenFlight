@@ -1,0 +1,60 @@
+# 3Dconnexion SpaceMouse Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x256F confirmed (3Dconnexion GmbH).
+# PID 0xC631 confirmed: Linux kernel hid-ids.h (USB_DEVICE_ID_3DCONNEXION_SPACEMOUSE_PRO),
+# spacenavd daemon (FreeSpacenav/spacenavd), and usb-ids.gowdy.us.
+# The SpaceMouse Pro is an enhanced 6-DOF controller with 15 programmable
+# function keys, 4 chord keys, and a customisable button ring. Used with MSFS
+# for cockpit navigation and camera control.
+schema_version: "1"
+
+device:
+  name: "3Dconnexion SpaceMouse Pro"
+  vendor: "3Dconnexion GmbH"
+  usb:
+    vendor_id: 0x256F   # 3Dconnexion GmbH
+    product_id: 0xC631  # SpaceMouse Pro — confirmed via Linux kernel hid-ids.h
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x08         # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 15
+  buttons: 15
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SIX_DOF_CONTROLLER
+    description: >
+      6-DOF spring-centred puck provides simultaneous translation (Tx/Ty/Tz)
+      and rotation (Rx/Ry/Rz) axes. All axes are spring-centred and return to
+      zero when released.
+  - id: EXTENDED_BUTTON_LAYOUT
+    description: >
+      The SpaceMouse Pro adds 15 programmable function keys (F1–F15) and 4
+      chord keys compared to the 2-button SpaceNavigator. Button events are
+      sent in a separate HID report from axis data.
+  - id: NOT_FLIGHT_SPECIFIC
+    description: >
+      Not a dedicated flight controller. Useful for MSFS camera control, drone
+      view, and cockpit panning. Map Tz to altitude control and Rx/Ry to pan.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0xC631 confirmed from Linux kernel hid-ids.h and spacenavd.
+    Enhanced version of the SpaceNavigator with additional function keys.
+    Used with MSFS for camera/cockpit navigation. Last reviewed: 2026-02.

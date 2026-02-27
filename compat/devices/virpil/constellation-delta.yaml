@@ -1,0 +1,61 @@
+# VIRPIL VPC Constellation Delta Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: the-sz.com USB ID DB (VIRPIL Controls UAB).
+# PID 0x831A is a community estimate for the Constellation Delta grip.
+# The Delta is a newer modular grip in the Constellation line, featuring
+# a distinct top-hat cluster layout and additional thumb axes. Mounts on
+# VIRPIL CM3/WarBRD-D bases via the internal connector.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Delta Grip"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x831A    # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 14
+  buttons: 28
+  hats: 3
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x831A is a community estimate for the Constellation Delta. No hardware
+      probe or open-source project has confirmed this value. Confirm with lsusb
+      or the VIRPIL Configurator software on real hardware.
+  - id: DELTA_GRIP_LAYOUT
+    description: >
+      The Delta grip features a new top-hat cluster with 3 hat switches and an
+      expanded button count compared to the Alpha/Beta/Sigma grips. The Rz axis
+      is a thumb joystick on the grip.
+  - id: SHARED_BASE_COMPATIBILITY
+    description: >
+      Compatible with VIRPIL CM3 and WarBRD-D stick bases. The base supplies
+      the USB HID interface; the PID is reported by the grip firmware.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL Constellation Delta grip — newer modular grip in the Constellation line.
+    PID 0x831A is a community estimate; update when confirmed with lsusb.
+    See constellation-alpha-left.yaml and constellation-beta.yaml for related grips.
+    VIRPIL VID=0x3344. Last reviewed: 2026-02.

@@ -1,0 +1,57 @@
+# PXN V3 Pro Flight Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (PXN / Gaoyi Electronics Technology Co., Ltd.).
+# PID 0x0003 is a community estimate for the V3 Pro.
+# The PXN V3 Pro is a mid-range flight joystick with twist rudder, throttle
+# slider, and multi-function buttons. A step up from the PXN-2119 with
+# improved precision and dedicated flight sim button layout.
+schema_version: "1"
+
+device:
+  name: "PXN V3 Pro Flight Joystick"
+  vendor: "PXN (Gaoyi Electronics)"
+  usb:
+    vendor_id: 0x0E8F   # PXN / Gaoyi Electronics Technology Co., Ltd.
+    product_id: 0x0003  # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 15
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the PXN V3 Pro. PXN uses low
+      PID values for some products. Confirm with lsusb on real hardware before
+      enabling production matching.
+  - id: TWIST_RUDDER
+    description: >
+      Twist grip provides Rz (rudder) axis. Throttle slider is on the joystick base.
+  - id: IMPROVED_PRECISION
+    description: >
+      12-bit ADC resolution (vs. 10-bit on the PXN-2119) provides smoother axis
+      response. A small 2% software deadzone may still be beneficial at centre.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN V3 Pro — mid-range flight joystick. VID 0x0E8F confirmed for PXN.
+    PID 0x0003 is unconfirmed. Improved axis precision over the PXN-2119.
+    Popular in Asian markets as a mid-tier option. Last reviewed: 2026-02.

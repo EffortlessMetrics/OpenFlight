@@ -1,0 +1,61 @@
+# Microsoft SideWinder Precision Pro USB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed (Microsoft Corporation).
+# PID 0x001C is a community estimate for the SideWinder Precision Pro USB.
+# The Precision Pro was originally a serial port joystick (1995–1998) with a
+# later USB variant. It is distinct from the Precision 2 (PID 0x0038) and
+# the 3D Pro (PID 0x001A). Not to be confused with the Precision Pro serial adapter.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Precision Pro USB"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E   # Microsoft Corporation
+    product_id: 0x001C  # Community estimate — Precision Pro USB variant; confirm with lsusb
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 9
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001C is a community estimate for the Precision Pro USB variant.
+      The Precision Pro was primarily a serial port device; the USB version
+      is rare. Confirm PID with lsusb or USBView. See also sidewinder-3d-pro.yaml
+      (PID 0x001A) and sidewinder-precision2.yaml (PID 0x0038).
+  - id: Z_AXIS_THROTTLE
+    description: >
+      The Z axis is the throttle lever on the base of the grip (unipolar).
+      The Rz axis is the twist grip rudder.
+  - id: LEGACY_SERIAL_COUSIN
+    description: >
+      The Precision Pro is primarily known as a serial port device. The USB
+      variant may have different axis precision from the serial version.
+      If a serial-to-USB adapter is in use, the PID may differ from the
+      native USB device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Precision Pro USB — rare USB variant of the 1995 serial
+    joystick. PID 0x001C is unconfirmed. The more common Precision 2 (USB-native,
+    PID 0x0038) superseded this model. Last reviewed: 2026-02.
