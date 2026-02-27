@@ -18,6 +18,26 @@ supported_versions:
   - "X-Plane 11 (11.55+)"
   - "X-Plane 12 (all)"
 
+version_notes:
+  xplane11:
+    notes: >
+      Uses classic UDP Data Output (DREF) protocol. Datarefs such as
+      sim/flightmodel/position/vh_ind_fpm (vertical speed in ft/min) and
+      sim/flightmodel/position/indicated_airspeed are stable across 11.55+.
+  xplane12:
+    notes: >
+      X-Plane 12 reorganised several position and performance datarefs.
+      Key changes vs XP11:
+        • sim/flightmodel/position/vh_ind_fpm — still present but the
+          preferred path in XP12 is sim/flightmodel2/position/vh_ind_fpm2.
+        • sim/flightmodel/position/local_ax/ay/az replaced by
+          sim/flightmodel2/position/Nrot_{roll,pitch,yaw}.
+        • sim/cockpit2/gauges/indicators/airspeed_kts_pilot supersedes
+          sim/flightmodel/position/indicated_airspeed for cockpit reads.
+      OpenFlight's DataRef subscription table uses the XP11 names as primary
+      keys and falls back to XP12 equivalents at runtime where the adapter
+      detects version ≥ 1200 from the VERS dataref.
+
 features:
   telemetry_read: true
   control_injection:

@@ -18,7 +18,15 @@ integration:
     structured UDP packets to OpenFlight on localhost.
 
 supported_versions:
-  - "DCS World 2.9+"
+  - "DCS World 2.8.x"
+  - "DCS World 2.9.x"
+
+version_notes:
+  export_script_compat: >
+    The Lua Export script format (LoGetSelfData, LoGetObjectById, etc.) is
+    consistent across DCS World 2.8 and 2.9. No version-specific branches are
+    required in the export hook. Newer 2.9 builds may expose additional module
+    data tables, but unrecognised keys are silently ignored by the parser.
 
 features:
   telemetry_read: true
