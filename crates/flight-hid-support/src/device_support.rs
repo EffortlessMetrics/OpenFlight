@@ -37,6 +37,29 @@ pub fn is_extreme_3d_pro(vendor_id: u16, product_id: u16) -> bool {
     vendor_id == LOGITECH_VENDOR_ID && product_id == EXTREME_3D_PRO_PID
 }
 
+/// USB Product ID for the Logitech G Flight Yoke System.
+///
+/// Confirmed: VID 0x046D (Logitech), PID 0xC259 — linux-hardware.org.
+/// The yoke and bundled throttle quadrant (PID 0xC25A) enumerate as
+/// separate USB HID devices.
+pub const G_FLIGHT_YOKE_PID: u16 = 0xC259;
+
+/// USB Product ID for the Logitech G Flight Throttle Quadrant.
+///
+/// Confirmed: VID 0x046D (Logitech), PID 0xC25A — linux-hardware.org.
+/// Standalone throttle quadrant; three levers (Z/Rz/Slider) + 6 buttons.
+pub const G_FLIGHT_THROTTLE_QUADRANT_PID: u16 = 0xC25A;
+
+/// Returns `true` if this VID/PID is a Logitech G Flight Yoke.
+pub fn is_g_flight_yoke(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == LOGITECH_VENDOR_ID && product_id == G_FLIGHT_YOKE_PID
+}
+
+/// Returns `true` if this VID/PID is a Logitech G Flight Throttle Quadrant.
+pub fn is_g_flight_throttle_quadrant(vendor_id: u16, product_id: u16) -> bool {
+    vendor_id == LOGITECH_VENDOR_ID && product_id == G_FLIGHT_THROTTLE_QUADRANT_PID
+}
+
 /// USB Vendor ID for all Honeycomb Aeronautical products.
 pub const HONEYCOMB_VENDOR_ID: u16 = 0x294B;
 
