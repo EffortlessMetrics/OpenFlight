@@ -2894,3 +2894,148 @@ requirements:
         tests:
           - flight-workspace-meta::tests::load_workspace_microcrate_names_succeeds_from_repo_root
           - flight-workspace-meta::tests::required_metadata_fields_has_expected_count
+
+  # Product Requirement: Logitech G940 FFB HOTAS HID Input Parsing
+  - id: REQ-75
+    name: Logitech G940 FFB HOTAS HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-75.1
+        description: "WHEN a G940 joystick HID report shorter than 11 bytes is parsed THEN parse_g940_joystick SHALL return Err(JoystickTooShort)"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_joystick_too_short
+      - id: AC-75.2
+        description: "WHEN G940 joystick bipolar axes (X, Y, Rz) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_joystick_centered_axes
+          - flight-hotas-logitech::g940::tests::test_x_full_right
+          - flight-hotas-logitech::g940::tests::test_x_full_left
+          - flight-hotas-logitech::g940::tests::test_y_full_forward
+          - flight-hotas-logitech::g940::tests::test_y_full_back
+          - flight-hotas-logitech::g940::tests::test_rz_twist_center
+          - flight-hotas-logitech::g940::tests::test_rz_twist_full_right
+          - flight-hotas-logitech::g940::tests::test_rz_twist_full_left
+          - flight-hotas-logitech::g940::tests::proptest_tests::x_axis_always_in_range
+          - flight-hotas-logitech::g940::tests::proptest_tests::y_axis_always_in_range
+          - flight-hotas-logitech::g940::tests::proptest_tests::rz_axis_always_in_range
+          - flight-hotas-logitech::g940::tests::proptest_tests::arbitrary_joystick_bytes_all_axes_in_range
+      - id: AC-75.3
+        description: "WHEN the G940 joystick Z axis (stick-body throttle) is at raw minimum (0) THEN the axis SHALL be 0.0; at raw maximum (4095) it SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_z_throttle_min
+          - flight-hotas-logitech::g940::tests::test_z_throttle_max
+          - flight-hotas-logitech::g940::tests::proptest_tests::z_axis_always_unipolar
+      - id: AC-75.4
+        description: "WHEN a G940 hat switch nibble value is parsed THEN it SHALL map to the correct G940Hat variant (North=0, NorthEast=1, East=2, SouthEast=3, South=4, SouthWest=5, West=6, NorthWest=7, Center=8..15)"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_hat_center
+          - flight-hotas-logitech::g940::tests::test_hat_north
+          - flight-hotas-logitech::g940::tests::test_hat_south
+          - flight-hotas-logitech::g940::tests::test_hat_northeast
+          - flight-hotas-logitech::g940::tests::test_hat_northwest
+      - id: AC-75.5
+        description: "WHEN G940 joystick buttons are pressed individually or in combination THEN each of the 20 buttons SHALL be independently addressable; button numbers outside 1-20 SHALL always return false"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_joystick_buttons_individual
+          - flight-hotas-logitech::g940::tests::test_joystick_all_buttons_pressed
+          - flight-hotas-logitech::g940::tests::test_joystick_out_of_range_buttons_false
+          - flight-hotas-logitech::g940::tests::proptest_tests::joystick_buttons_roundtrip
+          - flight-hotas-logitech::g940::tests::proptest_tests::out_of_range_joystick_buttons_always_false
+      - id: AC-75.6
+        description: "WHEN a G940 throttle HID report shorter than 5 bytes is parsed THEN parse_g940_throttle SHALL return Err(ThrottleTooShort)"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_throttle_too_short
+      - id: AC-75.7
+        description: "WHEN the G940 throttle dual levers are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (4095) each SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_left_throttle_min
+          - flight-hotas-logitech::g940::tests::test_left_throttle_max
+          - flight-hotas-logitech::g940::tests::test_right_throttle_min
+          - flight-hotas-logitech::g940::tests::test_right_throttle_max
+          - flight-hotas-logitech::g940::tests::proptest_tests::left_throttle_always_unipolar
+          - flight-hotas-logitech::g940::tests::proptest_tests::right_throttle_always_unipolar
+      - id: AC-75.8
+        description: "WHEN G940 throttle buttons are pressed individually or in combination THEN each of the 11 buttons SHALL be independently addressable; button numbers outside 1-11 SHALL always return false"
+        tests:
+          - flight-hotas-logitech::g940::tests::test_throttle_buttons_individual
+          - flight-hotas-logitech::g940::tests::test_throttle_all_buttons_pressed
+          - flight-hotas-logitech::g940::tests::test_throttle_out_of_range_buttons_false
+          - flight-hotas-logitech::g940::tests::proptest_tests::throttle_buttons_roundtrip
+
+  # Product Requirement: Logitech G Flight Yoke System HID Input Parsing
+  - id: REQ-76
+    name: Logitech G Flight Yoke System HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-76.1
+        description: "WHEN a G Flight Yoke HID report shorter than 8 bytes is parsed THEN parse_g_flight_yoke SHALL return Err(TooShort)"
+        tests:
+          - flight-hotas-logitech::g_flight_yoke::tests::test_too_short
+          - flight-hotas-logitech::g_flight_yoke::tests::test_too_short_error_fields
+      - id: AC-76.2
+        description: "WHEN G Flight Yoke bipolar axes (X, Y) are at center they SHALL normalize to approximately 0.0; at full deflection they SHALL normalize to approximately ±1.0; arbitrary byte patterns SHALL always produce values within −1.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g_flight_yoke::tests::test_centered
+          - flight-hotas-logitech::g_flight_yoke::tests::test_x_full_right
+          - flight-hotas-logitech::g_flight_yoke::tests::test_x_full_left
+          - flight-hotas-logitech::g_flight_yoke::tests::test_y_full_forward
+          - flight-hotas-logitech::g_flight_yoke::tests::test_y_full_back
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::x_axis_always_in_range
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::y_axis_always_in_range
+      - id: AC-76.3
+        description: "WHEN G Flight Yoke unipolar axes (Rz prop-pitch, Slider mixture, Slider2 carb-heat) are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (255) each SHALL be 1.0; arbitrary inputs SHALL always produce values within 0.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g_flight_yoke::tests::test_rz_max
+          - flight-hotas-logitech::g_flight_yoke::tests::test_rz_min
+          - flight-hotas-logitech::g_flight_yoke::tests::test_slider_max
+          - flight-hotas-logitech::g_flight_yoke::tests::test_slider2_max
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::rz_always_unipolar
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::slider_always_unipolar
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::slider2_always_unipolar
+      - id: AC-76.4
+        description: "WHEN a G Flight Yoke hat switch nibble value is parsed THEN it SHALL map to the correct GFlightYokeHat variant (North=0, NorthEast=1, East=2, SouthEast=3, South=4, SouthWest=5, West=6, NorthWest=7, Center=8..15)"
+        tests:
+          - flight-hotas-logitech::g_flight_yoke::tests::test_hat_north
+          - flight-hotas-logitech::g_flight_yoke::tests::test_hat_east
+          - flight-hotas-logitech::g_flight_yoke::tests::test_hat_south
+          - flight-hotas-logitech::g_flight_yoke::tests::test_hat_northwest
+          - flight-hotas-logitech::g_flight_yoke::tests::test_centered
+      - id: AC-76.5
+        description: "WHEN G Flight Yoke buttons are pressed individually or in combination THEN each of the 12 buttons SHALL be independently addressable; button numbers outside 1-12 SHALL always return false"
+        tests:
+          - flight-hotas-logitech::g_flight_yoke::tests::test_buttons_individual
+          - flight-hotas-logitech::g_flight_yoke::tests::test_all_buttons_pressed
+          - flight-hotas-logitech::g_flight_yoke::tests::test_out_of_range_button_returns_false
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::buttons_roundtrip
+          - flight-hotas-logitech::g_flight_yoke::tests::proptest_tests::out_of_range_buttons_always_false
+
+  # Product Requirement: Logitech G Flight Throttle Quadrant HID Input Parsing
+  - id: REQ-77
+    name: Logitech G Flight Throttle Quadrant HID Input Parsing
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-77.1
+        description: "WHEN a G Flight Throttle Quadrant HID report shorter than 6 bytes is parsed THEN parse_g_flight_throttle SHALL return Err(TooShort)"
+        tests:
+          - flight-hotas-logitech::g_flight_throttle::tests::test_too_short
+          - flight-hotas-logitech::g_flight_throttle::tests::test_too_short_error_fields
+      - id: AC-77.2
+        description: "WHEN G Flight Throttle Quadrant levers are at raw minimum (0) THEN each SHALL be 0.0; at raw maximum (4095) each SHALL be 1.0; levers SHALL be independently addressable; arbitrary inputs SHALL always produce values within 0.0..=1.0"
+        tests:
+          - flight-hotas-logitech::g_flight_throttle::tests::test_all_levers_min
+          - flight-hotas-logitech::g_flight_throttle::tests::test_all_levers_max
+          - flight-hotas-logitech::g_flight_throttle::tests::test_left_lever_midpoint
+          - flight-hotas-logitech::g_flight_throttle::tests::test_levers_independent
+          - flight-hotas-logitech::g_flight_throttle::tests::proptest_tests::left_always_unipolar
+          - flight-hotas-logitech::g_flight_throttle::tests::proptest_tests::center_always_unipolar
+          - flight-hotas-logitech::g_flight_throttle::tests::proptest_tests::right_always_unipolar
+      - id: AC-77.3
+        description: "WHEN G Flight Throttle Quadrant buttons are pressed individually or in combination THEN each of the 6 buttons SHALL be independently addressable; button numbers outside 1-6 SHALL always return false"
+        tests:
+          - flight-hotas-logitech::g_flight_throttle::tests::test_buttons_individual
+          - flight-hotas-logitech::g_flight_throttle::tests::test_all_buttons_pressed
+          - flight-hotas-logitech::g_flight_throttle::tests::test_out_of_range_button_returns_false
+          - flight-hotas-logitech::g_flight_throttle::tests::proptest_tests::buttons_roundtrip
