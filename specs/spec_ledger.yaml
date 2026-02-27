@@ -3336,6 +3336,30 @@ requirements:
         description: "WHEN a valid Orion2 Throttle report is parsed THEN all axis values SHALL be finite"
         tests:
           - flight-hotas-winwing::orion2_throttle::tests::test_throttle_min_position
+
+  # Product Requirement: Saitek X52 HID Parsing Property Invariants
+  - id: REQ-90
+    name: Saitek X52 HID Parsing Property Invariants
+    kind: product
+    status: draft
+    ac:
+      - id: AC-90.1
+        description: "AC1: WHEN a valid Saitek X52 HID report is parsed THEN all axis values SHALL be within normalized range"
+        tests:
+          - feature:specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature
+      - id: AC-90.2
+        description: "AC2: WHEN a report shorter than minimum length is parsed THEN the result SHALL be an error"
+        tests:
+          - feature:specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature
+      - id: AC-90.3
+        description: "AC3: WHEN any arbitrary bytes are parsed THEN axis values SHALL be finite and never NaN or Inf"
+        tests:
+          - feature:specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature
+      - id: AC-90.4
+        description: "AC4: WHEN button bits are extracted THEN they SHALL be within the valid bitmask range"
+        tests:
+          - feature:specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature
+
   - id: REQ-91
     name: Logitech Extreme 3D Pro HID Parsing Property Invariants
     kind: product
@@ -18689,6 +18713,283 @@ requirements:
         tests:
           - feature:specs/features/req_666_axis_jitter_suppression.feature
 
+
+  # Product Requirement: Axis Noise Floor Detection
+  - id: REQ-667
+    name: Axis Noise Floor Detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-667.1
+        description: "AC1: Noise floor is measured during calibration idle period"
+        tests:
+          - feature:specs/features/req_667_axis_noise_floor_detection.feature
+      - id: AC-667.2
+        description: "AC2: Noise floor threshold is stored per-axis in calibration data"
+        tests:
+          - feature:specs/features/req_667_axis_noise_floor_detection.feature
+      - id: AC-667.3
+        description: "AC3: Inputs below noise floor are suppressed to zero"
+        tests:
+          - feature:specs/features/req_667_axis_noise_floor_detection.feature
+      - id: AC-667.4
+        description: "AC4: Noise floor recalibration can be triggered manually"
+        tests:
+          - feature:specs/features/req_667_axis_noise_floor_detection.feature
+
+  # Product Requirement: Axis Signal Conditioning
+  - id: REQ-668
+    name: Axis Signal Conditioning
+    kind: product
+    status: draft
+    ac:
+      - id: AC-668.1
+        description: "AC1: Signal conditioning applies a configurable low-pass filter"
+        tests:
+          - feature:specs/features/req_668_axis_signal_conditioning.feature
+      - id: AC-668.2
+        description: "AC2: Filter cutoff frequency is adjustable per axis"
+        tests:
+          - feature:specs/features/req_668_axis_signal_conditioning.feature
+      - id: AC-668.3
+        description: "AC3: Conditioning preserves signal phase within acceptable tolerance"
+        tests:
+          - feature:specs/features/req_668_axis_signal_conditioning.feature
+      - id: AC-668.4
+        description: "AC4: Conditioning stage operates within RT budget"
+        tests:
+          - feature:specs/features/req_668_axis_signal_conditioning.feature
+
+  # Product Requirement: Axis Hysteresis Filter
+  - id: REQ-669
+    name: Axis Hysteresis Filter
+    kind: product
+    status: draft
+    ac:
+      - id: AC-669.1
+        description: "AC1: Hysteresis band prevents oscillation at decision boundaries"
+        tests:
+          - feature:specs/features/req_669_axis_hysteresis_filter.feature
+      - id: AC-669.2
+        description: "AC2: Band width is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_669_axis_hysteresis_filter.feature
+      - id: AC-669.3
+        description: "AC3: Filter does not add latency beyond one sample period"
+        tests:
+          - feature:specs/features/req_669_axis_hysteresis_filter.feature
+      - id: AC-669.4
+        description: "AC4: Hysteresis resets on axis recalibration"
+        tests:
+          - feature:specs/features/req_669_axis_hysteresis_filter.feature
+
+  # Product Requirement: Axis Calibration Persistence
+  - id: REQ-670
+    name: Axis Calibration Persistence
+    kind: product
+    status: draft
+    ac:
+      - id: AC-670.1
+        description: "AC1: Calibration data is saved to persistent storage on completion"
+        tests:
+          - feature:specs/features/req_670_axis_calibration_persistence.feature
+      - id: AC-670.2
+        description: "AC2: Calibration is restored on service restart"
+        tests:
+          - feature:specs/features/req_670_axis_calibration_persistence.feature
+      - id: AC-670.3
+        description: "AC3: Corrupt calibration file falls back to defaults with warning"
+        tests:
+          - feature:specs/features/req_670_axis_calibration_persistence.feature
+      - id: AC-670.4
+        description: "AC4: Calibration file format is versioned for forward compatibility"
+        tests:
+          - feature:specs/features/req_670_axis_calibration_persistence.feature
+
+  # Product Requirement: Axis Center Point Auto-Detect
+  - id: REQ-671
+    name: Axis Center Point Auto-Detect
+    kind: product
+    status: draft
+    ac:
+      - id: AC-671.1
+        description: "AC1: Center point is detected from idle position during calibration"
+        tests:
+          - feature:specs/features/req_671_axis_center_point_auto_detect.feature
+      - id: AC-671.2
+        description: "AC2: Auto-detect tolerates small deviations from mechanical center"
+        tests:
+          - feature:specs/features/req_671_axis_center_point_auto_detect.feature
+      - id: AC-671.3
+        description: "AC3: Center point can be manually overridden in profile"
+        tests:
+          - feature:specs/features/req_671_axis_center_point_auto_detect.feature
+      - id: AC-671.4
+        description: "AC4: Center offset is applied before deadzone processing"
+        tests:
+          - feature:specs/features/req_671_axis_center_point_auto_detect.feature
+
+  # Product Requirement: Axis Endpoint Calibration
+  - id: REQ-672
+    name: Axis Endpoint Calibration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-672.1
+        description: "AC1: Full deflection endpoints are captured during calibration sweep"
+        tests:
+          - feature:specs/features/req_672_axis_endpoint_calibration.feature
+      - id: AC-672.2
+        description: "AC2: Endpoint values define the axis normalization range"
+        tests:
+          - feature:specs/features/req_672_axis_endpoint_calibration.feature
+      - id: AC-672.3
+        description: "AC3: Asymmetric endpoints are supported for worn hardware"
+        tests:
+          - feature:specs/features/req_672_axis_endpoint_calibration.feature
+      - id: AC-672.4
+        description: "AC4: Endpoint calibration validates that range exceeds minimum threshold"
+        tests:
+          - feature:specs/features/req_672_axis_endpoint_calibration.feature
+
+  # Product Requirement: Axis Non-Linearity Compensation
+  - id: REQ-673
+    name: Axis Non-Linearity Compensation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-673.1
+        description: "AC1: Hardware non-linearity is measured during calibration"
+        tests:
+          - feature:specs/features/req_673_axis_non_linearity_compensation.feature
+      - id: AC-673.2
+        description: "AC2: Compensation lookup table is generated from calibration data"
+        tests:
+          - feature:specs/features/req_673_axis_non_linearity_compensation.feature
+      - id: AC-673.3
+        description: "AC3: Compensated output is linear within 1% of ideal"
+        tests:
+          - feature:specs/features/req_673_axis_non_linearity_compensation.feature
+      - id: AC-673.4
+        description: "AC4: Compensation is bypassed when custom response curves are active"
+        tests:
+          - feature:specs/features/req_673_axis_non_linearity_compensation.feature
+
+  # Product Requirement: Axis Temperature Drift Correction
+  - id: REQ-674
+    name: Axis Temperature Drift Correction
+    kind: product
+    status: draft
+    ac:
+      - id: AC-674.1
+        description: "AC1: Drift correction monitors center position over time"
+        tests:
+          - feature:specs/features/req_674_axis_temperature_drift_correction.feature
+      - id: AC-674.2
+        description: "AC2: Gradual drift is compensated without user intervention"
+        tests:
+          - feature:specs/features/req_674_axis_temperature_drift_correction.feature
+      - id: AC-674.3
+        description: "AC3: Sudden large shifts trigger a recalibration advisory"
+        tests:
+          - feature:specs/features/req_674_axis_temperature_drift_correction.feature
+      - id: AC-674.4
+        description: "AC4: Drift correction rate is configurable in service settings"
+        tests:
+          - feature:specs/features/req_674_axis_temperature_drift_correction.feature
+
+  # Product Requirement: Axis Multi-Point Calibration
+  - id: REQ-675
+    name: Axis Multi-Point Calibration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-675.1
+        description: "AC1: Calibration captures values at multiple reference points"
+        tests:
+          - feature:specs/features/req_675_axis_multi_point_calibration.feature
+      - id: AC-675.2
+        description: "AC2: Interpolation between calibration points uses cubic spline"
+        tests:
+          - feature:specs/features/req_675_axis_multi_point_calibration.feature
+      - id: AC-675.3
+        description: "AC3: Minimum of 3 calibration points are required per axis"
+        tests:
+          - feature:specs/features/req_675_axis_multi_point_calibration.feature
+      - id: AC-675.4
+        description: "AC4: Calibration points can be added incrementally"
+        tests:
+          - feature:specs/features/req_675_axis_multi_point_calibration.feature
+
+  # Product Requirement: Axis Raw Value Logging
+  - id: REQ-676
+    name: Axis Raw Value Logging
+    kind: product
+    status: draft
+    ac:
+      - id: AC-676.1
+        description: "AC1: Raw axis values can be logged to file for diagnostics"
+        tests:
+          - feature:specs/features/req_676_axis_raw_value_logging.feature
+      - id: AC-676.2
+        description: "AC2: Log format includes timestamp and device identifier"
+        tests:
+          - feature:specs/features/req_676_axis_raw_value_logging.feature
+      - id: AC-676.3
+        description: "AC3: Logging can be enabled per-axis without restarting service"
+        tests:
+          - feature:specs/features/req_676_axis_raw_value_logging.feature
+      - id: AC-676.4
+        description: "AC4: Log files are automatically rotated at configurable size"
+        tests:
+          - feature:specs/features/req_676_axis_raw_value_logging.feature
+
+  # Product Requirement: Axis Calibration Wizard
+  - id: REQ-677
+    name: Axis Calibration Wizard
+    kind: product
+    status: draft
+    ac:
+      - id: AC-677.1
+        description: "AC1: Step-by-step wizard guides user through calibration process"
+        tests:
+          - feature:specs/features/req_677_axis_calibration_wizard.feature
+      - id: AC-677.2
+        description: "AC2: Wizard detects when axis is at center and full deflection"
+        tests:
+          - feature:specs/features/req_677_axis_calibration_wizard.feature
+      - id: AC-677.3
+        description: "AC3: Progress is shown visually during calibration"
+        tests:
+          - feature:specs/features/req_677_axis_calibration_wizard.feature
+      - id: AC-677.4
+        description: "AC4: Wizard can be cancelled without affecting existing calibration"
+        tests:
+          - feature:specs/features/req_677_axis_calibration_wizard.feature
+
+  # Product Requirement: Axis Calibration Export
+  - id: REQ-678
+    name: Axis Calibration Export
+    kind: product
+    status: draft
+    ac:
+      - id: AC-678.1
+        description: "AC1: Calibration data can be exported to a portable file format"
+        tests:
+          - feature:specs/features/req_678_axis_calibration_export.feature
+      - id: AC-678.2
+        description: "AC2: Exported calibration can be imported on another installation"
+        tests:
+          - feature:specs/features/req_678_axis_calibration_export.feature
+      - id: AC-678.3
+        description: "AC3: Export includes device identifier for matching verification"
+        tests:
+          - feature:specs/features/req_678_axis_calibration_export.feature
+      - id: AC-678.4
+        description: "AC4: Import validates compatibility before applying calibration"
+        tests:
+          - feature:specs/features/req_678_axis_calibration_export.feature
+
   - id: REQ-679
     name: Axis Input Lag Budget Tracking
     kind: product
@@ -18941,6 +19242,559 @@ requirements:
         description: "AC4: Adaptive mode is compatible with all other pipeline stages"
         tests:
           - feature:specs/features/req_690_axis_smoothing_adaptive.feature
+
+
+  # Product Requirement: Axis Filter Chain Ordering
+  - id: REQ-691
+    name: Axis Filter Chain Ordering
+    kind: product
+    status: draft
+    ac:
+      - id: AC-691.1
+        description: "AC1: Filter chain order is defined in profile configuration"
+        tests:
+          - feature:specs/features/req_691_axis_filter_chain_ordering.feature
+      - id: AC-691.2
+        description: "AC2: Reordering filters produces deterministic output changes"
+        tests:
+          - feature:specs/features/req_691_axis_filter_chain_ordering.feature
+      - id: AC-691.3
+        description: "AC3: Invalid filter chain configurations are rejected at load time"
+        tests:
+          - feature:specs/features/req_691_axis_filter_chain_ordering.feature
+      - id: AC-691.4
+        description: "AC4: Default filter chain order matches recommended signal path"
+        tests:
+          - feature:specs/features/req_691_axis_filter_chain_ordering.feature
+
+  # Product Requirement: Axis Filter Bypass Mode
+  - id: REQ-692
+    name: Axis Filter Bypass Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-692.1
+        description: "AC1: Individual filters can be bypassed without removing configuration"
+        tests:
+          - feature:specs/features/req_692_axis_filter_bypass_mode.feature
+      - id: AC-692.2
+        description: "AC2: Bypass state is togglable at runtime via CLI"
+        tests:
+          - feature:specs/features/req_692_axis_filter_bypass_mode.feature
+      - id: AC-692.3
+        description: "AC3: Bypassed filters consume zero processing budget"
+        tests:
+          - feature:specs/features/req_692_axis_filter_bypass_mode.feature
+      - id: AC-692.4
+        description: "AC4: Filter bypass state is persisted across service restarts"
+        tests:
+          - feature:specs/features/req_692_axis_filter_bypass_mode.feature
+
+  # Product Requirement: Axis Output Rate Limiting
+  - id: REQ-693
+    name: Axis Output Rate Limiting
+    kind: product
+    status: draft
+    ac:
+      - id: AC-693.1
+        description: "AC1: Output update rate can be limited below the processing rate"
+        tests:
+          - feature:specs/features/req_693_axis_output_rate_limiting.feature
+      - id: AC-693.2
+        description: "AC2: Rate limiting reduces sim variable write frequency"
+        tests:
+          - feature:specs/features/req_693_axis_output_rate_limiting.feature
+      - id: AC-693.3
+        description: "AC3: Rate limit is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_693_axis_output_rate_limiting.feature
+      - id: AC-693.4
+        description: "AC4: Rate limiting does not affect internal processing fidelity"
+        tests:
+          - feature:specs/features/req_693_axis_output_rate_limiting.feature
+
+  # Product Requirement: Axis Value Clamping
+  - id: REQ-694
+    name: Axis Value Clamping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-694.1
+        description: "AC1: Output values are clamped to configured min/max range"
+        tests:
+          - feature:specs/features/req_694_axis_value_clamping.feature
+      - id: AC-694.2
+        description: "AC2: Clamp range is configurable per axis"
+        tests:
+          - feature:specs/features/req_694_axis_value_clamping.feature
+      - id: AC-694.3
+        description: "AC3: Values outside clamp range are reported as metric events"
+        tests:
+          - feature:specs/features/req_694_axis_value_clamping.feature
+      - id: AC-694.4
+        description: "AC4: Clamping operates as the final pipeline stage before output"
+        tests:
+          - feature:specs/features/req_694_axis_value_clamping.feature
+
+  # Product Requirement: Axis Inversion Toggle
+  - id: REQ-695
+    name: Axis Inversion Toggle
+    kind: product
+    status: draft
+    ac:
+      - id: AC-695.1
+        description: "AC1: Axis direction can be inverted via profile setting"
+        tests:
+          - feature:specs/features/req_695_axis_inversion_toggle.feature
+      - id: AC-695.2
+        description: "AC2: Inversion is applied after all processing stages"
+        tests:
+          - feature:specs/features/req_695_axis_inversion_toggle.feature
+      - id: AC-695.3
+        description: "AC3: Inversion toggle is available per axis independently"
+        tests:
+          - feature:specs/features/req_695_axis_inversion_toggle.feature
+      - id: AC-695.4
+        description: "AC4: Toggling inversion takes effect immediately without restart"
+        tests:
+          - feature:specs/features/req_695_axis_inversion_toggle.feature
+
+  # Product Requirement: Axis Swap Pair Configuration
+  - id: REQ-696
+    name: Axis Swap Pair Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-696.1
+        description: "AC1: Two axes can be swapped via profile configuration"
+        tests:
+          - feature:specs/features/req_696_axis_swap_pair_configuration.feature
+      - id: AC-696.2
+        description: "AC2: Swap applies to processed output, not raw input"
+        tests:
+          - feature:specs/features/req_696_axis_swap_pair_configuration.feature
+      - id: AC-696.3
+        description: "AC3: Swap configuration is validated to prevent circular references"
+        tests:
+          - feature:specs/features/req_696_axis_swap_pair_configuration.feature
+      - id: AC-696.4
+        description: "AC4: Axis swap is useful for adapting profiles to different hardware"
+        tests:
+          - feature:specs/features/req_696_axis_swap_pair_configuration.feature
+
+  # Product Requirement: Axis Trim Adjustment
+  - id: REQ-697
+    name: Axis Trim Adjustment
+    kind: product
+    status: draft
+    ac:
+      - id: AC-697.1
+        description: "AC1: Trim offset can be applied to shift the axis center point"
+        tests:
+          - feature:specs/features/req_697_axis_trim_adjustment.feature
+      - id: AC-697.2
+        description: "AC2: Trim can be adjusted incrementally via bound buttons"
+        tests:
+          - feature:specs/features/req_697_axis_trim_adjustment.feature
+      - id: AC-697.3
+        description: "AC3: Trim position is displayed in the axis status view"
+        tests:
+          - feature:specs/features/req_697_axis_trim_adjustment.feature
+      - id: AC-697.4
+        description: "AC4: Trim resets to zero on profile change unless persisted"
+        tests:
+          - feature:specs/features/req_697_axis_trim_adjustment.feature
+
+  # Product Requirement: Axis Sensitivity Presets
+  - id: REQ-698
+    name: Axis Sensitivity Presets
+    kind: product
+    status: draft
+    ac:
+      - id: AC-698.1
+        description: "AC1: Predefined sensitivity presets are available per axis type"
+        tests:
+          - feature:specs/features/req_698_axis_sensitivity_presets.feature
+      - id: AC-698.2
+        description: "AC2: Presets cover low, medium, high, and custom sensitivity"
+        tests:
+          - feature:specs/features/req_698_axis_sensitivity_presets.feature
+      - id: AC-698.3
+        description: "AC3: Selecting a preset configures curve and deadzone together"
+        tests:
+          - feature:specs/features/req_698_axis_sensitivity_presets.feature
+      - id: AC-698.4
+        description: "AC4: Custom preset can be saved from current axis settings"
+        tests:
+          - feature:specs/features/req_698_axis_sensitivity_presets.feature
+
+  # Product Requirement: Axis Response Curve Types
+  - id: REQ-699
+    name: Axis Response Curve Types
+    kind: product
+    status: draft
+    ac:
+      - id: AC-699.1
+        description: "AC1: Multiple response curve types are supported including linear, exponential, logarithmic, and S-curve"
+        tests:
+          - feature:specs/features/req_699_axis_response_curve_types.feature
+      - id: AC-699.2
+        description: "AC2: Curve type is selectable per axis in profile"
+        tests:
+          - feature:specs/features/req_699_axis_response_curve_types.feature
+      - id: AC-699.3
+        description: "AC3: Curve parameters are adjustable within type constraints"
+        tests:
+          - feature:specs/features/req_699_axis_response_curve_types.feature
+      - id: AC-699.4
+        description: "AC4: Curve type change takes effect at next tick boundary"
+        tests:
+          - feature:specs/features/req_699_axis_response_curve_types.feature
+
+  # Product Requirement: Axis S-Curve Response
+  - id: REQ-700
+    name: Axis S-Curve Response
+    kind: product
+    status: draft
+    ac:
+      - id: AC-700.1
+        description: "AC1: S-curve provides smooth acceleration near center and endpoints"
+        tests:
+          - feature:specs/features/req_700_axis_s_curve_response.feature
+      - id: AC-700.2
+        description: "AC2: S-curve inflection point is configurable"
+        tests:
+          - feature:specs/features/req_700_axis_s_curve_response.feature
+      - id: AC-700.3
+        description: "AC3: S-curve maintains monotonic output for monotonic input"
+        tests:
+          - feature:specs/features/req_700_axis_s_curve_response.feature
+      - id: AC-700.4
+        description: "AC4: S-curve parameters are validated for mathematical correctness"
+        tests:
+          - feature:specs/features/req_700_axis_s_curve_response.feature
+
+  # Product Requirement: Axis Exponential Response
+  - id: REQ-701
+    name: Axis Exponential Response
+    kind: product
+    status: draft
+    ac:
+      - id: AC-701.1
+        description: "AC1: Exponential curve provides fine control near center"
+        tests:
+          - feature:specs/features/req_701_axis_exponential_response.feature
+      - id: AC-701.2
+        description: "AC2: Exponent value is configurable from 1.0 to 5.0"
+        tests:
+          - feature:specs/features/req_701_axis_exponential_response.feature
+      - id: AC-701.3
+        description: "AC3: Exponential response preserves endpoint mapping"
+        tests:
+          - feature:specs/features/req_701_axis_exponential_response.feature
+      - id: AC-701.4
+        description: "AC4: Negative exponents are rejected with descriptive error"
+        tests:
+          - feature:specs/features/req_701_axis_exponential_response.feature
+
+  # Product Requirement: Axis Logarithmic Response
+  - id: REQ-702
+    name: Axis Logarithmic Response
+    kind: product
+    status: draft
+    ac:
+      - id: AC-702.1
+        description: "AC1: Logarithmic curve provides fine control near full deflection"
+        tests:
+          - feature:specs/features/req_702_axis_logarithmic_response.feature
+      - id: AC-702.2
+        description: "AC2: Log base is configurable to adjust curve shape"
+        tests:
+          - feature:specs/features/req_702_axis_logarithmic_response.feature
+      - id: AC-702.3
+        description: "AC3: Logarithmic response is normalized to unit output range"
+        tests:
+          - feature:specs/features/req_702_axis_logarithmic_response.feature
+      - id: AC-702.4
+        description: "AC4: Extreme parameter values are clamped to safe range"
+        tests:
+          - feature:specs/features/req_702_axis_logarithmic_response.feature
+
+  # Product Requirement: Axis Custom Curve Points
+  - id: REQ-703
+    name: Axis Custom Curve Points
+    kind: product
+    status: draft
+    ac:
+      - id: AC-703.1
+        description: "AC1: User can define custom curve via control point pairs"
+        tests:
+          - feature:specs/features/req_703_axis_custom_curve_points.feature
+      - id: AC-703.2
+        description: "AC2: Minimum of 2 points are required including origin and endpoint"
+        tests:
+          - feature:specs/features/req_703_axis_custom_curve_points.feature
+      - id: AC-703.3
+        description: "AC3: Maximum of 16 control points are supported per axis"
+        tests:
+          - feature:specs/features/req_703_axis_custom_curve_points.feature
+      - id: AC-703.4
+        description: "AC4: Points are validated for monotonic X values"
+        tests:
+          - feature:specs/features/req_703_axis_custom_curve_points.feature
+
+  # Product Requirement: Axis Curve Interpolation
+  - id: REQ-704
+    name: Axis Curve Interpolation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-704.1
+        description: "AC1: Interpolation between control points uses configurable method"
+        tests:
+          - feature:specs/features/req_704_axis_curve_interpolation.feature
+      - id: AC-704.2
+        description: "AC2: Supported methods include linear, cubic, and Catmull-Rom"
+        tests:
+          - feature:specs/features/req_704_axis_curve_interpolation.feature
+      - id: AC-704.3
+        description: "AC3: Interpolation produces smooth output without discontinuities"
+        tests:
+          - feature:specs/features/req_704_axis_curve_interpolation.feature
+      - id: AC-704.4
+        description: "AC4: Interpolation lookup table is precomputed for RT performance"
+        tests:
+          - feature:specs/features/req_704_axis_curve_interpolation.feature
+
+  # Product Requirement: Axis Curve Smoothness Validation
+  - id: REQ-705
+    name: Axis Curve Smoothness Validation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-705.1
+        description: "AC1: Curve smoothness is validated when profile is loaded"
+        tests:
+          - feature:specs/features/req_705_axis_curve_smoothness_validation.feature
+      - id: AC-705.2
+        description: "AC2: Discontinuities in curve slope generate warnings"
+        tests:
+          - feature:specs/features/req_705_axis_curve_smoothness_validation.feature
+      - id: AC-705.3
+        description: "AC3: Maximum slope change between adjacent segments is configurable"
+        tests:
+          - feature:specs/features/req_705_axis_curve_smoothness_validation.feature
+      - id: AC-705.4
+        description: "AC4: Validation results are included in profile lint output"
+        tests:
+          - feature:specs/features/req_705_axis_curve_smoothness_validation.feature
+
+  # Product Requirement: Axis Detent Position Configuration
+  - id: REQ-706
+    name: Axis Detent Position Configuration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-706.1
+        description: "AC1: Virtual detent positions can be defined along the axis range"
+        tests:
+          - feature:specs/features/req_706_axis_detent_position_configuration.feature
+      - id: AC-706.2
+        description: "AC2: Each detent has configurable position and width"
+        tests:
+          - feature:specs/features/req_706_axis_detent_position_configuration.feature
+      - id: AC-706.3
+        description: "AC3: Multiple detents are supported per axis"
+        tests:
+          - feature:specs/features/req_706_axis_detent_position_configuration.feature
+      - id: AC-706.4
+        description: "AC4: Detent configuration is validated for non-overlapping positions"
+        tests:
+          - feature:specs/features/req_706_axis_detent_position_configuration.feature
+
+  # Product Requirement: Axis Detent Force Feedback
+  - id: REQ-707
+    name: Axis Detent Force Feedback
+    kind: product
+    status: draft
+    ac:
+      - id: AC-707.1
+        description: "AC1: FFB-capable devices produce tactile feedback at detent positions"
+        tests:
+          - feature:specs/features/req_707_axis_detent_force_feedback.feature
+      - id: AC-707.2
+        description: "AC2: Detent force magnitude is configurable per detent"
+        tests:
+          - feature:specs/features/req_707_axis_detent_force_feedback.feature
+      - id: AC-707.3
+        description: "AC3: Force feedback respects FFB safety envelope"
+        tests:
+          - feature:specs/features/req_707_axis_detent_force_feedback.feature
+      - id: AC-707.4
+        description: "AC4: Non-FFB devices use output snapping as detent simulation"
+        tests:
+          - feature:specs/features/req_707_axis_detent_force_feedback.feature
+
+  # Product Requirement: Axis Virtual Detent Snap
+  - id: REQ-708
+    name: Axis Virtual Detent Snap
+    kind: product
+    status: draft
+    ac:
+      - id: AC-708.1
+        description: "AC1: Axis output snaps to detent position within capture range"
+        tests:
+          - feature:specs/features/req_708_axis_virtual_detent_snap.feature
+      - id: AC-708.2
+        description: "AC2: Snap releases when input moves beyond escape threshold"
+        tests:
+          - feature:specs/features/req_708_axis_virtual_detent_snap.feature
+      - id: AC-708.3
+        description: "AC3: Capture and escape thresholds are independently configurable"
+        tests:
+          - feature:specs/features/req_708_axis_virtual_detent_snap.feature
+      - id: AC-708.4
+        description: "AC4: Snap behavior is smooth with configurable transition curve"
+        tests:
+          - feature:specs/features/req_708_axis_virtual_detent_snap.feature
+
+  # Product Requirement: Axis Gate Boundary Definition
+  - id: REQ-709
+    name: Axis Gate Boundary Definition
+    kind: product
+    status: draft
+    ac:
+      - id: AC-709.1
+        description: "AC1: Gate boundaries divide the axis range into discrete zones"
+        tests:
+          - feature:specs/features/req_709_axis_gate_boundary_definition.feature
+      - id: AC-709.2
+        description: "AC2: Gate transitions are reported as discrete events"
+        tests:
+          - feature:specs/features/req_709_axis_gate_boundary_definition.feature
+      - id: AC-709.3
+        description: "AC3: Gate boundary positions are configurable in profile"
+        tests:
+          - feature:specs/features/req_709_axis_gate_boundary_definition.feature
+      - id: AC-709.4
+        description: "AC4: Gate zones can trigger profile-defined actions"
+        tests:
+          - feature:specs/features/req_709_axis_gate_boundary_definition.feature
+
+  # Product Requirement: Axis Relative Mode
+  - id: REQ-710
+    name: Axis Relative Mode
+    kind: product
+    status: draft
+    ac:
+      - id: AC-710.1
+        description: "AC1: Axis can operate in relative incremental mode instead of absolute"
+        tests:
+          - feature:specs/features/req_710_axis_relative_mode.feature
+      - id: AC-710.2
+        description: "AC2: Relative mode accumulates delta values from input changes"
+        tests:
+          - feature:specs/features/req_710_axis_relative_mode.feature
+      - id: AC-710.3
+        description: "AC3: Accumulated value is clamped to configured output range"
+        tests:
+          - feature:specs/features/req_710_axis_relative_mode.feature
+      - id: AC-710.4
+        description: "AC4: Relative mode sensitivity multiplier is configurable"
+        tests:
+          - feature:specs/features/req_710_axis_relative_mode.feature
+
+  # Product Requirement: Axis Acceleration Curve
+  - id: REQ-711
+    name: Axis Acceleration Curve
+    kind: product
+    status: draft
+    ac:
+      - id: AC-711.1
+        description: "AC1: Acceleration curve scales sensitivity based on input velocity"
+        tests:
+          - feature:specs/features/req_711_axis_acceleration_curve.feature
+      - id: AC-711.2
+        description: "AC2: Faster movements produce proportionally larger output changes"
+        tests:
+          - feature:specs/features/req_711_axis_acceleration_curve.feature
+      - id: AC-711.3
+        description: "AC3: Acceleration factor is configurable from 1x to 10x"
+        tests:
+          - feature:specs/features/req_711_axis_acceleration_curve.feature
+      - id: AC-711.4
+        description: "AC4: Acceleration applies only in relative mode"
+        tests:
+          - feature:specs/features/req_711_axis_acceleration_curve.feature
+
+  # Product Requirement: Axis Velocity Sensitivity
+  - id: REQ-712
+    name: Axis Velocity Sensitivity
+    kind: product
+    status: draft
+    ac:
+      - id: AC-712.1
+        description: "AC1: Input velocity is calculated from consecutive sample differences"
+        tests:
+          - feature:specs/features/req_712_axis_velocity_sensitivity.feature
+      - id: AC-712.2
+        description: "AC2: Velocity value is available as a metric for diagnostics"
+        tests:
+          - feature:specs/features/req_712_axis_velocity_sensitivity.feature
+      - id: AC-712.3
+        description: "AC3: High velocity events can trigger configurable actions"
+        tests:
+          - feature:specs/features/req_712_axis_velocity_sensitivity.feature
+      - id: AC-712.4
+        description: "AC4: Velocity calculation uses configurable sample window size"
+        tests:
+          - feature:specs/features/req_712_axis_velocity_sensitivity.feature
+
+  # Product Requirement: Axis Multi-Device Merge
+  - id: REQ-713
+    name: Axis Multi-Device Merge
+    kind: product
+    status: draft
+    ac:
+      - id: AC-713.1
+        description: "AC1: Multiple devices can contribute to the same logical axis"
+        tests:
+          - feature:specs/features/req_713_axis_multi_device_merge.feature
+      - id: AC-713.2
+        description: "AC2: Merge strategy is configurable as priority, sum, or average"
+        tests:
+          - feature:specs/features/req_713_axis_multi_device_merge.feature
+      - id: AC-713.3
+        description: "AC3: Device contribution weights are configurable per device"
+        tests:
+          - feature:specs/features/req_713_axis_multi_device_merge.feature
+      - id: AC-713.4
+        description: "AC4: Merge conflicts are resolved deterministically by priority order"
+        tests:
+          - feature:specs/features/req_713_axis_multi_device_merge.feature
+
+  # Product Requirement: Axis Priority Arbitration
+  - id: REQ-714
+    name: Axis Priority Arbitration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-714.1
+        description: "AC1: When multiple inputs target the same axis priority determines winner"
+        tests:
+          - feature:specs/features/req_714_axis_priority_arbitration.feature
+      - id: AC-714.2
+        description: "AC2: Priority is assigned per device in the profile"
+        tests:
+          - feature:specs/features/req_714_axis_priority_arbitration.feature
+      - id: AC-714.3
+        description: "AC3: Higher priority input overrides lower priority completely"
+        tests:
+          - feature:specs/features/req_714_axis_priority_arbitration.feature
+      - id: AC-714.4
+        description: "AC4: Priority ties are resolved by most-recent-input policy"
+        tests:
+          - feature:specs/features/req_714_axis_priority_arbitration.feature
 
   - id: REQ-715
     name: Axis Engine Thread Pool
@@ -25023,3 +25877,1153 @@ requirements:
         description: "AC4: Specification ledger passes schema validation without errors"
         tests:
           - feature:specs/features/req_1000_milestone_1000.feature
+
+  # Product Requirement: Macro Recording
+  - id: REQ-1001
+    name: Macro Recording
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1001.1
+        description: "AC1: WHEN user starts macro recording THEN all input events SHALL be captured with timestamps"
+        tests:
+          - feature:specs/features/req_1001_macro_recording.feature
+      - id: AC-1001.2
+        description: "AC2: Recorded macro can be saved with a user-defined name"
+        tests:
+          - feature:specs/features/req_1001_macro_recording.feature
+      - id: AC-1001.3
+        description: "AC3: Macro playback reproduces input sequence with original timing"
+        tests:
+          - feature:specs/features/req_1001_macro_recording.feature
+      - id: AC-1001.4
+        description: "AC4: Macro recording can be stopped and discarded without side effects"
+        tests:
+          - feature:specs/features/req_1001_macro_recording.feature
+
+  # Product Requirement: Conditional Triggers
+  - id: REQ-1002
+    name: Conditional Triggers
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1002.1
+        description: "AC1: Triggers can be defined with conditions based on sim state variables"
+        tests:
+          - feature:specs/features/req_1002_conditional_triggers.feature
+      - id: AC-1002.2
+        description: "AC2: WHEN condition evaluates to true THEN the configured action SHALL execute"
+        tests:
+          - feature:specs/features/req_1002_conditional_triggers.feature
+      - id: AC-1002.3
+        description: "AC3: Multiple conditions can be combined with AND/OR logic"
+        tests:
+          - feature:specs/features/req_1002_conditional_triggers.feature
+      - id: AC-1002.4
+        description: "AC4: Invalid condition expressions are rejected at profile load time"
+        tests:
+          - feature:specs/features/req_1002_conditional_triggers.feature
+
+  # Product Requirement: Timer-Based Actions
+  - id: REQ-1003
+    name: Timer-Based Actions
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1003.1
+        description: "AC1: Actions can be scheduled to execute after a configurable delay"
+        tests:
+          - feature:specs/features/req_1003_timer_based_actions.feature
+      - id: AC-1003.2
+        description: "AC2: Repeating timer actions execute at configurable intervals"
+        tests:
+          - feature:specs/features/req_1003_timer_based_actions.feature
+      - id: AC-1003.3
+        description: "AC3: Timer actions can be cancelled before execution"
+        tests:
+          - feature:specs/features/req_1003_timer_based_actions.feature
+      - id: AC-1003.4
+        description: "AC4: Timer precision is within 10ms of configured interval"
+        tests:
+          - feature:specs/features/req_1003_timer_based_actions.feature
+
+  # Product Requirement: Input Chaining
+  - id: REQ-1004
+    name: Input Chaining
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1004.1
+        description: "AC1: Multiple input actions can be chained into a named sequence"
+        tests:
+          - feature:specs/features/req_1004_input_chaining.feature
+      - id: AC-1004.2
+        description: "AC2: Chain steps execute in order with configurable delays between steps"
+        tests:
+          - feature:specs/features/req_1004_input_chaining.feature
+      - id: AC-1004.3
+        description: "AC3: Chain execution can be interrupted by a cancel action"
+        tests:
+          - feature:specs/features/req_1004_input_chaining.feature
+      - id: AC-1004.4
+        description: "AC4: Chain progress is reported via the event bus"
+        tests:
+          - feature:specs/features/req_1004_input_chaining.feature
+
+  # Product Requirement: State-Based Profiles
+  - id: REQ-1005
+    name: State-Based Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1005.1
+        description: "AC1: Profile auto-switching rules can reference sim state conditions"
+        tests:
+          - feature:specs/features/req_1005_state_based_profiles.feature
+      - id: AC-1005.2
+        description: "AC2: WHEN flight phase changes THEN the matching profile SHALL activate"
+        tests:
+          - feature:specs/features/req_1005_state_based_profiles.feature
+      - id: AC-1005.3
+        description: "AC3: State conditions support comparison operators for numeric sim variables"
+        tests:
+          - feature:specs/features/req_1005_state_based_profiles.feature
+      - id: AC-1005.4
+        description: "AC4: Profile switch hysteresis prevents rapid toggling between profiles"
+        tests:
+          - feature:specs/features/req_1005_state_based_profiles.feature
+
+  # Product Requirement: Voice Command Integration
+  - id: REQ-1006
+    name: Voice Command Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1006.1
+        description: "AC1: Voice commands can be mapped to input actions in profile"
+        tests:
+          - feature:specs/features/req_1006_voice_command_integration.feature
+      - id: AC-1006.2
+        description: "AC2: Voice recognition engine is configurable between platform options"
+        tests:
+          - feature:specs/features/req_1006_voice_command_integration.feature
+      - id: AC-1006.3
+        description: "AC3: WHEN a recognized voice command is detected THEN the mapped action SHALL execute"
+        tests:
+          - feature:specs/features/req_1006_voice_command_integration.feature
+      - id: AC-1006.4
+        description: "AC4: Voice command confidence threshold is configurable to reduce false triggers"
+        tests:
+          - feature:specs/features/req_1006_voice_command_integration.feature
+
+  # Product Requirement: Gesture Recognition
+  - id: REQ-1007
+    name: Gesture Recognition
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1007.1
+        description: "AC1: Movement patterns on multi-axis devices can be recognized as gestures"
+        tests:
+          - feature:specs/features/req_1007_gesture_recognition.feature
+      - id: AC-1007.2
+        description: "AC2: Gesture templates are defined in profile with tolerance parameters"
+        tests:
+          - feature:specs/features/req_1007_gesture_recognition.feature
+      - id: AC-1007.3
+        description: "AC3: WHEN a gesture is recognized THEN the configured action SHALL trigger"
+        tests:
+          - feature:specs/features/req_1007_gesture_recognition.feature
+      - id: AC-1007.4
+        description: "AC4: Gesture recognition operates within RT processing budget"
+        tests:
+          - feature:specs/features/req_1007_gesture_recognition.feature
+
+  # Product Requirement: AI-Assisted Mapping
+  - id: REQ-1008
+    name: AI-Assisted Mapping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1008.1
+        description: "AC1: System suggests axis and button mappings based on detected aircraft type"
+        tests:
+          - feature:specs/features/req_1008_ai_assisted_mapping.feature
+      - id: AC-1008.2
+        description: "AC2: Suggestions are based on community usage patterns and aircraft characteristics"
+        tests:
+          - feature:specs/features/req_1008_ai_assisted_mapping.feature
+      - id: AC-1008.3
+        description: "AC3: User can accept, modify, or reject suggested mappings"
+        tests:
+          - feature:specs/features/req_1008_ai_assisted_mapping.feature
+      - id: AC-1008.4
+        description: "AC4: Suggestion engine works offline using bundled mapping templates"
+        tests:
+          - feature:specs/features/req_1008_ai_assisted_mapping.feature
+
+  # Product Requirement: Template Library
+  - id: REQ-1009
+    name: Template Library
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1009.1
+        description: "AC1: Mapping templates are available for common aircraft and device combinations"
+        tests:
+          - feature:specs/features/req_1009_template_library.feature
+      - id: AC-1009.2
+        description: "AC2: Templates can be exported as shareable files"
+        tests:
+          - feature:specs/features/req_1009_template_library.feature
+      - id: AC-1009.3
+        description: "AC3: Imported templates are validated against schema before application"
+        tests:
+          - feature:specs/features/req_1009_template_library.feature
+      - id: AC-1009.4
+        description: "AC4: Template library is searchable by aircraft type and device model"
+        tests:
+          - feature:specs/features/req_1009_template_library.feature
+
+  # Product Requirement: Multi-User Profiles
+  - id: REQ-1010
+    name: Multi-User Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1010.1
+        description: "AC1: Multiple user profiles can exist on the same installation"
+        tests:
+          - feature:specs/features/req_1010_multi_user_profiles.feature
+      - id: AC-1010.2
+        description: "AC2: WHEN user switches THEN all mappings and settings SHALL change to that user profile"
+        tests:
+          - feature:specs/features/req_1010_multi_user_profiles.feature
+      - id: AC-1010.3
+        description: "AC3: User profile selection is available via CLI and UI"
+        tests:
+          - feature:specs/features/req_1010_multi_user_profiles.feature
+      - id: AC-1010.4
+        description: "AC4: Per-user settings are isolated in separate configuration directories"
+        tests:
+          - feature:specs/features/req_1010_multi_user_profiles.feature
+
+  # Product Requirement: Remote Device Sharing
+  - id: REQ-1011
+    name: Remote Device Sharing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1011.1
+        description: "AC1: Input devices can be shared with remote instances over network"
+        tests:
+          - feature:specs/features/req_1011_remote_device_sharing.feature
+      - id: AC-1011.2
+        description: "AC2: Shared device data is transmitted with minimal latency overhead"
+        tests:
+          - feature:specs/features/req_1011_remote_device_sharing.feature
+      - id: AC-1011.3
+        description: "AC3: Network device sharing requires explicit authorization from both endpoints"
+        tests:
+          - feature:specs/features/req_1011_remote_device_sharing.feature
+      - id: AC-1011.4
+        description: "AC4: Connection loss gracefully degrades to local-only operation"
+        tests:
+          - feature:specs/features/req_1011_remote_device_sharing.feature
+
+  # Product Requirement: Multiplayer Sync
+  - id: REQ-1012
+    name: Multiplayer Sync
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1012.1
+        description: "AC1: Control settings can be synchronized across crew station instances"
+        tests:
+          - feature:specs/features/req_1012_multiplayer_sync.feature
+      - id: AC-1012.2
+        description: "AC2: Sync protocol handles network latency with interpolation"
+        tests:
+          - feature:specs/features/req_1012_multiplayer_sync.feature
+      - id: AC-1012.3
+        description: "AC3: Each crew station maintains independent safety interlocks"
+        tests:
+          - feature:specs/features/req_1012_multiplayer_sync.feature
+      - id: AC-1012.4
+        description: "AC4: Sync conflicts are resolved by station priority assignment"
+        tests:
+          - feature:specs/features/req_1012_multiplayer_sync.feature
+
+  # Product Requirement: Instructor Station
+  - id: REQ-1013
+    name: Instructor Station
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1013.1
+        description: "AC1: Instructor station can override student input controls remotely"
+        tests:
+          - feature:specs/features/req_1013_instructor_station.feature
+      - id: AC-1013.2
+        description: "AC2: Override is indicated to the student via visual and haptic feedback"
+        tests:
+          - feature:specs/features/req_1013_instructor_station.feature
+      - id: AC-1013.3
+        description: "AC3: Instructor can freeze specific axes while allowing others"
+        tests:
+          - feature:specs/features/req_1013_instructor_station.feature
+      - id: AC-1013.4
+        description: "AC4: All instructor actions are logged for training review"
+        tests:
+          - feature:specs/features/req_1013_instructor_station.feature
+
+  # Product Requirement: Replay Sharing
+  - id: REQ-1014
+    name: Replay Sharing
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1014.1
+        description: "AC1: Flight input recordings can be exported as shareable replay files"
+        tests:
+          - feature:specs/features/req_1014_replay_sharing.feature
+      - id: AC-1014.2
+        description: "AC2: Replay files include all axis and button data with timestamps"
+        tests:
+          - feature:specs/features/req_1014_replay_sharing.feature
+      - id: AC-1014.3
+        description: "AC3: Shared replays can be loaded for playback on any compatible installation"
+        tests:
+          - feature:specs/features/req_1014_replay_sharing.feature
+      - id: AC-1014.4
+        description: "AC4: Replay file format is versioned for forward compatibility"
+        tests:
+          - feature:specs/features/req_1014_replay_sharing.feature
+
+  # Product Requirement: Cloud Profile Sync
+  - id: REQ-1015
+    name: Cloud Profile Sync
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1015.1
+        description: "AC1: Profiles can be synced to cloud storage for cross-machine access"
+        tests:
+          - feature:specs/features/req_1015_cloud_profile_sync.feature
+      - id: AC-1015.2
+        description: "AC2: Cloud sync handles conflict resolution with last-write-wins or manual merge"
+        tests:
+          - feature:specs/features/req_1015_cloud_profile_sync.feature
+      - id: AC-1015.3
+        description: "AC3: Sync status is visible in CLI and UI"
+        tests:
+          - feature:specs/features/req_1015_cloud_profile_sync.feature
+      - id: AC-1015.4
+        description: "AC4: Cloud sync operates with end-to-end encryption for profile data"
+        tests:
+          - feature:specs/features/req_1015_cloud_profile_sync.feature
+
+  # Product Requirement: Community Profiles
+  - id: REQ-1016
+    name: Community Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1016.1
+        description: "AC1: Users can browse community-shared profiles from within the application"
+        tests:
+          - feature:specs/features/req_1016_community_profiles.feature
+      - id: AC-1016.2
+        description: "AC2: Community profiles are searchable by aircraft, device, and simulator"
+        tests:
+          - feature:specs/features/req_1016_community_profiles.feature
+      - id: AC-1016.3
+        description: "AC3: Downloaded community profiles are validated before import"
+        tests:
+          - feature:specs/features/req_1016_community_profiles.feature
+      - id: AC-1016.4
+        description: "AC4: Users can rate and review community profiles"
+        tests:
+          - feature:specs/features/req_1016_community_profiles.feature
+
+  # Product Requirement: Telemetry Streaming
+  - id: REQ-1017
+    name: Telemetry Streaming
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1017.1
+        description: "AC1: Telemetry data can be streamed to external tools via configurable protocol"
+        tests:
+          - feature:specs/features/req_1017_telemetry_streaming.feature
+      - id: AC-1017.2
+        description: "AC2: Streaming supports UDP and TCP transport options"
+        tests:
+          - feature:specs/features/req_1017_telemetry_streaming.feature
+      - id: AC-1017.3
+        description: "AC3: Stream format is documented and versioned for third-party consumption"
+        tests:
+          - feature:specs/features/req_1017_telemetry_streaming.feature
+      - id: AC-1017.4
+        description: "AC4: Streaming can be enabled per data category to limit bandwidth"
+        tests:
+          - feature:specs/features/req_1017_telemetry_streaming.feature
+
+  # Product Requirement: REST API
+  - id: REQ-1018
+    name: REST API
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1018.1
+        description: "AC1: HTTP REST API provides access to configuration and status endpoints"
+        tests:
+          - feature:specs/features/req_1018_rest_api.feature
+      - id: AC-1018.2
+        description: "AC2: API supports CRUD operations for profiles and device settings"
+        tests:
+          - feature:specs/features/req_1018_rest_api.feature
+      - id: AC-1018.3
+        description: "AC3: API authentication uses token-based authorization"
+        tests:
+          - feature:specs/features/req_1018_rest_api.feature
+      - id: AC-1018.4
+        description: "AC4: API documentation is auto-generated from endpoint definitions"
+        tests:
+          - feature:specs/features/req_1018_rest_api.feature
+
+  # Product Requirement: WebSocket Events
+  - id: REQ-1019
+    name: WebSocket Events
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1019.1
+        description: "AC1: Real-time events are available via WebSocket connection"
+        tests:
+          - feature:specs/features/req_1019_websocket_events.feature
+      - id: AC-1019.2
+        description: "AC2: Events include device state changes, axis updates, and profile switches"
+        tests:
+          - feature:specs/features/req_1019_websocket_events.feature
+      - id: AC-1019.3
+        description: "AC3: WebSocket clients can subscribe to specific event categories"
+        tests:
+          - feature:specs/features/req_1019_websocket_events.feature
+      - id: AC-1019.4
+        description: "AC4: Connection handles reconnection with event replay for missed messages"
+        tests:
+          - feature:specs/features/req_1019_websocket_events.feature
+
+  # Product Requirement: MQTT Integration
+  - id: REQ-1020
+    name: MQTT Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1020.1
+        description: "AC1: Device and axis events can be published to MQTT broker"
+        tests:
+          - feature:specs/features/req_1020_mqtt_integration.feature
+      - id: AC-1020.2
+        description: "AC2: MQTT topic structure follows a documented hierarchy"
+        tests:
+          - feature:specs/features/req_1020_mqtt_integration.feature
+      - id: AC-1020.3
+        description: "AC3: MQTT commands can trigger profile switches and device actions"
+        tests:
+          - feature:specs/features/req_1020_mqtt_integration.feature
+      - id: AC-1020.4
+        description: "AC4: Broker connection supports TLS and credential-based authentication"
+        tests:
+          - feature:specs/features/req_1020_mqtt_integration.feature
+
+  # Product Requirement: FFB Effect Chaining
+  - id: REQ-1021
+    name: FFB Effect Chaining
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1021.1
+        description: "AC1: Multiple FFB effects can be chained into a composite effect"
+        tests:
+          - feature:specs/features/req_1021_ffb_effect_chaining.feature
+      - id: AC-1021.2
+        description: "AC2: Chain order determines effect composition priority"
+        tests:
+          - feature:specs/features/req_1021_ffb_effect_chaining.feature
+      - id: AC-1021.3
+        description: "AC3: Chained effects respect the overall FFB safety envelope"
+        tests:
+          - feature:specs/features/req_1021_ffb_effect_chaining.feature
+      - id: AC-1021.4
+        description: "AC4: Effect chain can be modified at runtime without interrupting playback"
+        tests:
+          - feature:specs/features/req_1021_ffb_effect_chaining.feature
+
+  # Product Requirement: FFB Frequency Response
+  - id: REQ-1022
+    name: FFB Frequency Response
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1022.1
+        description: "AC1: FFB effects support tunable frequency characteristics"
+        tests:
+          - feature:specs/features/req_1022_ffb_frequency_response.feature
+      - id: AC-1022.2
+        description: "AC2: Low-pass and band-pass filtering is available per effect"
+        tests:
+          - feature:specs/features/req_1022_ffb_frequency_response.feature
+      - id: AC-1022.3
+        description: "AC3: Frequency response parameters are configurable in profile"
+        tests:
+          - feature:specs/features/req_1022_ffb_frequency_response.feature
+      - id: AC-1022.4
+        description: "AC4: Frequency tuning operates within RT processing budget"
+        tests:
+          - feature:specs/features/req_1022_ffb_frequency_response.feature
+
+  # Product Requirement: FFB Position-Dependent Effects
+  - id: REQ-1023
+    name: FFB Position-Dependent Effects
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1023.1
+        description: "AC1: FFB effect magnitude can vary based on current stick position"
+        tests:
+          - feature:specs/features/req_1023_ffb_position_dependent_effects.feature
+      - id: AC-1023.2
+        description: "AC2: Position-dependent mapping is defined via configurable curve"
+        tests:
+          - feature:specs/features/req_1023_ffb_position_dependent_effects.feature
+      - id: AC-1023.3
+        description: "AC3: Effect transitions are smooth across position boundaries"
+        tests:
+          - feature:specs/features/req_1023_ffb_position_dependent_effects.feature
+      - id: AC-1023.4
+        description: "AC4: Position dependency is evaluated per tick without allocation"
+        tests:
+          - feature:specs/features/req_1023_ffb_position_dependent_effects.feature
+
+  # Product Requirement: FFB Airspeed Scaling
+  - id: REQ-1024
+    name: FFB Airspeed Scaling
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1024.1
+        description: "AC1: FFB effect magnitude scales with simulated airspeed"
+        tests:
+          - feature:specs/features/req_1024_ffb_airspeed_scaling.feature
+      - id: AC-1024.2
+        description: "AC2: Scaling curve is configurable per aircraft profile"
+        tests:
+          - feature:specs/features/req_1024_ffb_airspeed_scaling.feature
+      - id: AC-1024.3
+        description: "AC3: WHEN airspeed data is unavailable THEN effects use safe default scaling"
+        tests:
+          - feature:specs/features/req_1024_ffb_airspeed_scaling.feature
+      - id: AC-1024.4
+        description: "AC4: Scaling factor is clamped to prevent excessive force output"
+        tests:
+          - feature:specs/features/req_1024_ffb_airspeed_scaling.feature
+
+  # Product Requirement: FFB Stall Buffet
+  - id: REQ-1025
+    name: FFB Stall Buffet
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1025.1
+        description: "AC1: Stall buffet effect activates based on angle-of-attack threshold"
+        tests:
+          - feature:specs/features/req_1025_ffb_stall_buffet.feature
+      - id: AC-1025.2
+        description: "AC2: Buffet intensity increases progressively as stall deepens"
+        tests:
+          - feature:specs/features/req_1025_ffb_stall_buffet.feature
+      - id: AC-1025.3
+        description: "AC3: Buffet frequency and amplitude are configurable per aircraft"
+        tests:
+          - feature:specs/features/req_1025_ffb_stall_buffet.feature
+      - id: AC-1025.4
+        description: "AC4: Stall buffet respects FFB safety interlock system"
+        tests:
+          - feature:specs/features/req_1025_ffb_stall_buffet.feature
+
+  # Product Requirement: FFB Gear Buffet
+  - id: REQ-1026
+    name: FFB Gear Buffet
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1026.1
+        description: "AC1: Landing gear deployment produces configurable vibration effect"
+        tests:
+          - feature:specs/features/req_1026_ffb_gear_buffet.feature
+      - id: AC-1026.2
+        description: "AC2: Buffet duration matches gear transit time from sim data"
+        tests:
+          - feature:specs/features/req_1026_ffb_gear_buffet.feature
+      - id: AC-1026.3
+        description: "AC3: Gear buffet intensity is configurable per aircraft profile"
+        tests:
+          - feature:specs/features/req_1026_ffb_gear_buffet.feature
+      - id: AC-1026.4
+        description: "AC4: Effect is suppressed when gear is fully deployed or retracted"
+        tests:
+          - feature:specs/features/req_1026_ffb_gear_buffet.feature
+
+  # Product Requirement: FFB Flap Buffet
+  - id: REQ-1027
+    name: FFB Flap Buffet
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1027.1
+        description: "AC1: Flap deployment produces aerodynamic buffet feedback"
+        tests:
+          - feature:specs/features/req_1027_ffb_flap_buffet.feature
+      - id: AC-1027.2
+        description: "AC2: Buffet characteristics vary by flap position setting"
+        tests:
+          - feature:specs/features/req_1027_ffb_flap_buffet.feature
+      - id: AC-1027.3
+        description: "AC3: Flap buffet interacts correctly with airspeed scaling"
+        tests:
+          - feature:specs/features/req_1027_ffb_flap_buffet.feature
+      - id: AC-1027.4
+        description: "AC4: Effect parameters are configurable per aircraft and flap detent"
+        tests:
+          - feature:specs/features/req_1027_ffb_flap_buffet.feature
+
+  # Product Requirement: FFB Control Loading
+  - id: REQ-1028
+    name: FFB Control Loading
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1028.1
+        description: "AC1: Realistic control force simulation based on flight conditions"
+        tests:
+          - feature:specs/features/req_1028_ffb_control_loading.feature
+      - id: AC-1028.2
+        description: "AC2: Control loading force increases with airspeed per aircraft model"
+        tests:
+          - feature:specs/features/req_1028_ffb_control_loading.feature
+      - id: AC-1028.3
+        description: "AC3: Trim position affects the neutral force balance point"
+        tests:
+          - feature:specs/features/req_1028_ffb_control_loading.feature
+      - id: AC-1028.4
+        description: "AC4: Control loading respects maximum force limits from safety envelope"
+        tests:
+          - feature:specs/features/req_1028_ffb_control_loading.feature
+
+  # Product Requirement: FFB Breakout Force
+  - id: REQ-1029
+    name: FFB Breakout Force
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1029.1
+        description: "AC1: Center detent breakout force is simulated for FFB devices"
+        tests:
+          - feature:specs/features/req_1029_ffb_breakout_force.feature
+      - id: AC-1029.2
+        description: "AC2: Breakout force magnitude is configurable per axis"
+        tests:
+          - feature:specs/features/req_1029_ffb_breakout_force.feature
+      - id: AC-1029.3
+        description: "AC3: Force profile transitions smoothly past the breakout region"
+        tests:
+          - feature:specs/features/req_1029_ffb_breakout_force.feature
+      - id: AC-1029.4
+        description: "AC4: Breakout force integrates with trim offset position"
+        tests:
+          - feature:specs/features/req_1029_ffb_breakout_force.feature
+
+  # Product Requirement: FFB Damping
+  - id: REQ-1030
+    name: FFB Damping
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1030.1
+        description: "AC1: Velocity-dependent damping resists rapid stick movements"
+        tests:
+          - feature:specs/features/req_1030_ffb_damping.feature
+      - id: AC-1030.2
+        description: "AC2: Damping coefficient is configurable per axis in profile"
+        tests:
+          - feature:specs/features/req_1030_ffb_damping.feature
+      - id: AC-1030.3
+        description: "AC3: Damping force scales linearly with movement velocity"
+        tests:
+          - feature:specs/features/req_1030_ffb_damping.feature
+      - id: AC-1030.4
+        description: "AC4: Damping operates within FFB safety force limits"
+        tests:
+          - feature:specs/features/req_1030_ffb_damping.feature
+
+  # Product Requirement: Windows Notification Integration
+  - id: REQ-1031
+    name: Windows Notification Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1031.1
+        description: "AC1: Toast notifications are shown for device connect/disconnect events"
+        tests:
+          - feature:specs/features/req_1031_windows_notification_integration.feature
+      - id: AC-1031.2
+        description: "AC2: Notification categories are individually configurable"
+        tests:
+          - feature:specs/features/req_1031_windows_notification_integration.feature
+      - id: AC-1031.3
+        description: "AC3: Notifications include actionable buttons for common responses"
+        tests:
+          - feature:specs/features/req_1031_windows_notification_integration.feature
+      - id: AC-1031.4
+        description: "AC4: Notification permission is requested on first use"
+        tests:
+          - feature:specs/features/req_1031_windows_notification_integration.feature
+
+  # Product Requirement: System Tray Icon
+  - id: REQ-1032
+    name: System Tray Icon
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1032.1
+        description: "AC1: Service status is shown via system tray icon"
+        tests:
+          - feature:specs/features/req_1032_system_tray_icon.feature
+      - id: AC-1032.2
+        description: "AC2: Tray icon context menu provides quick access to common actions"
+        tests:
+          - feature:specs/features/req_1032_system_tray_icon.feature
+      - id: AC-1032.3
+        description: "AC3: Icon appearance changes to reflect service health status"
+        tests:
+          - feature:specs/features/req_1032_system_tray_icon.feature
+      - id: AC-1032.4
+        description: "AC4: Tray icon tooltip shows active profile and connected device count"
+        tests:
+          - feature:specs/features/req_1032_system_tray_icon.feature
+
+  # Product Requirement: Windows Startup Registry
+  - id: REQ-1033
+    name: Windows Startup Registry
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1033.1
+        description: "AC1: Auto-start on Windows login is configurable via CLI or UI"
+        tests:
+          - feature:specs/features/req_1033_windows_startup_registry.feature
+      - id: AC-1033.2
+        description: "AC2: Startup entry is added to current user registry run key"
+        tests:
+          - feature:specs/features/req_1033_windows_startup_registry.feature
+      - id: AC-1033.3
+        description: "AC3: Disabling auto-start removes the registry entry cleanly"
+        tests:
+          - feature:specs/features/req_1033_windows_startup_registry.feature
+      - id: AC-1033.4
+        description: "AC4: Startup configuration is verified during service health check"
+        tests:
+          - feature:specs/features/req_1033_windows_startup_registry.feature
+
+  # Product Requirement: Taskbar Progress
+  - id: REQ-1034
+    name: Taskbar Progress
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1034.1
+        description: "AC1: Long-running operations show progress in Windows taskbar"
+        tests:
+          - feature:specs/features/req_1034_taskbar_progress.feature
+      - id: AC-1034.2
+        description: "AC2: Progress indicator uses appropriate state: normal, paused, or error"
+        tests:
+          - feature:specs/features/req_1034_taskbar_progress.feature
+      - id: AC-1034.3
+        description: "AC3: Progress is shown for firmware updates, calibration, and profile import"
+        tests:
+          - feature:specs/features/req_1034_taskbar_progress.feature
+      - id: AC-1034.4
+        description: "AC4: Taskbar progress clears automatically on operation completion"
+        tests:
+          - feature:specs/features/req_1034_taskbar_progress.feature
+
+  # Product Requirement: File Association
+  - id: REQ-1035
+    name: File Association
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1035.1
+        description: "AC1: OpenFlight profile files (.ofp) are associated with the application"
+        tests:
+          - feature:specs/features/req_1035_file_association.feature
+      - id: AC-1035.2
+        description: "AC2: Double-clicking a .ofp file opens it in the profile editor"
+        tests:
+          - feature:specs/features/req_1035_file_association.feature
+      - id: AC-1035.3
+        description: "AC3: File association is registered during installation"
+        tests:
+          - feature:specs/features/req_1035_file_association.feature
+      - id: AC-1035.4
+        description: "AC4: File association can be repaired via CLI command"
+        tests:
+          - feature:specs/features/req_1035_file_association.feature
+
+  # Product Requirement: Deep Linking
+  - id: REQ-1036
+    name: Deep Linking
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1036.1
+        description: "AC1: URL scheme openflight:// is registered for command dispatch"
+        tests:
+          - feature:specs/features/req_1036_deep_linking.feature
+      - id: AC-1036.2
+        description: "AC2: Deep links can trigger profile loads, device actions, and navigation"
+        tests:
+          - feature:specs/features/req_1036_deep_linking.feature
+      - id: AC-1036.3
+        description: "AC3: Deep link parameters are validated before execution"
+        tests:
+          - feature:specs/features/req_1036_deep_linking.feature
+      - id: AC-1036.4
+        description: "AC4: Malformed deep links are rejected with descriptive error logging"
+        tests:
+          - feature:specs/features/req_1036_deep_linking.feature
+
+  # Product Requirement: Windows Game Bar
+  - id: REQ-1037
+    name: Windows Game Bar
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1037.1
+        description: "AC1: Game Bar widget displays active control status during gameplay"
+        tests:
+          - feature:specs/features/req_1037_windows_game_bar.feature
+      - id: AC-1037.2
+        description: "AC2: Widget shows connected devices and active profile name"
+        tests:
+          - feature:specs/features/req_1037_windows_game_bar.feature
+      - id: AC-1037.3
+        description: "AC3: Quick actions in the widget allow profile switching"
+        tests:
+          - feature:specs/features/req_1037_windows_game_bar.feature
+      - id: AC-1037.4
+        description: "AC4: Widget updates in real-time without impacting game performance"
+        tests:
+          - feature:specs/features/req_1037_windows_game_bar.feature
+
+  # Product Requirement: Linux Desktop Integration
+  - id: REQ-1038
+    name: Linux Desktop Integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1038.1
+        description: "AC1: Application provides a .desktop file for menu integration"
+        tests:
+          - feature:specs/features/req_1038_linux_desktop_integration.feature
+      - id: AC-1038.2
+        description: "AC2: Desktop file includes appropriate icon and category metadata"
+        tests:
+          - feature:specs/features/req_1038_linux_desktop_integration.feature
+      - id: AC-1038.3
+        description: "AC3: Application icon is installed in standard icon directories"
+        tests:
+          - feature:specs/features/req_1038_linux_desktop_integration.feature
+      - id: AC-1038.4
+        description: "AC4: Desktop integration follows freedesktop.org specifications"
+        tests:
+          - feature:specs/features/req_1038_linux_desktop_integration.feature
+
+  # Product Requirement: Linux DBus Notifications
+  - id: REQ-1039
+    name: Linux DBus Notifications
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1039.1
+        description: "AC1: Notifications are sent via DBus notification interface on Linux"
+        tests:
+          - feature:specs/features/req_1039_linux_dbus_notifications.feature
+      - id: AC-1039.2
+        description: "AC2: Notification urgency level matches event severity"
+        tests:
+          - feature:specs/features/req_1039_linux_dbus_notifications.feature
+      - id: AC-1039.3
+        description: "AC3: Notification actions are supported for interactive responses"
+        tests:
+          - feature:specs/features/req_1039_linux_dbus_notifications.feature
+      - id: AC-1039.4
+        description: "AC4: DBus notification support is detected and enabled automatically"
+        tests:
+          - feature:specs/features/req_1039_linux_dbus_notifications.feature
+
+  # Product Requirement: Linux Udev Rules
+  - id: REQ-1040
+    name: Linux Udev Rules
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1040.1
+        description: "AC1: Udev rules are provided for automatic device permission configuration"
+        tests:
+          - feature:specs/features/req_1040_linux_udev_rules.feature
+      - id: AC-1040.2
+        description: "AC2: Rules grant appropriate access to HID and USB devices"
+        tests:
+          - feature:specs/features/req_1040_linux_udev_rules.feature
+      - id: AC-1040.3
+        description: "AC3: Rule installation is automated during package installation"
+        tests:
+          - feature:specs/features/req_1040_linux_udev_rules.feature
+      - id: AC-1040.4
+        description: "AC4: Rules can be regenerated via CLI for newly supported devices"
+        tests:
+          - feature:specs/features/req_1040_linux_udev_rules.feature
+
+  # Product Requirement: Quick Setup Profiles
+  - id: REQ-1041
+    name: Quick Setup Profiles
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1041.1
+        description: "AC1: One-click setup configures common aircraft and device combinations"
+        tests:
+          - feature:specs/features/req_1041_quick_setup_profiles.feature
+      - id: AC-1041.2
+        description: "AC2: Quick setup detects connected devices and suggests matching profiles"
+        tests:
+          - feature:specs/features/req_1041_quick_setup_profiles.feature
+      - id: AC-1041.3
+        description: "AC3: Setup wizard completes in fewer than 5 user interactions"
+        tests:
+          - feature:specs/features/req_1041_quick_setup_profiles.feature
+      - id: AC-1041.4
+        description: "AC4: Quick setup results can be customized after initial configuration"
+        tests:
+          - feature:specs/features/req_1041_quick_setup_profiles.feature
+
+  # Product Requirement: Device Nickname
+  - id: REQ-1042
+    name: Device Nickname
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1042.1
+        description: "AC1: Users can assign custom display names to connected devices"
+        tests:
+          - feature:specs/features/req_1042_device_nickname.feature
+      - id: AC-1042.2
+        description: "AC2: Nicknames persist across device reconnections using hardware ID"
+        tests:
+          - feature:specs/features/req_1042_device_nickname.feature
+      - id: AC-1042.3
+        description: "AC3: Nicknames are shown in all UI and CLI device listings"
+        tests:
+          - feature:specs/features/req_1042_device_nickname.feature
+      - id: AC-1042.4
+        description: "AC4: Default nickname falls back to manufacturer and product name"
+        tests:
+          - feature:specs/features/req_1042_device_nickname.feature
+
+  # Product Requirement: Profile Notes
+  - id: REQ-1043
+    name: Profile Notes
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1043.1
+        description: "AC1: Users can attach text notes to any profile"
+        tests:
+          - feature:specs/features/req_1043_profile_notes.feature
+      - id: AC-1043.2
+        description: "AC2: Notes are stored within the profile file format"
+        tests:
+          - feature:specs/features/req_1043_profile_notes.feature
+      - id: AC-1043.3
+        description: "AC3: Notes are displayed in profile listing and detail views"
+        tests:
+          - feature:specs/features/req_1043_profile_notes.feature
+      - id: AC-1043.4
+        description: "AC4: Notes are preserved during profile export and import"
+        tests:
+          - feature:specs/features/req_1043_profile_notes.feature
+
+  # Product Requirement: Axis Test Screen
+  - id: REQ-1044
+    name: Axis Test Screen
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1044.1
+        description: "AC1: Built-in axis test displays real-time axis positions for all connected devices"
+        tests:
+          - feature:specs/features/req_1044_axis_test_screen.feature
+      - id: AC-1044.2
+        description: "AC2: Test screen shows raw and processed axis values side by side"
+        tests:
+          - feature:specs/features/req_1044_axis_test_screen.feature
+      - id: AC-1044.3
+        description: "AC3: Axis test supports visual indicators for deadzone and response curve"
+        tests:
+          - feature:specs/features/req_1044_axis_test_screen.feature
+      - id: AC-1044.4
+        description: "AC4: Test screen is accessible via CLI and UI"
+        tests:
+          - feature:specs/features/req_1044_axis_test_screen.feature
+
+  # Product Requirement: Button Test Screen
+  - id: REQ-1045
+    name: Button Test Screen
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1045.1
+        description: "AC1: Built-in button test highlights active buttons in real-time"
+        tests:
+          - feature:specs/features/req_1045_button_test_screen.feature
+      - id: AC-1045.2
+        description: "AC2: Test screen shows button state history with timestamps"
+        tests:
+          - feature:specs/features/req_1045_button_test_screen.feature
+      - id: AC-1045.3
+        description: "AC3: Button test displays both physical and mapped button identifiers"
+        tests:
+          - feature:specs/features/req_1045_button_test_screen.feature
+      - id: AC-1045.4
+        description: "AC4: Test screen is accessible via CLI and UI"
+        tests:
+          - feature:specs/features/req_1045_button_test_screen.feature
+
+  # Product Requirement: Response Curve Preview
+  - id: REQ-1046
+    name: Response Curve Preview
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1046.1
+        description: "AC1: Live curve visualization shows input-to-output mapping graphically"
+        tests:
+          - feature:specs/features/req_1046_response_curve_preview.feature
+      - id: AC-1046.2
+        description: "AC2: Preview updates in real-time as curve parameters are adjusted"
+        tests:
+          - feature:specs/features/req_1046_response_curve_preview.feature
+      - id: AC-1046.3
+        description: "AC3: Current input position is highlighted on the curve display"
+        tests:
+          - feature:specs/features/req_1046_response_curve_preview.feature
+      - id: AC-1046.4
+        description: "AC4: Preview supports all curve types including custom point curves"
+        tests:
+          - feature:specs/features/req_1046_response_curve_preview.feature
+
+  # Product Requirement: Deadzone Preview
+  - id: REQ-1047
+    name: Deadzone Preview
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1047.1
+        description: "AC1: Visual deadzone display shows active and inactive regions"
+        tests:
+          - feature:specs/features/req_1047_deadzone_preview.feature
+      - id: AC-1047.2
+        description: "AC2: Preview updates in real-time as deadzone parameters change"
+        tests:
+          - feature:specs/features/req_1047_deadzone_preview.feature
+      - id: AC-1047.3
+        description: "AC3: Current input position relative to deadzone is clearly indicated"
+        tests:
+          - feature:specs/features/req_1047_deadzone_preview.feature
+      - id: AC-1047.4
+        description: "AC4: Preview supports both inner and outer deadzone visualization"
+        tests:
+          - feature:specs/features/req_1047_deadzone_preview.feature
+
+  # Product Requirement: Input Overlay
+  - id: REQ-1048
+    name: Input Overlay
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1048.1
+        description: "AC1: Transparent in-game overlay shows current input states"
+        tests:
+          - feature:specs/features/req_1048_input_overlay.feature
+      - id: AC-1048.2
+        description: "AC2: Overlay position and opacity are configurable"
+        tests:
+          - feature:specs/features/req_1048_input_overlay.feature
+      - id: AC-1048.3
+        description: "AC3: Overlay can be toggled via configurable hotkey"
+        tests:
+          - feature:specs/features/req_1048_input_overlay.feature
+      - id: AC-1048.4
+        description: "AC4: Overlay rendering does not impact sim frame rate measurably"
+        tests:
+          - feature:specs/features/req_1048_input_overlay.feature
+
+  # Product Requirement: Performance Overlay
+  - id: REQ-1049
+    name: Performance Overlay
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1049.1
+        description: "AC1: In-game overlay displays processing latency and jitter metrics"
+        tests:
+          - feature:specs/features/req_1049_performance_overlay.feature
+      - id: AC-1049.2
+        description: "AC2: Overlay shows per-axis update rates and queue depths"
+        tests:
+          - feature:specs/features/req_1049_performance_overlay.feature
+      - id: AC-1049.3
+        description: "AC3: Performance warnings are highlighted when thresholds are exceeded"
+        tests:
+          - feature:specs/features/req_1049_performance_overlay.feature
+      - id: AC-1049.4
+        description: "AC4: Overlay can be toggled independently of input overlay"
+        tests:
+          - feature:specs/features/req_1049_performance_overlay.feature
+
+  # Product Requirement: Configuration Backup and Restore
+  - id: REQ-1050
+    name: Configuration Backup and Restore
+    kind: product
+    status: draft
+    ac:
+      - id: AC-1050.1
+        description: "AC1: Full configuration export creates a single archive file"
+        tests:
+          - feature:specs/features/req_1050_configuration_backup_and_restore.feature
+      - id: AC-1050.2
+        description: "AC2: Archive includes profiles, calibration data, and application settings"
+        tests:
+          - feature:specs/features/req_1050_configuration_backup_and_restore.feature
+      - id: AC-1050.3
+        description: "AC3: Restore imports archive and validates contents before applying"
+        tests:
+          - feature:specs/features/req_1050_configuration_backup_and_restore.feature
+      - id: AC-1050.4
+        description: "AC4: Backup and restore operations are available via CLI and UI"
+        tests:
+          - feature:specs/features/req_1050_configuration_backup_and_restore.feature
