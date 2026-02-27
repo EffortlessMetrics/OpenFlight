@@ -3571,3 +3571,91 @@ requirements:
           - flight_updater::rollback::tests::test_crash_count_threshold_respected
           - cmd:cargo test -p flight-updater update_simulator::test_update_rollback_cycle
           - cmd:cargo test -p flight-updater update_simulator::test_rollback_error_handling
+
+  # Product Requirement: RT Axis Processing Pipeline Invariants
+  - id: REQ-100
+    name: RT Axis Processing Pipeline Invariants
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-100.1
+        description: "WHEN input is within the deadzone threshold THEN output SHALL be exactly 0.0"
+        tests:
+          - flight_axis::proptest_tests::deadzone_zeroes_within_threshold
+          - flight_axis::proptest_tests::deadzone_output_in_range
+      - id: AC-100.2
+        description: "WHEN CurveNode expo is 0.0 THEN output SHALL equal input within floating-point tolerance for all inputs in [-1.0, 1.0]"
+        tests:
+          - flight_axis::proptest_tests::curve_identity_at_zero_expo
+      - id: AC-100.3
+        description: "WHEN two inputs a ≤ b are processed by CurveNode THEN curve(a) SHALL be ≤ curve(b) for any expo in [-1.0, 1.0]"
+        tests:
+          - flight_axis::proptest_tests::curve_is_monotone
+      - id: AC-100.4
+        description: "WHEN any input is processed by the axis pipeline THEN output SHALL be clamped to [-1.0, 1.0]"
+        tests:
+          - flight_axis::proptest_tests::curve_output_in_range
+          - flight_axis::proptest_tests::deadzone_output_in_range
+          - flight_axis::engine::tests::test_output_clamping
+      - id: AC-100.5
+        description: "WHEN a SlewNode is compiled from a valid slew configuration THEN it SHALL be bound to the pipeline and converge output toward input at the configured rate"
+        tests:
+          - flight_axis::compiler::tests::test_slew_config_binding
+          - cmd:cargo test -p flight-axis slew
+
+  # Product Requirement: Profile Cascade and Aircraft Auto-Switch
+  - id: REQ-101
+    name: Profile Cascade and Aircraft Auto-Switch
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-101.1
+        description: "WHEN no aircraft-specific profile override exists THEN the global profile SHALL provide fallback axis values"
+        tests:
+          - flight_session::tests::test_profile_hierarchy_loading
+      - id: AC-101.2
+        description: "WHEN an aircraft-specific profile defines an axis also present in the global profile THEN the aircraft value SHALL take precedence"
+        tests:
+          - flight_session::tests::test_profile_hierarchy_loading
+          - flight_session::tests::test_pof_override_application
+      - id: AC-101.3
+        description: "WHEN a single telemetry frame suggests a different phase of flight THEN the session SHALL not change phase (hysteresis)"
+        tests:
+          - flight_session::tests::test_hysteresis_logic
+          - flight_session::tests::test_consecutive_frames_hysteresis
+          - flight_session::tests::test_phase_flip_flop_prevention
+      - id: AC-101.4
+        description: "WHEN a profile reload attempt fails THEN the previously loaded profile SHALL remain active and unchanged"
+        tests:
+          - flight_session::tests::test_cache_invalidation
+          - cmd:cargo test -p flight-session
+      - id: AC-101.5
+        description: "WHEN an aircraft-change event is received THEN the new profile SHALL be active within 500ms"
+        tests:
+          - flight_session::tests::test_switch_timing_budget
+
+  # Product Requirement: Virtual Device and OFP-1 Integration
+  - id: REQ-102
+    name: Virtual Device and OFP-1 Integration
+    kind: product
+    status: implemented
+    ac:
+      - id: AC-102.1
+        description: "WHEN a virtual gamepad is created THEN it SHALL appear as an available HID device"
+        tests:
+          - flight_virtual::device::tests::test_virtual_device_creation
+          - flight_virtual::integration_tests::test_shared_device_manager_registration_flow
+      - id: AC-102.2
+        description: "WHEN any axis value is written to a virtual device THEN the reported output SHALL be within the device's valid range"
+        tests:
+          - flight_virtual::device::tests::test_axis_control
+          - flight_virtual::device::tests::test_hid_report_generation
+      - id: AC-102.3
+        description: "WHEN a disconnected virtual device is written to THEN the error SHALL be reported without a panic or memory-safety violation"
+        tests:
+          - flight_virtual::device::tests::test_disconnect_behavior
+      - id: AC-102.4
+        description: "WHEN the OFP-1 handshake sequence is initiated THEN the emulator SHALL report successful capability negotiation"
+        tests:
+          - flight_virtual::ofp1_emulator::tests::test_emulator_creation
+          - flight_virtual::ofp1_emulator::tests::test_emulator_capabilities
