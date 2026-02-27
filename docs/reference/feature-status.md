@@ -16,19 +16,19 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 437 |
-| ACs with tests | 437 |
-| ACs with Gherkin | 437 |
-| ACs with both tests + Gherkin | 437 |
-| Complete | 437 |
+| Total AC | 445 |
+| ACs with tests | 445 |
+| ACs with Gherkin | 445 |
+| ACs with both tests + Gherkin | 445 |
+| Complete | 445 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
-| Microcrates with tests | 63 (94.0%) |
-| Microcrates with Gherkin | 63 (94.0%) |
-| Microcrates fully covered | 63 (94.0%) |
+| Microcrates with tests | 65 (97.0%) |
+| Microcrates with Gherkin | 65 (97.0%) |
+| Microcrates fully covered | 65 (97.0%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 100.0% |
 | Test + Gherkin coverage | 100.0% |
@@ -42,7 +42,7 @@
 | flight-ac7-telemetry | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-adapter-common | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-bdd-metrics | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-bdd-metrics | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -100,7 +100,7 @@
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-wingman | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
-| flight-workspace-meta | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-workspace-meta | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-writers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-xplane | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-xplane-plugin | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
@@ -544,3 +544,11 @@
 | REQ-74 | AC-74.2 | WHEN integration docs are loaded for a simulator THEN the document SHALL be parsed with overview, files, network connections, and revert steps populated | specs/features/req_74_ui_settings.feature:11<br>specs/features/req_74_ui_settings.feature:17 | 2 | ✅ Complete |
 | REQ-74 | AC-74.3 | WHEN validation results are constructed THEN errors SHALL mark the result invalid, warnings SHALL not affect validity, and the initial state SHALL be valid | specs/features/req_74_ui_settings.feature:23<br>specs/features/req_74_ui_settings.feature:29<br>specs/features/req_74_ui_settings.feature:35 | 3 | ✅ Complete |
 | REQ-74 | AC-74.4 | WHEN the installer summary aggregates multiple simulators THEN file counts SHALL accumulate, network ports SHALL be deduplicated, and simulator names SHALL all appear | specs/features/req_74_ui_settings.feature:41<br>specs/features/req_74_ui_settings.feature:47 | 2 | ✅ Complete |
+| INF-REQ-16 | AC-INF16.1 | WHEN BddTraceabilityRow coverage methods are called THEN they SHALL return correct percentages and zero denominator SHALL yield zero | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:5<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:11 | 3 | ✅ Complete |
+| INF-REQ-16 | AC-INF16.2 | WHEN Gherkin scenario headers and AC tags are parsed THEN Scenario/Background/Outline headers SHALL be recognized and non-AC tags SHALL be filtered | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:17<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:23 | 3 | ✅ Complete |
+| INF-REQ-16 | AC-INF16.3 | WHEN test references are parsed THEN double-colon notation and -p flag notation SHALL both be extracted; valid and invalid crate name candidates SHALL be distinguished | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:29<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:35 | 5 | ✅ Complete |
+| INF-REQ-16 | AC-INF16.4 | WHEN coverage status is computed for all AC state combinations THEN every branch SHALL produce the correct AcStatus value; workspace crate filtering SHALL preserve unmapped rows | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:41<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:47 | 3 | ✅ Complete |
+| INF-REQ-17 | AC-INF17.1 | WHEN MetadataValidationReport is created THEN it SHALL start in success state; adding issues SHALL mark it as failed | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:56<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:62 | 2 | ✅ Complete |
+| INF-REQ-17 | AC-INF17.2 | WHEN CrateMetadataIssue summary is formatted THEN missing fields SHALL be listed as 'missing' and invalid fields as 'invalid' | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:68 | 2 | ✅ Complete |
+| INF-REQ-17 | AC-INF17.3 | WHEN readme path is resolved THEN absolute paths SHALL be returned unchanged and relative paths SHALL be joined to the manifest directory; None readme SHALL yield None path | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:74<br>specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:80 | 3 | ✅ Complete |
+| INF-REQ-17 | AC-INF17.4 | WHEN workspace microcrate names are loaded from the repo root THEN core flight crates SHALL be present in the result | specs/features/req_inf16_17_bdd_metrics_workspace_meta.feature:86 | 2 | ✅ Complete |

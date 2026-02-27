@@ -1,0 +1,63 @@
+# Yawman Arrow Portable Flight Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C is Sony Interactive Entertainment's registered USB vendor ID.
+# PID 0x0CE6 is the PS5 DualSense Wireless Controller USB identifier.
+# The Yawman Arrow is built on the DualSense chipset and presents under
+# Sony's VID/PID on the USB bus.
+schema_version: "1"
+
+device:
+  name: "Yawman Arrow"
+  vendor: "Yawman"
+  usb:
+    vendor_id: 0x054C     # Sony Interactive Entertainment (DualSense chipset)
+    product_id: 0x0CE6    # PS5 DualSense — Arrow uses this chipset and USB identity
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x05           # Gamepad (DualSense report format)
+
+capabilities:
+  axes:
+    count: 5
+    names: [roll, pitch, yaw, throttle, twist]
+    resolution_bits: 8    # DualSense analog sticks are 8-bit
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250   # DualSense USB polling rate
+  max_jitter_ms: 2
+
+quirks:
+  - id: DUALSENSE_CHIPSET
+    description: >
+      The Arrow uses the PlayStation 5 DualSense internal hardware and enumerates
+      with Sony's VID (0x054C) and the standard DualSense PID (0x0CE6). HID report
+      parsing must follow the DualSense HID report descriptor rather than a standard
+      joystick layout. Disambiguation from an actual DualSense gamepad requires
+      examining the product string or connected-device context.
+  - id: AXIS_REMAPPING_REQUIRED
+    description: >
+      DualSense report axis order does not map directly to standard flight-control
+      axis conventions. OpenFlight must apply axis remapping to translate DualSense
+      left-stick/right-stick/trigger byte offsets to roll, pitch, yaw, throttle, and
+      twist as presented to the sim adapters.
+  - id: PORTABLE_FORM_FACTOR
+    description: >
+      The Arrow is a handheld controller designed for portability. It lacks a physical
+      base/mount and is intended for use with laptops and portable sim rigs. No external
+      power supply is required; USB bus power only.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Handheld portable flight controller built on the PS5 DualSense chipset.
+    Enumerates as Sony VID 0x054C / PID 0x0CE6; axis remapping required to map
+    DualSense report layout to flight-control axes. No FFB. Tier 2 (automated
+    tests only; no HIL rig). Last reviewed: 2026-02.
