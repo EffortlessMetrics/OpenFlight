@@ -120,7 +120,8 @@ mod tests {
     #[test]
     fn test_profile_content_is_valid_yaml() {
         let yaml = default_profile_yaml();
-        let value: serde_yaml::Value = serde_yaml::from_str(yaml).expect("default profile must be valid YAML");
+        let value: serde_yaml::Value =
+            serde_yaml::from_str(yaml).expect("default profile must be valid YAML");
         assert!(value.is_mapping());
     }
 

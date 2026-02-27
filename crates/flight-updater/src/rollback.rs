@@ -667,8 +667,7 @@ mod tests {
         fs::write(&startup_file, "0").await.unwrap();
 
         // Use a 1-second timeout; elapsed (~55 years) easily exceeds it.
-        let detector =
-            StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(1));
+        let detector = StartupCrashDetector::new(&startup_file, std::time::Duration::from_secs(1));
 
         let result = detector.check_previous_crash().await.unwrap();
         assert!(

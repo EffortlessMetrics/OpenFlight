@@ -11,9 +11,19 @@ use std::collections::BTreeMap;
 /// Represents a difference between two profile values.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DiffEntry {
-    Added { key: String, value: String },
-    Removed { key: String, value: String },
-    Changed { key: String, old_value: String, new_value: String },
+    Added {
+        key: String,
+        value: String,
+    },
+    Removed {
+        key: String,
+        value: String,
+    },
+    Changed {
+        key: String,
+        old_value: String,
+        new_value: String,
+    },
 }
 
 /// Result of comparing two profiles.

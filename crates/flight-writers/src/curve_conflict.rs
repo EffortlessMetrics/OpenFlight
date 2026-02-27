@@ -834,8 +834,16 @@ mod tests {
         for test in [&registry_test, &command_test] {
             let result = writer.run_verification_test(test);
             assert!(result.skipped, "{} should be skipped", result.test_name);
-            assert!(!result.passed, "{} should not report passed", result.test_name);
-            assert!(result.error_message.is_none(), "{} should have no error", result.test_name);
+            assert!(
+                !result.passed,
+                "{} should not report passed",
+                result.test_name
+            );
+            assert!(
+                result.error_message.is_none(),
+                "{} should have no error",
+                result.test_name
+            );
         }
     }
 }

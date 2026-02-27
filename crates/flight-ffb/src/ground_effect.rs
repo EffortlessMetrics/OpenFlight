@@ -96,7 +96,10 @@ mod tests {
     #[test]
     fn half_wingspan_gives_partial_effect() {
         let m = ground_effect_modifier(5.0, 80.0, &default_cfg());
-        assert!(m > 0.3 && m < 0.9, "half-wingspan modifier should be intermediate, got {m}");
+        assert!(
+            m > 0.3 && m < 0.9,
+            "half-wingspan modifier should be intermediate, got {m}"
+        );
     }
 
     #[test]

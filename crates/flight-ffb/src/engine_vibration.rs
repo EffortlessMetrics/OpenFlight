@@ -158,7 +158,11 @@ mod tests {
             ..default_cfg()
         };
         let out = compute_engine_vibration(cfg.redline_rpm, 1.0, &cfg);
-        assert!(out.amplitude <= 1.0, "amplitude must not exceed 1.0: {}", out.amplitude);
+        assert!(
+            out.amplitude <= 1.0,
+            "amplitude must not exceed 1.0: {}",
+            out.amplitude
+        );
     }
 
     #[test]

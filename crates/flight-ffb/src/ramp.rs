@@ -55,8 +55,7 @@ impl EffectRamp {
         }
 
         let t = self.current_tick as f32 / self.duration as f32;
-        let value =
-            self.start_magnitude + (self.target_magnitude - self.start_magnitude) * t;
+        let value = self.start_magnitude + (self.target_magnitude - self.start_magnitude) * t;
 
         self.current_tick += 1;
         value

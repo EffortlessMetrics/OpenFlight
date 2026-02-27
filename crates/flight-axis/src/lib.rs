@@ -111,9 +111,9 @@ pub mod quantize;
 pub mod rate_limit;
 pub mod recording;
 pub mod scale;
-pub mod trace_replay;
 pub mod smoothing;
 pub mod throttle_zone;
+pub mod trace_replay;
 pub mod trim;
 pub mod velocity;
 
@@ -130,7 +130,7 @@ pub use calibration_wizard::{
 pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
-pub use conditional_scale::{ConditionalScale, ScaleCondition, MAX_CONDITIONS};
+pub use conditional_scale::{ConditionalScale, MAX_CONDITIONS, ScaleCondition};
 pub use conflict::{
     ConflictDetectorConfig, ConflictMetadata, ConflictResolution, ConflictSeverity, ConflictType,
     CurveConflict, CurveConflictDetector, ResolutionType,
@@ -171,10 +171,12 @@ pub use pipeline_bypass::{PipelineStage, StageBypass};
 pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};
-pub use trace_replay::{AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
 pub use throttle_zone::{
     ThrottleZoneConfig, ThrottleZoneProcessor, ZoneError, ZoneEvent, ZoneName,
+};
+pub use trace_replay::{
+    AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches,
 };
 pub use trim::{AxisTrim, AxisTrimBank};

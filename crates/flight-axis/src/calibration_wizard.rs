@@ -358,8 +358,10 @@ impl CalibrationWizard {
     fn advance_sweep(&mut self) {
         if self.is_timed_out() {
             // Check if we at least got *some* range before declaring failure.
-            let low_ok = self.min_seen < self.center_value - self.center_value.abs() * SWEEP_THRESHOLD;
-            let high_ok = self.max_seen > self.center_value + self.center_value.abs() * SWEEP_THRESHOLD;
+            let low_ok =
+                self.min_seen < self.center_value - self.center_value.abs() * SWEEP_THRESHOLD;
+            let high_ok =
+                self.max_seen > self.center_value + self.center_value.abs() * SWEEP_THRESHOLD;
             if !(low_ok && high_ok) {
                 self.fail(CalibrationError::InsufficientRange);
                 return;
@@ -490,7 +492,10 @@ mod tests {
         }
 
         let step = wiz.advance();
-        assert_eq!(step, CalibrationStep::Failed(CalibrationError::ExcessiveNoise));
+        assert_eq!(
+            step,
+            CalibrationStep::Failed(CalibrationError::ExcessiveNoise)
+        );
     }
 
     // 5. Min/max sweep detects full range
@@ -536,11 +541,17 @@ mod tests {
         // Tiny range that doesn't meet the 40% threshold
         let base_ts = CENTER_SAMPLES as u64 * 1000;
         for i in 0..100 {
-            wiz.feed_sample(sample(0.48 + 0.04 * (i as f64 / 100.0), base_ts + i as u64 * 20_000));
+            wiz.feed_sample(sample(
+                0.48 + 0.04 * (i as f64 / 100.0),
+                base_ts + i as u64 * 20_000,
+            ));
         }
 
         let step = wiz.advance();
-        assert_eq!(step, CalibrationStep::Failed(CalibrationError::InsufficientRange));
+        assert_eq!(
+            step,
+            CalibrationStep::Failed(CalibrationError::InsufficientRange)
+        );
     }
 
     // 7. Deadzone test recommends appropriate value
@@ -640,7 +651,10 @@ mod tests {
         wiz.advance();
 
         let p2 = wiz.progress_percent();
-        assert!(p2 > p1, "progress should increase after sweep: {p2} vs {p1}");
+        assert!(
+            p2 > p1,
+            "progress should increase after sweep: {p2} vs {p1}"
+        );
 
         let base2 = base + 2000;
         for i in 0..DEADZONE_SAMPLES {
@@ -649,14 +663,20 @@ mod tests {
         wiz.advance();
 
         let p3 = wiz.progress_percent();
-        assert!(p3 > p2, "progress should increase after deadzone: {p3} vs {p2}");
+        assert!(
+            p3 > p2,
+            "progress should increase after deadzone: {p3} vs {p2}"
+        );
 
         for i in 0..50 {
             wiz.feed_sample(sample(i as f64 / 50.0, 600_000 + i as u64 * 1000));
         }
         wiz.advance();
         let p4 = wiz.progress_percent();
-        assert!((p4 - 100.0).abs() < f32::EPSILON, "complete should be 100%: {p4}");
+        assert!(
+            (p4 - 100.0).abs() < f32::EPSILON,
+            "complete should be 100%: {p4}"
+        );
     }
 
     // 12. Timeout handling
@@ -686,7 +706,10 @@ mod tests {
         }
 
         let step = wiz.advance();
-        assert_eq!(step, CalibrationStep::Failed(CalibrationError::NonMonotonic));
+        assert_eq!(
+            step,
+            CalibrationStep::Failed(CalibrationError::NonMonotonic)
+        );
     }
 
     // 14. Samples ignored in terminal states

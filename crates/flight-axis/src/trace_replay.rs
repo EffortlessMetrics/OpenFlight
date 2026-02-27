@@ -177,12 +177,7 @@ pub fn assert_trace_matches(expected: &AxisTrace, actual: &AxisTrace, tolerance:
         actual.len(),
     );
 
-    for (i, (exp, act)) in expected
-        .samples()
-        .iter()
-        .zip(actual.samples())
-        .enumerate()
-    {
+    for (i, (exp, act)) in expected.samples().iter().zip(actual.samples()).enumerate() {
         assert_eq!(
             exp.timestamp_ns, act.timestamp_ns,
             "sample {i}: timestamp mismatch (expected {}ns, got {}ns)",

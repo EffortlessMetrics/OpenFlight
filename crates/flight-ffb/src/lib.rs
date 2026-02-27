@@ -54,11 +54,12 @@ pub mod mode_negotiation;
 pub mod ofp1_integration;
 #[cfg(test)]
 pub mod performance_validation;
+pub mod ramp;
 pub mod safety;
 pub mod safety_envelope;
-pub mod safety_interlock;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
+pub mod safety_interlock;
 #[cfg(test)]
 pub mod safety_threshold_validation;
 pub mod soft_stop;
@@ -69,7 +70,6 @@ pub mod trim_hil_tests;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
-pub mod ramp;
 pub mod wheel_shimmy;
 pub mod xinput_rumble;
 
@@ -93,6 +93,7 @@ pub use mode_negotiation::*;
 pub use ofp1_integration::*;
 #[cfg(test)]
 pub use performance_validation::*;
+pub use ramp::*;
 pub use safety::*;
 pub use safety_envelope::*;
 pub use safety_interlock::*;
@@ -104,7 +105,6 @@ pub use trim_hil_tests::*;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
-pub use ramp::*;
 pub use wheel_shimmy::*;
 pub use xinput_rumble::*;
 

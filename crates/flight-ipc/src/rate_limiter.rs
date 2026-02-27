@@ -278,10 +278,7 @@ mod tests {
         // vip bucket has only 2 tokens
         assert_eq!(rl.check("vip"), RateLimitResult::Allowed);
         assert_eq!(rl.check("vip"), RateLimitResult::Allowed);
-        assert!(matches!(
-            rl.check("vip"),
-            RateLimitResult::Limited { .. }
-        ));
+        assert!(matches!(rl.check("vip"), RateLimitResult::Limited { .. }));
 
         // default client still has 10
         for _ in 0..10 {

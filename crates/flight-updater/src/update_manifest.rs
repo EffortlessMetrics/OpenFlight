@@ -280,8 +280,8 @@ mod tests {
     #[test]
     fn test_update_manifest_integrity_invalid() {
         let mut entry = make_entry("1.0.0", UpdateChannel::Stable);
-        entry.sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
-            .to_string();
+        entry.sha256 =
+            "0000000000000000000000000000000000000000000000000000000000000000".to_string();
 
         assert!(!ManifestUpdateManager::verify_integrity(
             &entry,

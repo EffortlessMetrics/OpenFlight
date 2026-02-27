@@ -99,7 +99,9 @@ impl HealthCheckManager {
     /// Returns `true` only if every registered check is [`HealthStatus::Healthy`]
     /// and none have timed out.
     pub fn is_all_healthy(&self) -> bool {
-        self.checks.iter().all(|c| c.last_status == HealthStatus::Healthy)
+        self.checks
+            .iter()
+            .all(|c| c.last_status == HealthStatus::Healthy)
             && self.timed_out_checks().is_empty()
     }
 
@@ -186,7 +188,10 @@ mod tests {
         mgr.register("ffb", Duration::from_secs(5), 3);
         mgr.report_degraded("ffb", "high latency");
         let check = mgr.find("ffb").unwrap();
-        assert_eq!(check.last_status, HealthStatus::Degraded("high latency".into()));
+        assert_eq!(
+            check.last_status,
+            HealthStatus::Degraded("high latency".into())
+        );
         assert_eq!(check.consecutive_failures, 1);
     }
 
@@ -196,7 +201,10 @@ mod tests {
         mgr.register("hid", Duration::from_secs(5), 3);
         mgr.report_unhealthy("hid", "device lost");
         let check = mgr.find("hid").unwrap();
-        assert_eq!(check.last_status, HealthStatus::Unhealthy("device lost".into()));
+        assert_eq!(
+            check.last_status,
+            HealthStatus::Unhealthy("device lost".into())
+        );
         assert_eq!(check.consecutive_failures, 1);
     }
 
@@ -228,7 +236,11 @@ mod tests {
         mgr.register("c", Duration::from_secs(5), 3);
         mgr.report_unhealthy("a", "dead");
         mgr.report_degraded("b", "slow");
-        let unhealthy: Vec<_> = mgr.unhealthy_checks().iter().map(|c| c.name.as_str()).collect();
+        let unhealthy: Vec<_> = mgr
+            .unhealthy_checks()
+            .iter()
+            .map(|c| c.name.as_str())
+            .collect();
         assert_eq!(unhealthy, vec!["a"]);
     }
 

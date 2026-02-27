@@ -121,7 +121,8 @@ impl StatePersistence {
 
     /// Serialize the **current** state to JSON.
     pub fn to_json(&self) -> String {
-        serde_json::to_string(&self.current_state).expect("SessionState serialization is infallible")
+        serde_json::to_string(&self.current_state)
+            .expect("SessionState serialization is infallible")
     }
 
     /// Deserialize a `SessionState` from JSON.
@@ -214,11 +215,19 @@ mod tests {
         }
         assert_eq!(sp.snapshot_count(), 3);
         assert_eq!(
-            sp.restore_by_index(0).unwrap().preferences.get("iter").unwrap(),
+            sp.restore_by_index(0)
+                .unwrap()
+                .preferences
+                .get("iter")
+                .unwrap(),
             "0"
         );
         assert_eq!(
-            sp.restore_by_index(2).unwrap().preferences.get("iter").unwrap(),
+            sp.restore_by_index(2)
+                .unwrap()
+                .preferences
+                .get("iter")
+                .unwrap(),
             "2"
         );
     }
@@ -233,7 +242,11 @@ mod tests {
         assert_eq!(sp.snapshot_count(), 3);
         // Oldest two (0,1) were dropped; remaining are 2,3,4
         assert_eq!(
-            sp.restore_by_index(0).unwrap().preferences.get("v").unwrap(),
+            sp.restore_by_index(0)
+                .unwrap()
+                .preferences
+                .get("v")
+                .unwrap(),
             "2"
         );
     }

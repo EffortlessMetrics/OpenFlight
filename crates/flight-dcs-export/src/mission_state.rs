@@ -115,7 +115,10 @@ impl MissionStateMachine {
 
         // Airborne
         if t.altitude_agl < LANDING_ALT_THRESHOLD
-            && matches!(self.current_phase, MissionPhase::Enroute | MissionPhase::Combat)
+            && matches!(
+                self.current_phase,
+                MissionPhase::Enroute | MissionPhase::Combat
+            )
         {
             return MissionPhase::Landing;
         }

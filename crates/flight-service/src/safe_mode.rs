@@ -716,10 +716,7 @@ mod tests {
 
         // All four primary axes must be present
         for name in &["pitch", "roll", "yaw", "throttle"] {
-            assert!(
-                profile.axes.contains_key(*name),
-                "missing axis: {name}"
-            );
+            assert!(profile.axes.contains_key(*name), "missing axis: {name}");
         }
 
         // Pitch

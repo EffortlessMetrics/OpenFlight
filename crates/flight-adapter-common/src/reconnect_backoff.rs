@@ -29,12 +29,7 @@ impl ExponentialBackoff {
     ///
     /// # Panics
     /// Panics if `multiplier` is less than 1.0 or `jitter` is outside `[0.0, 1.0]`.
-    pub fn new(
-        initial_delay: Duration,
-        max_delay: Duration,
-        multiplier: f64,
-        jitter: f64,
-    ) -> Self {
+    pub fn new(initial_delay: Duration, max_delay: Duration, multiplier: f64, jitter: f64) -> Self {
         assert!(multiplier >= 1.0, "multiplier must be >= 1.0");
         assert!(
             (0.0..=1.0).contains(&jitter),
@@ -51,8 +46,8 @@ impl ExponentialBackoff {
 
     /// Compute the next backoff delay, advancing the internal attempt counter.
     pub fn next_delay(&mut self) -> Duration {
-        let base_ms = self.initial_delay.as_millis() as f64
-            * self.multiplier.powi(self.attempt as i32);
+        let base_ms =
+            self.initial_delay.as_millis() as f64 * self.multiplier.powi(self.attempt as i32);
         self.attempt = self.attempt.saturating_add(1);
 
         let jittered = self.apply_jitter(base_ms);

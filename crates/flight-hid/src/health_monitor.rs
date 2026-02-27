@@ -156,9 +156,7 @@ impl HealthMonitor {
         // Degraded: high latency
         let avg = m.avg_latency_us();
         if avg > HIGH_LATENCY_US {
-            return Some(DeviceHealth::Degraded(format!(
-                "avg latency {avg}µs"
-            )));
+            return Some(DeviceHealth::Degraded(format!("avg latency {avg}µs")));
         }
 
         Some(DeviceHealth::Healthy)
@@ -167,7 +165,9 @@ impl HealthMonitor {
     /// Generate a full health report for one device.
     pub fn generate_report(&self, device_id: &str) -> Option<DeviceHealthReport> {
         let m = self.devices.get(device_id)?;
-        let health = self.check_health(device_id).unwrap_or(DeviceHealth::Unknown);
+        let health = self
+            .check_health(device_id)
+            .unwrap_or(DeviceHealth::Unknown);
 
         Some(DeviceHealthReport {
             device_id: device_id.to_owned(),

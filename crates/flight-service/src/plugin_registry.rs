@@ -160,8 +160,8 @@ impl PluginRegistry {
 mod tests {
     use super::*;
     use crate::plugin::{PluginError, PluginErrorKind, PluginTier};
-    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     /// Minimal test plugin that succeeds on every lifecycle call.
     struct StubPlugin {

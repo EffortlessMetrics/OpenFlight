@@ -14,7 +14,10 @@ pub const FAILURE_DATAREFS: &[(&str, &str)] = &[
     ("sim/operation/failures/rel_hydpmp", "hydraulic_failure"),
     ("sim/operation/failures/rel_vacfai", "vacuum_failure"),
     ("sim/operation/failures/rel_pitfai", "pitot_failure"),
-    ("sim/operation/failures/rel_ss_ahz", "attitude_indicator_failure"),
+    (
+        "sim/operation/failures/rel_ss_ahz",
+        "attitude_indicator_failure",
+    ),
     ("sim/operation/failures/rel_g_fuel", "fuel_system_failure"),
     ("sim/operation/failures/rel_lbrake", "landing_gear_failure"),
 ];

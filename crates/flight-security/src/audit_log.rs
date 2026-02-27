@@ -131,10 +131,7 @@ impl AuditLog {
 
     /// Entries performed by a specific actor.
     pub fn entries_by_actor(&self, actor: &str) -> Vec<&AuditEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.actor == actor)
-            .collect()
+        self.entries.iter().filter(|e| e.actor == actor).collect()
     }
 
     /// All entries with a non-success outcome (Failure or Denied).
@@ -357,9 +354,11 @@ mod tests {
         ));
         let warnings_and_above = log.entries_by_severity(AuditSeverity::Warning);
         assert_eq!(warnings_and_above.len(), 2);
-        assert!(warnings_and_above
-            .iter()
-            .all(|e| e.severity >= AuditSeverity::Warning));
+        assert!(
+            warnings_and_above
+                .iter()
+                .all(|e| e.severity >= AuditSeverity::Warning)
+        );
     }
 
     #[test]
@@ -410,9 +409,7 @@ mod tests {
         ));
         let failures = log.failures();
         assert_eq!(failures.len(), 2);
-        assert!(failures
-            .iter()
-            .all(|e| e.outcome != AuditOutcome::Success));
+        assert!(failures.iter().all(|e| e.outcome != AuditOutcome::Success));
     }
 
     #[test]
@@ -506,7 +503,12 @@ mod tests {
             AuditCategory::NetworkAccess,
         ];
         for cat in &categories {
-            log.record(make_entry(*cat, AuditSeverity::Info, "multi", AuditOutcome::Success));
+            log.record(make_entry(
+                *cat,
+                AuditSeverity::Info,
+                "multi",
+                AuditOutcome::Success,
+            ));
         }
         assert_eq!(log.len(), categories.len());
         for cat in &categories {

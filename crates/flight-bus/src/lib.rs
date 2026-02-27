@@ -43,13 +43,13 @@ pub use integration_test::{
     AdapterIntegrationTest, AdapterType, IntegrationTestResult, MockAdapter, PhaseResult, TestError,
 };
 pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, SubscriptionConfig};
+pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
     Navigation,
 };
+pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};
 pub use types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearPosition, GearState, Mach, Percentage,
     SimId, ValidatedAngle, ValidatedSpeed,
 };
-pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
-pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};

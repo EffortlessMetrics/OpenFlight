@@ -100,7 +100,10 @@ impl EventJournal {
 
     /// Return entries recorded at or after `since`.
     pub fn entries_since(&self, since: SystemTime) -> Vec<&JournalEntry> {
-        self.entries.iter().filter(|e| e.timestamp >= since).collect()
+        self.entries
+            .iter()
+            .filter(|e| e.timestamp >= since)
+            .collect()
     }
 
     /// Return entries matching a specific category.
@@ -113,10 +116,7 @@ impl EventJournal {
 
     /// Return entries at or above the given severity level.
     pub fn entries_by_level(&self, level: JournalLevel) -> Vec<&JournalEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.level == level)
-            .collect()
+        self.entries.iter().filter(|e| e.level == level).collect()
     }
 
     /// Remove all entries.
@@ -259,24 +259,14 @@ mod tests {
     #[test]
     fn filter_by_level() {
         let mut journal = EventJournal::new(10);
-        journal.record(
-            JournalLevel::Info,
-            EventCategory::PluginEvent,
-            "info",
-            None,
-        );
+        journal.record(JournalLevel::Info, EventCategory::PluginEvent, "info", None);
         journal.record(
             JournalLevel::Error,
             EventCategory::ProfileError,
             "error1",
             None,
         );
-        journal.record(
-            JournalLevel::Error,
-            EventCategory::FfbEvent,
-            "error2",
-            None,
-        );
+        journal.record(JournalLevel::Error, EventCategory::FfbEvent, "error2", None);
         journal.record(
             JournalLevel::Critical,
             EventCategory::WatchdogAlert,
@@ -327,18 +317,8 @@ mod tests {
     #[test]
     fn clear_empties_the_journal() {
         let mut journal = EventJournal::new(10);
-        journal.record(
-            JournalLevel::Info,
-            EventCategory::PluginEvent,
-            "a",
-            None,
-        );
-        journal.record(
-            JournalLevel::Info,
-            EventCategory::PluginEvent,
-            "b",
-            None,
-        );
+        journal.record(JournalLevel::Info, EventCategory::PluginEvent, "a", None);
+        journal.record(JournalLevel::Info, EventCategory::PluginEvent, "b", None);
         assert_eq!(journal.len(), 2);
 
         journal.clear();
@@ -368,12 +348,7 @@ mod tests {
             "w1",
             None,
         );
-        journal.record(
-            JournalLevel::Error,
-            EventCategory::FfbEvent,
-            "e1",
-            None,
-        );
+        journal.record(JournalLevel::Error, EventCategory::FfbEvent, "e1", None);
         journal.record(
             JournalLevel::Critical,
             EventCategory::WatchdogAlert,
@@ -421,9 +396,11 @@ mod tests {
         assert!(journal.last_entry().is_none());
         assert!(journal.entries().is_empty());
         assert!(journal.entries_since(SystemTime::now()).is_empty());
-        assert!(journal
-            .entries_by_category(EventCategory::ServiceStartup)
-            .is_empty());
+        assert!(
+            journal
+                .entries_by_category(EventCategory::ServiceStartup)
+                .is_empty()
+        );
         assert!(journal.entries_by_level(JournalLevel::Error).is_empty());
 
         let s = journal.summary();
@@ -451,18 +428,8 @@ mod tests {
     #[test]
     fn rotation_preserves_newest_entries() {
         let mut journal = EventJournal::new(2);
-        journal.record(
-            JournalLevel::Info,
-            EventCategory::ServiceStartup,
-            "a",
-            None,
-        );
-        journal.record(
-            JournalLevel::Info,
-            EventCategory::SimConnected,
-            "b",
-            None,
-        );
+        journal.record(JournalLevel::Info, EventCategory::ServiceStartup, "a", None);
+        journal.record(JournalLevel::Info, EventCategory::SimConnected, "b", None);
         journal.record(
             JournalLevel::Warning,
             EventCategory::SimDisconnected,

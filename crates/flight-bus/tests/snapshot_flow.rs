@@ -8,11 +8,11 @@
 //!
 //! These are pure in-process tests — no network, no I/O.
 
+use flight_bus::adapter_fixtures::BuiltinFixtures;
+use flight_bus::types::SimId;
 use flight_bus::{
     AircraftId, BusPublisher, BusSnapshot, FixtureConverter, PublisherError, SubscriptionConfig,
 };
-use flight_bus::adapter_fixtures::BuiltinFixtures;
-use flight_bus::types::SimId;
 use std::time::Duration;
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -39,7 +39,10 @@ fn test_msfs_fixture_snapshot_flow() {
 
     publisher.publish(snapshot.clone()).unwrap();
 
-    let received = sub.try_recv().unwrap().expect("subscriber should receive snapshot");
+    let received = sub
+        .try_recv()
+        .unwrap()
+        .expect("subscriber should receive snapshot");
     assert_eq!(received.sim, SimId::Msfs);
     assert_eq!(received.aircraft, AircraftId::new("C172"));
     // Verify converted kinematics survived the bus round-trip
@@ -59,7 +62,10 @@ fn test_xplane_fixture_snapshot_flow() {
 
     publisher.publish(snapshot.clone()).unwrap();
 
-    let received = sub.try_recv().unwrap().expect("subscriber should receive snapshot");
+    let received = sub
+        .try_recv()
+        .unwrap()
+        .expect("subscriber should receive snapshot");
     assert_eq!(received.sim, SimId::XPlane);
     assert_eq!(received.aircraft, AircraftId::new("C172"));
     assert_eq!(received.kinematics.ias, snapshot.kinematics.ias);
@@ -77,7 +83,10 @@ fn test_dcs_fixture_snapshot_flow() {
 
     publisher.publish(snapshot.clone()).unwrap();
 
-    let received = sub.try_recv().unwrap().expect("subscriber should receive snapshot");
+    let received = sub
+        .try_recv()
+        .unwrap()
+        .expect("subscriber should receive snapshot");
     assert_eq!(received.sim, SimId::Dcs);
     assert_eq!(received.aircraft, AircraftId::new("F-16C"));
     assert_eq!(received.kinematics.heading, snapshot.kinematics.heading);
@@ -91,7 +100,10 @@ fn test_dcs_fixture_snapshot_flow() {
 fn test_stale_snapshot_propagation() {
     let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
     // Default validity has safe_for_ffb = false
-    assert!(!snapshot.validity.safe_for_ffb, "precondition: safe_for_ffb starts false");
+    assert!(
+        !snapshot.validity.safe_for_ffb,
+        "precondition: safe_for_ffb starts false"
+    );
 
     let mut publisher = make_publisher();
     let mut sub = publisher.subscribe(default_config()).unwrap();
@@ -147,12 +159,21 @@ fn test_multiple_subscribers_receive_same_snapshot() {
 
     publisher.publish(snapshot.clone()).unwrap();
 
-    for (label, sub) in [("sub1", &mut sub1), ("sub2", &mut sub2), ("sub3", &mut sub3)] {
-        let received = sub.try_recv().unwrap().unwrap_or_else(|| {
-            panic!("{label} should have received the snapshot")
-        });
+    for (label, sub) in [
+        ("sub1", &mut sub1),
+        ("sub2", &mut sub2),
+        ("sub3", &mut sub3),
+    ] {
+        let received = sub
+            .try_recv()
+            .unwrap()
+            .unwrap_or_else(|| panic!("{label} should have received the snapshot"));
         assert_eq!(received.sim, SimId::Msfs, "{label}: sim mismatch");
-        assert_eq!(received.aircraft, AircraftId::new("A320"), "{label}: aircraft mismatch");
+        assert_eq!(
+            received.aircraft,
+            AircraftId::new("A320"),
+            "{label}: aircraft mismatch"
+        );
         assert_eq!(
             received.kinematics.ias, snapshot.kinematics.ias,
             "{label}: IAS mismatch"
@@ -182,7 +203,10 @@ fn test_late_subscriber_gets_only_new_snapshots() {
     let snap2 = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
     publisher.publish(snap2).unwrap();
 
-    let received = late_sub.try_recv().unwrap().expect("late subscriber should get new snapshot");
+    let received = late_sub
+        .try_recv()
+        .unwrap()
+        .expect("late subscriber should get new snapshot");
     assert_eq!(received.sim, SimId::XPlane);
 }
 
@@ -284,7 +308,8 @@ fn test_subscriber_stats_after_receive() {
     let _ = sub.try_recv().unwrap();
 
     assert_eq!(
-        sub.stats().messages_received, 1,
+        sub.stats().messages_received,
+        1,
         "stats should reflect one received message"
     );
 }

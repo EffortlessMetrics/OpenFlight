@@ -26,7 +26,13 @@ pub struct FakeDevice {
 
 impl FakeDevice {
     /// Create a new fake device with the given identity and axis/button counts.
-    pub fn new(name: impl Into<String>, vid: u16, pid: u16, num_axes: usize, num_buttons: usize) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        vid: u16,
+        pid: u16,
+        num_axes: usize,
+        num_buttons: usize,
+    ) -> Self {
         Self {
             name: name.into(),
             vid,

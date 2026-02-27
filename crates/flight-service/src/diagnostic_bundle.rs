@@ -32,7 +32,12 @@ impl SystemInfo {
     pub fn to_text(&self) -> String {
         format!(
             "OS: {} {}\nArch: {}\nOpenFlight: {}\nRust MSRV: {}\nUptime: {}s\n",
-            self.os, self.os_version, self.arch, self.openflight_version, self.rust_version, self.uptime_secs
+            self.os,
+            self.os_version,
+            self.arch,
+            self.openflight_version,
+            self.rust_version,
+            self.uptime_secs
         )
     }
 }

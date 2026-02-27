@@ -1211,8 +1211,13 @@ mod tests {
         );
 
         // Call handle_process_detected (creates the adapter)
-        let result =
-            AircraftAutoSwitchService::handle_process_detected(process, &adapters, &config, &service_tx).await;
+        let result = AircraftAutoSwitchService::handle_process_detected(
+            process,
+            &adapters,
+            &config,
+            &service_tx,
+        )
+        .await;
         assert!(result.is_ok());
 
         // Transition to Running
@@ -1230,7 +1235,8 @@ mod tests {
         }
 
         // Simulate ProcessLost → should transition to Stopped and accumulate uptime
-        let result = AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters).await;
+        let result =
+            AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters).await;
         assert!(result.is_ok());
         {
             let mut metrics = adapter_metrics.write().await;

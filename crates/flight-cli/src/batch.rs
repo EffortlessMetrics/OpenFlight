@@ -161,9 +161,7 @@ mod tests {
                 axis: "pitch".into(),
                 value: 0.3,
             },
-            BatchOp::EnableAxis {
-                axis: "yaw".into(),
-            },
+            BatchOp::EnableAxis { axis: "yaw".into() },
         ];
         let result = execute_batch(&ops);
         assert_eq!(result.results.len(), 3);
@@ -186,9 +184,7 @@ mod tests {
                 axis: "pitch".into(),
                 value: 2.0,
             },
-            BatchOp::EnableAxis {
-                axis: "yaw".into(),
-            },
+            BatchOp::EnableAxis { axis: "yaw".into() },
         ];
         let result = execute_batch(&ops);
         assert_eq!(result.results.len(), 3);
@@ -207,9 +203,7 @@ mod tests {
                 axis: "".into(),
                 value: 0.0,
             },
-            BatchOp::DisableAxis {
-                axis: "yaw".into(),
-            },
+            BatchOp::DisableAxis { axis: "yaw".into() },
         ];
         let result = execute_batch(&ops);
         assert_eq!(result.success_count(), 2);

@@ -157,7 +157,11 @@ impl DetentBand {
     pub fn new(center: f32, half_width: f32, hysteresis: f32) -> Self {
         debug_assert!(half_width > 0.0, "half_width must be positive");
         debug_assert!(hysteresis >= 0.0, "hysteresis must be non-negative");
-        Self { center, half_width, hysteresis }
+        Self {
+            center,
+            half_width,
+            hysteresis,
+        }
     }
 }
 
@@ -165,7 +169,9 @@ impl DetentBand {
 enum BandEngagement {
     Free,
     /// `from_below` is `true` when the axis entered from the negative side.
-    Engaged { from_below: bool },
+    Engaged {
+        from_below: bool,
+    },
 }
 
 /// Const-generic, zero-allocation multi-detent processor.
@@ -218,7 +224,9 @@ impl<const N: usize> RtDetentProcessor<N> {
             match self.states[i] {
                 BandEngagement::Free => {
                     if dist.abs() <= band.half_width {
-                        self.states[i] = BandEngagement::Engaged { from_below: dist <= 0.0 };
+                        self.states[i] = BandEngagement::Engaged {
+                            from_below: dist <= 0.0,
+                        };
                         output = band.center;
                     }
                 }
@@ -458,7 +466,10 @@ mod rt_tests {
         p.process(-0.06);
         // Move past half_width + hysteresis = 0.15 → should exit
         let out = p.process(0.16);
-        assert!((out - 0.16).abs() < f32::EPSILON, "should be free: got {out}");
+        assert!(
+            (out - 0.16).abs() < f32::EPSILON,
+            "should be free: got {out}"
+        );
     }
 
     #[test]
@@ -483,7 +494,10 @@ mod rt_tests {
         assert_eq!(p.process(0.5), 0.5);
         // Exit second detent past its upper edge (exit_threshold = 0.07)
         let out = p.process(0.58);
-        assert!((out - 0.58).abs() < f32::EPSILON, "should be free: got {out}");
+        assert!(
+            (out - 0.58).abs() < f32::EPSILON,
+            "should be free: got {out}"
+        );
         // Both detents now free — midpoint passes through
         assert_eq!(p.process(0.0), 0.0);
     }

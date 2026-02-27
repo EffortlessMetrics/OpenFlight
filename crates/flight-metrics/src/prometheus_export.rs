@@ -336,12 +336,7 @@ mod tests {
     #[test]
     fn test_labels_in_json_output() {
         let mut reg = PrometheusRegistry::new();
-        reg.register_gauge(
-            "disk",
-            "Disk usage",
-            labels(&[("mount", "/data")]),
-            85.0,
-        );
+        reg.register_gauge("disk", "Disk usage", labels(&[("mount", "/data")]), 85.0);
         let json = reg.export_json();
         assert!(json.contains("\"mount\":\"/data\""));
     }

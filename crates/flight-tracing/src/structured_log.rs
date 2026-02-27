@@ -134,11 +134,7 @@ impl JsonLogFormatter {
             .unwrap_or_default();
         map.insert(
             "timestamp".into(),
-            serde_json::Value::String(format!(
-                "{}.{:03}",
-                epoch.as_secs(),
-                epoch.subsec_millis()
-            )),
+            serde_json::Value::String(format!("{}.{:03}", epoch.as_secs(), epoch.subsec_millis())),
         );
         map.insert(
             "level".into(),
@@ -163,16 +159,10 @@ impl JsonLogFormatter {
         }
 
         if let Some(ref id) = entry.span_id {
-            map.insert(
-                "span_id".into(),
-                serde_json::Value::String(id.clone()),
-            );
+            map.insert("span_id".into(), serde_json::Value::String(id.clone()));
         }
         if let Some(ref id) = entry.trace_id {
-            map.insert(
-                "trace_id".into(),
-                serde_json::Value::String(id.clone()),
-            );
+            map.insert("trace_id".into(), serde_json::Value::String(id.clone()));
         }
 
         serde_json::Value::Object(map).to_string()
@@ -203,8 +193,7 @@ mod tests {
 
     #[test]
     fn builder_creates_valid_entry() {
-        let entry = LogEntryBuilder::new(LogLevel::Info, "axis", "tick processed")
-            .build();
+        let entry = LogEntryBuilder::new(LogLevel::Info, "axis", "tick processed").build();
 
         assert_eq!(entry.level, LogLevel::Info);
         assert_eq!(entry.component, "axis");
@@ -222,8 +211,14 @@ mod tests {
             .build();
 
         assert_eq!(entry.fields.len(), 2);
-        assert!(matches!(entry.fields.get("device_id"), Some(LogValue::Int(42))));
-        assert!(matches!(entry.fields.get("success"), Some(LogValue::Bool(true))));
+        assert!(matches!(
+            entry.fields.get("device_id"),
+            Some(LogValue::Int(42))
+        ));
+        assert!(matches!(
+            entry.fields.get("success"),
+            Some(LogValue::Bool(true))
+        ));
     }
 
     #[test]
@@ -251,8 +246,8 @@ mod tests {
             .build();
 
         let json = JsonLogFormatter::format(&entry);
-        let parsed: serde_json::Value = serde_json::from_str(&json)
-            .expect("output must be valid JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("output must be valid JSON");
 
         assert_eq!(parsed["level"], "ERROR");
         assert_eq!(parsed["component"], "sched");
@@ -262,10 +257,7 @@ mod tests {
     #[test]
     fn batch_format_produces_newline_delimited() {
         let entries: Vec<LogEntry> = (0..3)
-            .map(|i| {
-                LogEntryBuilder::new(LogLevel::Info, "test", &format!("msg {i}"))
-                    .build()
-            })
+            .map(|i| LogEntryBuilder::new(LogLevel::Info, "test", &format!("msg {i}")).build())
             .collect();
 
         let batch = JsonLogFormatter::format_batch(&entries);
@@ -273,8 +265,7 @@ mod tests {
 
         assert_eq!(lines.len(), 3);
         for line in &lines {
-            serde_json::from_str::<serde_json::Value>(line)
-                .expect("each line must be valid JSON");
+            serde_json::from_str::<serde_json::Value>(line).expect("each line must be valid JSON");
         }
     }
 
@@ -323,18 +314,14 @@ mod tests {
 
     #[test]
     fn special_characters_escaped_in_json() {
-        let entry = LogEntryBuilder::new(
-            LogLevel::Info,
-            "test",
-            "line1\nline2\ttab \"quoted\"",
-        )
-        .field("path", LogValue::String("C:\\Users\\test".into()))
-        .build();
+        let entry = LogEntryBuilder::new(LogLevel::Info, "test", "line1\nline2\ttab \"quoted\"")
+            .field("path", LogValue::String("C:\\Users\\test".into()))
+            .build();
 
         let json = JsonLogFormatter::format(&entry);
         // Must be parseable (serde_json escapes automatically)
-        let parsed: serde_json::Value = serde_json::from_str(&json)
-            .expect("special chars must be properly escaped");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("special chars must be properly escaped");
 
         assert_eq!(parsed["message"], "line1\nline2\ttab \"quoted\"");
         assert_eq!(parsed["fields"]["path"], "C:\\Users\\test");

@@ -202,7 +202,12 @@ mod tests {
 
     // Helper: inject a "previously seen" state so we can test change detection
     // without real file I/O.
-    fn inject_state(watcher: &mut ConfigWatcher, path: &Path, modified: Option<SystemTime>, size: Option<u64>) {
+    fn inject_state(
+        watcher: &mut ConfigWatcher,
+        path: &Path,
+        modified: Option<SystemTime>,
+        size: Option<u64>,
+    ) {
         if let Some(state) = watcher.watched_files.get_mut(path) {
             state.last_modified = modified;
             state.last_size = size;

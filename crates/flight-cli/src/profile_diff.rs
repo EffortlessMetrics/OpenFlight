@@ -175,14 +175,8 @@ mod tests {
 
     #[test]
     fn axis_config_change_detected() {
-        let a = write_temp_profile(
-            "axis_a.json",
-            r#"{"axis_config": {"deadzone": 0.05}}"#,
-        );
-        let b = write_temp_profile(
-            "axis_b.json",
-            r#"{"axis_config": {"deadzone": 0.10}}"#,
-        );
+        let a = write_temp_profile("axis_a.json", r#"{"axis_config": {"deadzone": 0.05}}"#);
+        let b = write_temp_profile("axis_b.json", r#"{"axis_config": {"deadzone": 0.10}}"#);
         let diff = diff_profiles(&a, &b);
         assert!(!diff.is_empty());
         assert!(diff.iter().any(|e| e.field.contains("deadzone")));
@@ -191,10 +185,7 @@ mod tests {
     #[test]
     fn field_added_shows_none_old_value() {
         let a = write_temp_profile("add_a.json", r#"{"name": "base"}"#);
-        let b = write_temp_profile(
-            "add_b.json",
-            r#"{"name": "base", "new_field": 42}"#,
-        );
+        let b = write_temp_profile("add_b.json", r#"{"name": "base", "new_field": 42}"#);
         let diff = diff_profiles(&a, &b);
         let added = diff.iter().find(|e| e.field == "new_field").unwrap();
         assert!(added.old_value.is_none());
@@ -203,10 +194,7 @@ mod tests {
 
     #[test]
     fn field_removed_shows_none_new_value() {
-        let a = write_temp_profile(
-            "rem_a.json",
-            r#"{"name": "base", "old_field": true}"#,
-        );
+        let a = write_temp_profile("rem_a.json", r#"{"name": "base", "old_field": true}"#);
         let b = write_temp_profile("rem_b.json", r#"{"name": "base"}"#);
         let diff = diff_profiles(&a, &b);
         let removed = diff.iter().find(|e| e.field == "old_field").unwrap();

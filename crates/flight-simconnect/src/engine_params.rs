@@ -185,7 +185,10 @@ mod tests {
         // Engine 1 first param
         assert_eq!(vars[0], "GENERAL ENG RPM:1");
         // Engine 4 last param
-        assert_eq!(vars[4 * PARAMS_PER_ENGINE - 1], "GENERAL ENG OIL PRESSURE:4");
+        assert_eq!(
+            vars[4 * PARAMS_PER_ENGINE - 1],
+            "GENERAL ENG OIL PRESSURE:4"
+        );
     }
 
     #[test]

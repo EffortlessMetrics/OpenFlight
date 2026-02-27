@@ -145,7 +145,10 @@ mod tests {
 
     #[test]
     fn test_velocity_positive_movement() {
-        let config = VelocityConfig { tick_period_secs: DT, smooth_alpha: 0.0 };
+        let config = VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 0.0,
+        };
         let mut v = AxisVelocity::new(config);
         v.update(0.0); // seed
         let vel = v.update(0.04); // +0.04 per tick
@@ -154,7 +157,10 @@ mod tests {
 
     #[test]
     fn test_velocity_negative_movement() {
-        let config = VelocityConfig { tick_period_secs: DT, smooth_alpha: 0.0 };
+        let config = VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 0.0,
+        };
         let mut v = AxisVelocity::new(config);
         v.update(0.0); // seed
         let vel = v.update(-0.04);
@@ -164,7 +170,10 @@ mod tests {
     #[test]
     fn test_velocity_units() {
         // step of 1.0 in one 250 Hz tick → raw = 1.0 / (1/250) = 250.0 units/sec.
-        let config = VelocityConfig { tick_period_secs: DT, smooth_alpha: 0.0 };
+        let config = VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 0.0,
+        };
         let mut v = AxisVelocity::new(config);
         v.update(0.0); // seed at 0
         let vel = v.update(1.0);
@@ -177,7 +186,10 @@ mod tests {
     #[test]
     fn test_velocity_smoothing() {
         // With high smooth_alpha, a step spike is significantly dampened.
-        let config = VelocityConfig { tick_period_secs: DT, smooth_alpha: 0.8 };
+        let config = VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 0.8,
+        };
         let mut v = AxisVelocity::new(config);
         v.update(0.0); // seed
         let spike = v.update(1.0); // raw = 250.0; smoothed = 0.2 * 250 = 50.0
@@ -210,7 +222,10 @@ mod tests {
     #[test]
     fn test_velocity_no_smoothing() {
         // smooth_alpha = 0.0 means no lag: output equals raw velocity instantly.
-        let config = VelocityConfig { tick_period_secs: DT, smooth_alpha: 0.0 };
+        let config = VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 0.0,
+        };
         let mut v = AxisVelocity::new(config);
         v.update(0.0); // seed
         // Step up.
@@ -218,7 +233,10 @@ mod tests {
         assert!((up - 250.0).abs() < 1e-3, "expected 250.0, got {up}");
         // Step down.
         let down = v.update(0.0);
-        assert!((down - (-250.0)).abs() < 1e-3, "expected -250.0, got {down}");
+        assert!(
+            (down - (-250.0)).abs() < 1e-3,
+            "expected -250.0, got {down}"
+        );
         // Hold — velocity should snap back to 0 immediately.
         let hold = v.update(0.0);
         assert!(hold.abs() < 1e-6, "expected 0.0 (no lag), got {hold}");
@@ -227,12 +245,18 @@ mod tests {
     #[test]
     #[should_panic(expected = "smooth_alpha must be in [0.0, 1.0]")]
     fn test_velocity_invalid_alpha_panics() {
-        AxisVelocity::new(VelocityConfig { tick_period_secs: DT, smooth_alpha: 1.5 });
+        AxisVelocity::new(VelocityConfig {
+            tick_period_secs: DT,
+            smooth_alpha: 1.5,
+        });
     }
 
     #[test]
     #[should_panic(expected = "tick_period_secs must be finite and > 0")]
     fn test_velocity_invalid_period_panics() {
-        AxisVelocity::new(VelocityConfig { tick_period_secs: 0.0, smooth_alpha: 0.3 });
+        AxisVelocity::new(VelocityConfig {
+            tick_period_secs: 0.0,
+            smooth_alpha: 0.3,
+        });
     }
 }
