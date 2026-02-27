@@ -1,0 +1,56 @@
+# WinWing A-10 Upfront Control Panel (UFC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing A-10-specific Upfront Control Panel replicating the A-10C Warthog UFC.
+# PID 0xB73C is a community estimate.
+# See also: a10c-throttle.yaml, fa18-ufc.yaml, ah64d-apache-ufc.yaml.
+schema_version: "1"
+
+device:
+  name: "WinWing A-10 Upfront Control Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing Space Simulation Technology (confirmed)
+    product_id: 0xB73C  # PID estimated — A-10 UFC; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 26
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB73C is a community estimate for the A-10 UFC.
+      Confirm with lsusb or WinWing SimApp Pro.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events. OpenFlight maps encoder
+      steps to discrete sim commands.
+  - id: DISPLAY_OUTPUT
+    description: >
+      UFC panel includes an alphanumeric scratchpad display accepting HID
+      output reports for UFC text, frequencies, and waypoint data.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing A-10 Upfront Control Panel. Replicates A-10C Warthog UFC for
+    DCS A-10C II and MSFS. PID 0xB73C is a community estimate.
+    See also a10c-throttle.yaml. Last reviewed: 2026-06.

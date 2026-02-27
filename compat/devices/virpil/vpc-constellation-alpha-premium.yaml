@@ -1,0 +1,56 @@
+# VIRPIL VPC Constellation Alpha Premium (PID 0x4182)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB (the-sz.com USB ID DB).
+# PID 0x4182 is a community estimate for the VPC Constellation Alpha Premium
+# joystick grip. Adjacent community-confirmed PIDs: vpc-throttle-mt50-cm2
+# (0x4180), vpc-mongoost-50cm2 (0x4181). No hardware probe has confirmed 0x4182.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Alpha Premium"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4182      # Community estimate — confirm with VPC Configurator or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 15     # 15-bit precision
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4182 is a community estimate based on adjacent confirmed VIRPIL
+      PIDs (0x4180 = MT-50 CM2, 0x4181 = MongoosT-50CM2). No hardware probe
+      has confirmed 0x4182 for the Alpha Premium. Verify with VPC Configurator
+      or lsusb on real hardware. Update this manifest when confirmed.
+  - id: PREMIUM_GRIP
+    description: >
+      Premium variant includes additional mini-stick (5-way hat), extra
+      button count, and improved grip body. Configure the mini-stick as a
+      dedicated axis pair or button cluster depending on module.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation Alpha Premium — PID 0x4182 community estimate.
+    VID 0x3344 (VIRPIL Controls UAB). Premium grip variant with 24 buttons and
+    dual hats. Designed for MSFS, DCS, and X-Plane. Wave-47 addition.
+    Last reviewed: 2026-07.

@@ -1,0 +1,60 @@
+# FriendlyPanels Boeing 737 Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC) / PID 0x8038 — community estimate. FriendlyPanels
+# (Spain) produces Boeing 737 NG overhead panel replicas for home cockpit
+# builders, typically using Arduino-based USB HID boards for connectivity.
+# The overhead panel covers lighting, electrical, bleed air, and hydraulic
+# systems of the B737 forward overhead panel area.
+schema_version: "1"
+
+device:
+  name: "FriendlyPanels Boeing 737 Overhead Panel"
+  vendor: "FriendlyPanels"
+  type: panel
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (placeholder — FriendlyPanels Arduino base)
+    product_id: 0x8038      # Community estimate — Arduino-based B737 overhead
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8038 is a community estimate. FriendlyPanels kits use Arduino
+      Leonardo or similar boards (VID 0x2341); actual PID depends on installed
+      firmware. Verify with lsusb on assembled hardware.
+  - id: ARDUINO_HID_BASE
+    description: >
+      Arduino-based overhead panel — enumerates as a standard HID joystick.
+      No special driver required.
+  - id: BOEING_737_OVERHEAD_SYSTEMS
+    description: >
+      Covers forward overhead: lighting panel, electrical panel, bleed air
+      panel, hydraulics panel, and fuel panel switches. LED indicator annunciators
+      driven via USB output reports.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FriendlyPanels B737 Overhead Panel. VID 0x2341 (Arduino); PID 0x8038 estimated.
+    Spanish Boeing 737 cockpit panel replica builder. Wave-42 addition. Last reviewed: 2026-07.

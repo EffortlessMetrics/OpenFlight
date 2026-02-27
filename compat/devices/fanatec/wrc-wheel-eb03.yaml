@@ -1,0 +1,56 @@
+# Fanatec WRC Steering Wheel (Alt VID 0xEB03)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0xEB03 is a community-reported alternate VID seen on some Fanatec
+# hardware. The primary confirmed Fanatec VID is 0x0EB7. PID 0x0421 is a
+# community estimate for the Fanatec WRC Steering Wheel under alternate VID
+# 0xEB03. See wrc-wheel.yaml (VID 0x0EB7 / PID 0x0035) for primary manifest.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec WRC Steering Wheel"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0xEB03    # Community-reported alt VID — primary Fanatec VID is 0x0EB7
+    product_id: 0x0421   # Community estimate — WRC Wheel alt VID variant; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 18
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xEB03 is a community-reported alternate; primary Fanatec VID is
+      0x0EB7. PID 0x0421 is a community estimate. See wrc-wheel.yaml
+      (VID 0x0EB7 / PID 0x0035) for the primary manifest.
+  - id: RIM_ADDON
+    description: >
+      Requires a Fanatec wheel base with QR1 or QR2 quick release.
+  - id: LED_REV_STRIP
+    description: >
+      LED rev indicator strip driven by HID output reports via the base.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec WRC Steering Wheel — alternate VID 0xEB03 / PID 0x0421.
+    Primary manifest: wrc-wheel.yaml (VID 0x0EB7 / PID 0x0035).
+    Last reviewed: 2026-07.

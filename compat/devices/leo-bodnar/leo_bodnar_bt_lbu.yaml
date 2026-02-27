@@ -1,0 +1,54 @@
+# Leo Bodnar BT-LBU Standalone USB Encoder Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x0001 — community estimate.
+# The BT-LBU is a standalone USB rotary encoder interface: a single-channel
+# incremental encoder-to-USB adapter used in DIY cockpit builds for rotary
+# selectors, autopilot heading/altitude knobs, and trim wheels.
+# Presents as a two-axis joystick with relative encoder counts on X and Y.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar BT-LBU Standalone USB Encoder"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x0001      # Community estimate — BT-LBU standalone encoder
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [encoder_a, encoder_b]
+    resolution_bits: 10
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0001 is a community estimate. Confirm with lsusb or Leo Bodnar's
+      product page before deployment.
+  - id: RELATIVE_ENCODER_AXIS
+    description: >
+      Encoder counts are reported as relative axis deltas, not absolute
+      position. Host software must integrate delta values to maintain
+      absolute position state.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar BT-LBU standalone USB encoder — 2 relative axes, 1 button.
+    VID 0x1DD2 / PID 0x0001 (est). Used for single-channel rotary inputs.
+    Wave-40 addition. Last reviewed: 2026-07.

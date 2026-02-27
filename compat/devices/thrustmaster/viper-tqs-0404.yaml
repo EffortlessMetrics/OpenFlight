@@ -1,0 +1,60 @@
+# Thrustmaster Viper TQS (PID 0x0404 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (ThrustMaster GmbH). PID 0x0404 is an alternate community
+# estimate for the Thrustmaster Viper TQS throttle. The primary manifest
+# with PID 0xB380 (community-documented from DCS forum captures) is in
+# viper-tqs.yaml. PID 0x0404 appears in some USB device listings and may
+# represent a different hardware revision.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Viper TQS"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0404   # Community estimate — alt PID; see also 0xB380 in viper-tqs.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, thumbwheel_1, thumbwheel_2, thumbwheel_3, idle_detent]
+    resolution_bits: 16
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0404 is a community estimate. See viper-tqs.yaml (PID 0xB380) for
+      the primary documented variant. Multiple PID estimates exist for this
+      device; confirm from lsusb on real hardware.
+  - id: VIPER_TQS_THROTTLE_UNIPOLAR
+    description: >
+      The main throttle axis is unipolar 16-bit: 0x0000 = idle/cut-off,
+      0xFFFF = full throttle. An idle detent separates the idle region from
+      the cut-off position.
+  - id: VIPER_TQS_DCS_F16_PRIMARY
+    description: >
+      Designed for the DCS World F-16C Viper. Button layout mirrors the F-16C
+      left console. DCS default profiles map directly to TQS button indices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Viper TQS — PID 0x0404 alternate variant. See viper-tqs.yaml
+    for PID 0xB380. VID 0x044F confirmed. Both PIDs are community estimates.
+    Last reviewed: 2026-07.

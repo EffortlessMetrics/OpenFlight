@@ -1,0 +1,59 @@
+# Sismo Soluciones Airbus A320 FCU
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Sismo Soluciones A320 FCU (Flight Control Unit) replicates the Airbus A320
+# autopilot FCU panel including SPD/MACH, HDG/TRK, ALT, and V/S knobs plus
+# all associated pushbutton selectors.
+# VID 0x0EB7 / PID 0x0100: community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Sismo Soluciones A320 FCU"
+  vendor: "Sismo Soluciones"
+  usb:
+    vendor_id: 0x0EB7       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0100      # Community estimate — Sismo A320 FCU
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0EB7 / PID 0x0100 are community estimates for the Sismo A320 FCU.
+      Other Sismo products use VID 0x04D8 (Microchip). Confirm with lsusb.
+  - id: MANAGED_VS_SELECTED_MODES
+    description: >
+      FCU supports both managed (dotted) and selected (solid) display modes for
+      speed, heading, and altitude. Profile binding should track managed/selected
+      state flags from the simulator.
+  - id: ANNUNCIATOR_OUTPUTS
+    description: >
+      FCU pushbutton annunciators require HID output reports. Use SIOC
+      integration or OpenFlight output binding for LED feedback.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sismo Soluciones A320 FCU. VID 0x0EB7 / PID 0x0100 estimated.
+    For overhead see sismo-a320-overhead.yaml; for EFIS see sismo-efis-capt.yaml.
+    Last reviewed: 2026-06.

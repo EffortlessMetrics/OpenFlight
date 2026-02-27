@@ -68,10 +68,10 @@ impl DeadzoneConfig {
         if center + edge >= 1.0 {
             return Err(DeadzoneError::Overlap);
         }
-        if center < 0.0 || center >= 0.5 {
+        if !(0.0..0.5).contains(&center) {
             return Err(DeadzoneError::InvalidCenter);
         }
-        if edge < 0.0 || edge >= 0.5 {
+        if !(0.0..0.5).contains(&edge) {
             return Err(DeadzoneError::InvalidEdge);
         }
         Ok(Self { center, edge })

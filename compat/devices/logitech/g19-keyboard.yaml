@@ -1,0 +1,64 @@
+# Logitech G19 Gaming Keyboard (with colour LCD display)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Logitech G19 gaming keyboard featuring 12 programmable G-keys, a 320×240
+# colour GamePanel LCD, per-key RGB backlighting, and media controls.
+# VID 0x046D (Logitech), PID 0xC228 — community-reported for G19 keyboard.
+# Used in flight simulation for custom LCD panel data and G-key macros.
+schema_version: "1"
+
+device:
+  name: "Logitech G19 Gaming Keyboard"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech (confirmed VID)
+    product_id: 0xC228  # G19 gaming keyboard — community-reported PID
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 12           # G-keys (G1–G12 programmable macro buttons)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: COLOUR_LCD_PANEL_OUTPUT
+    description: >
+      The G19 includes a 320×240 pixel full-colour GamePanel LCD accessible via
+      Logitech's LCD SDK (lgLcd). In a flight sim context, third-party tools
+      can render MFD/EFIS pages or ECAM displays to the LCD. OpenFlight routes
+      display data to the LCD via the LCD SDK integration layer.
+  - id: G_KEYS_AS_HID_BUTTONS
+    description: >
+      G1–G12 keys enumerate as HID buttons in HID-compatible mode. Logitech
+      Gaming Software or GHUB may be required for full G-key button registration.
+  - id: MULTI_INTERFACE_DEVICE
+    description: >
+      The G19 enumerates as multiple USB HID interfaces: keyboard, G-key
+      controller, and colour LCD controller. Only the G-key interface is
+      relevant for flight sim input.
+  - id: USB_HUB_INTEGRATED
+    description: >
+      The G19 includes a 2-port USB hub. Connected devices will appear as
+      downstream USB devices; this has no effect on the keyboard's HID input.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G19 Gaming Keyboard. Colour 320×240 LCD usable for custom
+    instrument display via LCD SDK; G1–G12 for flight sim macros.
+    PID 0xC228 community-reported — confirm with lsusb.
+    Last reviewed: 2026-06.

@@ -1,0 +1,59 @@
+# Pololu Mini Maestro 18-Channel USB Servo Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1FFB (Pololu Corporation) / PID 0x008D — confirmed from Pololu product
+# documentation (native USB mode). The Mini Maestro 18 is an 18-channel servo
+# controller with onboard script support. Used in DIY cockpit builds to drive
+# servo-based gauge needles, trim actuators, and animated panel elements.
+schema_version: "1"
+
+device:
+  name: "Pololu Mini Maestro 18-Channel USB Servo Controller"
+  vendor: "Pololu Corporation"
+  type: other
+  usb:
+    vendor_id: 0x1FFB       # Pololu Corporation (confirmed, usb.ids)
+    product_id: 0x008D      # Mini Maestro 18 native mode — Pololu docs
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (custom Pololu protocol)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: NON_STANDARD_PROTOCOL
+    description: >
+      The Mini Maestro 18 uses Pololu's native USB protocol, not standard HID.
+      OpenFlight interacts via the pololu-maestro driver adapter.
+  - id: OUTPUT_ONLY_SERVO_DRIVER
+    description: >
+      Output-only servo position controller. No HID inputs to read back.
+  - id: ONBOARD_SCRIPT
+    description: >
+      Supports autonomous onboard scripts for sequence playback without
+      host connection — useful for power-on gauge sweep animations.
+  - id: DISTINCT_FROM_MINI_12
+    description: >
+      PID 0x008D is the 18-channel Mini Maestro. The 12-channel variant uses
+      a different PID (see pololu_maestro_mini12.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pololu Mini Maestro 18 USB servo controller — 18 channels. VID 0x1FFB / PID 0x008D (Pololu docs).
+    Output-only; custom Pololu protocol. Wave-42 addition. Last reviewed: 2026-07.

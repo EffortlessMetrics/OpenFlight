@@ -1,0 +1,56 @@
+# Logitech G Saitek Pro Flight Yoke System (PID 0xC2D0)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC2D0 is a community estimate for the Logitech G Saitek Pro Flight Yoke
+# System. The earlier G Flight Yoke (non-Saitek rebrand) uses PID 0xC259
+# (g-flight-yoke.yaml). The Saitek Pro Flight line was rebranded to Logitech G.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Pro Flight Yoke System"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D   # Logitech Inc.
+    product_id: 0xC2D0  # Community estimate — confirm with lsusb on real hardware
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, slider, slider2]
+    resolution_bits: 10
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC2D0 is a community estimate for the Logitech G Saitek Pro Flight
+      Yoke. The earlier G Flight Yoke uses PID 0xC259 (g-flight-yoke.yaml).
+      Confirm with lsusb or Windows Device Manager on real hardware.
+  - id: YOKE_AXIS_MAPPING
+    description: >
+      Axis mapping: X = roll (lateral), Y = pitch (fore/aft), Z = throttle,
+      Rz = propeller, Slider = mixture, Slider2 = carb heat. When paired
+      with the Saitek Pro Flight Throttle Quadrant, each device enumerates
+      as a separate HID node.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Saitek Pro Flight Yoke System — PID 0xC2D0 community estimate.
+    VID 0x046D (Logitech). Saitek-branded repackage of the Pro Flight Yoke.
+    See also g-flight-yoke.yaml (PID 0xC259) for the earlier variant.
+    Wave-47 addition. Last reviewed: 2026-07.

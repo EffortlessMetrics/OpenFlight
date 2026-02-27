@@ -685,6 +685,52 @@ impl CompiledRules {
     }
 }
 
+/// Result of a conflict check — two or more rules targeting the same LED output.
+#[derive(Debug, Clone)]
+pub struct BindingConflict {
+    /// The conflicting output name (LED target, e.g. `"GEAR"`, `"indexer"`).
+    pub output: String,
+    /// The `when` condition strings of every rule that targets this output.
+    pub sources: Vec<String>,
+}
+
+fn action_target(action: &Action) -> &str {
+    match action {
+        Action::LedOn { target }
+        | Action::LedOff { target }
+        | Action::LedBlink { target, .. }
+        | Action::LedBrightness { target, .. } => target,
+    }
+}
+
+/// Check a slice of rules for binding conflicts.
+///
+/// A conflict is reported whenever two or more rules map to the same logical
+/// output (LED target). The returned vec is sorted by output name for
+/// deterministic ordering.
+pub fn check_conflicts(rules: &[Rule]) -> Vec<BindingConflict> {
+    let compiler = RulesCompiler::new(HashMap::new());
+    let mut target_map: HashMap<String, Vec<String>> = HashMap::new();
+
+    for rule in rules {
+        if let Ok(action) = compiler.parse_action(&rule.action) {
+            let target = action_target(&action).to_string();
+            target_map
+                .entry(target)
+                .or_default()
+                .push(rule.when.clone());
+        }
+    }
+
+    let mut conflicts: Vec<BindingConflict> = target_map
+        .into_iter()
+        .filter(|(_, sources)| sources.len() > 1)
+        .map(|(output, sources)| BindingConflict { output, sources })
+        .collect();
+    conflicts.sort_by(|a, b| a.output.cmp(&b.output));
+    conflicts
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1141,6 +1187,71 @@ mod tests {
             defaults: None,
         };
         assert!(schema.validate().is_ok());
+    }
+
+    // ── check_conflicts tests ─────────────────────────────────────────────────
+
+    fn make_rule(when: &str, action: &str) -> Rule {
+        Rule {
+            when: when.to_string(),
+            do_action: action.to_string(),
+            action: action.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_empty_rule_set_no_conflicts() {
+        let conflicts = check_conflicts(&[]);
+        assert!(conflicts.is_empty());
+    }
+
+    #[test]
+    fn test_no_conflicts_for_unique_outputs() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("flaps > 0.5", "led.panel('FLAPS').on()"),
+            make_rule("ias > 200", "led.indexer.on()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert!(
+            conflicts.is_empty(),
+            "expected no conflicts, got: {:?}",
+            conflicts
+        );
+    }
+
+    #[test]
+    fn test_detects_duplicate_output_target() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("!gear_down", "led.panel('GEAR').off()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert_eq!(conflicts.len(), 1);
+        assert_eq!(conflicts[0].output, "GEAR");
+        assert_eq!(conflicts[0].sources.len(), 2);
+        assert!(conflicts[0].sources.contains(&"gear_down".to_string()));
+        assert!(conflicts[0].sources.contains(&"!gear_down".to_string()));
+    }
+
+    #[test]
+    fn test_multiple_conflicts_reported() {
+        let rules = vec![
+            make_rule("gear_down", "led.panel('GEAR').on()"),
+            make_rule("!gear_down", "led.panel('GEAR').off()"),
+            make_rule("ias > 200", "led.indexer.blink(rate_hz=4)"),
+            make_rule("ias < 100", "led.indexer.on()"),
+        ];
+        let conflicts = check_conflicts(&rules);
+        assert_eq!(
+            conflicts.len(),
+            2,
+            "expected 2 conflicts, got: {:?}",
+            conflicts
+        );
+        // sorted by output name: "GEAR" < "indexer"
+        assert_eq!(conflicts[0].output, "GEAR");
+        assert_eq!(conflicts[1].output, "indexer");
     }
 }
 

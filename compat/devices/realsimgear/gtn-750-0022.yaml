@@ -1,0 +1,53 @@
+# RealSimGear GTN 750 (VID 0x2B67, PID 0x0022)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2B67 is a community estimate for this RealSimGear variant. Existing
+# RealSimGear manifests use VID 0x04D8 (Microchip). PID 0x0022 is a community
+# estimate for the GTN 750 replica panel. The alternate GTN 750 variant uses
+# PID 0xF248 with VID 0x04D8 (gtn750.yaml).
+schema_version: "1"
+
+device:
+  name: "RealSimGear GTN 750"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — primary RSG VID is 0x04D8
+    product_id: 0x0022      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 40
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0022 with VID 0x2B67 is a community estimate for the RealSimGear
+      GTN 750. Primary RealSimGear VID is 0x04D8; gtn750.yaml uses VID 0x04D8,
+      PID 0xF248. Verify with Windows Device Manager or lsusb on real hardware.
+  - id: TOUCHSCREEN_PANEL
+    description: >
+      Replica Garmin GTN 750 panel with physical knobs, buttons, and touchscreen
+      bezel inputs. Rotary encoders report as paired button events. Designed
+      for MSFS and X-Plane GTN 750 avionics integration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GTN 750 — PID 0x0022, VID 0x2B67 community estimate.
+    See also gtn750.yaml (VID 0x04D8, PID 0xF248). Replica GTN 750 GPS/NAV
+    panel for MSFS and X-Plane. Wave-47 addition. Last reviewed: 2026-07.

@@ -1,0 +1,59 @@
+# Flight Illusion FTG-1 Gauge Interface Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Flight Illusion FTG-1 — a USB gauge interface card that drives stepper-motor
+# or servo-based analogue gauges for simulator cockpit instrument clusters.
+# The FTG-1 provides a single output channel targeting airspeed, altitude, or
+# other primary flight instruments. VID 0x04B4 / PID 0xF255 are community
+# estimates. Confirm with Flight Illusion USB utility.
+
+schema_version: "1"
+
+device:
+  name: "Flight Illusion FTG-1 Gauge Card"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate for Flight Illusion
+    product_id: 0xF255      # Community estimate — FTG-1 gauge card
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — gauge output device
+
+capabilities:
+  axes:
+    count: 1
+    names: [gauge_1]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF255 are community estimates. Confirm with the
+      Flight Illusion USB utility. See also fi-gau57.yaml (VID 0x1F4D)
+      for the GAU-57 multi-channel variant.
+  - id: OUTPUT_ONLY_DEVICE
+    description: >
+      The FTG-1 is an output-only gauge driver. HID output reports set
+      the gauge target position from sim variable values (e.g. airspeed).
+  - id: SINGLE_CHANNEL
+    description: >
+      Single-channel variant; for multi-gauge builds use the GAU-57
+      (fi-gau57.yaml) which provides 5 channels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion FTG-1 — VID 0x04B4 / PID 0xF255 (est).
+    Single-channel gauge driver card. See fi-gau57.yaml for 5-channel variant.
+    Wave-46 addition. Last reviewed: 2026-07.

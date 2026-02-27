@@ -1,0 +1,50 @@
+# WinWing F-18 UFC (PID 0x0101)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0101 is a community estimate for the WinWing F/A-18C UFC (Up-Front
+# Controller) panel. The alternate UFC variant is fa18-ufc.yaml (PID 0xB73A).
+schema_version: "1"
+
+device:
+  name: "WinWing F-18 UFC"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0101      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (panel devices)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0101 is a community estimate for the WinWing F/A-18C UFC. The
+      alternate confirmed variant uses PID 0xB73A (fa18-ufc.yaml). Verify
+      with SimAppPro USB enumeration or lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Button-only panel device. All inputs report as HID button events.
+      Designed for DCS F/A-18C Hornet UFC module bindings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F/A-18C UFC panel — alternate PID 0x0101 community estimate.
+    VID 0x4098 (WinWing). See also fa18-ufc.yaml (PID 0xB73A).
+    Designed for DCS F/A-18C Hornet UFC input. Wave-47 addition. Last reviewed: 2026-07.

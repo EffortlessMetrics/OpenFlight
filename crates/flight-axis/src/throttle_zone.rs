@@ -121,23 +121,23 @@ impl ThrottleZoneConfig {
             .iter()
             .find(|z| z.name == ZoneName::Max && z.enabled);
 
-        if let Some(c) = cut {
-            if !(0.0..=1.0).contains(&c.threshold) {
-                return Err(ZoneError::InvalidCutThreshold(c.threshold));
-            }
+        if let Some(c) = cut
+            && !(0.0..=1.0).contains(&c.threshold)
+        {
+            return Err(ZoneError::InvalidCutThreshold(c.threshold));
         }
-        if let Some(m) = max {
-            if !(0.0..=1.0).contains(&m.threshold) {
-                return Err(ZoneError::InvalidMaxThreshold(m.threshold));
-            }
+        if let Some(m) = max
+            && !(0.0..=1.0).contains(&m.threshold)
+        {
+            return Err(ZoneError::InvalidMaxThreshold(m.threshold));
         }
-        if let (Some(c), Some(m)) = (cut, max) {
-            if c.threshold >= m.threshold {
-                return Err(ZoneError::CutAboveMax {
-                    cut: c.threshold,
-                    max: m.threshold,
-                });
-            }
+        if let (Some(c), Some(m)) = (cut, max)
+            && c.threshold >= m.threshold
+        {
+            return Err(ZoneError::CutAboveMax {
+                cut: c.threshold,
+                max: m.threshold,
+            });
         }
         Ok(())
     }
@@ -187,10 +187,9 @@ impl ThrottleZoneProcessor {
             .zones
             .iter()
             .find(|z| z.name == ZoneName::Cut && z.enabled)
+            && clamped <= cut.threshold
         {
-            if clamped <= cut.threshold {
-                output = 0.0;
-            }
+            output = 0.0;
         }
 
         // Apply Max zone: values at or above the threshold are saturated to 1.0.
@@ -199,10 +198,9 @@ impl ThrottleZoneProcessor {
             .zones
             .iter()
             .find(|z| z.name == ZoneName::Max && z.enabled)
+            && clamped >= max.threshold
         {
-            if clamped >= max.threshold {
-                output = 1.0;
-            }
+            output = 1.0;
         }
 
         // Emit crossing events for MilPower, Afterburner, and Custom zones.

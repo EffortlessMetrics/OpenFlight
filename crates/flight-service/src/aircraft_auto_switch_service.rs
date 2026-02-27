@@ -136,6 +136,8 @@ pub struct AircraftAutoSwitchService {
     last_detection_time_ms: Arc<AtomicU64>,
     /// Processing latency (ms) of the most recent aircraft detection call.
     detection_latency_ms: Arc<AtomicU64>,
+    /// Total adapter errors across all adapters.
+    adapter_errors: Arc<AtomicU64>,
 }
 
 /// Simulator adapters
@@ -221,6 +223,19 @@ pub struct ServiceMetrics {
     pub last_detection_time_ms: u64,
     /// Processing latency in ms of the most recent aircraft detection call.
     pub detection_latency_ms: u64,
+    /// Total adapter errors since service creation.
+    pub adapter_errors: u64,
+}
+
+/// Lightweight snapshot of the three key service counters, readable without acquiring async locks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AutoSwitchCounters {
+    /// Total aircraft profile switches since service creation.
+    pub aircraft_switches: u64,
+    /// Processing latency of the most recent aircraft detection, in microseconds.
+    pub detection_time_us: u64,
+    /// Total adapter errors since service creation.
+    pub adapter_errors: u64,
 }
 
 /// Adapter-specific metrics
@@ -271,6 +286,7 @@ impl AircraftAutoSwitchService {
             aircraft_switch_count: Arc::new(AtomicU64::new(0)),
             last_detection_time_ms: Arc::new(AtomicU64::new(0)),
             detection_latency_ms: Arc::new(AtomicU64::new(0)),
+            adapter_errors: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -310,6 +326,7 @@ impl AircraftAutoSwitchService {
         let aircraft_switch_count = Arc::clone(&self.aircraft_switch_count);
         let last_detection_time_ms = Arc::clone(&self.last_detection_time_ms);
         let detection_latency_ms = Arc::clone(&self.detection_latency_ms);
+        let adapter_errors = Arc::clone(&self.adapter_errors);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -405,6 +422,7 @@ impl AircraftAutoSwitchService {
                         warn!("Adapter error for {}: {}", sim, error);
                         let mut metrics = adapter_metrics.write().await;
                         metrics.entry(sim).or_default().detection_errors += 1;
+                        adapter_errors.fetch_add(1, Ordering::Relaxed);
                     }
                     ServiceEvent::Shutdown => {
                         info!("Aircraft auto-switch service shutting down");
@@ -462,6 +480,23 @@ impl AircraftAutoSwitchService {
             aircraft_switch_count: self.aircraft_switch_count.load(Ordering::Relaxed),
             last_detection_time_ms: self.last_detection_time_ms.load(Ordering::Relaxed),
             detection_latency_ms: self.detection_latency_ms.load(Ordering::Relaxed),
+            adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
+        }
+    }
+
+    /// Return a lightweight snapshot of the three key service counters.
+    ///
+    /// Unlike [`get_metrics`], this is a synchronous method that reads only
+    /// atomics — no async locks are acquired, making it safe to call from
+    /// non-async contexts or tight polling loops.
+    pub fn metrics(&self) -> AutoSwitchCounters {
+        AutoSwitchCounters {
+            aircraft_switches: self.aircraft_switch_count.load(Ordering::Relaxed),
+            detection_time_us: self
+                .detection_latency_ms
+                .load(Ordering::Relaxed)
+                .saturating_mul(1_000),
+            adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
         }
     }
 

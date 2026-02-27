@@ -1,0 +1,54 @@
+# RealSimGear G1000 GPS Keypad Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / RealSimGear), PID 0xEB81 — community
+# estimate. The G1000 GPS Keypad is the alphanumeric entry keypad panel that
+# replicates the key matrix found on the right side of the Garmin G1000 MFD
+# and PFD bezels. It exposes its keys as USB HID buttons and is used alongside
+# the G1000 PFD/MFD bezel panels (see g1000-pfd.yaml, g1000-mfd.yaml).
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 GPS Keypad Module"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xEB81      # Community estimate — G1000 GPS keypad
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xEB81 is a community estimate. Confirm with lsusb or RealSimGear's
+      device documentation. Related G1000 PIDs: 0xEB80 (bezel est), 0xEB82 (GFC500 est).
+  - id: KEYPAD_BUTTON_MATRIX
+    description: >
+      All keys are exposed as discrete HID buttons. The keypad covers the
+      alphanumeric direct-entry keys (A–Z, 0–9) and function keys used for
+      GPS flight plan and navigation entry in Garmin G1000-equipped aircraft.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 GPS Keypad — 28 buttons, VID 0x04D8 / PID 0xEB81 (est).
+    Pairs with g1000-pfd.yaml and g1000-mfd.yaml for full G1000 panel coverage.
+    Wave-40 addition. Last reviewed: 2026-07.

@@ -1,0 +1,58 @@
+# Delanclip Sport IR Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / PIC-USB) / PID 0xF373 — community estimate.
+# The Delanclip Sport is an entry-level IR LED head tracking clip from
+# Delanclip, designed for use with OpenTrack or FaceTrackNoIR as a low-cost
+# alternative to TrackIR. Attaches to a headset or cap. Distinct from the
+# Fusion (3-point) and Enterprise variants.
+schema_version: "1"
+
+device:
+  name: "Delanclip Sport IR Head Tracker"
+  vendor: "Delanclip"
+  type: headtracker
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (PIC-USB MCU — community est)
+    product_id: 0xF373      # Delanclip Sport — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick (reports as HID joystick to opentrack)
+
+capabilities:
+  axes:
+    count: 3
+    names: [yaw, pitch, roll]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF373 is a community estimate. Delanclip uses Microchip PIC-USB MCU
+      (VID 0x04D8). Verify with lsusb. Distinct from the Fusion (PID 0xF372).
+  - id: OPENTRACK_INTEGRATION
+    description: >
+      Designed for use with OpenTrack. The Sport uses 3-point IR clip geometry;
+      head pose is computed by the camera tracker and forwarded to the sim
+      via OpenTrack output plugins.
+  - id: DISTINCT_FROM_FUSION_AND_ENTERPRISE
+    description: >
+      The Sport is the entry-level Delanclip model. The Fusion (delanclip_fusion.yaml)
+      is the mid-range; the Enterprise is the premium model.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Delanclip Sport IR head tracker. VID 0x04D8 (Microchip); PID 0xF373 estimated.
+    Entry-level OpenTrack IR clip. Wave-42 addition. Last reviewed: 2026-07.

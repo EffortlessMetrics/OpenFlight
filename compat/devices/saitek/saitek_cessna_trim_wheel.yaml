@@ -1,0 +1,54 @@
+# Saitek Pro Flight Cessna Trim Wheel (PID variant 0x0C26)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek / Logitech), PID 0x0C26 — community estimate.
+# Distinct from cessna-trim-wheel.yaml (PID 0x0BD4, confirmed). This manifest
+# covers the later firmware revision / batch that enumerates at PID 0x0C26.
+# Both variants present identical HID reports; the PID difference is believed
+# to reflect a firmware update in the Logitech manufacturing era.
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Trim Wheel (v2)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C26      # Community estimate — later batch / firmware revision
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C26 is a community estimate for a later production batch.
+      The confirmed PID for earlier units is 0x0BD4 (see cessna-trim-wheel.yaml).
+      Verify with lsusb or Windows Device Manager before deploying.
+  - id: SINGLE_AXIS_TRIM_WHEEL
+    description: >
+      Trim wheel exposes a single rotary axis with detented feel corresponding
+      to trim-up and trim-down positions. No buttons or hats.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Cessna Trim Wheel — later batch at PID 0x0C26 (est).
+    Functionally identical to the 0x0BD4 variant; single trim axis.
+    Wave-40 addition. Last reviewed: 2026-07.

@@ -1,0 +1,59 @@
+# Desktop Aviator Airbus A320 FMGC Panel Replica
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC / community USB HID VID), PID 0x0481 — community estimate.
+# Desktop Aviator produces high-quality Airbus cockpit panel replicas.
+# The A320 FMGC (Flight Management and Guidance Computer) panel replica
+# covers the FCU (Flight Control Unit) autopilot selector section.
+# Exposes AP/FD mode buttons, ALT/SPD/HDG/VS selector knobs, and auxiliary
+# FCU function keys as USB HID inputs.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator Airbus A320 FMGC Panel Replica"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x16C0       # PJRC / community HID VID (est — varies by unit)
+    product_id: 0x0481      # Community estimate — Desktop Aviator A320 FMGC
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [speed_knob, heading_knob, altitude_knob, vs_knob]
+    resolution_bits: 10
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x0481 are community estimates. Desktop Aviator panels
+      may use different VID/PID combinations depending on firmware revision.
+      Verify with lsusb or Windows Device Manager before deployment.
+  - id: ENCODER_AXES
+    description: >
+      FCU selector knobs (SPD, HDG/TRK, ALT, V/S) are presented as relative
+      encoder axes. Host software should integrate delta values for position state.
+  - id: AIRBUS_FCU_LAYOUT
+    description: >
+      Panel layout follows Airbus A320 FCU conventions: managed/selected modes,
+      AP1/AP2 engage buttons, A/THR arming, EXPED, and APPR mode selectors.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator A320 FMGC panel replica — 4 encoder axes, 32 buttons.
+    VID 0x16C0 / PID 0x0481 (est). FCU layout for Airbus A320 home cockpits.
+    Wave-40 addition. Last reviewed: 2026-07.

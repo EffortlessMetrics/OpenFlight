@@ -1,0 +1,52 @@
+# Logitech Extreme 3D Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech) / PID 0xC212 — confirmed from Linux kernel HID tables
+# and SDL2 gamecontrollerdb. The Logitech Extreme 3D is the predecessor to the
+# Extreme 3D Pro (PID 0xC215). It lacks the throttle wheel of the Pro but
+# shares the same ergonomic grip design. Sold circa 2000-2005.
+schema_version: "1"
+
+device:
+  name: "Logitech Extreme 3D Joystick"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech (confirmed)
+    product_id: 0xC212      # Extreme 3D — confirmed, Linux kernel / SDL2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DISTINCT_FROM_EXTREME_3D_PRO
+    description: >
+      PID 0xC212 is the original Extreme 3D; the Extreme 3D Pro uses PID 0xC215
+      (see extreme-3d-pro.yaml). The original lacks the throttle wheel.
+  - id: LEGACY_10BIT_AXES
+    description: >
+      Axes are 10-bit resolution. The twist-rudder (Rz) axis may require
+      a small deadzone to suppress noise at center.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Extreme 3D (original). VID 0x046D / PID 0xC212 confirmed.
+    Predecessor to the Extreme 3D Pro. No throttle wheel.
+    Wave-42 addition. Last reviewed: 2026-07.

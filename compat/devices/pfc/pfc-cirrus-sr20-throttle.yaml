@@ -1,0 +1,54 @@
+# Precision Flight Controls Cirrus SR20 Throttle (VID 0x2B67, PID 0x0031)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2B67 is used by some PFC USB hardware variants (see pfc/cirrus-usb-yoke.yaml
+# which also uses VID 0x2B67). PID 0x0031 is a community estimate for the PFC
+# Cirrus SR20 Throttle quadrant. PFC primarily uses VID 0x04D8 for most hardware.
+schema_version: "1"
+
+device:
+  name: "Precision Flight Controls Cirrus SR20 Throttle"
+  vendor: "Precision Flight Controls"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — PFC also uses 0x04D8; confirm
+    product_id: 0x0031      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, mixture, prop]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 and PID 0x0031 are community estimates for the PFC Cirrus SR20
+      Throttle. PFC hardware primarily uses VID 0x04D8 (Microchip); some units
+      use VID 0x2B67. Verify with Windows Device Manager or lsusb. See also
+      pfc-cirrus-throttle.yaml (VID 0x04D8, PID 0x0115).
+  - id: CIRRUS_THROTTLE
+    description: >
+      Cirrus SR20 replica throttle quadrant with separate throttle, mixture,
+      and propeller levers. All axes are unipolar (0 = idle/lean/coarse,
+      max = full/rich/fine). Designed for MSFS and X-Plane GA aircraft.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Cirrus SR20 Throttle — VID 0x2B67, PID 0x0031 community estimate.
+    See also pfc-cirrus-throttle.yaml (VID 0x04D8, PID 0x0115). Professional
+    replica cockpit hardware. Wave-47 addition. Last reviewed: 2026-07.

@@ -7,16 +7,10 @@
 //! Typical position in the pipeline: after deadzone, before curve.
 
 /// Per-axis inversion configuration.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct AxisInvert {
     /// When `true`, the axis value is negated.
     pub enabled: bool,
-}
-
-impl Default for AxisInvert {
-    fn default() -> Self {
-        Self { enabled: false }
-    }
 }
 
 impl AxisInvert {
@@ -88,7 +82,7 @@ impl InvertBank {
     pub fn is_inverted(&self, axis_index: usize) -> bool {
         self.invertors
             .get(axis_index)
-            .map_or(false, |inv| inv.enabled)
+            .is_some_and(|inv| inv.enabled)
     }
 
     /// Returns the number of axes in the bank.

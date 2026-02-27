@@ -182,8 +182,8 @@ impl ResponseCurve {
 
         tangents[0] = slope(0);
         tangents[n - 1] = slope(n - 2);
-        for i in 1..n - 1 {
-            tangents[i] = (slope(i - 1) + slope(i)) / 2.0;
+        for (i, t) in tangents.iter_mut().enumerate().take(n - 1).skip(1) {
+            *t = (slope(i - 1) + slope(i)) / 2.0;
         }
         tangents
     }

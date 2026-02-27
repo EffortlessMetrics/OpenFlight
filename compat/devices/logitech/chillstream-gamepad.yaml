@@ -1,0 +1,55 @@
+# Logitech Chillstream Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech) / PID 0xC220 — confirmed from multiple community USB
+# captures and the SDL2 gamecontrollerdb. The Logitech Chillstream is an Xbox
+# 360-style USB gamepad with a built-in fan in the back grips ("chill stream"
+# feature). Sold circa 2008-2012; discontinued.
+schema_version: "1"
+
+device:
+  name: "Logitech Chillstream Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech (confirmed)
+    product_id: 0xC220      # Chillstream — confirmed, SDL2 / community captures
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: BUILT_IN_FAN
+    description: >
+      The Chillstream has a small cooling fan in the grips powered from USB.
+      The fan draws minimal current and does not affect USB HID enumeration.
+  - id: XBOX360_LAYOUT
+    description: >
+      Xbox 360-style button layout (A/B/X/Y + LB/RB + LT/RT + thumbsticks).
+      In flight sim the right stick maps well to pitch/roll trim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Chillstream Gamepad. VID 0x046D / PID 0xC220 confirmed.
+    Discontinued Xbox 360-style pad with built-in grip fans.
+    Wave-42 addition. Last reviewed: 2026-07.

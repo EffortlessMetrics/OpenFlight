@@ -66,7 +66,9 @@
 //! rules.validate().expect("Rules should be valid");
 //! ```
 
+pub mod calibration_store;
 pub mod error;
+pub mod profile_watcher;
 
 // Re-exports from microcrates
 pub use flight_blackbox as blackbox;

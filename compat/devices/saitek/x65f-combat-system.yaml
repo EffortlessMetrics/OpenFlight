@@ -1,0 +1,55 @@
+# Saitek X65F Combat Control System (Full System PID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0B6A is a community-reported PID for the X65F combined system
+# (distinct from the stick-only PID 0x0261 in x65f-stick.yaml).
+# The X65F was Saitek's flagship HOTAS (2009), featuring metal construction
+# and an integrated MFD. Some firmware revisions enumerate under this PID.
+schema_version: "1"
+
+device:
+  name: "Saitek X65F Combat Control System"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0B6A      # Community-reported full-system PID; see also x65f-stick.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 12
+  buttons: 39
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B6A is community-reported for the X65F combined system.
+      Confirm with lsusb on real hardware. The stick-only PID (0x0261)
+      is documented in x65f-stick.yaml.
+  - id: INTEGRATED_MFD
+    description: >
+      The X65F stick includes a 128×43 monochrome LCD MFD accessed via
+      vendor-specific HID reports. OpenFlight binds the standard axis/button
+      path; MFD requires vendor driver.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X65F Combat Control System (full-system PID variant). PID 0x0B6A
+    is community-reported; verify with lsusb. See x65f-stick.yaml and
+    x65f-throttle.yaml for component manifests. Last reviewed: 2026-06.

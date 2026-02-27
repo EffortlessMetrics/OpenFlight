@@ -1,0 +1,61 @@
+# Skalarki Electronics Boeing 737 MCP
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (VOTI/community HID VID) / PID 0x05E2 — community estimate.
+# Skalarki Electronics (Poland) produces high-fidelity Boeing 737 NG cockpit
+# panel replicas. The B737 MCP (Mode Control Panel) replica provides full
+# autopilot speed/heading/altitude/VS selectors with 7-segment LED displays
+# and illuminated annunciators.
+schema_version: "1"
+
+device:
+  name: "Skalarki Electronics Boeing 737 MCP"
+  vendor: "Skalarki Electronics"
+  type: panel
+  usb:
+    vendor_id: 0x16C0       # VOTI / community HID VID (used by Skalarki)
+    product_id: 0x05E2      # Community estimate — Skalarki B737 MCP
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 5
+    names: [speed, heading, altitude, vs, course]
+    resolution_bits: 10
+  buttons: 24
+  hats: 0
+  encoders: 5
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x05E2 is a community estimate. Skalarki panels use VID 0x16C0
+      (VOTI/community HID VID). Verify with lsusb. Distinct from the
+      FCMC panel (skalarki-fcmc.yaml) and the generic MCP (generic-mcp.yaml).
+  - id: LED_DISPLAY_OUTPUT
+    description: >
+      7-segment LED displays for SPD, HDG, ALT, and V/S values are driven
+      via USB output reports. OpenFlight writes target autopilot values to
+      the display output path from the active profile state.
+  - id: FULL_737_AUTOPILOT_REPLICA
+    description: >
+      Full-width B737 NG MCP with VNAV/LNAV/FD/APP/HDG SEL/LOC/ALT HOLD
+      mode selectors, A/T ARM, DISENGAGE bar, and CMD A/B engage. 5-axis
+      selector knobs for SPD, HDG, ALT, V/S, CRS.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki B737 MCP. VID 0x16C0 / PID 0x05E2 estimated.
+    Polish high-fidelity B737 autopilot panel replica. Wave-42 addition. Last reviewed: 2026-07.

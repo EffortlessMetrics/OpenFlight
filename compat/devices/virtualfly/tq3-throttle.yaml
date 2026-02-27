@@ -1,0 +1,58 @@
+# VirtualFly TQ3 Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly TQ3 is a 3-lever throttle quadrant designed for twin-engine
+# general aviation aircraft simulation. Provides throttle, propeller, and
+# mixture levers with Hall-effect sensors.
+# VID 0x2742 / PID 0x0003: community estimate.
+# Note: confirmed VirtualFly VID on other units is 0x2B67.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly TQ3 Throttle Quadrant"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2742       # PID estimated — confirmed VirtualFly VID is 0x2B67
+    product_id: 0x0003      # Community estimate — TQ3
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, propeller, mixture]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2742 / PID 0x0003 are community estimates. Confirmed VirtualFly
+      VID on other units is 0x2B67 (see tq6-plus-throttle.yaml). Verify with
+      lsusb on real hardware.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three levers use Hall-effect sensors for contactless position sensing,
+      providing improved longevity and linearity over potentiometer designs.
+  - id: GA_TWIN_ENGINE
+    description: >
+      Designed for twin-engine GA (Cessna 310, Beechcraft Baron, Piper Seneca).
+      Throttle, propeller, and mixture map to standard GA twin-engine variables.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly TQ3 throttle quadrant — 3 levers for GA twin-engine. VID 0x2742 / PID 0x0003 est.
+    Confirmed VirtualFly VID is 0x2B67 on other units. Last reviewed: 2026-06.

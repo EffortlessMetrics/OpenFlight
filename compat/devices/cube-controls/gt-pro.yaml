@@ -1,0 +1,60 @@
+# Cube Controls GT Pro Racing Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cube Controls GT Pro — direct drive racing wheel base with USB HID.
+# VID 0x0EB7 (Fanatec / shared racing VID range), PID 0x0E03 is a community
+# estimate. See also: cube_formula_csl.yaml.
+schema_version: "1"
+
+device:
+  name: "Cube Controls GT Pro Racing Wheel Base"
+  vendor: "Cube Controls"
+  usb:
+    vendor_id: 0x0EB7   # Fanatec / racing wheel VID range (community-reported)
+    product_id: 0x0E03  # GT Pro — community estimate; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [wheel, accelerator, brake]
+    resolution_bits: 14
+  buttons: 8
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant_force]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0E03 is a community estimate for the Cube Controls GT Pro base.
+      Confirm with lsusb on physical hardware. VID 0x0EB7 is shared across
+      multiple racing wheel vendors; verify vendor attribution.
+  - id: DIRECT_DRIVE_HIGH_TORQUE
+    description: >
+      The GT Pro is a direct drive wheel base with high peak torque (up to
+      ~6–12 Nm). FFB safety limits should be configured in the sim and in
+      OpenFlight's FFB envelope to prevent wrist injury.
+  - id: HIGH_POLLING_RATE
+    description: >
+      Direct drive bases typically poll at 1000 Hz; OpenFlight should use
+      the highest available HID polling rate for this device class.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cube Controls GT Pro direct drive wheel base. PID 0x0E03 is a community
+    estimate — confirm with lsusb. High-torque FFB; configure safety limits.
+    See cube_formula_csl.yaml for the Formula CSL variant. Last reviewed: 2026-06.

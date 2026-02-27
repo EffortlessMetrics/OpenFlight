@@ -1,0 +1,66 @@
+# Delanclip Fusion IR Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8: Microchip Technology (community estimate for Delanclip Fusion
+# based on PIC-USB MCU). PID 0xF372 is a community estimate.
+# The Delanclip Fusion is a three-point IR LED clip for head tracking that
+# attaches to a headset; used with OpenTrack or FaceTrackNoIR for 6DOF view
+# control in flight simulators.
+
+schema_version: "1"
+
+device:
+  name: "Delanclip Fusion IR Head Tracker"
+  vendor: "Delanclip"
+  type: other
+  usb:
+    vendor_id: 0x04D8   # Microchip Technology (community estimate for PIC-USB)
+    product_id: 0xF372  # Community estimate — Delanclip Fusion
+  hid:
+    usage_page: 0x01
+    usage: 0x00   # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 75
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 / PID 0xF372 are community estimates for the Delanclip Fusion.
+      The Microchip USB VID is shared by many HID devices; rely on PID for
+      matching. Confirm from lsusb on real hardware.
+  - id: OPENTRACK_OR_FACETRACK_REQUIRED
+    description: >
+      The Delanclip Fusion provides three IR LEDs; a separate IR-filtered camera
+      and OpenTrack or FaceTrackNoIR software are required to compute 6DOF
+      head-pose data. Works with the "PointTracker" plugin in OpenTrack.
+  - id: CAMERA_REQUIRED
+    description: >
+      Requires an IR-filtered camera (e.g., PS3 Eye with IR pass filter or
+      dedicated TrackIR camera replacement). The Fusion clip provides passive
+      IR point targets only.
+  - id: MICROCHIP_VID
+    description: >
+      VID 0x04D8 is the Microchip Technology USB VID shared by many HID
+      devices. Rely on PID 0xF372 for device identification.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Delanclip Fusion IR head tracker clip. VID 0x04D8 / PID 0xF372 community
+    estimates. Works with OpenTrack PointTracker or FaceTrackNoIR for 6DOF
+    view control. Last reviewed: 2026-06.

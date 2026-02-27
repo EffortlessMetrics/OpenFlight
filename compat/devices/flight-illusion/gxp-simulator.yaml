@@ -1,0 +1,59 @@
+# Flight Illusion GXP Flight Simulator Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress Semiconductor) / PID 0xF232 — community estimate.
+# Flight Illusion (Czech Republic) produces advanced flight simulation
+# instruments and cockpit panels. The GXP is their generic expansion panel
+# platform used in professional home cockpit builds.
+# Cypress FX2LP (0x04B4) is widely used as the USB MCU in their panels.
+schema_version: "1"
+
+device:
+  name: "Flight Illusion GXP Simulator Panel"
+  vendor: "Flight Illusion"
+  type: panel
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor (Cypress FX2LP — community est)
+    product_id: 0xF232      # GXP — community estimate; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF232 is a community estimate. Flight Illusion uses Cypress FX2LP
+      (VID 0x04B4) for USB connectivity; exact PID varies by product and
+      firmware revision.
+  - id: OUTPUT_PANEL_DEVICE
+    description: >
+      The GXP panel is primarily an output device — LEDs and displays are
+      driven via USB output reports. Switch/button inputs are secondary.
+  - id: FSUIPC_WIDESERVER_COMPATIBLE
+    description: >
+      Flight Illusion panels are typically configured via FSUIPC/WideServer
+      or SIOC. OpenFlight reads button states via the HID input path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion GXP Simulator Panel. VID 0x04B4 (Cypress FX2LP); PID 0xF232 estimated.
+    Czech cockpit hardware builder, professional home cockpit panels.
+    Wave-42 addition. Last reviewed: 2026-07.

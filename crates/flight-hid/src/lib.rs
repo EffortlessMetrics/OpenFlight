@@ -10,6 +10,7 @@
 //!
 //! - [`calibration`] - HID axis calibration (raw integer → normalised float)
 //! - [`hid_writer`] - Optimized HID writer using overlapped I/O (Windows only)
+//! - [`hotplug`] - Device hot-plug detection and reconnect policy
 //! - [`ofp1`] - OFP-1 protocol support
 
 pub use flight_hid_support::HidDeviceInfo;
@@ -19,7 +20,11 @@ mod fd_safety_tests;
 pub use flight_hid_support::hid_descriptor;
 pub mod calibration;
 pub mod hid_writer;
+pub mod hotplug;
 pub mod ofp1;
+pub use hotplug::{
+    HotplugEvent, HotplugMonitor, MockHotplugMonitor, ReconnectManager, ReconnectState,
+};
 
 use flight_core::{ComponentType, FlightError, Result, WatchdogConfig, WatchdogEvent};
 use flight_metrics::{

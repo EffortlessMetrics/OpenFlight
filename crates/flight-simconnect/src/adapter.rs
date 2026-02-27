@@ -636,13 +636,12 @@ impl MsfsAdapter {
             );
 
             // Publish to bus subscribers
-            if let Some(ref publisher) = self.bus_publisher {
-                if let Ok(mut pub_guard) = publisher.lock() {
-                    if let Err(e) = pub_guard.publish(snapshot_to_publish.clone()) {
-                        warn!("Failed to publish snapshot to bus: {}", e);
-                        self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-                    }
-                }
+            if let Some(ref publisher) = self.bus_publisher
+                && let Ok(mut pub_guard) = publisher.lock()
+                && let Err(e) = pub_guard.publish(snapshot_to_publish.clone())
+            {
+                warn!("Failed to publish snapshot to bus: {}", e);
+                self.metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
             }
 
             if let Err(e) = self.snapshot_sender.send(snapshot_to_publish) {
@@ -667,10 +666,10 @@ impl MsfsAdapter {
         // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
         if let Some(ref publisher) = self.bus_publisher {
             let stale = BusSnapshot::new(self.sim_id(), AircraftId::new("unknown"));
-            if let Ok(mut pub_guard) = publisher.lock() {
-                if let Err(e) = pub_guard.publish(stale) {
-                    warn!("Failed to publish stale snapshot on connection loss: {}", e);
-                }
+            if let Ok(mut pub_guard) = publisher.lock()
+                && let Err(e) = pub_guard.publish(stale)
+            {
+                warn!("Failed to publish stale snapshot on connection loss: {}", e);
             }
         }
 

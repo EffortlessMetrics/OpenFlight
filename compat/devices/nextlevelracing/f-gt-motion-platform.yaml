@@ -1,0 +1,59 @@
+# Next Level Racing F-GT Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Next Level Racing F-GT Motion Platform — a 2DOF (pitch/roll) motion platform
+# for Formula GT and flight simulation cockpits. Connects via USB for motion
+# command data from NLR Motion software receiving simulator telemetry.
+# VID 0x16C0 (PJRC / community HID VID range) / PID 0x048B are community
+# estimates. Confirm with lsusb or Windows Device Manager.
+
+schema_version: "1"
+
+device:
+  name: "Next Level Racing F-GT Motion Platform"
+  vendor: "Next Level Racing"
+  usb:
+    vendor_id: 0x16C0       # Community estimate — PJRC/community HID VID range
+    product_id: 0x048B      # Community estimate — F-GT Motion Platform
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — motion controller interface
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x048B are community estimates. Confirm with lsusb.
+      The Motion Platform V3 uses a different USB bridge (see motion-platform-v3.yaml).
+  - id: MOTION_SOFTWARE_REQUIRED
+    description: >
+      Motion is controlled by NLR Motion software receiving simulator telemetry
+      (pitch, roll, G-forces). OpenFlight cannot directly command platform motion
+      without an NLR telemetry routing layer.
+  - id: OUTPUT_ONLY
+    description: >
+      The F-GT Motion Platform generates no HID input events. It is an
+      output-only 2DOF motion actuator system.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Next Level Racing F-GT Motion Platform — VID 0x16C0 / PID 0x048B (est).
+    2DOF output-only motion platform; requires NLR Motion software.
+    Wave-46 addition. Last reviewed: 2026-07.

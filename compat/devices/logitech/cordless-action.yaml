@@ -1,0 +1,51 @@
+# Logitech Cordless Action Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D (Logitech) / PID 0xC21A — confirmed from SDL2 gamecontrollerdb
+# and multiple community captures. The Logitech Cordless Action is a wireless
+# USB gamepad with a 2.4 GHz USB dongle; the dongle enumerates as VID 0x046D /
+# PID 0xC21A. Sold circa 2005-2010; discontinued.
+schema_version: "1"
+
+device:
+  name: "Logitech Cordless Action Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech (confirmed)
+    product_id: 0xC21A      # Cordless Action — confirmed, SDL2 gamecontrollerdb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: WIRELESS_DONGLE
+    description: >
+      USB dongle-based wireless; the dongle enumerates as the HID device.
+      Latency is slightly higher than wired (~1–2 ms additional).
+  - id: NO_RUMBLE
+    description: >
+      The Cordless Action has no vibration motors (unlike the Cordless Rumblepad).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech Cordless Action Gamepad. VID 0x046D / PID 0xC21A confirmed from SDL2.
+    Wireless dongle-based; no rumble. Discontinued.
+    Wave-42 addition. Last reviewed: 2026-07.

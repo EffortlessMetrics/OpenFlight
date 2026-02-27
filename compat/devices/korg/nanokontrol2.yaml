@@ -1,0 +1,59 @@
+# Korg nanoKONTROL2 USB MIDI Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Korg nanoKONTROL2 is a compact USB MIDI control surface featuring 8 faders,
+# 8 knobs, and 24 transport/assignment buttons. Widely used in cockpit replica
+# builds for throttle, mixture, and avionics panel simulation.
+# VID 0x0944 (Korg) / PID 0x0117: confirmed from Linux kernel MIDI driver.
+
+schema_version: "1"
+
+device:
+  name: "Korg nanoKONTROL2 MIDI Controller"
+  vendor: "Korg"
+  usb:
+    vendor_id: 0x0944       # Korg, Inc. (confirmed)
+    product_id: 0x0117      # nanoKONTROL2 — confirmed from Linux kernel
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 16
+    names: [fader_1, fader_2, fader_3, fader_4, fader_5, fader_6, fader_7, fader_8,
+            knob_1, knob_2, knob_3, knob_4, knob_5, knob_6, knob_7, knob_8]
+    resolution_bits: 7
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: MIDI_USB_ONLY
+    description: >
+      The nanoKONTROL2 is a pure USB MIDI device — it does NOT enumerate as
+      a USB HID joystick. OpenFlight must use the MIDI input subsystem to
+      receive CC messages from faders, knobs, and buttons.
+  - id: SCENE_SETS
+    description: >
+      The nanoKONTROL2 supports multiple configurable scenes. Ensure the active
+      scene matches the expected CC assignments in the OpenFlight MIDI profile.
+  - id: TRANSPORT_BUTTONS
+    description: >
+      Transport (play, stop, record) and assignment (track, marker) buttons
+      send fixed MIDI notes. Remap via Korg Kontrol Editor if conflicts occur.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Korg nanoKONTROL2 — 8 faders + 8 knobs + 24 buttons. VID 0x0944 / PID 0x0117.
+    Pure MIDI device; requires MIDI binding in OpenFlight.
+    Popular for throttle/mixture/prop control panels. Last reviewed: 2026-06.

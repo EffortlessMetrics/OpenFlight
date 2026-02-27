@@ -1,0 +1,56 @@
+# Honeycomb Charlie Throttle Pack (Virtual Bundle: Alpha XL + Charlie)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Honeycomb Charlie Throttle Pack is a retail bundle that pairs the
+# Alpha XL Flight Controls (VID 0x294B / PID 0x1932 est) with the Charlie
+# Throttle Quadrant (PID 0x1939 est). It is not a single USB device; both
+# units enumerate independently. This manifest is a virtual bundle for
+# software tracking and profile-set linking.
+# Related manifests:
+#   alpha-xl.yaml        — Alpha XL Flight Controls yoke
+#   honeycomb_charlie_throttle.yaml — Charlie Throttle Quadrant
+schema_version: "1"
+
+device:
+  name: "Honeycomb Charlie Throttle Pack (Bundle)"
+  vendor: "Honeycomb Aeronautical"
+  type: virtual_bundle
+  usb:
+    vendor_id: 0x294B     # Honeycomb Aeronautical (confirmed for Bravo/Alpha)
+    product_id: ~         # Bundle — no independent PID; see alpha-xl + charlie manifests
+  hid:
+    usage_page: ~
+    usage: ~
+
+capabilities:
+  axes:
+    count: 9             # Alpha XL (3) + Charlie (6)
+    names: [roll, pitch, alpha_throttle, throttle1, throttle2, throttle3, prop1, mixture1, condition]
+    resolution_bits: 12
+  buttons: 32            # Alpha XL (15) + Charlie (6) + trim switches
+  hats: 1
+  force_feedback: false
+
+quirks:
+  - id: VIRTUAL_BUNDLE_NO_OWN_USB
+    description: >
+      This is a software virtual bundle. The Alpha XL and Charlie Throttle
+      are independent USB HID devices; neither enumerates under a shared PID.
+      Profile sets referencing this bundle should link alpha-xl.yaml and
+      honeycomb_charlie_throttle.yaml as constituent devices.
+  - id: PID_UNCONFIRMED
+    description: >
+      Alpha XL PID 0x1932 and Charlie PID 0x1939 are community estimates
+      following the Honeycomb sequential allocation pattern. Confirm both
+      with lsusb before deployment.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Charlie Throttle Pack — virtual bundle of Alpha XL yoke + Charlie
+    Throttle Quadrant. Both devices enumerate independently under VID 0x294B.
+    9 combined axes, 32 buttons, 1 hat. Wave-40 addition. Last reviewed: 2026-07.

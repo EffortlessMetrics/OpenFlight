@@ -1,0 +1,53 @@
+# RealSimGear GFC500 Autopilot Controller (VID 0xEB80 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear GFC500 replicates the Garmin GFC 500 autopilot controller panel
+# for GA aircraft simulation. This manifest covers the VID 0xEB80 / PID 0x0009
+# variant (community estimate). The primary manifest (gfc500.yaml) uses VID 0x04D8
+# (confirmed RealSimGear VID on most units).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear GFC500 Autopilot Controller"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0xEB80       # PID estimated — confirmed RealSimGear VID is 0x04D8
+    product_id: 0x0009      # Community estimate — GFC500 (0xEB80 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0xEB80 / PID 0x0009 are community estimates. Confirmed RealSimGear
+      VID on other units is 0x04D8 (see gfc500.yaml). Verify with lsusb.
+  - id: ALTITUDE_PRESELECT_ENCODER
+    description: >
+      The altitude preselect encoder adjusts in 100 ft increments. The push
+      action toggles between 100 ft and 1000 ft step modes in G1000 integration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GFC500 autopilot — VID 0xEB80 / PID 0x0009 est (alternate batch).
+    Primary manifest: gfc500.yaml (VID 0x04D8). Last reviewed: 2026-06.

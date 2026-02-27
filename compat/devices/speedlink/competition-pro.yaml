@@ -1,0 +1,61 @@
+# SPEEDLINK Competition Pro USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04B4 (Cypress Semiconductor), PID 0x2412 — community estimate.
+# The SPEEDLINK Competition Pro is a retro-style USB reimagining of the classic
+# Atari/Commodore Competition Pro joystick, featuring microswitches and the
+# original 9-pin layout adapted to USB HID. Used in retro flight sim titles
+# and as a simple digital joystick for legacy games.
+
+schema_version: "1"
+
+device:
+  name: "SPEEDLINK Competition Pro USB"
+  vendor: "SPEEDLINK"
+  usb:
+    vendor_id: 0x04B4    # Cypress Semiconductor (community estimate for SPEEDLINK)
+    product_id: 0x2412   # Community estimate — Competition Pro USB; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x04          # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 1    # Digital (microswitch) — 3 positions: -1, 0, +1
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0x2412 are community estimates for the SPEEDLINK
+      Competition Pro USB. Cypress Semiconductor VID (0x04B4) is commonly used
+      in budget USB HID peripherals. Confirm from lsusb on real hardware.
+  - id: DIGITAL_AXES
+    description: >
+      The Competition Pro uses digital microswitches; axes report only three
+      positions (-1, 0, +1). Apply no curve or deadzone — axis output is
+      inherently discrete. Not suitable for analogue flight control axes.
+  - id: RETRO_LAYOUT
+    description: >
+      Original 9-pin Atari/Commodore layout: 4 directional microswitches and
+      fire button. The USB version adds a second fire button. No analogue
+      axes present.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SPEEDLINK Competition Pro USB — retro-style digital microswitch joystick.
+    VID 0x04B4 / PID 0x2412 community estimates. Suitable for legacy titles
+    and retro sim use only; digital axes only. Last reviewed: 2026-07.

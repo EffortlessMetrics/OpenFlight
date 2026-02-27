@@ -1,0 +1,59 @@
+# Fanatec GT DD Pro Wheel Base (Alt VID 0xEB03)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0xEB03 is a community-reported alternate VID seen on some Fanatec
+# hardware. The primary confirmed Fanatec VID is 0x0EB7 (gran-turismo-dd-pro.yaml,
+# PID 0x0031). PID 0x0008 is a community estimate for the GT DD Pro under
+# this alternate VID. See also clubsport-wheel-v25-eb03.yaml and
+# clubsport-pedals-v3-eb03.yaml for other 0xEB03 variants.
+
+schema_version: "1"
+
+device:
+  name: "Fanatec Gran Turismo DD Pro Wheel Base"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0xEB03    # Community-reported alt VID — primary Fanatec VID is 0x0EB7
+    product_id: 0x0008   # Community estimate — GT DD Pro alt VID variant; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, z, rz, rx, ry]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, inertia, friction, sine]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xEB03 is a community-reported alternate; primary Fanatec VID is
+      0x0EB7. PID 0x0008 is a community estimate. See gran-turismo-dd-pro.yaml
+      (VID 0x0EB7 / PID 0x0031) for the primary manifest.
+  - id: DD_PRO_8NM
+    description: >
+      GT DD Pro delivers up to 8 Nm peak torque (11 Nm with CSL DD Boost Kit).
+      Extremely realistic centering forces for rudder or cyclic axis use in
+      flight sim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec GT DD Pro — alternate VID 0xEB03 / PID 0x0008 variant.
+    Primary manifest: gran-turismo-dd-pro.yaml (VID 0x0EB7 / PID 0x0031).
+    8 Nm direct-drive FFB. Last reviewed: 2026-07.

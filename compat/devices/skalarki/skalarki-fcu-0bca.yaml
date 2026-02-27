@@ -1,0 +1,58 @@
+# Skalarki FCU Airbus (VID 0x0BCA variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki FCU (Flight Control Unit) replicates the Airbus A320/A330/A340
+# autopilot FCU panel. This manifest covers the VID 0x0BCA / PID 0x0050
+# variant (community estimate). See fcu-airbus.yaml for the STM32-based
+# variant at VID 0x0483.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki FCU Airbus"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x0BCA       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0050      # Community estimate — Skalarki FCU (0x0BCA batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0050 are community estimates. See fcu-airbus.yaml
+      for an alternative VID variant. Confirm with lsusb on real hardware.
+  - id: ENCODER_RESOLUTION
+    description: >
+      FCU rotary encoders (SPD, HDG, ALT, V/S) use high-resolution detents.
+      Map each encoder to the corresponding Airbus autopilot variable.
+  - id: ILLUMINATED_PUSHBUTTONS
+    description: >
+      FCU pushbuttons have integrated LEDs driven by HID output reports.
+      Requires sim telemetry output binding for annunciator feedback.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki FCU Airbus — VID 0x0BCA / PID 0x0050 estimated batch variant.
+    See also fcu-airbus.yaml (0x0483 VID). Used for A320/A330 autopilot simulation.
+    Last reviewed: 2026-06.

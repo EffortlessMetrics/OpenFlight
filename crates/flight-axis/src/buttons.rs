@@ -79,7 +79,7 @@ impl ButtonChord {
 }
 
 /// Action emitted when a macro fires.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum MacroAction {
     /// Emit a virtual button press.
     VirtualButton { index: u8 },
@@ -88,13 +88,8 @@ pub enum MacroAction {
     /// Set an axis to an exact value.
     AxisSet { axis_index: u8, value: f32 },
     /// Swallow the button press without emitting anything.
+    #[default]
     Suppress,
-}
-
-impl Default for MacroAction {
-    fn default() -> Self {
-        Self::Suppress
-    }
 }
 
 /// Specifies when a [`ButtonMacro`] fires.

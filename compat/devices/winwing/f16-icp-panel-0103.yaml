@@ -1,0 +1,50 @@
+# WinWing F-16 ICP Panel (PID 0x0103)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing (Shenzhen WinWing Simulation Technology).
+# PID 0x0103 is a community estimate for the WinWing F-16 ICP (Integrated
+# Control Panel). The confirmed variant is icp-panel.yaml (PID 0xBF06).
+schema_version: "1"
+
+device:
+  name: "WinWing F-16 ICP Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0103      # Community estimate — confirm with SimAppPro or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (panel devices)
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0103 is a community estimate for the WinWing F-16 ICP panel.
+      The confirmed variant uses PID 0xBF06 (icp-panel.yaml). Verify with
+      SimAppPro USB enumeration or lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Button-only panel device replicating the F-16 ICP. All inputs report
+      as HID button events. Designed for DCS F-16C Viper module.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing F-16 ICP panel — alternate PID 0x0103 community estimate.
+    VID 0x4098 (WinWing). See also icp-panel.yaml (PID 0xBF06).
+    Designed for DCS F-16C Viper ICP input. Wave-47 addition. Last reviewed: 2026-07.

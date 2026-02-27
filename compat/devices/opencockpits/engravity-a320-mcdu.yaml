@@ -1,0 +1,60 @@
+# Engravity / Opencockpits A320 MCDU
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Engravity (the parent company of Opencockpits) A320 MCDU replica.
+# The MCDU (Multi-Function Control and Display Unit) replicates the Airbus
+# A320 FMS keyboard and CDU display for home cockpit builders.
+# VID 0x0BCA / PID 0x0070 are community estimates. Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Engravity A320 MCDU"
+  vendor: "Engravity / Opencockpits"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Engravity/Opencockpits VID range
+    product_id: 0x0070      # Community estimate — A320 MCDU
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel/keyboard device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+  display:
+    type: lcd
+    digits: 24
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0070 are community estimates for this Engravity MCDU.
+      Verify with lsusb or Windows Device Manager on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Pure panel keyboard device; all keys map to button events. LCD output
+      requires HID output reports from the FMS data source.
+  - id: A320_FMS_KEYBOARD
+    description: >
+      Full A320 MCDU keyboard layout including alpha, numeric, and function
+      keys. Map to MSFS/X-Plane FMC keyboard assignments in the panel profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Engravity A320 MCDU — VID 0x0BCA / PID 0x0070 (est).
+    A320 FMS keyboard replica for Airbus home cockpit builds.
+    Wave-46 addition. Last reviewed: 2026-07.

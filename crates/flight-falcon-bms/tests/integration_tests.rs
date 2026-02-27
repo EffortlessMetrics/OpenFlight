@@ -1,206 +1,131 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
 
-//! Integration tests for `flight-falcon-bms`.
-//!
-//! These tests exercise the public adapter API end-to-end using a stub
-//! [`SharedMemoryReader`] so that no real shared memory is needed.
+//! Integration tests for `flight-falcon-bms` using the public adapter API.
 
+use bytemuck::Zeroable;
 use flight_falcon_bms::{
-    AircraftState, BmsAdapterError, FalconAircraftType, FalconBmsAdapter, MIN_DATA_BLOCK_SIZE,
-    SharedMemoryReader, detect_aircraft_type, parse_aircraft_state,
+    BmsError, FalconBmsAdapter, FlightData, MockSharedMemory, SharedMemoryReader,
 };
-use std::f32::consts::PI;
+use std::f32::consts;
 
-// ── Stub shared-memory reader ──────────────────────────────────────────────────
-
-struct StubReader {
-    data: Vec<u8>,
-    fail_open: bool,
+fn zeroed_data() -> FlightData {
+    FlightData::zeroed()
 }
 
-impl StubReader {
-    fn with_data(data: Vec<u8>) -> Self {
-        Self {
-            data,
-            fail_open: false,
-        }
+fn data_with_pitch(pitch: f32) -> FlightData {
+    let mut fd = FlightData::zeroed();
+    fd.pitch = pitch;
+    fd
+}
+
+fn data_with_throttle(throttle: f32) -> FlightData {
+    let mut fd = FlightData::zeroed();
+    fd.throttle = throttle;
+    fd
+}
+
+// ── Adapter lifecycle ─────────────────────────────────────────────────────────
+
+#[test]
+fn adapter_poll_returns_some_when_data_available() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    assert!(adapter.poll().is_some());
+}
+
+#[test]
+fn adapter_poll_returns_none_when_no_data() {
+    let mock = MockSharedMemory::new(None);
+    let mut adapter = FalconBmsAdapter::new(mock);
+    assert!(adapter.poll().is_none());
+}
+
+#[test]
+fn adapter_last_data_none_before_first_poll() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let adapter = FalconBmsAdapter::new(mock);
+    assert!(adapter.last_data().is_none());
+}
+
+#[test]
+fn adapter_last_data_set_after_successful_poll() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    adapter.poll();
+    assert!(adapter.last_data().is_some());
+}
+
+#[test]
+fn adapter_not_connected_before_any_poll() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let adapter = FalconBmsAdapter::new(mock);
+    assert!(!adapter.is_connected());
+}
+
+#[test]
+fn adapter_connected_after_successful_poll() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    adapter.poll();
+    assert!(adapter.is_connected());
+}
+
+#[test]
+fn adapter_disconnected_after_failed_poll() {
+    let mock = MockSharedMemory::new(None);
+    let mut adapter = FalconBmsAdapter::new(mock);
+    adapter.poll();
+    assert!(!adapter.is_connected());
+}
+
+// ── Normalization via polled data ─────────────────────────────────────────────
+
+#[test]
+fn polled_pitch_normalized_correctly() {
+    let mock = MockSharedMemory::new(Some(data_with_pitch(consts::FRAC_PI_2)));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    let fd = adapter.poll().unwrap();
+    let normalized = fd.pitch_normalized();
+    assert!((normalized - 0.5).abs() < 1e-6, "normalized={normalized}");
+}
+
+#[test]
+fn polled_throttle_clamped_to_one() {
+    let mock = MockSharedMemory::new(Some(data_with_throttle(2.0)));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    let fd = adapter.poll().unwrap();
+    assert!((fd.throttle_normalized() - 1.0).abs() < 1e-6);
+}
+
+// ── MockSharedMemory read_count ───────────────────────────────────────────────
+
+#[test]
+fn mock_read_count_tracks_all_calls() {
+    let mock = MockSharedMemory::new(Some(zeroed_data()));
+    let mut adapter = FalconBmsAdapter::new(mock);
+    adapter.poll();
+    adapter.poll();
+    adapter.poll();
+    assert_eq!(adapter.read_count(), 3);
+}
+
+// ── Custom reader for failure-mode tests ──────────────────────────────────────
+
+struct FailingReader;
+impl SharedMemoryReader for FailingReader {
+    fn read_flight_data(&self) -> Result<FlightData, BmsError> {
+        Err(BmsError::NotAvailable)
     }
-
-    fn failing() -> Self {
-        Self {
-            data: vec![],
-            fail_open: true,
-        }
+    fn is_available(&self) -> bool {
+        false
     }
 }
 
-impl SharedMemoryReader for StubReader {
-    fn open(&mut self, _name: &str) -> Result<(), BmsAdapterError> {
-        if self.fail_open {
-            Err(BmsAdapterError::BufferTooShort { found: 0 })
-        } else {
-            Ok(())
-        }
-    }
-
-    fn read_block(&self) -> Result<Vec<u8>, BmsAdapterError> {
-        Ok(self.data.clone())
-    }
-
-    fn close(&mut self) {}
-}
-
-// ── Helper ─────────────────────────────────────────────────────────────────────
-
-fn build_block(
-    heading_rad: f32,
-    pitch_rad: f32,
-    roll_rad: f32,
-    airspeed: f32,
-    altitude: f32,
-    gear_bits: u32,
-    flap_bits: u32,
-    weapons_loaded: u32,
-) -> Vec<u8> {
-    let mut buf = vec![0u8; MIN_DATA_BLOCK_SIZE];
-    buf[0..4].copy_from_slice(&heading_rad.to_le_bytes());
-    buf[4..8].copy_from_slice(&pitch_rad.to_le_bytes());
-    buf[8..12].copy_from_slice(&roll_rad.to_le_bytes());
-    buf[12..16].copy_from_slice(&airspeed.to_le_bytes());
-    buf[16..20].copy_from_slice(&altitude.to_le_bytes());
-    buf[20..24].copy_from_slice(&gear_bits.to_le_bytes());
-    buf[24..28].copy_from_slice(&flap_bits.to_le_bytes());
-    buf[28..32].copy_from_slice(&weapons_loaded.to_le_bytes());
-    buf
-}
-
-// ── Tests ──────────────────────────────────────────────────────────────────────
-
-/// Zero-filled shared memory must parse to defaults without panicking.
 #[test]
-fn zero_filled_memory_returns_defaults_no_panic() {
-    let block = vec![0u8; MIN_DATA_BLOCK_SIZE];
-    let state = parse_aircraft_state(&block).expect("zero-filled block must not fail");
-    assert_eq!(state, AircraftState::default());
-}
-
-/// Altitude, airspeed, and pitch (used as AoA proxy) are decoded correctly.
-#[test]
-fn altitude_airspeed_pitch_parsed_correctly() {
-    let pitch_rad = 0.15_f32;
-    let block = build_block(0.0, pitch_rad, 0.0, 280.0, 35_000.0, 0, 0, 0);
-    let state = parse_aircraft_state(&block).unwrap();
-    assert!(
-        (state.airspeed - 280.0).abs() < 0.01,
-        "airspeed={}",
-        state.airspeed
-    );
-    assert!(
-        (state.altitude - 35_000.0).abs() < 0.01,
-        "altitude={}",
-        state.altitude
-    );
-    assert!(
-        (state.pitch - pitch_rad.to_degrees()).abs() < 0.01,
-        "pitch={}",
-        state.pitch
-    );
-}
-
-/// Gear-down flag is driven exclusively by bit 0 of `gear_bits`; bits 1 and 2
-/// are reserved and must not set `gear_down`.
-#[test]
-fn gear_state_three_bit_scenarios() {
-    // Bit 0 (nose / main gear down signal) → gear_down = true.
-    let block0 = build_block(0.0, 0.0, 0.0, 150.0, 1_000.0, 0b0001, 0, 0);
-    assert!(
-        parse_aircraft_state(&block0).unwrap().gear_down,
-        "bit 0 → gear down"
-    );
-
-    // Bit 1 alone must NOT set gear_down.
-    let block1 = build_block(0.0, 0.0, 0.0, 150.0, 1_000.0, 0b0010, 0, 0);
-    assert!(
-        !parse_aircraft_state(&block1).unwrap().gear_down,
-        "bit 1 alone → gear up"
-    );
-
-    // Bit 2 alone must NOT set gear_down.
-    let block2 = build_block(0.0, 0.0, 0.0, 150.0, 1_000.0, 0b0100, 0, 0);
-    assert!(
-        !parse_aircraft_state(&block2).unwrap().gear_down,
-        "bit 2 alone → gear up"
-    );
-}
-
-/// Weapons-loaded count and flaps (master-warning proxy flags) are decoded.
-#[test]
-fn master_caution_weapons_and_flaps_flags_decoded() {
-    let block = build_block(0.0, 0.0, 0.0, 200.0, 5_000.0, 0, 1, 8);
-    let state = parse_aircraft_state(&block).unwrap();
-    assert!(state.flaps, "flaps bit set");
-    assert_eq!(state.weapons_loaded, 8, "weapons_loaded mismatch");
-
-    // All flags clear.
-    let clean = build_block(0.0, 0.0, 0.0, 200.0, 5_000.0, 0, 0, 0);
-    let clean_state = parse_aircraft_state(&clean).unwrap();
-    assert!(!clean_state.flaps);
-    assert_eq!(clean_state.weapons_loaded, 0);
-}
-
-/// Multiple sequential calls with the same buffer must produce identical output.
-#[test]
-fn multiple_sequential_reads_consistent_output() {
-    let block = build_block(PI / 4.0, 0.05, -0.1, 320.0, 20_000.0, 0, 0, 2);
-    let state1 = parse_aircraft_state(&block).unwrap();
-    let state2 = parse_aircraft_state(&block).unwrap();
-    let state3 = parse_aircraft_state(&block).unwrap();
-    assert_eq!(state1, state2, "read 1 vs read 2");
-    assert_eq!(state2, state3, "read 2 vs read 3");
-}
-
-/// Full adapter lifecycle: connect → poll → verify state → disconnect.
-#[test]
-fn adapter_full_lifecycle_connect_poll_disconnect() {
-    let block = build_block(PI, 0.0, 0.0, 400.0, 40_000.0, 0, 0, 4);
-    let reader = StubReader::with_data(block);
-    let mut adapter = FalconBmsAdapter::new(reader);
-
-    assert!(adapter.last_state().is_none(), "no state before first poll");
-
-    adapter.connect().expect("connect must succeed");
-    let state = adapter.poll().expect("poll must succeed");
-
-    assert!(
-        (state.heading - 180.0).abs() < 0.01,
-        "heading={}",
-        state.heading
-    );
-    assert!((state.airspeed - 400.0).abs() < 0.01);
-    assert!(
-        adapter.last_state().is_some(),
-        "last_state cached after poll"
-    );
-
-    adapter.disconnect();
-}
-
-/// An error from the reader's `open` must propagate through `connect`.
-#[test]
-fn connect_error_propagated_from_reader() {
-    let reader = StubReader::failing();
-    let mut adapter = FalconBmsAdapter::new(reader);
-    let err = adapter.connect().unwrap_err();
-    assert!(matches!(err, BmsAdapterError::BufferTooShort { .. }));
-}
-
-/// All three known aircraft types and the unknown fallback resolve correctly.
-#[test]
-fn aircraft_type_detected_for_all_known_ids() {
-    assert_eq!(detect_aircraft_type(1), FalconAircraftType::F16C);
-    assert_eq!(detect_aircraft_type(2), FalconAircraftType::F16A);
-    assert_eq!(detect_aircraft_type(3), FalconAircraftType::F16D);
-    assert_eq!(detect_aircraft_type(0), FalconAircraftType::Unknown);
-    assert_eq!(detect_aircraft_type(9_999), FalconAircraftType::Unknown);
+fn error_count_tracks_failed_reads() {
+    let mut adapter = FalconBmsAdapter::new(FailingReader);
+    adapter.poll();
+    adapter.poll();
+    assert_eq!(adapter.error_count(), 2);
 }

@@ -1,0 +1,57 @@
+# Thrustmaster T300 RS GT Edition (Alt PID 0xB677)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot Corporation S.A.).
+# PID 0xB677 is a community-reported PID for the T300 RS GT Edition.
+# The T300 RS uses a servomotor-based FFB system (BISS-C encoder) and
+# is compatible with PS3, PS4, and PC. The GT Edition includes the T3PA
+# pedal set. See also t300rs.yaml (0xB66E) and t300rs-gt-edition.yaml (0xB66F).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T300 RS GT Edition (Alt PID)"
+  vendor: "Thrustmaster / Guillemot"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot Corporation
+    product_id: 0xB677      # Community-reported alt PID; see t300rs-gt-edition.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant, periodic]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB677 is community-reported for the T300 RS GT Edition.
+      Confirm with lsusb. Related PIDs: 0xB66E (T300 RS), 0xB66F (GT Edition alt),
+      0xB66D (GT Edition alt). Servo-motor FFB requires PS4/PC mode.
+  - id: HIGH_RES_WHEEL
+    description: >
+      The T300 RS uses a 16-bit steering axis (65536 steps). Apply minimal
+      software filtering; the hardware encoder resolution is already high.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T300 RS GT Edition alternate PID (0xB677). Servo-motor FFB.
+    See t300rs.yaml and t300rs-gt-edition.yaml for primary variants.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# SimGauges USB LCD Gauge Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SimGauges USB LCD Gauge — a USB HID interface card that drives LCD-based
+# instrument gauge displays for custom cockpit builds. Accepts HID output
+# reports containing sim variable values and renders them on attached LCD
+# gauge modules. VID 0x04B4 (Cypress Semiconductor) / PID 0xF271 are
+# community estimates. Confirm with lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "SimGauges USB LCD Gauge Interface"
+  vendor: "SimGauges"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate
+    product_id: 0xF271      # Community estimate — SimGauges USB LCD Gauge
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — gauge output device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+  display:
+    type: lcd
+    digits: 8
+
+polling:
+  expected_rate_hz: 25
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF271 are community estimates. Cypress VID is shared
+      across many embedded controllers; verify exact PID with lsusb.
+  - id: OUTPUT_ONLY_DEVICE
+    description: >
+      Pure output device; no HID input reports. Sim variable values are sent
+      as HID output reports mapped to LCD gauge readings.
+  - id: SIM_VARIABLE_MAPPING
+    description: >
+      Map sim variables (airspeed, altitude, VSI, heading, etc.) to LCD
+      display slots via the panel output adapter profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimGauges USB LCD Gauge — VID 0x04B4 / PID 0xF271 (est).
+    Output-only LCD gauge interface; no HID input events.
+    Wave-46 addition. Last reviewed: 2026-07.

@@ -1,0 +1,61 @@
+# Leo Bodnar USB Sim Stepper Motor Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd), PID 0x0002 — community estimate.
+# The Leo Bodnar USB Stepper Controller drives stepper motors for physical
+# instrument gauge needles in DIY cockpit panel builds. Controlled via USB
+# HID output reports; the host sends target position values and the controller
+# generates the stepper pulse sequences. Used for airspeed, VSI, altimeter,
+# and similar analogue gauge replicas.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar USB Sim Stepper Motor Controller"
+  vendor: "Leo Bodnar"
+  type: other
+  usb:
+    vendor_id: 0x1DD2       # Leo Bodnar Ltd
+    product_id: 0x0002      # Community estimate — stepper controller variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (output-only controller)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0002 is a community estimate. Confirm with lsusb or Leo Bodnar's
+      stepper controller documentation before deployment.
+  - id: OUTPUT_ONLY
+    description: >
+      This device operates as an output-only controller. The host sends
+      target stepper positions via HID output reports; there are no axis
+      or button inputs to poll.
+  - id: GAUGE_REPLICA_USE
+    description: >
+      Primarily used in analogue gauge replica builds (altimeter, VSI,
+      airspeed indicator). Position resolution depends on stepper motor
+      step count and gear ratio used in the build.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar USB stepper controller — output-only gauge driver.
+    VID 0x1DD2 / PID 0x0002 (est). Used in DIY analogue gauge replicas.
+    Wave-40 addition. Last reviewed: 2026-07.

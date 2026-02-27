@@ -1,0 +1,57 @@
+# 8BitDo Ultimate Controller (PID 0x3106 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 8BitDo Ultimate controller variant identified by PID 0x3106 (VID 0x2DC8).
+# Known 8BitDo Ultimate PIDs: 0x6001 (USB), 0x6002 (2.4G receiver).
+# PID 0x3106 may correspond to a specific hardware revision or connection mode.
+# See also: ultimate.yaml (0x6001), ultimate-24g.yaml (0x6002).
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate Controller"
+  vendor: "8BitDo"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Co., Ltd. (confirmed)
+    product_id: 0x3106  # PID estimated — community-reported variant; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x3106 is a community estimate for this 8BitDo Ultimate variant.
+      Known confirmed PIDs are 0x6001 (USB wired) and 0x6002 (2.4G receiver).
+      Confirm with lsusb or 8BitDo Ultimate Software v2.
+  - id: MULTIMODE_FIRMWARE
+    description: >
+      The 8BitDo Ultimate supports Switch, Android, and PC modes switchable
+      via the profile button. PID may change between modes; this manifest
+      targets the PC/XInput mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    8BitDo Ultimate Controller — PID 0x3106 community-reported variant.
+    See ultimate.yaml (0x6001) for the confirmed USB variant.
+    Last reviewed: 2026-06.

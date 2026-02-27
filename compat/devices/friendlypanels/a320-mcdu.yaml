@@ -1,0 +1,57 @@
+# FriendlyPanels Airbus A320 MCDU Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino LLC) / PID 0x8039 — community estimate. FriendlyPanels
+# (Spain) produces Airbus A320 MCDU (Multifunction Control and Display Unit)
+# replica panels for home cockpit builders. The MCDU provides the full alphanumeric
+# keyboard, line select keys, and function keys of the Airbus FMS entry unit.
+schema_version: "1"
+
+device:
+  name: "FriendlyPanels Airbus A320 MCDU Panel"
+  vendor: "FriendlyPanels"
+  type: panel
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (placeholder — FriendlyPanels Arduino base)
+    product_id: 0x8039      # Community estimate — A320 MCDU
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 60
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x8039 is a community estimate. FriendlyPanels MCDU kits use Arduino
+      Leonardo-compatible boards (VID 0x2341). Verify with lsusb.
+  - id: ARDUINO_HID_BASE
+    description: >
+      Arduino-based MCDU panel. Enumerates as standard HID joystick/gamepad.
+  - id: AIRBUS_FMS_INPUT
+    description: >
+      Full A320 MCDU keyboard: alpha keys (A-Z), digit keys (0-9), decimal point,
+      CLR, DIR, PROG, PERF, INIT, DATA, F-PLN, RAD NAV, FUEL PRED, SEC F-PLN,
+      ATC COMM, and 6 × 2 line-select keys. Used for FMS route entry in A320
+      simulation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FriendlyPanels A320 MCDU Panel. VID 0x2341 (Arduino); PID 0x8039 estimated.
+    Full Airbus FMS keyboard replica. Wave-42 addition. Last reviewed: 2026-07.

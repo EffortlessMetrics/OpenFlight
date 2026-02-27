@@ -1,0 +1,59 @@
+# Opencockpits SIOC Mega Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Opencockpits SIOC Mega Card — an expanded I/O card for the Opencockpits SIOC
+# scripting system providing 128 digital inputs, 64 LED outputs, and 8 analogue
+# inputs. Used in large Boeing and Airbus home cockpit builds.
+# VID 0x0BCA / PID 0x0008 are community estimates. Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits SIOC Mega Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — Opencockpits/Engravity VID
+    product_id: 0x0008      # Community estimate — SIOC Mega Card
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel I/O card
+
+capabilities:
+  axes:
+    count: 8
+    names: [pot_1, pot_2, pot_3, pot_4, pot_5, pot_6, pot_7, pot_8]
+    resolution_bits: 10
+  buttons: 128
+  hats: 0
+  force_feedback: false
+  led_outputs: 64
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0008 are community estimates. See also:
+      sioc-usb.yaml, iocards-usb.yaml, adc-efis-card.yaml for related cards.
+      Confirm with lsusb before deploying in production profiles.
+  - id: SIOC_COMPATIBLE
+    description: >
+      Designed for the Opencockpits SIOC scripting system. OpenFlight wraps
+      SIOC-style I/O through the panel adapter layer.
+  - id: LARGE_FORMAT_PANEL
+    description: >
+      128-input / 64-LED capacity supports full aircraft system panel arrays.
+      Bit-packed HID reports across multiple report IDs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Opencockpits SIOC Mega Card — VID 0x0BCA / PID 0x0008 (est).
+    128 digital inputs, 64 LED outputs, 8 analogue axes.
+    Wave-46 addition. Last reviewed: 2026-07.

@@ -1,0 +1,63 @@
+# Cube Controls Formula CSL Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics — used on STM32-based HID firmware),
+# PID 0x5760 — community estimate.
+# Cube Controls produces high-quality racing and sim control grips.
+# The Formula CSL is a carbon fibre racing wheel rim with integrated
+# button panel, rotary encoders, and analog paddles. It connects via
+# USB HID and is compatible with direct-drive wheel bases. Some flight
+# sim users attach Formula CSL grips to Simucube or VPForce bases for
+# combined race/flight setups via adapter clamps.
+schema_version: "1"
+
+device:
+  name: "Cube Controls Formula CSL Racing Wheel"
+  vendor: "Cube Controls"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (STM32 USB HID firmware — est)
+    product_id: 0x5760      # Community estimate — Cube Controls Formula CSL
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [clutch_left, clutch_right, encoder_l, encoder_r]
+    resolution_bits: 12
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 / PID 0x5760 are community estimates. Cube Controls does not
+      publish USB descriptor data publicly. VID 0x0483 is shared with many
+      STM32-based devices (see stm32-hid-panel.yaml). Verify with lsusb.
+  - id: WHEEL_RIM_ONLY
+    description: >
+      The Formula CSL is a wheel rim / grip only; it requires an external
+      direct-drive base (not included). Axis output depends on the base
+      configuration and rim-to-base protocol.
+  - id: FLIGHT_SIM_VIA_ADAPTER
+    description: >
+      Used in flight simulation setups via shaft adapters to Simucube 2 / SC2
+      or VPForce Rhino bases. Grip buttons and paddles map to flight controls
+      in adapter-specific profiles.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cube Controls Formula CSL racing wheel — 4 analogue axes, 20 buttons, 1000 Hz.
+    VID 0x0483 / PID 0x5760 (est). Wheel rim for DD bases; flight use via adapter.
+    Wave-40 addition. Last reviewed: 2026-07.

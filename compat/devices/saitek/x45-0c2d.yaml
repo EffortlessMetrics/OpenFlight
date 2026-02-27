@@ -1,0 +1,49 @@
+# Saitek X45 HOTAS (Alt PID 0x0C2D)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0C2D is a community-reported alternate PID for the X45 system.
+# The primary X45 stick PID is 0x0241 (saitek_x45.yaml / x45-stick.yaml).
+# The X45 was Saitek's entry-level HOTAS (early 2000s), featuring a
+# twist-rudder stick and programmable throttle quadrant.
+schema_version: "1"
+
+device:
+  name: "Saitek X45 HOTAS (Alt PID)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C2D      # Community-reported alt PID; primary is 0x0241 (x45-stick.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, rz, throttle, slider, rx]
+    resolution_bits: 10
+  buttons: 24
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C2D is a community-reported alternate PID for the X45 system.
+      Confirm with lsusb on real hardware. Primary PIDs are 0x0241 (stick)
+      and 0x0243 (throttle) documented in x45-stick.yaml and x45-throttle.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X45 HOTAS alternate PID variant (0x0C2D). See x45-stick.yaml for the
+    confirmed PID variant. Last reviewed: 2026-06.

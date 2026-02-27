@@ -1,0 +1,59 @@
+# SteelSeries Nimbus+ Wireless Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1038 (SteelSeries ApS) / PID 0x1420 — community estimate. The
+# SteelSeries Nimbus+ is a Bluetooth/USB wireless gamepad designed for macOS,
+# iOS, and Apple TV, with a Lightning charging port. It also connects to PC
+# via USB-C or Bluetooth and is occasionally used for flight simulation on
+# macOS builds.
+schema_version: "1"
+
+device:
+  name: "SteelSeries Nimbus+ Wireless Gamepad"
+  vendor: "SteelSeries"
+  type: other
+  usb:
+    vendor_id: 0x1038       # SteelSeries ApS (confirmed)
+    product_id: 0x1420      # Nimbus+ — community estimate; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, rx, ry]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1420 is a community estimate for the Nimbus+. SteelSeries VID 0x1038
+      is confirmed. Verify with lsusb or IOKit on macOS.
+  - id: APPLE_PLATFORM_PRIMARY
+    description: >
+      The Nimbus+ is designed primarily for Apple platforms (macOS/iOS/tvOS)
+      via the Game Controller framework. On Windows/Linux it enumerates as a
+      standard HID gamepad via Bluetooth HID or USB HID.
+  - id: DISTINCT_FROM_NIMBUS
+    description: >
+      The Nimbus+ is distinct from the original Nimbus (steelseries_nimbus.yaml).
+      It adds a clickable thumbstick (L3/R3) and improved button feel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SteelSeries Nimbus+ Wireless Gamepad. VID 0x1038; PID 0x1420 estimated.
+    Apple-platform gamepad, also works on Windows via Bluetooth.
+    Wave-42 addition. Last reviewed: 2026-07.

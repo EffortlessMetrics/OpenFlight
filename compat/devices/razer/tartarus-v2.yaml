@@ -1,0 +1,61 @@
+# Razer Tartarus v2 Gaming Keypad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1532 (Razer Inc.) / PID 0x0244 — confirmed from multiple community USB
+# captures, the SDL2 gamecontrollerdb, and Razer's public USB ID list. The
+# Tartarus v2 is a 32-key programmable gaming keypad with a 8-way thumbpad,
+# analogue scroll wheel, and two analogue mini-sticks. Used in flight sim as
+# a button-box substitute for panel functions and view control.
+schema_version: "1"
+
+device:
+  name: "Razer Tartarus v2 Gaming Keypad"
+  vendor: "Razer Inc."
+  type: panel
+  usb:
+    vendor_id: 0x1532       # Razer Inc. (confirmed)
+    product_id: 0x0244      # Tartarus v2 — confirmed, community / SDL2
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard (enumerates as keyboard + gamepad composite)
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: COMPOSITE_USB_DEVICE
+    description: >
+      The Tartarus v2 is a USB composite device presenting both a HID keyboard
+      interface and a HID gamepad/joystick interface. OpenFlight binds to the
+      joystick interface (usage page 0x01) for axis/button input.
+  - id: SYNAPSE_DEPENDENCY
+    description: >
+      Advanced programmability (macros, per-key lighting) requires Razer Synapse
+      software. OpenFlight reads the device via the standard HID path without
+      requiring Synapse.
+  - id: THUMBSTICK_ANALOGUE
+    description: >
+      The 8-way D-pad thumb cluster is analogue on the v2 (unlike the
+      original Tartarus). Reports as a hat switch at low values and analogue
+      joystick at full deflection.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Razer Tartarus v2 Gaming Keypad. VID 0x1532 / PID 0x0244 confirmed.
+    32-key pad with analogue thumbstick and 8-way cluster. Useful as button box.
+    Wave-42 addition. Last reviewed: 2026-07.

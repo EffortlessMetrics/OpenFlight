@@ -1,0 +1,56 @@
+# WinWing Commander Core HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing Space Equipment Co., Ltd.
+# PID 0xB720 is a community estimate for the WinWing Commander Core HOTAS.
+# The Commander Core is WinWing's entry-level HOTAS system combining a joystick
+# and throttle optimised for space and sci-fi flight simulators.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Commander Core HOTAS"
+  vendor: "WinWing Space Equipment Co., Ltd."
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xB720   # Community estimate — Commander Core HOTAS; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rz, throttle, slider]
+    resolution_bits: 16
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB720 is a community estimate for the Commander Core HOTAS. The
+      Commander Core may enumerate stick and throttle as a single composite
+      device or as two separate USB devices. Confirm with lsusb or WinWing
+      SimApp Pro on real hardware.
+  - id: SIMAPP_PRO_INTEGRATION
+    description: >
+      WinWing SimApp Pro provides button mapping, axis calibration, and LED
+      control. The device is also usable as a standard HID joystick without
+      SimApp Pro.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Commander Core HOTAS. VID 0x4098 confirmed for WinWing.
+    PID 0xB720 community estimate. Entry-level HOTAS for space sims.
+    Last reviewed: 2026-07.

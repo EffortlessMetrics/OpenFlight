@@ -1,0 +1,57 @@
+# Meca Cup1 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Meca Cup1 — direct drive racing wheel base from Meca (Portuguese manufacturer).
+# VID 0x0EB7 (shared racing VID range), PID 0x1A00 is a community estimate.
+schema_version: "1"
+
+device:
+  name: "Meca Cup1 Racing Wheel"
+  vendor: "Meca"
+  usb:
+    vendor_id: 0x0EB7   # Shared racing wheel VID range (community-reported)
+    product_id: 0x1A00  # Cup1 — community estimate; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [wheel, accelerator, brake]
+    resolution_bits: 14
+  buttons: 6
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant_force]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1A00 is a community estimate for the Meca Cup1. VID 0x0EB7 is
+      shared with other racing wheel manufacturers. Confirm with lsusb on
+      physical hardware.
+  - id: DIRECT_DRIVE_HIGH_TORQUE
+    description: >
+      The Cup1 is a direct drive wheel base. Configure FFB peak torque limits
+      in OpenFlight's FFB envelope to prevent mechanical stress or wrist injury.
+  - id: HIGH_POLLING_RATE
+    description: >
+      Direct drive bases typically poll at 1000 Hz for minimal input latency.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meca Cup1 direct drive racing wheel base. PID 0x1A00 community estimate —
+    confirm with lsusb. High-torque FFB; configure safety limits in profile.
+    Last reviewed: 2026-06.

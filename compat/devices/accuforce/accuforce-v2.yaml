@@ -1,0 +1,62 @@
+# AccuForce v2 Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# AccuForce v2 by SimXperience — brushless direct drive wheel base for sim
+# racing. VID 0x16D0 (MCS Electronics / custom firmware), PID 0x0D5E is a
+# community estimate.
+schema_version: "1"
+
+device:
+  name: "AccuForce v2 Direct Drive Wheel Base"
+  vendor: "SimXperience"
+  usb:
+    vendor_id: 0x16D0   # MCS Electronics / SimXperience (community-reported)
+    product_id: 0x0D5E  # AccuForce v2 — community estimate; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [wheel, accelerator, brake]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant_force, periodic]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D5E is a community estimate for the AccuForce v2. VID 0x16D0 is
+      attributed to MCS Electronics, used by several small-batch sim hardware
+      manufacturers. Confirm with lsusb on physical hardware.
+  - id: DIRECT_DRIVE_HIGH_TORQUE
+    description: >
+      The AccuForce v2 is a brushless direct drive wheel with high peak torque
+      (~17 Nm continuous, ~25 Nm peak). FFB peak limits must be configured in
+      OpenFlight's FFB envelope and the AccuForce Manager software.
+  - id: SIMXPERIENCE_MANAGER_REQUIRED
+    description: >
+      Full FFB and configuration requires SimXperience's AccuForce Manager
+      software. OpenFlight uses the standard HID/DirectInput FFB interface;
+      some proprietary effects may only be accessible via AccuForce Manager.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    AccuForce v2 brushless direct drive wheel base (SimXperience). PID 0x0D5E
+    community estimate — confirm with lsusb. Very high torque (~17 Nm
+    continuous); configure FFB safety envelope before use.
+    Last reviewed: 2026-06.

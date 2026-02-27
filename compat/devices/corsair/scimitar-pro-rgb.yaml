@@ -1,0 +1,55 @@
+# Corsair SCIMITAR PRO RGB Mouse (VID 0x1B1C, PID 0x1B3C)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1B1C confirmed: Corsair Memory Inc.
+# PID 0x1B3C confirmed for the Corsair SCIMITAR PRO RGB gaming mouse.
+# The 12-button side panel makes it useful as a compact button box for
+# sim cockpit use, especially for radio and avionics panel bindings.
+schema_version: "1"
+
+device:
+  name: "Corsair SCIMITAR PRO RGB"
+  vendor: "Corsair"
+  usb:
+    vendor_id: 0x1B1C   # Corsair Memory Inc.
+    product_id: 0x1B3C  # Corsair SCIMITAR PRO RGB — community-confirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x02         # Mouse
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 17
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000  # 1ms polling on USB 2.0 HID
+  max_jitter_ms: 2
+
+quirks:
+  - id: MOUSE_AS_BUTTONBOX
+    description: >
+      Gaming mouse with 12 reprogrammable side buttons used as a sim button
+      box. Side buttons report as standard HID mouse buttons (buttons 4–15).
+      Map side buttons to sim actions in the OpenFlight profile. The main
+      mouse axes (X/Y) can be ignored or used for view slew.
+  - id: VENDOR_PROTOCOL
+    description: >
+      RGB lighting, DPI, and button remapping require Corsair iCUE software
+      or OpenRGB. OpenFlight interacts only with the standard HID mouse
+      interface; no vendor protocol integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Corsair SCIMITAR PRO RGB — VID 0x1B1C, PID 0x1B3C. Gaming mouse with 12
+    side buttons used as a sim cockpit button box. Standard HID mouse interface.
+    Wave-47 addition. Last reviewed: 2026-07.

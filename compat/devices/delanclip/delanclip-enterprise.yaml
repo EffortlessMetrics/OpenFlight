@@ -1,0 +1,59 @@
+# Delanclip Enterprise IR Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology / PIC-USB) / PID 0xF374 — community estimate.
+# The Delanclip Enterprise is the premium model in the Delanclip IR head
+# tracking clip range. It uses high-brightness IR LEDs and a refined clip
+# geometry for improved tracking accuracy at longer distances and under
+# ambient lighting.
+schema_version: "1"
+
+device:
+  name: "Delanclip Enterprise IR Head Tracker"
+  vendor: "Delanclip"
+  type: headtracker
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (PIC-USB MCU — community est)
+    product_id: 0xF374      # Delanclip Enterprise — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [yaw, pitch, roll]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF374 is a community estimate. Delanclip VID 0x04D8 is a community
+      estimate (Microchip PIC-USB). Verify with lsusb. Distinct from Sport
+      (0xF373) and Fusion (0xF372).
+  - id: HIGH_BRIGHTNESS_IR
+    description: >
+      Enterprise model uses high-output IR LEDs that maintain tracking lock
+      at wider head angles and in brightly lit environments. Clip geometry
+      is optimised for a 6DOF camera tracker with OpenTrack.
+  - id: OPENTRACK_INTEGRATION
+    description: >
+      Used with OpenTrack camera-based tracker. The clip is a passive LED
+      accessory; USB is only for LED power delivery in some revisions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Delanclip Enterprise IR head tracker. VID 0x04D8 (Microchip); PID 0xF374 estimated.
+    Premium IR clip for OpenTrack. Wave-42 addition. Last reviewed: 2026-07.

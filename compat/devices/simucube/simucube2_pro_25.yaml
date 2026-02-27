@@ -1,0 +1,60 @@
+# Simucube 2 Pro 25Nm Sport Limited Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 (Granite Devices / MCS Electronics), PID 0x0D62 — community
+# estimate. The Simucube 2 Pro 25Nm is a torque-limited variant of the
+# Simucube 2 Pro direct-drive base. While the standard SC2 Pro delivers up to
+# 25Nm, this limited-edition SKU is firmware-capped at 25Nm peak and ships with
+# a different PID to distinguish it from the higher-torque flagship Pro.
+# Related: simucube-2-pro.yaml (0x0D61), simucube-2-sport.yaml (0x0D60).
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Pro 25Nm"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics")
+    product_id: 0x0D62      # Community estimate — SC2 Pro 25Nm limited edition
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 24
+  buttons: 0
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D62 is a community estimate following the Simucube 2 sequential
+      PID pattern (Sport 0x0D60, Pro 0x0D61). Confirm with lsusb or Granite
+      Devices device documentation.
+  - id: DIRECT_DRIVE_FFBFORCE_FEEDBACK
+    description: >
+      Direct-drive servo motor with high-resolution encoder. Force feedback
+      is delivered via Granite Devices Simucube True Drive firmware; standard
+      USB HID FFB reports are not used.
+  - id: FLIGHT_SIM_GRIP_ADAPTER
+    description: >
+      Can be used in flight simulation setups with stick grip adapters
+      (e.g., VKB MCG Pro, VIRPIL Alpha-R shaft adapter).
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Pro 25Nm — direct-drive base, 1 axis, FFB via True Drive.
+    VID 0x16D0 / PID 0x0D62 (est). Torque-limited variant of the SC2 Pro.
+    Wave-40 addition. Last reviewed: 2026-07.

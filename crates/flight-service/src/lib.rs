@@ -20,9 +20,12 @@
 pub mod aircraft_auto_switch_service;
 pub mod capability_service;
 pub mod curve_conflict_service;
+pub mod diagnostic_bundle;
 pub mod error_taxonomy;
 pub mod health;
 pub mod input_runtime;
+pub mod instance_lock;
+pub mod metrics_server;
 pub mod one_click_resolver;
 pub mod power;
 pub mod safe_mode;

@@ -1,0 +1,61 @@
+# Jumper T-Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (Van Ooijen Technische Informatica / PJRC community USB HID VID).
+# PID 0x0483 is a community estimate for the Jumper T-Pro in EdgeTX USB
+# joystick mode. The T-Pro is a compact multi-protocol RC transmitter running
+# EdgeTX firmware, popular among FPV sim pilots for DCS and MSFS.
+
+schema_version: "1"
+
+device:
+  name: "Jumper T-Pro"
+  vendor: "Jumper"
+  usb:
+    vendor_id: 0x16C0    # PJRC / community HID VID (estimate for EdgeTX joystick)
+    product_id: 0x0483   # Community estimate — T-Pro EdgeTX USB joystick mode
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]     # Roll, Pitch, Throttle, Yaw
+    resolution_bits: 10
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x0483 are community estimates for the Jumper T-Pro
+      running EdgeTX in USB joystick mode. VID 0x16C0 is the PJRC shared
+      community HID VID used by many EdgeTX/OpenTX radios; PID varies by
+      EdgeTX version and board. Confirm from lsusb on real hardware.
+  - id: EDGETX_JOYSTICK_MODE
+    description: >
+      EdgeTX joystick mode must be enabled via the radio menu (System → USB
+      Mode → Joystick) before connecting. In this mode the RF transmitter is
+      silenced and the radio acts as a standard HID joystick.
+  - id: SHARED_COMMUNITY_VID
+    description: >
+      VID 0x16C0 is shared among many V-USB / EdgeTX / OpenTX and community
+      USB HID devices. PID alone is insufficient for unambiguous identification;
+      use product string matching to distinguish from other 0x16C0 devices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Jumper T-Pro RC transmitter in EdgeTX USB joystick mode. VID 0x16C0 /
+    PID 0x0483 community estimates. Used in DCS World and MSFS for FPV-style
+    inputs. Verify PID from lsusb. Last reviewed: 2026-07.

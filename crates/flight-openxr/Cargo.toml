@@ -1,0 +1,26 @@
+[package]
+homepage.workspace = true
+name = "flight-openxr"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OpenXR head tracking adapter for OpenFlight"
+readme = "README.md"
+categories = ["aerospace", "game-development"]
+keywords = ["openxr", "vr", "head-tracking", "flight-sim"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }

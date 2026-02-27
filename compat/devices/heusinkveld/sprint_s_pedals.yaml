@@ -1,0 +1,60 @@
+# Heusinkveld Sprint S Sim Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology — used by Heusinkveld firmware), PID 0xE2C7
+# — community estimate. The Sprint S is Heusinkveld's simplified / entry-level
+# variant of the Sprint pedal line. Uses the same load-cell technology as the
+# Sprint and Sprint+ but with a smaller footprint and simplified geometry.
+# Targeted at sim racers and flight simmers seeking professional load-cell
+# pedals at a lower price point than the full Sprint range.
+schema_version: "1"
+
+device:
+  name: "Heusinkveld Sprint S Sim Pedals"
+  vendor: "Heusinkveld Engineering"
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (Heusinkveld USB HID firmware)
+    product_id: 0xE2C7      # Community estimate — Sprint S simplified variant
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xE2C7 is a community estimate. Confirmed PIDs: Sprint (0xF6D0),
+      Sprint+ (0xF6D1). Verify the Sprint S PID with lsusb on target hardware
+      before deployment.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      Brake axis uses a load cell sensor (force-based) rather than a
+      potentiometer. The reported axis value is proportional to applied
+      force, not pedal travel. Requires load-cell calibration for optimal use.
+  - id: HIGH_POLL_RATE
+    description: >
+      Reports at 1000 Hz for minimal input latency in both racing and
+      flight sim use cases.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Heusinkveld Sprint S pedals — 3 axes (load-cell brake), 1000 Hz poll.
+    VID 0x04D8 / PID 0xE2C7 (est). Entry-level load-cell variant of the Sprint line.
+    Wave-40 addition. Last reviewed: 2026-07.

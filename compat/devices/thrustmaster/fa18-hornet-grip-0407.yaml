@@ -1,0 +1,61 @@
+# Thrustmaster F/A-18 Hornet Add-On Grip (PID 0x0407 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (ThrustMaster GmbH). PID 0x0407 is a community estimate for the
+# Thrustmaster F/A-18 Hornet HOTAS Add-On Grip; a separate manifest covering
+# the PID 0xB108 community estimate exists at fa18c-grip.yaml. PID 0x0407 is
+# reported in some early hardware probe logs. Both PIDs may be valid across
+# different firmware or hardware revisions of the same grip.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster F/A-18 Hornet HOTAS Add-On Grip"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0407   # Community estimate — see also 0xB108 in fa18c-grip.yaml
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [mini_stick_x, mini_stick_y, slew_x, slew_y]
+    resolution_bits: 16
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0407 is a community estimate. Another estimate (0xB108) appears in
+      fa18c-grip.yaml. Both may be valid across firmware revisions. Confirm
+      from lsusb on real hardware before deployment.
+  - id: FA18C_REQUIRES_WARTHOG_BASE
+    description: >
+      The F/A-18C grip is a drop-in replacement for the Warthog joystick grip.
+      It requires a compatible HOTAS Warthog throttle base. The grip does not
+      enumerate as a standalone device without a base unit.
+  - id: FA18C_MINI_STICK_BIPOLAR
+    description: >
+      The mini-stick (X/Y) and slew (X/Y) axes are bipolar 16-bit channels
+      centred at approximately 32768. Normalise as 0→-1.0, 32768→0.0,
+      65535→+1.0.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster F/A-18C Hornet HOTAS Add-On Grip — PID 0x0407 variant.
+    See fa18c-grip.yaml for PID 0xB108. VID 0x044F confirmed for Thrustmaster.
+    PID 0x0407 is a community estimate from early probe logs. Last reviewed: 2026-07.

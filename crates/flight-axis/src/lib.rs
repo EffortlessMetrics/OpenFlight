@@ -87,6 +87,7 @@ pub mod detent;
 pub mod engine;
 pub mod frame;
 pub mod hat;
+pub mod history;
 pub mod invert;
 pub mod nodes;
 pub mod pid;
@@ -119,6 +120,9 @@ pub use engine::{
 };
 pub use frame::{AxisFrame, FrameError};
 pub use hat::{HatBank, HatDecoder, HatError, HatOutput, HatResolution};
+pub use history::{
+    AxisHistory, AxisHistory64, AxisHistory256, AxisHistory1024, HistorySample, HistoryStats,
+};
 pub use invert::{AxisInvert, InvertBank};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,

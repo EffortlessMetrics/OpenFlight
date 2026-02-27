@@ -1,0 +1,58 @@
+# Thrustmaster T.Flight HOTAS Elite Dangerous Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The Thrustmaster T.Flight HOTAS Elite Dangerous Edition is a special edition
+# of the T.Flight HOTAS One produced under license for the Elite Dangerous game.
+# VID 0x044F confirmed; PID 0xB687 is a community estimate — the standard HOTAS
+# One uses 0xB67F; the Elite Dangerous edition may share this PID or have a
+# distinct one depending on firmware region/batch.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight HOTAS Elite Dangerous Edition"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster (confirmed)
+    product_id: 0xB687      # Community estimate — Elite Dangerous edition; verify with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB687 is a community estimate for the Elite Dangerous special edition.
+      Standard T.Flight HOTAS One uses 0xB67F. Verify with lsusb; the two variants
+      may enumerate identically on some firmware builds.
+  - id: HOTAS_COMBINED_DEVICE
+    description: >
+      Stick and throttle are combined in a single USB device. Stick axes use
+      X/Y; throttle is Rz; twist rudder is Rx or Ry depending on binding.
+  - id: ELITE_DANGEROUS_BRANDING
+    description: >
+      Cosmetic Elite Dangerous branding only; hardware is functionally identical
+      to the standard T.Flight HOTAS One for input purposes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight HOTAS Elite Dangerous Edition. VID 0x044F confirmed;
+    PID 0xB687 estimated. Functionally same as T.Flight HOTAS One. Wave-42 addition.
+    Last reviewed: 2026-07.

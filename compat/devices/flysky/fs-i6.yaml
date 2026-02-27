@@ -1,0 +1,61 @@
+# FlySky FS-i6 USB HID Mode
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1781 (community HID VID estimate). PID 0x0899 is a community estimate
+# for the FlySky FS-i6 RC transmitter in USB HID joystick mode.
+# The FS-i6 is a budget 6-channel RC transmitter that can enumerate as a
+# HID joystick when connected via USB (firmware-dependent).
+
+schema_version: "1"
+
+device:
+  name: "FlySky FS-i6"
+  vendor: "FlySky"
+  usb:
+    vendor_id: 0x1781    # Community HID VID (VID_UNCONFIRMED — estimate)
+    product_id: 0x0899   # Community estimate — FS-i6 USB HID mode
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]     # Right stick X/Y, left stick throttle/yaw (Mode 2)
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 16
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x1781 / PID 0x0899 are community estimates. USB joystick
+      functionality on the FS-i6 depends on firmware version and requires a
+      modified or third-party firmware. Confirm from lsusb on real hardware.
+  - id: FIRMWARE_DEPENDENT_USB
+    description: >
+      Stock FlySky FS-i6 firmware may not expose a USB HID joystick interface.
+      Community firmware builds (e.g., OpenTX ports) are required for joystick
+      mode. Verify firmware version before using this manifest.
+  - id: 6CH_LIMIT
+    description: >
+      The FS-i6 is a 6-channel radio; only 4 primary stick axes are exposed
+      in USB HID mode. The two additional channels (VRA, VRB) may not appear
+      as axes in the HID report descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FlySky FS-i6 RC transmitter in USB HID joystick mode. VID 0x1781 /
+    PID 0x0899 are community estimates; firmware-dependent USB mode.
+    Budget entry-level RC transmitter used as sim input device.
+    Last reviewed: 2026-07.

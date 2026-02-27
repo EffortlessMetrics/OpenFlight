@@ -1,0 +1,55 @@
+# Saitek Cyborg Evo Force Joystick (Alt PID 0x0427)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 confirmed (Saitek/Logitech PLC).
+# PID 0x0427 is a community-reported alternate PID for the Cyborg Evo Force.
+# The primary PID is 0x0462 (cyborg-evo-force.yaml). The Cyborg Evo Force
+# featured spring-return FFB effects on X and Y axes.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg Evo Force (Alt PID)"
+  vendor: "Saitek / Logitech"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0427      # Community-reported alt PID; primary is 0x0462
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, friction, constant, periodic]
+    max_update_rate_hz: 100
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0427 is community-reported for an alternate Cyborg Evo Force
+      firmware variant. Confirm with lsusb. Primary PID is 0x0462 in
+      cyborg-evo-force.yaml.
+  - id: DIRECTINPUT_FFB
+    description: >
+      Uses DirectInput force feedback on X and Y axes. Spring, damper, friction,
+      constant, and periodic effects are supported via the standard HID FFB path.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg Evo Force alternate PID (0x0427). See cyborg-evo-force.yaml
+    for the primary variant. Last reviewed: 2026-06.

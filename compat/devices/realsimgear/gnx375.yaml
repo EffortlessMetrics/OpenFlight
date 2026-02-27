@@ -1,0 +1,59 @@
+# RealSimGear GNX 375 GPS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology) / PID 0xF270 — community estimate.
+# The RealSimGear GNX 375 replicates the Garmin GNX 375, a compact ADS-B
+# In/Out capable GPS transponder combo unit. The GNX 375 combines GPS navigator
+# and Mode S/ADS-B Out transponder functions in a single 3.125" panel. Popular
+# in Light Sport Aircraft and modern GA refits.
+schema_version: "1"
+
+device:
+  name: "RealSimGear GNX 375 GPS/ADS-B Panel"
+  vendor: "RealSimGear"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF270      # GNX 375 — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF270 is a community estimate. Verify with lsusb. Distinct from
+      the GNX 375 GPS-only variant in the RealSimGear line.
+  - id: COMBINED_GPS_TRANSPONDER
+    description: >
+      The GNX 375 combines GPS navigator and ADS-B transponder functions.
+      In simulation, transponder squawk code input (digit rotary encoders)
+      and GPS knob input are multiplexed on a single USB HID device.
+  - id: LSA_MODERN_GA
+    description: >
+      Targeted at Light Sport Aircraft (LSA) and modern GA refits. Compact
+      3.125" panel; not a traditional stack-mounted nav/com unit.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear GNX 375 GPS/ADS-B Panel. VID 0x04D8 (Microchip); PID 0xF270 estimated.
+    Compact LSA/GA GPS+transponder combo replica. Wave-42 addition. Last reviewed: 2026-07.

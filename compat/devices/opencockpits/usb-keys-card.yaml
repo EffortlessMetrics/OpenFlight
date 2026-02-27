@@ -1,0 +1,57 @@
+# OpenCockpits USB Keys Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0BCA (OpenCockpits) / PID 0x0002 — community estimate. OpenCockpits
+# (Spain) produces a range of USB interface cards for home cockpit builders.
+# The USB Keys Card provides up to 72 digital switch inputs via USB HID,
+# compatible with SIOC software. Distinct from the USB Expansion (PID 0x0001).
+schema_version: "1"
+
+device:
+  name: "OpenCockpits USB Keys Card"
+  vendor: "OpenCockpits"
+  type: panel
+  usb:
+    vendor_id: 0x0BCA       # OpenCockpits (community-reported VID)
+    product_id: 0x0002      # USB Keys Card — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel input device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 72
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0002 is a community estimate. VID 0x0BCA is reported for OpenCockpits
+      in several community USB capture logs. Verify with lsusb on assembled hardware.
+  - id: SIOC_NATIVE
+    description: >
+      The USB Keys Card is natively supported by the OpenCockpits SIOC (Script
+      Input Output Controller) software. OpenFlight reads button states via the
+      standard HID input path.
+  - id: DISTINCT_FROM_USB_EXPANSION
+    description: >
+      The USB Keys Card (digital inputs only) is distinct from the OpenCockpits
+      USB Expansion (usb-expansion.yaml) which provides both I/O and analogue support.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits USB Keys Card. VID 0x0BCA; PID 0x0002 estimated.
+    72-input digital switch card for SIOC-based cockpits. Wave-42 addition. Last reviewed: 2026-07.

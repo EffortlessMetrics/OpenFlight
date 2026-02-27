@@ -1,0 +1,57 @@
+# VirtualFly RUDDO+ Rudder Pedals (VID 0x2742 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly RUDDO+ full-size aviation rudder pedals. This manifest covers the
+# VID 0x2742 / PID 0x0004 variant (community estimate). The primary manifest
+# (ruddo-plus-pedals.yaml) uses VID 0x2B67 / PID 0x0020.
+# VID 0x2742 may represent an earlier or alternate production batch.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly RUDDO+ Rudder Pedals"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2742       # PID estimated — confirmed VirtualFly VID is 0x2B67
+    product_id: 0x0004      # Community estimate — RUDDO+ (0x2742 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2742 / PID 0x0004 are community estimates. Confirmed VirtualFly
+      VID on other units is 0x2B67 (see ruddo-plus-pedals.yaml).
+      Verify with lsusb on real hardware.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      Rudder and brake axes use contactless Hall-effect sensors for improved
+      longevity and linearity compared to potentiometer-based pedals.
+  - id: ADJUSTABLE_SPRING
+    description: >
+      Adjustable spring tension via screw mechanism. Heavier spring settings
+      may require null zone calibration adjustment.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly RUDDO+ rudder pedals — VID 0x2742 / PID 0x0004 est (alternate batch).
+    Primary manifest: ruddo-plus-pedals.yaml (VID 0x2B67). Last reviewed: 2026-06.

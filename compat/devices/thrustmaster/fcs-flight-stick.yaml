@@ -1,0 +1,53 @@
+# Thrustmaster FCS Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot Corporation S.A.).
+# PID 0x0400 is a community estimate for the FCS Flight Stick USB variant.
+# The Thrustmaster FCS (Flight Control System) was an early USB joystick
+# targeting combat flight sim users. Features a replica F-16 grip profile.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster FCS Flight Stick"
+  vendor: "Thrustmaster / Guillemot"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot Corporation
+    product_id: 0x0400      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, throttle]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0400 is a community estimate for the Thrustmaster FCS USB variant.
+      Confirm with lsusb on real hardware. Early Thrustmaster USB products
+      have sparse PID documentation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster FCS Flight Stick — early USB combat flight joystick.
+    PID 0x0400 is a community estimate; verify with lsusb.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - dcs
+  - msfs

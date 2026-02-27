@@ -18,7 +18,7 @@ keywords = ["flight-sim", "openflight", "falcon-bms", "adapter"]
 flight-core = { path = "../flight-core" }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
+bytemuck = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
+approx = { workspace = true }

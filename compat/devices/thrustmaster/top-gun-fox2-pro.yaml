@@ -1,0 +1,52 @@
+# Thrustmaster Top Gun Fox2 Pro Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot Corporation S.A.).
+# PID 0x0402 is a community estimate for the Top Gun Fox2 Pro USB variant.
+# The Top Gun Fox2 Pro featured an ergonomic F/A-18-style grip with a
+# throttle slider, designed for combat flight simulation.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Top Gun Fox2 Pro"
+  vendor: "Thrustmaster / Guillemot"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot Corporation
+    product_id: 0x0402      # Community estimate — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 15
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0402 is a community estimate for the Top Gun Fox2 Pro USB variant.
+      Confirm with lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Top Gun Fox2 Pro — F/A-18-style combat joystick with throttle.
+    PID 0x0402 is a community estimate; verify with lsusb.
+    Last reviewed: 2026-06.
+
+tested_games:
+  - dcs
+  - xplane

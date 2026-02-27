@@ -1,0 +1,63 @@
+# CPFlight ATCPRO Radio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight ATCPRO — a VHF communications radio panel replica for Boeing 737
+# home cockpit builders. Provides COM1/COM2/NAV frequency tuning and squelch.
+# VID 0x0EB7 is a community estimate for CPFlight (Italy).
+# PID 0x0200 is a community estimate. Confirm with USBView or lsusb.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight ATCPRO Radio Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0EB7       # Community estimate — CPFlight VID
+    product_id: 0x0200      # Community estimate — ATCPRO Radio Panel
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  encoders: 4
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 12
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0EB7 / PID 0x0200 are community estimates for this CPFlight panel.
+      CPFlight uses a proprietary USB protocol; verify with USBView on real
+      hardware. Some CPFlight models use a virtual COM port instead of HID.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels may use proprietary serial-over-USB rather than standard
+      HID. OpenFlight's CPFlight adapter translates panel events to standard
+      axis/button events.
+  - id: FREQUENCY_DISPLAY
+    description: >
+      7-segment COM/NAV frequency displays require HID output reports sourced
+      from sim telemetry (COM1 active/standby, NAV1 active/standby).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight ATCPRO Radio Panel — VID 0x0EB7 / PID 0x0200 (est).
+    VHF radio panel for 737 home cockpit; may use VCP serial.
+    Wave-46 addition. Last reviewed: 2026-07.

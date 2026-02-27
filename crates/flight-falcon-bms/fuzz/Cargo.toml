@@ -1,0 +1,21 @@
+[package]
+name = "flight-falcon-bms-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+flight-falcon-bms = { path = ".." }
+bytemuck = "1"
+
+[[bin]]
+name = "fuzz_flight_data"
+path = "fuzz_targets/fuzz_flight_data.rs"
+test = false
+doc = false
+
+[workspace]

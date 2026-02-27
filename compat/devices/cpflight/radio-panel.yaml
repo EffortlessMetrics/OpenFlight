@@ -1,0 +1,59 @@
+# CPFlight Boeing 737 Radio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0DC3 (community estimate for CPFlight) / PID 0x0802 — community
+# estimate. CPFlight (Italy) produces Boeing 737 NG cockpit panel replicas.
+# The Radio Panel replicates the B737 VHF communications selector and
+# frequency management unit with 5-digit LED displays and transfer switches.
+schema_version: "1"
+
+device:
+  name: "CPFlight Boeing 737 Radio Panel"
+  vendor: "CPFlight"
+  type: panel
+  usb:
+    vendor_id: 0x0DC3       # Community estimate — CPFlight USB HID VID
+    product_id: 0x0802      # B737 Radio Panel — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Both VID 0x0DC3 and PID 0x0802 are community estimates for CPFlight.
+      Verify with lsusb on real hardware.
+  - id: LED_DISPLAY_OUTPUT
+    description: >
+      5-digit LED frequency displays are driven via USB output reports.
+      OpenFlight sends active/standby COM1/COM2/NAV1/NAV2 frequency data
+      to the display output path.
+  - id: FSUIPC_COMPATIBLE
+    description: >
+      CPFlight panels are traditionally configured via FSUIPC/Pete Dowson
+      libraries. OpenFlight reads switch inputs and writes display data via
+      the HID path.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight B737 Radio Panel. VID 0x0DC3 / PID 0x0802 estimated.
+    Italian Boeing 737 replica hardware builder. Wave-42 addition. Last reviewed: 2026-07.

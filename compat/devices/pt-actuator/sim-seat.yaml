@@ -1,0 +1,60 @@
+# PT Actuator Sim Seat
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PT Actuator simulation seat — a motion-capable sim seat using linear
+# actuators driven by USB HID output commands. Used in full-motion cockpit
+# builds with MSFS, X-Plane, and DCS.
+# VID 0x04B4 (Cypress Semiconductor) / PID 0xF260 are community estimates.
+# Confirm with lsusb or Windows Device Manager on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "PT Actuator Sim Seat"
+  vendor: "PT Actuator"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate for PT Actuator
+    product_id: 0xF260      # Community estimate — PT Actuator Sim Seat
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — motion actuator interface
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF260 are community estimates for the PT Actuator
+      sim seat. Cypress Semiconductor's VID is shared across many embedded
+      controllers; verify exact PID with lsusb on target hardware.
+  - id: OUTPUT_ONLY
+    description: >
+      Motion commands are output-only; the sim seat generates no HID input
+      events. Controlled via telemetry-to-actuator translation layer.
+  - id: MOTION_TELEMETRY_REQUIRED
+    description: >
+      Requires simulator telemetry (heave, sway, surge, roll, pitch, yaw)
+      routed to the actuator driver. SimConnect or X-Plane UDP telemetry
+      is the typical data source.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PT Actuator Sim Seat — VID 0x04B4 / PID 0xF260 (est).
+    Output-only motion seat; requires telemetry-to-actuator translation.
+    Wave-46 addition. Last reviewed: 2026-07.

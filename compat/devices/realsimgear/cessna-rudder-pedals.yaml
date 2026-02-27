@@ -1,0 +1,59 @@
+# RealSimGear Cessna Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0xEB80 (RealSimGear / community estimate). PID 0x0007 is a community
+# estimate for the RealSimGear Cessna Rudder Pedals. RealSimGear produces
+# Garmin-certified flight training peripherals; 0xEB80 has been noted as a
+# candidate VID in community G1000 device discussions. Confirm from lsusb.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear Cessna Rudder Pedals"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0xEB80    # Community estimate — RealSimGear candidate VID; PID_UNCONFIRMED
+    product_id: 0x0007   # Community estimate — Cessna Rudder Pedals; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xEB80 / PID 0x0007 are community estimates for the RealSimGear
+      Cessna Rudder Pedals. VID 0xEB80 is noted as a candidate RealSimGear VID
+      in G1000 community notes. Confirm from lsusb on real hardware.
+  - id: CESSNA_STYLE_PEDALS
+    description: >
+      Cessna-style differential toe-brake pedals with separate left and right
+      brake axes. Rudder is the combined differential; brake axes are unipolar.
+  - id: GARMIN_FLIGHT_TRAINING
+    description: >
+      RealSimGear peripherals are designed for Garmin-certified flight training.
+      The pedals are calibrated to match Cessna 172 pedal force/travel ratios
+      for realistic training use in MSFS G1000/G3000 aircraft.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Cessna Rudder Pedals. VID 0xEB80 / PID 0x0007 community estimates.
+    Garmin-certified training peripheral. Separate left/right brake axes.
+    Last reviewed: 2026-07.

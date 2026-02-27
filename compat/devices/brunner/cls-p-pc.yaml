@@ -1,0 +1,61 @@
+# Brunner CLS-P PC Center Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x25BB (Brunner Elektronik AG) confirmed. PID 0x0090 is a community
+# estimate for the CLS-P PC center joystick variant. Distinct from the
+# CLS-P Pedals (cls-p-pedals.yaml). The CLS-P PC is a professional-grade
+# force feedback center joystick for fixed-wing simulation, providing
+# active aerodynamic resistance on pitch and roll axes.
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-P PC Center Joystick"
+  vendor: "Brunner Elektronik AG"
+  type: joystick
+  usb:
+    vendor_id: 0x25BB       # Brunner Elektronik AG (confirmed)
+    product_id: 0x0090      # CLS-P PC center joystick — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 4
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [spring, damper, constant, inertia]
+    max_update_rate_hz: 250
+    torque_limit_nm: null   # Configured in CLS2SIM software
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0090 is a community estimate for the CLS-P PC. Brunner VID 0x25BB
+      confirmed. Verify with lsusb on real hardware or Brunner SDK enumeration.
+  - id: CLS2SIM_COMPANION
+    description: >
+      FFB configuration requires the Brunner CLS2SIM companion software. OpenFlight
+      reads axis data directly via HID; FFB forces are sent via CLS2SIM API.
+  - id: DISTINCT_FROM_CLS_P_PEDALS
+    description: >
+      The CLS-P PC is a center joystick (2-axis X/Y); the CLS-P Pedals
+      (cls-p-pedals.yaml) provides rudder axis control. Both are force-feedback.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-P PC center joystick. VID 0x25BB confirmed; PID 0x0090 estimated.
+    Professional FFB center stick — pitch + roll axes. Wave-42 addition. Last reviewed: 2026-07.

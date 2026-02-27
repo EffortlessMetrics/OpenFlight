@@ -1,0 +1,59 @@
+# VirtualFly YOKO THE HONEY Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VirtualFly YOKO THE HONEY is a full-size airliner-style yoke for cockpit
+# replica builds. Distinct from the YOKO XL (see yoko-xl-yoke.yaml) in
+# ergonomic design and button layout. Hall-effect sensors on pitch and roll.
+# VID 0x2742 / PID 0x0005: community estimate.
+# Note: confirmed VirtualFly VID on other units is 0x2B67.
+
+schema_version: "1"
+
+device:
+  name: "VirtualFly YOKO THE HONEY Yoke"
+  vendor: "VirtualFly"
+  usb:
+    vendor_id: 0x2742       # PID estimated — confirmed VirtualFly VID is 0x2B67
+    product_id: 0x0005      # Community estimate — YOKO THE HONEY
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [aileron, elevator]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x2742 / PID 0x0005 are community estimates. Confirmed VirtualFly
+      VID on other units is 0x2B67 (see yoko-xl-yoke.yaml). Verify with
+      lsusb on real hardware.
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      Pitch and roll axes use Hall-effect sensors. Centre detent may require
+      calibration in the OpenFlight profile for accurate null zone.
+  - id: DISTINCT_FROM_YOKO_XL
+    description: >
+      YOKO THE HONEY differs from YOKO XL in physical design and button count.
+      Use separate profiles for each variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VirtualFly YOKO THE HONEY yoke. VID 0x2742 / PID 0x0005 est.
+    Distinct from yoko-xl-yoke.yaml. Confirmed VirtualFly VID is 0x2B67 on other units.
+    Last reviewed: 2026-06.

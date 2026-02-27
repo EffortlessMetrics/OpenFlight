@@ -1,0 +1,55 @@
+# Trust GXT 245 Vibration Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EFF (Trust Gaming International) / PID 0x0010 — community estimate.
+# The Trust GXT 245 Vibra is a budget USB gamepad with dual vibration motors,
+# dual analogue sticks, and Xbox-style layout. Widely sold in European
+# budget markets.
+schema_version: "1"
+
+device:
+  name: "Trust GXT 245 Vibra Gamepad"
+  vendor: "Trust Gaming"
+  type: other
+  usb:
+    vendor_id: 0x0EFF       # Trust Gaming International (community estimate)
+    product_id: 0x0010      # GXT 245 — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x05             # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      Both VID 0x0EFF and PID 0x0010 are community estimates for Trust Gaming.
+      Verify with lsusb on real hardware before production device matching.
+  - id: BUDGET_XBOX_LAYOUT
+    description: >
+      Xbox-style button layout (A/B/X/Y). Suitable as a low-cost sim pad
+      for basic flight controls when HOTAS hardware is unavailable.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Trust GXT 245 Vibra Gamepad. VID 0x0EFF / PID 0x0010 estimated.
+    Budget European market gamepad with rumble. Wave-42 addition. Last reviewed: 2026-07.

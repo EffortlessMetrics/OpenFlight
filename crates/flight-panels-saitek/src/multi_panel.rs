@@ -155,7 +155,7 @@ impl LcdDisplay {
 
     /// Encode up to 5 characters from `s` left-to-right; remaining positions
     /// are filled with blanks. Extra characters are silently truncated.
-    pub fn from_str(s: &str) -> Self {
+    pub fn encode_str(s: &str) -> Self {
         let mut chars = [0u8; 5];
         for (i, c) in s.chars().take(5).enumerate() {
             chars[i] = encode_segment(c);
@@ -175,7 +175,7 @@ impl LcdDisplay {
         } else {
             format!("{:>5}", value.min(99999))
         };
-        Self::from_str(&s)
+        Self::encode_str(&s)
     }
 
     /// Set one character position (0 = leftmost) from a `char`.
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn test_lcd_from_str_five_digits() {
-        let lcd = LcdDisplay::from_str("12345");
+        let lcd = LcdDisplay::encode_str("12345");
         assert_eq!(lcd.raw(0), encode_segment('1'));
         assert_eq!(lcd.raw(1), encode_segment('2'));
         assert_eq!(lcd.raw(2), encode_segment('3'));
@@ -498,7 +498,7 @@ mod tests {
 
     #[test]
     fn test_lcd_from_str_shorter_than_five_pads_right() {
-        let lcd = LcdDisplay::from_str("42");
+        let lcd = LcdDisplay::encode_str("42");
         assert_eq!(lcd.raw(0), encode_segment('4'));
         assert_eq!(lcd.raw(1), encode_segment('2'));
         assert_eq!(lcd.raw(2), 0x00, "position 2 should be blank");
@@ -508,7 +508,7 @@ mod tests {
 
     #[test]
     fn test_lcd_from_str_longer_than_five_truncated() {
-        let lcd = LcdDisplay::from_str("123456789");
+        let lcd = LcdDisplay::encode_str("123456789");
         // Only first 5 chars used
         for i in 0..5 {
             let c = char::from_digit(i as u32 + 1, 10).unwrap();
@@ -577,7 +577,7 @@ mod tests {
 
     #[test]
     fn test_lcd_to_hid_report_format() {
-        let lcd = LcdDisplay::from_str("12345");
+        let lcd = LcdDisplay::encode_str("12345");
         let leds = MultiPanelLedMask(led_bits::ALT | led_bits::VS);
         let report = lcd.to_hid_report(leds);
 
@@ -686,7 +686,7 @@ mod tests {
     #[test]
     fn test_multi_panel_state_to_hid_report_combines_display_and_leds() {
         let mut state = MultiPanelState::default();
-        state.display = LcdDisplay::from_str("88888");
+        state.display = LcdDisplay::encode_str("88888");
         state.leds = MultiPanelLedMask::ALL;
         let report = state.to_hid_report();
         // All 5 display positions should be 0x7F ('8')

@@ -1,0 +1,52 @@
+# GoFlight GF-LGT Landing Gear (VID 0x0BCA, PID 0x0031)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0BCA is used by OpenCockpits/Engravity hardware; the primary GoFlight
+# VID is 0x0E9F. PID 0x0031 with VID 0x0BCA is a community estimate.
+# The primary GF-LGT manifest uses VID 0x0E9F, PID 0x0006 (gf-lgt.yaml).
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-LGT Landing Gear"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0BCA       # Community estimate — primary GoFlight VID is 0x0E9F
+    product_id: 0x0031      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA and PID 0x0031 are community estimates. The primary GoFlight
+      VID is 0x0E9F; the GF-LGT with that VID uses PID 0x0006 (gf-lgt.yaml).
+      VID 0x0BCA is shared with OpenCockpits/Engravity hardware. Verify with
+      lsusb on real hardware.
+  - id: PANEL_DEVICE
+    description: >
+      Landing gear control module with gear lever and three gear indicator lights
+      (nose, left, right). Gear lever reports as a button; lights are output-only
+      via vendor protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-LGT Landing Gear panel — VID 0x0BCA, PID 0x0031 community
+    estimate. Primary manifest: gf-lgt.yaml (VID 0x0E9F, PID 0x0006).
+    Wave-47 addition. Last reviewed: 2026-07.

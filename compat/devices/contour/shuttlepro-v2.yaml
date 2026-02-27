@@ -1,0 +1,57 @@
+# Contour Design ShuttlePRO v2 (VID 0x0B33, PID 0x0030)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0B33 confirmed: Contour Design Inc.
+# PID 0x0030 confirmed for the Contour ShuttlePRO v2 jog/shuttle controller.
+# Larger sibling of the ShuttleXpress (PID 0x0020) with 15 buttons. Used in
+# sim cockpits for autopilot and avionics panel control.
+schema_version: "1"
+
+device:
+  name: "Contour ShuttlePRO v2"
+  vendor: "Contour Design"
+  usb:
+    vendor_id: 0x0B33   # Contour Design Inc.
+    product_id: 0x0030  # ShuttlePRO v2 — community-confirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [shuttle, jog]
+    resolution_bits: 8
+  buttons: 15
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: SHUTTLE_RING
+    description: >
+      The outer shuttle ring is a spring-centred bipolar axis (-7 to +7 detents).
+      The inner jog wheel is an incremental encoder reporting relative position
+      changes, not absolute position. Map the shuttle ring to a bipolar axis
+      (e.g. heading bug rate) and the jog wheel to paired increment/decrement
+      button events.
+  - id: JOG_RELATIVE
+    description: >
+      The jog wheel reports relative HID wheel events, not absolute axis values.
+      OpenFlight should treat jog events as button pairs (CW = +1, CCW = -1)
+      rather than an absolute axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Contour ShuttlePRO v2 — VID 0x0B33, PID 0x0030. Expanded version of the
+    ShuttleXpress (PID 0x0020) with 15 buttons. Useful for sim autopilot and
+    avionics panel control. Plug and play on Windows and Linux.
+    Wave-47 addition. Last reviewed: 2026-07.

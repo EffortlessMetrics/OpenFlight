@@ -1,0 +1,55 @@
+# RealAir Boeing 737 Yoke (VID 0x2B67, PID 0x0030)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2B67 is a community estimate for RealAir hardware. PID 0x0030 is
+# a community estimate for the RealAir Boeing 737 column yoke assembly.
+# RealAir produces professional-grade replica cockpit hardware for training
+# and enthusiast use. No hardware probe has confirmed VID/PID.
+schema_version: "1"
+
+device:
+  name: "RealAir Boeing 737 Yoke"
+  vendor: "RealAir"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — VID_UNCONFIRMED for RealAir
+    product_id: 0x0030      # Community estimate — PID estimated from community sources
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2B67 and PID 0x0030 are community estimates for the RealAir Boeing
+      737 yoke. No hardware probe has confirmed these values. Verify with
+      Windows Device Manager or lsusb on real hardware.
+  - id: COLUMN_YOKE
+    description: >
+      Boeing 737 column-style yoke with authentic throw distance. X axis is
+      roll (column rotation), Y axis is pitch (column push/pull). Large
+      physical travel range; apply appropriate response curve.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealAir Boeing 737 Yoke — VID 0x2B67, PID 0x0030. Both VID and PID are
+    community estimates; confirm with hardware. Professional replica cockpit
+    hardware for MSFS and X-Plane Boeing 737 simulation. Wave-47 addition.
+    Last reviewed: 2026-07.

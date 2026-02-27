@@ -1,0 +1,58 @@
+# OpenCockpits USB Servos Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0BCA (OpenCockpits) / PID 0x0003 — community estimate. The OpenCockpits
+# USB Servos Card drives up to 24 RC-type servo motors via USB for physical
+# gauge needles, flap position indicators, and animated cockpit elements.
+# Output-only device; no HID button/axis inputs.
+schema_version: "1"
+
+device:
+  name: "OpenCockpits USB Servos Card"
+  vendor: "OpenCockpits"
+  type: other
+  usb:
+    vendor_id: 0x0BCA       # OpenCockpits (community-reported VID)
+    product_id: 0x0003      # USB Servos Card — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (output-only device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate. OpenCockpits VID 0x0BCA is
+      community-reported. Verify with lsusb on assembled hardware.
+  - id: OUTPUT_ONLY_SERVO_DRIVER
+    description: >
+      The USB Servos Card drives servo positions via USB output reports.
+      There are no HID axis or button inputs — this is a pure output device
+      for physical cockpit animation.
+  - id: SIOC_NATIVE
+    description: >
+      Natively supported by OpenCockpits SIOC software. OpenFlight sends
+      servo position data via the HID output path to animate gauge needles
+      and physical indicators.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits USB Servos Card. VID 0x0BCA; PID 0x0003 estimated.
+    24-servo output card for cockpit gauge animation. Wave-42 addition. Last reviewed: 2026-07.

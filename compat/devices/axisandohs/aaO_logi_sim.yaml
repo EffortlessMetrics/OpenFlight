@@ -1,0 +1,60 @@
+# Axis and Ohs Multi-Axis Flight Sim Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16C0 (PJRC / community USB HID VID), PID 0x05DC — community estimate.
+# Axis and Ohs (aaO) is a software platform for building virtual HID axes and
+# buttons from physical inputs (Arduino, Teensy, etc.) in flight simulation.
+# The aaO logical sim controller enumerates as a USB HID gamepad/joystick and
+# presents combined axes and buttons from multiple physical input sources.
+# The VID 0x16C0 / PID 0x05DC pair is a commonly used community default for
+# Teensy-based HID devices; individual installations may differ.
+schema_version: "1"
+
+device:
+  name: "Axis and Ohs Multi-Axis Flight Sim Controller"
+  vendor: "Axis and Ohs (community)"
+  usb:
+    vendor_id: 0x16C0       # PJRC Teensy / community HID VID (est)
+    product_id: 0x05DC      # Community estimate — aaO default Teensy HID PID
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider0, slider1]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 / PID 0x05DC is a community estimate for the Axis and Ohs
+      default Teensy configuration. Individual users may assign different PIDs.
+  - id: SOFTWARE_VIRTUAL_DEVICE
+    description: >
+      Axis and Ohs is a software multiplexing platform; the actual axis and
+      button counts depend on the user's aaO configuration profile. This
+      manifest reflects a typical 8-axis / 32-button reference configuration.
+  - id: BUILDER_SPECIFIC_MAPPING
+    description: >
+      Axis assignments and button mappings are fully user-configurable within
+      the aaO software. OpenFlight should treat axis names as suggestions only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Axis and Ohs virtual flight sim controller — 8 axes, 32 buttons, 1 hat.
+    VID 0x16C0 / PID 0x05DC (est). Software platform; config varies by user.
+    Wave-40 addition. Last reviewed: 2026-07.

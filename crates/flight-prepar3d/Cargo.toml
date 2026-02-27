@@ -1,0 +1,24 @@
+[package]
+homepage.workspace = true
+name = "flight-prepar3d"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Lockheed Martin Prepar3D adapter for OpenFlight"
+readme = "README.md"
+categories = ["aerospace", "game-development"]
+keywords = ["prepar3d", "p3d", "simconnect", "flight-sim"]
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2026 Flight Hub Team
+
+[dependencies]
+flight-core = { path = "../flight-core" }
+flight-adapter-common = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+approx = { workspace = true }

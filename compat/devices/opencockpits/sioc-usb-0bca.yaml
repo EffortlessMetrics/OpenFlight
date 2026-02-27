@@ -1,0 +1,53 @@
+# OpenCockpits SIOC USB (VID 0x0BCA variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# OpenCockpits SIOC USB card provides a USB HID interface to the SIOC
+# (Simulator Input/Output Controller) ecosystem. This manifest covers the
+# VID 0x0BCA / PID 0x0004 variant (community estimate). See opencockpits/
+# sioc-usb.yaml for the 0x1000/0x0002 variant.
+
+schema_version: "1"
+
+device:
+  name: "OpenCockpits SIOC USB Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x0BCA       # PID estimated — confirm with lsusb on real hardware
+    product_id: 0x0004      # Community estimate — SIOC USB (0x0BCA batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0BCA / PID 0x0004 are community estimates. See sioc-usb.yaml
+      (VID 0x1000 / PID 0x0002) for the alternative variant. Confirm with lsusb.
+  - id: SIOC_PROTOCOL
+    description: >
+      SIOC USB uses the OpenCockpits proprietary protocol. Direct HID input
+      access is available for button states; output report binding needed for
+      annunciators and display updates.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits SIOC USB card — VID 0x0BCA / PID 0x0004 est (alternate batch).
+    See opencockpits/sioc-usb.yaml for VID 0x1000 variant. Last reviewed: 2026-06.

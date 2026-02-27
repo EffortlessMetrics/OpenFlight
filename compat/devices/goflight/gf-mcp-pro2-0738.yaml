@@ -1,0 +1,58 @@
+# GoFlight GF-MCP Pro2 Autopilot Panel (VID 0x0738 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight GF-MCP Pro2 — second-generation MCP autopilot panel. This manifest
+# covers the VID 0x0738 / PID 0x7118 variant (community estimate). The primary
+# manifest (gf-mcp-pro2.yaml) uses VID 0x0E9F (confirmed GoFlight VID).
+# VID 0x0738 may be an alternate USB interface chip batch; confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-MCP Pro2 Autopilot Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0738       # PID estimated — confirmed GoFlight VID is 0x0E9F
+    product_id: 0x7118      # Community estimate — GF-MCP Pro2 (0x0738 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 42
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0738 / PID 0x7118 are community estimates. Confirmed GoFlight VID
+      on other units is 0x0E9F (see gf-mcp-pro2.yaml). VID 0x0738 is unverified
+      for GoFlight hardware. Confirm with lsusb on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All rotary encoders report CW/CCW as button pairs. Map each encoder
+      to the corresponding Boeing 737 autopilot MCP variable.
+  - id: SEVEN_SEG_DISPLAY
+    description: >
+      7-segment LED display requires HID output reports via GoFlight SDK
+      or FSUIPC plugin for altitude, heading, and speed readouts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-MCP Pro2 — VID 0x0738 / PID 0x7118 est (alternate batch).
+    Primary manifest: gf-mcp-pro2.yaml (VID 0x0E9F). Last reviewed: 2026-06.

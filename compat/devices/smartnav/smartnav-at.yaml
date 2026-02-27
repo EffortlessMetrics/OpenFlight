@@ -1,0 +1,55 @@
+# SmartNav AT Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# SmartNav AT — an assistive head-tracking device from NaturalPoint that predates
+# the TrackIR product line. Provides head-mounted IR dot tracking for hands-free
+# mouse/view control. VID 0x0C10 is a community estimate; PID 0x0001 is a
+# community estimate from early USB probe reports. Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "SmartNav AT Head Tracker"
+  vendor: "NaturalPoint (SmartNav)"
+  usb:
+    vendor_id: 0x0C10       # Community estimate — NaturalPoint/SmartNav early VID
+    product_id: 0x0001      # Community estimate — SmartNav AT
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x02             # Mouse (relative head position)
+
+capabilities:
+  axes:
+    count: 2
+    names: [yaw, pitch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 15
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0C10 / PID 0x0001 are community estimates for the SmartNav AT.
+      This device predates the TrackIR series; USB enumeration details are
+      poorly documented. Confirm with lsusb on real hardware.
+  - id: HEAD_TRACKER
+    description: >
+      Provides yaw and pitch head-tracking axes for hands-free view control.
+      Map to camera/view axes in the sim profile. Accuracy and polling rate
+      are lower than later TrackIR/TrackHAT devices.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SmartNav AT — VID 0x0C10 / PID 0x0001 (est). Early NaturalPoint head
+    tracker; predecessor to TrackIR line. Limited USB documentation available.
+    Wave-46 addition. Last reviewed: 2026-07.

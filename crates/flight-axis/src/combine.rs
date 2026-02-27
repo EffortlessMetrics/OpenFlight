@@ -40,6 +40,90 @@ pub fn split_bipolar(axis: f32) -> (f32, f32) {
     (positive, negative)
 }
 
+/// Merge mode for combining multiple axis inputs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MergeMode {
+    /// Use the input with the highest absolute value.
+    Priority,
+    /// Sum all inputs and clamp to `[-1, 1]`.
+    Sum,
+    /// Average all inputs.
+    Average,
+}
+
+/// Combiner for merging N axis inputs into one output.
+pub struct AxisCombiner {
+    mode: MergeMode,
+}
+
+impl AxisCombiner {
+    pub fn new(mode: MergeMode) -> Self {
+        Self { mode }
+    }
+
+    /// Merge `inputs` into a single value according to the configured [`MergeMode`].
+    ///
+    /// Returns `0.0` when `inputs` is empty.
+    pub fn combine(&self, inputs: &[f32]) -> f32 {
+        if inputs.is_empty() {
+            return 0.0;
+        }
+        match self.mode {
+            MergeMode::Priority => inputs
+                .iter()
+                .copied()
+                .max_by(|a, b| {
+                    a.abs()
+                        .partial_cmp(&b.abs())
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .unwrap_or(0.0),
+            MergeMode::Sum => inputs
+                .iter()
+                .copied()
+                .fold(0.0f32, |acc, v| acc + v)
+                .clamp(-1.0, 1.0),
+            MergeMode::Average => {
+                let sum: f32 = inputs.iter().copied().sum();
+                (sum / inputs.len() as f32).clamp(-1.0, 1.0)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod combiner_tests {
+    use super::*;
+
+    #[test]
+    fn test_priority_merge_picks_highest_abs_value() {
+        let c = AxisCombiner::new(MergeMode::Priority);
+        assert_eq!(c.combine(&[0.3, -0.8, 0.5]), -0.8);
+    }
+
+    #[test]
+    fn test_sum_merge_clamps_to_one() {
+        let c = AxisCombiner::new(MergeMode::Sum);
+        assert_eq!(c.combine(&[0.7, 0.6, 0.5]), 1.0);
+        assert_eq!(c.combine(&[-0.7, -0.6, -0.5]), -1.0);
+    }
+
+    #[test]
+    fn test_average_merge_averages_inputs() {
+        let c = AxisCombiner::new(MergeMode::Average);
+        let out = c.combine(&[0.4, 0.6]);
+        assert!((out - 0.5).abs() < 1e-6, "expected 0.5, got {out}");
+    }
+
+    #[test]
+    fn test_empty_inputs_returns_zero() {
+        for mode in [MergeMode::Priority, MergeMode::Sum, MergeMode::Average] {
+            let c = AxisCombiner::new(mode);
+            assert_eq!(c.combine(&[]), 0.0, "failed for {mode:?}");
+        }
+    }
+}
+
 #[cfg(test)]
 mod proptests {
     use super::*;

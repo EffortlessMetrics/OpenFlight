@@ -1,0 +1,56 @@
+# RealSimGear G1000 Bezel Left (VID 0x2B67, PID 0x0020)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2B67 is a community estimate for this RealSimGear variant. Existing
+# RealSimGear manifests use VID 0x04D8 (Microchip). PID 0x0020 is a community
+# estimate for the G1000 Bezel Left unit. The G1000 Bezel hub variant uses
+# PID 0xF230 with VID 0x04D8 (g1000-bezel.yaml).
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 Bezel Left"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2B67       # Community estimate — primary RSG VID is 0x04D8
+    product_id: 0x0020      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x06             # Keyboard
+
+capabilities:
+  axes:
+    count: 2
+    names: [rx, ry]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 with VID 0x2B67 is a community estimate for the RealSimGear
+      G1000 Bezel Left. Primary RealSimGear VID is 0x04D8; g1000-bezel.yaml
+      uses VID 0x04D8, PID 0xF230. Verify with Windows Device Manager or
+      lsusb on real hardware.
+  - id: AVIONICS_PANEL
+    description: >
+      Replica G1000 PFD bezel with rotary encoders, pushbuttons, and softkeys.
+      Encoders report as paired button events (CW/CCW per detent). Designed
+      for MSFS and X-Plane G1000 avionics panels.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 Bezel Left — PID 0x0020, VID 0x2B67 community estimate.
+    See also g1000-bezel.yaml (VID 0x04D8, PID 0xF230). Paired with
+    g1000-bezel-right.yaml (PID 0x0021). Wave-47 addition. Last reviewed: 2026-07.

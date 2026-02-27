@@ -1,0 +1,60 @@
+# GoFlight GF-TP6 Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# GoFlight GF-TP6 is a 6-axis trim panel providing pitch, roll, and yaw trim
+# controls along with additional trim wheels and buttons for airliner cockpit
+# simulation. Distinct from the earlier GF-TP (see gf-tp.yaml).
+# VID 0x0738 / PID 0x7120: community estimate. Note: confirmed GoFlight VID
+# on other units is 0x0E9F; 0x0738 is unverified for this model.
+
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-TP6 Trim Panel"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0738       # PID estimated — unconfirmed; GoFlight confirmed VID is 0x0E9F
+    product_id: 0x7120      # Community estimate — GF-TP6
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 6
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0738 / PID 0x7120 are community estimates. The confirmed GoFlight VID
+      on other units is 0x0E9F. VID 0x0738 may be incorrect. Verify with lsusb
+      on real hardware. See gf-tp.yaml for the earlier model.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All six trim encoders report increment/decrement as button pairs.
+      Map each to the corresponding trim axis in MSFS or X-Plane.
+  - id: GOFLIGHT_HID_PROTOCOL
+    description: >
+      Uses GoFlight proprietary HID panel protocol shared across the GF
+      avionics panel family.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-TP6 trim panel — 6-encoder variant. VID 0x0738 / PID 0x7120 est.
+    Distinct from GF-TP (gf-tp.yaml). Confirmed GoFlight VID is 0x0E9F on other units.
+    Last reviewed: 2026-06.

@@ -1,0 +1,61 @@
+# Aura Bass Shaker USB Audio Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0D8C (C-Media Electronics) / PID 0x0012 — USB audio device class.
+# The Aura Bass Shaker (by Aura Sound / Now Part of Linaeum) is a tactile
+# transducer driven by a USB audio interface. It converts bass-frequency
+# audio signals into full-body vibration for simulation rigs. The C-Media
+# VID 0x0D8C is a common chip used in many USB audio adapters; PID 0x0012
+# is the generic C-Media USB audio dongle PID.
+schema_version: "1"
+
+device:
+  name: "Aura Bass Shaker USB Audio Interface"
+  vendor: "Aura Sound"
+  type: other
+  usb:
+    vendor_id: 0x0D8C       # C-Media Electronics (USB audio chip vendor)
+    product_id: 0x0012      # C-Media USB audio — community-confirmed PID
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (USB audio class device, not HID input)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 0
+  hats: 0
+  force_feedback: false     # Audio-driven tactile output, not HID force-feedback
+
+polling:
+  expected_rate_hz: 0       # Audio device — continuous stream, not polled
+  max_jitter_ms: ~
+
+quirks:
+  - id: USB_AUDIO_CLASS_DEVICE
+    description: >
+      Enumerates as a USB Audio Class device, not a HID joystick. OpenFlight
+      sends bass-frequency audio to drive the shaker via the OS audio stack;
+      no HID input path is used.
+  - id: SHARED_C_MEDIA_PID
+    description: >
+      PID 0x0012 is shared by many generic C-Media USB audio dongles. Device
+      matching should be combined with USB audio class descriptor inspection
+      to disambiguate from unrelated audio adapters.
+  - id: AUDIO_DRIVEN_TACTILE
+    description: >
+      Tactile intensity is proportional to audio amplitude at bass frequencies
+      (typically 20–80 Hz). OpenFlight maps simulation events (gear, engine,
+      landing impact) to audio amplitude via the tactile output pipeline.
+
+support:
+  tier: 4
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Aura Bass Shaker via C-Media USB audio (VID 0x0D8C / PID 0x0012). Audio class device.
+    Tactile transducer for sim rig vibration feedback. Wave-42 addition. Last reviewed: 2026-07.

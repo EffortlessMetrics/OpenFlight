@@ -1,0 +1,62 @@
+# Pololu Maestro Mini 12-Channel USB Servo Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1FFB (Pololu Corporation), PID 0x0089 — confirmed from Pololu product
+# documentation and usb.ids database. The Maestro Mini 12 is a compact 12-channel
+# USB-to-servo controller used in DIY cockpit builds to drive servo-based
+# physical indicator gauges, trim actuators, and animated panel elements.
+# Not a traditional HID joystick; communicates via USB CDC or custom HID
+# interface using Pololu's native protocol.
+schema_version: "1"
+
+device:
+  name: "Pololu Maestro Mini 12-Channel USB Servo Controller"
+  vendor: "Pololu Corporation"
+  type: other
+  usb:
+    vendor_id: 0x1FFB       # Pololu Corporation (confirmed, usb.ids)
+    product_id: 0x0089      # Maestro Mini 12 — confirmed, Pololu docs
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (custom Pololu protocol, not standard HID)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: NON_STANDARD_PROTOCOL
+    description: >
+      The Maestro Mini 12 uses Pololu's native USB protocol rather than
+      standard HID. OpenFlight interacts with it via the pololu-maestro
+      driver adapter, not the generic HID path.
+  - id: OUTPUT_ONLY_SERVO_DRIVER
+    description: >
+      Operates as a servo position output controller. The host sends target
+      servo positions (0–255 per channel); there are no HID axis or button
+      inputs to read back.
+  - id: 12_CHANNEL_SERVO
+    description: >
+      Supports up to 12 independent servo channels simultaneously. Channels
+      can also be configured as digital outputs or analogue inputs depending
+      on firmware settings.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Pololu Maestro Mini 12 USB servo controller — 12 channels, VID 0x1FFB / PID 0x0089 (confirmed).
+    Output-only; custom Pololu protocol. Used in DIY cockpit servo gauge builds.
+    Wave-40 addition. Last reviewed: 2026-07.

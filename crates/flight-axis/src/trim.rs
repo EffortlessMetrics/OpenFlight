@@ -108,9 +108,7 @@ impl AxisTrimBank {
     /// Returns a mutable reference to the `AxisTrim` for the given axis, inserting
     /// a default `AxisTrim` if it does not yet exist.
     pub fn get_or_insert(&mut self, axis: &str) -> &mut AxisTrim {
-        self.trims
-            .entry(axis.to_string())
-            .or_insert_with(AxisTrim::default)
+        self.trims.entry(axis.to_string()).or_default()
     }
 
     /// Resets all axis trims to `0.0`.

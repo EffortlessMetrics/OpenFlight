@@ -1,0 +1,60 @@
+# MOZA AB9 Wheel Base (STM32 firmware variant, VID 0x0483)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0xA407 is a community estimate for the
+# MOZA AB9 in a firmware variant that exposes the STM32 USB VID. The primary
+# MOZA AB9 manifest (VID 0x346E / PID 0x0005) is in ab9.yaml. Some MOZA
+# devices expose 0x0483 when connected in DFU or firmware update mode, or with
+# alternate firmware builds.
+
+schema_version: "1"
+
+device:
+  name: "MOZA AB9 Wheel Base"
+  vendor: "MOZA Racing"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (community estimate — alt firmware VID)
+    product_id: 0xA407   # Community estimate from community sources; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [roll, pitch, throttle, twist]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 250
+    torque_limit_nm: 9.0
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 / PID 0xA407 are community estimates from community sources.
+      The primary confirmed MOZA AB9 VID is 0x346E (ab9.yaml, PID 0x0005).
+      VID 0x0483 may appear with alternate MOZA firmware or in DFU mode.
+  - id: ALT_FIRMWARE_VID
+    description: >
+      STMicroelectronics VID (0x0483) can appear for MOZA products using
+      STM32 chips in certain firmware configurations. Prefer ab9.yaml (0x346E)
+      for standard operating mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA AB9 Wheel Base — STM32 VID variant (0x0483/0xA407, community estimate).
+    Primary manifest: ab9.yaml (VID 0x346E / PID 0x0005). Use this manifest
+    only if the AB9 enumerates with STM32 VID. Last reviewed: 2026-07.

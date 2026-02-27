@@ -1,0 +1,56 @@
+# WinWing AH-64D Apache Upfront Control Panel (UFC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# WinWing AH-64D Apache-specific Upfront Control Panel for helicopter
+# simulation. PID 0xB73B is a community estimate.
+# See also: ah64d-cpg-panel.yaml, ah64d-george-panel.yaml, fa18-ufc.yaml.
+schema_version: "1"
+
+device:
+  name: "WinWing AH-64D Apache Upfront Control Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098   # WinWing Space Simulation Technology (confirmed)
+    product_id: 0xB73B  # PID estimated — AH-64D UFC; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB73B is a community estimate for the AH-64D Apache UFC.
+      Confirm with lsusb or WinWing SimApp Pro.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events. OpenFlight maps encoder
+      steps to discrete sim commands.
+  - id: HELICOPTER_PANEL
+    description: >
+      Layout replicates the AH-64D Apache front-seat pilot UFC, including
+      keyboard entry pad and frequency/scratchpad display.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing AH-64D Apache Upfront Control Panel. Replicates Apache pilot UFC
+    for helicopter sim (DCS AH-64D). PID 0xB73B is a community estimate.
+    See also ah64d-cpg-panel.yaml. Last reviewed: 2026-06.

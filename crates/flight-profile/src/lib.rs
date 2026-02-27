@@ -481,6 +481,11 @@ impl Profile {
 
         Ok(())
     }
+
+    /// Export the profile to a pretty-printed JSON string.
+    pub fn export_json(&self) -> Result<String> {
+        serde_json::to_string_pretty(self).map_err(|e| ProfileError::Validation(e.to_string()))
+    }
 }
 
 impl CapabilityContext {
@@ -1114,5 +1119,32 @@ mod tests {
     fn snapshot_capability_manifest_kid() {
         let ctx = CapabilityContext::for_mode(CapabilityMode::Kid);
         insta::assert_json_snapshot!("capability_manifest_kid", ctx);
+    }
+
+    // ── export_json tests ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_profile_export_produces_valid_json() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&json).expect("exported JSON must be valid");
+        assert!(parsed.is_object());
+    }
+
+    #[test]
+    fn test_profile_export_roundtrip() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        let restored: Profile =
+            serde_json::from_str(&json).expect("should deserialize back to Profile");
+        assert_eq!(profile, restored);
+    }
+
+    #[test]
+    fn test_profile_export_snapshot() {
+        let profile = create_valid_profile();
+        let json = profile.export_json().expect("export_json should succeed");
+        insta::assert_snapshot!("profile_export_snapshot", json);
     }
 }

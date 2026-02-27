@@ -1,0 +1,53 @@
+# Corsair Vengeance K65 RGB (VID 0x1B1C, PID 0x1B17)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1B1C confirmed: Corsair Memory Inc.
+# PID 0x1B17 confirmed for the Corsair Vengeance K65 RGB compact mechanical
+# gaming keyboard. Used as a button box in sim cockpits due to its
+# programmable RGB keys and compact tenkeyless layout.
+schema_version: "1"
+
+device:
+  name: "Corsair Vengeance K65 RGB"
+  vendor: "Corsair"
+  usb:
+    vendor_id: 0x1B1C   # Corsair Memory Inc.
+    product_id: 0x1B17  # Corsair Vengeance K65 RGB — community-confirmed
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x06         # Keyboard
+
+capabilities:
+  axes:
+    count: 0
+  buttons: 87
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000  # 1ms polling on USB 2.0 HID
+  max_jitter_ms: 2
+
+quirks:
+  - id: KEYBOARD_AS_BUTTONBOX
+    description: >
+      This is a keyboard device used as a sim button box. Key events are
+      reported as standard HID keyboard scancodes, not as joystick buttons.
+      Map individual keycodes to sim actions in the OpenFlight key-binding
+      profile. NKRO (N-key rollover) via USB HID allows simultaneous presses.
+  - id: VENDOR_PROTOCOL
+    description: >
+      RGB lighting and macro configuration require Corsair iCUE software or
+      OpenRGB. OpenFlight interacts only with the standard HID keyboard
+      interface; no vendor protocol integration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Corsair Vengeance K65 RGB — VID 0x1B1C, PID 0x1B17. Tenkeyless compact
+    keyboard used as a sim cockpit button box. Standard HID keyboard interface.
+    Wave-47 addition. Last reviewed: 2026-07.

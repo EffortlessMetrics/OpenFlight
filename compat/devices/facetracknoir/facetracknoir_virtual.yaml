@@ -1,0 +1,64 @@
+# FaceTrackNoIR Virtual Head-Tracking Output (Virtual Device)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FaceTrackNoIR is open-source head-tracking software for Windows that uses
+# webcam face detection, IR trackers, or IMU sources to derive 6DOF head pose.
+# This manifest represents the virtual output endpoint in OpenFlight rather
+# than a physical USB device. FaceTrackNoIR exposes head-pose via FreeTrack
+# protocol, OpenTrack UDP, or direct FlightGear/SimConnect outputs.
+
+schema_version: "1"
+
+device:
+  name: "FaceTrackNoIR Virtual Head Tracker"
+  vendor: "FaceTrackNoIR Project"
+  type: other
+  usb:
+    vendor_id: 0x0000   # Virtual device — no physical USB
+    product_id: 0x0000  # Virtual device — no physical USB
+  virtual: true
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, yaw, pitch, roll]
+    resolution_bits: 32   # Single-precision float in protocol
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 10
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      This is a virtual device manifest; no physical USB device. OpenFlight
+      integrates with FaceTrackNoIR via FreeTrack shared-memory protocol or
+      OpenTrack UDP output from FaceTrackNoIR.
+  - id: FREETRACK_PROTOCOL
+    description: >
+      FaceTrackNoIR exposes head-pose via FreeTrack shared-memory (Windows)
+      or OpenTrack UDP (48-byte 6DOF packet). Configure FaceTrackNoIR to use
+      the "OpenTrack" output plugin for UDP relay to OpenFlight.
+  - id: LOW_UPDATE_RATE
+    description: >
+      Webcam-based face detection typically runs at 20-30 Hz depending on
+      camera resolution and host CPU. IR LED tracking or IMU sources can
+      achieve higher rates (60-120 Hz).
+  - id: NO_USB_MATCHING
+    description: >
+      VID 0x0000 / PID 0x0000 — OpenFlight activates this source via protocol
+      binding, not USB enumeration.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    FaceTrackNoIR virtual head-tracking source. No physical USB device; 6DOF
+    head-pose via FreeTrack shared-memory or OpenTrack UDP protocol.
+    Last reviewed: 2026-06.

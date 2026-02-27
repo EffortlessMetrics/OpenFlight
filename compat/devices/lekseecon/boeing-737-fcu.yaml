@@ -1,0 +1,62 @@
+# Lekseecon Boeing 737 FCU
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Lekseecon Boeing 737 FCU (Flight Control Unit) / MCP replica.
+# Lekseecon produces mid-range 737 cockpit panel replicas targeting PMDG 737
+# and MSFS Boeing 737 add-on use. The FCU/MCP includes IAS, HDG, ALT, V/S,
+# and course selectors plus full AP mode pushbutton layout.
+# VID 0x04B4 (Cypress) / PID 0xF256 are community estimates. Confirm with lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Lekseecon Boeing 737 FCU"
+  vendor: "Lekseecon"
+  usb:
+    vendor_id: 0x04B4       # Cypress Semiconductor — community estimate
+    product_id: 0xF256      # Community estimate — Lekseecon 737 FCU
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined — panel device
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  encoders: 6
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 20
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04B4 / PID 0xF256 are community estimates for the Lekseecon 737 FCU.
+      Cypress VID is shared across many embedded controllers; verify exact PID.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      7-segment IAS, HDG, ALT, V/S displays require HID output reports from
+      sim telemetry (SimConnect MSFS or XPUIPC X-Plane).
+  - id: ENCODER_AXES
+    description: >
+      Selector knobs are relative rotary encoders. Treat axis values as
+      delta increments rather than absolute positions in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Lekseecon Boeing 737 FCU — VID 0x04B4 / PID 0xF256 (est).
+    32 buttons, 6 encoders, 20-digit 7-seg display; 737 MCP/FCU replica.
+    Wave-46 addition. Last reviewed: 2026-07.

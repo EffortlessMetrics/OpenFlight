@@ -1,0 +1,49 @@
+# Logitech WingMan Rumblepad (Alt PID 0xC208)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed (Logitech Inc.).
+# PID 0xC208 is a community-reported alternate PID for the WingMan RumblePad.
+# The primary Rumble Pad PID is 0xC20C (wingman-rumblepad.yaml).
+# The WingMan RumblePad was Logitech's dual-analog gamepad with vibration motors;
+# used by some flight sim players for axis input and button panels.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan RumblePad (Alt PID)"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Logitech Inc.
+    product_id: 0xC208      # Community-reported alt PID; primary is 0xC20C
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC208 is a community-reported alternate PID for an early WingMan
+      RumblePad revision. Confirm with lsusb. The primary PID is 0xC20C
+      (see wingman-rumblepad.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan RumblePad alternate PID (0xC208). See wingman-rumblepad.yaml
+    for the primary variant. Last reviewed: 2026-06.

@@ -1,0 +1,58 @@
+# RealSimGear G1000 MFD (VID 0xEB80 variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# RealSimGear G1000 MFD (Multi-Function Display) bezel replica for GA aircraft
+# simulation. This manifest covers the VID 0xEB80 / PID 0x0003 variant
+# (community estimate). The primary manifest (g1000-mfd.yaml) uses VID 0x04D8
+# (Microchip Technology, the confirmed RealSimGear VID on most units).
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 MFD Bezel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0xEB80       # PID estimated — confirmed RealSimGear VID is 0x04D8
+    product_id: 0x0003      # Community estimate — G1000 MFD (0xEB80 batch)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 60
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0xEB80 / PID 0x0003 are community estimates. Confirmed RealSimGear
+      VID on other units is 0x04D8 (see g1000-mfd.yaml). Verify with lsusb
+      or Windows Device Manager on real hardware.
+  - id: ROTARY_ENCODERS_FMS
+    description: >
+      FMS inner/outer knobs and range knob are incremental rotary encoders.
+      Each detent produces a button press event (CW or CCW).
+  - id: SOFTKEY_LAYOUT
+    description: >
+      Twelve softkeys along top and bottom bezels map to G1000 page selections.
+      Require per-aircraft profile binding for meaningful sim integration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 MFD — VID 0xEB80 / PID 0x0003 est (alternate batch).
+    Primary manifest: g1000-mfd.yaml (VID 0x04D8). Last reviewed: 2026-06.

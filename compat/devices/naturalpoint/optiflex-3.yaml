@@ -1,0 +1,59 @@
+# NaturalPoint OptiTrack Flex 3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x131D confirmed: NaturalPoint Inc.
+# PID 0x0159 is a community estimate for the NaturalPoint OptiTrack Flex 3
+# IR motion capture camera. The Flex 3 is a prosumer IR tracking camera from
+# the OptiTrack lineup, used in multi-camera setups for body and prop tracking
+# in flight simulation and professional applications.
+
+schema_version: "1"
+
+device:
+  name: "NaturalPoint OptiTrack Flex 3"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D    # NaturalPoint Inc. (confirmed)
+    product_id: 0x0159   # Community estimate — OptiTrack Flex 3; PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0159 is a community estimate for the OptiTrack Flex 3. VID 0x131D
+      confirmed for NaturalPoint. Verify from lsusb or Motive software.
+  - id: MOTIVE_SOFTWARE
+    description: >
+      Requires NaturalPoint Motive software for camera synchronisation and
+      calibration. Head and body pose streamed via NatNet SDK or opentrack.
+  - id: CAMERA_NODE_ONLY
+    description: >
+      The Flex 3 is a camera node; it does not directly expose HID axes.
+      Tracking data is computed by Motive on the host PC and forwarded to
+      OpenFlight via the opentrack NatNet plugin.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint OptiTrack Flex 3 IR camera. VID 0x131D confirmed;
+    PID 0x0159 community estimate. Multi-camera motion cap system for
+    flight sim head/body tracking via NatNet. Last reviewed: 2026-07.

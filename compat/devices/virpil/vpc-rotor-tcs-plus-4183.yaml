@@ -1,0 +1,56 @@
+# VIRPIL VPC Rotor TCS Plus (PID 0x4183)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB (the-sz.com USB ID DB).
+# PID 0x4183 is a community estimate for the VPC Rotor TCS Plus (alternate
+# hardware revision). The primary confirmed Rotor TCS Plus uses PID 0x4190
+# (vpc-rotor-tcs-plus.yaml). PID 0x4192 covers the Rotor TCS v2.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS Plus"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4183      # Community estimate — confirm with VPC Configurator or lsusb
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [collective, twist, rx, ry, slider]
+    resolution_bits: 15     # 15-bit precision
+  buttons: 20
+  hats: 1
+  encoders: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4183 is a community estimate for an alternate Rotor TCS Plus
+      hardware revision. The primary confirmed PID is 0x4190 (vpc-rotor-tcs-plus.yaml).
+      Verify with VPC Configurator or lsusb on real hardware.
+  - id: HELICOPTER_COLLECTIVE
+    description: >
+      The collective axis is unipolar (0 = full down, max = full up). No spring
+      centering — the collective rests at its physical position. Map unipolar
+      [0, 1] in the helicopter profile.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS Plus — alternate PID 0x4183 community estimate.
+    VID 0x3344 (VIRPIL Controls UAB). See also vpc-rotor-tcs-plus.yaml (PID 0x4190)
+    and vpc-rotor-tcs-v2.yaml (PID 0x4192). Intended for DCS helicopter modules.
+    Wave-47 addition. Last reviewed: 2026-07.

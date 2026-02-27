@@ -1,0 +1,60 @@
+# RealSimGear G500H Aviation Avionics Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip Technology) / PID 0xF260 — community estimate.
+# RealSimGear produces physical replicas of Garmin avionics for general
+# aviation simulation. The G500H is the helicopter-specific variant of the
+# G500 EFIS suite, providing pilot's PFD and MFD controls for rotary-wing
+# simulation in MSFS and X-Plane.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G500H Helicopter Avionics"
+  vendor: "RealSimGear"
+  type: panel
+  usb:
+    vendor_id: 0x04D8       # Microchip Technology (used by RealSimGear)
+    product_id: 0xF260      # G500H — community estimate
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xF260 is a community estimate. RealSimGear uses Microchip VID 0x04D8;
+      exact PID varies per product. Verify with lsusb.
+  - id: HELICOPTER_VARIANT
+    description: >
+      The G500H is the helicopter-specific EFIS variant; distinct from the fixed-wing
+      G500 (g500-trainer.yaml). HSI mode, engine monitoring page, and rotor tachometer
+      controls are unique to the H variant.
+  - id: REALSIMGEAR_HID_PROTOCOL
+    description: >
+      All RealSimGear devices use a consistent HID button-report protocol.
+      Panel events are mapped to MSFS/X-Plane commands via the RealSimGear
+      driver or directly via OpenFlight panel binding.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G500H Helicopter Avionics. VID 0x04D8 (Microchip); PID 0xF260 estimated.
+    Garmin G500H EFIS replica for rotary-wing simulation. Wave-42 addition. Last reviewed: 2026-07.

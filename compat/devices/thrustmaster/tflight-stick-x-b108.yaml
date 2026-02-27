@@ -1,0 +1,53 @@
+# Thrustmaster T.Flight Stick X (Alt PID 0xB108 / Guillemot variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F confirmed (Thrustmaster / Guillemot Corporation S.A.).
+# PID 0xB108 is a community-reported alternate PID for the T.Flight Stick X,
+# associated with an early Guillemot-era production run or a regional variant.
+# The primary PID is 0xB106 (tflight-stick-x.yaml, confirmed linux-hardware.org).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.Flight Stick X (Alt PID)"
+  vendor: "Thrustmaster / Guillemot"
+  usb:
+    vendor_id: 0x044F       # Thrustmaster / Guillemot Corporation
+    product_id: 0xB108      # Community-reported alt PID; primary is 0xB106
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, throttle, slider]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB108 is a community-reported alternate PID for the T.Flight Stick X.
+      Confirm with lsusb. The confirmed primary PID is 0xB106 in
+      tflight-stick-x.yaml. Both share identical capabilities.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.Flight Stick X alternate PID (0xB108). See tflight-stick-x.yaml
+    for the confirmed primary variant. Last reviewed: 2026-06.
+
+tested_games:
+  - msfs
+  - xplane
+  - dcs
