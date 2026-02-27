@@ -302,6 +302,147 @@ mod tests {
         assert_eq!(snap.sim, SimId::Ksp);
     }
 
+    // ── Vessel type / atmospheric detection / stage separation tests ─────────
+
+    /// FLYING situation = atmospheric craft (plane-like); aero and FFB valid.
+    #[test]
+    fn test_flying_situation_classifies_as_atmospheric_craft() {
+        let mut snap = default_snapshot();
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::FLYING,
+                altitude_m: 5_000.0,
+                ..Default::default()
+            },
+        );
+        assert!(
+            snap.validity.aero_valid,
+            "atmospheric craft should have aero data"
+        );
+        assert!(
+            snap.validity.safe_for_ffb,
+            "atmospheric craft should be safe for FFB"
+        );
+        assert!(
+            snap.validity.kinematics_valid,
+            "atmospheric craft should have kinematics"
+        );
+    }
+
+    /// ESCAPING situation = interplanetary spacecraft; no atmospheric data.
+    #[test]
+    fn test_escaping_situation_classifies_as_spacecraft() {
+        let mut snap = default_snapshot();
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::ESCAPING,
+                altitude_m: 500_000.0,
+                ..Default::default()
+            },
+        );
+        assert!(
+            !snap.validity.aero_valid,
+            "spacecraft should not have aero data"
+        );
+        assert!(
+            !snap.validity.safe_for_ffb,
+            "spacecraft should not be safe for FFB"
+        );
+        assert!(
+            snap.validity.attitude_valid,
+            "spacecraft attitude should be valid"
+        );
+    }
+
+    /// Atmospheric detection is controlled by `situation`, not altitude value.
+    #[test]
+    fn test_atmospheric_detection_depends_on_situation_not_altitude() {
+        let mut snap = default_snapshot();
+        // Low altitude but SUB_ORBITAL → no atmospheric validity
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::SUB_ORBITAL,
+                altitude_m: 1_000.0,
+                ..Default::default()
+            },
+        );
+        assert!(
+            !snap.validity.aero_valid,
+            "aero_valid must be driven by situation, not altitude"
+        );
+        assert!(!snap.validity.safe_for_ffb);
+        assert!(
+            snap.validity.attitude_valid,
+            "still in-flight on sub-orbital arc"
+        );
+    }
+
+    /// Stage separation: transition FLYING → SUB_ORBITAL changes validity flags.
+    #[test]
+    fn test_sub_orbital_represents_stage_separation() {
+        let mut snap = default_snapshot();
+        // First-stage / atmospheric flight
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::FLYING,
+                altitude_m: 30_000.0,
+                speed_mps: 500.0,
+                ..Default::default()
+            },
+        );
+        assert!(snap.validity.safe_for_ffb);
+        assert!(snap.validity.aero_valid);
+        // After staging, rocket exits atmosphere
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::SUB_ORBITAL,
+                altitude_m: 70_000.0,
+                speed_mps: 2_000.0,
+                ..Default::default()
+            },
+        );
+        assert!(
+            !snap.validity.safe_for_ffb,
+            "no FFB after leaving atmosphere"
+        );
+        assert!(
+            !snap.validity.aero_valid,
+            "no aero data after stage separation"
+        );
+        assert!(
+            snap.validity.attitude_valid,
+            "attitude valid on sub-orbital arc"
+        );
+        assert!(
+            snap.validity.velocities_valid,
+            "velocities valid on sub-orbital arc"
+        );
+    }
+
+    /// PRELAUNCH (2) is below FLYING (3) so `in_flight = false`; flight data is
+    /// not meaningful while the vessel is on the launch pad.
+    #[test]
+    fn test_prelaunch_situation_has_no_in_flight_data() {
+        let mut snap = default_snapshot();
+        apply_telemetry(
+            &mut snap,
+            &KspRawTelemetry {
+                situation: situation::PRELAUNCH,
+                ..Default::default()
+            },
+        );
+        assert!(!snap.validity.attitude_valid, "no attitude on pad");
+        assert!(!snap.validity.velocities_valid, "no velocities on pad");
+        assert!(!snap.validity.safe_for_ffb, "no FFB on pad");
+        assert!(!snap.validity.aero_valid, "no aero data on pad");
+        assert!(snap.validity.position_valid, "position always valid");
+    }
+
     // ── Property tests ────────────────────────────────────────────────────────
 
     proptest::proptest! {

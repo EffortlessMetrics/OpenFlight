@@ -122,4 +122,26 @@ mod tests {
         assert_eq!(back.airframe, original.airframe);
         assert!((back.ias_kmh.unwrap() - 500.0).abs() < 0.01);
     }
+
+    #[test]
+    fn malformed_json_returns_serde_error() {
+        let result: Result<WtIndicators, _> = serde_json::from_str("not valid json at all!!");
+        assert!(result.is_err(), "malformed JSON should not parse");
+    }
+
+    #[test]
+    fn wrong_field_type_returns_serde_error() {
+        // "IAS km/h" expects f32 but receives a string
+        let result: Result<WtIndicators, _> = serde_json::from_str(r#"{"IAS km/h": "fast_speed"}"#);
+        assert!(result.is_err(), "wrong-typed field should not parse");
+    }
+
+    #[test]
+    fn array_instead_of_object_returns_serde_error() {
+        let result: Result<WtIndicators, _> = serde_json::from_str(r#"[1, 2, 3]"#);
+        assert!(
+            result.is_err(),
+            "JSON array should not parse as WtIndicators"
+        );
+    }
 }

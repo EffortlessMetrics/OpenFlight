@@ -147,4 +147,89 @@ mod tests {
             Err(VirtualControllerError::ButtonOutOfRange(32))
         );
     }
+
+    /// All 8 axes must be 0.0 (centred) on a freshly created controller.
+    #[test]
+    fn stub_initial_state_all_axes_centred() {
+        let ctrl = StubVirtualController::new();
+        for i in 0u8..8 {
+            assert_eq!(
+                ctrl.axis(i),
+                Some(0.0),
+                "axis {i} should be centred at init"
+            );
+        }
+    }
+
+    /// All 32 buttons must be released on a freshly created controller.
+    #[test]
+    fn stub_initial_state_all_buttons_released() {
+        let ctrl = StubVirtualController::new();
+        for i in 0u8..32 {
+            assert_eq!(
+                ctrl.button_state(i),
+                Some(false),
+                "button {i} should be released at init"
+            );
+        }
+    }
+
+    /// Axis values below -1.0 must be clamped to -1.0.
+    #[test]
+    fn stub_axis_clamps_negative_below_minus_one() {
+        let mut ctrl = StubVirtualController::new();
+        ctrl.send_axis(0, -2.0).unwrap();
+        assert_eq!(ctrl.axis(0).unwrap(), -1.0, "should be clamped to -1.0");
+    }
+
+    /// Setting one button pressed then released (momentary) must not affect
+    /// adjacent buttons (toggle independence).
+    #[test]
+    fn stub_buttons_are_independently_tracked() {
+        let mut ctrl = StubVirtualController::new();
+        ctrl.send_button(0, true).unwrap();
+        ctrl.send_button(1, true).unwrap();
+        ctrl.send_button(2, false).unwrap();
+        assert_eq!(ctrl.button_state(0), Some(true));
+        assert_eq!(ctrl.button_state(1), Some(true));
+        assert_eq!(ctrl.button_state(2), Some(false));
+        // Release button 0 (momentary) — button 1 must remain pressed
+        ctrl.send_button(0, false).unwrap();
+        assert_eq!(ctrl.button_state(0), Some(false));
+        assert_eq!(
+            ctrl.button_state(1),
+            Some(true),
+            "button 1 should still be pressed"
+        );
+    }
+
+    /// Two controller instances must maintain entirely independent state
+    /// (no shared global storage).
+    #[test]
+    fn stub_multiple_instances_have_independent_state() {
+        let mut ctrl1 = StubVirtualController::new();
+        let ctrl2 = StubVirtualController::new();
+        ctrl1.send_axis(0, 1.0).unwrap();
+        ctrl1.send_button(0, true).unwrap();
+        // ctrl2 should be completely unaffected
+        assert_eq!(ctrl2.axis(0), Some(0.0), "ctrl2 axis must be independent");
+        assert_eq!(
+            ctrl2.button_state(0),
+            Some(false),
+            "ctrl2 button must be independent"
+        );
+    }
+
+    /// `StubVirtualController` has no built-in deadband: small values pass
+    /// through unchanged. Deadband filtering is applied upstream in the axis
+    /// engine before values reach the virtual controller.
+    #[test]
+    fn stub_small_axis_value_is_not_filtered_by_deadband() {
+        let mut ctrl = StubVirtualController::new();
+        ctrl.send_axis(0, 0.001).unwrap();
+        assert!(
+            (ctrl.axis(0).unwrap() - 0.001).abs() < f32::EPSILON,
+            "small values must not be filtered at the virtual controller layer"
+        );
+    }
 }

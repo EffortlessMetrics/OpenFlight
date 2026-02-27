@@ -1,0 +1,53 @@
+# VKB T-Rudder Mk.IV (USB rudder pedals)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+# Community-reported: VID 0x231D (VKB), PID 0x0126 — T-Rudder Mk.IV.
+# Hall effect sensors on all three axes; no mechanical rudder curve applied
+# in firmware (curve shaping is left to the host application or VKBDevCfg).
+device:
+  name: "VKB T-Rudder Mk.IV"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0126
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, brake_left, brake_right]
+    resolution_bits: 12   # 12-bit effective
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: HALL_EFFECT_SENSORS
+    description: >
+      All three axes use contactless Hall effect sensors with no mechanical
+      wear. No rudder curve is applied in firmware; curve shaping should be
+      done in OpenFlight or the simulator.
+  - id: NO_SPRING_CENTERING
+    description: >
+      The T-Rudder Mk.IV has a centering spring for the rudder axis but
+      no spring on the individual brake axes. Apply a small deadzone to
+      the brake axes if resting position drifts.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PID 0x0126 community-reported for the T-Rudder Mk.IV.
+    Three-axis rudder pedal unit: rudder yaw axis plus independent
+    left and right toe-brake axes. Brake axes are not mechanically linked.

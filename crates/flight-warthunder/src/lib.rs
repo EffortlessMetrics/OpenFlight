@@ -485,4 +485,97 @@ mod tests {
         let adapter = WarThunderAdapter::new(WarThunderConfig::default());
         assert!(adapter.time_since_last_packet().is_none());
     }
+
+    #[test]
+    fn all_none_indicators_all_validity_false() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let snapshot = adapter
+            .convert_indicators(&WtIndicators::default())
+            .unwrap();
+        assert!(!snapshot.validity.attitude_valid);
+        assert!(!snapshot.validity.velocities_valid);
+        assert!(!snapshot.validity.position_valid);
+        assert!(!snapshot.validity.kinematics_valid);
+        assert!(!snapshot.validity.safe_for_ffb);
+    }
+
+    #[test]
+    fn various_airframe_names_reflected_in_snapshot_aircraft_id() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        for name in &["F-86F Sabre", "Me 262 A-1a", "Su-27"] {
+            let ind = WtIndicators {
+                airframe: Some(name.to_string()),
+                ..Default::default()
+            };
+            let snap = adapter.convert_indicators(&ind).unwrap();
+            assert_eq!(
+                snap.aircraft.icao, *name,
+                "airframe name should appear in snapshot"
+            );
+        }
+    }
+
+    #[test]
+    fn vertical_speed_mps_to_fpm_conversion() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // 1 m/s = 196.85 ft/min
+        let ind = WtIndicators {
+            vert_speed: Some(1.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            (snap.kinematics.vertical_speed - 196.85).abs() < 0.5,
+            "1 m/s → ~196.85 ft/min, got {}",
+            snap.kinematics.vertical_speed
+        );
+    }
+
+    #[test]
+    fn large_altitude_above_fl400_handled_correctly() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // FL400 = 40,000 ft; 15,000 m ≈ 49,212.6 ft
+        let ind = WtIndicators {
+            altitude: Some(15_000.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            (snap.environment.altitude - 49_212.6).abs() < 5.0,
+            "15000 m should be ~49212.6 ft, got {}",
+            snap.environment.altitude
+        );
+    }
+
+    #[test]
+    fn heading_360_normalises_to_zero() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        let ind = WtIndicators {
+            heading: Some(360.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        // normalize_degrees_signed(360.0) → 0.0
+        assert!(
+            snap.kinematics.heading.to_degrees().abs() < 0.01,
+            "heading 360° should normalise to 0°, got {}",
+            snap.kinematics.heading.to_degrees()
+        );
+    }
+
+    #[test]
+    fn negative_vertical_speed_produces_negative_fpm() {
+        let adapter = WarThunderAdapter::new(WarThunderConfig::default());
+        // -5 m/s means descending
+        let ind = WtIndicators {
+            vert_speed: Some(-5.0),
+            ..Default::default()
+        };
+        let snap = adapter.convert_indicators(&ind).unwrap();
+        assert!(
+            snap.kinematics.vertical_speed < 0.0,
+            "descending should give negative ft/min, got {}",
+            snap.kinematics.vertical_speed
+        );
+    }
 }
