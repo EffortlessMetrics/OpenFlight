@@ -1,0 +1,71 @@
+# VIRPIL VPC Constellation Alpha Prime T (T-Rudder Variant)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# The Constellation Alpha Prime T is the integrated twist-rudder (T-grip) variant
+# of the Alpha Prime joystick — it adds a third axis for rudder twist on the grip,
+# for users who do not use separate rudder pedals.
+# PID is a community estimate; the Alpha Prime Right uses one PID in the
+# 0x41xx range (see constellation-alpha-prime-right.yaml).
+# PID 0x4197 is an estimate — verify via lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Constellation Alpha Prime T"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x4197   # Community estimate — verify against real hardware
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, sl]   # x=roll, y=pitch, rz=twist-rudder, sl=thumbstick
+    resolution_bits: 14
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4197 is a community estimate for the Alpha Prime T (twist-rudder)
+      variant. The non-twist Alpha Prime Right uses a different PID.
+      Update this manifest when confirmed via lsusb or VIRPIL community reports.
+  - id: TWIST_AXIS_RUDDER
+    description: >
+      The rz (rudder twist) axis is active only on the T variant. On non-T
+      Alpha Prime, the grip does not expose a twist axis.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Constellation Alpha Prime T — twist-rudder grip variant for
+    users without dedicated rudder pedals. PID 0x4197 is unconfirmed.
+    VID 0x3344 confirmed. Last reviewed: 2026-02.
+
+driver:
+  type: virpil_vpc
+  notes: >
+    VPC Config Tool optional for axis calibration; device enumerates as
+    standard HID without vendor software.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case. Twist axis maps to rudder in DCS controls."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "All axes and buttons recognised automatically."

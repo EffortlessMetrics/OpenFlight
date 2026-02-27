@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 542 |
-| ACs with tests | 542 |
-| ACs with Gherkin | 542 |
-| ACs with both tests + Gherkin | 542 |
-| Complete | 542 |
+| Total AC | 556 |
+| ACs with tests | 556 |
+| ACs with Gherkin | 556 |
+| ACs with both tests + Gherkin | 556 |
+| Complete | 556 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -41,7 +41,7 @@
 | flight-ac7-protocol | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-ac7-telemetry | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-adapter-common | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
-| flight-axis | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-axis | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-bdd-metrics | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
@@ -85,7 +85,7 @@
 | flight-scheduler | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-security | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-service | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-session | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
+| flight-session | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-simconnect-sys | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-streamdeck | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
@@ -95,7 +95,7 @@
 | flight-ui | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 11 | 11 | 11 | 11 | 11 | 100.0% | 100.0% | 100.0% |
-| flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-virtual | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
 | flight-vr-overlay | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -649,3 +649,17 @@
 | REQ-99 | AC-99.2 | WHEN rollback_to_previous is called with two or more versions recorded THEN the result SHALL be the immediately preceding VersionInfo and current_version SHALL be updated; WHEN only one version exists THEN rollback SHALL return Err | specs/features/req_99_updater_rollback.feature:21<br>specs/features/req_99_updater_rollback.feature:28 | 3 | ✅ Complete |
 | REQ-99 | AC-99.3 | WHEN a delta patch is applied to matching source content THEN the output SHALL equal the target content exactly; WHEN the source file hash does not match the patch manifest THEN the result SHALL be Err(DeltaPatch source hash mismatch) | specs/features/req_99_updater_rollback.feature:34<br>specs/features/req_99_updater_rollback.feature:40 | 3 | ✅ Complete |
 | REQ-99 | AC-99.4 | WHEN an update fails mid-installation THEN the running version SHALL remain unchanged; WHEN automatic rollback executes after a startup crash THEN the installed version SHALL revert to the pre-update version and the failed version SHALL be recorded | specs/features/req_99_updater_rollback.feature:47<br>specs/features/req_99_updater_rollback.feature:54 | 3 | ✅ Complete |
+| REQ-100 | AC-100.1 | WHEN input is within the deadzone threshold THEN output SHALL be exactly 0.0 | specs/features/req_100_rt_axis_invariants.feature:5 | 2 | ✅ Complete |
+| REQ-100 | AC-100.2 | WHEN CurveNode expo is 0.0 THEN output SHALL equal input within floating-point tolerance for all inputs in [-1.0, 1.0] | specs/features/req_100_rt_axis_invariants.feature:11 | 1 | ✅ Complete |
+| REQ-100 | AC-100.3 | WHEN two inputs a ≤ b are processed by CurveNode THEN curve(a) SHALL be ≤ curve(b) for any expo in [-1.0, 1.0] | specs/features/req_100_rt_axis_invariants.feature:17 | 1 | ✅ Complete |
+| REQ-100 | AC-100.4 | WHEN any input is processed by the axis pipeline THEN output SHALL be clamped to [-1.0, 1.0] | specs/features/req_100_rt_axis_invariants.feature:23 | 3 | ✅ Complete |
+| REQ-100 | AC-100.5 | WHEN a SlewNode is compiled from a valid slew configuration THEN it SHALL be bound to the pipeline and converge output toward input at the configured rate | specs/features/req_100_rt_axis_invariants.feature:29 | 2 | ✅ Complete |
+| REQ-101 | AC-101.1 | WHEN no aircraft-specific profile override exists THEN the global profile SHALL provide fallback axis values | specs/features/req_101_session_cascade.feature:5 | 1 | ✅ Complete |
+| REQ-101 | AC-101.2 | WHEN an aircraft-specific profile defines an axis also present in the global profile THEN the aircraft value SHALL take precedence | specs/features/req_101_session_cascade.feature:11 | 2 | ✅ Complete |
+| REQ-101 | AC-101.3 | WHEN a single telemetry frame suggests a different phase of flight THEN the session SHALL not change phase (hysteresis) | specs/features/req_101_session_cascade.feature:17 | 3 | ✅ Complete |
+| REQ-101 | AC-101.4 | WHEN a profile reload attempt fails THEN the previously loaded profile SHALL remain active and unchanged | specs/features/req_101_session_cascade.feature:23 | 2 | ✅ Complete |
+| REQ-101 | AC-101.5 | WHEN an aircraft-change event is received THEN the new profile SHALL be active within 500ms | specs/features/req_101_session_cascade.feature:29 | 1 | ✅ Complete |
+| REQ-102 | AC-102.1 | WHEN a virtual gamepad is created THEN it SHALL appear as an available HID device | specs/features/req_102_virtual_device.feature:5 | 2 | ✅ Complete |
+| REQ-102 | AC-102.2 | WHEN any axis value is written to a virtual device THEN the reported output SHALL be within the device's valid range | specs/features/req_102_virtual_device.feature:11 | 2 | ✅ Complete |
+| REQ-102 | AC-102.3 | WHEN a disconnected virtual device is written to THEN the error SHALL be reported without a panic or memory-safety violation | specs/features/req_102_virtual_device.feature:17 | 1 | ✅ Complete |
+| REQ-102 | AC-102.4 | WHEN the OFP-1 handshake sequence is initiated THEN the emulator SHALL report successful capability negotiation | specs/features/req_102_virtual_device.feature:23 | 2 | ✅ Complete |

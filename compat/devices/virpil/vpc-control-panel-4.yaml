@@ -1,0 +1,58 @@
+# VIRPIL VPC Control Panel #4
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB (the-sz.com USB ID database).
+# PID for Control Panel #4 is a community estimate; the known series is:
+#   CP #1: 0x025B (confirmed), CP #2: 0x0259 (confirmed),
+#   CP #3: 0x025C (estimated, see vpc-control-panel-3.yaml).
+# CP #4: 0x025D is an estimate based on the CP family range; not independently
+# confirmed from lsusb / VIRPIL Configurator logs at time of writing.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Control Panel #4"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x025D   # Community estimate; CP#1=0x025B, CP#2=0x0259, CP#3=0x025C
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [a1, a2]
+    resolution_bits: 14
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x025D is a community estimate following the CP#1–CP#3 range.
+      Update this manifest when a confirmed PID is available via lsusb or
+      VIRPIL Configurator capture. CP#3 uses 0x025C (estimated).
+  - id: NO_AXES_ALTERNATIVE
+    description: >
+      Some firmware versions report 0 axes (48 pure button inputs). The 2-axis
+      variant reflects the mini-stick hardware option. Verify with VIRPIL
+      Configurator to determine which mode is active.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Control Panel #4 — button/encoder expansion panel in the CP family.
+    Intended for use alongside CP#1 (0x025B), CP#2 (0x0259), and CP#3 (0x025C).
+    PID 0x025D is unconfirmed; verify before deployment.
+    VIRPIL VID=0x3344 confirmed. Last reviewed: 2026-02.

@@ -1,0 +1,46 @@
+# Komodo Sim Autopilot Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim dedicated autopilot engagement panel — standalone AP panel
+# separate from the MCP, for GA aircraft autopilot replicas (e.g. KAP 140,
+# Garmin GFC 700 style). VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim Autopilot Panel"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0303  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 3
+    names: [altitude_sel, vs_sel, heading_sel]
+    resolution_bits: 12
+  buttons: 24
+  hats: 0
+  encoders: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for Komodo Sim; verify with lsusb."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0303 is a placeholder; must be verified before production use."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: "Komodo Sim Autopilot Panel. VID/PID unconfirmed. Last reviewed: 2026-02."

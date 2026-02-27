@@ -1,0 +1,53 @@
+# VKB Sim Pedals Pro V3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKBsim.
+# The VKB Sim Pedals Pro V3 is the third generation of VKB's pedal set,
+# featuring redesigned cams, updated hall sensors, and improved toe-brake
+# mechanisms over the V2 (Pro V2) predecessor.
+# PID is a community estimate; Sim Pedals Pro (V2) uses a PID in the
+# 0x01xx range. PID 0x0158 is an estimate — verify via linux-hardware.org.
+
+schema_version: "1"
+
+device:
+  name: "VKB Sim Pedals Pro V3"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0158   # Community estimate — V3; V2 uses nearby PID
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 14
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0158 is a community estimate for the V3 generation.
+      Update when confirmed via linux-hardware.org or VKBDevCfg reports.
+  - id: DIFFERENTIAL_TOE_BRAKES
+    description: "Left and right toe brakes are independent axes reporting [0, max]."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Sim Pedals Pro V3 — third-generation pedals with updated cam geometry
+    and hall-effect sensors. PID 0x0158 is unconfirmed. VID 0x231D confirmed.
+    Last reviewed: 2026-02.

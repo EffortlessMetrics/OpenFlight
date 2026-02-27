@@ -1,0 +1,54 @@
+# Elite Simulations E-Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions (ESS) manufactures Cessna-style hardware for
+# approved aviation training simulators. The E-RUDDER PEDALS replicate
+# Cessna 172 rudder/brake geometry.
+# VID 0x04D8 (Microchip Technology) is a plausible but unconfirmed VID for
+# ESS hardware. PID is unconfirmed; research required via lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations E-Rudder Pedals"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED; verify with lsusb
+    product_id: 0x0200  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 10
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a plausible placeholder; verify against real ESS hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0200 is a placeholder; must be verified before production use."
+  - id: DIFFERENTIAL_TOE_BRAKES
+    description: >
+      Left and right toe brakes are independent axes. Both report [0, max]
+      with full-up brake at maximum value.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations Solutions E-Rudder Pedals — Cessna 172 replica used in
+    FAA-approved ATDs and FTDs. VID/PID require field verification.
+    Last reviewed: 2026-02.

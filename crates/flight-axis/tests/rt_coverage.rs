@@ -98,10 +98,7 @@ fn test_deadzone_value_at_exact_threshold() {
 
     let mut frame = AxisFrame::new(threshold, 1_000);
     node.step(&mut frame);
-    assert_eq!(
-        frame.out, 0.0,
-        "value at exact threshold rescales to 0.0"
-    );
+    assert_eq!(frame.out, 0.0, "value at exact threshold rescales to 0.0");
 }
 
 /// Input just outside deadzone → small positive output (rescaled, not zero).
@@ -250,9 +247,15 @@ fn test_combined_deadzone_expo_sign_preservation() {
 
     let mut pos_frame = AxisFrame::new(0.8, 1_000);
     pipeline.process(&mut pos_frame, &mut state_pos);
-    assert!(pos_frame.out > 0.0, "positive input must give positive output");
+    assert!(
+        pos_frame.out > 0.0,
+        "positive input must give positive output"
+    );
 
     let mut neg_frame = AxisFrame::new(-0.8, 1_000);
     pipeline.process(&mut neg_frame, &mut state_neg);
-    assert!(neg_frame.out < 0.0, "negative input must give negative output");
+    assert!(
+        neg_frame.out < 0.0,
+        "negative input must give negative output"
+    );
 }

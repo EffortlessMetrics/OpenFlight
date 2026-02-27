@@ -378,7 +378,10 @@ fn test_scheduler_reset_stats_clears_counters() {
 
     let after = scheduler.get_stats();
     assert_eq!(after.total_ticks, 0, "total_ticks must be zero after reset");
-    assert_eq!(after.missed_ticks, 0, "missed_ticks must be zero after reset");
+    assert_eq!(
+        after.missed_ticks, 0,
+        "missed_ticks must be zero after reset"
+    );
     assert_eq!(after.miss_rate, 0.0, "miss_rate must be 0.0 after reset");
 }
 

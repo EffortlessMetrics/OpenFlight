@@ -1,0 +1,57 @@
+# Komodo Sim MCP (Mode Control Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim manufactures Airbus-style cockpit panel hardware for GA and
+# commercial flight simulation cockpit builders.
+# The MCP replicates the Boeing 737 / Airbus FCU Mode Control Panel with
+# autopilot engagement selectors, speed/heading/altitude rotaries, and
+# engage buttons. VID/PID unconfirmed; research required via lsusb.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim MCP Panel"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED; Microchip-based MCU plausible
+    product_id: 0x0300  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x00         # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 5
+    names: [speed_sel, heading_sel, altitude_sel, vs_sel, course_sel]
+    resolution_bits: 12
+  buttons: 32
+  hats: 0
+  encoders: 5
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for Komodo Sim; verify with lsusb on real hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0300 is a placeholder; must be verified before production use."
+  - id: ENCODER_AS_AXIS
+    description: >
+      Speed, heading, altitude, VS, and CRS selectors are rotary encoders.
+      They may report as continuous axes or as button pairs (increment/decrement)
+      depending on firmware variant. Verify with HID descriptor.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim MCP Panel — Boeing 737 / Airbus FCU autopilot mode control.
+    VID/PID unconfirmed; field research required. Pairs with rmp-left.yaml,
+    rmp-right.yaml, and efis-panel.yaml for a complete Komodo Sim cockpit.
+    Last reviewed: 2026-02.

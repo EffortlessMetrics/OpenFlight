@@ -1,0 +1,48 @@
+# Komodo Sim EFIS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Komodo Sim EFIS (Electronic Flight Instrument System) panel — replicates
+# Airbus EFIS CP with ND range/mode selectors, barometric pressure setting,
+# and display option buttons. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Sim EFIS Panel"
+  vendor: "Komodo Sim"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0304  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 2
+    names: [baro_sel, nd_range]
+    resolution_bits: 12
+  buttons: 16
+  hats: 0
+  encoders: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 20
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for Komodo Sim; verify with lsusb."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0304 is a placeholder; must be verified before production use."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Sim EFIS Panel. VID/PID unconfirmed. Intended for use alongside
+    mcp-panel.yaml in a full Komodo Sim cockpit setup. Last reviewed: 2026-02.

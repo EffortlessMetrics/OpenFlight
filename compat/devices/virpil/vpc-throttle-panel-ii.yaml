@@ -1,0 +1,57 @@
+# VIRPIL VPC Throttle Panel II
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# The VPC Throttle Panel II is the successor to the original VPC Throttle Panel
+# (vpc-throttle-panel.yaml) with an expanded button/switch layout and updated
+# encoder resolution. PID is a community estimate; the original Throttle Panel
+# uses a PID in the 0x019x family.
+# PID 0x01A0 is an estimate — verify via lsusb on real hardware.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle Panel II"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x01A0   # Community estimate (original Throttle Panel ~0x019x)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [a1, a2, a3, a4]
+    resolution_bits: 14
+  buttons: 48
+  hats: 0
+  encoders: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x01A0 is a community estimate for the Throttle Panel II.
+      Update this manifest when confirmed from lsusb or VIRPIL community reports.
+  - id: ENCODER_AS_BUTTON
+    description: >
+      Rotary encoders generate HID button events (increment/decrement pairs)
+      rather than axis deltas. OpenFlight maps encoder steps to discrete
+      commands or axis positions based on the active profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Throttle Panel II — expansion panel with buttons, switches, and
+    encoders for throttle-side cockpit controls. PID 0x01A0 is unconfirmed.
+    VID 0x3344 confirmed. Last reviewed: 2026-02.

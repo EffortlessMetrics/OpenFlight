@@ -1,0 +1,65 @@
+# VKB GNX-SCG (Gladiator NXT Space/Sidewinder Combat Grip)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D confirmed: VKBsim / VKB Technology Co. Ltd.
+# The GNX-SCG is the Gladiator NXT EVO fitted with a SCG (Space Combat Grip /
+# Sidewinder-style Combat Grip) top — a separate product from the Gladiator NXT
+# EVO with standard MCG or omni-directional grip.
+# PID is a community estimate; the NXT EVO (standard) uses 0x0200 (right)
+# and 0x0201 (left). The SCG variant likely uses a PID in the 0x02xx range.
+# PID 0x0214 is an estimate — verify via linux-hardware.org or VKBDevCfg.
+
+schema_version: "1"
+
+device:
+  name: "VKB GNX-SCG (Gladiator NXT EVO + SCG Grip)"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0214   # Community estimate — SCG variant of Gladiator NXT EVO
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0214 is a community estimate for the GNX-SCG variant.
+      The standard Gladiator NXT EVO (R) uses 0x0200. Update this manifest
+      when confirmed via linux-hardware.org (USB string probe) or VKBDevCfg.
+  - id: MODULAR_GRIP
+    description: >
+      The SCG (Space Combat Grip) is installed at the factory; it is not a
+      field-replaceable top on the NXT EVO without base modification.
+  - id: CONFIGURABLE_AXES
+    description: >
+      Axis mapping can be changed in VKBDevCfg software. OpenFlight reads
+      whatever the device reports; align VKB config with OpenFlight assignments.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB GNX-SCG — Gladiator NXT EVO with SCG (Space/Sidewinder Combat Grip) top.
+    Distinct product from the standard NXT EVO (PID 0x0200). PID 0x0214 is
+    unconfirmed. VID 0x231D confirmed. Last reviewed: 2026-02.
+
+driver:
+  type: vkb_devcfg
+  notes: "VKBDevCfg optional for calibration; device enumerates as standard HID."

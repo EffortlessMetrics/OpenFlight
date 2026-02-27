@@ -1,0 +1,57 @@
+# PFC Professional Yoke System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC (Professional Flight Controls) makes Cessna-style yoke/rudder hardware
+# used in licensed Cessna flight-training simulators.
+# VID and PID are unconfirmed — PFC devices may enumerate under a Microchip
+# Technology VID (0x04D8) or a proprietary VID; field research required.
+
+schema_version: "1"
+
+device:
+  name: "PFC Professional Yoke System"
+  vendor: "Professional Flight Controls"
+  usb:
+    vendor_id: 0x04D8   # Microchip Technology — unconfirmed for PFC; research required
+    product_id: 0x0100  # Placeholder — PID_UNCONFIRMED; verify with lsusb
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [roll, pitch, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x04D8 (Microchip Technology) is a placeholder. PFC may use a
+      proprietary or OEM USB VID. Verify with lsusb or USBDeview on real hardware
+      before using this manifest in production.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0100 is a placeholder. Must be verified against real hardware.
+  - id: THROTTLE_NOT_CENTERED
+    description: >
+      Throttle (Z) axis reports [0, max]; map to [0.0, 1.0] range in profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Professional Flight Controls manufactures Cessna-licensed flight training
+    hardware (yokes, rudder pedals, throttle quadrants) used in FAA-approved training
+    devices. USB HID interface details require field verification.
+    Last reviewed: 2026-02.

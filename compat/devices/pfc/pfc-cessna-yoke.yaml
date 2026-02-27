@@ -1,0 +1,48 @@
+# PFC Cessna-Licensed Training Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC produces Cessna-licensed replica yokes for FAA-approved Level 5/6
+# aviation training devices. This variant is the single-engine Cessna yoke
+# (two axes, no integrated throttle). VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Cessna Training Yoke"
+  vendor: "Professional Flight Controls"
+  usb:
+    vendor_id: 0x04D8   # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0103  # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [roll, pitch]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a placeholder for PFC; field verification required."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0103 is a placeholder; must be verified against real hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cessna-licensed replica yoke for FAA-approved training simulators.
+    Typically paired with pfc-rudder-pedals.yaml and pfc-throttle-quadrant.yaml.
+    VID/PID unconfirmed — requires hardware probe. Last reviewed: 2026-02.
