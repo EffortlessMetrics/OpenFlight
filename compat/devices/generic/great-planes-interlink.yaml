@@ -1,0 +1,43 @@
+# Great Planes InterLink USB Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0E55 — original Great Planes RC sim controller.
+schema_version: "1"
+
+device:
+  name: "Great Planes InterLink USB Controller"
+  vendor: "Great Planes (Knife Edge Software)"
+  usb:
+    vendor_id: 0x0A5C
+    product_id: 0x0E55
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID are community estimates. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Original Great Planes RC simulator USB controller. VID/PID community estimate.
+    Last reviewed: 2026-06.

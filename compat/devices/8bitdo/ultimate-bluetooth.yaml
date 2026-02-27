@@ -1,0 +1,41 @@
+# 8BitDo Ultimate Bluetooth Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x6006 from user reports. Premium wireless gamepad.
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate Bluetooth Controller"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8
+    product_id: 0x6006
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 12
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Premium wireless gamepad with charging dock. PID 0x6006 from user reports.
+    Last reviewed: 2026-06.

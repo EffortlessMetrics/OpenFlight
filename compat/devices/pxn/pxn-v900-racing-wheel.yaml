@@ -1,0 +1,43 @@
+# PXN V900 Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0100 — 900-degree budget racing wheel.
+schema_version: "1"
+
+device:
+  name: "PXN V900 Racing Wheel"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416
+    product_id: 0x0100
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, z, rz, rx]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0100 is a community estimate for V900. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    900-degree budget racing wheel with pedals.
+    Last reviewed: 2026-06.

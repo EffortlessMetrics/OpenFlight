@@ -1,0 +1,41 @@
+# Saitek Aviator Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x050A from USB IF. Dual-throttle flight stick.
+schema_version: "1"
+
+device:
+  name: "Saitek Aviator Joystick"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x050A
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, twist, throttle_l, throttle_r]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Split-throttle aviator joystick. VID/PID confirmed from USB IF.
+    Last reviewed: 2026-06.

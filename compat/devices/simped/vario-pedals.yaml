@@ -1,0 +1,44 @@
+# Simped Vario Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0002 — adjustable-spacing rudder pedals.
+schema_version: "1"
+
+device:
+  name: "Simped Vario Rudder Pedals"
+  vendor: "Simped"
+  usb:
+    vendor_id: 0xF5A0
+    product_id: 0x0002
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xF5A0 / PID 0x0002 are community estimates. Simped may use
+      a custom or Leonardo-based USB VID. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    High-end adjustable-spacing rudder pedals. VID/PID estimated.
+    Last reviewed: 2026-06.

@@ -1,0 +1,44 @@
+# RealFlight InterLink DX Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0E56 — RC sim transmitter-style USB controller (VID 0x0A5C).
+schema_version: "1"
+
+device:
+  name: "RealFlight InterLink DX Controller"
+  vendor: "RealFlight (Knife Edge Software)"
+  usb:
+    vendor_id: 0x0A5C
+    product_id: 0x0E56
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, slider_1, slider_2]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID are community estimates. RealFlight uses Broadcom-derived VID in some models.
+      Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RC simulator USB transmitter controller. VID/PID community estimate.
+    Last reviewed: 2026-06.

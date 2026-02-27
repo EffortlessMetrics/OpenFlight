@@ -1,0 +1,43 @@
+# PXN V10 Pro Racing Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x1000 — direct drive racing wheel.
+schema_version: "1"
+
+device:
+  name: "PXN V10 Pro Racing Wheel"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416
+    product_id: 0x1000
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rz, rx]
+    resolution_bits: 12
+  buttons: 14
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1000 is a community estimate for V10 Pro. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Direct drive racing wheel. VID/PID community estimate.
+    Last reviewed: 2026-06.

@@ -1,0 +1,41 @@
+# 8BitDo Pro 2 Wired Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x6011 — wired-only Pro 2 variant.
+schema_version: "1"
+
+device:
+  name: "8BitDo Pro 2 Wired Controller"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8
+    product_id: 0x6011
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 18
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Wired-only variant of Pro 2 controller. PID 0x6011 from user reports.
+    Last reviewed: 2026-06.

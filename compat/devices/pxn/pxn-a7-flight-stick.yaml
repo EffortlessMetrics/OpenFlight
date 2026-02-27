@@ -1,0 +1,43 @@
+# PXN A7 Flight Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0700 — budget PC flight stick.
+schema_version: "1"
+
+device:
+  name: "PXN A7 Flight Stick"
+  vendor: "PXN (Shenzhen JMD Technology)"
+  usb:
+    vendor_id: 0x3416
+    product_id: 0x0700
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, twist, throttle]
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0700 is a community estimate for A7 flight stick. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Budget flight stick with twist rudder and throttle slider.
+    Last reviewed: 2026-06.

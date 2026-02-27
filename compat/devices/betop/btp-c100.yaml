@@ -1,0 +1,43 @@
+# Betop BTP-C100 Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x5501 — wireless Bluetooth gamepad.
+schema_version: "1"
+
+device:
+  name: "Betop BTP-C100 Gamepad"
+  vendor: "Betop (Shenzhen Betop)"
+  usb:
+    vendor_id: 0x20BC
+    product_id: 0x5501
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, right_x, right_y]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x20BC / PID 0x5501 are community estimates for Betop. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Budget wireless gamepad. VID/PID from community estimates.
+    Last reviewed: 2026-06.

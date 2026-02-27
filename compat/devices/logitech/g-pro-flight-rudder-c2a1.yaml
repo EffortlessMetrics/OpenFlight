@@ -1,0 +1,41 @@
+# Logitech G PRO Flight Rudder Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC2A1 — Logitech-rebranded Saitek rudder pedals.
+schema_version: "1"
+
+device:
+  name: "Logitech G PRO Flight Rudder Pedals"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC2A1
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [left_brake, right_brake, rudder]
+    resolution_bits: 8
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Logitech-branded Pro Flight rudder pedals. 3 axes (rudder + toe brakes).
+    Last reviewed: 2026-06.

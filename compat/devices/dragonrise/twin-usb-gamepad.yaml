@@ -1,0 +1,41 @@
+# DragonRise Twin USB Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0003 — twin/dual gamepad adapter.
+schema_version: "1"
+
+device:
+  name: "DragonRise Twin USB Gamepad"
+  vendor: "DragonRise Inc."
+  usb:
+    vendor_id: 0x0079
+    product_id: 0x0003
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, rx, ry]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Twin USB gamepad adapter. VID 0x0079 / PID 0x0003 from USB IF.
+    Last reviewed: 2026-06.

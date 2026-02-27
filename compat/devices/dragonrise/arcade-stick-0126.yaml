@@ -1,0 +1,41 @@
+# DragonRise Arcade Joystick Encoder
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0126 — zero-delay arcade encoder board.
+schema_version: "1"
+
+device:
+  name: "DragonRise Arcade Joystick Encoder"
+  vendor: "DragonRise Inc."
+  usb:
+    vendor_id: 0x0079
+    product_id: 0x0126
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Zero-delay arcade encoder board. Popular in DIY arcade sticks. PID from USB IF.
+    Last reviewed: 2026-06.

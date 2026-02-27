@@ -1,0 +1,44 @@
+# FSSB R3 Force Sensing Sidestick Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0003 — force-sensing (isometric) sidestick base. VID 0xF055 (FSSB custom).
+schema_version: "1"
+
+device:
+  name: "FSSB R3 Force Sensing Sidestick Base"
+  vendor: "FSSB (Force Sensing Sidestick Base)"
+  usb:
+    vendor_id: 0xF055
+    product_id: 0x0003
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, twist]
+    resolution_bits: 16
+  buttons: 0
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xF055 / PID 0x0003 are estimates. FSSB uses custom VID/PID.
+      Verify with lsusb or Windows Device Manager.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Force-sensing isometric sidestick base. No physical deflection. VID/PID estimated.
+    Last reviewed: 2026-06.

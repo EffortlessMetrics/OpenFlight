@@ -1,0 +1,41 @@
+# Suncom SFS Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x00A3 — SFS throttle unit.
+schema_version: "1"
+
+device:
+  name: "Suncom SFS Throttle"
+  vendor: "Suncom"
+  usb:
+    vendor_id: 0x0543
+    product_id: 0x00A3
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, range, antenna]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SFS throttle unit with multiple axes. PID 0x00A3 from USB databases.
+    Last reviewed: 2026-06.

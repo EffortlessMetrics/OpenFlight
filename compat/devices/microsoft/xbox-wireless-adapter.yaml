@@ -1,0 +1,41 @@
+# Microsoft Xbox Wireless Adapter for Windows
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x02E6 — wireless adapter for Xbox controllers.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox Wireless Adapter for Windows"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x02E6
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Wireless adapter for Xbox controllers on PC. PID 0x02E6 from USB databases.
+    Last reviewed: 2026-06.

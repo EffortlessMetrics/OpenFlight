@@ -1,0 +1,41 @@
+# Logitech G Saitek Flight Instrument Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xC2AB — Logitech-branded Saitek FIP with LCD display.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Flight Instrument Panel"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D
+    product_id: 0xC2AB
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech-branded Flight Instrument Panel with 3.5 inch LCD.
+    Last reviewed: 2026-06.

@@ -1,0 +1,41 @@
+# Saitek R440 Force Feedback Wheel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x0301 from USB IF. Force feedback racing wheel.
+schema_version: "1"
+
+device:
+  name: "Saitek R440 Force Feedback Wheel"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0301
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Force feedback racing wheel. VID/PID confirmed from USB IF registry.
+    Last reviewed: 2026-06.

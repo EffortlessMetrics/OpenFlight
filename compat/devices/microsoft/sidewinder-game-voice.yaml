@@ -1,0 +1,41 @@
+# Microsoft SideWinder Game Voice
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x003B from USB IF — gaming voice communicator.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Game Voice"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x003B
+  hid:
+    usage_page: 0x01
+    usage: 0x4           # Joystick
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gaming voice communicator with command buttons. VID/PID from USB IF.
+    Last reviewed: 2026-06.

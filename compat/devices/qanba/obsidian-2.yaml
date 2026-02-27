@@ -1,0 +1,41 @@
+# Qanba Obsidian 2 Arcade Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0x2300 — premium arcade fight stick (VID 0x2C22).
+schema_version: "1"
+
+device:
+  name: "Qanba Obsidian 2 Arcade Joystick"
+  vendor: "Qanba"
+  usb:
+    vendor_id: 0x2C22
+    product_id: 0x2300
+  hid:
+    usage_page: 0x01
+    usage: 0x5           # Game Pad
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  []
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Premium arcade fight stick. PID 0x2300 community estimate.
+    Last reviewed: 2026-06.
