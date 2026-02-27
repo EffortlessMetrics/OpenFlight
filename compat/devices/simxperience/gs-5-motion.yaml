@@ -1,0 +1,46 @@
+# SimXperience AccuForce GS-5
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Full-motion simulation seat with integrated direct-drive motor.
+
+schema_version: "1"
+
+device:
+  name: "SimXperience AccuForce GS-5"
+  vendor: "SimXperience"
+  type: platform
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x5005
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, heave]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes) / PID 0x5005 community estimate."
+  - id: MOTION_OUTPUT_ONLY
+    description: "Full-motion seat with direct-drive. Driven by SimXperience software."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience AccuForce GS-5 full-motion seat. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -1,0 +1,45 @@
+# VIRPIL VPC MongoosT-50CM4 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fourth generation CM4 throttle with enhanced axis resolution.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM4 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8250
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [left_throttle, right_throttle, friction, left_index, right_index, rotary1, rotary2, slider]
+    resolution_bits: 16
+  buttons: 64
+  hats: 3
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed VIRPIL. PID 0x8250 community estimate for CM4."
+  - id: DUAL_THROTTLE
+    description: "Independent left/right throttle axes with friction detent."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM4 throttle. Next-gen dual throttle. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

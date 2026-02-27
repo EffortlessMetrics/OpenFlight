@@ -1,0 +1,45 @@
+# VIRPIL VPC WarBRD-D Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Desktop-mounted gimbal base with adjustable cams and springs.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC WarBRD-D Base"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x01E0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed VIRPIL. PID 0x01E0 community estimate for WarBRD-D."
+  - id: BASE_ONLY
+    description: "Desktop gimbal base only. Grip sold separately."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC WarBRD-D desktop gimbal base. Adjustable cams/springs. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

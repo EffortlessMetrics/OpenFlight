@@ -1,0 +1,45 @@
+# Saitek X46 Pro HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Mid-range HOTAS system between X45 and X52 product lines.
+
+schema_version: "1"
+
+device:
+  name: "Saitek X46 Pro HOTAS"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x046E
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, throttle, slider]
+    resolution_bits: 10
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x06A3 confirmed Saitek. PID 0x046E community estimate."
+  - id: LEGACY_DEVICE
+    description: "Legacy product. May require Saitek/Logitech legacy drivers on Windows 10+."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek X46 Pro HOTAS. Mid-range legacy HOTAS. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

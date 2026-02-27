@@ -1,0 +1,45 @@
+# CH Products Fighterstick USB2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# USB2 revision of the classic CH Fighterstick with improved firmware.
+
+schema_version: "1"
+
+device:
+  name: "CH Products Fighterstick USB2"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00F4
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, throttle]
+    resolution_bits: 10
+  buttons: 24
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x068E confirmed CH Products. PID 0x00F4 community estimate for USB2 revision."
+  - id: LEGACY_DEVICE
+    description: "Updated USB2 firmware revision of the classic Fighterstick."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Fighterstick USB2 revision. Updated firmware. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

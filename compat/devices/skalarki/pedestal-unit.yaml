@@ -1,0 +1,45 @@
+# Skalarki Center Pedestal Unit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Full center pedestal assembly with throttle, speedbrake, and trim.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Center Pedestal Unit"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0BD5
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [engine1, engine2, speedbrake, stab_trim]
+    resolution_bits: 16
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0BD5 community estimate."
+  - id: COMPOSITE_DEVICE
+    description: "Multiple USB endpoints for throttle axes and panel buttons."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki center pedestal unit. Full assembly with throttle and trim. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

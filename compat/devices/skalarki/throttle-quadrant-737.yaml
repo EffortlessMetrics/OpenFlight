@@ -1,0 +1,45 @@
+# Skalarki Throttle Quadrant 737
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Boeing 737 replica throttle quadrant with thrust reversers.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki Throttle Quadrant 737"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0BD0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [engine1, engine2, speedbrake, flap_lever]
+    resolution_bits: 16
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0BD0 community estimate."
+  - id: THRUST_REVERSER
+    description: "Includes thrust reverser detent and idle gate on both throttle levers."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki 737 throttle quadrant replica. Thrust reversers. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

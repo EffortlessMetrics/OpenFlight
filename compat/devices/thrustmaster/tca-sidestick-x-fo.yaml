@@ -1,0 +1,45 @@
+# Thrustmaster TCA Sidestick X First Officer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Left-hand Airbus sidestick for first officer position.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Sidestick X First Officer"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB6A0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, twist]
+    resolution_bits: 12
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x044F confirmed Thrustmaster. PID 0xB6A0 community estimate for TCA X FO."
+  - id: LEFT_HAND
+    description: "Left-handed sidestick for first officer (right seat) use."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster TCA Sidestick X First Officer. Left-hand Airbus stick. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

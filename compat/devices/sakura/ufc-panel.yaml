@@ -1,0 +1,46 @@
+# Sakura UFC Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Up-front controller panel for fighter cockpits.
+# USB panel device with rotary encoders and backlit buttons.
+
+schema_version: "1"
+
+device:
+  name: "Sakura UFC Panel"
+  vendor: "Sakura"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xB003
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PANEL_DEVICE
+    description: "Cockpit panel replica. Buttons and rotary encoders report as HID button presses."
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID community estimate. Verify on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sakura UFC Panel. USB cockpit panel replica. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

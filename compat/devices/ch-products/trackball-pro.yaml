@@ -1,0 +1,47 @@
+# CH Products Trackball Pro Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CH Products Trackball Pro for cockpit view control and cursor management.
+# USB trackball with programmable buttons for sim cockpit integration.
+
+schema_version: "1"
+
+device:
+  name: "CH Products Trackball Pro Controller"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E   # CH Products (confirmed)
+    product_id: 0x00FE  # Community estimate — Trackball Pro
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [trackball_x, trackball_y]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x068E confirmed CH Products. PID 0x00FE community estimate."
+  - id: TRACKBALL_INPUT
+    description: "Trackball for cockpit view panning and cursor control in sim panels."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Trackball Pro for sim cockpit view control.
+    VID/PID unconfirmed.
+    Last reviewed: 2026-07.

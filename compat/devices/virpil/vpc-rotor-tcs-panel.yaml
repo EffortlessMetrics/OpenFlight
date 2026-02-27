@@ -1,0 +1,45 @@
+# VIRPIL VPC Rotor TCS Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Helicopter throttle and condition system panel for VPC collective.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Rotor TCS Panel"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8225
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, condition]
+    resolution_bits: 14
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed VIRPIL. PID 0x8225 community estimate."
+  - id: PANEL_DEVICE
+    description: "TCS panel for collective. Throttle and condition lever controls."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Rotor TCS panel for helicopter collective. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

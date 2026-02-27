@@ -1,0 +1,45 @@
+# Saitek Pro Flight Instrument Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# LCD instrument panel for displaying virtual cockpit gauges.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Instrument Panel"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0D06
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x06A3 confirmed Saitek. PID 0x0D06 community estimate."
+  - id: PANEL_DEVICE
+    description: "LCD panel device. Displays virtual instruments via Saitek Flight Panel SDK."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Instrument Panel. LCD virtual gauge display. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

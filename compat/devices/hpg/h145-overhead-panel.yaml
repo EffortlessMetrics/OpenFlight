@@ -1,0 +1,45 @@
+# HPG H145 Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Airbus H145 overhead panel with engine and electrical controls.
+
+schema_version: "1"
+
+device:
+  name: "HPG H145 Overhead Panel"
+  vendor: "HPG Simulation"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF012
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF012 community estimate."
+  - id: PANEL_DEVICE
+    description: "Overhead panel with toggle switches, guards, and rotary selectors."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG H145 overhead panel. Engine start and electrical systems. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

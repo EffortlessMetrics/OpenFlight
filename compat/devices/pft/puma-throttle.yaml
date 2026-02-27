@@ -1,0 +1,45 @@
+# PFT Puma Throttle Twist Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Helicopter throttle twist grip for turbine engine power management.
+
+schema_version: "1"
+
+device:
+  name: "PFT Puma Throttle Twist Grip"
+  vendor: "Pro Flight Trainer"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE005
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [throttle_twist]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xE005 community estimate."
+  - id: TWIST_GRIP
+    description: "Rotary twist grip mounted on collective lever. Maps to engine power."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFT Puma helicopter throttle twist grip. Mounts on collective. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

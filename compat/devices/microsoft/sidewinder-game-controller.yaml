@@ -1,0 +1,45 @@
+# Microsoft SideWinder Game Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Original USB game controller from the SideWinder series.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Game Controller"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x0026
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x045E confirmed Microsoft. PID 0x0026 community estimate."
+  - id: LEGACY_DEVICE
+    description: "Original SideWinder gamepad. Legacy device from late 1990s."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Game Controller. Legacy gamepad. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

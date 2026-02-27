@@ -1,0 +1,47 @@
+# Dayton Audio Puck Tactile Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Compact puck-style tactile transducer for seat/floor mounting.
+
+schema_version: "1"
+
+device:
+  name: "Dayton Audio Puck Tactile Transducer"
+  vendor: "Dayton Audio"
+  usb:
+    vendor_id: 0x0000
+    product_id: 0x0000
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Audio-driven transducer. No USB HID interface."
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: "Compact puck form factor. Driven by audio amplifier output."
+  - id: NO_HID_INPUT
+    description: "No HID input events. Tracked for sim-rig accessory compatibility."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Dayton Audio Puck tactile transducer. Compact form factor, audio-driven.
+    Last reviewed: 2026-07.

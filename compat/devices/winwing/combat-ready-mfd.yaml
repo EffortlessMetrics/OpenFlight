@@ -1,0 +1,45 @@
+# WinWing Combat Ready MFD Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Multi-function display panel for Combat Ready fighter sim setups.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Combat Ready MFD Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0250
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed WinWing. PID 0x0250 community estimate."
+  - id: PANEL_DEVICE
+    description: "MFD panel with OSB pushbuttons around display bezel."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Combat Ready MFD panel. OSB buttons for fighter MFD. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

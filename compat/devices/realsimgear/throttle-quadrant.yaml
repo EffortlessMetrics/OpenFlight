@@ -1,0 +1,45 @@
+# RealSimGear Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# General aviation throttle/prop/mixture quadrant for Cessna/Piper.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear Throttle Quadrant"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF250
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, prop, mixture]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x04D8 (Microchip/RealSimGear). PID 0xF250 community estimate."
+  - id: GA_LAYOUT
+    description: "Three-lever GA layout with throttle, prop RPM, and mixture."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear throttle quadrant for GA aircraft. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

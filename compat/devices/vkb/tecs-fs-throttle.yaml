@@ -1,0 +1,45 @@
+# VKB TECS FS Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Flight simulation specific TECS throttle with condition levers.
+
+schema_version: "1"
+
+device:
+  name: "VKB TECS FS Throttle"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0280
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, prop, mixture, flaps, speedbrake]
+    resolution_bits: 16
+  buttons: 24
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x231D confirmed VKB. PID 0x0280 community estimate for TECS FS."
+  - id: MODULAR_LEVERS
+    description: "Modular lever system configurable for single/twin engine aircraft."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB TECS FS throttle for flight simulation. Modular levers. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

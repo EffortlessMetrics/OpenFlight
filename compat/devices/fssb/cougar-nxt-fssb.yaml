@@ -1,0 +1,46 @@
+# Cougar NXT FSSB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Force sensing stick base compatible with Cougar-style grips.
+# Uses strain gauges instead of physical gimbal movement.
+
+schema_version: "1"
+
+device:
+  name: "Cougar NXT FSSB"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x0738
+    product_id: 0xA001
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING
+    description: "No physical deflection; strain gauges measure applied force. Requires careful centre dead zone calibration."
+  - id: PID_UNCONFIRMED
+    description: "VID/PID community estimates. Verify with lsusb on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Cougar NXT FSSB force sensing stick base. No gimbal deflection. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -1,0 +1,46 @@
+# DOF Reality M3 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 3-DOF compact motion platform (pitch, roll, yaw) for desktop setups.
+
+schema_version: "1"
+
+device:
+  name: "DOF Reality M3 Motion Platform"
+  vendor: "DOF Reality"
+  type: platform
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x3008
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, yaw]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes) / PID 0x3008 community estimate."
+  - id: MOTION_OUTPUT_ONLY
+    description: "Compact 3-DOF motion platform. Receives motion cues from SimTools."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DOF Reality M3 compact 3-DOF motion platform. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

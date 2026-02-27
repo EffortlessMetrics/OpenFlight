@@ -1,0 +1,47 @@
+# Dayton Audio HDS-3 Haptic Driver System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 3-channel haptic driver system for multi-zone simulation feedback.
+
+schema_version: "1"
+
+device:
+  name: "Dayton Audio HDS-3 Haptic Driver System"
+  vendor: "Dayton Audio"
+  usb:
+    vendor_id: 0x0000
+    product_id: 0x0000
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Audio-driven system. No USB HID interface."
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: "3-channel haptic driver. Each channel drives a separate transducer zone."
+  - id: NO_HID_INPUT
+    description: "No HID input events. Tracked for sim-rig accessory compatibility."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Dayton Audio HDS-3 3-channel haptic driver system. Audio-driven multi-zone.
+    Last reviewed: 2026-07.

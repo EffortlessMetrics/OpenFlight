@@ -1,0 +1,45 @@
+# Generic Helicopter Anti-Torque Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Anti-torque trim and tail rotor management panel.
+
+schema_version: "1"
+
+device:
+  name: "Generic Helicopter Anti-Torque Trim Panel"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF032
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [tail_rotor_trim]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF032 community estimate."
+  - id: PANEL_DEVICE
+    description: "Anti-torque trim panel for tail rotor pitch management."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic helicopter anti-torque trim panel. Tail rotor management. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

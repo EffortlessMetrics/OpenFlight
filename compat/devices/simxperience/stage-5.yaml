@@ -1,0 +1,46 @@
+# SimXperience Stage 5 Motion Simulator
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 5-DOF motion platform for professional simulation.
+
+schema_version: "1"
+
+device:
+  name: "SimXperience Stage 5 Motion Simulator"
+  vendor: "SimXperience"
+  type: platform
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x5006
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 5
+    names: [pitch, roll, yaw, surge, heave]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes) / PID 0x5006 community estimate."
+  - id: MOTION_OUTPUT_ONLY
+    description: "5-DOF motion platform for professional simulation use."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimXperience Stage 5 motion platform. 5-DOF professional. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

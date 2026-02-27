@@ -1,0 +1,46 @@
+# Touch Portal Macro Pad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Programmable macro keypad for Touch Portal integration.
+# Touch Portal ecosystem hardware for sim panel integration.
+
+schema_version: "1"
+
+device:
+  name: "Touch Portal Macro Pad"
+  vendor: "Touch Portal"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xC004
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 15
+
+quirks:
+  - id: PANEL_DEVICE
+    description: "Touch Portal ecosystem device. Buttons map to configurable sim actions."
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID community estimate. Verify on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Touch Portal Macro Pad. Touch Portal ecosystem panel. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

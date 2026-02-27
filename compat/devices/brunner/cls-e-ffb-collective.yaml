@@ -1,0 +1,47 @@
+# Brunner CLS-E FFB Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Force feedback helicopter collective with active centering and resistance.
+
+schema_version: "1"
+
+device:
+  name: "Brunner CLS-E FFB Collective"
+  vendor: "Brunner Elektronik AG"
+  usb:
+    vendor_id: 0x1781
+    product_id: 0x0A15
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, friction]
+    resolution_bits: 14
+  buttons: 8
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x1781 / PID 0x0A15 unconfirmed. Brunner uses custom firmware."
+  - id: FORCE_FEEDBACK_COLLECTIVE
+    description: "Active force feedback on collective axis. Simulates hydraulic resistance."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Collective axis is unipolar [0, max]; map to [0.0, 1.0]."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brunner CLS-E FFB helicopter collective. Force feedback on collective axis. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

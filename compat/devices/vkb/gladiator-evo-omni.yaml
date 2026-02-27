@@ -1,0 +1,45 @@
+# VKB Gladiator EVO Omni-Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Ambidextrous space-sim throttle with omnidirectional stick.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator EVO Omni-Throttle"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0510
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, twist, ministick_x, ministick_y]
+    resolution_bits: 14
+  buttons: 20
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x231D confirmed VKB. PID 0x0510 community estimate."
+  - id: OMNI_THROTTLE
+    description: "Omnidirectional joystick for space-sim HOSAS. Left or right hand use."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gladiator EVO Omni-Throttle for HOSAS space-sim. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

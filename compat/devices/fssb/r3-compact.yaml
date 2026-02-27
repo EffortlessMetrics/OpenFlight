@@ -1,0 +1,45 @@
+# FSSB R3 Compact
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Compact form factor R3 force sensing base for desktop mounting.
+
+schema_version: "1"
+
+device:
+  name: "FSSB R3 Compact"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x0738
+    product_id: 0xA003
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING
+    description: "Compact desktop form factor. Two-axis force sensing only (no Z axis)."
+  - id: PID_UNCONFIRMED
+    description: "VID/PID community estimates. Verify with lsusb on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R3 Compact desktop force sensing stick base. Two-axis variant. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

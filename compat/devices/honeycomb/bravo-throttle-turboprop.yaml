@@ -1,0 +1,45 @@
+# Honeycomb Bravo Throttle Quadrant Turboprop Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Turboprop-specific Bravo throttle with condition lever and prop RPM.
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Bravo Throttle Quadrant Turboprop Edition"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1904
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, prop1, prop2, condition1, condition2]
+    resolution_bits: 16
+  buttons: 28
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x294B confirmed Honeycomb. PID 0x1904 community estimate for turboprop edition."
+  - id: LEVER_DETENTS
+    description: "Condition levers have physical detents for ground/flight idle and cutoff."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Bravo Turboprop Edition. Condition and prop levers. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

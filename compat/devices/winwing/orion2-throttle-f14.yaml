@@ -1,0 +1,45 @@
+# WinWing Orion2 F-14 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# F-14 Tomcat replica throttle with DLC and wing sweep controls.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion2 F-14 Throttle"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0230
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_throttle, right_throttle, wing_sweep, dlc]
+    resolution_bits: 16
+  buttons: 48
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed WinWing. PID 0x0230 community estimate for F-14 throttle."
+  - id: WING_SWEEP
+    description: "Dedicated wing sweep lever axis for F-14 variable geometry wings."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion2 F-14 Tomcat replica throttle. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -1,0 +1,46 @@
+# Real Simulator FSSB R3L
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# R3L is the lightweight variant of the R3 force sensing stick base.
+# Reduced force threshold for lighter touch; ideal for long sessions.
+
+schema_version: "1"
+
+device:
+  name: "Real Simulator FSSB R3L"
+  vendor: "Real Simulator"
+  usb:
+    vendor_id: 0x04F3
+    product_id: 0x0173
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING
+    description: "Lighter spring constant than standard R3. Lower actuation force for extended sessions."
+  - id: PID_UNCONFIRMED
+    description: "VID/PID community estimates. Verify with lsusb on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Real Simulator FSSB R3L lightweight force sensing stick base. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

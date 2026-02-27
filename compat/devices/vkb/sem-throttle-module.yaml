@@ -1,0 +1,45 @@
+# VKB SEM Throttle Module
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Side-mounted throttle module for single-engine GA aircraft.
+
+schema_version: "1"
+
+device:
+  name: "VKB SEM Throttle Module"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0520
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, mixture]
+    resolution_bits: 14
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x231D confirmed VKB. PID 0x0520 community estimate."
+  - id: SIDE_MOUNT
+    description: "Side-mounted throttle module. Attaches to VKB desk mounts."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB SEM side-mounted throttle module for GA aircraft. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

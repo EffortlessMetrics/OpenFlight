@@ -1,0 +1,45 @@
+# VIRPIL VPC Throttle SX
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Compact single-engine throttle for GA and trainer aircraft.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Throttle SX"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8260
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, prop, mixture, friction]
+    resolution_bits: 14
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed VIRPIL. PID 0x8260 community estimate."
+  - id: SINGLE_ENGINE
+    description: "Single-engine throttle layout with prop and mixture levers."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Throttle SX single-engine compact throttle. VID/PID unconfirmed.
+    Last reviewed: 2026-07.
