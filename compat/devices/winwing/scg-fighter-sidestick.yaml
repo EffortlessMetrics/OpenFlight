@@ -1,0 +1,54 @@
+# WinWing SCG Fighter Sidestick (standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xBECC is community-reported for the WinWing SCG standalone fighter
+# sidestick. Not yet confirmed via linux-hardware.org or USB descriptor
+# capture. The SCG is a self-contained joystick (no separate base unit)
+# distinct from the Orion Base + grip series.
+
+schema_version: "1"
+
+device:
+  name: "WinWing SCG Fighter Sidestick"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0xBECC    # Community-reported; not confirmed from hardware probes.
+                           # Verify with lsusb / USBView before enabling device matching.
+  hid:
+    usage_page: 0x01    # Generic Desktop
+    usage: 0x04         # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 12
+  buttons: 30
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBECC is community-reported and has not been confirmed from
+      linux-hardware.org probes or a USB descriptor capture. Update this
+      manifest when a confirmed PID becomes available.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing SCG standalone fighter sidestick — self-contained unit with
+    integrated base (no separate Orion base required). Three axes (X/Y stick
+    + Z twist), approximately 30 buttons, one 8-way hat. PID 0xBECC is
+    community-reported; confirm with lsusb or USB descriptor capture when
+    hardware is available. Distinct from the Orion Base + grip series
+    (e.g., Orion 2 F-16EX Stick at PID 0xBEA8).

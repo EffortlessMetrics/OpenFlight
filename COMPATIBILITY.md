@@ -171,6 +171,8 @@
 | WinWing Orion 3 F-15EX Stick | 0x4098 | 0xBD38 | 2 | 20 | ✗ | 2 |
 | WinWing Orion 3 F-16EX HOTAS Bundle (Virtual) | 0x4098 | ? | 6 | 52 | ✗ | 3 |
 | WinWing Orion 3 F-16EX Throttle | 0x4098 | 0xBD48 | 4 | 32 | ✗ | 2 |
+| WinWing Orion 3 Throttle Base + TGRIP-F16 | 0x4098 | 0xBD68 | 4 | 40 | ✗ | 2 |
+| WinWing SCG Fighter Sidestick | 0x4098 | 0xBECC | 3 | 30 | ✗ | 2 |
 | WinWing SimApp Pro FCU + EFIS-L + EFIS-R | 0x4098 | 0xBA01 | 0 | 96 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-L | 0x4098 | 0xBC1D | 0 | 64 | ✗ | 3 |
 | WinWing SimApp Pro FCU + EFIS-R | 0x4098 | 0xBC1E | 0 | 64 | ✗ | 3 |
