@@ -20,6 +20,7 @@
 //! - Clear UI messaging when features are unavailable
 
 pub mod adapter;
+pub mod auto_deploy;
 pub mod export_lua;
 pub mod installer;
 pub mod mp_detection;
@@ -27,6 +28,7 @@ pub mod socket_bridge;
 pub mod tcp;
 
 pub use adapter::{DcsAdapter, DcsAdapterConfig, DcsAdapterError};
+pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use installer::{DcsInstaller, InstallResult, InstallStatus};
