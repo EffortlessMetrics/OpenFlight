@@ -25,6 +25,7 @@ pub mod crash_report;
 pub mod curve_conflict_service;
 pub mod diagnostic_bundle;
 pub mod error_taxonomy;
+pub mod event_journal;
 pub mod first_run;
 pub mod graceful_drain;
 pub mod health;
@@ -33,6 +34,7 @@ pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
 pub mod one_click_resolver;
+pub mod perf_profiler;
 pub mod plugin;
 pub mod plugin_registry;
 pub mod power;
@@ -85,5 +87,6 @@ pub use stecs_runtime::{
     VkbStecsRuntimeConfig, VkbStecsSnapshot,
 };
 
+pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
 pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
 pub use plugin_registry::PluginRegistry;
