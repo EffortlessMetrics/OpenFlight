@@ -1,0 +1,12 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: ctx
+---
+mode: Full
+limits:
+  max_axis_output: 1
+  max_ffb_torque: 50
+  allow_high_torque: true
+  max_expo: 1
+  max_slew_rate: 100
+audit_enabled: true

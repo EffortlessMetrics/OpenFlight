@@ -1,0 +1,36 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "msfs",
+  "aircraft": {
+    "icao": "B738"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "expo": 0.2,
+      "slew_rate": 1.0,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    }
+  },
+  "pof_overrides": {
+    "approach": {
+      "axes": {
+        "pitch": {
+          "deadzone": 0.05,
+          "expo": 0.4,
+          "slew_rate": 2.0,
+          "detents": [],
+          "curve": null,
+          "filter": null
+        }
+      },
+      "hysteresis": null
+    }
+  }
+}

@@ -1,0 +1,24 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "xplane",
+  "aircraft": null,
+  "axes": {
+    "rudder": {
+      "deadzone": 0.05,
+      "expo": 0.1,
+      "slew_rate": null,
+      "detents": [],
+      "curve": null,
+      "filter": {
+        "alpha": 0.15,
+        "spike_threshold": 0.08,
+        "max_spike_count": 5
+      }
+    }
+  },
+  "pof_overrides": null
+}

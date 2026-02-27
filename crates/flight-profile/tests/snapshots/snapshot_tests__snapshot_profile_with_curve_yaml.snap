@@ -1,0 +1,27 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: profile
+---
+schema: flight.profile/1
+sim: dcs
+aircraft:
+  icao: F16C
+axes:
+  pitch:
+    deadzone: 0.02
+    expo: ~
+    slew_rate: ~
+    detents: []
+    curve:
+      - input: 0
+        output: 0
+      - input: 0.25
+        output: 0.15
+      - input: 0.5
+        output: 0.4
+      - input: 0.75
+        output: 0.7
+      - input: 1
+        output: 1
+    filter: ~
+pof_overrides: ~

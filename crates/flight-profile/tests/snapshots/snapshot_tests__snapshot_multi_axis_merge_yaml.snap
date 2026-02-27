@@ -1,0 +1,38 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: merged
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "msfs",
+  "aircraft": {
+    "icao": "C172SP"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "expo": 0.5,
+      "slew_rate": 1.2,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    },
+    "roll": {
+      "deadzone": 0.04,
+      "expo": 0.3,
+      "slew_rate": null,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    },
+    "rudder": {
+      "deadzone": 0.05,
+      "expo": null,
+      "slew_rate": null,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    }
+  },
+  "pof_overrides": null
+}

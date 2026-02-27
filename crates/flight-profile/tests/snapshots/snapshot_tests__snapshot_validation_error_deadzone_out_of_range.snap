@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/tests/snapshot_tests.rs
+expression: err.to_string()
+---
+Validation error: axes.pitch.deadzone: Deadzone must be between 0.0 and 0.5
