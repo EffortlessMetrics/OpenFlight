@@ -24,3 +24,15 @@ name = "fuzz_thrustmaster_parsers"
 path = "fuzz_targets/fuzz_thrustmaster_parsers.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_warthog_stick"
+path = "fuzz_targets/fuzz_warthog_stick.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_t16000m"
+path = "fuzz_targets/fuzz_t16000m.rs"
+test = false
+doc = false

@@ -24,3 +24,15 @@ name = "fuzz_virpil_parsers"
 path = "fuzz_targets/fuzz_virpil_parsers.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_alpha"
+path = "fuzz_targets/fuzz_alpha.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_mongoost"
+path = "fuzz_targets/fuzz_mongoost.rs"
+test = false
+doc = false
