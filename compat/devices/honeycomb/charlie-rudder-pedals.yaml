@@ -54,3 +54,16 @@ support:
     VID confirmed (0x294B). PID community-inferred as 0x1902 (sequential pattern:
     Alpha=0x1900, Bravo=0x1901). Not hardware-confirmed; do not use for production
     device matching. Last reviewed: 2026-02.
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; rudder and toe-brake axes recognised automatically."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Rudder and toe brakes map to DCS rudder/wheel-brake axes via DCS input controls."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."

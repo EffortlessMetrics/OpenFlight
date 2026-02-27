@@ -74,3 +74,21 @@ support:
     PID 0x43F5 confirmed from LunaBaloona/Virpil_devices_on_Linux (lsusb, real hardware).
     Report format shared with MongoosT-50CM3; use parse_mongoost_stick_report.
     Last reviewed: 2026-02.
+
+driver:
+  type: virpil_vpc
+  notes: >
+    VPC Config Tool required for axis calibration, curve shaping, and button remapping.
+    The device enumerates as standard HID; vendor software is optional for basic use
+    but recommended for full configuration.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. VPC Config Tool used for axis tuning."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; all 5 axes and buttons recognised automatically."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Plug and play. 14-bit resolution provides smooth axis response for warbird profiles."

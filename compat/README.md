@@ -38,6 +38,16 @@ All files use `schema_version: "1"`. Required fields:
 - `capabilities.axes`, `capabilities.buttons`, `capabilities.force_feedback`
 - `support.tier`
 
+Optional fields (all manifests may include these):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `driver` | string | Driver/software requirement. `standard_hid` = plug and play; otherwise names the required vendor tool (e.g. `virpil_vpc`, `vkb_devcfg`, `vpforce_companion`). |
+| `firmware.min_version` | string | Minimum tested firmware version (semver). |
+| `firmware.max_version` | string or null | Maximum tested firmware version; `null` means all newer versions are expected to work. |
+| `firmware.notes` | string | Firmware-specific quirks or update instructions. |
+| `tested_games` | list | Simulators this device has been tested with. Each entry: `game` (display name), `integration` (mechanism), `notes` (free text). |
+
 ### Game manifest
 - `game.name`, `game.id`, `integration.mechanism`, `integration.crate`
 - `features.telemetry_read`, `features.control_injection`

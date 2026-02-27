@@ -63,3 +63,21 @@ support:
     For the Mk.III, see gunfighter-mk3.yaml (PID 0x0127).
     For the Gunfighter + MCG Pro combo, see gunfighter-modern-combat-pro.yaml
     (PID 0x0125). Last reviewed: 2026-02.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software required for firmware updates, axis calibration, grip
+    configuration, and firmware profile selection. Device enumerates as standard
+    HID after configuration; vendor software is optional for basic use.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. VKBDevCfg used for axis and button tuning."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; axes and buttons recognised automatically. MCG/T-Stick grips add extra buttons."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Plug and play. 13-bit resolution provides smooth warbird axis response."

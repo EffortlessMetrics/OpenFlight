@@ -63,3 +63,19 @@ support:
     VPforce Rhino Mk.I (first-generation). Shares FFB capabilities with
     Rhino v2/v3 (rhino.yaml). PID 0xA1BF is a community estimate; confirm
     with lsusb. For current Rhino, see rhino.yaml. Last reviewed: 2026-02.
+
+firmware:
+  min_version: null
+  max_version: null
+  notes: >
+    Mk.I units may run older VPforce firmware pre-dating the 4.x series used
+    on v2/v3. Update via the VPforce companion app; ensure the companion app
+    version matches the installed firmware. FFB effect support is expected to
+    be identical to later Rhino versions, but has not been independently verified.
+
+driver:
+  type: vpforce_companion
+  notes: >
+    VPforce companion app required for firmware updates and torque configuration.
+    Device enumerates as standard HID; companion app communicates via vendor-defined
+    HID reports over the same USB interface.

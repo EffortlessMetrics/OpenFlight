@@ -54,3 +54,16 @@ support:
     community analysis of TARGET scripting output, Linux evtest captures, and
     the DCS HID documentation. Byte offsets have not been validated on
     physical hardware. Last validated: 2026-02.
+
+driver: standard_hid   # No vendor software required. TARGET scripting software is optional.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. TARGET optional for scripting."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; all axes and buttons recognised. Bipolar axis centering handled by axis engine."
+  - game: "Falcon BMS"
+    integration: direct_input
+    notes: "Standard DirectInput binding. TARGET macros supported for advanced BMS pit mapping."

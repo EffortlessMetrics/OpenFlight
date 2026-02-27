@@ -63,3 +63,16 @@ support:
     is derived from community DCS TARGET scripting analysis and Linux evtest
     captures. Byte offsets have not been validated on physical hardware.
     Last validated: 2026-02.
+
+driver: standard_hid   # No vendor software required. TARGET scripting software is optional.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Primary use case; plug and play with DCS built-in bindings. Toggle switch state preserved across sessions."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; dual throttle levers and slew control recognised as generic axes."
+  - game: "Falcon BMS"
+    integration: direct_input
+    notes: "Standard DirectInput binding. TARGET macros commonly used for BMS throttle detents."

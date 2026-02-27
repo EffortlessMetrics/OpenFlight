@@ -42,3 +42,13 @@ support:
     PID 0xBE48 confirmed from linux-hardware.org (2 probes). The updated
     variant ships as PID 0xBEA8 ("Orion Joystick Base 2 + JGRIP-F16").
     Typically paired with the Orion 2 Throttle (PID 0xBE62).
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Plug and play with DCS built-in bindings. Primary use case for F-16 module."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; X/Y axes and buttons recognised automatically."

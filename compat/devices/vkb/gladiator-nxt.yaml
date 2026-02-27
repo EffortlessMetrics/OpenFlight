@@ -40,3 +40,24 @@ support:
     simulated: true
     hil: false
   notes: "PID 0x0200 confirmed via linux-hardware.org (24 probes, USB string 'VKBsim Gladiator EVO R'). Left-hand variant uses PID 0x0201; see gladiator-nxt-left.yaml."
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software required for firmware updates, axis calibration, and
+    axis remapping. Device enumerates as standard HID after configuration;
+    vendor software is optional for basic use.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Plug and play with DCS built-in bindings. 15-bit resolution provides smooth axis control."
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; all 8 axes and buttons recognised automatically."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."
+  - game: "IL-2 Sturmovik: Great Battles"
+    integration: direct_input
+    notes: "Plug and play. High-resolution axes well-suited for warbird control."

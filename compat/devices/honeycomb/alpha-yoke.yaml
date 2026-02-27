@@ -45,3 +45,16 @@ support:
   test_coverage:
     simulated: true
     hil: false
+
+driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
+
+tested_games:
+  - game: "MSFS 2020"
+    integration: direct_input
+    notes: "Plug and play; yoke axes and all buttons recognised automatically."
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Button mapping via DCS input controls. Trim wheel maps to manual trim axis."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "Plug and play under X-Plane generic joystick support."
