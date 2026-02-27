@@ -1,0 +1,58 @@
+# Arduino Due as HID Joystick (runtime mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x2341 (Arduino LLC, confirmed).
+# PID 0x003E is the Arduino Due CDC composite runtime mode PID as documented
+# at arduino.cc/en/Main/Products. Arduino Due runs on SAM3X8E ARM Cortex-M3.
+# When used with Arduino HID library (e.g., ArduinoJoystickLibrary), it
+# enumerates as a composite USB device including HID joystick interface.
+schema_version: "1"
+
+device:
+  name: "Arduino Due USB HID Joystick (DIY)"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (confirmed)
+    product_id: 0x003E      # Arduino Due — runtime/application mode (confirmed arduino.cc)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      VID 0x2341 / PID 0x003E is the Arduino Due runtime application mode.
+      The bootloader mode uses PID 0x003D. The axis/button layout is entirely
+      user-defined by the sketch (e.g., ArduinoJoystickLibrary).
+  - id: DIY_HARDWARE
+    description: >
+      Arduino Due is a DIY hardware platform with 54 digital I/O and 12 analog
+      inputs, making it popular for complex cockpit builds.
+  - id: ARM_CORTEX_M3
+    description: >
+      The Due's SAM3X8E ARM Cortex-M3 processor provides higher performance than
+      AVR-based boards, enabling more complex flight panel firmware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Due USB HID joystick (runtime mode). VID 0x2341 / PID 0x003E
+    confirmed from arduino.cc. Bootloader mode uses PID 0x003D. Axis/button
+    layout builder-defined. Wave-41 addition. Last reviewed: 2026-07.

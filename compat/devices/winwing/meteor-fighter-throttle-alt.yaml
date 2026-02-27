@@ -1,0 +1,54 @@
+# WinWing Meteor Fighter Throttle Alt PID (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x4098 (WinWing, confirmed).
+# PID 0xBF21 is a community estimate for an alternate or hardware revision
+# of the WinWing Meteor Fighter Throttle. The primary Meteor Fighter Throttle
+# uses PID 0xBF20 (meteor-fighter-throttle.yaml). PID 0xBF21 may correspond
+# to a revised PCB, button firmware version, or pack variant observed in
+# some community DCS/MSFS configuration files.
+schema_version: "1"
+
+device:
+  name: "WinWing Meteor Fighter Throttle (alt PID)"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098       # WinWing (confirmed)
+    product_id: 0xBF21      # Community estimate; primary is 0xBF20 (meteor-fighter-throttle.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, z, rx, ry, rz]
+    resolution_bits: 12
+  buttons: 40
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBF21 is a community estimate. Primary Meteor Fighter Throttle uses
+      PID 0xBF20 (meteor-fighter-throttle.yaml). Verify with SimApp Pro or lsusb.
+  - id: SIMAPP_PRO_INTEGRATION
+    description: >
+      WinWing Meteor Fighter Throttle integrates with SimApp Pro for button
+      mapping, LED control, and display configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Meteor Fighter Throttle alt PID community estimate (0xBF21).
+    Primary uses 0xBF20. VID 0x4098 confirmed.
+    Wave-41 addition. Last reviewed: 2026-07.

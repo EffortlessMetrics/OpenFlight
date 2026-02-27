@@ -1,0 +1,60 @@
+# Arduino Pro Micro as HID (VID 0x2341, PID 0x0037)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x2341 (Arduino LLC, confirmed).
+# PID 0x0037 is the Arduino Pro Micro application/runtime mode PID,
+# as confirmed from arduino.cc USB product IDs. The existing manifest
+# arduino-pro-micro-trim-wheel.yaml uses PID 0x8037 which is the
+# bootloader-mode PID. PID 0x0037 is the standard operational HID mode.
+schema_version: "1"
+
+device:
+  name: "Arduino Pro Micro as HID (Runtime Mode)"
+  vendor: "Arduino LLC"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (confirmed)
+    product_id: 0x0037      # Arduino Pro Micro — runtime/application mode (confirmed arduino.cc)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 10
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: VID_PID_FIRMWARE_DEFINED
+    description: >
+      VID 0x2341 / PID 0x0037 is the Arduino Pro Micro runtime (application)
+      mode. PID 0x8037 is the bootloader mode (arduino-pro-micro-trim-wheel.yaml).
+      The axis/button layout is entirely user-defined by the Arduino sketch.
+      Values listed represent a typical DIY cockpit joystick configuration.
+  - id: DIY_HARDWARE
+    description: >
+      Arduino Pro Micro is a DIY hardware platform. Axis count, button count,
+      names, and HID report descriptor vary by builder sketch.
+  - id: HIGH_POLL_RATE
+    description: >
+      The Pro Micro (ATmega32U4) supports USB full-speed 1000 Hz polling.
+      Default Arduino HID libraries poll at 125 Hz; custom firmware can reach 1000 Hz.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Arduino Pro Micro runtime mode HID joystick. VID 0x2341 / PID 0x0037
+    confirmed from arduino.cc. Bootloader mode uses PID 0x8037. Layout is
+    builder-defined. Common DIY cockpit platform. Wave-41 addition.
+    Last reviewed: 2026-07.

@@ -1,0 +1,60 @@
+# TrackHat Clip+ v2 Head Tracker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x33DD is a community estimate for TrackHat Ltd
+# (UK-based head tracking accessory manufacturer). PID 0x0002 is reported
+# for the Clip+ v2 hardware revision which uses a custom USB descriptor
+# rather than the Arduino-based VID 0x2341 used by earlier revisions.
+# Verify with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "TrackHat Clip+ v2"
+  vendor: "TrackHat"
+  usb:
+    vendor_id: 0x33DD       # Community estimate — TrackHat Ltd (UK)
+    product_id: 0x0002      # Community estimate — Clip+ v2 firmware
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Generic (head tracker, not a joystick)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x33DD and PID 0x0002 are community estimates for the TrackHat Clip+ v2.
+      Earlier revisions used Arduino VID 0x2341 (see trackhat_clip.yaml).
+      Verify with lsusb on your specific unit.
+  - id: OPENTRACK_REQUIRED
+    description: >
+      The Clip+ does not expose head-pose data as standard HID axes.
+      It outputs an IR LED pattern captured by a camera; OpenTrack processes
+      the video feed to produce 6DOF pose data.
+  - id: CAMERA_REQUIRED
+    description: >
+      Requires a separate IR-filtered camera (e.g., PS3 Eye with IR pass filter).
+      The Clip provides IR LEDs; the camera and OpenTrack do the head-pose computation.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    TrackHat Clip+ v2 IR LED head tracker. VID 0x33DD / PID 0x0002 community
+    estimates. Requires OpenTrack for 6DOF head tracking. Earlier revisions
+    use Arduino VID/PID (trackhat_clip.yaml). Wave-41 addition.
+    Last reviewed: 2026-07.

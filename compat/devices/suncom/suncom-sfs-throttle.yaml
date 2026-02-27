@@ -1,0 +1,60 @@
+# Suncom SFS Throttle (VID 0x0583, PID 0x0001)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x0583 is a community estimate for the Suncom USB
+# throttle. Suncom Technologies had no confirmed registered USB VID in public
+# USB ID databases; 0x0583 appears in some community USB capture logs for
+# Suncom USB devices. PID 0x0001 is estimated for the SFS Throttle.
+# An alternate Suncom manifest (suncom_sfs_t_stick.yaml) uses VID 0x068E
+# (CH Products VID placeholder). Verify on real hardware.
+schema_version: "1"
+
+device:
+  name: "Suncom SFS Throttle"
+  vendor: "Suncom Technologies"
+  usb:
+    vendor_id: 0x0583       # Community estimate — Suncom had no confirmed registered VID
+    product_id: 0x0001      # Community estimate for SFS Throttle
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, z]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_PID_UNCONFIRMED
+    description: >
+      VID 0x0583 and PID 0x0001 are community estimates. Suncom Technologies
+      did not have a confirmed USB VID in public databases. An alternate manifest
+      uses VID 0x068E placeholder (suncom_sfs_t_stick.yaml). This device may
+      only be available via legacy USB-to-gameport adapter configurations.
+  - id: VINTAGE_THROTTLE
+    description: >
+      The SFS Throttle is a vintage throttle unit from the late 1990s originally
+      designed for gameport connection. USB variants typically use an adapter.
+  - id: LIMITED_RESOLUTION
+    description: >
+      8-bit axis resolution (256 positions) is typical for vintage Suncom
+      throttle hardware. Apply smoothing in the profile if jitter is observed.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Suncom SFS Throttle VID 0x0583 / PID 0x0001 community estimates.
+    No confirmed USB VID for Suncom Technologies. See suncom_sfs_t_stick.yaml
+    for alternate placeholder. Wave-41 addition. Last reviewed: 2026-07.

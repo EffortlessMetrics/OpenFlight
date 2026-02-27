@@ -1,0 +1,53 @@
+# VIRPIL VPC MongoosT-50CM3 (Alt PID 0x4193)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x4193 is a community estimate for the VPC MongoosT-50CM3 base/stick
+# unit. Alternate estimates exist at vpc-mongoost-50cm3-stick.yaml and
+# vpc-mongoost-50cm3-throttle.yaml (PID 0x820D). Verify with lsusb or
+# VIRPIL Configurator before production deployment.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 (Alt PID)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x4193      # Community estimate — confirm via lsusb or VIRPIL Configurator
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [x, y, z, rx, ry, rz, slider]
+    resolution_bits: 14
+  buttons: 24
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4193 is a community estimate. Other CM3 manifests use 0x820D.
+      Only one PID will match on real hardware — verify with lsusb.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings configurable via VIRPIL Configurator.
+      Default report layout may differ from hardware configuration.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM3 alternate PID 0x4193 estimate. VID 0x3344 confirmed.
+    See vpc-mongoost-50cm3-stick.yaml for alternate estimate. Wave-41 addition.
+    Last reviewed: 2026-07.

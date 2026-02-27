@@ -1,0 +1,57 @@
+# Logitech G Saitek Pro Flight Instrument Panel (Alt PID 0x0C2D)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x06A3 (Saitek / Logitech PLC).
+# PID 0x0C2D is a community-reported alternate PID for the Pro Flight
+# Instrument Panel (FIP). The confirmed primary PID is 0xA2AE
+# (g-flight-instrument-panel.yaml, confirmed via Saitek SDK).
+# PID 0x0C2D appears in some community USB capture logs and driver databases.
+schema_version: "1"
+
+device:
+  name: "Logitech G Saitek Pro Flight Instrument Panel (Alt PID)"
+  vendor: "Logitech (Saitek)"
+  usb:
+    vendor_id: 0x06A3       # Saitek / Logitech PLC
+    product_id: 0x0C2D      # Community-reported alt PID — confirmed primary is 0xA2AE
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x00             # Undefined (panel device)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 7
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0C2D is a community-reported alternate. The confirmed primary PID
+      is 0xA2AE (g-flight-instrument-panel.yaml). Verify with lsusb.
+  - id: OUTPUT_LCD_DISPLAY
+    description: >
+      The FIP features a 320×240 TFT colour LCD driven via USB bulk transfers.
+      The Saitek/Logitech DirectOutput SDK is required for display output on Windows.
+  - id: SAITEK_ALIAS
+    description: >
+      VID 0x06A3 was originally released under Saitek branding. Logitech
+      re-released with identical VID after the 2016 acquisition.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech G Saitek Pro Flight Instrument Panel alternate PID 0x0C2D.
+    Primary confirmed PID is 0xA2AE (g-flight-instrument-panel.yaml).
+    Wave-41 addition. Last reviewed: 2026-07.

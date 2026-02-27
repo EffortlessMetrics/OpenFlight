@@ -1,0 +1,55 @@
+# Honeycomb Charlie Rudder Pedals (Alt PID 0x1903)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x294B confirmed (Honeycomb Aeronautical).
+# PID 0x1903 is a community estimate for the Charlie Rudder Pedals,
+# as an alternative to the community-inferred PID 0x1902 (charlie-rudder-pedals.yaml).
+# Both values are unconfirmed; the sequential Honeycomb scheme (Alpha=0x1900,
+# Bravo=0x1901) does not conclusively determine the Charlie PID.
+# Verify with lsusb or Windows Device Manager on real hardware.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Charlie Rudder Pedals (Alt PID)"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1903      # Community estimate — see also charlie-rudder-pedals.yaml (0x1902)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [rudder, left_brake, right_brake]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1903 is a community estimate. An alternate inferred PID (0x1902)
+      is in charlie-rudder-pedals.yaml. Neither has been hardware-confirmed.
+      Verify with lsusb / USBView on real hardware before enabling device matching.
+  - id: RUDDER_CENTRED
+    description: >
+      Rudder axis is bipolar (centred). Toe brakes are unipolar (0 = released,
+      max = fully depressed).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Charlie Rudder Pedals alternate PID 0x1903 estimate. VID 0x294B
+    confirmed. See charlie-rudder-pedals.yaml for PID 0x1902 estimate.
+    Neither PID is hardware-confirmed. Wave-41 addition. Last reviewed: 2026-07.

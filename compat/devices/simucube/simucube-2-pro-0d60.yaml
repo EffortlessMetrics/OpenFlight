@@ -1,0 +1,57 @@
+# Simucube 2 Pro (Alt PID 0x0D60)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x16D0 confirmed (Granite Devices / MCS Electronics).
+# PID 0x0D60 is a community estimate for the Simucube 2 Pro as an alternate
+# to PID 0x0D61 (simucube-2-pro.yaml). Both are community estimates pending
+# hardware confirmation. Only one PID will match on real hardware.
+schema_version: "1"
+
+device:
+  name: "Simucube 2 Pro (Alt PID)"
+  vendor: "Granite Devices"
+  usb:
+    vendor_id: 0x16D0       # Granite Devices (usb.ids "MCS Electronics") — confirmed
+    product_id: 0x0D60      # Community estimate — see also simucube-2-pro.yaml (0x0D61)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 24
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 25.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0D60 is a community estimate. An alternate estimate (0x0D61) is in
+      simucube-2-pro.yaml. Only one PID will match; confirm with lsusb or
+      Simucube True Drive USB descriptor capture.
+  - id: TORQUE_ONLY
+    description: >
+      Simucube 2 series accepts raw torque commands via vendor HID reports,
+      not standard DirectInput effect types.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simucube 2 Pro alternate PID 0x0D60 estimate. See simucube-2-pro.yaml
+    for PID 0x0D61 estimate. VID 0x16D0 = Granite Devices. Wave-41 addition.
+    Last reviewed: 2026-07.

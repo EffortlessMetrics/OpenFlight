@@ -1,0 +1,56 @@
+# Fanatec ClubSport Pedals V3 (Alt VID 0xEB03)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0xEB03 is a community-reported alternate VID seen
+# in some Fanatec USB captures. The primary confirmed Fanatec VID is 0x0EB7
+# (clubsport-pedals-v3.yaml, PID 0x0020). PID 0x0005 is a community estimate
+# for the ClubSport Pedals V3 under this alternate VID.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V3 (Alt VID)"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0xEB03       # Community-reported alt VID — primary Fanatec VID is 0x0EB7
+    product_id: 0x0005      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0xEB03 is a community-reported alternate. Primary Fanatec VID is
+      0x0EB7 (clubsport-pedals-v3.yaml). Verify with lsusb before production use.
+  - id: LOAD_CELL_BRAKE
+    description: >
+      The V3 brake pedal uses a load-cell (force-based) sensor. Axis values
+      reflect applied force rather than pedal travel distance.
+  - id: FLIGHT_PEDAL_USE
+    description: >
+      When used as rudder pedals in flight sim, map throttle axis to left brake,
+      clutch axis to right brake, and brake axis to rudder.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V3 alternate VID 0xEB03 / PID 0x0005.
+    Primary manifest is clubsport-pedals-v3.yaml (VID 0x0EB7 / PID 0x0020).
+    Wave-41 addition. Last reviewed: 2026-07.

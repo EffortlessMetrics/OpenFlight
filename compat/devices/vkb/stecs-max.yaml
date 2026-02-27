@@ -1,0 +1,55 @@
+# VKB STECS Max Throttle (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x231D (VKB Sim, confirmed).
+# PID 0x020B is a community estimate for the VKB STECS Max throttle,
+# the full-featured variant of the STECS (Smart Throttle Engine Control System)
+# range. Related STECS manifests: stecs_mini.yaml (0x0201),
+# stecs_standard.yaml (0x0209). The Max variant is expected to include
+# additional axes, encoders, and button options.
+schema_version: "1"
+
+device:
+  name: "VKB STECS Max"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D       # VKB Sim (confirmed)
+    product_id: 0x020B      # Community estimate — verify with VKBDevCfg or lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 8
+    names: [left_throttle, right_throttle, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 15
+  buttons: 40
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x020B is a community estimate. STECS Mini uses 0x0201, STECS Standard
+      uses 0x0209. The Max variant PID is unconfirmed. Verify with VKBDevCfg → USB Info.
+  - id: CONFIGURABLE_VIA_VKBDEVCFG
+    description: >
+      Axis mapping and button assignments configurable via VKBDevCfg software.
+      Dual-throttle layout supports split-throttle twin-engine operations.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB STECS Max community estimate (PID 0x020B). VID 0x231D confirmed.
+    Full-featured STECS variant with dual throttle and extended controls.
+    See stecs_mini.yaml (0x0201) and stecs_standard.yaml (0x0209).
+    Wave-41 addition. Last reviewed: 2026-07.

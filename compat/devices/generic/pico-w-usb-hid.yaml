@@ -1,0 +1,59 @@
+# Raspberry Pi Pico W as USB HID
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x2E8A (Raspberry Pi Foundation, confirmed).
+# PID 0x000B is reported in raspberrypi.com USB product documentation for the
+# Raspberry Pi Pico W. The Pico W adds WiFi via CYW43439 to the RP2040.
+# When used as a USB HID joystick (via TinyUSB or CircuitPython), it
+# enumerates with VID 0x2E8A. The Pico W PID (0x000B) is distinct from
+# the standard Pico (0x0004) and pico-sdk-joystick.yaml (0x000A).
+schema_version: "1"
+
+device:
+  name: "Raspberry Pi Pico W USB HID"
+  vendor: "Raspberry Pi Foundation"
+  usb:
+    vendor_id: 0x2E8A       # Raspberry Pi Foundation (confirmed)
+    product_id: 0x000B      # Pico W product PID (raspberrypi.com USB product IDs)
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PICO_W_VARIANT
+    description: >
+      PID 0x000B is specific to the Pico W (with WiFi). Standard Pico uses
+      PID 0x0004 (pico-usb-hid.yaml). The pico-sdk-joystick.yaml uses PID
+      0x000A (SDK community default).
+  - id: DIY_HARDWARE
+    description: >
+      RP2040-based DIY platform. Axis/button layout entirely firmware-defined
+      via TinyUSB, MicroPython, or CircuitPython.
+  - id: WIFI_COEXISTENCE
+    description: >
+      Pico W runs both USB HID and WiFi. Some firmware may use WiFi for
+      wireless data relay while maintaining USB HID enumeration simultaneously.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Raspberry Pi Pico W USB HID (PID 0x000B). Distinct from standard Pico
+    (PID 0x0004). VID 0x2E8A confirmed. DIY platform; layout firmware-defined.
+    Wave-41 addition. Last reviewed: 2026-07.

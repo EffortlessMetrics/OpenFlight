@@ -1,0 +1,55 @@
+# VIRPIL VPC T-50 CM3 Throttle (Alt PID 0x4195)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x4195 is a community estimate for the VPC T-50 Throttle (CM3 generation).
+# The original MongoosT-50 throttle uses PID 0x0140 (vpc-throttle-mt50.yaml).
+# Confirm with lsusb or VIRPIL Configurator before production deployment.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC T-50 Throttle (CM3)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB
+    product_id: 0x4195      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, scx, scy, slider1, slider2]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4195 is a community estimate for the CM3 generation throttle.
+      The original MT-50 throttle uses 0x0140 (vpc-throttle-mt50.yaml).
+      Verify with lsusb before use.
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      Throttle_L and Throttle_R are independent left and right throttle levers;
+      they can be linked or used independently in twin-engine split-throttle profiles.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: "Axis assignments and button mappings configurable via VIRPIL Configurator."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC T-50 Throttle CM3 generation (PID 0x4195 community estimate).
+    VID 0x3344 confirmed. Dual-throttle layout, 14-bit axes, 32 buttons.
+    Wave-41 addition. Last reviewed: 2026-07.

@@ -1,0 +1,62 @@
+# Simagic Alpha Mini Direct Drive Base (STM32, VID 0x0483)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x0483 is STMicroelectronics (community-reported
+# for Simagic Alpha Mini units using STM32-based USB firmware). PID 0x5750
+# is a community estimate for the Alpha Mini in this firmware variant.
+# The primary Alpha Mini manifest (alpha-mini-base.yaml) uses VID 0x0EBC
+# (Simagic Technology). Confirm with lsusb on real hardware.
+schema_version: "1"
+
+device:
+  name: "Simagic Alpha Mini (STM32 Variant)"
+  vendor: "Simagic Technology"
+  usb:
+    vendor_id: 0x0483       # STMicroelectronics (community-reported for Simagic STM32 variant)
+    product_id: 0x5750      # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [torque, spring, damper]
+    max_update_rate_hz: 2000
+    torque_limit_nm: 12
+
+polling:
+  expected_rate_hz: 2000
+  max_jitter_ms: 1
+
+quirks:
+  - id: VID_COMMUNITY_REPORTED
+    description: >
+      VID 0x0483 (STMicro) is used by Simagic for STM32-based firmware.
+      The primary Alpha Mini manifest uses VID 0x0EBC (alpha-mini-base.yaml).
+      Only one VID will match on a given unit.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5750 is a community estimate. Confirm with lsusb or Simagic
+      Alpha Manager application before production deployment.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      For flight sim use, the wheel rotation axis maps to roll. An axis
+      scaling profile is recommended to restrict effective travel.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Simagic Alpha Mini STM32 variant (VID 0x0483, PID 0x5750 estimate).
+    Primary manifest is alpha-mini-base.yaml (VID 0x0EBC). Wave-41 addition.
+    Last reviewed: 2026-07.

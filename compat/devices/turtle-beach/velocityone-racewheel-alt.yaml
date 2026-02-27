@@ -1,0 +1,55 @@
+# Turtle Beach VelocityOne Race Wheel Alt PID (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. Turtle Beach VID 0x1432 (community confirmed from
+# velocityone-edge-joystick.yaml; also 0x10F5 observed on other VO models).
+# PID 0xB401 is a community estimate for an alternate firmware variant of
+# the VelocityOne Race Wheel. The primary Race Wheel uses PID 0xB400
+# (velocityone-racewheel.yaml). PID 0xB401 may correspond to a firmware
+# revision or regional variant.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Race Wheel (alt PID)"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x1432       # Turtle Beach (community confirmed)
+    product_id: 0xB401      # Community estimate; primary is 0xB400 (velocityone-racewheel.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [steering, throttle, brake, clutch, handbrake]
+    resolution_bits: 12
+  buttons: 20
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB401 is a community estimate. Primary velocityone-racewheel.yaml
+      uses PID 0xB400. VID 0x1432 is community confirmed from other
+      VelocityOne hardware. Verify with lsusb.
+  - id: FORCE_FEEDBACK_BELT_DRIVE
+    description: >
+      VelocityOne Race Wheel uses belt-drive force feedback motor. FFB
+      intensity and response configurable via Turtle Beach Control Hub.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Race Wheel alt PID estimate (0xB401).
+    Primary uses 0xB400 (velocityone-racewheel.yaml). VID 0x1432.
+    Wave-41 addition. Last reviewed: 2026-07.

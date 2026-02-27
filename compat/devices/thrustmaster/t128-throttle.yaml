@@ -1,0 +1,50 @@
+# Thrustmaster T.128 Throttle Module (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x044F (Guillemot / Thrustmaster, confirmed).
+# PID 0xB698 is a community estimate for the Thrustmaster T.128 Throttle
+# Module, intended as a companion throttle for the T.128 racing/flight
+# controller lineup. The T.128 joystick is estimated at 0xB697.
+# PID is derived from Thrustmaster's sequential B6xx allocation pattern.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster T.128 Throttle Module"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F       # Guillemot / Thrustmaster (confirmed)
+    product_id: 0xB698      # Community estimate — T.128 throttle companion
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle, slider1, rx, ry]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB698 is a community estimate based on Thrustmaster sequential
+      PID allocation. T.128 joystick is expected at PID 0xB697.
+      Verify actual PID with lsusb when hardware is available.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster T.128 Throttle Module community estimate (PID 0xB698).
+    VID 0x044F confirmed. Companion throttle to T.128 joystick.
+    Wave-41 addition. Last reviewed: 2026-07.

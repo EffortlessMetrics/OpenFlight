@@ -1,0 +1,54 @@
+# VIRPIL VPC T-50CM3 Base Alt PID (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x3344 (VIRPIL Controls UAB, confirmed).
+# PID 0x4501 is a community estimate for an alternate firmware variant
+# of the VIRPIL VPC T-50CM3 Base. The primary PID 0x4500 is documented
+# in t50cm3-base.yaml. PID 0x4501 has been observed in some community
+# reports for production variant or firmware revision of the same device.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC T-50CM3 Base (alt PID)"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344       # VIRPIL Controls UAB (confirmed)
+    product_id: 0x4501      # Community estimate; primary is 0x4500 (t50cm3-base.yaml)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, slider1, slider2]
+    resolution_bits: 15
+  buttons: 30
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4501 is a community-observed alt PID for the T-50CM3 Base. The
+      primary manifest uses PID 0x4500 (t50cm3-base.yaml). Verify with
+      VIRPIL Control Panel → USB Device Info or lsusb.
+  - id: HALL_EFFECT_ALL_AXES
+    description: >
+      All axes use VIRPIL contactless Hall effect sensors as in the primary
+      T-50CM3 Base manifest (t50cm3-base.yaml).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC T-50CM3 Base alt PID community estimate (0x4501). Primary
+    t50cm3-base.yaml uses PID 0x4500. VID 0x3344 confirmed.
+    Wave-41 addition. Last reviewed: 2026-07.

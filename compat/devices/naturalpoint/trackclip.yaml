@@ -1,0 +1,59 @@
+# NaturalPoint TrackClip (Passive)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x131D (NaturalPoint Inc., confirmed).
+# PID 0x0156 is a community estimate for the passive TrackClip (non-Pro)
+# accessory. The TrackClip Pro uses PID 0x015A (trackclip-pro.yaml).
+# The passive TrackClip uses retroreflectors rather than active IR LEDs
+# and relies entirely on the TrackIR camera's IR illumination.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackClip"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D       # NaturalPoint Inc. (confirmed)
+    product_id: 0x0156      # Community estimate — TrackClip (passive, non-Pro)
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Generic (not a joystick)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: PASSIVE_RETROREFLECTOR
+    description: >
+      The passive TrackClip uses three retroreflective spheres, not IR LEDs.
+      It relies on the TrackIR camera's built-in IR illumination ring.
+      No USB power is required; it does not enumerate as a USB device independently.
+  - id: NOT_A_JOYSTICK
+    description: >
+      The TrackClip does not expose head-pose data as HID axes. The TrackIR
+      camera (trackir-5.yaml or trackir-4-pro.yaml) provides the HID input.
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0156 is a community estimate. The TrackClip (passive) may not
+      enumerate as a USB device at all. See TrackClip Pro (PID 0x015A) in
+      trackclip-pro.yaml for the active LED variant.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackClip (passive retroreflector). PID 0x0156 community estimate.
+    Distinct from TrackClip Pro (0x015A, trackclip-pro.yaml) which uses active LEDs.
+    VID 0x131D = NaturalPoint Inc. Wave-41 addition. Last reviewed: 2026-07.

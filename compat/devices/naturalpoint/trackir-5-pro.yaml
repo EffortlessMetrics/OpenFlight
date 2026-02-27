@@ -1,0 +1,57 @@
+# NaturalPoint TrackIR 5 Pro (community estimate)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-41 addition. VID 0x131D (NaturalPoint Inc., confirmed).
+# PID 0x0157 is a community estimate for the TrackIR 5 Pro camera unit.
+# The standard TrackIR 5 uses PID 0x0155 (trackir-5.yaml, confirmed).
+# The TrackIR 5 Pro adds a higher-precision lens and extended tracking range.
+# PID 0x0157 has been observed in some community driver configuration files.
+schema_version: "1"
+
+device:
+  name: "NaturalPoint TrackIR 5 Pro"
+  vendor: "NaturalPoint Inc."
+  usb:
+    vendor_id: 0x131D       # NaturalPoint Inc. (confirmed)
+    product_id: 0x0157      # Community estimate — standard TrackIR 5 is 0x0155
+  hid:
+    usage_page: 0x01
+    usage: 0x00             # Generic (head tracker)
+
+capabilities:
+  axes:
+    count: 6
+    names: [tx, ty, tz, rx, ry, rz]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 120
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0157 is a community estimate. Standard TrackIR 5 uses PID 0x0155
+      (trackir-5.yaml). Verify with lsusb or NaturalPoint device info.
+  - id: TRACKIR_SOFTWARE_REQUIRED
+    description: >
+      Requires NaturalPoint TrackIR software for head-pose computation and
+      6DOF data relay to flight simulators via NaturalPoint plugin interface.
+  - id: HIGHER_PRECISION_LENS
+    description: >
+      The TrackIR 5 Pro is expected to offer improved tracking precision
+      over the standard TrackIR 5 at extended head-movement ranges.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    NaturalPoint TrackIR 5 Pro community estimate (PID 0x0157). Standard TrackIR 5
+    uses 0x0155 (trackir-5.yaml). VID 0x131D confirmed. Requires TrackIR software.
+    Wave-41 addition. Last reviewed: 2026-07.
