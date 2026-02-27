@@ -6,6 +6,7 @@
 //! Implements security controls, plugin signing verification, capability validation,
 //! and privacy-preserving telemetry collection according to SEC-01 requirements.
 
+pub mod audit_log;
 pub mod verification;
 
 use serde::{Deserialize, Serialize};

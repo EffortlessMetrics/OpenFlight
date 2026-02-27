@@ -67,6 +67,7 @@
 //! ```
 
 pub mod calibration_store;
+pub mod circuit_breaker;
 pub mod error;
 pub mod profile_watcher;
 
