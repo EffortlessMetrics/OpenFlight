@@ -1492,7 +1492,9 @@
 | VKB Gladiator NXT EVO Pro | 0x231D | 0x0202 | 8 | 40 | ✗ | 3 |
 | VKB Gladiator NXT EVO Space Combat Grip | 0x231D | 0x0222 | 5 | 20 | ✗ | 2 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0200 | 6 | 22 | ✗ | 2 |
+| VKB Gladiator NXT EVO OT Left | 0x231D | 0x3201 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO Left | 0x231D | 0x0201 | 8 | 32 | ✗ | 2 |
+| VKB Gladiator NXT EVO SEM THQ | 0x231D | 0x2214 | 4 | 24 | ✗ | 3 |
 | VKB Gladiator NXT Premium (Right) | 0x231D | 0x0204 | 6 | 24 | ✗ | 3 |
 | VKB Gladiator NXT EVO Right SEM | 0x231D | 0x0204 | 8 | 32 | ✗ | 3 |
 | VKB Gladiator NXT EVO | 0x231D | 0x0200 | 8 | 32 | ✗ | 2 |

@@ -806,4 +806,36 @@ mod tests {
         assert!(matches!(CcDiffOperation::Append, CcDiffOperation::Append));
         assert!(matches!(CcDiffOperation::Replace, CcDiffOperation::Replace));
     }
+
+    #[test]
+    fn test_skipped_verification_not_passed_or_failed() {
+        let temp_dir = TempDir::new().unwrap();
+        let config = WritersConfig {
+            config_dir: temp_dir.path().join("config"),
+            backup_dir: temp_dir.path().join("backup"),
+            max_backups: 5,
+            enable_verification: true,
+        };
+        let writer = CurveConflictWriter::with_config(config).unwrap();
+
+        let registry_test = CcVerificationTest {
+            name: "reg_check".to_string(),
+            description: "Registry check".to_string(),
+            test_type: VerificationTestType::RegistryValue,
+            expected_result: "HKLM\\Software\\Test:value".to_string(),
+        };
+        let command_test = CcVerificationTest {
+            name: "cmd_check".to_string(),
+            description: "Command check".to_string(),
+            test_type: VerificationTestType::Command,
+            expected_result: "echo ok".to_string(),
+        };
+
+        for test in [&registry_test, &command_test] {
+            let result = writer.run_verification_test(test);
+            assert!(result.skipped, "{} should be skipped", result.test_name);
+            assert!(!result.passed, "{} should not report passed", result.test_name);
+            assert!(result.error_message.is_none(), "{} should have no error", result.test_name);
+        }
+    }
 }
