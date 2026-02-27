@@ -2833,3 +2833,64 @@ requirements:
         tests:
           - flight-ui::integration_docs::tests::installer_summary_add_simulator_deduplicates_ports
           - flight-ui::integration_docs::tests::installer_summary_counts_files_across_simulators
+
+  # Infrastructure Requirement: BDD Traceability Metrics Library
+  - id: INF-REQ-16
+    name: BDD Traceability Metrics Library
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-16.1
+        description: "WHEN BddTraceabilityRow coverage methods are called THEN they SHALL return correct percentages and zero denominator SHALL yield zero"
+        tests:
+          - flight-bdd-metrics::tests::bdd_traceability_row_coverage_methods
+          - flight-bdd-metrics::tests::coverage_percent_full_coverage
+          - flight-bdd-metrics::tests::coverage_percent_zero_denominator_returns_zero
+      - id: AC-16.2
+        description: "WHEN Gherkin scenario headers and AC tags are parsed THEN Scenario/Background/Outline headers SHALL be recognized and non-AC tags SHALL be filtered"
+        tests:
+          - flight-bdd-metrics::tests::is_scenario_header_recognises_scenario_types
+          - flight-bdd-metrics::tests::bdd_scenario_ac_tags_filters_non_ac_tags
+          - flight-bdd-metrics::tests::parse_tags_from_line_extracts_tags
+      - id: AC-16.3
+        description: "WHEN test references are parsed THEN double-colon notation and -p flag notation SHALL both be extracted; valid and invalid crate name candidates SHALL be distinguished"
+        tests:
+          - flight-bdd-metrics::tests::extract_crates_from_reference_double_colon_notation
+          - flight-bdd-metrics::tests::extract_crates_from_reference_cmd_prefix
+          - flight-bdd-metrics::tests::extract_crates_from_command_parses_p_flag
+          - flight-bdd-metrics::tests::is_crate_name_candidate_valid_and_invalid
+          - flight-bdd-metrics::tests::normalize_crate_name_strips_quotes_and_underscores
+      - id: AC-16.4
+        description: "WHEN coverage status is computed for all AC state combinations THEN every branch SHALL produce the correct AcStatus value; workspace crate filtering SHALL preserve unmapped rows"
+        tests:
+          - flight-bdd-metrics::tests::coverage_status_compute_all_branches
+          - flight-bdd-metrics::tests::with_workspace_crates_filters_non_workspace_rows
+          - flight-bdd-metrics::tests::with_workspace_crates_preserves_unmapped_row
+
+  # Infrastructure Requirement: Workspace Metadata Validation
+  - id: INF-REQ-17
+    name: Workspace Crate Metadata Validation
+    kind: infra
+    status: implemented
+    ac:
+      - id: AC-17.1
+        description: "WHEN MetadataValidationReport is created THEN it SHALL start in success state; adding issues SHALL mark it as failed"
+        tests:
+          - flight-workspace-meta::tests::metadata_validation_report_starts_successful
+          - flight-workspace-meta::tests::metadata_validation_report_with_issues_fails
+      - id: AC-17.2
+        description: "WHEN CrateMetadataIssue summary is formatted THEN missing fields SHALL be listed as 'missing' and invalid fields as 'invalid'"
+        tests:
+          - flight-workspace-meta::tests::crate_metadata_issue_summary_missing_fields
+          - flight-workspace-meta::tests::crate_metadata_issue_summary_invalid_fields
+      - id: AC-17.3
+        description: "WHEN readme path is resolved THEN absolute paths SHALL be returned unchanged and relative paths SHALL be joined to the manifest directory; None readme SHALL yield None path"
+        tests:
+          - flight-workspace-meta::tests::readme_path_absolute_returned_unchanged
+          - flight-workspace-meta::tests::readme_path_relative_joined_to_manifest_dir
+          - flight-workspace-meta::tests::readme_path_none_when_no_readme
+      - id: AC-17.4
+        description: "WHEN workspace microcrate names are loaded from the repo root THEN core flight crates SHALL be present in the result"
+        tests:
+          - flight-workspace-meta::tests::load_workspace_microcrate_names_succeeds_from_repo_root
+          - flight-workspace-meta::tests::required_metadata_fields_has_expected_count

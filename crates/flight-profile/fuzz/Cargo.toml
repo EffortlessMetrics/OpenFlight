@@ -25,3 +25,9 @@ name = "fuzz_profile_parse"
 path = "fuzz_targets/fuzz_profile_parse.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_profile_merge"
+path = "fuzz_targets/fuzz_profile_merge.rs"
+test = false
+doc = false

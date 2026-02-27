@@ -8,7 +8,7 @@
 
 use flight_profile::{
     AircraftId, AxisConfig, CapabilityContext, CapabilityMode, CurvePoint, DetentZone,
-    FilterConfig, PofOverrides, Profile, PROFILE_SCHEMA_VERSION,
+    FilterConfig, PROFILE_SCHEMA_VERSION, PofOverrides, Profile,
 };
 use std::collections::HashMap;
 

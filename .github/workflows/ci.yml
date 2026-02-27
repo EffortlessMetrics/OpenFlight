@@ -1022,6 +1022,24 @@ jobs:
           cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
+      - name: Smoke fuzz flight-rules DSL parser (5s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_rules_parser -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-profile JSON parser (5s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_parse -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-profile merge path (5s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_merge -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
   # ──────────────────────────────────────────────────────────────────────────────
   # Nightly Fuzz Gates (runs weekly on Sunday at 02:00 UTC, or on-demand)
   # ──────────────────────────────────────────────────────────────────────────────
@@ -1060,6 +1078,12 @@ jobs:
         run: |
           cd crates/flight-profile
           cargo +nightly fuzz run fuzz_profile_parse -- -max_total_time=60 -timeout=10
+        continue-on-error: false
+
+      - name: Fuzz flight-profile merge path (60s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_merge -- -max_total_time=60 -timeout=10
         continue-on-error: false
 
       - name: Fuzz flight-dcs-export message parser (60s)
