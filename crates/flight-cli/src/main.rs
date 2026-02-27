@@ -23,9 +23,11 @@ mod axis_monitor;
 mod client_manager;
 #[cfg(feature = "cli")]
 mod commands;
+pub mod batch;
 mod completions;
 #[cfg(feature = "cli")]
 mod device_list;
+pub mod scripting;
 #[cfg(feature = "cli")]
 mod output;
 #[cfg(feature = "cli")]

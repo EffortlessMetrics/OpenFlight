@@ -33,6 +33,8 @@ pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
 pub mod one_click_resolver;
+pub mod plugin;
+pub mod plugin_registry;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
@@ -82,3 +84,6 @@ pub use stecs_runtime::{
     SimulatedVkbStecsReportSource, VkbStecsInputRuntime, VkbStecsReportSource,
     VkbStecsRuntimeConfig, VkbStecsSnapshot,
 };
+
+pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
+pub use plugin_registry::PluginRegistry;
