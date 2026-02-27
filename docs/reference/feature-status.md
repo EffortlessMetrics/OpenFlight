@@ -18,20 +18,20 @@
 |--------|-------|
 | Total AC | 433 |
 | ACs with tests | 433 |
-| ACs with Gherkin | 399 |
-| ACs with both tests + Gherkin | 399 |
-| Complete | 399 |
-| Needs Gherkin | 34 |
+| ACs with Gherkin | 433 |
+| ACs with both tests + Gherkin | 433 |
+| Complete | 433 |
+| Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
 | Incomplete | 0 |
 | Microcrates | 67 |
 | Microcrates with tests | 62 (92.5%) |
-| Microcrates with Gherkin | 58 (86.6%) |
-| Microcrates fully covered | 58 (86.6%) |
+| Microcrates with Gherkin | 62 (92.5%) |
+| Microcrates fully covered | 62 (92.5%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 92.1% |
-| Test + Gherkin coverage | 92.1% |
+| Gherkin coverage | 100.0% |
+| Test + Gherkin coverage | 100.0% |
 
 ## BDD Microcrate Matrix
 
@@ -46,7 +46,7 @@
 | flight-blackbox | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-bus | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-cloud-profiles | 17 | 17 | 9 | 9 | 9 | 100.0% | 52.9% | 52.9% |
+| flight-cloud-profiles | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-core | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-device-common | 7 | 7 | 7 | 7 | 7 | 100.0% | 100.0% | 100.0% |
@@ -71,9 +71,9 @@
 | flight-ipc | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-macos-hid | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
-| flight-metrics | 19 | 19 | 3 | 3 | 3 | 100.0% | 15.8% | 15.8% |
+| flight-metrics | 19 | 19 | 19 | 19 | 19 | 100.0% | 100.0% | 100.0% |
 | flight-motion | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
-| flight-open-hardware | 13 | 13 | 9 | 9 | 9 | 100.0% | 69.2% | 69.2% |
+| flight-open-hardware | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
 | flight-panels | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-panels-core | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
@@ -96,7 +96,7 @@
 | flight-units | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-updater | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-virtual | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
-| flight-vr-overlay | 15 | 15 | 9 | 9 | 9 | 100.0% | 60.0% | 60.0% |
+| flight-vr-overlay | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-warthunder | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-watchdog | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
 | flight-wingman | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -506,37 +506,37 @@
 | REQ-66 | AC-66.3 | WHEN breaking protocol changes are detected THEN removed RPCs and removed messages SHALL be flagged as breaking | specs/features/req_66_flight_ipc.feature:17 | 4 | ✅ Complete |
 | REQ-66 | AC-66.4 | WHEN feature negotiation runs THEN the intersection of client and server features SHALL be selected and missing required features SHALL be rejected | specs/features/req_66_flight_ipc.feature:24 | 4 | ✅ Complete |
 | REQ-66 | AC-66.5 | WHEN fuzz inputs are applied to IPC message handlers THEN no panics SHALL occur | specs/features/req_66_flight_ipc.feature:30 | 3 | ✅ Complete |
-| REQ-67 | AC-67.1 | WHEN a cache entry is checked within its TTL window THEN is_expired SHALL return false; WHEN checked after expiry THEN is_expired SHALL return true | - | 3 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.2 | WHEN evict() is called for a key THEN that entry SHALL be removed; WHEN list_cached() is called THEN only fresh entries SHALL be returned | - | 3 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.3 | WHEN the HTTP client encodes URL parameters THEN safe chars SHALL pass through unchanged and spaces and slashes SHALL be percent-encoded | - | 3 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.4 | WHEN CloudClient is constructed with default config THEN base_url and timeout fields SHALL be populated and the client SHALL not error on construction | - | 2 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.5 | WHEN sanitize_for_upload is called THEN the original profile SHALL not be modified, the sim field SHALL be lowercased, schema version normalised, and axes and aircraft SHALL be preserved | - | 5 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.6 | WHEN validate_for_publish is called THEN a valid profile SHALL be accepted and empty/whitespace titles, empty axes, and invalid deadzones SHALL each be rejected | - | 6 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.7 | WHEN ProfileListing models are constructed THEN score calculations SHALL be correct, JSON round-trips SHALL preserve all fields, and PublishMeta constructors SHALL set all fields | - | 5 | 🟡 Needs Gherkin |
-| REQ-67 | AC-67.8 | WHEN SortOrder and Page models are used THEN display formatting SHALL be correct, last-page detection SHALL work, and vote results SHALL compute the net score | - | 4 | 🟡 Needs Gherkin |
-| REQ-68 | AC-68.1 | WHEN an InputReport is parsed THEN button bitmask, hat-switch position, and FFB-fault flag SHALL each be decoded correctly | - | 3 | 🟡 Needs Gherkin |
-| REQ-68 | AC-68.2 | WHEN an empty slice or a slice shorter than the report size is passed to parse() THEN it SHALL return None | - | 2 | 🟡 Needs Gherkin |
-| REQ-68 | AC-68.3 | WHEN LedReport is parsed THEN the reserved byte SHALL always be zero, LED flag constants SHALL match the spec, and wrong-ID or too-short buffers SHALL return None | - | 4 | 🟡 Needs Gherkin |
-| REQ-68 | AC-68.4 | WHEN FfbOutputReport is built for every FFB mode THEN serialization SHALL round-trip correctly; invalid mode bytes SHALL return None; byte-field positions SHALL match the spec | - | 3 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.1 | WHEN OverlayConfig is validated THEN zero max_notifications, out-of-range depth, zero scale, and anchor-point round-trips SHALL all be enforced; serde round-trip SHALL preserve all fields | - | 5 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.2 | WHEN NotificationQueue operations run THEN push/len SHALL track count, clear() SHALL empty the queue, and acknowledging a non-existent ID SHALL return false | - | 3 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.3 | WHEN Severity values are used THEN Display formatting SHALL produce the expected strings, ordering SHALL rank Critical above Warning above Info, and max_severity on an empty queue SHALL return None | - | 3 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.4 | WHEN NullRenderer methods are called THEN backend display SHALL round-trip, opacity SHALL be clamped to [0,1], and show/hide SHALL toggle the renderer's visible flag | - | 3 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.5 | WHEN OverlayService is spawned THEN it SHALL start and shut down cleanly, toggle_visible SHALL flip visibility, and notify SHALL deliver a command to the service | - | 3 | 🟡 Needs Gherkin |
-| REQ-69 | AC-69.6 | WHEN OverlayState is constructed and mutated THEN default state SHALL have expected values, set_sim and with_profile SHALL update fields, and serde round-trip SHALL preserve all state | - | 6 | 🟡 Needs Gherkin |
-| REQ-70 | AC-70.1 | WHEN MetricsRegistry is used as a MetricsCollector trait object THEN collect() SHALL return all recorded metrics and produce the same result as snapshot() | - | 2 | 🟡 Needs Gherkin |
-| REQ-70 | AC-70.2 | WHEN MetricsCollector::reset() is called via the trait THEN all counters, gauges, and histograms SHALL be cleared | - | 1 | 🟡 Needs Gherkin |
-| REQ-70 | AC-70.3 | WHEN a custom MetricsCollector implementation is provided THEN it SHALL be usable as a boxed trait object and its collect/reset methods SHALL be dispatched correctly | - | 4 | 🟡 Needs Gherkin |
-| REQ-71 | AC-71.1 | WHEN simulator metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all SimMetrics fields including frames_total, errors_total, data_rate_hz, last_packet_age_ms, profile_switches_total, and frame latency histogram | - | 2 | 🟡 Needs Gherkin |
-| REQ-71 | AC-71.2 | WHEN FFB metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all FfbMetrics fields including effects_applied_total, envelope_clamp_total, emergency_stop_total, fault_count_total, torque gauges, and effect latency histogram | - | 2 | 🟡 Needs Gherkin |
-| REQ-71 | AC-71.3 | WHEN real-time scheduler metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate RtMetrics including ticks_total, missed_deadlines_total, and the jitter histogram with correct min/max/mean | - | 2 | 🟡 Needs Gherkin |
-| REQ-71 | AC-71.4 | WHEN no metrics have been recorded or only unknown metric names appear THEN MetricsDashboard::from_snapshot SHALL return default values without panicking and all histograms SHALL be absent | - | 3 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.1 | WHEN a gauge is set and read back via gauge_value() THEN the stored value SHALL equal the written value; reading a nonexistent gauge SHALL return None | - | 2 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.2 | WHEN a counter is incremented multiple times THEN each delta SHALL be accumulated and the total SHALL appear in the next snapshot | - | 1 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.3 | WHEN NaN or infinite values are observed into a histogram THEN they SHALL be silently dropped and only finite samples SHALL be included in the summary | - | 1 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.4 | WHEN histogram observations exceed the configured capacity THEN the oldest samples SHALL be evicted and the summary count SHALL not exceed the capacity limit | - | 1 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.5 | WHEN a snapshot is taken after recording counters, gauges, and histogram observations THEN all three metric types SHALL be present in the result | - | 1 | 🟡 Needs Gherkin |
-| REQ-72 | AC-72.6 | WHEN reset() is called multiple times in succession THEN each call SHALL succeed without panic and the registry SHALL remain empty | - | 1 | 🟡 Needs Gherkin |
-| REQ-73 | AC-73.1 | WHEN the sim.connection_state gauge equals exactly 0.5 THEN the dashboard SHALL report connected=true; values below 0.5 or equal to 0.0 SHALL report connected=false | - | 3 | 🟡 Needs Gherkin |
-| REQ-73 | AC-73.2 | WHEN duplicate counter entries for the same metric name appear in a raw snapshot slice THEN the last entry in the slice SHALL take precedence in the dashboard view | - | 1 | 🟡 Needs Gherkin |
-| REQ-73 | AC-73.3 | WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow | - | 1 | 🟡 Needs Gherkin |
+| REQ-67 | AC-67.1 | WHEN a cache entry is checked within its TTL window THEN is_expired SHALL return false; WHEN checked after expiry THEN is_expired SHALL return true | specs/features/req_67_cloud_profiles_extended.feature:5<br>specs/features/req_67_cloud_profiles_extended.feature:11 | 3 | ✅ Complete |
+| REQ-67 | AC-67.2 | WHEN evict() is called for a key THEN that entry SHALL be removed; WHEN list_cached() is called THEN only fresh entries SHALL be returned | specs/features/req_67_cloud_profiles_extended.feature:17<br>specs/features/req_67_cloud_profiles_extended.feature:23 | 3 | ✅ Complete |
+| REQ-67 | AC-67.3 | WHEN the HTTP client encodes URL parameters THEN safe chars SHALL pass through unchanged and spaces and slashes SHALL be percent-encoded | specs/features/req_67_cloud_profiles_extended.feature:29<br>specs/features/req_67_cloud_profiles_extended.feature:35 | 3 | ✅ Complete |
+| REQ-67 | AC-67.4 | WHEN CloudClient is constructed with default config THEN base_url and timeout fields SHALL be populated and the client SHALL not error on construction | specs/features/req_67_cloud_profiles_extended.feature:41 | 2 | ✅ Complete |
+| REQ-67 | AC-67.5 | WHEN sanitize_for_upload is called THEN the original profile SHALL not be modified, the sim field SHALL be lowercased, schema version normalised, and axes and aircraft SHALL be preserved | specs/features/req_67_cloud_profiles_extended.feature:47 | 5 | ✅ Complete |
+| REQ-67 | AC-67.6 | WHEN validate_for_publish is called THEN a valid profile SHALL be accepted and empty/whitespace titles, empty axes, and invalid deadzones SHALL each be rejected | specs/features/req_67_cloud_profiles_extended.feature:53<br>specs/features/req_67_cloud_profiles_extended.feature:59 | 6 | ✅ Complete |
+| REQ-67 | AC-67.7 | WHEN ProfileListing models are constructed THEN score calculations SHALL be correct, JSON round-trips SHALL preserve all fields, and PublishMeta constructors SHALL set all fields | specs/features/req_67_cloud_profiles_extended.feature:65<br>specs/features/req_67_cloud_profiles_extended.feature:71 | 5 | ✅ Complete |
+| REQ-67 | AC-67.8 | WHEN SortOrder and Page models are used THEN display formatting SHALL be correct, last-page detection SHALL work, and vote results SHALL compute the net score | specs/features/req_67_cloud_profiles_extended.feature:77<br>specs/features/req_67_cloud_profiles_extended.feature:83 | 4 | ✅ Complete |
+| REQ-68 | AC-68.1 | WHEN an InputReport is parsed THEN button bitmask, hat-switch position, and FFB-fault flag SHALL each be decoded correctly | specs/features/req_68_open_hardware_extended.feature:5<br>specs/features/req_68_open_hardware_extended.feature:11<br>specs/features/req_68_open_hardware_extended.feature:17 | 3 | ✅ Complete |
+| REQ-68 | AC-68.2 | WHEN an empty slice or a slice shorter than the report size is passed to parse() THEN it SHALL return None | specs/features/req_68_open_hardware_extended.feature:23<br>specs/features/req_68_open_hardware_extended.feature:29 | 2 | ✅ Complete |
+| REQ-68 | AC-68.3 | WHEN LedReport is parsed THEN the reserved byte SHALL always be zero, LED flag constants SHALL match the spec, and wrong-ID or too-short buffers SHALL return None | specs/features/req_68_open_hardware_extended.feature:35<br>specs/features/req_68_open_hardware_extended.feature:41 | 4 | ✅ Complete |
+| REQ-68 | AC-68.4 | WHEN FfbOutputReport is built for every FFB mode THEN serialization SHALL round-trip correctly; invalid mode bytes SHALL return None; byte-field positions SHALL match the spec | specs/features/req_68_open_hardware_extended.feature:47<br>specs/features/req_68_open_hardware_extended.feature:53 | 3 | ✅ Complete |
+| REQ-69 | AC-69.1 | WHEN OverlayConfig is validated THEN zero max_notifications, out-of-range depth, zero scale, and anchor-point round-trips SHALL all be enforced; serde round-trip SHALL preserve all fields | specs/features/req_69_vr_overlay_extended.feature:5<br>specs/features/req_69_vr_overlay_extended.feature:11 | 5 | ✅ Complete |
+| REQ-69 | AC-69.2 | WHEN NotificationQueue operations run THEN push/len SHALL track count, clear() SHALL empty the queue, and acknowledging a non-existent ID SHALL return false | specs/features/req_69_vr_overlay_extended.feature:17<br>specs/features/req_69_vr_overlay_extended.feature:23<br>specs/features/req_69_vr_overlay_extended.feature:29 | 3 | ✅ Complete |
+| REQ-69 | AC-69.3 | WHEN Severity values are used THEN Display formatting SHALL produce the expected strings, ordering SHALL rank Critical above Warning above Info, and max_severity on an empty queue SHALL return None | specs/features/req_69_vr_overlay_extended.feature:35<br>specs/features/req_69_vr_overlay_extended.feature:41 | 3 | ✅ Complete |
+| REQ-69 | AC-69.4 | WHEN NullRenderer methods are called THEN backend display SHALL round-trip, opacity SHALL be clamped to [0,1], and show/hide SHALL toggle the renderer's visible flag | specs/features/req_69_vr_overlay_extended.feature:47<br>specs/features/req_69_vr_overlay_extended.feature:53 | 3 | ✅ Complete |
+| REQ-69 | AC-69.5 | WHEN OverlayService is spawned THEN it SHALL start and shut down cleanly, toggle_visible SHALL flip visibility, and notify SHALL deliver a command to the service | specs/features/req_69_vr_overlay_extended.feature:59<br>specs/features/req_69_vr_overlay_extended.feature:65 | 3 | ✅ Complete |
+| REQ-69 | AC-69.6 | WHEN OverlayState is constructed and mutated THEN default state SHALL have expected values, set_sim and with_profile SHALL update fields, and serde round-trip SHALL preserve all state | specs/features/req_69_vr_overlay_extended.feature:71<br>specs/features/req_69_vr_overlay_extended.feature:77 | 6 | ✅ Complete |
+| REQ-70 | AC-70.1 | WHEN MetricsRegistry is used as a MetricsCollector trait object THEN collect() SHALL return all recorded metrics and produce the same result as snapshot() | specs/features/req_70_73_metrics_extended.feature:5 | 2 | ✅ Complete |
+| REQ-70 | AC-70.2 | WHEN MetricsCollector::reset() is called via the trait THEN all counters, gauges, and histograms SHALL be cleared | specs/features/req_70_73_metrics_extended.feature:11 | 1 | ✅ Complete |
+| REQ-70 | AC-70.3 | WHEN a custom MetricsCollector implementation is provided THEN it SHALL be usable as a boxed trait object and its collect/reset methods SHALL be dispatched correctly | specs/features/req_70_73_metrics_extended.feature:17 | 4 | ✅ Complete |
+| REQ-71 | AC-71.1 | WHEN simulator metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all SimMetrics fields including frames_total, errors_total, data_rate_hz, last_packet_age_ms, profile_switches_total, and frame latency histogram | specs/features/req_70_73_metrics_extended.feature:23 | 2 | ✅ Complete |
+| REQ-71 | AC-71.2 | WHEN FFB metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate all FfbMetrics fields including effects_applied_total, envelope_clamp_total, emergency_stop_total, fault_count_total, torque gauges, and effect latency histogram | specs/features/req_70_73_metrics_extended.feature:29 | 2 | ✅ Complete |
+| REQ-71 | AC-71.3 | WHEN real-time scheduler metrics are recorded THEN MetricsDashboard::from_snapshot SHALL populate RtMetrics including ticks_total, missed_deadlines_total, and the jitter histogram with correct min/max/mean | specs/features/req_70_73_metrics_extended.feature:35 | 2 | ✅ Complete |
+| REQ-71 | AC-71.4 | WHEN no metrics have been recorded or only unknown metric names appear THEN MetricsDashboard::from_snapshot SHALL return default values without panicking and all histograms SHALL be absent | specs/features/req_70_73_metrics_extended.feature:41 | 3 | ✅ Complete |
+| REQ-72 | AC-72.1 | WHEN a gauge is set and read back via gauge_value() THEN the stored value SHALL equal the written value; reading a nonexistent gauge SHALL return None | specs/features/req_70_73_metrics_extended.feature:47 | 2 | ✅ Complete |
+| REQ-72 | AC-72.2 | WHEN a counter is incremented multiple times THEN each delta SHALL be accumulated and the total SHALL appear in the next snapshot | specs/features/req_70_73_metrics_extended.feature:53 | 1 | ✅ Complete |
+| REQ-72 | AC-72.3 | WHEN NaN or infinite values are observed into a histogram THEN they SHALL be silently dropped and only finite samples SHALL be included in the summary | specs/features/req_70_73_metrics_extended.feature:59 | 1 | ✅ Complete |
+| REQ-72 | AC-72.4 | WHEN histogram observations exceed the configured capacity THEN the oldest samples SHALL be evicted and the summary count SHALL not exceed the capacity limit | specs/features/req_70_73_metrics_extended.feature:65 | 1 | ✅ Complete |
+| REQ-72 | AC-72.5 | WHEN a snapshot is taken after recording counters, gauges, and histogram observations THEN all three metric types SHALL be present in the result | specs/features/req_70_73_metrics_extended.feature:71 | 1 | ✅ Complete |
+| REQ-72 | AC-72.6 | WHEN reset() is called multiple times in succession THEN each call SHALL succeed without panic and the registry SHALL remain empty | specs/features/req_70_73_metrics_extended.feature:77 | 1 | ✅ Complete |
+| REQ-73 | AC-73.1 | WHEN the sim.connection_state gauge equals exactly 0.5 THEN the dashboard SHALL report connected=true; values below 0.5 or equal to 0.0 SHALL report connected=false | specs/features/req_70_73_metrics_extended.feature:83<br>specs/features/req_70_73_metrics_extended.feature:89 | 3 | ✅ Complete |
+| REQ-73 | AC-73.2 | WHEN duplicate counter entries for the same metric name appear in a raw snapshot slice THEN the last entry in the slice SHALL take precedence in the dashboard view | specs/features/req_70_73_metrics_extended.feature:95 | 1 | ✅ Complete |
+| REQ-73 | AC-73.3 | WHEN a counter value near u64::MAX is recorded and then read back through a dashboard snapshot THEN the exact value SHALL be preserved without truncation or overflow | specs/features/req_70_73_metrics_extended.feature:101 | 1 | ✅ Complete |
