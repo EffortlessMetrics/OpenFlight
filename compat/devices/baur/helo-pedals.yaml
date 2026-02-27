@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Baur"
+  name: "Baur Helicopter Pedals"
+  usb:
+    vid: "0x1209"
+    pid: "0xBA10"
+  type: "rudder"
+capabilities:
+  axes: 2
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Baur helicopter-style anti-torque pedals without toe brakes."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

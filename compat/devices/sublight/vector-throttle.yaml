@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sublight Dynamics"
+  name: "Sublight Dynamics Vector Throttle"
+  usb:
+    vid: "0x2FC8"
+    pid: "0x0002"
+  type: "throttle"
+capabilities:
+  axes: 4
+  buttons: 16
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sublight Dynamics Vector throttle for space sims."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

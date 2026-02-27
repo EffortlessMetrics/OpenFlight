@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "CockpitSonic"
+  name: "CockpitSonic Pedestal Panel"
+  usb:
+    vid: "0x16C0"
+    pid: "0x0611"
+  type: "panel"
+capabilities:
+  axes: 4
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "CockpitSonic center pedestal panel for Boeing-style cockpit."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

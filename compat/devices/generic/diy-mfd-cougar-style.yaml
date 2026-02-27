@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY Cougar-Style MFD Button Frame"
+  usb:
+    vid: "0x1209"
+    pid: "0xAF02"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 20
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY MFD button frame inspired by Cougar MFD layout."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VKB"
+  name: "VKB Gladiator Space Combat EVO"
+  usb:
+    vid: "0x231D"
+    pid: "0x0154"
+  type: "joystick"
+capabilities:
+  axes: 6
+  buttons: 32
+  hats: 1
+  ffb: false
+support:
+  tier: 2
+  notes: "VKB Gladiator EVO with Space Combat Grip for HOSAS."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VKB"
+  name: "VKB T-Rudder Mk.V Premium"
+  usb:
+    vid: "0x231D"
+    pid: "0x0155"
+  type: "rudder"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "VKB T-Rudder Mk.V Premium with enhanced toe-brake resolution."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

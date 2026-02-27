@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "SPAD.neXt Serial Interface Panel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF720"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "SPAD.neXt compatible serial interface panel for cockpit building."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

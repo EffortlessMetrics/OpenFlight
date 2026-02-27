@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Raspberry Pi EICAS Display Controller"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x0110"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 8
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Raspberry Pi based EICAS engine display with USB HID buttons."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

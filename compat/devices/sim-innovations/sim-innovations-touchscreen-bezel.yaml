@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sim Innovations"
+  name: "Sim Innovations Touchscreen Bezel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF702"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 16
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sim Innovations touchscreen bezel for Air Manager displays."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

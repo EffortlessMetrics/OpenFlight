@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY Glass Cockpit USB Controller"
+  usb:
+    vid: "0x1209"
+    pid: "0xAC01"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY USB controller board for custom glass cockpit panel builds."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

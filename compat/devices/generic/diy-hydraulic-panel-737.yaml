@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY 737 Hydraulic Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xEC0F"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 10
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY Boeing 737 hydraulic system control panel replica."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

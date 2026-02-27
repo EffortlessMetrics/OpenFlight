@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY STM32 COM/NAV Panel"
+  usb:
+    vid: "0x0483"
+    pid: "0x5752"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY STM32-based COM/NAV radio panel with OLED display."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

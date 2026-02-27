@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "PJ Rasmussen"
+  name: "PJ Rasmussen Audio Panel 340"
+  usb:
+    vid: "0x04D8"
+    pid: "0xE340"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 18
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "PJ Rasmussen Audio Panel 340 basic audio selector."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

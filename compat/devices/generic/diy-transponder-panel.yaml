@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY USB Transponder Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xAC02"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 16
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY USB transponder squawk code entry panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

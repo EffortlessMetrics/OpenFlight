@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY Arduino COM/NAV Panel"
+  usb:
+    vid: "0x2341"
+    pid: "0x8037"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 10
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY Arduino-based COM/NAV radio tuning panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

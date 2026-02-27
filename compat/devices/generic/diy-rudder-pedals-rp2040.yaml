@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY RP2040 Rudder Pedals"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x010D"
+  type: "rudder"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY RP2040-based rudder pedals with Raspberry Pi Pico."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

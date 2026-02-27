@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Generic USB PTT Switch Single"
+  usb:
+    vid: "0x0C45"
+    pid: "0x7413"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 1
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Single USB push-to-talk switch for VATSIM/IVAO use."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

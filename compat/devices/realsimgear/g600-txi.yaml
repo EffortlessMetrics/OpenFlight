@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "RealSimGear"
+  name: "RealSimGear G600 TXi"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF242"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 28
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "RealSimGear G600 TXi dual-screen PFD/MFD bezel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY 737 Lighting Control Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xEC07"
+  type: "panel"
+capabilities:
+  axes: 6
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY Boeing 737 exterior/interior lighting control panel replica."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

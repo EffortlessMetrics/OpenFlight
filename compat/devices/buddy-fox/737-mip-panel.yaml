@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Buddy Fox"
+  name: "Buddy Fox 737 MIP Panel"
+  usb:
+    vid: "0x2FD0"
+    pid: "0x0002"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 64
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Buddy Fox 737 main instrument panel USB controller."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

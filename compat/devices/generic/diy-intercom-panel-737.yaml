@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY 737 Intercom Panel Replica"
+  usb:
+    vid: "0x1209"
+    pid: "0xAC06"
+  type: "panel"
+capabilities:
+  axes: 2
+  buttons: 10
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY Boeing 737 intercom panel replica with USB HID."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]
