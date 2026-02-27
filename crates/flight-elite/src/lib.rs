@@ -586,4 +586,42 @@ mod tests {
             Some("Sagittarius A*")
         );
     }
+
+    #[test]
+    fn in_flight_supercruise_position_valid() {
+        // SUPERCRUISE set; DOCKED/LANDED/IN_SRV absent → in_flight = true
+        let adapter = EliteAdapter::new(EliteConfig::default());
+        let status = StatusJson {
+            flags: EliteFlags::SUPERCRUISE.bits(),
+            ..Default::default()
+        };
+        let snap = adapter.convert_status(&status);
+        assert!(snap.validity.position_valid);
+    }
+
+    #[test]
+    fn landed_on_surface_position_not_valid() {
+        let adapter = EliteAdapter::new(EliteConfig::default());
+        let status = StatusJson {
+            flags: EliteFlags::LANDED.bits(),
+            ..Default::default()
+        };
+        let snap = adapter.convert_status(&status);
+        assert!(!snap.validity.position_valid);
+    }
+
+    #[test]
+    fn scooping_fuel_while_in_flight_position_valid() {
+        // SCOOPING_FUEL is bit 11; player is not docked/landed/in-SRV
+        let adapter = EliteAdapter::new(EliteConfig::default());
+        let status = StatusJson {
+            flags: EliteFlags::SCOOPING_FUEL.bits(),
+            ..Default::default()
+        };
+        let snap = adapter.convert_status(&status);
+        assert!(
+            snap.validity.position_valid,
+            "scooping fuel while in-flight should be position_valid"
+        );
+    }
 }

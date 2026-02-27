@@ -312,20 +312,255 @@ fn multiple_data_groups_flow_through_bus() {
     assert!((rx.kinematics.bank.to_degrees() - roll_deg).abs() < 0.01);
 }
 
-/// Placeholder for a full adapter integration test that requires a live
-/// X-Plane instance running on localhost:49000.
-///
-/// TODO: remove `#[ignore]` when XPlane→bus wiring is exercised in CI
-///       against a real (or simulator-recorded) X-Plane session.
+/// `convert_raw_to_snapshot` with an empty DataRef map must return `Ok` with
+/// default (zero) values and not panic.
 #[test]
-#[ignore = "requires a live X-Plane instance; TODO: remove #[ignore] when XPlane→bus wiring is complete"]
+fn convert_raw_to_snapshot_with_empty_map_returns_defaults() {
+    let raw = make_raw_data(HashMap::new());
+    let result = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now());
+    assert!(
+        result.is_ok(),
+        "Expected Ok with empty dataref map, got: {:?}",
+        result.err()
+    );
+    let snapshot = result.unwrap();
+    assert_eq!(snapshot.sim, flight_bus::types::SimId::XPlane);
+    // Speeds default to 0 m/s when no DataRefs are present.
+    assert_eq!(snapshot.kinematics.ias.value(), 0.0);
+    assert_eq!(snapshot.kinematics.tas.value(), 0.0);
+    assert_eq!(snapshot.kinematics.ground_speed.value(), 0.0);
+}
+
+/// Pitch values outside [-180°, 180°] must be normalised into the signed range
+/// rather than causing a conversion error.  270° → -90° is the canonical case.
+#[test]
+fn out_of_range_pitch_is_normalised_to_signed_range() {
+    let mut dataref_values = HashMap::new();
+    // 270° is outside [-180, 180]; normalize_degrees_signed maps it to -90°.
+    dataref_values.insert(
+        "sim/flightmodel/position/theta".to_string(),
+        DataRefValue::Float(270.0),
+    );
+    let raw = make_raw_data(dataref_values);
+    let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now())
+        .expect("270° pitch should normalise successfully, not error");
+    let pitch = snapshot.kinematics.pitch.to_degrees();
+    assert!(
+        (pitch - (-90.0_f32)).abs() < 0.01,
+        "270° pitch should normalise to -90°, got {pitch:.3}°"
+    );
+}
+
+/// A `DataRefValue::Float(f32::NAN)` in a validated field must not panic.
+/// The adapter treats NaN as out-of-range and returns `Err`.
+#[test]
+fn nan_dataref_value_does_not_panic() {
+    let mut dataref_values = HashMap::new();
+    dataref_values.insert(
+        "sim/flightmodel/position/indicated_airspeed".to_string(),
+        DataRefValue::Float(f32::NAN),
+    );
+    let raw = make_raw_data(dataref_values);
+    // Must not panic; NaN fails `ValidatedSpeed` range-check → Err.
+    let result = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now());
+    assert!(result.is_err(), "NaN airspeed should return Err, not Ok");
+}
+
+/// Two aircraft that share the same ICAO code but have different titles / authors
+/// must produce an identical `AircraftId` in the converted snapshot.
+/// This reflects the adapter's ICAO-only identity key used for deduplication.
+#[test]
+fn same_icao_different_title_produces_same_aircraft_id() {
+    let make = |title: &str, author: &str| XPlaneRawData {
+        timestamp: Instant::now(),
+        aircraft_info: DetectedAircraft {
+            icao: "B738".to_string(),
+            title: title.to_string(),
+            author: author.to_string(),
+        },
+        dataref_values: HashMap::new(),
+    };
+
+    let snap_a = XPlaneAdapter::convert_raw_to_snapshot(
+        make("Boeing 737-800 v1", "Laminar"),
+        Instant::now(),
+    )
+    .unwrap();
+    let snap_b =
+        XPlaneAdapter::convert_raw_to_snapshot(make("Boeing 737-800 v2", "IXEG"), Instant::now())
+            .unwrap();
+
+    assert_eq!(
+        snap_a.aircraft, snap_b.aircraft,
+        "Same ICAO should yield the same AircraftId regardless of title/author"
+    );
+}
+
+/// Two subscribers attached to the same `BusPublisher` must each receive a copy
+/// of every published snapshot.
+#[test]
+fn multiple_subscribers_both_receive_published_snapshot() {
+    let ias_mps = 80.0_f32;
+    let mut dataref_values = HashMap::new();
+    dataref_values.insert(
+        "sim/flightmodel/position/indicated_airspeed".to_string(),
+        DataRefValue::Float(ias_mps),
+    );
+    let snapshot =
+        XPlaneAdapter::convert_raw_to_snapshot(make_raw_data(dataref_values), Instant::now())
+            .expect("convert failed");
+
+    let mut publisher = BusPublisher::new(60.0);
+    let mut sub1 = publisher.subscribe(SubscriptionConfig::default()).unwrap();
+    let mut sub2 = publisher.subscribe(SubscriptionConfig::default()).unwrap();
+
+    publisher.publish(snapshot.clone()).unwrap();
+
+    let rx1 = sub1
+        .try_recv()
+        .unwrap()
+        .expect("sub1: no snapshot in channel");
+    let rx2 = sub2
+        .try_recv()
+        .unwrap()
+        .expect("sub2: no snapshot in channel");
+
+    assert_eq!(rx1.sim, snapshot.sim, "sub1 sim mismatch");
+    assert_eq!(rx2.sim, snapshot.sim, "sub2 sim mismatch");
+    assert!(
+        (rx1.kinematics.ias.value() - ias_mps).abs() < 0.01,
+        "sub1 IAS={:.3} m/s, expected {ias_mps:.3}",
+        rx1.kinematics.ias.value()
+    );
+    assert!(
+        (rx2.kinematics.ias.value() - ias_mps).abs() < 0.01,
+        "sub2 IAS={:.3} m/s, expected {ias_mps:.3}",
+        rx2.kinematics.ias.value()
+    );
+}
+
+/// End-to-end loopback test: DATA packets are sent over a loopback UDP socket,
+/// parsed into `XPlaneRawData`, converted via `convert_raw_to_snapshot`, and
+/// published to the bus — verifying the full pipeline without a live X-Plane
+/// instance.
+#[test]
 fn xplane_adapter_end_to_end_with_live_instance() {
-    // This test would:
-    //   1. Create a real XPlaneAdapter bound to 127.0.0.1:49000
-    //   2. Subscribe a BusSubscriber
-    //   3. Start the adapter in a background task
-    //   4. Send a series of DATA packets to 127.0.0.1:49000 via a test UDP sender
-    //   5. Assert that the subscriber receives snapshots within 200 ms
-    //   6. Verify IAS / attitude values match the sent packet contents
-    unimplemented!("live X-Plane integration test not yet implemented");
+    // -----------------------------------------------------------------
+    // 1. Bind an ephemeral loopback listener — no live X-Plane needed.
+    // -----------------------------------------------------------------
+    let listener = UdpSocket::bind("127.0.0.1:0").expect("bind listener");
+    listener
+        .set_read_timeout(Some(std::time::Duration::from_secs(2)))
+        .expect("set_read_timeout");
+    let addr = listener.local_addr().unwrap();
+    let sender = UdpSocket::bind("127.0.0.1:0").expect("bind sender");
+
+    let ias_mps = 60.0_f32; // ≈ 117 knots
+    let tas_mps = 62.0_f32;
+    let gs_mps = 58.0_f32;
+    let pitch_deg = 4.0_f32;
+    let roll_deg = -8.0_f32;
+    let hdg_deg = 45.0_f32;
+
+    // -----------------------------------------------------------------
+    // 2. Send group-3 (speeds) then group-17 (attitude) DATA packets.
+    // -----------------------------------------------------------------
+    sender
+        .send_to(
+            &make_xplane_data_packet(3, [ias_mps, tas_mps, gs_mps, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            addr,
+        )
+        .expect("send speeds packet");
+    sender
+        .send_to(
+            &make_xplane_data_packet(17, [pitch_deg, roll_deg, hdg_deg, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            addr,
+        )
+        .expect("send attitude packet");
+
+    // -----------------------------------------------------------------
+    // 3. Receive both packets and build the DataRef cache.
+    // -----------------------------------------------------------------
+    let mut buf = [0u8; 512];
+    let (len, _) = listener.recv_from(&mut buf).expect("recv speeds");
+    let (_, speeds) = parse_first_data_record(&buf[..len]);
+
+    let (len, _) = listener.recv_from(&mut buf).expect("recv attitude");
+    let (_, attitude) = parse_first_data_record(&buf[..len]);
+
+    let mut dataref_values: HashMap<String, DataRefValue> = HashMap::new();
+    dataref_values.insert(
+        "sim/flightmodel/position/indicated_airspeed".to_string(),
+        DataRefValue::Float(speeds[0]),
+    );
+    dataref_values.insert(
+        "sim/flightmodel/position/true_airspeed".to_string(),
+        DataRefValue::Float(speeds[1]),
+    );
+    dataref_values.insert(
+        "sim/flightmodel/position/groundspeed".to_string(),
+        DataRefValue::Float(speeds[2]),
+    );
+    dataref_values.insert(
+        "sim/flightmodel/position/theta".to_string(),
+        DataRefValue::Float(attitude[0]),
+    );
+    dataref_values.insert(
+        "sim/flightmodel/position/phi".to_string(),
+        DataRefValue::Float(attitude[1]),
+    );
+    dataref_values.insert(
+        "sim/flightmodel/position/psi".to_string(),
+        DataRefValue::Float(attitude[2]),
+    );
+
+    // -----------------------------------------------------------------
+    // 4. Convert raw → snapshot (no background loop required).
+    // -----------------------------------------------------------------
+    let raw = make_raw_data(dataref_values);
+    let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now())
+        .expect("convert_raw_to_snapshot failed");
+
+    assert_eq!(snapshot.sim, flight_bus::types::SimId::XPlane);
+    assert!(
+        (snapshot.kinematics.ias.value() - ias_mps).abs() < 0.01,
+        "IAS: expected {ias_mps:.3} m/s, got {:.3}",
+        snapshot.kinematics.ias.value()
+    );
+    assert!(
+        (snapshot.kinematics.pitch.to_degrees() - pitch_deg).abs() < 0.01,
+        "pitch: expected {pitch_deg:.3}°, got {:.3}°",
+        snapshot.kinematics.pitch.to_degrees()
+    );
+    assert!(
+        (snapshot.kinematics.heading.to_degrees() - hdg_deg).abs() < 0.01,
+        "heading: expected {hdg_deg:.3}°, got {:.3}°",
+        snapshot.kinematics.heading.to_degrees()
+    );
+
+    // -----------------------------------------------------------------
+    // 5. Publish snapshot to the bus and verify a subscriber receives it.
+    // -----------------------------------------------------------------
+    let mut publisher = BusPublisher::new(60.0);
+    let mut subscriber = publisher
+        .subscribe(SubscriptionConfig::default())
+        .expect("subscribe failed");
+
+    publisher.publish(snapshot.clone()).expect("publish failed");
+
+    let received = subscriber
+        .try_recv()
+        .expect("try_recv error")
+        .expect("no snapshot in channel");
+
+    assert_eq!(received.sim, snapshot.sim, "sim id mismatch");
+    assert_eq!(received.aircraft, snapshot.aircraft, "aircraft id mismatch");
+    assert!(
+        (received.kinematics.ias.value() - ias_mps).abs() < 0.01,
+        "bus IAS mismatch"
+    );
+    assert!(
+        (received.kinematics.pitch.to_degrees() - pitch_deg).abs() < 0.01,
+        "bus pitch mismatch"
+    );
 }

@@ -244,7 +244,11 @@ mod tests {
         let mut reader = JournalReader::new(dir.path());
         let events = reader.read_new_events().unwrap();
         assert_eq!(events.len(), 1000, "should read all 1000 FsdJump events");
-        assert!(events.iter().all(|e| matches!(e, JournalEvent::FsdJump { .. })));
+        assert!(
+            events
+                .iter()
+                .all(|e| matches!(e, JournalEvent::FsdJump { .. }))
+        );
     }
 
     #[test]
