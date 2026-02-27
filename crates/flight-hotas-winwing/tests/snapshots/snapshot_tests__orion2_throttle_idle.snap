@@ -1,0 +1,24 @@
+---
+source: crates/flight-hotas-winwing/tests/snapshot_tests.rs
+expression: state
+---
+Orion2ThrottleInputState {
+    axes: Orion2ThrottleAxes {
+        throttle_left: 0.0,
+        throttle_right: 0.0,
+        throttle_combined: 0.0,
+        friction: 0.0,
+        mouse_x: 0.0,
+        mouse_y: 0.0,
+    },
+    buttons: Orion2ThrottleButtons {
+        mask: 0,
+        encoders: [
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+    },
+}
