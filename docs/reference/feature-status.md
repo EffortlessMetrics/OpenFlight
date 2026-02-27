@@ -16,11 +16,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 482 |
-| ACs with tests | 482 |
-| ACs with Gherkin | 482 |
-| ACs with both tests + Gherkin | 482 |
-| Complete | 482 |
+| Total AC | 507 |
+| ACs with tests | 507 |
+| ACs with Gherkin | 507 |
+| ACs with both tests + Gherkin | 507 |
+| Complete | 507 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
 | Draft | 0 |
@@ -59,14 +59,14 @@
 | flight-hid-types | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-brunner | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-ch | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-honeycomb | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-honeycomb | 10 | 10 | 10 | 10 | 10 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-logitech | 21 | 21 | 21 | 21 | 21 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-saitek | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-thrustmaster | 20 | 20 | 20 | 20 | 20 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-thrustmaster | 33 | 33 | 33 | 33 | 33 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-virpil | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vkb | 24 | 24 | 24 | 24 | 24 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
-| flight-hotas-winwing | 9 | 9 | 9 | 9 | 9 | 100.0% | 100.0% | 100.0% |
+| flight-hotas-winwing | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ipc | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -589,3 +589,28 @@
 | REQ-82 | AC-82.3 | WHEN any raw u16 axis values are parsed by GladiatorInputHandler THEN roll, pitch, yaw, and throttle SHALL all be finite (never NaN or Inf) | specs/features/req_82_vkb_gladiator.feature:17 | 1 | ✅ Complete |
 | REQ-82 | AC-82.4 | WHEN a Gladiator NXT EVO report shorter than 12 bytes is parsed THEN GladiatorParseError::ReportTooShort SHALL be returned | specs/features/req_82_vkb_gladiator.feature:23 | 1 | ✅ Complete |
 | REQ-82 | AC-82.5 | WHEN 64 button bits are packed into btn_lo (bits 0–31) and btn_hi (bits 32–63) THEN state.buttons[0..31] SHALL exactly reflect btn_lo bits and state.buttons[32..63] SHALL exactly reflect btn_hi bits | specs/features/req_82_vkb_gladiator.feature:29 | 1 | ✅ Complete |
+| REQ-83 | AC-83.1 | WHEN a HOTAS Cougar report is parsed THEN stick X and Y axes SHALL normalize 16-bit unsigned values to [-1.0, 1.0] with center value 32768 mapping to approximately 0.0 and extreme values (0 / 65535) to approximately ±1.0 | specs/features/req_83_cougar_hotas.feature:5<br>specs/features/req_83_cougar_hotas.feature:12<br>specs/features/req_83_cougar_hotas.feature:18<br>specs/features/req_83_cougar_hotas.feature:24<br>specs/features/req_83_cougar_hotas.feature:30<br>specs/features/req_83_cougar_hotas.feature:36 | 6 | ✅ Complete |
+| REQ-83 | AC-83.2 | WHEN a HOTAS Cougar report is parsed THEN the throttle lever SHALL normalize 16-bit unsigned values to [0.0, 1.0] with 0 mapping to 0.0 and 65535 mapping to 1.0 | specs/features/req_83_cougar_hotas.feature:43<br>specs/features/req_83_cougar_hotas.feature:49<br>specs/features/req_83_cougar_hotas.feature:55 | 3 | ✅ Complete |
+| REQ-83 | AC-83.3 | WHEN a HOTAS Cougar HID buffer shorter than 10 bytes is parsed THEN parse_cougar SHALL return CougarParseError::TooShort and SHALL never panic | specs/features/req_83_cougar_hotas.feature:61<br>specs/features/req_83_cougar_hotas.feature:67<br>specs/features/req_83_cougar_hotas.feature:73 | 3 | ✅ Complete |
+| REQ-83 | AC-83.4 | WHEN a 16-bit button bitmask is present in the HOTAS Cougar report THEN each of the 16 buttons SHALL be individually addressable via button(1..=16) and out-of-range indices SHALL return false | specs/features/req_83_cougar_hotas.feature:79<br>specs/features/req_83_cougar_hotas.feature:86<br>specs/features/req_83_cougar_hotas.feature:93<br>specs/features/req_83_cougar_hotas.feature:99<br>specs/features/req_83_cougar_hotas.feature:105 | 5 | ✅ Complete |
+| REQ-83 | AC-83.5 | WHEN the TMS hat nibble in byte 8 is decoded THEN values 0–7 SHALL map to the eight compass directions (N/NE/E/SE/S/SW/W/NW) and values 8–15 SHALL map to Center | specs/features/req_83_cougar_hotas.feature:111<br>specs/features/req_83_cougar_hotas.feature:117<br>specs/features/req_83_cougar_hotas.feature:123<br>specs/features/req_83_cougar_hotas.feature:129<br>specs/features/req_83_cougar_hotas.feature:135 | 5 | ✅ Complete |
+| REQ-84 | AC-84.1 | WHEN any raw 12-bit roll value (0..=4095) is parsed by parse_alpha_report THEN state.axes.roll SHALL be within [-1.001, 1.001] | specs/features/req_84_honeycomb_alpha_proptest.feature:5 | 1 | ✅ Complete |
+| REQ-84 | AC-84.2 | WHEN any raw 12-bit pitch value (0..=4095) is parsed by parse_alpha_report THEN state.axes.pitch SHALL be within [-1.001, 1.001] | specs/features/req_84_honeycomb_alpha_proptest.feature:11 | 1 | ✅ Complete |
+| REQ-84 | AC-84.3 | WHEN an Alpha Yoke report is built with arbitrary roll, pitch, 64-bit button mask, and hat nibble THEN parse_alpha_report SHALL always return Ok | specs/features/req_84_honeycomb_alpha_proptest.feature:17 | 1 | ✅ Complete |
+| REQ-85 | AC-85.1 | WHEN any raw 12-bit throttle axis values (0..=4095) are parsed by parse_bravo_report THEN each of the 7 throttle levers SHALL be within [0.0, 1.0001] | specs/features/req_85_honeycomb_bravo_proptest.feature:5 | 1 | ✅ Complete |
+| REQ-85 | AC-85.2 | WHEN a Bravo Throttle report is built with arbitrary per-lever throttle values and a 64-bit button mask THEN parse_bravo_report SHALL always return Ok | specs/features/req_85_honeycomb_bravo_proptest.feature:12 | 1 | ✅ Complete |
+| REQ-86 | AC-86.1 | WHEN any raw u16 values are parsed for Warthog stick axes (X, Y, Rz) THEN each SHALL be within [-1.0, 1.0] | specs/features/req_86_warthog_stick_proptest.feature:5 | 1 | ✅ Complete |
+| REQ-86 | AC-86.2 | WHEN a Warthog stick HID buffer shorter than the minimum report size is parsed THEN parse_warthog_stick SHALL return an error | specs/features/req_86_warthog_stick_proptest.feature:13 | 1 | ✅ Complete |
+| REQ-86 | AC-86.3 | WHEN arbitrary 16-bit button-low and 8-bit button-high values are packed into a Warthog stick report THEN state.buttons.button(n) SHALL exactly reflect the corresponding bit for n in 1..=19 | specs/features/req_86_warthog_stick_proptest.feature:19 | 1 | ✅ Complete |
+| REQ-86 | AC-86.4 | WHEN a Warthog stick HID buffer of valid or oversized length is parsed THEN parse_warthog_stick SHALL return Ok and SHALL never panic | specs/features/req_86_warthog_stick_proptest.feature:27<br>specs/features/req_86_warthog_stick_proptest.feature:33 | 2 | ✅ Complete |
+| REQ-87 | AC-87.1 | WHEN any raw u16 values are parsed for Warthog throttle axes (throttle_left, throttle_right) THEN each SHALL be within [0.0, 1.0] | specs/features/req_87_warthog_throttle_proptest.feature:5 | 1 | ✅ Complete |
+| REQ-87 | AC-87.2 | WHEN a Warthog throttle HID buffer shorter than the minimum report size is parsed THEN parse_warthog_throttle SHALL return an error | specs/features/req_87_warthog_throttle_proptest.feature:12 | 1 | ✅ Complete |
+| REQ-87 | AC-87.3 | WHEN arbitrary 16-bit btn_low, 16-bit btn_mid, and 8-bit btn_high values are packed into a Warthog throttle report THEN state.buttons.button(n) SHALL exactly reflect the corresponding bit for n in 1..=40 | specs/features/req_87_warthog_throttle_proptest.feature:18 | 1 | ✅ Complete |
+| REQ-87 | AC-87.4 | WHEN a Warthog throttle HID buffer of valid or oversized length is parsed THEN parse_warthog_throttle SHALL return Ok and SHALL never panic | specs/features/req_87_warthog_throttle_proptest.feature:27<br>specs/features/req_87_warthog_throttle_proptest.feature:33 | 2 | ✅ Complete |
+| REQ-88 | AC-88.1 | WHEN a HID report shorter than 12 bytes is parsed by parse_orion2_stick_report THEN the result SHALL be Err(Orion2StickParseError::TooShort) containing the expected byte count | specs/features/req_88_winwing_orion2_stick.feature:8<br>specs/features/req_88_winwing_orion2_stick.feature:15 | 1 | ✅ Complete |
+| REQ-88 | AC-88.2 | WHEN any raw i16 value is used as roll or pitch input THEN parse_orion2_stick_report SHALL produce axes.roll and axes.pitch within [-1.001, +1.001] | specs/features/req_88_winwing_orion2_stick.feature:21<br>specs/features/req_88_winwing_orion2_stick.feature:27 | 2 | ✅ Complete |
+| REQ-88 | AC-88.3 | WHEN a valid Orion2 Stick report with centered axes is parsed THEN axes.roll and axes.pitch SHALL be finite and approximately 0.0 | specs/features/req_88_winwing_orion2_stick.feature:33 | 1 | ✅ Complete |
+| REQ-88 | AC-88.4 | WHEN a button byte with bit 0 set is parsed THEN buttons.is_pressed(1) SHALL be true and buttons.is_pressed(2) SHALL be false; out-of-range indices 0 and 21 SHALL always return false | specs/features/req_88_winwing_orion2_stick.feature:40<br>specs/features/req_88_winwing_orion2_stick.feature:47 | 2 | ✅ Complete |
+| REQ-89 | AC-89.1 | WHEN a HID report shorter than 24 bytes is parsed by parse_orion2_throttle_report THEN the result SHALL be Err(Orion2ThrottleParseError::TooShort) containing the expected byte count | specs/features/req_89_winwing_orion2_throttle.feature:8<br>specs/features/req_89_winwing_orion2_throttle.feature:15 | 2 | ✅ Complete |
+| REQ-89 | AC-89.2 | WHEN any raw u16 values are used for throttle_left, throttle_right, and friction THEN parse_orion2_throttle_report SHALL produce all throttle and friction axes within [0.0, 1.0] | specs/features/req_89_winwing_orion2_throttle.feature:21<br>specs/features/req_89_winwing_orion2_throttle.feature:29<br>specs/features/req_89_winwing_orion2_throttle.feature:37 | 3 | ✅ Complete |
+| REQ-89 | AC-89.3 | WHEN a valid Orion2 Throttle report is parsed THEN all axis values SHALL be finite | specs/features/req_89_winwing_orion2_throttle.feature:46 | 1 | ✅ Complete |

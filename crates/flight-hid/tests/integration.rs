@@ -52,18 +52,9 @@ fn stick_16bit() -> AxisCalibration {
 #[test]
 fn test_full_pipeline_normalizes_axis() {
     let cal = stick_16bit();
-    assert!(
-        (cal.normalize(32767) - 0.0_f32).abs() < 1e-3,
-        "centre → 0"
-    );
-    assert!(
-        (cal.normalize(65535) - 1.0_f32).abs() < 1e-3,
-        "max → 1"
-    );
-    assert!(
-        (cal.normalize(0) - (-1.0_f32)).abs() < 1e-3,
-        "min → -1"
-    );
+    assert!((cal.normalize(32767) - 0.0_f32).abs() < 1e-3, "centre → 0");
+    assert!((cal.normalize(65535) - 1.0_f32).abs() < 1e-3, "max → 1");
+    assert!((cal.normalize(0) - (-1.0_f32)).abs() < 1e-3, "min → -1");
     // Values beyond the hardware range must be clamped to the output range.
     assert!(
         (cal.normalize(u32::MAX) - 1.0_f32).abs() < 1e-3,
@@ -146,10 +137,7 @@ fn test_unipolar_throttle_axis() {
         "throttle max → 1"
     );
     let mid = 127.0_f32 / 255.0_f32;
-    assert!(
-        (cal.normalize(127) - mid).abs() < 1e-4,
-        "throttle midpoint"
-    );
+    assert!((cal.normalize(127) - mid).abs() < 1e-4, "throttle midpoint");
 }
 
 /// When raw_min == raw_max (degenerate), normalize returns the output midpoint.
@@ -322,7 +310,11 @@ fn test_endpoint_id_equality_and_hashing() {
     set.insert(a);
     set.insert(b); // duplicate — must not grow the set
     set.insert(c);
-    assert_eq!(set.len(), 2, "distinct endpoint types must hash differently");
+    assert_eq!(
+        set.len(),
+        2,
+        "distinct endpoint types must hash differently"
+    );
 }
 
 /// `EndpointType::Feature` is a valid variant and compares correctly.
