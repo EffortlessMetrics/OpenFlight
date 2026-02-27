@@ -22848,3 +22848,1053 @@ requirements:
         description: "AC4: Specification ledger passes schema validation without errors"
         tests:
           - feature:specs/features/req_900_milestone_900_requirements.feature
+  - id: REQ-901
+    name: Windows MSI Installer
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-901.1
+        description: "AC1: MSI installer performs per-user installation without requiring admin privileges"
+        tests:
+          - feature:specs/features/req_901_windows_msi_installer.feature
+      - id: AC-901.2
+        description: "AC2: Installer offers optional sim integration checkboxes for MSFS, X-Plane, and DCS"
+        tests:
+          - feature:specs/features/req_901_windows_msi_installer.feature
+      - id: AC-901.3
+        description: "AC3: Installation creates Start Menu shortcut and registers uninstall entry"
+        tests:
+          - feature:specs/features/req_901_windows_msi_installer.feature
+      - id: AC-901.4
+        description: "AC4: Installer validates disk space and prerequisites before proceeding"
+        tests:
+          - feature:specs/features/req_901_windows_msi_installer.feature
+  - id: REQ-902
+    name: Windows Uninstaller
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-902.1
+        description: "AC1: Uninstaller removes all binaries and registry entries cleanly"
+        tests:
+          - feature:specs/features/req_902_windows_uninstaller.feature
+      - id: AC-902.2
+        description: "AC2: User configuration files in AppData are preserved after uninstall"
+        tests:
+          - feature:specs/features/req_902_windows_uninstaller.feature
+      - id: AC-902.3
+        description: "AC3: Sim-specific plugins installed during setup are removed on uninstall"
+        tests:
+          - feature:specs/features/req_902_windows_uninstaller.feature
+      - id: AC-902.4
+        description: "AC4: Uninstaller provides option to remove all data including user config"
+        tests:
+          - feature:specs/features/req_902_windows_uninstaller.feature
+  - id: REQ-903
+    name: Linux Deb Package
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-903.1
+        description: "AC1: Deb package installs binaries to standard FHS paths"
+        tests:
+          - feature:specs/features/req_903_linux_deb_package.feature
+      - id: AC-903.2
+        description: "AC2: Package includes udev rules for supported HID devices"
+        tests:
+          - feature:specs/features/req_903_linux_deb_package.feature
+      - id: AC-903.3
+        description: "AC3: Package includes systemd user unit file for auto-start"
+        tests:
+          - feature:specs/features/req_903_linux_deb_package.feature
+      - id: AC-903.4
+        description: "AC4: Package declares correct dependencies for libudev and libusb"
+        tests:
+          - feature:specs/features/req_903_linux_deb_package.feature
+  - id: REQ-904
+    name: Linux Postinst Script
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-904.1
+        description: "AC1: Postinst script adds user to input group for HID access"
+        tests:
+          - feature:specs/features/req_904_linux_postinst.feature
+      - id: AC-904.2
+        description: "AC2: Postinst triggers udev rule reload without requiring reboot"
+        tests:
+          - feature:specs/features/req_904_linux_postinst.feature
+      - id: AC-904.3
+        description: "AC3: Postinst enables systemd user unit when auto-start is configured"
+        tests:
+          - feature:specs/features/req_904_linux_postinst.feature
+      - id: AC-904.4
+        description: "AC4: Postinst validates installation integrity and reports errors"
+        tests:
+          - feature:specs/features/req_904_linux_postinst.feature
+  - id: REQ-905
+    name: Auto-Start Configuration
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-905.1
+        description: "AC1: Service starts automatically on user login when auto-start is enabled"
+        tests:
+          - feature:specs/features/req_905_auto_start_config.feature
+      - id: AC-905.2
+        description: "AC2: Auto-start can be toggled via CLI command without manual config editing"
+        tests:
+          - feature:specs/features/req_905_auto_start_config.feature
+      - id: AC-905.3
+        description: "AC3: Windows auto-start uses Task Scheduler with user-level privileges"
+        tests:
+          - feature:specs/features/req_905_auto_start_config.feature
+      - id: AC-905.4
+        description: "AC4: Linux auto-start uses systemd user unit with correct dependencies"
+        tests:
+          - feature:specs/features/req_905_auto_start_config.feature
+  - id: REQ-906
+    name: Sim Plugin Deployment
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-906.1
+        description: "AC1: Installer auto-detects installed simulators and their plugin directories"
+        tests:
+          - feature:specs/features/req_906_sim_plugin_deployment.feature
+      - id: AC-906.2
+        description: "AC2: MSFS community folder receives WASM plugin during installation"
+        tests:
+          - feature:specs/features/req_906_sim_plugin_deployment.feature
+      - id: AC-906.3
+        description: "AC3: X-Plane plugins directory receives native plugin during installation"
+        tests:
+          - feature:specs/features/req_906_sim_plugin_deployment.feature
+      - id: AC-906.4
+        description: "AC4: DCS scripts directory receives export script during installation"
+        tests:
+          - feature:specs/features/req_906_sim_plugin_deployment.feature
+  - id: REQ-907
+    name: Portable Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-907.1
+        description: "AC1: Application runs without installation when portable marker file exists"
+        tests:
+          - feature:specs/features/req_907_portable_mode.feature
+      - id: AC-907.2
+        description: "AC2: Portable mode stores all config alongside the executable directory"
+        tests:
+          - feature:specs/features/req_907_portable_mode.feature
+      - id: AC-907.3
+        description: "AC3: Portable mode works from USB drive without leaving traces on host"
+        tests:
+          - feature:specs/features/req_907_portable_mode.feature
+      - id: AC-907.4
+        description: "AC4: Portable mode disables auto-start and update features by default"
+        tests:
+          - feature:specs/features/req_907_portable_mode.feature
+  - id: REQ-908
+    name: Silent Install
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-908.1
+        description: "AC1: Installer supports silent mode via command-line flag for unattended operation"
+        tests:
+          - feature:specs/features/req_908_silent_install.feature
+      - id: AC-908.2
+        description: "AC2: Silent install accepts configuration parameters for sim integration selection"
+        tests:
+          - feature:specs/features/req_908_silent_install.feature
+      - id: AC-908.3
+        description: "AC3: Silent install returns non-zero exit code on failure with error in log"
+        tests:
+          - feature:specs/features/req_908_silent_install.feature
+      - id: AC-908.4
+        description: "AC4: Silent install produces machine-readable log for enterprise deployment tools"
+        tests:
+          - feature:specs/features/req_908_silent_install.feature
+  - id: REQ-909
+    name: Installation Verification
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-909.1
+        description: "AC1: Post-install self-test verifies all binaries are present and executable"
+        tests:
+          - feature:specs/features/req_909_installation_verification.feature
+      - id: AC-909.2
+        description: "AC2: Self-test validates HID device access permissions are correctly configured"
+        tests:
+          - feature:specs/features/req_909_installation_verification.feature
+      - id: AC-909.3
+        description: "AC3: Self-test checks that sim plugin files are installed in correct locations"
+        tests:
+          - feature:specs/features/req_909_installation_verification.feature
+      - id: AC-909.4
+        description: "AC4: Self-test reports results in structured format for automated validation"
+        tests:
+          - feature:specs/features/req_909_installation_verification.feature
+  - id: REQ-910
+    name: Multi-Version Coexistence
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-910.1
+        description: "AC1: Stable and beta versions install to separate directories without conflict"
+        tests:
+          - feature:specs/features/req_910_multi_version_coexistence.feature
+      - id: AC-910.2
+        description: "AC2: Each version uses isolated configuration and data directories"
+        tests:
+          - feature:specs/features/req_910_multi_version_coexistence.feature
+      - id: AC-910.3
+        description: "AC3: IPC ports are version-namespaced to prevent cross-version interference"
+        tests:
+          - feature:specs/features/req_910_multi_version_coexistence.feature
+      - id: AC-910.4
+        description: "AC4: Only one version may be actively running at any given time"
+        tests:
+          - feature:specs/features/req_910_multi_version_coexistence.feature
+  - id: REQ-911
+    name: Update Channel Selection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-911.1
+        description: "AC1: User can switch between stable, beta, and canary update channels"
+        tests:
+          - feature:specs/features/req_911_update_channel_selection.feature
+      - id: AC-911.2
+        description: "AC2: Channel selection persists across service restarts"
+        tests:
+          - feature:specs/features/req_911_update_channel_selection.feature
+      - id: AC-911.3
+        description: "AC3: Switching channels triggers an immediate update check"
+        tests:
+          - feature:specs/features/req_911_update_channel_selection.feature
+      - id: AC-911.4
+        description: "AC4: CLI command displays current channel and available channels"
+        tests:
+          - feature:specs/features/req_911_update_channel_selection.feature
+  - id: REQ-912
+    name: Delta Updates
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-912.1
+        description: "AC1: Update system generates binary diffs between consecutive versions"
+        tests:
+          - feature:specs/features/req_912_delta_updates.feature
+      - id: AC-912.2
+        description: "AC2: Delta patches reduce download size by at least 50 percent versus full packages"
+        tests:
+          - feature:specs/features/req_912_delta_updates.feature
+      - id: AC-912.3
+        description: "AC3: Delta application verifies source version hash before patching"
+        tests:
+          - feature:specs/features/req_912_delta_updates.feature
+      - id: AC-912.4
+        description: "AC4: Full package fallback occurs when delta patch fails verification"
+        tests:
+          - feature:specs/features/req_912_delta_updates.feature
+  - id: REQ-913
+    name: Update Rollback
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-913.1
+        description: "AC1: Failed update automatically reverts to the previous working version"
+        tests:
+          - feature:specs/features/req_913_update_rollback.feature
+      - id: AC-913.2
+        description: "AC2: Rollback preserves user configuration without modification"
+        tests:
+          - feature:specs/features/req_913_update_rollback.feature
+      - id: AC-913.3
+        description: "AC3: Manual rollback command is available via CLI for user-initiated revert"
+        tests:
+          - feature:specs/features/req_913_update_rollback.feature
+      - id: AC-913.4
+        description: "AC4: Rollback event is logged with reason and prior version details"
+        tests:
+          - feature:specs/features/req_913_update_rollback.feature
+  - id: REQ-914
+    name: Update Integrity
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-914.1
+        description: "AC1: All update payloads are signed with Ed25519 signatures"
+        tests:
+          - feature:specs/features/req_914_update_integrity.feature
+      - id: AC-914.2
+        description: "AC2: Signature verification occurs before any update files are extracted"
+        tests:
+          - feature:specs/features/req_914_update_integrity.feature
+      - id: AC-914.3
+        description: "AC3: Update manifest includes SHA-256 hashes for every contained file"
+        tests:
+          - feature:specs/features/req_914_update_integrity.feature
+      - id: AC-914.4
+        description: "AC4: Tampered or unsigned payloads are rejected with descriptive error"
+        tests:
+          - feature:specs/features/req_914_update_integrity.feature
+  - id: REQ-915
+    name: Background Download
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-915.1
+        description: "AC1: Updates download in background without interrupting active flight session"
+        tests:
+          - feature:specs/features/req_915_background_download.feature
+      - id: AC-915.2
+        description: "AC2: Download uses bandwidth throttling to avoid impacting sim network traffic"
+        tests:
+          - feature:specs/features/req_915_background_download.feature
+      - id: AC-915.3
+        description: "AC3: Partial downloads resume from last checkpoint after network interruption"
+        tests:
+          - feature:specs/features/req_915_background_download.feature
+      - id: AC-915.4
+        description: "AC4: Download progress is reported via IPC for UI consumption"
+        tests:
+          - feature:specs/features/req_915_background_download.feature
+  - id: REQ-916
+    name: Update Scheduling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-916.1
+        description: "AC1: Updates can be deferred to next service restart via user preference"
+        tests:
+          - feature:specs/features/req_916_update_scheduling.feature
+      - id: AC-916.2
+        description: "AC2: Scheduled updates apply automatically when service starts with pending update"
+        tests:
+          - feature:specs/features/req_916_update_scheduling.feature
+      - id: AC-916.3
+        description: "AC3: Update schedule is configurable with time-of-day preference"
+        tests:
+          - feature:specs/features/req_916_update_scheduling.feature
+      - id: AC-916.4
+        description: "AC4: Deferred update notification persists until update is applied or dismissed"
+        tests:
+          - feature:specs/features/req_916_update_scheduling.feature
+  - id: REQ-917
+    name: Update Notification
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-917.1
+        description: "AC1: User is notified when a new update is available on their channel"
+        tests:
+          - feature:specs/features/req_917_update_notification.feature
+      - id: AC-917.2
+        description: "AC2: Notification includes version number and brief summary of changes"
+        tests:
+          - feature:specs/features/req_917_update_notification.feature
+      - id: AC-917.3
+        description: "AC3: Notification is delivered via system tray and IPC event"
+        tests:
+          - feature:specs/features/req_917_update_notification.feature
+      - id: AC-917.4
+        description: "AC4: Notification frequency is rate-limited to prevent spam on rapid releases"
+        tests:
+          - feature:specs/features/req_917_update_notification.feature
+  - id: REQ-918
+    name: Release Notes Display
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-918.1
+        description: "AC1: CLI displays changelog for pending update before installation"
+        tests:
+          - feature:specs/features/req_918_release_notes_display.feature
+      - id: AC-918.2
+        description: "AC2: Release notes include categorized entries for features, fixes, and breaking changes"
+        tests:
+          - feature:specs/features/req_918_release_notes_display.feature
+      - id: AC-918.3
+        description: "AC3: Release notes are fetched from update server and cached locally"
+        tests:
+          - feature:specs/features/req_918_release_notes_display.feature
+      - id: AC-918.4
+        description: "AC4: UI renders markdown-formatted release notes with proper styling"
+        tests:
+          - feature:specs/features/req_918_release_notes_display.feature
+  - id: REQ-919
+    name: Forced Update Policy
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-919.1
+        description: "AC1: Minimum version enforcement prevents running versions below policy threshold"
+        tests:
+          - feature:specs/features/req_919_forced_update_policy.feature
+      - id: AC-919.2
+        description: "AC2: Forced update displays clear message explaining why update is required"
+        tests:
+          - feature:specs/features/req_919_forced_update_policy.feature
+      - id: AC-919.3
+        description: "AC3: Service enters degraded mode with limited functionality until update completes"
+        tests:
+          - feature:specs/features/req_919_forced_update_policy.feature
+      - id: AC-919.4
+        description: "AC4: Forced update policy is signed and verified to prevent spoofing"
+        tests:
+          - feature:specs/features/req_919_forced_update_policy.feature
+  - id: REQ-920
+    name: Update Telemetry
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-920.1
+        description: "AC1: Update success and failure events are recorded with version metadata"
+        tests:
+          - feature:specs/features/req_920_update_telemetry.feature
+      - id: AC-920.2
+        description: "AC2: Telemetry tracks download duration, size, and bandwidth utilization"
+        tests:
+          - feature:specs/features/req_920_update_telemetry.feature
+      - id: AC-920.3
+        description: "AC3: Rollback events are tracked with failure reason classification"
+        tests:
+          - feature:specs/features/req_920_update_telemetry.feature
+      - id: AC-920.4
+        description: "AC4: Update telemetry respects user opt-in preference for data collection"
+        tests:
+          - feature:specs/features/req_920_update_telemetry.feature
+  - id: REQ-921
+    name: Config File Integrity
+    kind: security
+    status: draft
+    ac:
+      - id: AC-921.1
+        description: "AC1: Configuration files include HMAC integrity tags validated on load"
+        tests:
+          - feature:specs/features/req_921_config_file_integrity.feature
+      - id: AC-921.2
+        description: "AC2: Tampered configuration is detected and reported before applying changes"
+        tests:
+          - feature:specs/features/req_921_config_file_integrity.feature
+      - id: AC-921.3
+        description: "AC3: Integrity check failure falls back to default configuration with warning"
+        tests:
+          - feature:specs/features/req_921_config_file_integrity.feature
+      - id: AC-921.4
+        description: "AC4: Integrity validation covers all YAML and TOML configuration files"
+        tests:
+          - feature:specs/features/req_921_config_file_integrity.feature
+  - id: REQ-922
+    name: IPC Authentication
+    kind: security
+    status: draft
+    ac:
+      - id: AC-922.1
+        description: "AC1: gRPC connections require mutual TLS authentication between client and service"
+        tests:
+          - feature:specs/features/req_922_ipc_authentication.feature
+      - id: AC-922.2
+        description: "AC2: Authentication tokens are rotated on each service restart"
+        tests:
+          - feature:specs/features/req_922_ipc_authentication.feature
+      - id: AC-922.3
+        description: "AC3: Unauthenticated IPC connections are rejected with appropriate error code"
+        tests:
+          - feature:specs/features/req_922_ipc_authentication.feature
+      - id: AC-922.4
+        description: "AC4: Authentication credentials are stored in platform-specific secure storage"
+        tests:
+          - feature:specs/features/req_922_ipc_authentication.feature
+  - id: REQ-923
+    name: Plugin Sandboxing
+    kind: security
+    status: draft
+    ac:
+      - id: AC-923.1
+        description: "AC1: WASM plugins execute in capability-limited sandbox with declared permissions"
+        tests:
+          - feature:specs/features/req_923_plugin_sandboxing.feature
+      - id: AC-923.2
+        description: "AC2: Sandbox prevents file system access beyond plugin-specific data directory"
+        tests:
+          - feature:specs/features/req_923_plugin_sandboxing.feature
+      - id: AC-923.3
+        description: "AC3: Plugin memory usage is bounded by configurable per-plugin limits"
+        tests:
+          - feature:specs/features/req_923_plugin_sandboxing.feature
+      - id: AC-923.4
+        description: "AC4: Sandbox violations are logged and terminate the offending plugin"
+        tests:
+          - feature:specs/features/req_923_plugin_sandboxing.feature
+  - id: REQ-924
+    name: Audit Logging
+    kind: security
+    status: draft
+    ac:
+      - id: AC-924.1
+        description: "AC1: Security-relevant events are logged to tamper-evident audit log"
+        tests:
+          - feature:specs/features/req_924_audit_logging.feature
+      - id: AC-924.2
+        description: "AC2: Audit entries include timestamp, actor, action, and outcome fields"
+        tests:
+          - feature:specs/features/req_924_audit_logging.feature
+      - id: AC-924.3
+        description: "AC3: Audit log rotation preserves completed log files with integrity hashes"
+        tests:
+          - feature:specs/features/req_924_audit_logging.feature
+      - id: AC-924.4
+        description: "AC4: Configuration changes, auth events, and plugin loads are audit-logged"
+        tests:
+          - feature:specs/features/req_924_audit_logging.feature
+  - id: REQ-925
+    name: Secure Defaults
+    kind: security
+    status: draft
+    ac:
+      - id: AC-925.1
+        description: "AC1: Default configuration ships with IPC authentication enabled"
+        tests:
+          - feature:specs/features/req_925_secure_defaults.feature
+      - id: AC-925.2
+        description: "AC2: Default configuration disables remote access and binds to localhost only"
+        tests:
+          - feature:specs/features/req_925_secure_defaults.feature
+      - id: AC-925.3
+        description: "AC3: Default plugin permissions follow least-privilege principle"
+        tests:
+          - feature:specs/features/req_925_secure_defaults.feature
+      - id: AC-925.4
+        description: "AC4: Default logging level excludes sensitive data from log output"
+        tests:
+          - feature:specs/features/req_925_secure_defaults.feature
+  - id: REQ-926
+    name: Input Validation
+    kind: security
+    status: draft
+    ac:
+      - id: AC-926.1
+        description: "AC1: All external inputs are validated against schema before processing"
+        tests:
+          - feature:specs/features/req_926_input_validation.feature
+      - id: AC-926.2
+        description: "AC2: Profile file parsing rejects malformed or oversized input with error"
+        tests:
+          - feature:specs/features/req_926_input_validation.feature
+      - id: AC-926.3
+        description: "AC3: IPC message fields are bounds-checked before deserialization"
+        tests:
+          - feature:specs/features/req_926_input_validation.feature
+      - id: AC-926.4
+        description: "AC4: Device descriptor parsing sanitizes strings to prevent injection"
+        tests:
+          - feature:specs/features/req_926_input_validation.feature
+  - id: REQ-927
+    name: Memory Safety
+    kind: security
+    status: draft
+    ac:
+      - id: AC-927.1
+        description: "AC1: No unsafe code blocks exist outside FFI boundary modules"
+        tests:
+          - feature:specs/features/req_927_memory_safety.feature
+      - id: AC-927.2
+        description: "AC2: FFI boundary modules document safety invariants for each unsafe block"
+        tests:
+          - feature:specs/features/req_927_memory_safety.feature
+      - id: AC-927.3
+        description: "AC3: CI enforces unsafe audit via cargo-geiger or equivalent tooling"
+        tests:
+          - feature:specs/features/req_927_memory_safety.feature
+      - id: AC-927.4
+        description: "AC4: All unsafe blocks are covered by miri tests where applicable"
+        tests:
+          - feature:specs/features/req_927_memory_safety.feature
+  - id: REQ-928
+    name: Privilege Separation
+    kind: security
+    status: draft
+    ac:
+      - id: AC-928.1
+        description: "AC1: Service components run with minimal required OS permissions"
+        tests:
+          - feature:specs/features/req_928_privilege_separation.feature
+      - id: AC-928.2
+        description: "AC2: HID access uses dedicated capability without full root or admin"
+        tests:
+          - feature:specs/features/req_928_privilege_separation.feature
+      - id: AC-928.3
+        description: "AC3: Update application runs in separate privilege context from main service"
+        tests:
+          - feature:specs/features/req_928_privilege_separation.feature
+      - id: AC-928.4
+        description: "AC4: Plugin processes are sandboxed with reduced privilege set"
+        tests:
+          - feature:specs/features/req_928_privilege_separation.feature
+  - id: REQ-929
+    name: Certificate Pinning
+    kind: security
+    status: draft
+    ac:
+      - id: AC-929.1
+        description: "AC1: Update server TLS certificates are pinned in the application binary"
+        tests:
+          - feature:specs/features/req_929_certificate_pinning.feature
+      - id: AC-929.2
+        description: "AC2: Certificate rotation is supported via signed pin update mechanism"
+        tests:
+          - feature:specs/features/req_929_certificate_pinning.feature
+      - id: AC-929.3
+        description: "AC3: Pinning failure aborts connection and logs security event"
+        tests:
+          - feature:specs/features/req_929_certificate_pinning.feature
+      - id: AC-929.4
+        description: "AC4: Backup pins allow recovery when primary certificate is rotated"
+        tests:
+          - feature:specs/features/req_929_certificate_pinning.feature
+  - id: REQ-930
+    name: Crash Dump Safety
+    kind: security
+    status: draft
+    ac:
+      - id: AC-930.1
+        description: "AC1: Crash reports exclude authentication tokens and credentials"
+        tests:
+          - feature:specs/features/req_930_crash_dump_safety.feature
+      - id: AC-930.2
+        description: "AC2: Memory dumps are scrubbed of user-identifiable profile data"
+        tests:
+          - feature:specs/features/req_930_crash_dump_safety.feature
+      - id: AC-930.3
+        description: "AC3: Crash dump upload requires explicit user consent per incident"
+        tests:
+          - feature:specs/features/req_930_crash_dump_safety.feature
+      - id: AC-930.4
+        description: "AC4: Crash report format is documented for user inspection before submission"
+        tests:
+          - feature:specs/features/req_930_crash_dump_safety.feature
+  - id: REQ-931
+    name: Screen Reader Support
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-931.1
+        description: "AC1: All UI elements have accessible labels compatible with screen readers"
+        tests:
+          - feature:specs/features/req_931_screen_reader_support.feature
+      - id: AC-931.2
+        description: "AC2: Focus order follows logical navigation flow through settings panels"
+        tests:
+          - feature:specs/features/req_931_screen_reader_support.feature
+      - id: AC-931.3
+        description: "AC3: Dynamic content changes announce updates to assistive technology"
+        tests:
+          - feature:specs/features/req_931_screen_reader_support.feature
+      - id: AC-931.4
+        description: "AC4: Screen reader compatibility is tested with NVDA and Windows Narrator"
+        tests:
+          - feature:specs/features/req_931_screen_reader_support.feature
+  - id: REQ-932
+    name: High Contrast Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-932.1
+        description: "AC1: UI provides high contrast theme meeting WCAG 2.1 AA contrast ratios"
+        tests:
+          - feature:specs/features/req_932_high_contrast_mode.feature
+      - id: AC-932.2
+        description: "AC2: High contrast mode is selectable from settings without restart"
+        tests:
+          - feature:specs/features/req_932_high_contrast_mode.feature
+      - id: AC-932.3
+        description: "AC3: UI automatically detects OS high contrast setting and adapts"
+        tests:
+          - feature:specs/features/req_932_high_contrast_mode.feature
+      - id: AC-932.4
+        description: "AC4: All interactive elements remain visible and distinguishable in high contrast"
+        tests:
+          - feature:specs/features/req_932_high_contrast_mode.feature
+  - id: REQ-933
+    name: Keyboard Navigation
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-933.1
+        description: "AC1: All UI functionality is accessible via keyboard without mouse"
+        tests:
+          - feature:specs/features/req_933_keyboard_navigation.feature
+      - id: AC-933.2
+        description: "AC2: Tab order follows logical flow and is consistent across panels"
+        tests:
+          - feature:specs/features/req_933_keyboard_navigation.feature
+      - id: AC-933.3
+        description: "AC3: Keyboard shortcuts are documented and discoverable in-app"
+        tests:
+          - feature:specs/features/req_933_keyboard_navigation.feature
+      - id: AC-933.4
+        description: "AC4: Focus indicators are clearly visible on all interactive elements"
+        tests:
+          - feature:specs/features/req_933_keyboard_navigation.feature
+  - id: REQ-934
+    name: Error Messages
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-934.1
+        description: "AC1: Error messages describe the problem in non-technical language"
+        tests:
+          - feature:specs/features/req_934_error_messages.feature
+      - id: AC-934.2
+        description: "AC2: Each error message includes a suggested action for resolution"
+        tests:
+          - feature:specs/features/req_934_error_messages.feature
+      - id: AC-934.3
+        description: "AC3: Error codes are included for support reference and searchability"
+        tests:
+          - feature:specs/features/req_934_error_messages.feature
+      - id: AC-934.4
+        description: "AC4: Critical errors are visually distinct from warnings and info messages"
+        tests:
+          - feature:specs/features/req_934_error_messages.feature
+  - id: REQ-935
+    name: First-Run Wizard
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-935.1
+        description: "AC1: First launch presents guided setup wizard for initial configuration"
+        tests:
+          - feature:specs/features/req_935_first_run_wizard.feature
+      - id: AC-935.2
+        description: "AC2: Wizard auto-detects connected devices and installed simulators"
+        tests:
+          - feature:specs/features/req_935_first_run_wizard.feature
+      - id: AC-935.3
+        description: "AC3: Wizard creates initial profile based on detected hardware"
+        tests:
+          - feature:specs/features/req_935_first_run_wizard.feature
+      - id: AC-935.4
+        description: "AC4: Wizard can be skipped and re-launched from settings at any time"
+        tests:
+          - feature:specs/features/req_935_first_run_wizard.feature
+  - id: REQ-936
+    name: Context Help
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-936.1
+        description: "AC1: Each settings panel includes contextual help accessible via help icon"
+        tests:
+          - feature:specs/features/req_936_context_help.feature
+      - id: AC-936.2
+        description: "AC2: Help content explains the setting purpose and recommended values"
+        tests:
+          - feature:specs/features/req_936_context_help.feature
+      - id: AC-936.3
+        description: "AC3: Help text is searchable from a global help search function"
+        tests:
+          - feature:specs/features/req_936_context_help.feature
+      - id: AC-936.4
+        description: "AC4: Help content links to relevant online documentation when available"
+        tests:
+          - feature:specs/features/req_936_context_help.feature
+  - id: REQ-937
+    name: Undo Redo Support
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-937.1
+        description: "AC1: Configuration changes support undo operation via Ctrl+Z"
+        tests:
+          - feature:specs/features/req_937_undo_redo_support.feature
+      - id: AC-937.2
+        description: "AC2: Redo operation restores undone changes via Ctrl+Y"
+        tests:
+          - feature:specs/features/req_937_undo_redo_support.feature
+      - id: AC-937.3
+        description: "AC3: Undo history persists within the current editing session"
+        tests:
+          - feature:specs/features/req_937_undo_redo_support.feature
+      - id: AC-937.4
+        description: "AC4: Undo stack depth is bounded to prevent excessive memory usage"
+        tests:
+          - feature:specs/features/req_937_undo_redo_support.feature
+  - id: REQ-938
+    name: Progress Indicators
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-938.1
+        description: "AC1: Long operations display progress bar with estimated time remaining"
+        tests:
+          - feature:specs/features/req_938_progress_indicators.feature
+      - id: AC-938.2
+        description: "AC2: Indeterminate operations show activity spinner to indicate work in progress"
+        tests:
+          - feature:specs/features/req_938_progress_indicators.feature
+      - id: AC-938.3
+        description: "AC3: Progress state is reported via IPC for headless monitoring"
+        tests:
+          - feature:specs/features/req_938_progress_indicators.feature
+      - id: AC-938.4
+        description: "AC4: Cancel button is available for interruptible long-running operations"
+        tests:
+          - feature:specs/features/req_938_progress_indicators.feature
+  - id: REQ-939
+    name: Notification Preferences
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-939.1
+        description: "AC1: User can configure notification verbosity from silent to verbose"
+        tests:
+          - feature:specs/features/req_939_notification_preferences.feature
+      - id: AC-939.2
+        description: "AC2: Per-category notification settings allow selective muting"
+        tests:
+          - feature:specs/features/req_939_notification_preferences.feature
+      - id: AC-939.3
+        description: "AC3: Notification preferences persist across service restarts"
+        tests:
+          - feature:specs/features/req_939_notification_preferences.feature
+      - id: AC-939.4
+        description: "AC4: Do-not-disturb mode suppresses all non-critical notifications"
+        tests:
+          - feature:specs/features/req_939_notification_preferences.feature
+  - id: REQ-940
+    name: Language Localization Framework
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-940.1
+        description: "AC1: UI strings are externalized in resource files for translation"
+        tests:
+          - feature:specs/features/req_940_language_localization.feature
+      - id: AC-940.2
+        description: "AC2: Language selection is configurable in settings with immediate effect"
+        tests:
+          - feature:specs/features/req_940_language_localization.feature
+      - id: AC-940.3
+        description: "AC3: Fallback to English occurs for untranslated strings"
+        tests:
+          - feature:specs/features/req_940_language_localization.feature
+      - id: AC-940.4
+        description: "AC4: Date, time, and number formatting respects locale conventions"
+        tests:
+          - feature:specs/features/req_940_language_localization.feature
+  - id: REQ-941
+    name: Structured Logging
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-941.1
+        description: "AC1: Log output is formatted as structured JSON with consistent field schema"
+        tests:
+          - feature:specs/features/req_941_structured_logging.feature
+      - id: AC-941.2
+        description: "AC2: Each log entry includes timestamp, level, component, and message fields"
+        tests:
+          - feature:specs/features/req_941_structured_logging.feature
+      - id: AC-941.3
+        description: "AC3: Structured logs include trace and span IDs for correlation"
+        tests:
+          - feature:specs/features/req_941_structured_logging.feature
+      - id: AC-941.4
+        description: "AC4: Log format is configurable between JSON and human-readable output"
+        tests:
+          - feature:specs/features/req_941_structured_logging.feature
+  - id: REQ-942
+    name: Log Rotation
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-942.1
+        description: "AC1: Log files rotate automatically when size exceeds configured threshold"
+        tests:
+          - feature:specs/features/req_942_log_rotation.feature
+      - id: AC-942.2
+        description: "AC2: Rotated log files are compressed and retained for configurable duration"
+        tests:
+          - feature:specs/features/req_942_log_rotation.feature
+      - id: AC-942.3
+        description: "AC3: Log rotation occurs without dropping any log entries during switchover"
+        tests:
+          - feature:specs/features/req_942_log_rotation.feature
+      - id: AC-942.4
+        description: "AC4: Maximum total log storage is bounded by configurable disk quota"
+        tests:
+          - feature:specs/features/req_942_log_rotation.feature
+  - id: REQ-943
+    name: Metrics Export
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-943.1
+        description: "AC1: Prometheus-compatible metrics endpoint exposes system metrics"
+        tests:
+          - feature:specs/features/req_943_metrics_export.feature
+      - id: AC-943.2
+        description: "AC2: Metrics include axis processing latency, jitter, and throughput counters"
+        tests:
+          - feature:specs/features/req_943_metrics_export.feature
+      - id: AC-943.3
+        description: "AC3: Device connection status and error counts are exposed as metrics"
+        tests:
+          - feature:specs/features/req_943_metrics_export.feature
+      - id: AC-943.4
+        description: "AC4: Metrics endpoint supports HTTP scraping on configurable port"
+        tests:
+          - feature:specs/features/req_943_metrics_export.feature
+  - id: REQ-944
+    name: Health Check Endpoint
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-944.1
+        description: "AC1: HTTP health check endpoint returns service status for monitoring"
+        tests:
+          - feature:specs/features/req_944_health_check_endpoint.feature
+      - id: AC-944.2
+        description: "AC2: Health response includes component-level status for each subsystem"
+        tests:
+          - feature:specs/features/req_944_health_check_endpoint.feature
+      - id: AC-944.3
+        description: "AC3: Health check distinguishes between healthy, degraded, and unhealthy states"
+        tests:
+          - feature:specs/features/req_944_health_check_endpoint.feature
+      - id: AC-944.4
+        description: "AC4: Health endpoint responds within 100ms under normal operating conditions"
+        tests:
+          - feature:specs/features/req_944_health_check_endpoint.feature
+  - id: REQ-945
+    name: Distributed Tracing
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-945.1
+        description: "AC1: Trace context propagates across IPC boundaries between components"
+        tests:
+          - feature:specs/features/req_945_distributed_tracing.feature
+      - id: AC-945.2
+        description: "AC2: Traces capture axis processing pipeline stages with timing data"
+        tests:
+          - feature:specs/features/req_945_distributed_tracing.feature
+      - id: AC-945.3
+        description: "AC3: Trace export supports OpenTelemetry protocol for external collectors"
+        tests:
+          - feature:specs/features/req_945_distributed_tracing.feature
+      - id: AC-945.4
+        description: "AC4: Trace sampling rate is configurable to control overhead"
+        tests:
+          - feature:specs/features/req_945_distributed_tracing.feature
+  - id: REQ-946
+    name: Performance Counters
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-946.1
+        description: "AC1: Windows performance counters are registered for perfmon integration"
+        tests:
+          - feature:specs/features/req_946_performance_counters.feature
+      - id: AC-946.2
+        description: "AC2: Linux perf integration exposes custom counters for system monitoring"
+        tests:
+          - feature:specs/features/req_946_performance_counters.feature
+      - id: AC-946.3
+        description: "AC3: Counters track tick rate, processing time, and queue depths"
+        tests:
+          - feature:specs/features/req_946_performance_counters.feature
+      - id: AC-946.4
+        description: "AC4: Performance counter registration is automatic during service startup"
+        tests:
+          - feature:specs/features/req_946_performance_counters.feature
+  - id: REQ-947
+    name: Resource Monitoring
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-947.1
+        description: "AC1: Service tracks its own CPU usage and reports via metrics endpoint"
+        tests:
+          - feature:specs/features/req_947_resource_monitoring.feature
+      - id: AC-947.2
+        description: "AC2: Memory usage is monitored with alerts on approaching configured limits"
+        tests:
+          - feature:specs/features/req_947_resource_monitoring.feature
+      - id: AC-947.3
+        description: "AC3: Disk usage for logs and data is tracked and reported"
+        tests:
+          - feature:specs/features/req_947_resource_monitoring.feature
+      - id: AC-947.4
+        description: "AC4: Resource metrics are sampled at configurable intervals"
+        tests:
+          - feature:specs/features/req_947_resource_monitoring.feature
+  - id: REQ-948
+    name: Alert Thresholds
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-948.1
+        description: "AC1: Configurable alert thresholds trigger on metric value exceedance"
+        tests:
+          - feature:specs/features/req_948_alert_thresholds.feature
+      - id: AC-948.2
+        description: "AC2: Alerts support severity levels from info through critical"
+        tests:
+          - feature:specs/features/req_948_alert_thresholds.feature
+      - id: AC-948.3
+        description: "AC3: Alert state changes are emitted as structured events on the bus"
+        tests:
+          - feature:specs/features/req_948_alert_thresholds.feature
+      - id: AC-948.4
+        description: "AC4: Alert cooldown prevents repeated firing for sustained threshold breach"
+        tests:
+          - feature:specs/features/req_948_alert_thresholds.feature
+  - id: REQ-949
+    name: Diagnostic Commands
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-949.1
+        description: "AC1: CLI provides diagnostic commands for system health inspection"
+        tests:
+          - feature:specs/features/req_949_diagnostic_commands.feature
+      - id: AC-949.2
+        description: "AC2: Diagnostics include device enumeration, connection status, and axis state"
+        tests:
+          - feature:specs/features/req_949_diagnostic_commands.feature
+      - id: AC-949.3
+        description: "AC3: Diagnostic output is structured for both human and machine consumption"
+        tests:
+          - feature:specs/features/req_949_diagnostic_commands.feature
+      - id: AC-949.4
+        description: "AC4: Diagnostic bundle export collects logs, config, and state into single archive"
+        tests:
+          - feature:specs/features/req_949_diagnostic_commands.feature
+  - id: REQ-950
+    name: Telemetry Opt-In
+    kind: operational
+    status: draft
+    ac:
+      - id: AC-950.1
+        description: "AC1: Anonymous usage telemetry is disabled by default requiring explicit opt-in"
+        tests:
+          - feature:specs/features/req_950_telemetry_opt_in.feature
+      - id: AC-950.2
+        description: "AC2: Opt-in preference is configurable via CLI and UI settings"
+        tests:
+          - feature:specs/features/req_950_telemetry_opt_in.feature
+      - id: AC-950.3
+        description: "AC3: Telemetry data is anonymized with no device or user identifiers"
+        tests:
+          - feature:specs/features/req_950_telemetry_opt_in.feature
+      - id: AC-950.4
+        description: "AC4: User can view exactly what telemetry data would be sent before opting in"
+        tests:
+          - feature:specs/features/req_950_telemetry_opt_in.feature
