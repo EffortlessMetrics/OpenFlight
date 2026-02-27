@@ -21798,3 +21798,1053 @@ requirements:
         description: "AC4: Crosswind forces respect FFB safety envelope limits"
         tests:
           - feature:specs/features/req_850_ffb_crosswind_landing.feature
+  - id: REQ-851
+    name: Profile Version Control
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-851.1
+        description: "AC1: Profile change history is tracked with timestamps and author metadata"
+        tests:
+          - feature:specs/features/req_851_profile_version_control.feature
+      - id: AC-851.2
+        description: "AC2: Previous profile versions can be restored from the version log"
+        tests:
+          - feature:specs/features/req_851_profile_version_control.feature
+      - id: AC-851.3
+        description: "AC3: Version diffs show which axes and bindings changed between revisions"
+        tests:
+          - feature:specs/features/req_851_profile_version_control.feature
+      - id: AC-851.4
+        description: "AC4: Version history is persisted across service restarts"
+        tests:
+          - feature:specs/features/req_851_profile_version_control.feature
+  - id: REQ-852
+    name: Profile Sharing Protocol
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-852.1
+        description: "AC1: Profiles can be exported as signed portable packages"
+        tests:
+          - feature:specs/features/req_852_profile_sharing_protocol.feature
+      - id: AC-852.2
+        description: "AC2: Imported profiles are validated against a cryptographic signature"
+        tests:
+          - feature:specs/features/req_852_profile_sharing_protocol.feature
+      - id: AC-852.3
+        description: "AC3: Sharing protocol includes device compatibility metadata"
+        tests:
+          - feature:specs/features/req_852_profile_sharing_protocol.feature
+      - id: AC-852.4
+        description: "AC4: Import rejects packages with mismatched or missing signatures"
+        tests:
+          - feature:specs/features/req_852_profile_sharing_protocol.feature
+  - id: REQ-853
+    name: Profile Auto-Backup
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-853.1
+        description: "AC1: Profiles are automatically backed up at a configurable interval"
+        tests:
+          - feature:specs/features/req_853_profile_auto_backup.feature
+      - id: AC-853.2
+        description: "AC2: Backup rotation retains the most recent N backups per profile"
+        tests:
+          - feature:specs/features/req_853_profile_auto_backup.feature
+      - id: AC-853.3
+        description: "AC3: Auto-backup triggers before any destructive profile operation"
+        tests:
+          - feature:specs/features/req_853_profile_auto_backup.feature
+      - id: AC-853.4
+        description: "AC4: Backup files can be restored through the CLI or service API"
+        tests:
+          - feature:specs/features/req_853_profile_auto_backup.feature
+  - id: REQ-854
+    name: Profile Conflict Detection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-854.1
+        description: "AC1: Conflicting axis assignments across profiles are detected at load time"
+        tests:
+          - feature:specs/features/req_854_profile_conflict_detection.feature
+      - id: AC-854.2
+        description: "AC2: Conflict report identifies the specific axes and profiles involved"
+        tests:
+          - feature:specs/features/req_854_profile_conflict_detection.feature
+      - id: AC-854.3
+        description: "AC3: Service emits a warning event when conflicts are detected"
+        tests:
+          - feature:specs/features/req_854_profile_conflict_detection.feature
+      - id: AC-854.4
+        description: "AC4: User can resolve conflicts interactively or via a priority rule"
+        tests:
+          - feature:specs/features/req_854_profile_conflict_detection.feature
+  - id: REQ-855
+    name: Profile Quick-Switch
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-855.1
+        description: "AC1: Profiles can be switched via a configurable hotkey combination"
+        tests:
+          - feature:specs/features/req_855_profile_quick_switch.feature
+      - id: AC-855.2
+        description: "AC2: Quick-switch completes within 100ms without dropping input frames"
+        tests:
+          - feature:specs/features/req_855_profile_quick_switch.feature
+      - id: AC-855.3
+        description: "AC3: An on-screen indicator confirms the active profile after switch"
+        tests:
+          - feature:specs/features/req_855_profile_quick_switch.feature
+      - id: AC-855.4
+        description: "AC4: Quick-switch cycles through a user-defined profile ring"
+        tests:
+          - feature:specs/features/req_855_profile_quick_switch.feature
+  - id: REQ-856
+    name: Profile Validation Report
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-856.1
+        description: "AC1: Validation produces a structured report with errors and warnings"
+        tests:
+          - feature:specs/features/req_856_profile_validation_report.feature
+      - id: AC-856.2
+        description: "AC2: Report includes actionable suggestions for each validation issue"
+        tests:
+          - feature:specs/features/req_856_profile_validation_report.feature
+      - id: AC-856.3
+        description: "AC3: Validation checks axis ranges, curve continuity, and binding conflicts"
+        tests:
+          - feature:specs/features/req_856_profile_validation_report.feature
+      - id: AC-856.4
+        description: "AC4: Report is available in JSON and human-readable text formats"
+        tests:
+          - feature:specs/features/req_856_profile_validation_report.feature
+  - id: REQ-857
+    name: Profile Comparison Tool
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-857.1
+        description: "AC1: Two profiles can be compared side-by-side showing all differences"
+        tests:
+          - feature:specs/features/req_857_profile_comparison_tool.feature
+      - id: AC-857.2
+        description: "AC2: Comparison highlights added, removed, and modified bindings"
+        tests:
+          - feature:specs/features/req_857_profile_comparison_tool.feature
+      - id: AC-857.3
+        description: "AC3: Axis curve differences are reported with numerical deltas"
+        tests:
+          - feature:specs/features/req_857_profile_comparison_tool.feature
+      - id: AC-857.4
+        description: "AC4: Comparison output is available via CLI and service API"
+        tests:
+          - feature:specs/features/req_857_profile_comparison_tool.feature
+  - id: REQ-858
+    name: Profile Scripting
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-858.1
+        description: "AC1: Profile macros can be defined using a safe expression language"
+        tests:
+          - feature:specs/features/req_858_profile_scripting.feature
+      - id: AC-858.2
+        description: "AC2: Scripts can reference axis values and sim variables as inputs"
+        tests:
+          - feature:specs/features/req_858_profile_scripting.feature
+      - id: AC-858.3
+        description: "AC3: Script execution is sandboxed with a configurable time budget"
+        tests:
+          - feature:specs/features/req_858_profile_scripting.feature
+      - id: AC-858.4
+        description: "AC4: Syntax errors in scripts produce clear diagnostic messages"
+        tests:
+          - feature:specs/features/req_858_profile_scripting.feature
+  - id: REQ-859
+    name: Profile Inheritance Chain
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-859.1
+        description: "AC1: Profiles support multi-level inheritance with override visibility"
+        tests:
+          - feature:specs/features/req_859_profile_inheritance_chain.feature
+      - id: AC-859.2
+        description: "AC2: Inheritance chain displays which level each setting originates from"
+        tests:
+          - feature:specs/features/req_859_profile_inheritance_chain.feature
+      - id: AC-859.3
+        description: "AC3: Circular inheritance references are detected and rejected"
+        tests:
+          - feature:specs/features/req_859_profile_inheritance_chain.feature
+      - id: AC-859.4
+        description: "AC4: Override at any level can be inspected and reverted independently"
+        tests:
+          - feature:specs/features/req_859_profile_inheritance_chain.feature
+  - id: REQ-860
+    name: Profile Performance Impact
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-860.1
+        description: "AC1: Profile complexity cost is measured and reported as a score"
+        tests:
+          - feature:specs/features/req_860_profile_performance_impact.feature
+      - id: AC-860.2
+        description: "AC2: Performance impact analysis runs without affecting RT spine latency"
+        tests:
+          - feature:specs/features/req_860_profile_performance_impact.feature
+      - id: AC-860.3
+        description: "AC3: Profiles exceeding a complexity threshold trigger a warning"
+        tests:
+          - feature:specs/features/req_860_profile_performance_impact.feature
+      - id: AC-860.4
+        description: "AC4: Impact report breaks down cost by axis, curve, and mixer components"
+        tests:
+          - feature:specs/features/req_860_profile_performance_impact.feature
+  - id: REQ-861
+    name: Device Polling Rate Optimization
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-861.1
+        description: "AC1: Polling interval is auto-tuned based on device response characteristics"
+        tests:
+          - feature:specs/features/req_861_device_polling_rate_optimization.feature
+      - id: AC-861.2
+        description: "AC2: Optimization adjusts independently for each connected device"
+        tests:
+          - feature:specs/features/req_861_device_polling_rate_optimization.feature
+      - id: AC-861.3
+        description: "AC3: Tuning respects a minimum polling floor to prevent excessive CPU usage"
+        tests:
+          - feature:specs/features/req_861_device_polling_rate_optimization.feature
+      - id: AC-861.4
+        description: "AC4: Polling rate changes are logged and visible in diagnostics"
+        tests:
+          - feature:specs/features/req_861_device_polling_rate_optimization.feature
+  - id: REQ-862
+    name: Device Axis Smoothing Config
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-862.1
+        description: "AC1: Per-device smoothing presets are available for common device types"
+        tests:
+          - feature:specs/features/req_862_device_axis_smoothing_config.feature
+      - id: AC-862.2
+        description: "AC2: Custom smoothing parameters can be configured per axis"
+        tests:
+          - feature:specs/features/req_862_device_axis_smoothing_config.feature
+      - id: AC-862.3
+        description: "AC3: Smoothing algorithm selection includes moving average and Kalman filter"
+        tests:
+          - feature:specs/features/req_862_device_axis_smoothing_config.feature
+      - id: AC-862.4
+        description: "AC4: Smoothing configuration changes take effect within one processing cycle"
+        tests:
+          - feature:specs/features/req_862_device_axis_smoothing_config.feature
+  - id: REQ-863
+    name: Device Button Debounce Tuning
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-863.1
+        description: "AC1: Debounce timing is configurable per button on each device"
+        tests:
+          - feature:specs/features/req_863_device_button_debounce_tuning.feature
+      - id: AC-863.2
+        description: "AC2: Default debounce values are set based on device hardware profile"
+        tests:
+          - feature:specs/features/req_863_device_button_debounce_tuning.feature
+      - id: AC-863.3
+        description: "AC3: Debounce tuning UI shows real-time bounce detection counts"
+        tests:
+          - feature:specs/features/req_863_device_button_debounce_tuning.feature
+      - id: AC-863.4
+        description: "AC4: Extremely short debounce values trigger a reliability warning"
+        tests:
+          - feature:specs/features/req_863_device_button_debounce_tuning.feature
+  - id: REQ-864
+    name: Device Health Monitoring
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-864.1
+        description: "AC1: Periodic self-test checks device connectivity and response time"
+        tests:
+          - feature:specs/features/req_864_device_health_monitoring.feature
+      - id: AC-864.2
+        description: "AC2: Health status is reported as healthy, degraded, or disconnected"
+        tests:
+          - feature:specs/features/req_864_device_health_monitoring.feature
+      - id: AC-864.3
+        description: "AC3: Degraded health triggers an alert event on the event bus"
+        tests:
+          - feature:specs/features/req_864_device_health_monitoring.feature
+      - id: AC-864.4
+        description: "AC4: Health history is retained for trend analysis over time"
+        tests:
+          - feature:specs/features/req_864_device_health_monitoring.feature
+  - id: REQ-865
+    name: Device Usage Analytics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-865.1
+        description: "AC1: Device usage patterns are tracked including active time per axis"
+        tests:
+          - feature:specs/features/req_865_device_usage_analytics.feature
+      - id: AC-865.2
+        description: "AC2: Analytics data is stored locally with configurable retention"
+        tests:
+          - feature:specs/features/req_865_device_usage_analytics.feature
+      - id: AC-865.3
+        description: "AC3: Usage reports can be generated per device and per session"
+        tests:
+          - feature:specs/features/req_865_device_usage_analytics.feature
+      - id: AC-865.4
+        description: "AC4: Analytics collection can be disabled entirely by the user"
+        tests:
+          - feature:specs/features/req_865_device_usage_analytics.feature
+  - id: REQ-866
+    name: Device LED Pattern Engine
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-866.1
+        description: "AC1: Programmable LED sequences can be defined with timing and color"
+        tests:
+          - feature:specs/features/req_866_device_led_pattern_engine.feature
+      - id: AC-866.2
+        description: "AC2: LED patterns can be triggered by sim events or state changes"
+        tests:
+          - feature:specs/features/req_866_device_led_pattern_engine.feature
+      - id: AC-866.3
+        description: "AC3: Pattern engine supports blending multiple concurrent patterns"
+        tests:
+          - feature:specs/features/req_866_device_led_pattern_engine.feature
+      - id: AC-866.4
+        description: "AC4: Invalid pattern definitions are rejected with descriptive errors"
+        tests:
+          - feature:specs/features/req_866_device_led_pattern_engine.feature
+  - id: REQ-867
+    name: Device Multi-Profile Binding
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-867.1
+        description: "AC1: Different profiles can be assigned to individual connected devices"
+        tests:
+          - feature:specs/features/req_867_device_multi_profile_binding.feature
+      - id: AC-867.2
+        description: "AC2: Per-device profile assignment persists across service restarts"
+        tests:
+          - feature:specs/features/req_867_device_multi_profile_binding.feature
+      - id: AC-867.3
+        description: "AC3: Removing a device falls back to the global active profile"
+        tests:
+          - feature:specs/features/req_867_device_multi_profile_binding.feature
+      - id: AC-867.4
+        description: "AC4: Profile-device bindings are displayed in the device status view"
+        tests:
+          - feature:specs/features/req_867_device_multi_profile_binding.feature
+  - id: REQ-868
+    name: Device Input Recording
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-868.1
+        description: "AC1: Raw device input streams can be recorded to a timestamped file"
+        tests:
+          - feature:specs/features/req_868_device_input_recording.feature
+      - id: AC-868.2
+        description: "AC2: Recording captures all axes, buttons, and hat positions"
+        tests:
+          - feature:specs/features/req_868_device_input_recording.feature
+      - id: AC-868.3
+        description: "AC3: Playback of recorded input is supported for diagnostics"
+        tests:
+          - feature:specs/features/req_868_device_input_recording.feature
+      - id: AC-868.4
+        description: "AC4: Recording automatically stops when file size limit is reached"
+        tests:
+          - feature:specs/features/req_868_device_input_recording.feature
+  - id: REQ-869
+    name: Device Firmware Compatibility
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-869.1
+        description: "AC1: Device firmware version is checked against a known compatibility list"
+        tests:
+          - feature:specs/features/req_869_device_firmware_compatibility.feature
+      - id: AC-869.2
+        description: "AC2: Incompatible firmware triggers a warning with upgrade guidance"
+        tests:
+          - feature:specs/features/req_869_device_firmware_compatibility.feature
+      - id: AC-869.3
+        description: "AC3: Compatibility database is updatable without a service release"
+        tests:
+          - feature:specs/features/req_869_device_firmware_compatibility.feature
+      - id: AC-869.4
+        description: "AC4: Firmware version is displayed in device information output"
+        tests:
+          - feature:specs/features/req_869_device_firmware_compatibility.feature
+  - id: REQ-870
+    name: Device Virtual Pairing
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-870.1
+        description: "AC1: Virtual devices can be paired with physical device inputs"
+        tests:
+          - feature:specs/features/req_870_device_virtual_pairing.feature
+      - id: AC-870.2
+        description: "AC2: Pairing maps physical axis outputs to virtual device channels"
+        tests:
+          - feature:specs/features/req_870_device_virtual_pairing.feature
+      - id: AC-870.3
+        description: "AC3: Paired devices appear as a single logical device in profiles"
+        tests:
+          - feature:specs/features/req_870_device_virtual_pairing.feature
+      - id: AC-870.4
+        description: "AC4: Unpairing restores both devices to independent operation"
+        tests:
+          - feature:specs/features/req_870_device_virtual_pairing.feature
+  - id: REQ-871
+    name: Service Plugin Discovery
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-871.1
+        description: "AC1: Plugins are scanned and loaded from configured directories at startup"
+        tests:
+          - feature:specs/features/req_871_service_plugin_discovery.feature
+      - id: AC-871.2
+        description: "AC2: Plugin manifests are validated before loading proceeds"
+        tests:
+          - feature:specs/features/req_871_service_plugin_discovery.feature
+      - id: AC-871.3
+        description: "AC3: Incompatible or unsigned plugins are skipped with a warning"
+        tests:
+          - feature:specs/features/req_871_service_plugin_discovery.feature
+      - id: AC-871.4
+        description: "AC4: Discovered plugins are listed in the service status report"
+        tests:
+          - feature:specs/features/req_871_service_plugin_discovery.feature
+  - id: REQ-872
+    name: Service API Rate Limiting
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-872.1
+        description: "AC1: IPC endpoints enforce configurable request rate limits"
+        tests:
+          - feature:specs/features/req_872_service_api_rate_limiting.feature
+      - id: AC-872.2
+        description: "AC2: Rate-limited requests receive a descriptive rejection response"
+        tests:
+          - feature:specs/features/req_872_service_api_rate_limiting.feature
+      - id: AC-872.3
+        description: "AC3: Rate limit counters reset on a sliding window basis"
+        tests:
+          - feature:specs/features/req_872_service_api_rate_limiting.feature
+      - id: AC-872.4
+        description: "AC4: Critical control endpoints are exempt from rate limiting"
+        tests:
+          - feature:specs/features/req_872_service_api_rate_limiting.feature
+  - id: REQ-873
+    name: Service Config Hot-Reload
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-873.1
+        description: "AC1: Configuration changes are applied without restarting the service"
+        tests:
+          - feature:specs/features/req_873_service_config_hot_reload.feature
+      - id: AC-873.2
+        description: "AC2: Hot-reload validates new configuration before applying it"
+        tests:
+          - feature:specs/features/req_873_service_config_hot_reload.feature
+      - id: AC-873.3
+        description: "AC3: Failed hot-reload rolls back to the previous valid configuration"
+        tests:
+          - feature:specs/features/req_873_service_config_hot_reload.feature
+      - id: AC-873.4
+        description: "AC4: A reload event is published on the event bus after success"
+        tests:
+          - feature:specs/features/req_873_service_config_hot_reload.feature
+  - id: REQ-874
+    name: Service Diagnostic Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-874.1
+        description: "AC1: Diagnostic mode enables enhanced logging for all subsystems"
+        tests:
+          - feature:specs/features/req_874_service_diagnostic_mode.feature
+      - id: AC-874.2
+        description: "AC2: Mode can be activated and deactivated at runtime via CLI"
+        tests:
+          - feature:specs/features/req_874_service_diagnostic_mode.feature
+      - id: AC-874.3
+        description: "AC3: Diagnostic output includes timing traces for RT spine ticks"
+        tests:
+          - feature:specs/features/req_874_service_diagnostic_mode.feature
+      - id: AC-874.4
+        description: "AC4: Diagnostic mode automatically disables after a configurable timeout"
+        tests:
+          - feature:specs/features/req_874_service_diagnostic_mode.feature
+  - id: REQ-875
+    name: Service Backup Scheduler
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-875.1
+        description: "AC1: Automatic configuration backup runs on a configurable schedule"
+        tests:
+          - feature:specs/features/req_875_service_backup_scheduler.feature
+      - id: AC-875.2
+        description: "AC2: Backup includes profiles, device settings, and service configuration"
+        tests:
+          - feature:specs/features/req_875_service_backup_scheduler.feature
+      - id: AC-875.3
+        description: "AC3: Old backups are pruned based on retention policy"
+        tests:
+          - feature:specs/features/req_875_service_backup_scheduler.feature
+      - id: AC-875.4
+        description: "AC4: Backup status and history are queryable via the service API"
+        tests:
+          - feature:specs/features/req_875_service_backup_scheduler.feature
+  - id: REQ-876
+    name: Service Performance Profiling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-876.1
+        description: "AC1: Built-in performance sampling captures CPU and latency metrics"
+        tests:
+          - feature:specs/features/req_876_service_performance_profiling.feature
+      - id: AC-876.2
+        description: "AC2: Profiling can be started and stopped via CLI command"
+        tests:
+          - feature:specs/features/req_876_service_performance_profiling.feature
+      - id: AC-876.3
+        description: "AC3: Profile data is exported in a standard format for analysis tools"
+        tests:
+          - feature:specs/features/req_876_service_performance_profiling.feature
+      - id: AC-876.4
+        description: "AC4: Profiling overhead does not exceed 2 percent of baseline CPU usage"
+        tests:
+          - feature:specs/features/req_876_service_performance_profiling.feature
+  - id: REQ-877
+    name: Service Event Journal
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-877.1
+        description: "AC1: All service events are persisted to a rotated journal file"
+        tests:
+          - feature:specs/features/req_877_service_event_journal.feature
+      - id: AC-877.2
+        description: "AC2: Journal entries include timestamp, severity, source, and payload"
+        tests:
+          - feature:specs/features/req_877_service_event_journal.feature
+      - id: AC-877.3
+        description: "AC3: Journal rotation triggers based on file size or time interval"
+        tests:
+          - feature:specs/features/req_877_service_event_journal.feature
+      - id: AC-877.4
+        description: "AC4: Journal can be queried by time range, severity, or source filter"
+        tests:
+          - feature:specs/features/req_877_service_event_journal.feature
+  - id: REQ-878
+    name: Service Network Diagnostics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-878.1
+        description: "AC1: Network connectivity to each sim adapter endpoint is tested on demand"
+        tests:
+          - feature:specs/features/req_878_service_network_diagnostics.feature
+      - id: AC-878.2
+        description: "AC2: Diagnostic reports latency and packet loss per adapter connection"
+        tests:
+          - feature:specs/features/req_878_service_network_diagnostics.feature
+      - id: AC-878.3
+        description: "AC3: Unreachable adapters are flagged in the service health status"
+        tests:
+          - feature:specs/features/req_878_service_network_diagnostics.feature
+      - id: AC-878.4
+        description: "AC4: Network diagnostic results are cached to avoid repeated probes"
+        tests:
+          - feature:specs/features/req_878_service_network_diagnostics.feature
+  - id: REQ-879
+    name: Service License Management
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-879.1
+        description: "AC1: License validity is verified at startup for premium feature access"
+        tests:
+          - feature:specs/features/req_879_service_license_management.feature
+      - id: AC-879.2
+        description: "AC2: Expired or invalid licenses degrade gracefully to free-tier features"
+        tests:
+          - feature:specs/features/req_879_service_license_management.feature
+      - id: AC-879.3
+        description: "AC3: License status is visible in service info and CLI output"
+        tests:
+          - feature:specs/features/req_879_service_license_management.feature
+      - id: AC-879.4
+        description: "AC4: License verification works offline using a cached validation token"
+        tests:
+          - feature:specs/features/req_879_service_license_management.feature
+  - id: REQ-880
+    name: Service Update Scheduling
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-880.1
+        description: "AC1: Updates can be scheduled for a user-specified time window"
+        tests:
+          - feature:specs/features/req_880_service_update_scheduling.feature
+      - id: AC-880.2
+        description: "AC2: Scheduled updates are skipped if a flight session is active"
+        tests:
+          - feature:specs/features/req_880_service_update_scheduling.feature
+      - id: AC-880.3
+        description: "AC3: Update schedule is persisted and survives service restarts"
+        tests:
+          - feature:specs/features/req_880_service_update_scheduling.feature
+      - id: AC-880.4
+        description: "AC4: Users receive a notification before a scheduled update begins"
+        tests:
+          - feature:specs/features/req_880_service_update_scheduling.feature
+  - id: REQ-881
+    name: CLI Batch Operations
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-881.1
+        description: "AC1: Settings can be applied to multiple devices in a single command"
+        tests:
+          - feature:specs/features/req_881_cli_batch_operations.feature
+      - id: AC-881.2
+        description: "AC2: Batch operations report per-device success or failure status"
+        tests:
+          - feature:specs/features/req_881_cli_batch_operations.feature
+      - id: AC-881.3
+        description: "AC3: A dry-run flag previews changes without applying them"
+        tests:
+          - feature:specs/features/req_881_cli_batch_operations.feature
+      - id: AC-881.4
+        description: "AC4: Batch input accepts device lists from a file or glob pattern"
+        tests:
+          - feature:specs/features/req_881_cli_batch_operations.feature
+  - id: REQ-882
+    name: CLI Scripting Mode
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-882.1
+        description: "AC1: Non-interactive scripting mode suppresses prompts and progress bars"
+        tests:
+          - feature:specs/features/req_882_cli_scripting_mode.feature
+      - id: AC-882.2
+        description: "AC2: Exit codes follow standard conventions for success and error types"
+        tests:
+          - feature:specs/features/req_882_cli_scripting_mode.feature
+      - id: AC-882.3
+        description: "AC3: Scripting mode output is stable and machine-parseable"
+        tests:
+          - feature:specs/features/req_882_cli_scripting_mode.feature
+      - id: AC-882.4
+        description: "AC4: Environment variable selects scripting mode without a CLI flag"
+        tests:
+          - feature:specs/features/req_882_cli_scripting_mode.feature
+  - id: REQ-883
+    name: CLI Remote Connection
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-883.1
+        description: "AC1: CLI can connect to a remote service instance by address and port"
+        tests:
+          - feature:specs/features/req_883_cli_remote_connection.feature
+      - id: AC-883.2
+        description: "AC2: Remote connections require authentication via token or certificate"
+        tests:
+          - feature:specs/features/req_883_cli_remote_connection.feature
+      - id: AC-883.3
+        description: "AC3: Connection timeout and retry are configurable per remote target"
+        tests:
+          - feature:specs/features/req_883_cli_remote_connection.feature
+      - id: AC-883.4
+        description: "AC4: Remote connection status is shown in the CLI prompt or status bar"
+        tests:
+          - feature:specs/features/req_883_cli_remote_connection.feature
+  - id: REQ-884
+    name: CLI Auto-Complete Context
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-884.1
+        description: "AC1: Completions are context-aware based on the current command prefix"
+        tests:
+          - feature:specs/features/req_884_cli_auto_complete_context.feature
+      - id: AC-884.2
+        description: "AC2: Device names and profile names are suggested from live service data"
+        tests:
+          - feature:specs/features/req_884_cli_auto_complete_context.feature
+      - id: AC-884.3
+        description: "AC3: Completion scripts are generated for bash, zsh, fish, and PowerShell"
+        tests:
+          - feature:specs/features/req_884_cli_auto_complete_context.feature
+      - id: AC-884.4
+        description: "AC4: Completions update dynamically when devices connect or disconnect"
+        tests:
+          - feature:specs/features/req_884_cli_auto_complete_context.feature
+  - id: REQ-885
+    name: CLI Output Formatting
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-885.1
+        description: "AC1: Output format is selectable as table, JSON, or CSV via a flag"
+        tests:
+          - feature:specs/features/req_885_cli_output_formatting.feature
+      - id: AC-885.2
+        description: "AC2: Default format is human-readable table for interactive terminals"
+        tests:
+          - feature:specs/features/req_885_cli_output_formatting.feature
+      - id: AC-885.3
+        description: "AC3: JSON output conforms to a documented schema for each command"
+        tests:
+          - feature:specs/features/req_885_cli_output_formatting.feature
+      - id: AC-885.4
+        description: "AC4: CSV output includes a header row with column names"
+        tests:
+          - feature:specs/features/req_885_cli_output_formatting.feature
+  - id: REQ-886
+    name: CLI Device Pairing Wizard
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-886.1
+        description: "AC1: Guided wizard walks user through device setup step by step"
+        tests:
+          - feature:specs/features/req_886_cli_device_pairing_wizard.feature
+      - id: AC-886.2
+        description: "AC2: Wizard detects connected devices and suggests default configurations"
+        tests:
+          - feature:specs/features/req_886_cli_device_pairing_wizard.feature
+      - id: AC-886.3
+        description: "AC3: Each step validates input before proceeding to the next"
+        tests:
+          - feature:specs/features/req_886_cli_device_pairing_wizard.feature
+      - id: AC-886.4
+        description: "AC4: Wizard can be cancelled at any step without partial side effects"
+        tests:
+          - feature:specs/features/req_886_cli_device_pairing_wizard.feature
+  - id: REQ-887
+    name: CLI Performance Report
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-887.1
+        description: "AC1: Performance analysis report is generated with a single CLI command"
+        tests:
+          - feature:specs/features/req_887_cli_performance_report.feature
+      - id: AC-887.2
+        description: "AC2: Report includes RT spine latency, jitter, and throughput metrics"
+        tests:
+          - feature:specs/features/req_887_cli_performance_report.feature
+      - id: AC-887.3
+        description: "AC3: Report compares current metrics against historical baselines"
+        tests:
+          - feature:specs/features/req_887_cli_performance_report.feature
+      - id: AC-887.4
+        description: "AC4: Output supports both summary and detailed breakdown views"
+        tests:
+          - feature:specs/features/req_887_cli_performance_report.feature
+  - id: REQ-888
+    name: CLI Plugin Management
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-888.1
+        description: "AC1: Plugins can be installed, removed, and updated via CLI commands"
+        tests:
+          - feature:specs/features/req_888_cli_plugin_management.feature
+      - id: AC-888.2
+        description: "AC2: Plugin install verifies signature and compatibility before applying"
+        tests:
+          - feature:specs/features/req_888_cli_plugin_management.feature
+      - id: AC-888.3
+        description: "AC3: Installed plugins are listed with version and status information"
+        tests:
+          - feature:specs/features/req_888_cli_plugin_management.feature
+      - id: AC-888.4
+        description: "AC4: Plugin update checks for newer versions from configured sources"
+        tests:
+          - feature:specs/features/req_888_cli_plugin_management.feature
+  - id: REQ-889
+    name: CLI Profile Wizard
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-889.1
+        description: "AC1: Interactive wizard guides creation of a new profile from scratch"
+        tests:
+          - feature:specs/features/req_889_cli_profile_wizard.feature
+      - id: AC-889.2
+        description: "AC2: Wizard suggests axis mappings based on detected devices"
+        tests:
+          - feature:specs/features/req_889_cli_profile_wizard.feature
+      - id: AC-889.3
+        description: "AC3: Created profile is validated before being saved to disk"
+        tests:
+          - feature:specs/features/req_889_cli_profile_wizard.feature
+      - id: AC-889.4
+        description: "AC4: Wizard supports pre-built templates for common aircraft types"
+        tests:
+          - feature:specs/features/req_889_cli_profile_wizard.feature
+  - id: REQ-890
+    name: CLI Log Viewer
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-890.1
+        description: "AC1: Real-time log streaming displays service logs in the terminal"
+        tests:
+          - feature:specs/features/req_890_cli_log_viewer.feature
+      - id: AC-890.2
+        description: "AC2: Log output can be filtered by severity, source, or keyword"
+        tests:
+          - feature:specs/features/req_890_cli_log_viewer.feature
+      - id: AC-890.3
+        description: "AC3: Viewer supports pausing and resuming the log stream"
+        tests:
+          - feature:specs/features/req_890_cli_log_viewer.feature
+      - id: AC-890.4
+        description: "AC4: Log viewer gracefully reconnects if the service connection drops"
+        tests:
+          - feature:specs/features/req_890_cli_log_viewer.feature
+  - id: REQ-891
+    name: Automated Regression Suite
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-891.1
+        description: "AC1: Full regression test suite runs with a single command invocation"
+        tests:
+          - feature:specs/features/req_891_automated_regression_suite.feature
+      - id: AC-891.2
+        description: "AC2: Suite covers unit, integration, and BDD feature tests"
+        tests:
+          - feature:specs/features/req_891_automated_regression_suite.feature
+      - id: AC-891.3
+        description: "AC3: Test results are reported in JUnit XML format for CI integration"
+        tests:
+          - feature:specs/features/req_891_automated_regression_suite.feature
+      - id: AC-891.4
+        description: "AC4: Flaky test detection flags tests with inconsistent pass rates"
+        tests:
+          - feature:specs/features/req_891_automated_regression_suite.feature
+  - id: REQ-892
+    name: Performance Benchmark Suite
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-892.1
+        description: "AC1: Standardized benchmarks measure axis processing throughput"
+        tests:
+          - feature:specs/features/req_892_performance_benchmark_suite.feature
+      - id: AC-892.2
+        description: "AC2: Benchmark results are compared against checked-in baseline values"
+        tests:
+          - feature:specs/features/req_892_performance_benchmark_suite.feature
+      - id: AC-892.3
+        description: "AC3: Regressions beyond a configurable threshold fail the benchmark run"
+        tests:
+          - feature:specs/features/req_892_performance_benchmark_suite.feature
+      - id: AC-892.4
+        description: "AC4: Benchmark suite runs in isolation to minimize measurement noise"
+        tests:
+          - feature:specs/features/req_892_performance_benchmark_suite.feature
+  - id: REQ-893
+    name: Compatibility Test Matrix
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-893.1
+        description: "AC1: Automated tests verify device compatibility across OS versions"
+        tests:
+          - feature:specs/features/req_893_compatibility_test_matrix.feature
+      - id: AC-893.2
+        description: "AC2: Test matrix covers all supported simulator and device combinations"
+        tests:
+          - feature:specs/features/req_893_compatibility_test_matrix.feature
+      - id: AC-893.3
+        description: "AC3: Matrix results are published as a compatibility report"
+        tests:
+          - feature:specs/features/req_893_compatibility_test_matrix.feature
+      - id: AC-893.4
+        description: "AC4: New device or simulator additions automatically extend the matrix"
+        tests:
+          - feature:specs/features/req_893_compatibility_test_matrix.feature
+  - id: REQ-894
+    name: Security Audit Automation
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-894.1
+        description: "AC1: Automated security scanning runs as part of the CI pipeline"
+        tests:
+          - feature:specs/features/req_894_security_audit_automation.feature
+      - id: AC-894.2
+        description: "AC2: Dependency vulnerabilities are checked with cargo-audit and cargo-deny"
+        tests:
+          - feature:specs/features/req_894_security_audit_automation.feature
+      - id: AC-894.3
+        description: "AC3: Audit failures block the merge pipeline with a clear report"
+        tests:
+          - feature:specs/features/req_894_security_audit_automation.feature
+      - id: AC-894.4
+        description: "AC4: False positives can be suppressed with a reviewed allow-list"
+        tests:
+          - feature:specs/features/req_894_security_audit_automation.feature
+  - id: REQ-895
+    name: Documentation Coverage
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-895.1
+        description: "AC1: API documentation completeness is tracked as a coverage metric"
+        tests:
+          - feature:specs/features/req_895_documentation_coverage.feature
+      - id: AC-895.2
+        description: "AC2: Public items missing doc comments are flagged in CI"
+        tests:
+          - feature:specs/features/req_895_documentation_coverage.feature
+      - id: AC-895.3
+        description: "AC3: Documentation coverage trend is reported over time"
+        tests:
+          - feature:specs/features/req_895_documentation_coverage.feature
+      - id: AC-895.4
+        description: "AC4: Coverage threshold is enforced as a quality gate for releases"
+        tests:
+          - feature:specs/features/req_895_documentation_coverage.feature
+  - id: REQ-896
+    name: Code Quality Metrics
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-896.1
+        description: "AC1: Cyclomatic complexity is tracked and reported per module"
+        tests:
+          - feature:specs/features/req_896_code_quality_metrics.feature
+      - id: AC-896.2
+        description: "AC2: Complexity trends are compared against previous release baselines"
+        tests:
+          - feature:specs/features/req_896_code_quality_metrics.feature
+      - id: AC-896.3
+        description: "AC3: Modules exceeding the complexity threshold are flagged for review"
+        tests:
+          - feature:specs/features/req_896_code_quality_metrics.feature
+      - id: AC-896.4
+        description: "AC4: Metrics are collected automatically during CI builds"
+        tests:
+          - feature:specs/features/req_896_code_quality_metrics.feature
+  - id: REQ-897
+    name: Integration Test Harness
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-897.1
+        description: "AC1: Standardized harness provides mock devices and sim adapters"
+        tests:
+          - feature:specs/features/req_897_integration_test_harness.feature
+      - id: AC-897.2
+        description: "AC2: Harness supports deterministic replay of recorded device inputs"
+        tests:
+          - feature:specs/features/req_897_integration_test_harness.feature
+      - id: AC-897.3
+        description: "AC3: Test fixtures are reusable across multiple integration test suites"
+        tests:
+          - feature:specs/features/req_897_integration_test_harness.feature
+      - id: AC-897.4
+        description: "AC4: Harness setup and teardown are automatic with no manual steps"
+        tests:
+          - feature:specs/features/req_897_integration_test_harness.feature
+  - id: REQ-898
+    name: Load Testing Framework
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-898.1
+        description: "AC1: Stress tests exercise the service under sustained high device counts"
+        tests:
+          - feature:specs/features/req_898_load_testing_framework.feature
+      - id: AC-898.2
+        description: "AC2: Load profiles are configurable for duration, concurrency, and rate"
+        tests:
+          - feature:specs/features/req_898_load_testing_framework.feature
+      - id: AC-898.3
+        description: "AC3: Framework reports latency percentiles and error rates under load"
+        tests:
+          - feature:specs/features/req_898_load_testing_framework.feature
+      - id: AC-898.4
+        description: "AC4: Load test results are compared against defined SLA thresholds"
+        tests:
+          - feature:specs/features/req_898_load_testing_framework.feature
+  - id: REQ-899
+    name: Chaos Testing
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-899.1
+        description: "AC1: Fault injection simulates device disconnection during operation"
+        tests:
+          - feature:specs/features/req_899_chaos_testing.feature
+      - id: AC-899.2
+        description: "AC2: Chaos tests verify graceful degradation under adapter failures"
+        tests:
+          - feature:specs/features/req_899_chaos_testing.feature
+      - id: AC-899.3
+        description: "AC3: Random delay injection tests RT spine jitter resilience"
+        tests:
+          - feature:specs/features/req_899_chaos_testing.feature
+      - id: AC-899.4
+        description: "AC4: Chaos test results document recovery time for each failure mode"
+        tests:
+          - feature:specs/features/req_899_chaos_testing.feature
+  - id: REQ-900
+    name: Milestone 900 Requirements
+    kind: functional
+    status: draft
+    ac:
+      - id: AC-900.1
+        description: "AC1: All 900 requirements are tracked in the specification ledger"
+        tests:
+          - feature:specs/features/req_900_milestone_900_requirements.feature
+      - id: AC-900.2
+        description: "AC2: Coverage report confirms feature files exist for every requirement"
+        tests:
+          - feature:specs/features/req_900_milestone_900_requirements.feature
+      - id: AC-900.3
+        description: "AC3: Milestone review validates traceability from requirements to tests"
+        tests:
+          - feature:specs/features/req_900_milestone_900_requirements.feature
+      - id: AC-900.4
+        description: "AC4: Specification ledger passes schema validation without errors"
+        tests:
+          - feature:specs/features/req_900_milestone_900_requirements.feature
