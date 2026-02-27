@@ -1,0 +1,64 @@
+# ViGEm Virtual Xbox 360 Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# ViGEm (Virtual Gamepad Emulation Framework) by Nefarius Software Solutions
+# creates virtual HID devices that are indistinguishable from real hardware.
+# The Xbox 360 emulation target uses VID 0x045E / PID 0x028E — identical to
+# the physical Xbox 360 Wired Controller. Confirmed from ViGEm Bus driver
+# source (github.com/ViGEm/ViGEmBus, EmulationTargetXUSB.cpp).
+# OpenFlight uses ViGEm as a virtual output device for gamepad-compatible sims.
+schema_version: "1"
+
+device:
+  name: "ViGEm Virtual Xbox 360 Controller"
+  vendor: "Nefarius Software Solutions / ViGEm"
+  is_virtual: true
+  usb:
+    vendor_id: 0x045E    # Microsoft — ViGEm emulates the real Xbox 360 VID
+    product_id: 0x028E   # Xbox 360 Wired Controller PID (emulated by ViGEm)
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16  # XInput 16-bit axes
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: VIRTUAL_DEVICE
+    description: >
+      ViGEm creates a software HID device emulating real Xbox 360 hardware.
+      VID/PID (0x045E/0x028E) is shared with physical Xbox 360 controllers.
+      Windows and simulators cannot distinguish ViGEm from real hardware.
+  - id: VIGEM_XINPUT_EMULATION
+    description: >
+      ViGEm exposes both XInput and DirectInput interfaces. Use the
+      OpenFlight ViGEm output adapter to route processed axis data to
+      XInput-only simulators.
+  - id: PID_CONFLICT_REAL_HW
+    description: >
+      VID/PID conflicts with real Xbox 360 controllers. Disambiguation
+      requires checking the device instance path reported by the HID layer.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    ViGEm Bus is used by OpenFlight as a virtual output for XInput-only
+    simulators. VID/PID confirmed from ViGEm Bus open-source driver.
+    Last reviewed: 2026-06.

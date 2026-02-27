@@ -1,0 +1,58 @@
+# Generic USB Helicopter Cyclic Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (pid.codes — open allocation namespace for DIY/custom USB devices).
+# PID 0x5741 is used by various community-built USB cyclic stick implementations.
+# DIY helicopter cyclic controllers typically implement a 2-axis centre-mounted
+# stick with optional twist rudder, built on Arduino or STM32 platforms.
+# This manifest represents the common DIY cyclic pattern.
+schema_version: "1"
+
+device:
+  name: "Generic USB Helicopter Cyclic"
+  vendor: "DIY / Community Build"
+  usb:
+    vendor_id: 0x1209    # pid.codes — DIY/open USB VID
+    product_id: 0x5741   # Community DIY cyclic PID (STM32-based)
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]    # Roll, pitch, optional tail rotor twist
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x5741 is a community estimate for DIY cyclic builds.
+      Verify with lsusb before enabling production device matching.
+  - id: CENTER_STICK_CYCLIC
+    description: >
+      Cyclic sticks are typically centre-mounted with spring return to centre.
+      X axis = lateral cyclic (roll), Y axis = longitudinal cyclic (pitch).
+      Rz (if present) = tail rotor pedal substitute.
+  - id: DIY_BUILD_VARIANCE
+    description: >
+      Capabilities vary by DIY build. Some builds add collective as a fourth
+      axis or include additional hat switches for trim.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic USB helicopter cyclic pattern for DIY builds. VID 0x1209 (pid.codes),
+    PID 0x5741 (community estimate). Used in DCS helicopter modules and
+    X-Plane. Last reviewed: 2026-06.

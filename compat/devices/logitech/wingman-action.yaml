@@ -1,0 +1,53 @@
+# Logitech WingMan Action Gamepad
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x046D confirmed: Logitech Inc.
+# PID 0xC208 is a community estimate for the WingMan Action (circa 2000–2003).
+# The WingMan Action was a dual-stick USB gamepad in Logitech's WingMan line.
+# Some early flight sim players used it before dedicated HOTAS controllers
+# became affordable. PID is approximate; confirm with lsusb.
+schema_version: "1"
+
+device:
+  name: "Logitech WingMan Action Gamepad"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D    # Logitech Inc.
+    product_id: 0xC208   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xC208 is a community estimate. Confirm with lsusb before enabling
+      production device matching.
+  - id: LEGACY_GAMEPAD
+    description: >
+      Early-2000s dual-stick gamepad. Used in flight sims via DInput mappings.
+      Map LX/LY to roll/pitch, RX/RY to throttle/yaw or secondary axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech WingMan Action (circa 2000–2003). PID 0xC208 is unconfirmed.
+    Legacy gamepad occasionally seen in older sim setups.
+    Last reviewed: 2026-06.

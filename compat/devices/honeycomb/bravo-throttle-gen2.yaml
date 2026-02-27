@@ -1,0 +1,55 @@
+# Honeycomb Bravo Throttle Quadrant (Gen 2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x294B (Honeycomb Aeronautical). PID 0x1905 is a community estimate
+# for a potential Gen 2 revision of the Bravo Throttle Quadrant. Some
+# community members have reported a firmware revision with an incremented PID.
+# The standard Bravo uses PID 0x1901 (bravo-throttle.yaml).
+# This manifest covers the potential Gen 2 revision; confirm PID with lsusb.
+schema_version: "1"
+
+device:
+  name: "Honeycomb Bravo Throttle Quadrant (Gen 2)"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B    # Honeycomb Aeronautical
+    product_id: 0x1905   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [throttle1, throttle2, throttle3, throttle4, throttle5, flap_lever, spoiler]
+    resolution_bits: 12
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1905 is a community estimate for a potential Gen 2 revision.
+      If the device does not match, use bravo-throttle.yaml (PID 0x1901).
+  - id: GEAR_LEVER_AS_BUTTON
+    description: >
+      Landing gear lever is reported as a button pair (up/down), not an axis.
+  - id: AUTOPILOT_BUTTONS
+    description: >
+      Autopilot panel switches are discrete buttons requiring explicit mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Bravo Gen 2 (potential firmware revision). PID 0x1905 unconfirmed.
+    Use bravo-throttle.yaml (PID 0x1901) if this manifest does not match.
+    Last reviewed: 2026-06.

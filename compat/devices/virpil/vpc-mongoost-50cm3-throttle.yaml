@@ -1,0 +1,57 @@
+# VIRPIL VPC MongoosT-50CM3 Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x820D is a community estimate for the VPC MongoosT-50CM3 Throttle,
+# the third-generation throttle unit in the MongoosT-50 series. The CM3
+# throttle pairs with the MongoosT-50CM3 base (vpc-mongoost-50cm3-stick.yaml).
+# Distinct from the CM2 throttle (mongoost-50cm2-throttle.yaml).
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC MongoosT-50CM3 Throttle"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344    # VIRPIL Controls UAB
+    product_id: 0x820D   # Community estimate — confirm via lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, scx, scy, slider1, slider2]
+    resolution_bits: 14
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x820D is a community estimate. Confirm via lsusb or VIRPIL
+      Configurator. The CM2 throttle (mongoost-50cm2-throttle.yaml) has
+      a different PID.
+  - id: DUAL_THROTTLE_AXES
+    description: >
+      Throttle_L and Throttle_R are independent left and right throttle
+      levers; they can be linked or used independently in split-throttle
+      twin-engine profiles.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: "Axis assignments and button mappings configurable via VIRPIL Configurator."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC MongoosT-50CM3 Throttle. PID 0x820D unconfirmed.
+    Third-generation MongoosT throttle; distinct from CM2 throttle.
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-06.

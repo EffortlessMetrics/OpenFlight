@@ -1,0 +1,51 @@
+# Microsoft SideWinder Joystick Plus / Pro (USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation.
+# PID 0x001B is a community estimate for the SideWinder Joystick Plus,
+# a 4-axis USB joystick distinct from the SideWinder 3D Pro (0x001A),
+# Precision Pro (0x0039), and Precision 2 (0x0038).
+# The SideWinder Joystick Plus added a hat switch and extra buttons over
+# the base SideWinder model while remaining below the Precision Pro tier.
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Joystick Plus"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation
+    product_id: 0x001B   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 9
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x001B is a community estimate. Confirm with lsusb before enabling
+      production device matching. Distinct from SideWinder 3D Pro (0x001A),
+      Precision Pro (0x0039), and Precision 2 (0x0038).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Joystick Plus. PID 0x001B is unconfirmed.
+    VID 0x045E = Microsoft. Mid-tier SideWinder between the base joystick
+    and the Precision Pro. Last reviewed: 2026-06.

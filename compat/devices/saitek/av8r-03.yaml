@@ -1,0 +1,49 @@
+# Saitek AV8R-03 Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek). PID 0x0B6A is a community estimate for the AV8R-03,
+# a potential third-generation revision of the AV8R joystick series.
+# The AV8R-01 (av8r-01.yaml) and AV8R-02 (av8r-02.yaml) cover earlier
+# hardware revisions. The AV8R-03 designation is community-reported.
+schema_version: "1"
+
+device:
+  name: "Saitek AV8R-03 Joystick"
+  vendor: "Saitek / Mad Catz"
+  usb:
+    vendor_id: 0x06A3    # Saitek
+    product_id: 0x0B6A   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 10
+  buttons: 16
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0B6A is a community estimate for the AV8R-03 revision.
+      Confirm with lsusb. See av8r-01.yaml and av8r-02.yaml for
+      earlier hardware revisions.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek AV8R-03 (community-reported third revision). PID 0x0B6A unconfirmed.
+    VID 0x06A3 = Saitek. See av8r-01.yaml and av8r-02.yaml for related manifests.
+    Last reviewed: 2026-06.

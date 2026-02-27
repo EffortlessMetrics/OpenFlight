@@ -1,0 +1,54 @@
+# Gravis GamePad Pro USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Advanced Gravis Computer Technology Ltd / Kensington).
+# PID 0x4000 is listed in the usb.ids community database as the Gravis
+# GamePad Pro USB (some sources list it as "Gravis USB Joystick").
+# The GamePad Pro was a dual-joystick USB gamepad used by early flight
+# sim players who preferred pad-style input before dedicated HOTAS existed.
+schema_version: "1"
+
+device:
+  name: "Gravis GamePad Pro USB"
+  vendor: "Advanced Gravis / Kensington"
+  usb:
+    vendor_id: 0x0428    # Advanced Gravis Computer Technology Ltd
+    product_id: 0x4000   # usb.ids community database entry
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 4
+    names: [lx, ly, rx, ry]
+    resolution_bits: 8
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4000 is from the usb.ids community database; not confirmed via
+      hardware probe. Verify with lsusb before enabling production matching.
+  - id: LEGACY_GAMEPAD
+    description: >
+      Dual-stick gamepad form factor. Used in flight sims via DirectInput
+      mappings. No dedicated flight axis labels — map LX/LY to roll/pitch,
+      RX/RY to throttle/yaw or camera axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis GamePad Pro USB — late-1990s dual-stick gamepad.
+    PID 0x4000 from usb.ids; confirm with lsusb before production use.
+    Last reviewed: 2026-06.

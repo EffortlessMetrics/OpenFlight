@@ -1,0 +1,52 @@
+# Turtle Beach VelocityOne Flight Universal Control System
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x10F5 (Turtle Beach). PID 0x1073 is a community estimate for the
+# VelocityOne Flight Universal Control System — an all-in-one yoke, throttle
+# quadrant, and instrument panel combo. Distinct from the VelocityOne Flight
+# Pro (velocityone-flight-pro.yaml) which is a premium standalone yoke.
+schema_version: "1"
+
+device:
+  name: "Turtle Beach VelocityOne Flight Universal"
+  vendor: "Turtle Beach"
+  usb:
+    vendor_id: 0x10F5    # Turtle Beach
+    product_id: 0x1073   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, slider]
+    resolution_bits: 12
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1073 is a community estimate. Confirm with lsusb. Distinct from
+      the VelocityOne Flight Pro (velocityone-flight-pro.yaml).
+  - id: INTEGRATED_THROTTLE_PANEL
+    description: >
+      The Universal combines a yoke axis with a multi-lever throttle quadrant
+      and instrument annunciator panel. All units enumerate as a single USB
+      HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Turtle Beach VelocityOne Flight Universal. PID 0x1073 unconfirmed.
+    All-in-one yoke + throttle + panel combo. Last reviewed: 2026-06.

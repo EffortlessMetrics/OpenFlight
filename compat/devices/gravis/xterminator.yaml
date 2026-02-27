@@ -1,0 +1,54 @@
+# Gravis Xterminator Dual Control
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0428 (Advanced Gravis Computer Technology Ltd / Kensington).
+# PID 0x4002 is a community estimate for the Gravis Xterminator Dual Control,
+# a split joystick + throttle unit from the early 2000s. The Xterminator
+# was notable for its separate left-hand throttle/rudder unit and right-hand
+# stick, making it an early HOTAS-style setup in the budget segment.
+schema_version: "1"
+
+device:
+  name: "Gravis Xterminator Dual Control"
+  vendor: "Advanced Gravis / Kensington"
+  usb:
+    vendor_id: 0x0428    # Advanced Gravis Computer Technology Ltd
+    product_id: 0x4002   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rz, slider]
+    resolution_bits: 8
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4002 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+  - id: SPLIT_HOTAS_STYLE
+    description: >
+      Two-piece HOTAS-style setup. Right-hand stick provides X/Y axes;
+      left-hand unit provides throttle (Z), twist rudder (Rz), and a
+      slider. Both units enumerate as a single USB HID device.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis Xterminator Dual Control — early-2000s budget HOTAS-style unit.
+    PID 0x4002 is unconfirmed; verify with lsusb. VID 0x0428 = Gravis.
+    Last reviewed: 2026-06.

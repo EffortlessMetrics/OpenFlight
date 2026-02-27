@@ -1,0 +1,54 @@
+# Leo Bodnar USB Magnetic Encoder Interface
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1DD2 (Leo Bodnar Ltd). PID 0x000C is a community estimate for the
+# Leo Bodnar USB Magnetic Encoder Interface, a hall-effect encoder-to-USB
+# adapter used in DIY cockpit builds for high-precision rotary axis sensing.
+# Used to connect DIY control loaders, trim wheels, and rotary encoders
+# directly to a USB port without an intermediate microcontroller.
+schema_version: "1"
+
+device:
+  name: "Leo Bodnar USB Magnetic Encoder Interface"
+  vendor: "Leo Bodnar"
+  usb:
+    vendor_id: 0x1DD2    # Leo Bodnar Ltd
+    product_id: 0x000C   # Community estimate — confirm via devicehunt.com
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [encoder_a, encoder_b]   # Up to 2 hall-effect encoder channels
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1      # Direct USB HID at full-speed polling rate
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000C is a community estimate. Confirm via Leo Bodnar website or
+      devicehunt.com. Distinct from the BU0836 series (bu0836.yaml, etc.).
+  - id: HIGH_PRECISION_ENCODER
+    description: >
+      Hall-effect magnetic encoder provides high-precision non-contact angle
+      sensing. Suitable for control loader feedback, trim wheel position, and
+      precise rotary axis applications in DIY cockpit builds.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Leo Bodnar USB Magnetic Encoder Interface. PID 0x000C unconfirmed.
+    VID 0x1DD2 = Leo Bodnar Ltd. Used in DIY cockpit builder setups.
+    Last reviewed: 2026-06.

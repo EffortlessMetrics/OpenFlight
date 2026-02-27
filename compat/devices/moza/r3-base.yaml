@@ -1,0 +1,57 @@
+# MOZA R3 Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (GUDSEN TECHNOLOGY CO., LTD — MOZA Racing).
+# PID 0x0005 is a community estimate for the MOZA R3 base.
+# The R3 is MOZA's entry-level direct-drive base (3 Nm peak), positioned
+# below the R5 (r5-base.yaml) and R9 (r9-base.yaml). Used in combined
+# race+flight setups with a flight grip adapter.
+schema_version: "1"
+
+device:
+  name: "MOZA R3 Direct Drive Wheel Base"
+  vendor: "MOZA Racing (Gudsen Technology)"
+  usb:
+    vendor_id: 0x346E    # Gudsen Technology Co., Ltd. (MOZA)
+    product_id: 0x0005   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x08          # Steering wheel
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, triangle, sawtooth_up, sawtooth_down]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 3.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is a community estimate for the R3 base. Confirm with
+      lsusb. The R5 (r5-base.yaml) and R9 (r9-base.yaml) have different PIDs.
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      A flight grip adapter is required for flight sim use. The base provides
+      only the rotation axis. Map to aileron or rudder with an appropriate grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA R3 Direct Drive Base (3 Nm entry-level). PID 0x0005 unconfirmed.
+    VID 0x346E = MOZA Racing. Used in combined race+flight setups.
+    Last reviewed: 2026-06.

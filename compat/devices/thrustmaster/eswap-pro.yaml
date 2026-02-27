@@ -1,0 +1,58 @@
+# Thrustmaster eSwap PRO Controller (PC)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0xB687 is a community estimate for the
+# PC-only eSwap PRO Controller (the non-Xbox / non-PS edition with USB-C).
+# The eSwap PRO is a modular gamepad with swappable components; it is used
+# in MSFS as a gamepad-style flight controller. Distinct from the eSwap X Pro
+# (eswap-x-pro.yaml, Xbox edition) and the eSwap S Pro (PS5 edition).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster eSwap PRO Controller"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F    # Thrustmaster
+    product_id: 0xB687   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xB687 is a community estimate. Confirm with lsusb before
+      enabling production device matching. Distinct from eSwap X Pro
+      (Xbox, eswap-x-pro.yaml).
+  - id: MODULAR_COMPONENTS
+    description: >
+      The eSwap PRO has swappable sticks and d-pad modules. The axis
+      layout is consistent regardless of module configuration; button
+      assignments may vary slightly.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster eSwap PRO Controller (PC edition). PID 0xB687 unconfirmed.
+    Modular gamepad used in MSFS and other sims on PC.
+    Last reviewed: 2026-06.

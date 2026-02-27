@@ -1,0 +1,55 @@
+# RealSimulator FSSB R3 Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x20FF (RealSimulator). PID 0x0003 is a community estimate for the
+# FSSB R3 Pro, a high-performance variant of the FSSB R3 Force Sensing Stick
+# Base. The standard FSSB R3 uses PID 0x0001 (fssb-r3.yaml). The R3 Pro adds
+# higher force sensor resolution and additional input channels.
+schema_version: "1"
+
+device:
+  name: "RealSimulator FSSB R3 Pro"
+  vendor: "RealSimulator"
+  usb:
+    vendor_id: 0x20FF    # RealSimulator
+    product_id: 0x0003   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]   # Force-sensing: no mechanical displacement axes
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0003 is a community estimate for the R3 Pro variant. Confirm
+      with lsusb. The standard FSSB R3 uses PID 0x0001 (fssb-r3.yaml).
+  - id: FORCE_SENSING_NO_DISPLACEMENT
+    description: >
+      The FSSB is a force-sensing (isometric) device. It measures the force
+      applied to the stick handle, not mechanical displacement. The stick does
+      not physically move — axis output is proportional to applied force.
+      This requires a dedicated force-sensing profile in OpenFlight.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimulator FSSB R3 Pro. PID 0x0003 unconfirmed. VID 0x20FF = RealSimulator.
+    Force-sensing no-displacement joystick for high-fidelity flight simulation.
+    See fssb-r3.yaml and fssb-r3-lighting.yaml for related manifests.
+    Last reviewed: 2026-06.

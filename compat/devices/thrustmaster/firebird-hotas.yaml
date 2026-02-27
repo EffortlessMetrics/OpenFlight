@@ -1,0 +1,55 @@
+# Thrustmaster Firebird HOTAS
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x044F (Thrustmaster). PID 0x0300 is a community estimate for the
+# Thrustmaster Firebird HOTAS (circa 2002–2005), a budget two-piece HOTAS
+# designed for Microsoft Flight Simulator and combat flight sims of the era.
+# The Firebird was a USB HOTAS combining a joystick and throttle unit.
+# PID is unconfirmed; verify with lsusb before production deployment.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Firebird HOTAS"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F    # Thrustmaster
+    product_id: 0x0300   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, rz, z, slider]    # Stick + twist + throttle + slider
+    resolution_bits: 10
+  buttons: 12
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0300 is a community estimate for the Firebird HOTAS. Confirm with
+      lsusb before enabling production device matching. May share PID with
+      other early Thrustmaster USB devices.
+  - id: LEGACY_HOTAS
+    description: >
+      Early-2000s budget HOTAS. The stick and throttle may enumerate as a
+      single USB HID device or as two separate devices depending on the
+      firmware revision. Check with lsusb and confirm axis layout.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster Firebird HOTAS (circa 2002–2005). PID 0x0300 is unconfirmed.
+    VID 0x044F = Thrustmaster. Legacy HOTAS still seen in older setups.
+    Last reviewed: 2026-06.

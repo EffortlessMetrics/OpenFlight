@@ -1,0 +1,60 @@
+# Fanatec ClubSport Pedals V3
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH (registered USB vendor).
+# PID 0x0020 is a community estimate for ClubSport Pedals V3. Fanatec uses
+# USB HID for their pedal line; the V3 adds a vibration motor on the brake.
+# Used in combined racing/flight setups, especially with rudder axis mapping.
+# Confirm PID from lsusb or Fanatec USB descriptor capture.
+schema_version: "1"
+
+device:
+  name: "Fanatec ClubSport Pedals V3"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH (confirmed)
+    product_id: 0x0020   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0020 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+  - id: BRAKE_LOAD_CELL
+    description: >
+      Brake axis uses a load cell sensor rather than a potentiometer.
+      The response curve is non-linear by default; apply a pressure curve
+      in the OpenFlight profile or via Fanatec Wheel Property Page.
+  - id: FLIGHT_USE_MAPPING
+    description: >
+      In flight sim setups, throttle → engine throttle, brake → toe brakes
+      (left and right via a splitter or single axis), clutch → rudder or
+      differential brake. Map appropriately in the OpenFlight profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec ClubSport Pedals V3. VID 0x0EB7 = Fanatec GmbH (confirmed).
+    PID 0x0020 is unconfirmed community estimate. Often used in combined
+    race+flight setups with rudder/brake axis mapping.
+    Last reviewed: 2026-06.

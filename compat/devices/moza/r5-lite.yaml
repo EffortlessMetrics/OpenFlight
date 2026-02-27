@@ -1,0 +1,55 @@
+# MOZA R5 Lite Direct Drive Wheel Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x346E (Gudsen Technology Co., Ltd. — MOZA Racing).
+# PID 0x000A is a community estimate for the MOZA R5 Lite base variant.
+# The R5 Lite is a reduced-torque (5 Nm) version of the R5 base (r5-base.yaml)
+# sharing the same chassis but with a lighter motor assembly. Distinct from the
+# standard R5 (r5-base.yaml). Confirm PID with lsusb.
+schema_version: "1"
+
+device:
+  name: "MOZA R5 Lite Direct Drive Wheel Base"
+  vendor: "MOZA Racing (Gudsen Technology)"
+  usb:
+    vendor_id: 0x346E    # Gudsen Technology Co., Ltd. (MOZA)
+    product_id: 0x000A   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x08
+
+capabilities:
+  axes:
+    count: 1
+    names: [x]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, sine, triangle, sawtooth_up, sawtooth_down]
+    max_update_rate_hz: 1000
+    torque_limit_nm: 5.0
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x000A is a community estimate. Confirm with lsusb.
+      Distinct from the standard R5 (r5-base.yaml).
+  - id: GRIP_ADAPTER_REQUIRED
+    description: >
+      A flight grip adapter is required for flight sim use.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MOZA R5 Lite Direct Drive Base (5 Nm). PID 0x000A unconfirmed.
+    VID 0x346E = MOZA Racing. Last reviewed: 2026-06.

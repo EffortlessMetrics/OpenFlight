@@ -1,0 +1,53 @@
+# Saitek Cyborg X Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x06A3 (Saitek, later Logitech). PID 0x075C is a community estimate
+# for the Saitek Cyborg X Joystick (circa 2009–2012), a 6-axis USB joystick
+# with a distinctive Y-shaped ergonomic grip. The Cyborg X was positioned
+# between the budget Cyborg Evo and the high-end X52 Pro in the Saitek lineup.
+schema_version: "1"
+
+device:
+  name: "Saitek Cyborg X Joystick"
+  vendor: "Saitek / Mad Catz"
+  usb:
+    vendor_id: 0x06A3    # Saitek (later Logitech)
+    product_id: 0x075C   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 10
+  buttons: 13
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x075C is a community estimate. Confirm with lsusb before enabling
+      production device matching. Distinct from the Cyborg Evo (cyborg-evo.yaml)
+      and the Cyborg V.1 (cyborg-v1.yaml).
+  - id: ERGONOMIC_HAND_ORIENTATION
+    description: >
+      The Cyborg X uses a dual-handed ergonomic grip. Right-hand grip controls
+      X/Y; optional left-hand grip attachment provides additional axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Cyborg X (circa 2009–2012). PID 0x075C unconfirmed.
+    VID 0x06A3 = Saitek. Mid-range stick between Cyborg Evo and X52 Pro.
+    Last reviewed: 2026-06.

@@ -1,0 +1,55 @@
+# VIRPIL VPC ACE-1 Joystick Head
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x3344 confirmed: VIRPIL Controls UAB.
+# PID 0x4141 is a community estimate for the VPC ACE-1 joystick head.
+# The ACE-1 is VIRPIL's older joystick grip (distinct from the ACE-1 Pedals
+# at ace-1-pedals.yaml). It preceded the Constellation Alpha series and
+# mounts on WarBRD or MongoosT-50 bases. PID may be in the 0x41xx range
+# alongside other VIRPIL stick grips.
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC ACE-1 Joystick Head"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344    # VIRPIL Controls UAB
+    product_id: 0x4141   # Community estimate — confirm via lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 14  # VIRPIL 14-bit sensors
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x4141 is a community estimate for the VPC ACE-1 joystick head.
+      Note: the ACE-1 Pedals (ace-1-pedals.yaml) have a different PID.
+      Confirm via lsusb or VIRPIL Configurator device scan.
+  - id: CONFIGURABLE_VIA_VIRPIL_CONFIGURATOR
+    description: >
+      Axis assignments and button mappings can be changed via the VIRPIL
+      Configurator software.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC ACE-1 joystick head (older grip, predates Constellation series).
+    Distinct from ace-1-pedals.yaml. PID 0x4141 is unconfirmed.
+    VID 0x3344 = VIRPIL Controls UAB. Last reviewed: 2026-06.

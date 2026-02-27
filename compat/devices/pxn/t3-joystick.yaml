@@ -1,0 +1,48 @@
+# PXN T3 USB Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E8F (PXN / Gaoyi Electronics Technology Co., Ltd.).
+# PID 0x1003 is a community estimate for the PXN T3 budget joystick,
+# a simpler 3-axis USB joystick with integrated throttle lever on the base.
+schema_version: "1"
+
+device:
+  name: "PXN T3 USB Joystick"
+  vendor: "PXN (Gaoyi Electronics)"
+  usb:
+    vendor_id: 0x0E8F    # PXN (Gaoyi Electronics Technology Co., Ltd.)
+    product_id: 0x1003   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 8
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x1003 is a community estimate. Confirm with lsusb before
+      enabling production device matching.
+  - id: LEGACY_8BIT_AXES
+    description: "8-bit axis resolution. Apply smoothing for analogue axis response."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PXN T3 USB Joystick. PID 0x1003 unconfirmed. VID 0x0E8F = PXN.
+    Entry-level budget joystick. Last reviewed: 2026-06.

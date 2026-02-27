@@ -1,0 +1,53 @@
+# WinWing Orion 3 Base (Standalone)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x4098 confirmed: WinWing.
+# PID 0xBE60 is a community estimate for the Orion 3 Base as a standalone unit.
+# The Orion 3 is WinWing's third-generation gimbal base, used with F-15EX,
+# F-16EX, and F-18EX grip configurations (see orion3-*.yaml).
+schema_version: "1"
+
+device:
+  name: "WinWing Orion 3 Base"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098    # WinWing
+    product_id: 0xBE60   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 12
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xBE60 is a community estimate. Confirm with lsusb. Grips for
+      the Orion 3 (F-15EX, F-16EX, F-18EX) enumerate as separate USB HID
+      devices. See orion3-*.yaml for specific grip manifests.
+  - id: BASE_ONLY_AXES
+    description: >
+      Orion 3 Base provides only X/Y gimbal axes as standalone. Buttons and
+      additional axes come from the attached grip.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion 3 Base (gimbal base without grip). PID 0xBE60 unconfirmed.
+    VID 0x4098 = WinWing. Third-generation base for F-15EX/F-16EX/F-18EX grips.
+    Last reviewed: 2026-06.

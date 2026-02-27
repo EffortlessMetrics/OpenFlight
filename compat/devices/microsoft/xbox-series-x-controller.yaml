@@ -1,0 +1,57 @@
+# Microsoft Xbox Series X|S Controller (USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x045E confirmed: Microsoft Corporation.
+# PID 0x0B12 confirmed from:
+#   1. libsdl-org/SDL: MAKE_VIDPID(0x045e, 0x0b12) — "Xbox Series X Controller"
+#   2. Linux kernel xpad driver (xpad_device_id table)
+#   3. linux-hardware.org hardware probe data
+# The Xbox Series X|S controller (2020) via USB-C. Used in MSFS 2024 on PC.
+schema_version: "1"
+
+device:
+  name: "Microsoft Xbox Series X|S Controller"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E    # Microsoft Corporation
+    product_id: 0x0B12   # Xbox Series X|S Controller (confirmed from SDL)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 16
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right, trigger_l, trigger_r]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_PREFERRED
+    description: >
+      Use XInput for full 16-bit axis resolution. OpenFlight uses XInput
+      when available on Windows for Series X|S controllers.
+  - id: SHARE_BUTTON
+    description: >
+      Xbox Series X|S adds a Share button not present on older controllers.
+      Mapped as button 17 in DirectInput mode.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Xbox Series X|S Controller. PID 0x0B12 confirmed from SDL.
+    Used in MSFS 2024 on PC as primary or secondary controller.
+    Last reviewed: 2026-06.

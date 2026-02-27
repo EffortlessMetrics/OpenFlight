@@ -1,0 +1,51 @@
+# Fanatec Podium Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0EB7 confirmed: Fanatec GmbH.
+# PID 0x0005 is a community estimate for the Fanatec Podium Pedals, the
+# top-tier pedal set in the Fanatec lineup featuring 3 load cell sensors
+# and carbon fibre construction. Used in high-end race+flight hybrid setups.
+schema_version: "1"
+
+device:
+  name: "Fanatec Podium Pedals"
+  vendor: "Fanatec GmbH"
+  usb:
+    vendor_id: 0x0EB7    # Fanatec GmbH
+    product_id: 0x0005   # Community estimate — confirm with lsusb
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, brake, clutch]
+    resolution_bits: 14  # High-resolution load cell sensors
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0x0005 is a community estimate. Confirm with lsusb.
+  - id: ALL_LOAD_CELL
+    description: >
+      Podium Pedals use load cell sensors on all three pedals (not potentiometers).
+      Non-linear pressure response; apply appropriate curves in the profile.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Fanatec Podium Pedals (top-tier load cell set). PID 0x0005 unconfirmed.
+    VID 0x0EB7 = Fanatec GmbH. Used in premium race+flight hybrid setups.
+    Last reviewed: 2026-06.

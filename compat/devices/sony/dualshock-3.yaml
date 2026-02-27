@@ -1,0 +1,61 @@
+# Sony DualShock 3 (SIXAXIS)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment (Sony Computer
+# Entertainment). PID 0x0268 confirmed from multiple sources:
+#   1. Linux kernel drivers/hid/hid-sony.c USB_DEVICE_ID_SONY_PS3_CONTROLLER
+#   2. libsdl-org/SDL: MAKE_VIDPID(0x054c, 0x0268) — PS3 DualShock 3
+#   3. linux-hardware.org: usb:054c:0268 "PLAYSTATION(R)3 Controller"
+# Used for flight sims on PC via SCP/DS3 tool or direct DInput mapping.
+schema_version: "1"
+
+device:
+  name: "Sony DualShock 3 / SIXAXIS"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment
+    product_id: 0x0268   # DualShock 3 / SIXAXIS (confirmed)
+  hid:
+    usage_page: 0x01
+    usage: 0x05          # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: DS3_REQUIRES_DRIVER
+    description: >
+      On Windows, the DualShock 3 requires third-party drivers (ScpToolkit or
+      DsHidMini) to expose a DirectInput/HID interface. Without these drivers
+      the device may not enumerate as a standard joystick. OpenFlight detects
+      the DualShock 3 through DsHidMini's HID passthrough mode.
+  - id: PRESSURE_SENSITIVE_BUTTONS
+    description: >
+      DualShock 3 buttons (face + triggers) are pressure-sensitive with 8-bit
+      analogue values. These extra axes are exposed in the full HID report but
+      most DirectInput applications see only the primary 6 axes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Sony DualShock 3 / SIXAXIS. VID/PID confirmed from Linux kernel and SDL.
+    Requires DsHidMini on Windows for HID passthrough. Used in some flight
+    setups via direct mapping or virtual device passthrough.
+    Last reviewed: 2026-06.

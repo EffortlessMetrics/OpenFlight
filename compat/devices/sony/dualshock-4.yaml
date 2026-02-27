@@ -1,0 +1,61 @@
+# Sony DualShock 4 (CUH-ZCT1x / CUH-ZCT2x)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x054C confirmed: Sony Interactive Entertainment.
+# PID 0x05C4 (CUH-ZCT1x, first-gen DS4) and 0x09CC (CUH-ZCT2x, second-gen).
+# This manifest covers PID 0x05C4; see dualshock-4-v2.yaml for 0x09CC.
+# Confirmed from:
+#   1. Linux kernel drivers/hid/hid-sony.c
+#   2. libsdl-org/SDL: MAKE_VIDPID(0x054c, 0x05c4)
+#   3. linux-hardware.org: 54 independent probes
+schema_version: "1"
+
+device:
+  name: "Sony DualShock 4 (CUH-ZCT1)"
+  vendor: "Sony Interactive Entertainment"
+  usb:
+    vendor_id: 0x054C    # Sony Interactive Entertainment
+    product_id: 0x05C4   # DualShock 4 CUH-ZCT1x (first generation)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [lx, ly, rx, ry, lt, rt]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: true
+  ffb:
+    effects: [rumble_left, rumble_right]
+    max_update_rate_hz: 60
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 4
+
+quirks:
+  - id: DS4_TOUCHPAD_AS_BUTTON
+    description: >
+      DualShock 4 touchpad click is exposed as a button. Touchpad swipe
+      gestures are available via the DS4 vendor report (report ID 0x01)
+      but not exposed in the standard HID descriptor.
+  - id: DS4_ORIENTATION_AXES
+    description: >
+      DS4 exposes 3-axis gyroscope and 3-axis accelerometer data via
+      vendor HID reports. These are not included in the standard HID
+      descriptor axis count but can be read by flight sim software that
+      uses the full DS4 report.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Sony DualShock 4 CUH-ZCT1. VID/PID confirmed from Linux kernel and SDL.
+    Widely used for MSFS on PC via DInput or Steam Input.
+    Last reviewed: 2026-06.

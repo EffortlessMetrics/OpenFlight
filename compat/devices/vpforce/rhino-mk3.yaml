@@ -1,0 +1,58 @@
+# VPforce Rhino FFB Joystick Mk.III
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics — used by VPforce). PID 0xA1C3 is a
+# community estimate for the Rhino Mk.III, the third major hardware revision
+# of the VPforce Rhino direct-drive FFB joystick. The Rhino Mk.I (rhino.yaml),
+# Mk.II (rhino-mk2.yaml) and revised second-gen (rhino-mk1.yaml, rhino-mk2.yaml)
+# use PIDs in the 0xA1Cxx range. Mk.III continues this pattern.
+schema_version: "1"
+
+device:
+  name: "VPforce Rhino FFB Joystick Mk.III"
+  vendor: "VPforce"
+  usb:
+    vendor_id: 0x0483    # STMicroelectronics (VPforce USB VID)
+    product_id: 0xA1C3   # Community estimate — Rhino Mk.III
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, rz]
+    resolution_bits: 16
+  buttons: 32
+  hats: 2
+  force_feedback: true
+  ffb:
+    effects: [constant, spring, damper, friction, inertia, sine, square,
+              triangle, sawtooth_up, sawtooth_down]
+    max_update_rate_hz: 1000
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID 0xA1C3 is a community estimate for the Rhino Mk.III. Confirm via
+      lsusb or VPforce firmware version screen. See rhino.yaml, rhino-mk1.yaml,
+      rhino-mk2.yaml for earlier hardware revisions.
+  - id: HIGH_RESOLUTION_ENCODER
+    description: >
+      The Rhino series uses high-resolution quadrature encoders on X/Y axes.
+      16-bit effective resolution provides sub-milliradian angle precision.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VPforce Rhino Mk.III. PID 0xA1C3 unconfirmed. VID 0x0483 = STM32 USB.
+    High-end direct-drive FFB joystick. See rhino-mk1.yaml and rhino-mk2.yaml
+    for previous revisions. Last reviewed: 2026-06.
