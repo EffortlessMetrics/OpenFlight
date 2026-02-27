@@ -85,17 +85,21 @@ pub mod conflict;
 pub mod counters;
 pub mod curve;
 pub mod deadzone;
+pub mod debounce;
 pub mod detent;
 pub mod engine;
 pub mod frame;
+pub mod freeze_detect;
 pub mod hat;
 pub mod histogram;
 pub mod history;
+pub mod input_validator;
 pub mod invert;
 pub mod lag_compensator;
 pub mod nodes;
 pub mod noise_floor;
 pub mod normalize;
+pub mod peak_hold;
 pub mod pid;
 pub mod pipeline;
 pub mod quantize;
@@ -126,16 +130,19 @@ pub use curve::{ControlPoint, CurveError, ExpoCurveConfig, InterpolationMode, Re
 pub use deadzone::{
     AsymmetricDeadzoneConfig, DeadzoneBank, DeadzoneConfig, DeadzoneError, DeadzoneProcessor,
 };
+pub use debounce::AxisDebounce;
 pub use detent::{Detent, DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor};
 pub use engine::{
     AxisEngine, CompileError as EngineCompileError, EngineConfig, ProcessError, UpdateResult,
 };
 pub use frame::{AxisFrame, FrameError};
+pub use freeze_detect::FreezeDetector;
 pub use hat::{HatBank, HatDecoder, HatError, HatOutput, HatResolution};
 pub use histogram::{AxisHistogram, HISTOGRAM_BUCKETS};
 pub use history::{
     AxisHistory, AxisHistory64, AxisHistory256, AxisHistory1024, HistorySample, HistoryStats,
 };
+pub use input_validator::InputValidator;
 pub use invert::{AxisInvert, InvertBank};
 pub use lag_compensator::{LagCompensator, LagCompensatorConfig};
 pub use nodes::{
@@ -145,6 +152,7 @@ pub use nodes::{
 };
 pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64};
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
+pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
 pub use pipeline::{Pipeline, PipelineState};
 pub use quantize::{AxisQuantize, QuantizeConfig};
