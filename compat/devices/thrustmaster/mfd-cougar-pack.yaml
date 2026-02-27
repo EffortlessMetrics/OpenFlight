@@ -1,0 +1,73 @@
+# Thrustmaster MFD Cougar Pack (Two-Panel Set)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The MFD Cougar Pack ships two F-16 MFD panels connected through a shared
+# USB hub adapter. Each panel enumerates as a separate HID device:
+#   Panel 1 (left):  VID 0x044F, PID 0xB351  (see f16-mfd-1.yaml)
+#   Panel 2 (right): VID 0x044F, PID 0xB352  (see f16-mfd-2.yaml)
+#
+# This manifest describes the pack-level behaviour and the USB hub pairing
+# quirk. Individual panel capabilities are documented in f16-mfd-1.yaml and
+# f16-mfd-2.yaml.
+schema_version: "1"
+
+device:
+  name: "Thrustmaster MFD Cougar Pack"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: ~         # Pack — two devices: 0xB351 (panel 1) + 0xB352 (panel 2)
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x06           # Keyboard (buttons only — no axes)
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: ~
+  buttons: 38             # 19 per panel × 2 panels
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: MFD_PACK_SHARED_USB_HUB
+    description: >
+      Both MFD panels are connected to the host via a shared USB hub adapter
+      included in the pack. The hub presents both panels simultaneously as two
+      independent USB devices. If the hub loses power or is disconnected, BOTH
+      panels disappear from the device tree at the same time. OpenFlight should
+      track both panel PIDs (0xB351 and 0xB352) as a logical pair: if one is
+      present without the other, raise a diagnostic warning.
+  - id: MFD_PACK_PAIRED_PIDS
+    description: >
+      Panel 1 (PID 0xB351) is conventionally the LEFT MFD; Panel 2 (PID 0xB352)
+      is the RIGHT MFD. This assignment is by convention — the panels are
+      physically identical and the USB hub wiring determines which PID appears
+      on which physical panel socket.
+  - id: PANEL_BUTTONS_ONLY
+    description: >
+      Both MFD panels have no analog axes — only 19 digital buttons each,
+      arranged around the LCD bezel. All buttons map to HID keyboard-class usages.
+  - id: DCS_PRIMARY
+    description: >
+      Primarily used in DCS World for MFD/MFCD page navigation. Each panel
+      button can be bound independently via DCS input configuration.
+
+support:
+  tier: 2              # Combined pack: individual panels are tier 3; pack-level quirk documented here
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    This manifest describes the MFD Cougar Pack as a combined unit.
+    Individual panel manifests are in f16-mfd-1.yaml (PID 0xB351) and
+    f16-mfd-2.yaml (PID 0xB352). The pack-level quirk is the shared USB hub:
+    both panels must be treated as a pair. Button layout confirmed from
+    linux-hardware.org probe data and community DCS World documentation.
+    Last reviewed: 2026-06.

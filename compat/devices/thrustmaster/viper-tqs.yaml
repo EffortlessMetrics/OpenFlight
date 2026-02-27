@@ -1,0 +1,68 @@
+# Thrustmaster Viper TQS (Throttle Quadrant System)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PID 0xB380 — community-documented; not confirmed on physical hardware.
+# Source: DCS World forums, Thrustmaster community HID capture logs.
+# Combined throttle + avionics panel designed for DCS F-16C Viper users.
+# Typically paired with the F-16C Viper HOTAS Add-On Grip (PID 0xB113).
+schema_version: "1"
+
+device:
+  name: "Thrustmaster Viper TQS"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0xB380   # Community-documented; HIL confirmation pending
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [throttle, thumbwheel_1, thumbwheel_2, thumbwheel_3, idle_detent]
+    resolution_bits: 16
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: VIPER_TQS_THROTTLE_UNIPOLAR
+    description: >
+      The main throttle axis is a unipolar 16-bit channel: 0x0000 = idle
+      (full back), 0xFFFF = full throttle (full forward). An idle/cut-off
+      detent separates the idle region from the cutoff position; values below
+      the detent threshold should be treated as engine cut-off in DCS profiles.
+  - id: VIPER_TQS_THUMBWHEELS_BIPOLAR
+    description: >
+      The three thumbwheel axes (antenna elevation, DED increment, range) are
+      bipolar 16-bit channels centered at approximately 32768. They spring
+      back to center when released.
+  - id: VIPER_TQS_AVIONICS_PANEL
+    description: >
+      The TQS includes an integrated avionics panel with toggle switches
+      (master arm, ECM, IFF) and momentary buttons for throttle-grip functions.
+      Toggle switches report persistent state independently of button edge events.
+  - id: VIPER_TQS_DCS_F16_PRIMARY
+    description: >
+      This throttle was designed primarily for the DCS World F-16C Viper module.
+      Button layout mirrors the F-16C left console. DCS default profiles map
+      directly to TQS button indices without remapping.
+
+support:
+  tier: 2              # Parser tests only (community-documented layout, HIL pending)
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    The Viper TQS is the dedicated throttle for the Thrustmaster F-16C Viper
+    HOTAS system. Designed for DCS World F-16C Viper users. Input layout derived
+    from community DCS forum documentation and T.A.R.G.E.T scripting captures.
+    PID 0xB380 is community-documented; byte offsets have not been validated on
+    physical hardware. Pair with F-16C Viper grip (PID 0xB113) for full HOTAS.
+    Last reviewed: 2026-06.
