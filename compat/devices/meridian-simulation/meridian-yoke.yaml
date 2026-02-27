@@ -1,0 +1,47 @@
+# Meridian Simulation Generic Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Meridian Simulation (UK) generic column-and-wheel yoke for home and
+# semi-professional flight simulation. USB HID device with pitch/roll
+# axes. VID/PID unconfirmed — Meridian is a small batch manufacturer.
+
+schema_version: "1"
+
+device:
+  name: "Meridian Simulation Yoke"
+  vendor: "Meridian Simulation"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0500      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      Meridian Simulation is a small batch UK manufacturer. VID/PID are
+      unconfirmed and may vary across production runs.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Meridian Simulation yoke (generic column style). VID/PID unconfirmed.
+    Small batch UK manufacturer. Last reviewed: 2026-06.

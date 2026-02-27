@@ -266,6 +266,10 @@ pub const THRUSTMASTER_USB_JOYSTICK_PID: u16 = 0xB304;
 pub const X52_PID: u16 = 0x075C;
 pub const X52_PRO_PID: u16 = 0x0762;
 
+// X65F (unified USB, Saitek VID 0x06A3) - confidence: LIKELY
+// Source: Linux kernel hid-ids.h (USB_DEVICE_ID_SAITEK_X65)
+pub const X65F_PID: u16 = 0x0B6A;
+
 // X55 family (split USB, Saitek VID 0x06A3) - confidence: LIKELY
 // Note: Some X55 units may use Mad Catz VID (0x0738) with same PIDs
 pub const X55_STICK_PID: u16 = 0x2215;

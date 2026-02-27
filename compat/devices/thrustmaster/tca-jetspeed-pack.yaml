@@ -1,0 +1,50 @@
+# Thrustmaster TCA Jetspeed Pack (Virtual Bundle)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# The TCA Jetspeed Pack is a retail bundle combining the TCA Sidestick Airbus
+# and TCA Quadrant Airbus Add-On. Each component is an independent USB device.
+# Components:
+#   - TCA Sidestick Airbus  (VID 0x044F — see tca-sidestick-airbus.yaml)
+#   - TCA Quadrant Airbus   (VID 0x044F — see tca-quadrant-airbus.yaml)
+# This manifest is a VIRTUAL BUNDLE descriptor — no USB device of its own.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster TCA Jetspeed Pack (Bundle)"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0000      # Virtual bundle — no real USB device
+  hid:
+    usage_page: 0x00
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 0
+  max_jitter_ms: 0
+
+quirks:
+  - id: VIRTUAL_BUNDLE
+    description: >
+      No physical USB device. Each component enumerates independently.
+      See tca-sidestick-airbus.yaml and tca-quadrant-airbus.yaml.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Virtual bundle for TCA Jetspeed Pack. References tca-sidestick-airbus.yaml +
+    tca-quadrant-airbus.yaml. Last reviewed: 2026-06.

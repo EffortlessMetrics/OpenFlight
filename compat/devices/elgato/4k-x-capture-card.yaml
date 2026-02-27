@@ -1,0 +1,51 @@
+# Elgato 4K X Capture Card (USB / HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elgato 4K X — USB 3.0 capture card with an HID control interface for
+# hardware button. Occasionally used in home cockpit setups to capture
+# secondary display output or for OBS scene triggering. VID 0x0FD9
+# confirmed; PID community estimate.
+
+schema_version: "1"
+
+device:
+  name: "Elgato 4K X Capture Card"
+  vendor: "Elgato"
+  usb:
+    vendor_id: 0x0FD9   # Elgato Systems / Corsair (confirmed)
+    product_id: 0x0079  # 4K X — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0xFF00
+    usage: 0x0001
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0079 is a community estimate. Verify against real hardware."
+  - id: PANEL_DEVICE
+    description: >
+      Capture card — primary function is video capture. HID interface
+      exposes hardware button events only.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Elgato 4K X capture card HID interface. Used in some cockpit setups
+    for secondary display capture. VID 0x0FD9 confirmed; PID unconfirmed.
+    Last reviewed: 2026-06.

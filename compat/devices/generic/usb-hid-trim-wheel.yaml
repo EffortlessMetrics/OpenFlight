@@ -1,0 +1,54 @@
+# Generic USB HID Trim Wheel (OEM / DIY)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# A broad class of generic or DIY USB trim wheels using common USB HID chips
+# (Pro Micro, Arduino Leonardo, STM32 HID). These enumerate as single-axis
+# joystick devices with a rotary encoder or potentiometer. Common in home
+# cockpit builds as elevator/aileron/rudder trim wheels.
+
+schema_version: "1"
+
+device:
+  name: "Generic USB HID Trim Wheel"
+  vendor: "Generic / DIY"
+  usb:
+    vendor_id: 0x2341       # Arduino LLC (common DIY HID trim wheel base)
+    product_id: 0x8036      # Arduino Leonardo (common base — PID varies)
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 1
+    names: [trim]
+    resolution_bits: 10
+  buttons: 2               # Optional trim-rate switches (some builds add these)
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_VARIES
+    description: >
+      DIY trim wheels use many VID/PID combinations (Arduino, Pro Micro, STM32,
+      Teensy). Match by single-axis HID descriptor and product string containing
+      "trim". PID is firmware-dependent.
+  - id: RELATIVE_OR_ABSOLUTE
+    description: >
+      Some builds use a rotary encoder (relative delta per click) while others
+      use a multi-turn potentiometer (absolute position). OpenFlight supports
+      both via the encoder-as-buttons and absolute-axis modes respectively.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic DIY trim wheel — best-effort support. VID/PID firmware-dependent.
+    Apply trim-rate curve in profile. Last reviewed: 2026-06.

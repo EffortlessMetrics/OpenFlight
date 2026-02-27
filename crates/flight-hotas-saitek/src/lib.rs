@@ -24,6 +24,8 @@ pub mod health;
 pub mod input;
 pub mod policy;
 pub mod traits;
+pub mod x52_pro;
+pub mod x65f;
 
 #[cfg(feature = "x52-mfd-experimental")]
 pub mod mfd;

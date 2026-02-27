@@ -1,0 +1,47 @@
+# PFC Twin-Engine Throttle Quadrant
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC generic twin-engine throttle quadrant (throttle L/R, mixture L/R,
+# prop L/R) for Beechcraft Baron, Piper Seneca, or similar twin ATD setups.
+# VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Twin-Engine Throttle Quadrant"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0130      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle_l, throttle_r, mixture_l, mixture_r, prop_l, prop_r]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against real PFC hardware."
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes are unipolar [0, max]."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC twin-engine 6-axis throttle quadrant for Baron/Seneca ATD setups.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

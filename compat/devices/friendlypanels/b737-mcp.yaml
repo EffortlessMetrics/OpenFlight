@@ -1,0 +1,56 @@
+# FriendlyPanels Boeing 737 MCP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# FriendlyPanels Boeing 737 NG Mode Control Panel replica for home cockpit
+# builders. Features SPD, HDG, ALT, VS, CRS encoders and AP mode pushbuttons
+# with illuminated annunciators. Arduino-based USB HID interface.
+# VID/PID unconfirmed — same hardware platform as a320-fcu.yaml.
+
+schema_version: "1"
+
+device:
+  name: "FriendlyPanels Boeing 737 MCP"
+  vendor: "FriendlyPanels"
+  usb:
+    vendor_id: 0x2341       # Placeholder — Arduino LLC VID
+    product_id: 0x8037      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 36               # AP mode buttons, annunciators, N1 selector
+  hats: 0
+  encoders: 8               # IAS, HDG, ALT, VS, CRS L, CRS R, outer/inner
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. Arduino base; actual PID may match a320-fcu.yaml
+      (0x8036) if same firmware. Verify with lsusb on assembled hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All MCP encoders report as button pairs.
+  - id: ARDUINO_HID_BASE
+    description: >
+      Arduino-based HID; enumerates as standard HID joystick.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FriendlyPanels B737 MCP replica. VID/PID unconfirmed (Arduino base).
+    Companion to a320-fcu.yaml for Boeing 737 home cockpit builds.
+    Last reviewed: 2026-06.

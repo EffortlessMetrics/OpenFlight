@@ -1,0 +1,62 @@
+# CPFlight MCP Pro (Boeing 737 Mode Control Panel)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# CPFlight (Italy) produces high-fidelity Boeing 737 NG avionics panel replicas
+# for home cockpit builders. The MCP Pro is a full-size 737 autopilot Mode
+# Control Panel with 7-segment display and illuminated pushbuttons.
+# VID/PID unconfirmed — CPFlight uses a USB-to-HID adapter with custom firmware.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight MCP Pro Boeing 737 Autopilot Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x0DC3       # Placeholder — community estimate for CPFlight USB VID
+    product_id: 0x0800      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40               # AP mode buttons, FD, AT, LNAV, VNAV, APP, LOC
+  hats: 0
+  encoders: 8               # IAS, HDG, ALT, VS, CRS L, CRS R, outer/inner
+  force_feedback: false
+  display:
+    type: seven_segment
+    digits: 24
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 30
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0DC3 and PID 0x0800 are community estimates. CPFlight uses a
+      proprietary USB protocol; some models use virtual COM port (VCP) rather
+      than HID. Verify with USBView on real hardware.
+  - id: SEVEN_SEG_DISPLAY_MCP
+    description: >
+      7-segment displays for IAS, HDG, ALT, VS readouts require HID output
+      reports from the sim telemetry.
+  - id: CPFLIGHT_PROTOCOL
+    description: >
+      CPFlight panels may use a proprietary serial-over-USB protocol rather
+      than standard HID. OpenFlight's CPFlight adapter translates panel
+      protocol to standard axis/button events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight MCP Pro — high-fidelity 737 MCP replica. VID/PID unconfirmed.
+    May use VCP serial rather than HID. Last reviewed: 2026-06.

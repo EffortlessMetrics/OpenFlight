@@ -1,0 +1,51 @@
+# 8BitDo SN30 Pro USB Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd (registered USB vendor).
+# PID 0x6100 confirmed: kernel HID table and multiple open-source driver
+# references (xpad, linux-hardware.org). Classic SNES-style form factor
+# with dual analog sticks — used by some flight sim pilots for secondary
+# panel or menu navigation.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo SN30 Pro"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6100  # SN30 Pro — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x05         # Gamepad
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 16
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: XINPUT_MODE_AVAILABLE
+    description: >
+      The SN30 Pro can operate in XInput mode (reports as Xbox 360 controller)
+      or in HID mode. This manifest covers HID mode only. XInput mode is handled
+      by the generic xinput driver.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo SN30 Pro USB gamepad. VID 0x2DC8 and PID 0x6100 confirmed from
+    kernel HID tables. Useful as a secondary input device for sim menu
+    navigation and panel shortcuts. Last reviewed: 2026-06.

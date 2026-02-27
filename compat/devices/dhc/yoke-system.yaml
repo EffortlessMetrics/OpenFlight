@@ -1,0 +1,48 @@
+# DHC Yoke System (Cockpit Builder OEM)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# DHC produces replica yoke systems for home cockpit and ATD (Aviation Training
+# Device) builders. Their yokes replicate various aircraft yoke geometries
+# (Piper Cherokee, Cessna 172, etc.) and use standard USB HID.
+# VID/PID unconfirmed — DHC uses various USB interface controllers.
+
+schema_version: "1"
+
+device:
+  name: "DHC Yoke System"
+  vendor: "DHC"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0xFF20      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01        # Generic Desktop
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, throttle]
+    resolution_bits: 12
+  buttons: 10              # Grip buttons, PTT, AP disconnect, trim hat
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. DHC yoke hardware varies by model; verify with
+      lsusb on real hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DHC replica yoke system for home cockpit and ATD use. VID/PID unconfirmed.
+    Contact DHC for USB descriptor details. Last reviewed: 2026-06.

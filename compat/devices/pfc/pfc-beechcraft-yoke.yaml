@@ -1,0 +1,45 @@
+# PFC Beechcraft Baron / Bonanza Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# PFC Beechcraft-style yoke replicating the Baron 58 / Bonanza G36 column
+# geometry. Used in twin-engine FAA ATD builds. VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Beechcraft Baron/Bonanza Yoke"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED
+    product_id: 0x0135      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [pitch, roll]
+    resolution_bits: 12
+  buttons: 10
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. Verify against real PFC hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Beechcraft Baron/Bonanza yoke for FAA twin-engine ATD setups.
+    VID/PID unconfirmed. Pairs with pfc-twin-engine-throttle.yaml.
+    Last reviewed: 2026-06.

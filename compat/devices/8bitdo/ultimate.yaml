@@ -1,0 +1,51 @@
+# 8BitDo Ultimate Controller (USB)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x6001 confirmed: kernel HID tables and linux-hardware.org probes.
+# Premium gamepad with hall-effect sticks and back paddles. Used in sim
+# setups as secondary input for cockpit systems.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate (USB)"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6001  # Ultimate — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 12
+  buttons: 19
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 2
+
+quirks:
+  - id: HALL_EFFECT_STICKS
+    description: >
+      Uses hall-effect sensors for analog sticks and triggers. Provides
+      12-bit resolution with no deadzone drift at center.
+  - id: BACK_PADDLES
+    description: "Two back paddles plus two bumper paddles report as additional buttons."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Ultimate USB gamepad with hall-effect sticks. VID 0x2DC8,
+    PID 0x6001 confirmed. High-resolution axes useful for throttle/collective
+    secondary control. Last reviewed: 2026-06.

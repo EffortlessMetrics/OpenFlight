@@ -4910,3 +4910,404 @@ requirements:
         description: "Signature verification SHALL succeed for a binary accompanied by a valid Ed25519 signature"
         tests:
           - feature:specs/features/req_140_installer_update.feature
+
+  - id: REQ-141
+    name: X-Plane 12 specific features
+    kind: product
+    status: draft
+    ac:
+      - id: AC-141.1
+        description: "XP12 autopilot engaged state SHALL be decoded from the autopilot dataref"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.2
+        description: "XP12 flaps fully deployed state SHALL be decoded from the flaps ratio dataref"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.3
+        description: "Landing gear down state SHALL be decoded from the gear deployment dataref"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.4
+        description: "Multi-engine N1 values SHALL be surfaced as distinct readings per engine"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.5
+        description: "AoA alpha dataref SHALL be parsed and reported in degrees"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.6
+        description: "FMC route data SHALL be received via the UDP DataRef channel"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.7
+        description: "Weather turbulence intensity SHALL be parsed from the turbulence intensity dataref"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+      - id: AC-141.8
+        description: "Vertical speed SHALL be reported in feet per minute from the vertical speed dataref"
+        tests:
+          - feature:specs/features/req_141_xplane12_features.feature
+  - id: REQ-142
+    name: SimConnect aircraft detection
+    kind: product
+    status: draft
+    ac:
+      - id: AC-142.1
+        description: "The ATC_MODEL simulation variable SHALL be used as the primary aircraft identifier"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.2
+        description: "A title containing 'Cessna 172' SHALL map to aircraft type C172"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.3
+        description: "A title containing 'Boeing 737' SHALL map to aircraft type B738"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.4
+        description: "An unrecognised aircraft title SHALL return None without causing a panic"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.5
+        description: "The detection callback SHALL be invoked once on first aircraft detection"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.6
+        description: "The detection callback SHALL NOT be re-fired when the same aircraft is detected again"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+      - id: AC-142.7
+        description: "A title buffer shorter than the minimum expected length SHALL return an InvalidFormat error"
+        tests:
+          - feature:specs/features/req_142_simconnect_aircraft_detection.feature
+  - id: REQ-143
+    name: Microsoft Sidewinder classic controllers
+    kind: product
+    status: draft
+    ac:
+      - id: AC-143.1
+        description: "A device with VID 0x045E PID 0x001B SHALL be identified as Microsoft Sidewinder FFB Pro"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+      - id: AC-143.2
+        description: "A device with VID 0x045E PID 0x0038 SHALL be identified as Microsoft Sidewinder FFB2"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+      - id: AC-143.3
+        description: "Pitch and roll axis values SHALL be parsed correctly from Sidewinder HID reports"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+      - id: AC-143.4
+        description: "A constant force effect of the requested magnitude SHALL be applied to the Sidewinder FFB Pro"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+      - id: AC-143.5
+        description: "The adapter SHALL re-initialise the Sidewinder device without error after reconnect"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+      - id: AC-143.6
+        description: "No latency violation SHALL be reported when polling a Sidewinder at the USB 1.0 rate of 10 ms"
+        tests:
+          - feature:specs/features/req_143_sidewinder_classic.feature
+  - id: REQ-144
+    name: Saitek X52 and X65 HOTAS
+    kind: product
+    status: draft
+    ac:
+      - id: AC-144.1
+        description: "X52 Pro stick X and Y axes SHALL be parsed at 12-bit resolution"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.2
+        description: "X52 Pro throttle axis SHALL be parsed at 12-bit resolution"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.3
+        description: "X65F stick X and Y axes SHALL be parsed at 14-bit resolution"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.4
+        description: "X65F mode switch position SHALL be decoded from HID reports"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.5
+        description: "X52 Pro device LED colour SHALL be set as requested by the profile"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.6
+        description: "The X52 Pro MFD SHALL display text written by the adapter"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.7
+        description: "Holding the clutch button SHALL activate pedal-mode axis mapping on the X52 Pro"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+      - id: AC-144.8
+        description: "A device with the Saitek X52 Pro VID/PID pair SHALL be identified as a Saitek X52 Pro"
+        tests:
+          - feature:specs/features/req_144_saitek_x52_x65.feature
+  - id: REQ-145
+    name: 8BitDo controller support
+    kind: product
+    status: draft
+    ac:
+      - id: AC-145.1
+        description: "8BitDo Pro 2 left thumbstick X and Y axes SHALL be mapped correctly from HID reports"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+      - id: AC-145.2
+        description: "Button-to-action mapping SHALL be configurable via the flight profile"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+      - id: AC-145.3
+        description: "D-pad inputs SHALL be decoded as a hat-switch axis when the profile specifies hat mode"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+      - id: AC-145.4
+        description: "Trigger axes SHALL be normalised to the range [0, 1]"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+      - id: AC-145.5
+        description: "A device with the 8BitDo Pro 2 VID/PID pair SHALL be identified as an 8BitDo Pro 2"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+      - id: AC-145.6
+        description: "The associated flight profile SHALL be loaded automatically when the device connects"
+        tests:
+          - feature:specs/features/req_145_8bitdo_controller.feature
+  - id: REQ-146
+    name: Elite Simulations hardware
+    kind: product
+    status: draft
+    ac:
+      - id: AC-146.1
+        description: "All three throttle lever axes SHALL be parsed from Elite throttle quadrant HID reports"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+      - id: AC-146.2
+        description: "Lever positions SHALL be mapped to the full normalised range after calibration with known-good values"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+      - id: AC-146.3
+        description: "The Elite throttle quadrant SHALL appear in the HID device enumeration list"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+      - id: AC-146.4
+        description: "Each Elite throttle quadrant axis SHALL provide at least 10-bit resolution"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+      - id: AC-146.5
+        description: "A C172-specific profile override SHALL be applied when a Cessna 172 is the active aircraft"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+      - id: AC-146.6
+        description: "All axis channels SHALL report healthy status when the device health check is invoked"
+        tests:
+          - feature:specs/features/req_146_elite_simulations.feature
+  - id: REQ-147
+    name: Windows Sidewinder FFB implementation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-147.1
+        description: "A USB device with VID 0x045E and PID 0x001B SHALL be identified as a Sidewinder FFB Pro"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+      - id: AC-147.2
+        description: "A USB device with VID 0x045E and PID 0x001C SHALL be identified as a Sidewinder FFB2"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+      - id: AC-147.3
+        description: "A constant force effect SHALL be applied at 100% output when commanded at full magnitude"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+      - id: AC-147.4
+        description: "The spring centering effect SHALL apply a restoring force proportional to joystick displacement"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+      - id: AC-147.5
+        description: "A periodic sine effect SHALL oscillate the output at 10 Hz when commanded"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+      - id: AC-147.6
+        description: "All force output SHALL be stopped and the FFB session released cleanly when the device disconnects"
+        tests:
+          - feature:specs/features/req_147_sidewinder_ffb.feature
+  - id: REQ-148
+    name: GoFlight panel integration
+    kind: product
+    status: draft
+    ac:
+      - id: AC-148.1
+        description: "All autopilot button states on the GF-MCP Pro SHALL be decoded correctly from HID input reports"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.2
+        description: "The GF-MCP Pro speed encoder SHALL increment the speed value by the configured step per clockwise detent"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.3
+        description: "All GF-EFIS button states SHALL be decoded correctly from HID input reports"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.4
+        description: "The GF-RP48 adapter SHALL report the new rotary position value when the selector is moved"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.5
+        description: "All GF-T8 Plus toggle states SHALL be decoded and reported correctly from HID input reports"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.6
+        description: "The adapter SHALL write the correct HID output report when an LED state update is commanded"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.7
+        description: "Multiple GoFlight panels on the same USB hub SHALL each be enumerated and addressed independently"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+      - id: AC-148.8
+        description: "The panel enumeration API SHALL report the correct GoFlight device type for each connected panel"
+        tests:
+          - feature:specs/features/req_148_goflight_panels.feature
+  - id: REQ-149
+    name: RealSimGear avionics panels
+    kind: product
+    status: draft
+    ac:
+      - id: AC-149.1
+        description: "The G1000 PFD bezel knob SHALL increment the associated value by one step per clockwise detent"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.2
+        description: "All G1000 MFD soft key states SHALL be decoded and reported correctly from HID input reports"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.3
+        description: "The GNS 530 outer knob adapter SHALL report the correct direction and step count on rotation"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.4
+        description: "All GNS 430W button states SHALL be decoded correctly from HID input reports"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.5
+        description: "The adapter SHALL emit the corresponding button event when a KAP 140 autopilot button is pressed"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.6
+        description: "A RealSimGear avionics panel SHALL appear in the enumerated HID device list when connected"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+      - id: AC-149.7
+        description: "The adapter SHALL write the correct HID output report when a display update command is issued"
+        tests:
+          - feature:specs/features/req_149_realsimgear_panels.feature
+  - id: REQ-150
+    name: Safety interlock triggers
+    kind: product
+    status: draft
+    ac:
+      - id: AC-150.1
+        description: "The safety interlock SHALL clamp force output to the configured maximum when a command exceeds it"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.2
+        description: "The safety interlock SHALL reduce FFB output when the device temperature exceeds the safety threshold"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.3
+        description: "The safety interlock SHALL attenuate FFB output when supply voltage drops below the safe threshold"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.4
+        description: "The safety interlock SHALL immediately halt the motor command when a hard stop position is detected"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.5
+        description: "All force output SHALL be zeroed within one control cycle when the emergency stop command is issued"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.6
+        description: "The safe-mode profile SHALL become active when any safety interlock condition is triggered"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.7
+        description: "Each safety interlock event SHALL be recorded in the log with a UTC timestamp"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+      - id: AC-150.8
+        description: "A triggered safety interlock SHALL remain active until an explicit reset command is issued"
+        tests:
+          - feature:specs/features/req_150_safety_interlock.feature
+  - id: REQ-151
+    name: Profile schema validation
+    kind: product
+    status: draft
+    ac:
+      - id: AC-151.1
+        description: "The profile validator SHALL accept a profile document declaring schema version 1"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.2
+        description: "The profile validator SHALL reject a profile declaring a schema version higher than the supported maximum"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.3
+        description: "The profile validator SHALL accept a deadzone value of 0.0"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.4
+        description: "The profile validator SHALL accept a deadzone value of 1.0"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.5
+        description: "The profile validator SHALL reject a deadzone value greater than 1.0"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.6
+        description: "The profile validator SHALL reject an expo value outside the range [0.0, 1.0]"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+      - id: AC-151.7
+        description: "The profile validator SHALL accept a profile document that contains no axis configurations"
+        tests:
+          - feature:specs/features/req_151_profile_schema.feature
+  - id: REQ-152
+    name: Session management
+    kind: product
+    status: draft
+    ac:
+      - id: AC-152.1
+        description: "Each new session SHALL be assigned a unique identifier on startup"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.2
+        description: "The session SHALL save the current profile context before switching when the active aircraft changes"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.3
+        description: "The session SHALL restore the last saved profile context when the service reconnects"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.4
+        description: "The session SHALL produce a self-contained diagnostic archive when the export command is issued"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.5
+        description: "Concurrent sessions SHALL each apply only their own profile context when processing events"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.6
+        description: "Each session log entry SHALL include a UTC timestamp"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.7
+        description: "The session SHALL release all resources and flush logs before exit when the service stop command is issued"
+        tests:
+          - feature:specs/features/req_152_session_management.feature
+      - id: AC-152.8
+        description: "The session identifier SHALL conform to the RFC 4122 UUID format"
+        tests:
+          - feature:specs/features/req_152_session_management.feature

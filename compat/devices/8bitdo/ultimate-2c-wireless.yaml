@@ -1,0 +1,47 @@
+# 8BitDo Ultimate 2C Wireless Controller (USB Receiver)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x6002: community estimate for Ultimate 2C wireless receiver mode.
+# The Ultimate 2C is a newer budget variant of the Ultimate series.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Ultimate 2C (USB Wireless Receiver)"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6002  # Ultimate 2C receiver — PID_UNCONFIRMED (community estimate)
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_x, left_y, right_x, right_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 17
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 6
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "PID 0x6002 is a community estimate for Ultimate 2C. Verify against hardware."
+  - id: WIRELESS_LATENCY
+    description: "USB dongle adds ~2ms wireless latency vs wired."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Ultimate 2C wireless receiver. VID 0x2DC8 confirmed; PID 0x6002
+    unconfirmed. See ultimate.yaml for wired variant. Last reviewed: 2026-06.

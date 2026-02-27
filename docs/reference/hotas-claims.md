@@ -27,6 +27,7 @@ This document tracks verified and unverified claims about Saitek/Logitech HOTAS 
 |--------|-----|-----|----------|------------|-----------------|
 | X52 | 0x06A3 | 0x075C | Unified | **Known** | ✓ USB-IF, libx52 |
 | X52 Pro | 0x06A3 | 0x0762 | Unified | **Known** | ✓ USB-IF, libx52, hid-saitek.c |
+| X65F | 0x06A3 | 0x0B6A | Unified | **Likely** | Linux kernel hid-ids.h; lsusb from real hardware |
 | X55 Stick | 0x06A3 | 0x2215 | Split | **Likely** | HID descriptor fixture |
 | X55 Throttle | 0x06A3 | 0xA215 | Split | **Likely** | HID descriptor fixture |
 | X55 Stick | 0x0738 | 0x2215 | Split | **Likely** | lsusb dump (Mad Catz era) |
@@ -51,6 +52,7 @@ This document tracks verified and unverified claims about Saitek/Logitech HOTAS 
 |--------|----------|------------|-------|
 | X52 | Unified USB | **Known** | Single composite device |
 | X52 Pro | Unified USB | **Known** | Single composite device |
+| X65F | Unified USB | **Likely** | Single composite device (F-22 style HOTAS) |
 | X55 | Split USB | **Known** | Separate stick/throttle |
 | X56 | Split USB | **Known** | Separate stick/throttle |
 

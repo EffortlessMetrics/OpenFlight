@@ -1,0 +1,53 @@
+# Opencockpits Rotary Encoder Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1000 (community estimate — Opencockpits/Engravity).
+# PID 0x0004 is a community estimate for the Rotary Encoder Card.
+# Provides 16 rotary encoders for autopilot/avionics panel construction.
+# Each encoder reports as a button-pair (CW/CCW) via SIOC protocol.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits Rotary Encoder Card"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x1000       # Opencockpits/Engravity — VID_UNCONFIRMED
+    product_id: 0x0004      # Rotary card — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32               # 16 encoders × 2 directions
+  hats: 0
+  encoders: 16
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID/PID unconfirmed. Community estimate based on Opencockpits sequential
+      card numbering. Verify with USBView on real hardware.
+  - id: ENCODER_AS_BUTTONS
+    description: >
+      All 16 encoders report CW/CCW rotation as momentary button pairs via
+      SIOC protocol.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Opencockpits Rotary Encoder Card — 16-encoder panel interface.
+    VID/PID unconfirmed. SIOC protocol required. Last reviewed: 2026-06.

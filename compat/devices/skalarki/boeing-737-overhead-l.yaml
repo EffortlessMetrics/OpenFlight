@@ -1,0 +1,54 @@
+# Skalarki Electronics Boeing 737 Overhead Panel — Left Section
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Skalarki Electronics (Poland) produces professional-grade Boeing 737 NG
+# overhead panel replicas for home cockpit builders. Each section (left/right)
+# enumerates as a separate USB HID device. VID/PID unconfirmed; Skalarki
+# hardware uses Microchip PIC18F USB controllers with custom firmware.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki B737 Overhead Panel — Left Section"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — Microchip VID common in Skalarki hardware
+    product_id: 0xF100      # Placeholder — PID_UNCONFIRMED (Skalarki left overhead)
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64               # Electrical, hydraulics, pneumatics, fuel, pressurisation
+  hats: 0
+  encoders: 4               # Pressurisation differential and flow control knobs
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 20
+  max_jitter_ms: 20
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x04D8 (Microchip) is a placeholder. PID 0xF100 is unconfirmed.
+      Skalarki hardware uses custom PIC18F firmware; contact Skalarki or
+      inspect with USBView for actual descriptor values.
+  - id: GUARDED_SWITCHES
+    description: >
+      Many overhead switches have guard covers. OpenFlight treats guard open
+      and switch actuation as separate button events.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki B737 Overhead Panel left section — Boeing 737 NG replica overhead.
+    VID/PID unconfirmed. Professional home cockpit component. Last reviewed: 2026-06.

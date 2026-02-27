@@ -1,0 +1,59 @@
+# Opencockpits IOCard USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Opencockpits / Engravity IOCard — the original Opencockpits USB I/O
+# card providing 64 digital inputs and 36 LED outputs for custom cockpit
+# switch panels. Separate from the SIOC USB card (sioc-usb.yaml) and
+# USB Expansion card (usb-expansion.yaml). VID/PID from community reports.
+
+schema_version: "1"
+
+device:
+  name: "Opencockpits IOCard USB"
+  vendor: "Opencockpits / Engravity"
+  usb:
+    vendor_id: 0x1000       # Opencockpits/Engravity — VID_UNCONFIRMED
+    product_id: 0x0001      # IOCard — PID community estimate
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+  led_outputs: 36
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: >
+      VID 0x1000 is a community estimate for Opencockpits/Engravity.
+      The IOCard may enumerate differently across firmware versions.
+  - id: PANEL_DEVICE
+    description: >
+      Pure panel I/O device: 64 digital inputs and 36 LED outputs.
+      No analog axes. Input report is a raw 8-byte bitmask.
+  - id: CUSTOM_PROTOCOL
+    description: >
+      Opencockpits IOCard uses a custom HID protocol. Button state is
+      packed into a bit-field across multiple report bytes.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    Opencockpits IOCard USB: 64 digital inputs + 36 LED outputs for
+    custom cockpit panels. Widely used in Boeing/Airbus home cockpits.
+    VID/PID unconfirmed. See also sioc-usb.yaml, usb-expansion.yaml.
+    Last reviewed: 2026-06.

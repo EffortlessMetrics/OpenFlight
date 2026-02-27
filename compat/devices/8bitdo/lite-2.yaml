@@ -1,0 +1,44 @@
+# 8BitDo Lite 2 Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2DC8 confirmed: 8BitDo Technology HK Ltd.
+# PID 0x6106: kernel HID table reference for Lite 2. Compact form factor
+# with D-pad and analog triggers. Used for sim UI navigation.
+
+schema_version: "1"
+
+device:
+  name: "8BitDo Lite 2"
+  vendor: "8BitDo Technology"
+  usb:
+    vendor_id: 0x2DC8   # 8BitDo Technology HK Ltd (confirmed)
+    product_id: 0x6106  # Lite 2 — confirmed from kernel HID tables
+  hid:
+    usage_page: 0x01
+    usage: 0x05
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_x, left_y, left_trigger, right_trigger]
+    resolution_bits: 8
+  buttons: 14
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks: []
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    8BitDo Lite 2 compact gamepad. VID 0x2DC8, PID 0x6106 confirmed from
+    kernel HID tables. No rumble. Compact form suitable for cockpit side-panel
+    mounting. Last reviewed: 2026-06.

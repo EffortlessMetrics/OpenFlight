@@ -1,0 +1,51 @@
+# Elite Simulations Throttle Quadrant (Commercial Grade)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Elite Simulations Solutions full 3-axis throttle quadrant for FAA-approved
+# ATDs. Three independent lever axes (throttle, mixture, prop) with realistic
+# friction detents. VID/PID unconfirmed; ESS commonly uses Microchip 0x04D8.
+
+schema_version: "1"
+
+device:
+  name: "Elite Simulations Throttle Quadrant"
+  vendor: "Elite Simulations Solutions"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip)
+    product_id: 0x0210      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, mixture, propeller]
+    resolution_bits: 10
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID 0x04D8 is a plausible placeholder. Verify against real ESS hardware."
+  - id: PID_UNCONFIRMED
+    description: "PID 0x0210 is a placeholder. Must be confirmed before production use."
+  - id: THROTTLE_NOT_CENTERED
+    description: "All lever axes report [0, max]; map to [0.0, 1.0] in profile."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Elite Simulations 3-axis throttle quadrant (throttle/mixture/prop) for
+    FAA ATD use. VID/PID unconfirmed. Pairs with e-yoke.yaml and
+    e-rudder-pedals.yaml in standard ESS single-engine ATD setup.
+    Last reviewed: 2026-06.

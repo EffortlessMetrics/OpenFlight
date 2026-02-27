@@ -1,0 +1,47 @@
+# PFC Cirrus SR Series Throttle (3-Lever)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Precision Flight Controls (PFC) licensed Cirrus SR20/SR22 throttle
+# quadrant with throttle, mixture, and park-brake axes. Separate product
+# from the PFC Cirrus yoke (cirrus-yoke.yaml). VID/PID unconfirmed.
+
+schema_version: "1"
+
+device:
+  name: "PFC Cirrus SR Throttle (3-Lever)"
+  vendor: "Precision Flight Controls (PFC)"
+  usb:
+    vendor_id: 0x04D8       # Placeholder — VID_UNCONFIRMED (Microchip)
+    product_id: 0x0115      # Placeholder — PID_UNCONFIRMED
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [throttle, mixture, park_brake]
+    resolution_bits: 12
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "VID/PID unconfirmed. PFC may use Microchip 0x04D8 or FTDI 0x0403."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Lever axes are unipolar [0, max]; use [0.0, 1.0] mapping."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFC Cirrus SR20/SR22 3-lever throttle for FAA ATD. Pairs with cirrus-yoke.yaml.
+    VID/PID unconfirmed. Last reviewed: 2026-06.

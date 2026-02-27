@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 802 |
-| ACs with tests | 802 |
+| Total AC | 887 |
+| ACs with tests | 887 |
 | ACs with Gherkin | 714 |
 | ACs with both tests + Gherkin | 714 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 205 |
+| Draft | 290 |
 | Incomplete | 0 |
 | Microcrates | 72 |
 | Microcrates with tests | 65 (90.3%) |
 | Microcrates with Gherkin | 65 (90.3%) |
 | Microcrates fully covered | 65 (90.3%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 89.0% |
-| Test + Gherkin coverage | 89.0% |
+| Gherkin coverage | 80.5% |
+| Test + Gherkin coverage | 80.5% |
 
 ## BDD Microcrate Matrix
 
@@ -914,3 +914,88 @@
 | REQ-140 | AC-140.6 | Applying a delta patch SHALL update the installed binary to the target version | - | 1 | ⚪ Draft |
 | REQ-140 | AC-140.7 | Rollback SHALL restore the previously installed version and leave the system in a consistent state | - | 1 | ⚪ Draft |
 | REQ-140 | AC-140.8 | Signature verification SHALL succeed for a binary accompanied by a valid Ed25519 signature | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.1 | XP12 autopilot engaged state SHALL be decoded from the autopilot dataref | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.2 | XP12 flaps fully deployed state SHALL be decoded from the flaps ratio dataref | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.3 | Landing gear down state SHALL be decoded from the gear deployment dataref | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.4 | Multi-engine N1 values SHALL be surfaced as distinct readings per engine | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.5 | AoA alpha dataref SHALL be parsed and reported in degrees | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.6 | FMC route data SHALL be received via the UDP DataRef channel | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.7 | Weather turbulence intensity SHALL be parsed from the turbulence intensity dataref | - | 1 | ⚪ Draft |
+| REQ-141 | AC-141.8 | Vertical speed SHALL be reported in feet per minute from the vertical speed dataref | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.1 | The ATC_MODEL simulation variable SHALL be used as the primary aircraft identifier | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.2 | A title containing 'Cessna 172' SHALL map to aircraft type C172 | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.3 | A title containing 'Boeing 737' SHALL map to aircraft type B738 | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.4 | An unrecognised aircraft title SHALL return None without causing a panic | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.5 | The detection callback SHALL be invoked once on first aircraft detection | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.6 | The detection callback SHALL NOT be re-fired when the same aircraft is detected again | - | 1 | ⚪ Draft |
+| REQ-142 | AC-142.7 | A title buffer shorter than the minimum expected length SHALL return an InvalidFormat error | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.1 | A device with VID 0x045E PID 0x001B SHALL be identified as Microsoft Sidewinder FFB Pro | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.2 | A device with VID 0x045E PID 0x0038 SHALL be identified as Microsoft Sidewinder FFB2 | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.3 | Pitch and roll axis values SHALL be parsed correctly from Sidewinder HID reports | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.4 | A constant force effect of the requested magnitude SHALL be applied to the Sidewinder FFB Pro | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.5 | The adapter SHALL re-initialise the Sidewinder device without error after reconnect | - | 1 | ⚪ Draft |
+| REQ-143 | AC-143.6 | No latency violation SHALL be reported when polling a Sidewinder at the USB 1.0 rate of 10 ms | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.1 | X52 Pro stick X and Y axes SHALL be parsed at 12-bit resolution | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.2 | X52 Pro throttle axis SHALL be parsed at 12-bit resolution | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.3 | X65F stick X and Y axes SHALL be parsed at 14-bit resolution | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.4 | X65F mode switch position SHALL be decoded from HID reports | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.5 | X52 Pro device LED colour SHALL be set as requested by the profile | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.6 | The X52 Pro MFD SHALL display text written by the adapter | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.7 | Holding the clutch button SHALL activate pedal-mode axis mapping on the X52 Pro | - | 1 | ⚪ Draft |
+| REQ-144 | AC-144.8 | A device with the Saitek X52 Pro VID/PID pair SHALL be identified as a Saitek X52 Pro | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.1 | 8BitDo Pro 2 left thumbstick X and Y axes SHALL be mapped correctly from HID reports | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.2 | Button-to-action mapping SHALL be configurable via the flight profile | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.3 | D-pad inputs SHALL be decoded as a hat-switch axis when the profile specifies hat mode | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.4 | Trigger axes SHALL be normalised to the range [0, 1] | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.5 | A device with the 8BitDo Pro 2 VID/PID pair SHALL be identified as an 8BitDo Pro 2 | - | 1 | ⚪ Draft |
+| REQ-145 | AC-145.6 | The associated flight profile SHALL be loaded automatically when the device connects | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.1 | All three throttle lever axes SHALL be parsed from Elite throttle quadrant HID reports | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.2 | Lever positions SHALL be mapped to the full normalised range after calibration with known-good values | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.3 | The Elite throttle quadrant SHALL appear in the HID device enumeration list | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.4 | Each Elite throttle quadrant axis SHALL provide at least 10-bit resolution | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.5 | A C172-specific profile override SHALL be applied when a Cessna 172 is the active aircraft | - | 1 | ⚪ Draft |
+| REQ-146 | AC-146.6 | All axis channels SHALL report healthy status when the device health check is invoked | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.1 | A USB device with VID 0x045E and PID 0x001B SHALL be identified as a Sidewinder FFB Pro | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.2 | A USB device with VID 0x045E and PID 0x001C SHALL be identified as a Sidewinder FFB2 | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.3 | A constant force effect SHALL be applied at 100% output when commanded at full magnitude | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.4 | The spring centering effect SHALL apply a restoring force proportional to joystick displacement | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.5 | A periodic sine effect SHALL oscillate the output at 10 Hz when commanded | - | 1 | ⚪ Draft |
+| REQ-147 | AC-147.6 | All force output SHALL be stopped and the FFB session released cleanly when the device disconnects | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.1 | All autopilot button states on the GF-MCP Pro SHALL be decoded correctly from HID input reports | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.2 | The GF-MCP Pro speed encoder SHALL increment the speed value by the configured step per clockwise detent | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.3 | All GF-EFIS button states SHALL be decoded correctly from HID input reports | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.4 | The GF-RP48 adapter SHALL report the new rotary position value when the selector is moved | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.5 | All GF-T8 Plus toggle states SHALL be decoded and reported correctly from HID input reports | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.6 | The adapter SHALL write the correct HID output report when an LED state update is commanded | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.7 | Multiple GoFlight panels on the same USB hub SHALL each be enumerated and addressed independently | - | 1 | ⚪ Draft |
+| REQ-148 | AC-148.8 | The panel enumeration API SHALL report the correct GoFlight device type for each connected panel | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.1 | The G1000 PFD bezel knob SHALL increment the associated value by one step per clockwise detent | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.2 | All G1000 MFD soft key states SHALL be decoded and reported correctly from HID input reports | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.3 | The GNS 530 outer knob adapter SHALL report the correct direction and step count on rotation | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.4 | All GNS 430W button states SHALL be decoded correctly from HID input reports | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.5 | The adapter SHALL emit the corresponding button event when a KAP 140 autopilot button is pressed | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.6 | A RealSimGear avionics panel SHALL appear in the enumerated HID device list when connected | - | 1 | ⚪ Draft |
+| REQ-149 | AC-149.7 | The adapter SHALL write the correct HID output report when a display update command is issued | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.1 | The safety interlock SHALL clamp force output to the configured maximum when a command exceeds it | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.2 | The safety interlock SHALL reduce FFB output when the device temperature exceeds the safety threshold | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.3 | The safety interlock SHALL attenuate FFB output when supply voltage drops below the safe threshold | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.4 | The safety interlock SHALL immediately halt the motor command when a hard stop position is detected | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.5 | All force output SHALL be zeroed within one control cycle when the emergency stop command is issued | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.6 | The safe-mode profile SHALL become active when any safety interlock condition is triggered | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.7 | Each safety interlock event SHALL be recorded in the log with a UTC timestamp | - | 1 | ⚪ Draft |
+| REQ-150 | AC-150.8 | A triggered safety interlock SHALL remain active until an explicit reset command is issued | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.1 | The profile validator SHALL accept a profile document declaring schema version 1 | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.2 | The profile validator SHALL reject a profile declaring a schema version higher than the supported maximum | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.3 | The profile validator SHALL accept a deadzone value of 0.0 | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.4 | The profile validator SHALL accept a deadzone value of 1.0 | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.5 | The profile validator SHALL reject a deadzone value greater than 1.0 | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.6 | The profile validator SHALL reject an expo value outside the range [0.0, 1.0] | - | 1 | ⚪ Draft |
+| REQ-151 | AC-151.7 | The profile validator SHALL accept a profile document that contains no axis configurations | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.1 | Each new session SHALL be assigned a unique identifier on startup | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.2 | The session SHALL save the current profile context before switching when the active aircraft changes | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.3 | The session SHALL restore the last saved profile context when the service reconnects | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.4 | The session SHALL produce a self-contained diagnostic archive when the export command is issued | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.5 | Concurrent sessions SHALL each apply only their own profile context when processing events | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.6 | Each session log entry SHALL include a UTC timestamp | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.7 | The session SHALL release all resources and flush logs before exit when the service stop command is issued | - | 1 | ⚪ Draft |
+| REQ-152 | AC-152.8 | The session identifier SHALL conform to the RFC 4122 UUID format | - | 1 | ⚪ Draft |

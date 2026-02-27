@@ -36,6 +36,8 @@
 | CH Products USB Game Stick | 0x068E | 0x00F3 | 4 | 8 | ✗ | 3 |
 | CH Products USB Rudder Pedals | 0x068E | 0x00F6 | 1 | 0 | ✗ | 3 |
 | CH Products USB Throttle Controller | 0x068E | 0x00FF | 4 | 12 | ✗ | 2 |
+| CPFlight MCDU Pro Boeing 737 FMC Keyboard | 0x0DC3 | 0x0801 | 0 | 65 | ✗ | 3 |
+| CPFlight MCP Pro Boeing 737 Autopilot Panel | 0x0DC3 | 0x0800 | 0 | 40 | ✗ | 3 |
 | DHC Yoke System | 0x04D8 | 0xFF20 | 3 | 10 | ✗ | 3 |
 | Elgato Stream Deck Mini | 0x0FD9 | 0x0063 | 0 | 6 | ✗ | 3 |
 | Elgato Stream Deck MK.2 | 0x0FD9 | 0x0080 | 0 | 15 | ✗ | 3 |
@@ -68,6 +70,10 @@
 | Fanatec Podium DD1 | 0x0EB7 | 0x0040 | 1 | 0 | ✓ | 3 |
 | Fanatec Podium DD2 | 0x0EB7 | 0x0042 | 1 | 0 | ✓ | 3 |
 | Fanatec Podium Pedals | 0x0EB7 | 0x0005 | 3 | 0 | ✗ | 3 |
+| FriendlyPanels Airbus A320 FCU Panel | 0x2341 | 0x8036 | 0 | 24 | ✗ | 3 |
+| FriendlyPanels Boeing 737 MCP | 0x2341 | 0x8037 | 0 | 36 | ✗ | 3 |
+| Generic Chinese OEM HOTAS (DragonRise / No-Brand) | 0x0079 | 0x0006 | 5 | 12 | ✗ | 3 |
+| Generic USB HID Trim Wheel | 0x2341 | 0x8036 | 1 | 2 | ✗ | 3 |
 | GoFlight GF-100 Boeing 737 MCP | 0x0E9F | 0x000A | 0 | 48 | ✗ | 3 |
 | GoFlight GF-166 Radio Stack Module | 0x0E9F | 0x0008 | 0 | 20 | ✗ | 2 |
 | GoFlight GF-177 Boeing Autopilot Extended Panel | 0x0E9F | 0x000B | 0 | 36 | ✗ | 3 |
@@ -126,6 +132,7 @@
 | Hori HOTAS Flight Stick for PlayStation 5 | 0x0F0D | 0x0192 | 5 | 16 | ✗ | 2 |
 | HORI HOTAS One (PC) | 0x0F0D | 0x011C | 5 | 16 | ✗ | 3 |
 | HORI HOTAS Flight Stick for Xbox One | 0x0F0D | 0x0084 | 4 | 12 | ✗ | 3 |
+| HORI HOTAS Flight Stick for Xbox Series X|S | 0x0F0D | 0x00F6 | 5 | 14 | ✗ | 3 |
 | Hori PS4 Flight Stick (PS4-113E) | 0x0F0D | 0x00F6 | 5 | 17 | ✗ | 3 |
 | HORI Real Arcade Pro Jet | 0x0F0D | 0x006E | 2 | 10 | ✗ | 3 |
 | HORI VF-2 Ace Combat Flight Stick (Legacy) | 0x0F0D | 0x0011 | 3 | 10 | ✗ | 3 |
@@ -295,6 +302,7 @@
 | Saitek Flight Pro Combat Rudder | 0x06A3 | 0x0764 | 3 | 15 | ✗ | 2 |
 | Saitek PC Dashboard 1 | 0x06A3 | 0x0A00 | 0 | 20 | ✗ | 3 |
 | Saitek PC Dashboard 2 | 0x06A3 | 0x0A01 | 0 | 24 | ✗ | 3 |
+| Saitek Pro Flight Combo Pack (Bundle) | 0x06A3 | 0x0000 | 0 | 0 | ✗ | 3 |
 | Saitek Pro Flight Instrument Panel (FIP) | 0x06A3 | 0x0D46 | 0 | 6 | ✗ | 3 |
 | Saitek Pro Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 32 | ✗ | 2 |
 | Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 |
@@ -324,6 +332,8 @@
 | Simucube 2 Sport | 0x16D0 | 0x0D60 | 1 | 0 | ✓ | 3 |
 | Simucube 2 Ultimate | 0x16D0 | 0x0D62 | 1 | 0 | ✓ | 3 |
 | SimuFlite / CAE Generic USB Rudder Pedals | 0x04D8 | 0xFF01 | 3 | 0 | ✗ | 3 |
+| Skalarki B737 Overhead Panel — Left Section | 0x04D8 | 0xF100 | 0 | 64 | ✗ | 3 |
+| Skalarki B737 Overhead Panel — Right Section | 0x04D8 | 0xF101 | 0 | 60 | ✗ | 3 |
 | Sony DualSense Edge Wireless Controller | 0x054C | 0x0DF2 | 6 | 21 | ✓ | 2 |
 | Sony DualSense | 0x054C | 0x0CE6 | 6 | 17 | ✓ | 3 |
 | Sony DualShock 3 / SIXAXIS | 0x054C | 0x0268 | 6 | 17 | ✓ | 3 |
@@ -359,6 +369,7 @@
 | Thrustmaster T.A320 Pack (Virtual Bundle) | 0x044F | ? | 8 | 36 | ✗ | 3 |
 | Thrustmaster T.A.R.G.E.T Virtual Device | 0x044F | 0x0402 | 8 | 120 | ✗ | 3 |
 | Thrustmaster TCA Boeing Throttle | 0x044F | 0xB68C | 4 | 16 | ✗ | 3 |
+| Thrustmaster TCA Jetspeed Pack (Bundle) | 0x044F | 0x0000 | 0 | 0 | ✗ | 3 |
 | Thrustmaster TCA Officer Pack Airbus (Virtual) | 0x044F | ? | 6 | 28 | ✗ | 3 |
 | Thrustmaster TCA Quadrant Airbus Add-On (Eng 3&4) | 0x044F | 0x0408 | 4 | 12 | ✗ | 2 |
 | Thrustmaster TCA Quadrant Airbus Edition | 0x044F | 0x0407 | 4 | 12 | ✗ | 2 |
@@ -523,6 +534,7 @@
 | WinWing F-16 Emergency/Landing Panel | 0x4098 | 0xBF10 | 0 | 20 | ✗ | 3 |
 | WinWing F-16 MFD Combo Panel (Virtual Bundle) | 0x4098 | ? | 0 | 40 | ✗ | 3 |
 | WinWing F-16 Main Interface Panel (MIP) | 0x4098 | 0xBF20 | 0 | 28 | ✗ | 3 |
+| WinWing F-18 Attack Panel | 0x4098 | 0xBF30 | 0 | 24 | ✗ | 3 |
 | WinWing F/A-18 Combat Ready Panel | 0x4098 | 0xBE05 | 0 | 32 | ✗ | 3 |
 | WinWing F/A-18 HUD1 Panel | 0x4098 | 0xBEDF | 1 | 8 | ✗ | 3 |
 | WinWing F/A-18 IFEI Panel | 0x4098 | 0xBF08 | 0 | 16 | ✗ | 3 |
