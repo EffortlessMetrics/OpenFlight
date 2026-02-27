@@ -25,6 +25,7 @@ pub mod integration_test;
 pub mod publisher;
 pub mod replay;
 pub mod snapshot;
+pub mod telemetry_aggregator;
 pub mod types;
 
 // Re-export main types for convenience
@@ -51,3 +52,4 @@ pub use types::{
     SimId, ValidatedAngle, ValidatedSpeed,
 };
 pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
+pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};

@@ -56,6 +56,7 @@ pub mod ofp1_integration;
 pub mod performance_validation;
 pub mod safety;
 pub mod safety_envelope;
+pub mod safety_interlock;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
 #[cfg(test)]
@@ -94,6 +95,7 @@ pub use ofp1_integration::*;
 pub use performance_validation::*;
 pub use safety::*;
 pub use safety_envelope::*;
+pub use safety_interlock::*;
 pub use soft_stop::*;
 pub use telemetry_synth::*;
 pub use trim::*;

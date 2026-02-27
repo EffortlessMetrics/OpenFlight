@@ -70,6 +70,8 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+pub mod profile_compare;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
