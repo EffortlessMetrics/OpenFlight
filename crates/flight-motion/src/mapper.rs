@@ -169,7 +169,10 @@ mod tests {
 
     #[test]
     fn test_zero_intensity_returns_neutral() {
-        let config = MotionConfig { intensity: 0.0, ..Default::default() };
+        let config = MotionConfig {
+            intensity: 0.0,
+            ..Default::default()
+        };
         let mut mapper = MotionMapper::new(config, 1.0 / 250.0);
         let frame = mapper.process(&neutral_snapshot());
         assert!(frame.is_neutral());

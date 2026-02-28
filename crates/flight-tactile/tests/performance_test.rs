@@ -4,7 +4,7 @@ use flight_bus::{AircraftId, BusSnapshot, SimId};
 use flight_tactile::{EffectType, TactileConfig, TactileManager};
 use parking_lot::RwLock;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Test that tactile processing doesn't introduce significant latency
 #[test]
@@ -143,7 +143,6 @@ fn test_memory_stability() {
 
     // If we get here without running out of memory, the test passes
     // In a real implementation, we might check actual memory usage
-    assert!(true, "Memory stability test completed");
 }
 
 /// Benchmark tactile bridge thread safety
@@ -183,5 +182,4 @@ fn test_concurrent_access() {
     }
 
     // Test passed if no deadlocks or panics occurred
-    assert!(true, "Concurrent access test completed");
 }

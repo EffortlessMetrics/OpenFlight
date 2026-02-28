@@ -240,12 +240,10 @@ fn test_verify_test_lifecycle() {
 
     // Update test in a time-bounded loop — RadioPanel has 2×100ms Delay steps
     let test_deadline = std::time::Instant::now() + Duration::from_secs(5);
-    let mut result = None;
-    loop {
+    let test_result = loop {
         match writer.update_verify_test() {
             Ok(Some(test_result)) => {
-                result = Some(test_result);
-                break;
+                break test_result;
             }
             Ok(None) => {
                 assert!(
@@ -256,10 +254,8 @@ fn test_verify_test_lifecycle() {
             }
             Err(e) => panic!("Verify test failed: {}", e),
         }
-    }
+    };
 
-    assert!(result.is_some());
-    let test_result = result.unwrap();
     assert_eq!(test_result.panel_path, device_path);
     assert!(!test_result.step_results.is_empty());
 

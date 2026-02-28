@@ -440,9 +440,10 @@ mod tests {
 
     #[test]
     fn test_radio_display_hid_report_content() {
-        let mut display = RadioDisplay::default();
-        display.active = LcdDisplay::encode_str("12150");
-        display.standby = LcdDisplay::encode_str("12350");
+        let display = RadioDisplay {
+            active: LcdDisplay::encode_str("12150"),
+            standby: LcdDisplay::encode_str("12350"),
+        };
 
         let report = display.to_hid_report();
         assert_eq!(report[0], 0x00, "report ID");
@@ -459,8 +460,8 @@ mod tests {
         assert_eq!(report[9], encode_segment('5'));
         assert_eq!(report[10], encode_segment('0'));
         // Reserved bytes should be zero
-        for i in 11..RADIO_PANEL_OUTPUT_BYTES {
-            assert_eq!(report[i], 0x00, "byte {i} should be reserved/zero");
+        for (i, byte) in report[11..RADIO_PANEL_OUTPUT_BYTES].iter().enumerate() {
+            assert_eq!(*byte, 0x00, "byte {} should be reserved/zero", i + 11);
         }
     }
 
@@ -611,9 +612,10 @@ mod tests {
 
     #[test]
     fn test_encoder_delta_reset() {
-        let mut delta = EncoderDelta::default();
-        delta.outer = 5;
-        delta.inner = -3;
+        let mut delta = EncoderDelta {
+            outer: 5,
+            inner: -3,
+        };
         delta.reset();
         assert_eq!(delta.outer, 0);
         assert_eq!(delta.inner, 0);

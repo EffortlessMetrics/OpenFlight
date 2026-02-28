@@ -662,8 +662,10 @@ mod tests {
 
     #[test]
     fn test_switch_panel_state_gear_down_green() {
-        let mut state = SwitchPanelState::default();
-        state.gear_leds = SwitchPanelGearLeds::ALL_GREEN;
+        let state = SwitchPanelState {
+            gear_leds: SwitchPanelGearLeds::ALL_GREEN,
+            ..Default::default()
+        };
         let report = state.to_hid_report();
         assert_ne!(report[1], 0x00, "gear LEDs should be set");
     }

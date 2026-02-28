@@ -749,8 +749,8 @@ mod tests {
         assert_eq!(report[4], encode_segment('4'), "byte 4 = char 3");
         assert_eq!(report[5], encode_segment('5'), "byte 5 = char 4");
         // bytes 6–10 = lower row (zero)
-        for i in 6..11 {
-            assert_eq!(report[i], 0x00, "byte {i} should be 0");
+        for (i, byte) in report[6..11].iter().enumerate() {
+            assert_eq!(*byte, 0x00, "byte {} should be 0", i + 6);
         }
         assert_eq!(
             report[11],
@@ -845,13 +845,15 @@ mod tests {
 
     #[test]
     fn test_multi_panel_state_to_hid_report_combines_display_and_leds() {
-        let mut state = MultiPanelState::default();
-        state.display = LcdDisplay::encode_str("88888");
-        state.leds = MultiPanelLedMask::ALL;
+        let state = MultiPanelState {
+            display: LcdDisplay::encode_str("88888"),
+            leds: MultiPanelLedMask::ALL,
+            ..Default::default()
+        };
         let report = state.to_hid_report();
         // All 5 display positions should be 0x7F ('8')
-        for i in 1..=5 {
-            assert_eq!(report[i], 0x7F, "byte {i} should be 0x7F ('8')");
+        for (i, byte) in report[1..=5].iter().enumerate() {
+            assert_eq!(*byte, 0x7F, "byte {} should be 0x7F ('8')", i + 1);
         }
         assert_eq!(report[11], 0xFF, "byte 11 should be 0xFF (all LEDs)");
     }

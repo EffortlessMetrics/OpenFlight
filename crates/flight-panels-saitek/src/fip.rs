@@ -530,8 +530,7 @@ mod tests {
 
     #[test]
     fn test_scroll_wheel_drain_resets() {
-        let mut sw = FipScrollWheel::default();
-        sw.accumulated = 5;
+        let mut sw = FipScrollWheel { accumulated: 5 };
         let val = sw.drain();
         assert_eq!(val, 5);
         assert_eq!(sw.accumulated, 0);
