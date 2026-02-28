@@ -36,6 +36,7 @@ pub mod blackbox;
 pub mod crosswind;
 pub mod device_health;
 pub mod dinput_backend;
+pub mod effects;
 #[cfg(windows)]
 pub mod dinput_com;
 pub mod dinput_device;
@@ -83,6 +84,7 @@ pub use crosswind::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;
+pub use effects::*;
 pub use engine_vibration::*;
 pub use fault::*;
 pub use ffb_pipeline::*;
