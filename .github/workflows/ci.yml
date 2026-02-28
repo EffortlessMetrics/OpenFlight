@@ -118,6 +118,9 @@ jobs:
     name: Test Suite
     runs-on: ${{ matrix.os }}
     timeout-minutes: ${{ matrix.os == 'windows-latest' && 30 || 20 }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
