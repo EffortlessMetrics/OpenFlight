@@ -80,6 +80,7 @@ fn collect_bdd_traceability_metrics() -> Result<BddTraceabilityMetrics> {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn extract_crates_from_command(command: &str) -> BTreeSet<String> {
     extract_crates_from_command_impl(command)
 }
@@ -89,8 +90,10 @@ mod tests {
     use super::*;
     use regex::Regex;
 
+    #[allow(dead_code)]
     const PROJECT_INFRA_REQUIREMENTS_PATH: &str =
         ".kiro/specs/project-infrastructure/requirements.md";
+    #[allow(dead_code)]
     const PROJECT_INFRA_TASKS_PATH: &str = ".kiro/specs/project-infrastructure/tasks.md";
 
     #[test]
@@ -100,6 +103,7 @@ mod tests {
         assert_eq!(crates.len(), 1);
     }
 
+    #[allow(dead_code)]
     fn inf_req_7_task_section_lines() -> Vec<String> {
         let mut lines = Vec::new();
         let mut in_section = false;
@@ -131,6 +135,7 @@ mod tests {
         lines
     }
 
+    #[allow(dead_code)]
     fn inf_req_7_ac_numbers(lines: &[String]) -> Vec<u8> {
         let ac_re = Regex::new(r"AC-7\.([1-7])").expect("Invalid AC regex");
         let mut numbers = Vec::new();
@@ -145,6 +150,7 @@ mod tests {
         numbers
     }
 
+    #[allow(dead_code)]
     fn task_section_code_tokens(lines: &[String]) -> Vec<String> {
         let token_re = Regex::new(r#"`([^`]+)`"#).expect("Invalid token regex");
         let mut tokens = Vec::new();
@@ -158,6 +164,7 @@ mod tests {
         tokens
     }
 
+    #[allow(dead_code)]
     fn is_potential_path_token(token: &str) -> bool {
         token.contains(".md")
             || token.contains(".yml")
@@ -168,6 +175,7 @@ mod tests {
             || token.contains("\\")
     }
 
+    #[allow(dead_code)]
     fn is_absolute_path_token(token: &str) -> bool {
         if token.starts_with('/') || token.starts_with('\\') {
             return true;

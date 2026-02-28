@@ -19,7 +19,6 @@
 #![allow(clippy::vec_init_then_push)]
 #![allow(clippy::redundant_pattern_matching)]
 #![allow(clippy::single_char_add_str)]
-#![allow(dead_code)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 

@@ -909,7 +909,7 @@ fn test_connection_error_has_correct_exit_code() {
     // Exit code 1 = generic error (service unreachable wraps as UNKNOWN_ERROR)
     let code = output.status.code().unwrap();
     assert!(
-        code >= 1 && code <= 7,
+        (1..=7).contains(&code),
         "exit code should be in the mapped error range: {}",
         code
     );

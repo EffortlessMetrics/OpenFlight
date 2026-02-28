@@ -187,8 +187,10 @@ async fn test_telemetry_aircraft_change_triggers_re_emission() {
 
 #[tokio::test]
 async fn test_safe_mode_state_transitions() {
-    let mut cfg = FlightServiceConfig::default();
-    cfg.safe_mode = true;
+    let cfg = FlightServiceConfig {
+        safe_mode: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(cfg);
 

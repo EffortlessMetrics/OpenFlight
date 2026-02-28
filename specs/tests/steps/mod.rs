@@ -12,13 +12,6 @@ pub mod tflight_hotas4;
 use crate::FlightWorld;
 use cucumber::given;
 
-// Re-export step definitions
-pub use axis_processing::*;
-pub use coverage::*;
-pub use documentation::*;
-pub use new_adapters::*;
-pub use tflight_hotas4::*;
-
 #[given("the blackbox recording system is available")]
 async fn given_blackbox_recording_system_available(_world: &mut FlightWorld) {}
 

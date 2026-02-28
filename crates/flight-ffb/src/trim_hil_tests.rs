@@ -155,7 +155,7 @@ impl HilTrimTestSuite {
         let mut timing_analysis = TimingAnalysis::default();
         let mut update_periods = Vec::new();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result: TrimValidationResult = {
             let mut engine = self.create_test_engine();
 
             // Configure for high-performance FFB mode
@@ -279,7 +279,7 @@ impl HilTrimTestSuite {
                 passed: !rate_violation && !timing_failure,
                 duration: start_time.elapsed(),
                 error: if rate_violation {
-                    Some(format!("Rate limit exceeded with hardware timing"))
+                    Some("Rate limit exceeded with hardware timing".to_string())
                 } else if timing_failure {
                     Some(format!(
                         "Missed {} timing deadlines",
@@ -367,7 +367,7 @@ impl HilTrimTestSuite {
                 passed: !jerk_violation,
                 duration: start_time.elapsed(),
                 error: if jerk_violation {
-                    Some(format!("Jerk limit exceeded with hardware timing"))
+                    Some("Jerk limit exceeded with hardware timing".to_string())
                 } else {
                     None
                 },
@@ -673,7 +673,7 @@ impl HilTrimTestSuite {
 
                 let target_nm = if i % 2 == 0 { 8.0 } else { -8.0 };
                 let change = SetpointChange {
-                    target_nm: target_nm,
+                    target_nm,
                     limits: TrimLimits::default(),
                 };
 

@@ -194,8 +194,10 @@ async fn test_safe_mode_axis_engine_initializes_in_safe_mode() {
 /// with active == true.
 #[tokio::test]
 async fn test_safe_mode_service_exposes_active_status() {
-    let mut cfg = FlightServiceConfig::default();
-    cfg.safe_mode = true;
+    let cfg = FlightServiceConfig {
+        safe_mode: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(cfg);
 

@@ -1076,7 +1076,7 @@ mod tests {
         assert_eq!(status.overall_health, SubsystemHealth::Healthy);
         assert_eq!(status.subsystems.len(), 4);
 
-        for (_, sub) in &status.subsystems {
+        for sub in status.subsystems.values() {
             assert!(sub.running);
             assert_eq!(sub.health, SubsystemHealth::Healthy);
             assert_eq!(sub.error_count, 0);
@@ -1112,7 +1112,7 @@ mod tests {
         let status = orch.status();
         assert_eq!(status.boot_phase, BootSequence::Initializing);
         // All subsystems should be not-running
-        for (_, sub) in &status.subsystems {
+        for sub in status.subsystems.values() {
             assert!(!sub.running);
         }
     }

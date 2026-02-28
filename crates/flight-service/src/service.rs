@@ -1032,8 +1032,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_safe_mode_service() {
-        let mut config = FlightServiceConfig::default();
-        config.safe_mode = true;
+        let config = FlightServiceConfig {
+            safe_mode: true,
+            ..Default::default()
+        };
 
         let mut service = FlightService::new(config);
         let result = service.start().await;
@@ -1096,8 +1098,10 @@ mod tests {
         use flight_core::profile::{AxisConfig, Profile};
         use std::collections::HashMap;
 
-        let mut config = FlightServiceConfig::default();
-        config.safe_mode = false;
+        let config = FlightServiceConfig {
+            safe_mode: false,
+            ..Default::default()
+        };
         let mut service = FlightService::new(config);
         let _ = service.initialize_axis_engine().await;
 
@@ -1250,8 +1254,10 @@ mod tests {
     #[test]
     fn test_config_load_from_str_validation_failure() {
         // Construct JSON with an invalid field value (poll_hz = 0).
-        let mut cfg = FlightServiceConfig::default();
-        cfg.tflight_poll_hz = 0;
+        let cfg = FlightServiceConfig {
+            tflight_poll_hz: 0,
+            ..Default::default()
+        };
         let json = serde_json::to_string(&cfg).unwrap();
         let result = FlightServiceConfig::load_from_str(&json);
         assert!(result.is_err(), "zero poll_hz should fail validation");

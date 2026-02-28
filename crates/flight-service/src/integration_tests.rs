@@ -69,12 +69,9 @@ mod tests {
 
     /// Create a mock axis engine with conflict detection
     fn create_mock_axis_engine(axis_name: &str, _has_conflict: bool) -> Arc<AxisEngine> {
-        let engine = Arc::new(AxisEngine::new_for_axis(axis_name.to_string()));
-
         // In a real implementation, we would inject the conflict into the engine
         // For testing, we'll simulate this by manually adding to the service cache
-
-        engine
+        Arc::new(AxisEngine::new_for_axis(axis_name.to_string()))
     }
 
     #[tokio::test]
@@ -277,12 +274,13 @@ mod tests {
                 println!("  - Steps: {}", resolution.steps_performed.len());
 
                 // If it failed and we have backup info, test rollback
-                if !resolution.success && resolution.backup_info.is_some() {
+                if !resolution.success
+                    && let Some(backup_info) = resolution.backup_info
+                {
                     println!("  - Testing rollback...");
 
                     // In a real implementation, we would test the rollback functionality
                     // For now, just verify the backup info is present
-                    let backup_info = resolution.backup_info.unwrap();
                     assert!(!backup_info.description.is_empty());
                     assert!(!backup_info.backup_dir.to_string_lossy().is_empty());
 

@@ -95,7 +95,7 @@ proptest! {
         let snap = adapter().convert_indicators(&ind).unwrap();
         let pct = snap.config.flaps.value();
         prop_assert!(
-            pct >= 0.0 && pct <= 100.0,
+            (0.0..=100.0).contains(&pct),
             "flaps pct out of range: {} for input {}", pct, flaps
         );
     }

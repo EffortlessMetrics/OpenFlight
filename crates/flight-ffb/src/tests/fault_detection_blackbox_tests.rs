@@ -303,7 +303,7 @@ fn test_both_over_temp_and_over_current() {
 
     // Both faults should be recorded in history
     let history = engine.get_fault_history();
-    assert!(history.len() >= 1, "At least one fault should be recorded");
+    assert!(!history.is_empty(), "At least one fault should be recorded");
 
     // The latched fault is the most recent one (over_current since it's processed second)
     let fault = engine.get_latched_fault().unwrap();
@@ -449,12 +449,12 @@ fn test_hardware_critical_fault_requires_power_cycle() {
     assert_eq!(engine.safety_state(), SafetyState::Faulted);
 
     // Try to reset without power cycle - should remain faulted
-    engine.reset_from_fault(false).unwrap();
+    engine.reset_after_power_cycle(false).unwrap();
     assert!(engine.has_latched_fault());
     assert_eq!(engine.safety_state(), SafetyState::Faulted);
 
     // Reset with power cycle - should clear fault
-    engine.reset_from_fault(true).unwrap();
+    engine.reset_after_power_cycle(true).unwrap();
     assert!(!engine.has_latched_fault());
     assert_eq!(engine.safety_state(), SafetyState::SafeTorque);
 }
@@ -480,7 +480,7 @@ fn test_transient_fault_clearable() {
     assert!(engine.has_latched_fault());
 
     // Clear via power cycle (user action)
-    engine.reset_from_fault(true).unwrap();
+    engine.reset_after_power_cycle(true).unwrap();
     assert!(!engine.has_latched_fault());
     assert_eq!(engine.safety_state(), SafetyState::SafeTorque);
 }
