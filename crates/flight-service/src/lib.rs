@@ -20,6 +20,7 @@
 pub mod aircraft_auto_switch_service;
 pub mod audit_log;
 pub mod capability_service;
+pub mod config_validator;
 pub mod config_watcher;
 pub mod crash_report;
 pub mod curve_conflict_service;
@@ -31,6 +32,7 @@ pub mod first_run;
 pub mod graceful_drain;
 pub mod health;
 pub mod health_http;
+pub mod health_report;
 pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
@@ -41,8 +43,10 @@ pub mod plugin_registry;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
+pub mod shutdown_coordinator;
 pub mod startup_sequence;
 pub mod stecs_runtime;
+pub mod task_supervisor;
 
 #[cfg(feature = "tflight-hidapi")]
 pub mod hidapi_source;
