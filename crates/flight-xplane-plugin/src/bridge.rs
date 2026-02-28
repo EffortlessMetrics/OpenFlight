@@ -159,44 +159,62 @@ fn connect_and_run(running: &AtomicBool) -> Result<(), BridgeError> {
 
 /// Handle an incoming request from Flight Hub and return an optional response.
 fn handle_message(msg: PluginMessage) -> Option<PluginResponse> {
+    use crate::xplm;
+
     match msg {
         PluginMessage::GetAircraftInfo { id } => {
-            // TODO: call XPLM DataRef APIs once SDK is linked
+            let icao = xplm::read_dataref_string("sim/aircraft/view/acf_ICAO")
+                .unwrap_or_else(|| "UNKN".to_string());
+            let title =
+                xplm::read_dataref_string("sim/aircraft/view/acf_descrip").unwrap_or_default();
+            let author =
+                xplm::read_dataref_string("sim/aircraft/view/acf_author").unwrap_or_default();
+            let file_path = xplm::read_dataref_string("sim/aircraft/view/acf_relative_path")
+                .unwrap_or_default();
             Some(PluginResponse::AircraftInfo {
                 id,
-                icao: "UNKN".to_string(),
-                title: String::new(),
-                author: String::new(),
-                file_path: String::new(),
+                icao,
+                title,
+                author,
+                file_path,
             })
         }
         PluginMessage::Ping { id, timestamp } => Some(PluginResponse::Pong { id, timestamp }),
-        PluginMessage::GetDataRef { id, name } => {
-            // Stub: XPLM DataRef reads will be wired here once the SDK is linked.
-            eprintln!("[FlightHub] GetDataRef: {} (XPLM stub, returning 0)", name);
-            Some(PluginResponse::DataRefValue {
+        PluginMessage::GetDataRef { id, name } => match xplm::read_dataref(&name) {
+            Some(value) => Some(PluginResponse::DataRefValue {
                 id,
                 name,
-                value: serde_json::json!(0.0),
-                timestamp: 0,
-            })
-        }
+                value,
+                timestamp: xplm::timestamp_ms(),
+            }),
+            None => Some(PluginResponse::Error {
+                id: Some(id),
+                error: format!("DataRef not found: {}", name),
+                details: None,
+            }),
+        },
         PluginMessage::SetDataRef { id, name, value } => {
-            // Stub: XPLM DataRef writes will be wired here once the SDK is linked.
-            eprintln!("[FlightHub] SetDataRef: {} = {} (XPLM stub)", name, value);
+            let success = xplm::write_dataref(&name, &value);
             Some(PluginResponse::CommandResult {
                 id,
-                success: true,
-                message: None,
+                success,
+                message: if success {
+                    None
+                } else {
+                    Some(format!("Failed to write DataRef: {}", name))
+                },
             })
         }
         PluginMessage::Command { id, name } => {
-            // Stub: XPLMCommandRef execution will be wired here once the SDK is linked.
-            eprintln!("[FlightHub] Command: {} (XPLM stub)", name);
+            let success = xplm::execute_command(&name);
             Some(PluginResponse::CommandResult {
                 id,
-                success: true,
-                message: None,
+                success,
+                message: if success {
+                    None
+                } else {
+                    Some(format!("Command not found: {}", name))
+                },
             })
         }
         _ => {
@@ -222,4 +240,230 @@ fn read_message(reader: &mut BufReader<TcpStream>) -> Result<PluginMessage, Brid
         )));
     }
     Ok(serde_json::from_str(line.trim())?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::xplm::{self, MockValue};
+
+    #[test]
+    fn get_dataref_returns_float_value() {
+        xplm::clear_mocks();
+        xplm::set_mock_dataref("sim/cockpit/autopilot/altitude", MockValue::Float(35000.0));
+
+        let msg = PluginMessage::GetDataRef {
+            id: 1,
+            name: "sim/cockpit/autopilot/altitude".to_string(),
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::DataRefValue {
+                id, name, value, ..
+            } => {
+                assert_eq!(id, 1);
+                assert_eq!(name, "sim/cockpit/autopilot/altitude");
+                assert!((value.as_f64().unwrap() - 35000.0).abs() < 0.1);
+            }
+            other => panic!("Expected DataRefValue, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn get_dataref_returns_error_when_not_found() {
+        xplm::clear_mocks();
+
+        let msg = PluginMessage::GetDataRef {
+            id: 2,
+            name: "sim/nonexistent/dataref".to_string(),
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::Error { id, error, .. } => {
+                assert_eq!(id, Some(2));
+                assert!(error.contains("not found"));
+            }
+            other => panic!("Expected Error, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn set_dataref_succeeds_when_dataref_exists() {
+        xplm::clear_mocks();
+        xplm::set_mock_dataref("sim/test/writable", MockValue::Float(0.0));
+
+        let msg = PluginMessage::SetDataRef {
+            id: 3,
+            name: "sim/test/writable".to_string(),
+            value: serde_json::json!(123.4),
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::CommandResult {
+                id,
+                success,
+                message,
+            } => {
+                assert_eq!(id, 3);
+                assert!(success);
+                assert!(message.is_none());
+            }
+            other => panic!("Expected CommandResult, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn set_dataref_fails_when_not_found() {
+        xplm::clear_mocks();
+
+        let msg = PluginMessage::SetDataRef {
+            id: 4,
+            name: "sim/nonexistent/dataref".to_string(),
+            value: serde_json::json!(1.0),
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::CommandResult {
+                id,
+                success,
+                message,
+            } => {
+                assert_eq!(id, 4);
+                assert!(!success);
+                assert!(message.is_some());
+            }
+            other => panic!("Expected CommandResult, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn command_executes_and_records() {
+        xplm::clear_mocks();
+
+        let msg = PluginMessage::Command {
+            id: 5,
+            name: "sim/autopilot/heading_sync".to_string(),
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::CommandResult {
+                id,
+                success,
+                message,
+            } => {
+                assert_eq!(id, 5);
+                assert!(success);
+                assert!(message.is_none());
+            }
+            other => panic!("Expected CommandResult, got {:?}", other),
+        }
+        let cmds = xplm::executed_commands();
+        assert_eq!(cmds, vec!["sim/autopilot/heading_sync"]);
+    }
+
+    #[test]
+    fn get_aircraft_info_reads_datarefs() {
+        xplm::clear_mocks();
+        xplm::set_mock_dataref(
+            "sim/aircraft/view/acf_ICAO",
+            MockValue::Data(b"B738\0".to_vec()),
+        );
+        xplm::set_mock_dataref(
+            "sim/aircraft/view/acf_descrip",
+            MockValue::Data(b"Boeing 737-800\0".to_vec()),
+        );
+        xplm::set_mock_dataref(
+            "sim/aircraft/view/acf_author",
+            MockValue::Data(b"Zibo\0".to_vec()),
+        );
+        xplm::set_mock_dataref(
+            "sim/aircraft/view/acf_relative_path",
+            MockValue::Data(b"Aircraft/B738/B738.acf\0".to_vec()),
+        );
+
+        let msg = PluginMessage::GetAircraftInfo { id: 6 };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::AircraftInfo {
+                id,
+                icao,
+                title,
+                author,
+                file_path,
+            } => {
+                assert_eq!(id, 6);
+                assert_eq!(icao, "B738");
+                assert_eq!(title, "Boeing 737-800");
+                assert_eq!(author, "Zibo");
+                assert_eq!(file_path, "Aircraft/B738/B738.acf");
+            }
+            other => panic!("Expected AircraftInfo, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn get_aircraft_info_defaults_when_datarefs_missing() {
+        xplm::clear_mocks();
+
+        let msg = PluginMessage::GetAircraftInfo { id: 7 };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::AircraftInfo {
+                id,
+                icao,
+                title,
+                author,
+                file_path,
+            } => {
+                assert_eq!(id, 7);
+                assert_eq!(icao, "UNKN");
+                assert!(title.is_empty());
+                assert!(author.is_empty());
+                assert!(file_path.is_empty());
+            }
+            other => panic!("Expected AircraftInfo, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn ping_returns_pong() {
+        let msg = PluginMessage::Ping {
+            id: 8,
+            timestamp: 1234567890,
+        };
+        let response = handle_message(msg).unwrap();
+        match response {
+            PluginResponse::Pong { id, timestamp } => {
+                assert_eq!(id, 8);
+                assert_eq!(timestamp, 1234567890);
+            }
+            other => panic!("Expected Pong, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn handshake_returns_none() {
+        let msg = PluginMessage::Handshake {
+            version: "1.0".to_string(),
+            capabilities: vec![],
+        };
+        assert!(handle_message(msg).is_none());
+    }
+
+    #[test]
+    fn get_dataref_timestamp_is_nonzero() {
+        xplm::clear_mocks();
+        xplm::set_mock_dataref("sim/test/ts", MockValue::Int(42));
+
+        let msg = PluginMessage::GetDataRef {
+            id: 9,
+            name: "sim/test/ts".to_string(),
+        };
+        let response = handle_message(msg).unwrap();
+        if let PluginResponse::DataRefValue { timestamp, .. } = response {
+            assert!(timestamp > 0, "timestamp should be non-zero");
+        } else {
+            panic!("Expected DataRefValue");
+        }
+    }
 }
