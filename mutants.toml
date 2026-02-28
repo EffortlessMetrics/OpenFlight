@@ -4,6 +4,9 @@
 # Increase this if mutants are being killed by timeouts on slow machines
 timeout_multiplier = 2.0
 
+# Minimum test timeout to avoid flaky failures on slow CI runners
+minimum_test_timeout = 60
+
 # Exclude specific files or patterns from mutation
 # We exclude tests and benchmarks as mutating them doesn't help find bugs in code
 exclude = [
@@ -29,3 +32,7 @@ skip_calls = [
 
 # Additional arguments to cargo test
 additional_cargo_test_args = []
+
+# Core crates to target in CI (see .github/workflows/weekly-mutations.yml)
+# Run locally with:
+#   cargo mutants -p flight-core -p flight-axis -p flight-bus -p flight-units
