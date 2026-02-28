@@ -174,14 +174,14 @@ async fn list_profiles(
                 });
 
                 // Try to read and extract metadata
-                if let Ok(content) = fs::read_to_string(&path) {
-                    if let Ok(parsed) = serde_json::from_str::<Value>(&content) {
-                        if let Some(desc) = parsed.get("description") {
-                            profile["description"] = desc.clone();
-                        }
-                        if let Some(version) = parsed.get("version") {
-                            profile["version"] = version.clone();
-                        }
+                if let Ok(content) = fs::read_to_string(&path)
+                    && let Ok(parsed) = serde_json::from_str::<Value>(&content)
+                {
+                    if let Some(desc) = parsed.get("description") {
+                        profile["description"] = desc.clone();
+                    }
+                    if let Some(version) = parsed.get("version") {
+                        profile["version"] = version.clone();
                     }
                 }
 
@@ -403,13 +403,14 @@ async fn export_profile(
         .map_err(|e| anyhow::anyhow!("Invalid JSON in profile '{}': {}", name, e))?;
 
     // Write to the export destination
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() && !parent.exists() {
-            return Err(anyhow::anyhow!(
-                "Output directory '{}' does not exist",
-                parent.display()
-            ));
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+        && !parent.exists()
+    {
+        return Err(anyhow::anyhow!(
+            "Output directory '{}' does not exist",
+            parent.display()
+        ));
     }
 
     fs::write(path, &content)

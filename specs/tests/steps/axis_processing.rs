@@ -198,7 +198,7 @@ mod tests {
 
         // Verify jitter measurements are in reasonable range
         for &jitter in &measurements {
-            assert!(jitter >= 0.0 && jitter < 1.0);
+            assert!((0.0..1.0).contains(&jitter));
         }
     }
 }

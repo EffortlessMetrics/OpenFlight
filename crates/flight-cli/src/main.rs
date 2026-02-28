@@ -4,9 +4,7 @@
 //! Flight Hub CLI - Command line interface with full parity to UI functionality
 
 #![allow(unused)]
-#![allow(clippy::collapsible_if)]
-#![allow(clippy::ptr_arg)]
-#![allow(clippy::field_reassign_with_default)]
+
 
 #[cfg(feature = "cli")]
 use clap::{Parser, Subcommand};
@@ -168,8 +166,10 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // Initialize client manager
-    let mut client_config = ClientConfig::default();
-    client_config.connection_timeout_ms = cli.timeout;
+    let client_config = ClientConfig {
+        connection_timeout_ms: cli.timeout,
+        ..ClientConfig::default()
+    };
 
     let client_manager = ClientManager::new(client_config);
 

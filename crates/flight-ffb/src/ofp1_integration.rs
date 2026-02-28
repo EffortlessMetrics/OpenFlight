@@ -42,7 +42,7 @@ pub struct Ofp1FfbIntegration {
     /// Whether integration is running
     is_running: bool,
     /// Last command sequence number
-    last_sequence: u16,
+    _last_sequence: u16,
     /// Torque path stability tracker
     stability_tracker: TorquePathStabilityTracker,
 }
@@ -61,7 +61,7 @@ struct TorqueCommand {
 #[derive(Debug, Clone)]
 struct HealthUpdate {
     health_report: HealthStatusReport,
-    timestamp: Instant,
+    _timestamp: Instant,
 }
 
 /// Torque path stability tracking
@@ -195,7 +195,7 @@ impl Ofp1FfbIntegration {
             health_receiver,
             integration_thread: None,
             is_running: false,
-            last_sequence: 0,
+            _last_sequence: 0,
             stability_tracker: TorquePathStabilityTracker::new(),
         })
     }
@@ -332,7 +332,7 @@ impl Ofp1FfbIntegration {
 
             let health_update = HealthUpdate {
                 health_report,
-                timestamp: Instant::now(),
+                _timestamp: Instant::now(),
             };
 
             if health_sender.try_send(health_update).is_err() {

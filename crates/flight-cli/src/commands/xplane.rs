@@ -12,7 +12,7 @@ use crate::output::OutputFormat;
 use anyhow::{Context, Result};
 use clap::Subcommand;
 use serde_json::json;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Subcommand)]
 pub enum XPlaneAction {
@@ -66,10 +66,10 @@ fn detect_xplane_paths() -> Vec<PathBuf> {
             let steam_xplane = steam_path
                 .parent()
                 .map(|p| p.join("Steam/steamapps/common/X-Plane 12"));
-            if let Some(p) = steam_xplane {
-                if p.exists() {
-                    paths.push(p);
-                }
+            if let Some(p) = steam_xplane
+                && p.exists()
+            {
+                paths.push(p);
             }
         }
     }
@@ -95,7 +95,7 @@ fn detect_xplane_paths() -> Vec<PathBuf> {
 }
 
 /// Get the plugin directory for an X-Plane installation
-fn get_plugin_dir(xplane_path: &PathBuf) -> PathBuf {
+fn get_plugin_dir(xplane_path: &Path) -> PathBuf {
     xplane_path
         .join("Resources")
         .join("plugins")
@@ -103,7 +103,7 @@ fn get_plugin_dir(xplane_path: &PathBuf) -> PathBuf {
 }
 
 /// Check if plugin is installed
-fn is_plugin_installed(xplane_path: &PathBuf) -> bool {
+fn is_plugin_installed(xplane_path: &Path) -> bool {
     let plugin_dir = get_plugin_dir(xplane_path);
     plugin_dir.exists()
 }

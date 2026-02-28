@@ -131,7 +131,7 @@ struct EffectSlot {
     priority: EffectPriority,
     gain: f32,
     active: bool,
-    created_tick: u32,
+    _created_tick: u32,
 }
 
 /// Pre-allocated, bounded effect slot manager.
@@ -168,7 +168,7 @@ impl EffectSlotManager {
                     priority,
                     gain: gain.clamp(0.0, 1.0),
                     active: true,
-                    created_tick: self.current_tick,
+                    _created_tick: self.current_tick,
                 });
                 self.count += 1;
                 return Some(EffectSlotHandle(i as u8));

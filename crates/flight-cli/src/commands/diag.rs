@@ -352,13 +352,13 @@ async fn start_recording(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     // Validate output path
-    if let Some(parent) = output_path.parent() {
-        if !parent.exists() {
-            return Err(anyhow::anyhow!(
-                "Output directory '{}' does not exist",
-                parent.display()
-            ));
-        }
+    if let Some(parent) = output_path.parent()
+        && !parent.exists()
+    {
+        return Err(anyhow::anyhow!(
+            "Output directory '{}' does not exist",
+            parent.display()
+        ));
     }
 
     // Check file extension
