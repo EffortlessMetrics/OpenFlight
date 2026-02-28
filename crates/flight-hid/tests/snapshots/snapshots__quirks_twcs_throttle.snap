@@ -1,0 +1,13 @@
+---
+source: crates/flight-hid/tests/snapshots.rs
+expression: quirks
+---
+[
+    NoisyAxis {
+        axis_name: "Slider",
+        noise_floor: 0.015,
+    },
+    SlowInit {
+        delay_ms: 500,
+    },
+]

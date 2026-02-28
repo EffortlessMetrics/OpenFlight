@@ -1,0 +1,17 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: toml_str
+---
+[[calibrations."044F:B10A"]]
+axis_id = 0
+raw_min = 0
+raw_max = 65535
+raw_center = 32768
+updated_at = "2024-01-01T00:00:00Z"
+
+[[calibrations."044F:B10A"]]
+axis_id = 1
+raw_min = 0
+raw_max = 65535
+raw_center = 32768
+updated_at = "2024-01-01T00:00:00Z"

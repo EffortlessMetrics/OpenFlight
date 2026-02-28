@@ -1,0 +1,15 @@
+---
+source: crates/flight-hid/tests/snapshots.rs
+expression: fp
+---
+{
+  "vid": 1103,
+  "pid": 1026,
+  "serial": "WH001",
+  "manufacturer": "Thrustmaster",
+  "product": "HOTAS Warthog Joystick",
+  "interface_number": 0,
+  "usage_page": 1,
+  "usage": 4,
+  "usb_path": "1-2.3"
+}

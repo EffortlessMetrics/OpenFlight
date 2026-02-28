@@ -25,10 +25,10 @@
 | Needs Tests | 0 |
 | Draft | 4455 |
 | Incomplete | 0 |
-| Microcrates | 86 |
-| Microcrates with tests | 65 (75.6%) |
-| Microcrates with Gherkin | 65 (75.6%) |
-| Microcrates fully covered | 65 (75.6%) |
+| Microcrates | 87 |
+| Microcrates with tests | 65 (74.7%) |
+| Microcrates with Gherkin | 65 (74.7%) |
+| Microcrates fully covered | 65 (74.7%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 36.4% |
 | Test + Gherkin coverage | 36.4% |
@@ -92,6 +92,7 @@
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-goflight | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
+| flight-plugin | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-prepar3d | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-profile | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |

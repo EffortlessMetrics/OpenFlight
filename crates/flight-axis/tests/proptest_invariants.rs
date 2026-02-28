@@ -11,10 +11,18 @@
 //! - Expo curve preserves sign
 //! - A deadzone + curve pipeline always produces finite output
 //! - `f32::clamp` output never exceeds its bounds
+//! - Slew rate limiter: delta between consecutive outputs ≤ max_rate
+//! - Smoothing: output converges to constant input over time
+//! - Saturation: output always within [min, max]
+//! - RT pipeline with all stages produces finite output
 
 use flight_axis::{
     AxisFrame, PipelineBuilder,
     nodes::{CurveNode, DeadzoneNode, Node},
+    stages::{
+        ClampStage, CurveStage, CurveType, DeadzoneShape, DeadzoneStage, RtAxisPipeline,
+        SaturationStage, SlewRateLimiter, SmoothingStage, Stage,
+    },
 };
 use proptest::prelude::*;
 
@@ -120,6 +128,159 @@ proptest! {
             clamped.is_finite(),
             "clamp({}) = {} is not finite",
             input, clamped
+        );
+    }
+
+    // ── Slew rate limiter invariants ────────────────────────────────────────
+
+    /// Invariant 6: Slew rate limiter — delta between consecutive outputs ≤ max_rate.
+    #[test]
+    fn slew_rate_delta_bounded(
+        max_rate in 0.01f64..=0.5,
+        targets in prop::collection::vec(-1.0f64..=1.0, 2..30),
+    ) {
+        let mut limiter = SlewRateLimiter::new(max_rate);
+        let mut prev = limiter.process(targets[0]);
+        for &target in &targets[1..] {
+            let out = limiter.process(target);
+            let delta = (out - prev).abs();
+            prop_assert!(
+                delta <= max_rate + 1e-10,
+                "slew rate violated: delta={delta} > max_rate={max_rate} (prev={prev}, out={out})"
+            );
+            prev = out;
+        }
+    }
+
+    /// Invariant 7: Slew rate limiter with unlimited rate is passthrough (after init).
+    #[test]
+    fn slew_rate_unlimited_passthrough(input in -1.0f64..=1.0) {
+        let mut limiter = SlewRateLimiter::new(0.0);
+        // First call initializes
+        limiter.process(0.0);
+        let out = limiter.process(input);
+        prop_assert!(
+            (out - input).abs() < 1e-10,
+            "unlimited slew rate should be passthrough: input={input}, output={out}"
+        );
+    }
+
+    // ── Smoothing invariants ────────────────────────────────────────────────
+
+    /// Invariant 8: EMA smoothing output converges to constant input over time.
+    #[test]
+    fn smoothing_ema_converges_to_constant(
+        alpha in 0.01f64..=0.99,
+        target in -1.0f64..=1.0,
+    ) {
+        let mut smoother = SmoothingStage::ema(alpha);
+        for _ in 0..500 {
+            smoother.process(target);
+        }
+        let final_out = smoother.process(target);
+        prop_assert!(
+            (final_out - target).abs() < 1e-3,
+            "EMA did not converge: alpha={alpha}, target={target}, output={final_out}"
+        );
+    }
+
+    /// Invariant 9: Smoothing output is always finite for finite inputs.
+    #[test]
+    fn smoothing_output_always_finite(
+        alpha in 0.0f64..=1.0,
+        inputs in prop::collection::vec(-1.0f64..=1.0, 1..20),
+    ) {
+        let mut smoother = SmoothingStage::ema(alpha);
+        for &input in &inputs {
+            let out = smoother.process(input);
+            prop_assert!(
+                out.is_finite(),
+                "smoothing output should be finite: alpha={alpha}, input={input}, output={out}"
+            );
+        }
+    }
+
+    // ── Saturation invariants ───────────────────────────────────────────────
+
+    /// Invariant 10: SaturationStage output always within [min, max].
+    #[test]
+    fn saturation_output_within_bounds(
+        input in -10.0f64..=10.0,
+        min in -2.0f64..=-0.01,
+        max in 0.01f64..=2.0,
+    ) {
+        let mut sat = SaturationStage::new(min, max);
+        let out = sat.process(input);
+        prop_assert!(
+            (min..=max).contains(&out),
+            "saturation output {out} not in [{min}, {max}] for input={input}"
+        );
+    }
+
+    /// Invariant 11: Bipolar saturation always produces [-1.0, 1.0].
+    #[test]
+    fn saturation_bipolar_bounds(input in -100.0f64..=100.0) {
+        let mut sat = SaturationStage::bipolar();
+        let out = sat.process(input);
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "bipolar saturation output {out} not in [-1, 1] for input={input}"
+        );
+    }
+
+    // ── RT pipeline invariants ──────────────────────────────────────────────
+
+    /// Invariant 12: RT pipeline (deadzone → curve → clamp) output is always finite.
+    #[test]
+    fn rt_pipeline_output_finite(
+        input in -2.0f64..=2.0,
+        expo in 0.0f64..=1.0,
+        dz_width in 0.01f64..=0.3,
+    ) {
+        let mut pipeline = RtAxisPipeline::builder()
+            .deadzone(0.0, dz_width, DeadzoneShape::Linear)
+            .curve(CurveType::Expo(expo))
+            .clamp(-1.0, 1.0)
+            .build();
+        let out = pipeline.process(input);
+        prop_assert!(
+            out.is_finite(),
+            "RT pipeline output should be finite: input={input}, out={out}"
+        );
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "RT pipeline output {out} out of [-1, 1]"
+        );
+    }
+
+    /// Invariant 13: RT deadzone stage output is always in [-1.0, 1.0] for bounded inputs.
+    #[test]
+    fn rt_deadzone_output_bounded(
+        input in -1.0f64..=1.0,
+        width in 0.0f64..=0.5,
+    ) {
+        let mut dz = DeadzoneStage::new(0.0, width, DeadzoneShape::Linear);
+        let out = dz.process(input);
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "RT deadzone output {out} out of [-1, 1] for input={input}, width={width}"
+        );
+    }
+
+    /// Invariant 14: RT curve (expo) is monotone: for a ≤ b, curve(a) ≤ curve(b).
+    #[test]
+    fn rt_curve_expo_monotone(
+        a in -1.0f64..=1.0,
+        b in -1.0f64..=1.0,
+        expo in 0.0f64..=2.0,
+    ) {
+        let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
+        let mut curve = CurveStage::expo(expo);
+        let out_lo = curve.process(lo);
+        let out_hi = curve.process(hi);
+        prop_assert!(
+            out_lo <= out_hi + 1e-10,
+            "RT expo curve monotonicity violated: curve({lo})={out_lo} > curve({hi})={out_hi}, expo={expo}"
         );
     }
 }
