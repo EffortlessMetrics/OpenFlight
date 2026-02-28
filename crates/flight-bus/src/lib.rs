@@ -22,7 +22,9 @@ pub mod adapters;
 pub mod e2e_test;
 pub mod event_router;
 pub mod fixtures;
+pub mod health;
 pub mod integration_test;
+pub mod metrics;
 pub mod publisher;
 pub mod replay;
 pub mod snapshot;
@@ -41,9 +43,11 @@ pub use e2e_test::{
 };
 pub use event_router::{EventFilter, EventRouter, RoutingEntry};
 pub use fixtures::{ScenarioType, SnapshotFixture, SnapshotValidator, ValidationTolerance};
+pub use health::{BusHealth, assess_health};
 pub use integration_test::{
     AdapterIntegrationTest, AdapterType, IntegrationTestResult, MockAdapter, PhaseResult, TestError,
 };
+pub use metrics::{BusMetrics, BusMetricsSnapshot};
 pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, SubscriptionConfig};
 pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
 pub use snapshot::{

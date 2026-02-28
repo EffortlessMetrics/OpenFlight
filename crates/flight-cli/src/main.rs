@@ -52,6 +52,10 @@ struct Cli {
     #[arg(long, short, value_enum, default_value = "human")]
     output: OutputFormat,
 
+    /// Shorthand for --output json
+    #[arg(long)]
+    json: bool,
+
     /// Verbose output
     #[arg(long, short)]
     verbose: bool,
@@ -145,7 +149,12 @@ enum Commands {
 #[cfg(feature = "cli")]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
+
+    // --json flag overrides --output
+    if cli.json {
+        cli.output = OutputFormat::Json;
+    }
 
     // Initialize client manager
     let mut client_config = ClientConfig::default();
@@ -368,5 +377,27 @@ mod tests {
         } else {
             panic!("unexpected command variant");
         }
+    }
+
+    #[test]
+    fn parse_json_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "--json", "status"]).unwrap();
+        assert!(cli.json);
+    }
+
+    #[test]
+    fn parse_json_flag_sets_output_to_json() {
+        let mut cli = Cli::try_parse_from(["flightctl", "--json", "status"]).unwrap();
+        if cli.json {
+            cli.output = OutputFormat::Json;
+        }
+        assert!(matches!(cli.output, OutputFormat::Json));
+    }
+
+    #[test]
+    fn parse_no_json_flag_keeps_human_default() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert!(!cli.json);
+        assert!(matches!(cli.output, OutputFormat::Human));
     }
 }

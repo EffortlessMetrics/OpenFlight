@@ -257,19 +257,16 @@ fn test_version_command() {
 fn test_status_command_no_daemon() {
     let output = run_cli_command(&["status"]);
 
-    // Should fail gracefully when daemon is not running — not panic
+    // Status should succeed even when daemon is not running (reports offline status)
     assert!(
-        !output.status.success(),
-        "status should fail when daemon is not running"
+        output.status.success(),
+        "status should succeed with offline fallback"
     );
-    let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(!stderr.is_empty(), "stderr should contain an error message");
-    // Exit code 101 would indicate a Rust panic
-    assert_ne!(
-        output.status.code(),
-        Some(101),
-        "status should not panic: {}",
-        stderr
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("unreachable"),
+        "status should report service as unreachable: {}",
+        stdout
     );
 }
 
@@ -360,28 +357,28 @@ fn test_diag_command_help() {
 
 #[test]
 fn test_status_json_error_format() {
-    // Verify that status with JSON output returns well-formed JSON when daemon is unavailable
+    // Verify that status with JSON output returns well-formed JSON with offline status
     let output = run_cli_command(&["--output", "json", "status"]);
 
-    assert!(!output.status.success());
-    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        output.status.success(),
+        "status should succeed with offline fallback"
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
 
-    let json_line = stderr
+    let json_line = stdout
         .lines()
         .find(|l| l.trim().starts_with('{'))
-        .unwrap_or_else(|| panic!("No JSON output found in stderr: {}", stderr));
+        .unwrap_or_else(|| panic!("No JSON output found in stdout: {}", stdout));
 
     let json: serde_json::Value = serde_json::from_str(json_line)
-        .unwrap_or_else(|e| panic!("Invalid JSON in stderr: {} — {}", e, json_line));
+        .unwrap_or_else(|e| panic!("Invalid JSON in stdout: {} — {}", e, json_line));
 
-    assert_eq!(json["success"], false);
+    assert_eq!(json["success"], true);
+    assert_eq!(json["data"]["service_status"], "unreachable");
     assert!(
-        json["error"].is_string(),
-        "JSON error field should be a string"
-    );
-    assert!(
-        json["error_code"].is_string(),
-        "JSON error_code field should be a string"
+        json["data"]["cli_version"].is_string(),
+        "JSON should contain cli_version"
     );
 }
 
@@ -410,4 +407,24 @@ fn test_devices_list_json_error_format() {
         json["error_code"].is_string(),
         "JSON error_code field should be a string"
     );
+}
+
+#[test]
+fn test_json_flag_shorthand() {
+    // --json flag should work as shorthand for --output json
+    let output = run_cli_command(&["--json", "status"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON output found in stdout: {}", stdout));
+
+    let json: serde_json::Value = serde_json::from_str(json_line)
+        .unwrap_or_else(|e| panic!("Invalid JSON: {} — {}", e, json_line));
+
+    assert_eq!(json["success"], true);
+    assert_eq!(json["data"]["service_status"], "unreachable");
 }

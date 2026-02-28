@@ -5,10 +5,39 @@
 
 use crate::client_manager::ClientManager;
 use crate::output::OutputFormat;
-use flight_ipc::{HealthEventType, HealthSubscribeRequest, ListDevicesRequest};
-use serde_json::{Value, json};
+use flight_ipc::ListDevicesRequest;
+use serde_json::json;
 
 pub async fn execute(
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    match execute_online(output_format, verbose, client_manager).await {
+        Ok(result) => Ok(result),
+        Err(err) => Ok(Some(offline_status(output_format, verbose, &err))),
+    }
+}
+
+fn offline_status(output_format: OutputFormat, verbose: bool, err: &anyhow::Error) -> String {
+    let mut result = json!({
+        "service_status": "unreachable",
+        "service_version": null,
+        "uptime_seconds": null,
+        "connected_devices": null,
+        "total_devices": null,
+        "cli_version": env!("CARGO_PKG_VERSION"),
+        "message": "Flight Hub service is not running or unreachable",
+    });
+
+    if verbose {
+        result["connection_error"] = json!(err.to_string());
+    }
+
+    output_format.success(result)
+}
+
+async fn execute_online(
     output_format: OutputFormat,
     verbose: bool,
     client_manager: &ClientManager,
@@ -88,5 +117,44 @@ fn device_type_to_string(device_type: flight_ipc::DeviceType) -> &'static str {
         flight_ipc::DeviceType::Panel => "panel",
         flight_ipc::DeviceType::ForceFeedback => "force-feedback",
         flight_ipc::DeviceType::Streamdeck => "streamdeck",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn offline_status_json_contains_unreachable() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Json, false, &err);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert_eq!(parsed["data"]["service_status"], "unreachable");
+        assert!(parsed["data"]["cli_version"].is_string());
+    }
+
+    #[test]
+    fn offline_status_verbose_includes_error() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Json, true, &err);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["data"]["connection_error"], "connection refused");
+    }
+
+    #[test]
+    fn offline_status_non_verbose_omits_error() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Json, false, &err);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed["data"]["connection_error"].is_null());
+    }
+
+    #[test]
+    fn offline_status_human_contains_unreachable() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Human, false, &err);
+        assert!(result.contains("unreachable"));
+        assert!(result.contains("cli_version"));
     }
 }

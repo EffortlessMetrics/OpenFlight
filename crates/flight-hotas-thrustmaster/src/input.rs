@@ -489,7 +489,7 @@ fn normalize_axis_8bit_centered(raw: u8) -> f32 {
 /// Normalize an 8-bit throttle value to 0.0..1.0 range.
 fn normalize_throttle_8bit(raw: u8, invert: bool) -> f32 {
     let normalized = raw as f32 / 255.0;
-    if invert { 1.0 - normalized } else { normalized }
+    (if invert { 1.0 - normalized } else { normalized }).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]

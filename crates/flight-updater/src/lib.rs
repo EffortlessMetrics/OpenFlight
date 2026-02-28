@@ -23,6 +23,7 @@ pub mod integration_docs;
 pub mod packaging;
 pub mod rollback;
 pub mod signature;
+pub mod signed_manifest;
 pub mod update_manifest;
 pub mod updater;
 
