@@ -936,8 +936,8 @@ impl AircraftAutoSwitch {
             profiles.push(result);
         }
 
-        // Load aircraft-specific profile
-        let aircraft_filename = format!("{}.json", aircraft_id.icao);
+        // Load aircraft-specific profile (lowercase ICAO for filesystem compatibility)
+        let aircraft_filename = format!("{}.json", aircraft_id.icao.to_lowercase());
         if let Ok(result) =
             Self::load_profile_from_path(&config.profile_paths[2], &aircraft_filename).await
         {

@@ -791,7 +791,7 @@ mod tests {
         let c = collector.register_counter("c", "counter");
         c.increment();
         let g = collector.register_gauge("g", "gauge");
-        g.set(3.14);
+        g.set(4.56);
         let text = collector.snapshot().to_prometheus_text();
         assert!(text.contains("# TYPE c counter"));
         assert!(text.contains("# TYPE g gauge"));

@@ -27,27 +27,8 @@ fn make_warthog_stick(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: 
     r
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_warthog_throttle(
-    scx: u16,
-    scy: u16,
-    tl: u16,
-    tr: u16,
-    tc: u16,
-    btn_low: u16,
-    btn_mid: u16,
-    btn_high: u8,
-    toggles: u8,
-    hat_dms: u8,
-    hat_csl: u8,
-) -> [u8; 20] {
-    let mut r = [0u8; 20];
-    r[0..2].copy_from_slice(&scx.to_le_bytes());
-    r[2..4].copy_from_slice(&scy.to_le_bytes());
-    r[4..6].copy_from_slice(&tl.to_le_bytes());
-    r[6..8].copy_from_slice(&tr.to_le_bytes());
-    r[8..10].copy_from_slice(&tc.to_le_bytes());
-    r[10..12].copy_from_slice(&btn_low.to_le_bytes());
-    r[12..14].copy_from_slice(&btn_mid.to_le_bytes());
     r[14] = btn_high;
     r[15] = toggles;
     r[16] = hat_dms;

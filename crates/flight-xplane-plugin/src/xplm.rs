@@ -292,9 +292,9 @@ mod tests {
     #[test]
     fn read_dataref_double() {
         clear_mocks();
-        set_mock_dataref("sim/test/double", MockValue::Double(3.14159));
+        set_mock_dataref("sim/test/double", MockValue::Double(4.56789));
         let val = read_dataref("sim/test/double").unwrap();
-        assert!((val.as_f64().unwrap() - 3.14159).abs() < 1e-6);
+        assert!((val.as_f64().unwrap() - 4.56789).abs() < 1e-6);
     }
 
     #[test]

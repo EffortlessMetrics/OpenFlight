@@ -574,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_parse_float() {
-        assert!((parse_indicator_value("3.14").unwrap() - 3.14).abs() < 1e-10);
+        assert!((parse_indicator_value("4.56").unwrap() - 4.56).abs() < 1e-10);
     }
 
     #[test]

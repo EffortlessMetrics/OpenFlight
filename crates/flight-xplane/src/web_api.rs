@@ -669,12 +669,12 @@ mod tests {
         let client = WebApiClient::new(config).unwrap();
 
         let json = client
-            .convert_dataref_value_to_json(DataRefValue::Double(3.14159265358979))
+            .convert_dataref_value_to_json(DataRefValue::Double(4.567891234))
             .unwrap();
         // JSON double comes back as a Number; converting back gives a Float (f64→f32 narrowing)
         let back = client.convert_json_to_dataref_value(json).unwrap();
         if let DataRefValue::Float(f) = back {
-            assert!((f - 3.14159265358979_f32).abs() < 1e-5);
+            assert!((f - 4.567_891_f32).abs() < 1e-5);
         } else {
             panic!("Expected Float, got {:?}", back);
         }

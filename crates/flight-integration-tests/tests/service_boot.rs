@@ -174,8 +174,10 @@ fn boot_startup_sequence_multiple_warnings_accumulate() {
 
 #[tokio::test]
 async fn boot_safe_mode_starts_in_safe_mode_state() {
-    let mut cfg = FlightServiceConfig::default();
-    cfg.safe_mode = true;
+    let cfg = FlightServiceConfig {
+        safe_mode: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(cfg);
 

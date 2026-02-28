@@ -7,7 +7,7 @@
 //! **Validates: Test Requirements SIM-TEST-01.10, QG-FFB-SAFETY**
 
 #[cfg(test)]
-mod tests {
+mod safety_envelope_tests {
     use crate::safety_envelope::*;
     use std::thread;
     use std::time::Duration;

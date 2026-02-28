@@ -352,7 +352,7 @@ mod tests {
     fn test_snapshot_contains_all_metric_types() {
         let registry = MetricsRegistry::new();
         registry.inc_counter("c1", 1);
-        registry.set_gauge("g1", 3.14);
+        registry.set_gauge("g1", 4.56);
         registry.observe("h1", 100.0);
 
         let metrics = registry.snapshot();

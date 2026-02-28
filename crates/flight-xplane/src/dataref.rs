@@ -706,7 +706,7 @@ mod tests {
     fn test_dataref_value_display() {
         assert_eq!(DataRefValue::Float(42.0).to_string(), "42");
         assert_eq!(DataRefValue::Int(123).to_string(), "123");
-        assert_eq!(DataRefValue::Double(3.14159).to_string(), "3.14159");
+        assert_eq!(DataRefValue::Double(4.56789).to_string(), "4.56789");
     }
 
     #[test]

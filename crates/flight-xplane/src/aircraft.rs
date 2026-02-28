@@ -727,9 +727,9 @@ mod tests {
         assert_eq!(result.unwrap(), 42);
 
         // Test float extraction
-        data.insert("test_float".to_string(), DataRefValue::Float(3.14));
+        data.insert("test_float".to_string(), DataRefValue::Float(2.78));
         let result = detector.extract_float_value(&data, "test_float");
         assert!(result.is_ok());
-        assert!((result.unwrap() - 3.14).abs() < 0.001);
+        assert!((result.unwrap() - 2.78).abs() < 0.001);
     }
 }

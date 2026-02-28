@@ -170,6 +170,7 @@ fn test_normal_flight_variations_no_violations() {
 
 /// Test 3: Verify that deliberately injected NaN values are detectable
 #[test]
+#[allow(clippy::type_complexity)]
 fn test_injected_nan_is_detectable() {
     let mut results = Vec::new();
 
@@ -233,6 +234,7 @@ fn test_injected_nan_is_detectable() {
 
 /// Test 4: Verify that deliberately injected Inf values are detectable
 #[test]
+#[allow(clippy::type_complexity)]
 fn test_injected_inf_is_detectable() {
     let mut results = Vec::new();
 

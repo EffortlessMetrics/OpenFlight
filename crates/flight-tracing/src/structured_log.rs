@@ -297,7 +297,7 @@ mod tests {
     fn log_value_display_formats_correctly() {
         assert_eq!(LogValue::String("hello".into()).to_string(), "hello");
         assert_eq!(LogValue::Int(42).to_string(), "42");
-        assert_eq!(LogValue::Float(3.14).to_string(), "3.14");
+        assert_eq!(LogValue::Float(4.56).to_string(), "4.56");
         assert_eq!(LogValue::Bool(true).to_string(), "true");
         assert_eq!(LogValue::Bool(false).to_string(), "false");
     }

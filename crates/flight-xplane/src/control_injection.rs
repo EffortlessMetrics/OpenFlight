@@ -359,7 +359,7 @@ mod tests {
 
     #[test]
     fn dref_packet_encodes_value_le() {
-        let val = 3.14f32;
+        let val = 2.78f32;
         let pkt = udp_protocol::build_dref_command("sim/test", val);
         let decoded = f32::from_le_bytes([pkt[5], pkt[6], pkt[7], pkt[8]]);
         assert!((decoded - val).abs() < f32::EPSILON);

@@ -287,7 +287,7 @@ mod tests {
             },
             Metric::Gauge {
                 name: "unknown.gauge".to_string(),
-                value: 3.14,
+                value: 4.56,
             },
             Metric::Histogram {
                 name: "unknown.hist".to_string(),

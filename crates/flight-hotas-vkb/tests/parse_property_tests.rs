@@ -23,17 +23,8 @@ fn make_stecs_report(rx: u16, ry: u16, x: u16, y: u16, z: u16, buttons: u32) -> 
     r
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_gladiator_report(
-    roll: u16,
-    pitch: u16,
-    yaw: u16,
-    mini_x: u16,
-    mini_y: u16,
-    throttle: u16,
-    btn_lo: u32,
-    btn_hi: u32,
-    hat: u8,
-) -> [u8; 21] {
     let mut r = [0u8; 21];
     r[0..2].copy_from_slice(&roll.to_le_bytes());
     r[2..4].copy_from_slice(&pitch.to_le_bytes());

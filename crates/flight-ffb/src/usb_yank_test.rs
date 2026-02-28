@@ -128,6 +128,12 @@ pub struct MockUsbDevice {
     last_write_time: Arc<Mutex<Option<Instant>>>,
 }
 
+impl Default for MockUsbDevice {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockUsbDevice {
     /// Create new mock USB device
     pub fn new() -> Self {

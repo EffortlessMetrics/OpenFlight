@@ -743,19 +743,24 @@ mod tests {
 
     #[test]
     fn gladiator_shift_model() {
-        assert_eq!(GLADIATOR_NXT_EVO_SHIFT.layer_count, 2);
-        assert!(
-            GLADIATOR_NXT_EVO_SHIFT.logical_button_count
-                >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count
-        );
+        const { assert!(GLADIATOR_NXT_EVO_SHIFT.layer_count == 2) };
+        const {
+            assert!(
+                GLADIATOR_NXT_EVO_SHIFT.logical_button_count
+                    >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count
+            )
+        };
     }
 
     #[test]
     fn gunfighter_mcg_shift_model() {
-        assert_eq!(GUNFIGHTER_MCG_SHIFT.layer_count, 3);
-        assert!(
-            GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count
-        );
+        const { assert!(GUNFIGHTER_MCG_SHIFT.layer_count == 3) };
+        const {
+            assert!(
+                GUNFIGHTER_MCG_SHIFT.logical_button_count
+                    >= GUNFIGHTER_MCG_SHIFT.physical_button_count
+            )
+        };
     }
 
     // ─── LED commands ─────────────────────────────────────────────────────
