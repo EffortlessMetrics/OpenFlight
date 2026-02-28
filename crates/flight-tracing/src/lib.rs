@@ -31,19 +31,25 @@ mod etw;
 #[cfg(unix)]
 mod tracepoints;
 
+pub mod correlation;
 pub mod counters;
 pub mod events;
 pub mod log_rotation;
 pub mod regression;
+pub mod spans;
+pub mod structured;
 pub mod structured_log;
 
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use std::time::Instant;
 
+pub use correlation::{ChainCollector, CorrelatedEvent, CorrelationId, EventChain};
 pub use counters::{CounterSnapshot, PerfCounters};
 pub use events::{EventData, TraceEvent};
 pub use regression::{Alert, RegressionDetector, Threshold};
+pub use spans::{FlightSpan, SpanCollector, SpanSummary};
+pub use structured::{EventBuilder, EventContext, EventLevel, EventSink, FlightEvent, MemorySink};
 
 /// Global performance counters
 static PERF_COUNTERS: Lazy<PerfCounters> = Lazy::new(PerfCounters::new);

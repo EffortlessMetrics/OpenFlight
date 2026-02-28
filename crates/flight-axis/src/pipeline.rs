@@ -659,10 +659,13 @@ mod tests {
     fn test_insert_stage_at_end() {
         let mut pipeline = AxisPipeline::new();
         pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
-        pipeline.insert_stage(99, Box::new(ClampStage {
-            min: -1.0,
-            max: 1.0,
-        })); // beyond length → appends
+        pipeline.insert_stage(
+            99,
+            Box::new(ClampStage {
+                min: -1.0,
+                max: 1.0,
+            }),
+        ); // beyond length → appends
         assert_eq!(pipeline.stage_count(), 2);
         assert_eq!(pipeline.stage_names(), vec!["sensitivity", "clamp"]);
     }

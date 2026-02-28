@@ -16,21 +16,44 @@
 //!
 //! Provides loopback HID devices that simulate real hardware
 //! without requiring physical devices for testing.
+//!
+//! # Virtual device backends
+//!
+//! Platform-specific virtual joystick drivers live behind the
+//! [`VirtualBackend`](backend::VirtualBackend) trait:
+//!
+//! * [`vjoy`] – Windows (vJoy driver)
+//! * [`uinput`] – Linux (uinput subsystem)
+//! * [`backend::MockBackend`] – cross-platform mock for testing
+//!
+//! The [`mapper`] module maps physical inputs to virtual outputs with
+//! transformations, merging, and button modes.
 
 use flight_device_common::{DeviceHealth, DeviceId, DeviceManager};
 use parking_lot::Mutex;
 use std::sync::Arc;
 use std::{error::Error, fmt};
 
+pub mod backend;
 pub mod device;
 pub mod loopback;
+pub mod mapper;
 pub mod ofp1_emulator;
 pub mod perf_gate;
+pub mod uinput;
+pub mod vjoy;
 
+pub use backend::{HatDirection, MockBackend, VirtualBackend, VirtualBackendError};
 pub use device::{DeviceType, VirtualDevice, VirtualDeviceConfig};
 pub use loopback::{HidReport, LoopbackHid};
+pub use mapper::{
+    AxisMapping, AxisTransform, ButtonMapping, ButtonMode, HatMapping, MergeStrategy,
+    VirtualDeviceMapper,
+};
 pub use ofp1_emulator::{EmulatorFaultType, EmulatorStatistics, Ofp1Emulator, Ofp1EmulatorConfig};
 pub use perf_gate::{PerfGate, PerfGateConfig, PerfResult};
+pub use uinput::{UInputCapabilities, UInputDevice};
+pub use vjoy::VJoyDevice;
 
 #[cfg(test)]
 mod integration_tests;

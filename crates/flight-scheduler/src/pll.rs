@@ -191,9 +191,10 @@ impl PhaseLockLoop {
 
         // Clamp output to ±1 % of nominal period
         let max_delta = self.nominal_period_ns * 0.01;
-        self.corrected_period_ns =
-            self.corrected_period_ns
-                .clamp(self.nominal_period_ns - max_delta, self.nominal_period_ns + max_delta);
+        self.corrected_period_ns = self.corrected_period_ns.clamp(
+            self.nominal_period_ns - max_delta,
+            self.nominal_period_ns + max_delta,
+        );
 
         // --- Lock detection ---
         self.update_lock_state(phase_error_ns);
@@ -403,8 +404,8 @@ mod tests {
 
     #[test]
     fn pll_pi_lock_maintained_within_threshold() {
-        let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
-            .with_lock_detection(50_000.0, 200_000.0, 5);
+        let mut pll =
+            PhaseLockLoop::new(0.1, 0.001, 4_000_000.0).with_lock_detection(50_000.0, 200_000.0, 5);
 
         // Lock first
         for _ in 0..10 {
@@ -424,8 +425,8 @@ mod tests {
 
     #[test]
     fn pll_pi_unlock_on_sustained_large_error() {
-        let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
-            .with_lock_detection(50_000.0, 200_000.0, 5);
+        let mut pll =
+            PhaseLockLoop::new(0.1, 0.001, 4_000_000.0).with_lock_detection(50_000.0, 200_000.0, 5);
 
         // Lock
         for _ in 0..10 {
@@ -443,8 +444,8 @@ mod tests {
     #[test]
     fn pll_pi_phase_error_recovery_after_disturbance() {
         let nominal = 4_000_000.0;
-        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal)
-            .with_lock_detection(50_000.0, 200_000.0, 10);
+        let mut pll =
+            PhaseLockLoop::new(0.1, 0.001, nominal).with_lock_detection(50_000.0, 200_000.0, 10);
 
         // Phase 1: converge and lock
         let mut error = 0.0;

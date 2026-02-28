@@ -158,6 +158,7 @@ pub use history::{
 pub use input_validator::InputValidator;
 pub use invert::{AxisInvert, InvertBank};
 pub use lag_compensator::{LagCompensator, LagCompensatorConfig};
+pub use mixer::{AxisMixer, MAX_MIXER_INPUTS, MixMode};
 pub use mode_switch::{AxisMode, ModeSwitcher};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
@@ -165,7 +166,6 @@ pub use nodes::{
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
 pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64};
-pub use mixer::{AxisMixer, MixMode, MAX_MIXER_INPUTS};
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
@@ -179,17 +179,16 @@ pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
+pub use stages::{
+    ClampStage as RtClampStage, CurveType, DeadzoneShape, DeadzoneStage as RtDeadzoneStage,
+    InvertStage as RtInvertStage, MAX_CURVE_POINTS, MAX_SMA_WINDOW, MAX_STAGES, NoiseGate,
+    PipelineDiagnostics, RescaleStage, RtAxisPipeline, RtPipelineBuilder, SlewRateLimiter,
+    SmoothingStage as RtSmoothingStage, SmoothingType, Stage, StageDiagnostic, StageSlot,
+};
 pub use throttle_zone::{
     ThrottleZoneConfig, ThrottleZoneProcessor, ZoneError, ZoneEvent, ZoneName,
 };
 pub use trace_replay::{
     AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches,
-};
-pub use stages::{
-    ClampStage as RtClampStage, CurveType, DeadzoneShape,
-    DeadzoneStage as RtDeadzoneStage, InvertStage as RtInvertStage, NoiseGate,
-    PipelineDiagnostics, RescaleStage, RtAxisPipeline, RtPipelineBuilder, SlewRateLimiter,
-    SmoothingStage as RtSmoothingStage, SmoothingType, Stage, StageDiagnostic, StageSlot,
-    MAX_CURVE_POINTS, MAX_SMA_WINDOW, MAX_STAGES,
 };
 pub use trim::{AxisTrim, AxisTrimBank};

@@ -125,7 +125,10 @@ impl Stage for DeadzoneStage {
 // ---------------------------------------------------------------------------
 
 /// Response curve type.
-#[expect(clippy::large_enum_variant, reason = "zero-alloc: boxing would violate ADR-004")]
+#[expect(
+    clippy::large_enum_variant,
+    reason = "zero-alloc: boxing would violate ADR-004"
+)]
 #[derive(Debug, Clone, Copy)]
 pub enum CurveType {
     /// Linear pass-through (identity).
@@ -796,7 +799,9 @@ impl RtPipelineBuilder {
     /// Appends a deadzone stage.
     #[must_use]
     pub fn deadzone(self, center: f64, width: f64, shape: DeadzoneShape) -> Self {
-        self.stage(StageSlot::Deadzone(DeadzoneStage::new(center, width, shape)))
+        self.stage(StageSlot::Deadzone(DeadzoneStage::new(
+            center, width, shape,
+        )))
     }
 
     /// Appends a response curve stage.
@@ -1247,9 +1252,7 @@ mod tests {
 
     #[test]
     fn pipeline_single_stage() {
-        let mut p = RtAxisPipeline::builder()
-            .clamp(-0.5, 0.5)
-            .build();
+        let mut p = RtAxisPipeline::builder().clamp(-0.5, 0.5).build();
         assert!(approx(p.process(0.8), 0.5));
     }
 
@@ -1272,19 +1275,14 @@ mod tests {
 
     #[test]
     fn pipeline_invert_then_clamp() {
-        let mut p = RtAxisPipeline::builder()
-            .invert()
-            .clamp(-0.5, 0.5)
-            .build();
+        let mut p = RtAxisPipeline::builder().invert().clamp(-0.5, 0.5).build();
         assert!(approx(p.process(0.8), -0.5));
         assert!(approx(p.process(-0.3), 0.3));
     }
 
     #[test]
     fn pipeline_insert_stage() {
-        let mut p = RtAxisPipeline::builder()
-            .clamp(-1.0, 1.0)
-            .build();
+        let mut p = RtAxisPipeline::builder().clamp(-1.0, 1.0).build();
         assert_eq!(p.stage_count(), 1);
 
         // Insert invert before clamp
@@ -1298,10 +1296,7 @@ mod tests {
 
     #[test]
     fn pipeline_remove_stage() {
-        let mut p = RtAxisPipeline::builder()
-            .invert()
-            .clamp(-0.5, 0.5)
-            .build();
+        let mut p = RtAxisPipeline::builder().invert().clamp(-0.5, 0.5).build();
         assert_eq!(p.stage_count(), 2);
 
         assert!(p.remove_stage(0)); // remove invert
@@ -1445,9 +1440,7 @@ mod tests {
 
     #[test]
     fn very_large_values_handled() {
-        let mut p = RtAxisPipeline::builder()
-            .clamp(-1.0, 1.0)
-            .build();
+        let mut p = RtAxisPipeline::builder().clamp(-1.0, 1.0).build();
         assert!(approx(p.process(1e300), 1.0));
         assert!(approx(p.process(-1e300), -1.0));
     }
@@ -1528,10 +1521,7 @@ mod tests {
             StageSlot::Deadzone(DeadzoneStage::new(0.0, 0.05, DeadzoneShape::Linear)).name(),
             "deadzone"
         );
-        assert_eq!(
-            StageSlot::Curve(CurveStage::linear()).name(),
-            "curve"
-        );
+        assert_eq!(StageSlot::Curve(CurveStage::linear()).name(), "curve");
         assert_eq!(
             StageSlot::Smoothing(SmoothingStage::ema(0.5)).name(),
             "smoothing"
@@ -1546,6 +1536,9 @@ mod tests {
             StageSlot::Rescale(RescaleStage::new(0.0, 1.0, 0.0, 1.0)).name(),
             "rescale"
         );
-        assert_eq!(StageSlot::NoiseGate(NoiseGate::new(0.01)).name(), "noise_gate");
+        assert_eq!(
+            StageSlot::NoiseGate(NoiseGate::new(0.01)).name(),
+            "noise_gate"
+        );
     }
 }

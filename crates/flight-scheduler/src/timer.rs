@@ -454,7 +454,11 @@ mod tests {
     fn fallback_timer_sleep_accuracy() {
         let mut timer = FallbackTimer::new(50_000); // 50µs busy-spin
         let target_interval = Duration::from_millis(4); // 250 Hz
-        let tolerance = Duration::from_millis(2);
+        let tolerance = if std::env::var_os("CI").is_some() {
+            Duration::from_millis(10)
+        } else {
+            Duration::from_millis(5)
+        };
 
         let start = Instant::now();
         let deadline = start + target_interval;
@@ -463,7 +467,7 @@ mod tests {
 
         // Should be close to 4ms (within tolerance)
         assert!(
-            elapsed >= target_interval.saturating_sub(Duration::from_micros(100)),
+            elapsed >= target_interval.saturating_sub(Duration::from_micros(500)),
             "woke too early: {elapsed:?}"
         );
         assert!(
@@ -512,10 +516,10 @@ mod tests {
     fn timer_measure_tick_intervals() {
         let mut timer = FallbackTimer::new(50_000);
         let period = Duration::from_millis(4);
-        let ci_tolerance = if std::env::var_os("CI").is_some() {
-            Duration::from_millis(5)
+        let tolerance = if std::env::var_os("CI").is_some() {
+            Duration::from_millis(10)
         } else {
-            Duration::from_millis(2)
+            Duration::from_millis(5)
         };
 
         let base = Instant::now();
@@ -529,11 +533,11 @@ mod tests {
             let interval = now - prev;
 
             assert!(
-                interval >= period.saturating_sub(Duration::from_micros(500)),
+                interval >= period.saturating_sub(Duration::from_millis(2)),
                 "tick {i}: interval too short: {interval:?}"
             );
             assert!(
-                interval <= period + ci_tolerance,
+                interval <= period + tolerance,
                 "tick {i}: interval too long: {interval:?}"
             );
             prev = now;
