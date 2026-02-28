@@ -173,7 +173,7 @@ fn test_variable_mapping_configuration() {
     assert!(!config.default_mapping.engines.is_empty());
     assert_eq!(config.update_rates.kinematics, 60.0);
 
-    let mapping = VariableMapping::new(config);
+    let _mapping = VariableMapping::new(config);
     // Basic creation test - more detailed tests would require SimConnect connection
 }
 
@@ -440,9 +440,11 @@ async fn test_adapter_lifecycle_with_fixtures() {
 /// Requirements: SIM-TEST-01.7
 #[tokio::test]
 async fn test_reconnection_behavior() {
-    let mut config = MsfsAdapterConfig::default();
-    config.auto_reconnect = true;
-    config.max_reconnect_attempts = 3;
+    let config = MsfsAdapterConfig {
+        auto_reconnect: true,
+        max_reconnect_attempts: 3,
+        ..Default::default()
+    };
 
     match MsfsAdapter::new(config) {
         Ok(adapter) => {

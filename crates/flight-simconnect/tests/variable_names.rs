@@ -399,7 +399,7 @@ fn test_engine_index_offset_is_one() {
     let msfs_suffix: u8 = eng
         .running
         .split(':')
-        .last()
+        .next_back()
         .and_then(|s| s.parse().ok())
         .expect("engine running SimVar must contain a colon-separated index");
 

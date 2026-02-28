@@ -166,8 +166,10 @@ fn test_session_config_local_connection() {
 /// Disabling auto-reconnect is reflected in the config and adapter creation succeeds.
 #[tokio::test]
 async fn test_disabled_auto_reconnect_config() {
-    let mut cfg = MsfsAdapterConfig::default();
-    cfg.auto_reconnect = false;
+    let cfg = MsfsAdapterConfig {
+        auto_reconnect: false,
+        ..Default::default()
+    };
     let adapter = MsfsAdapter::new(cfg).unwrap();
     assert_eq!(adapter.state().await, AdapterState::Disconnected);
 }
@@ -175,8 +177,10 @@ async fn test_disabled_auto_reconnect_config() {
 /// Custom publish rate is preserved through adapter creation.
 #[tokio::test]
 async fn test_custom_publish_rate() {
-    let mut cfg = MsfsAdapterConfig::default();
-    cfg.publish_rate = 30.0;
+    let cfg = MsfsAdapterConfig {
+        publish_rate: 30.0,
+        ..Default::default()
+    };
     // Adapter creation should succeed with a non-default publish rate.
     let adapter = MsfsAdapter::new(cfg).unwrap();
     assert_eq!(adapter.state().await, AdapterState::Disconnected);
@@ -390,7 +394,7 @@ fn test_fixture_c172_all_kinematics_golden() {
 
     let heading = MsfsConverter::convert_angle_degrees(sv_heading).unwrap();
     assert!((heading.to_degrees() - (-90.0f32)).abs() < 0.001);
-    assert!((heading.to_radians() - (-1.570796f32)).abs() < 0.0001);
+    assert!((heading.to_radians() - (-std::f32::consts::FRAC_PI_2)).abs() < 0.0001);
 
     assert_eq!(
         MsfsConverter::convert_g_force(sv_g).unwrap().value(),
