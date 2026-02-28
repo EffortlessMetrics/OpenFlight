@@ -2,4 +2,4 @@
 source: crates/flight-rules/tests/rules_snapshots.rs
 expression: err.to_string()
 ---
-Validation error: Rule 1: Invalid action syntax: Validation error: Unsupported action syntax: not_a_valid_action()
+Validation error: Rule 1: Unsupported action syntax: not_a_valid_action()

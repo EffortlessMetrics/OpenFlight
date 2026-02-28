@@ -2,4 +2,4 @@
 source: crates/flight-rules/tests/rules_snapshots.rs
 expression: err.to_string()
 ---
-Validation error: Rule 1: Invalid condition syntax: Validation error: Invalid number: abc
+Validation error: Rule 1: Invalid number: abc

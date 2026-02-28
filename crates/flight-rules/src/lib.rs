@@ -172,14 +172,14 @@ impl RulesSchema {
             return Err("Rule action cannot be empty".to_string());
         }
 
-        // Validate condition and action syntax using the same parser paths used at runtime
-        let compiler = RulesCompiler::new(Default::default());
-        compiler
-            .parse_condition(&rule.when)
-            .map_err(|e| format!("Invalid condition syntax: {}", e))?;
-        compiler
-            .parse_action(&rule.action)
-            .map_err(|e| format!("Invalid action syntax: {}", e))?;
+        // Trial-compile through the full bytecode pipeline (parse → emit),
+        // identical to the runtime path used by RulesSchema::compile(), so
+        // validation catches every error that compile() would.
+        let mut bc = BytecodeCompiler::new();
+        bc.compile_rule(rule).map_err(|e| {
+            let RulesError::Validation(msg) = &e;
+            msg.clone()
+        })?;
 
         Ok(())
     }
@@ -1387,7 +1387,7 @@ mod tests {
         let err = validate_one("ias > ", "led.indexer.on()").unwrap_err();
         let msg = err.to_string();
         assert!(
-            msg.contains("Invalid"),
+            msg.contains("Invalid") || msg.contains("Unsupported"),
             "error should mention invalid syntax, got: {msg}"
         );
     }
