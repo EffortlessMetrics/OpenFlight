@@ -161,6 +161,9 @@ impl AdapterStateMachine {
             // Active → Stale
             (Active, TelemetryTimeout) => Stale,
 
+            // Stale → Stale (repeated timeout while already stale)
+            (Stale, TelemetryTimeout) => Stale,
+
             // Stale → Active (recovery)
             (Stale, TelemetryReceived) => {
                 self.error_count = 0;
@@ -257,6 +260,17 @@ mod tests {
         let next = sm.transition(AdapterEvent::TelemetryReceived).unwrap();
         assert_eq!(next, XPlaneAdapterState::Active);
         assert_eq!(sm.error_count(), 0);
+    }
+
+    #[test]
+    fn stale_stays_stale_on_repeated_timeout() {
+        let mut sm = sm();
+        sm.transition(AdapterEvent::SocketBound).unwrap();
+        sm.transition(AdapterEvent::SocketBound).unwrap();
+        sm.transition(AdapterEvent::TelemetryReceived).unwrap();
+        sm.transition(AdapterEvent::TelemetryTimeout).unwrap();
+        let next = sm.transition(AdapterEvent::TelemetryTimeout).unwrap();
+        assert_eq!(next, XPlaneAdapterState::Stale);
     }
 
     // --- error & recovery ---
