@@ -64,7 +64,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,
@@ -75,7 +75,7 @@ pub enum CompareOp {
 }
 
 /// Rule action parsed from DSL string
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Action {
     /// Turn LED on
     LedOn { target: String },
@@ -93,7 +93,7 @@ pub struct RulesCompiler {
 }
 
 /// Bytecode instruction for rules evaluation
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BytecodeOp {
     /// Load variable value onto stack: LOAD var_index
     LoadVar(u16),
@@ -120,7 +120,7 @@ pub enum BytecodeOp {
 }
 
 /// Compiled bytecode program
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BytecodeProgram {
     /// Bytecode instructions
     pub instructions: Vec<BytecodeOp>,
