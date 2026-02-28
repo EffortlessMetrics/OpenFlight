@@ -23,6 +23,8 @@ pub mod g29_wheel;
 pub mod g940;
 pub mod g_flight_throttle;
 pub mod g_flight_yoke;
+pub mod profiles;
+pub mod protocol;
 
 pub use extreme3dpro::{
     EXTREME_3D_PRO_MIN_REPORT_BYTES, Extreme3DProAxes, Extreme3DProButtons, Extreme3DProHat,

@@ -35,7 +35,10 @@ pub mod adapter;
 pub mod adapter_state;
 pub mod aircraft;
 pub mod aircraft_db;
+pub mod aircraft_detection;
 pub mod camera;
+pub mod connection;
+pub mod control_injection;
 pub mod engine_params;
 pub mod event_mapping;
 pub mod events;
@@ -74,3 +77,14 @@ pub use event_mapping::{
     SimEventCategory, SimEventDef, SimEventMapper, catalog_by_category, catalog_lookup,
 };
 pub use var_registry::{SimVar, SimVarCategory, SimVarRegistry};
+
+pub use aircraft_detection::{
+    AircraftDetectionEngine, AircraftEntry, DetectionResult, MatchConfidence, SimAircraftData,
+};
+pub use connection::{
+    ConnectionConfig, ConnectionEvent, ConnectionState, ConnectionTransitionError,
+    ExponentialBackoff, HealthMonitor, SimConnectConnection,
+};
+pub use control_injection::{
+    AxisId, ControlInjectorConfig, InjectionCommand, RateLimiter, SimControlInjector,
+};

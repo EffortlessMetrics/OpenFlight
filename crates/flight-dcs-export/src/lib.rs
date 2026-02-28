@@ -22,10 +22,12 @@
 pub mod adapter;
 pub mod adapter_state;
 pub mod aircraft_db;
+pub mod aircraft_detection;
 pub mod auto_deploy;
 pub mod control_injection;
 pub mod export_lua;
 pub mod installer;
+pub mod lua_bridge;
 pub mod mission_state;
 pub mod mp_detection;
 pub mod protocol;
@@ -37,11 +39,18 @@ pub use adapter_state::{
     DcsAdapterEvent, DcsAdapterState, DcsAdapterStateMachine, DcsTransitionError,
 };
 pub use aircraft_db::{AircraftCategory, AxesProfile, DcsAircraftInfo};
+pub use aircraft_detection::{
+    AircraftDetection, CockpitSeat, ModuleFidelity, detect_aircraft, detect_axes_profile,
+    detect_category,
+};
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
-pub use control_injection::{DcsControlCommand, DcsControlInjector};
+pub use control_injection::{
+    DcsCommandDef, DcsControlCommand, DcsControlInjector, DcsDevice, DcsUdpSender,
+};
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use installer::{DcsInstaller, InstallResult, InstallStatus};
+pub use lua_bridge::{HookAction, LuaBridgeConfig, SnippetStatus};
 pub use mission_state::{MissionPhase, MissionStateMachine, MissionTelemetry};
 pub use mp_detection::{MpSession, SessionType};
 pub use protocol::{DcsExportEntry, DcsFlightData, DcsTelemetryPacket, ParseError};
