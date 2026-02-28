@@ -7,6 +7,8 @@
 //! and privacy-preserving telemetry collection according to SEC-01 requirements.
 
 pub mod audit_log;
+pub mod fs_access;
+pub mod update_signature;
 pub mod verification;
 
 use serde::{Deserialize, Serialize};
@@ -20,6 +22,9 @@ pub use verification::{
     SecurityRecommendation, SecuritySeverity, SecurityVerificationResult, SecurityVerifier,
     VerificationConfig, VerificationError, VerificationStatus,
 };
+
+pub use fs_access::FsAccessPolicy;
+pub use update_signature::{sha256_hex, verify_digest, verify_file_digest, SignedPayload};
 
 pub type Result<T> = std::result::Result<T, SecurityError>;
 
@@ -42,6 +47,18 @@ pub enum SecurityError {
 
     #[error("Security policy violation: {reason}")]
     PolicyViolation { reason: String },
+
+    #[error("Unauthorized path access: {path:?} (allowed roots: {allowed_roots:?})")]
+    UnauthorizedPath {
+        path: PathBuf,
+        allowed_roots: Vec<PathBuf>,
+    },
+
+    #[error("Path traversal detected: {path:?}")]
+    PathTraversal { path: PathBuf },
+
+    #[error("Permission escalation denied: {reason}")]
+    PermissionEscalation { reason: String },
 }
 
 /// Plugin signature status
@@ -185,6 +202,8 @@ pub struct SecurityManager {
     telemetry_config: TelemetryConfig,
     acl_config: AclConfig,
     plugin_registry: HashMap<String, PluginCapabilityManifest>,
+    fs_policy: Option<FsAccessPolicy>,
+    audit: audit_log::AuditLog,
 }
 
 /// Security configuration
@@ -259,6 +278,8 @@ impl SecurityManager {
             telemetry_config: TelemetryConfig::default(),
             acl_config: AclConfig::default(),
             plugin_registry: HashMap::new(),
+            fs_policy: None,
+            audit: audit_log::AuditLog::new(10_000),
         }
     }
 
@@ -268,12 +289,19 @@ impl SecurityManager {
         telemetry_config: TelemetryConfig,
         acl_config: AclConfig,
     ) -> Self {
-        Self {
+        let audit_enabled = config.audit_logging;
+        let mut mgr = Self {
             config,
             telemetry_config,
             acl_config,
             plugin_registry: HashMap::new(),
+            fs_policy: None,
+            audit: audit_log::AuditLog::new(10_000),
+        };
+        if !audit_enabled {
+            mgr.audit.disable();
         }
+        mgr
     }
 
     /// Validate plugin manifest and signature
@@ -282,12 +310,19 @@ impl SecurityManager {
         if self.config.enforce_signatures {
             match &manifest.signature {
                 SignatureStatus::Signed { .. } => {
-                    // In a real implementation, this would verify the signature
-                    // against trusted CAs and check validity period
                     self.verify_plugin_signature(&manifest)?;
                 }
                 SignatureStatus::Unsigned => {
                     if !self.config.allow_unsigned {
+                        self.audit.record_event(
+                            audit_log::AuditCategory::PluginLoad,
+                            audit_log::AuditSeverity::Warning,
+                            &manifest.name,
+                            "validate_plugin",
+                            "plugin_signature",
+                            audit_log::AuditOutcome::Denied,
+                            Some("unsigned plugin rejected".to_string()),
+                        );
                         return Err(SecurityError::SignatureVerificationFailed {
                             reason: "Plugin is unsigned and unsigned plugins are not allowed"
                                 .to_string(),
@@ -295,6 +330,15 @@ impl SecurityManager {
                     }
                 }
                 SignatureStatus::Invalid { reason } => {
+                    self.audit.record_event(
+                        audit_log::AuditCategory::PluginLoad,
+                        audit_log::AuditSeverity::Alert,
+                        &manifest.name,
+                        "validate_plugin",
+                        "plugin_signature",
+                        audit_log::AuditOutcome::Denied,
+                        Some(format!("invalid signature: {reason}")),
+                    );
                     return Err(SecurityError::SignatureVerificationFailed {
                         reason: reason.clone(),
                     });
@@ -304,6 +348,16 @@ impl SecurityManager {
 
         // Validate capability manifest
         self.validate_capabilities(&manifest)?;
+
+        self.audit.record_event(
+            audit_log::AuditCategory::PluginLoad,
+            audit_log::AuditSeverity::Info,
+            &manifest.name,
+            "validate_plugin",
+            "plugin_registry",
+            audit_log::AuditOutcome::Success,
+            None,
+        );
 
         // Register the plugin
         self.plugin_registry.insert(manifest.name.clone(), manifest);
@@ -420,6 +474,57 @@ impl SecurityManager {
         self.validate_platform_acl(client_info)?;
 
         Ok(())
+    }
+
+    /// Set the file-system access policy.
+    pub fn set_fs_policy(&mut self, policy: FsAccessPolicy) {
+        self.fs_policy = Some(policy);
+    }
+
+    /// Validate a file-system access request against the configured policy.
+    pub fn validate_fs_access(&self, path: &std::path::Path) -> Result<PathBuf> {
+        match &self.fs_policy {
+            Some(policy) => policy.validate(path),
+            None => Err(SecurityError::PolicyViolation {
+                reason: "no file-system access policy configured".to_string(),
+            }),
+        }
+    }
+
+    /// Check whether a capability escalation is allowed.
+    ///
+    /// A registered plugin may not gain capabilities beyond those declared in
+    /// its manifest. Attempting to exercise an undeclared capability is treated
+    /// as a permission escalation.
+    pub fn check_escalation(
+        &mut self,
+        plugin_name: &str,
+        capability: &PluginCapability,
+    ) -> Result<()> {
+        if self.check_capability(plugin_name, capability) {
+            return Ok(());
+        }
+
+        self.audit.record_event(
+            audit_log::AuditCategory::Authorization,
+            audit_log::AuditSeverity::Alert,
+            plugin_name,
+            "check_escalation",
+            format!("{capability:?}"),
+            audit_log::AuditOutcome::Denied,
+            Some("attempted undeclared capability access".to_string()),
+        );
+
+        Err(SecurityError::PermissionEscalation {
+            reason: format!(
+                "plugin '{plugin_name}' attempted undeclared capability: {capability:?}"
+            ),
+        })
+    }
+
+    /// Access the internal audit log.
+    pub fn audit_log(&self) -> &audit_log::AuditLog {
+        &self.audit
     }
 
     /// Get plugin registry for UI display
@@ -752,5 +857,143 @@ mod tests {
         };
         mgr.validate_plugin(manifest).unwrap();
         assert_eq!(mgr.get_plugin_registry().len(), 1);
+    }
+
+    // --- Permission escalation prevention tests ---
+
+    #[test]
+    fn test_escalation_denied_for_undeclared_capability() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        let manifest = PluginCapabilityManifest {
+            name: "limited".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: [PluginCapability::ReadBus].into_iter().collect(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            signature: SignatureStatus::Unsigned,
+        };
+        mgr.validate_plugin(manifest).unwrap();
+
+        // Declared capability — should succeed
+        assert!(mgr.check_escalation("limited", &PluginCapability::ReadBus).is_ok());
+
+        // Undeclared capability — should be denied
+        let err = mgr
+            .check_escalation("limited", &PluginCapability::WriteBlackbox)
+            .unwrap_err();
+        assert!(format!("{err}").contains("undeclared capability"));
+    }
+
+    #[test]
+    fn test_escalation_denied_for_unregistered_plugin() {
+        let mut mgr = SecurityManager::new();
+        let err = mgr
+            .check_escalation("no-such-plugin", &PluginCapability::ReadBus)
+            .unwrap_err();
+        assert!(format!("{err}").contains("undeclared capability"));
+    }
+
+    #[test]
+    fn test_escalation_audit_event_emitted() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        let manifest = PluginCapabilityManifest {
+            name: "audited".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: [PluginCapability::ReadBus].into_iter().collect(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            signature: SignatureStatus::Unsigned,
+        };
+        mgr.validate_plugin(manifest).unwrap();
+
+        // Trigger an escalation attempt
+        let _ = mgr.check_escalation("audited", &PluginCapability::EmitPanel);
+
+        // Audit log should contain the denied event
+        let denied: Vec<_> = mgr
+            .audit_log()
+            .entries()
+            .iter()
+            .filter(|e| e.outcome == audit_log::AuditOutcome::Denied)
+            .collect();
+        assert!(!denied.is_empty(), "denied escalation must be audited");
+    }
+
+    // --- Audit integration tests ---
+
+    #[test]
+    fn test_validate_plugin_records_audit_on_success() {
+        let mut mgr = SecurityManager::new();
+        mgr.config.allow_unsigned = true;
+
+        let manifest = PluginCapabilityManifest {
+            name: "audit-ok".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: HashSet::new(),
+            description: None,
+            plugin_type: PluginType::Native,
+            signature: SignatureStatus::Unsigned,
+        };
+        mgr.validate_plugin(manifest).unwrap();
+
+        let successes: Vec<_> = mgr
+            .audit_log()
+            .entries()
+            .iter()
+            .filter(|e| e.outcome == audit_log::AuditOutcome::Success)
+            .collect();
+        assert!(!successes.is_empty());
+    }
+
+    #[test]
+    fn test_validate_plugin_records_audit_on_rejection() {
+        let mut mgr = SecurityManager::new();
+        // Signatures enforced, unsigned not allowed (default)
+
+        let manifest = PluginCapabilityManifest {
+            name: "audit-rejected".to_string(),
+            version: "1.0.0".to_string(),
+            capabilities: HashSet::new(),
+            description: None,
+            plugin_type: PluginType::Wasm,
+            signature: SignatureStatus::Unsigned,
+        };
+        let _ = mgr.validate_plugin(manifest);
+
+        let denied: Vec<_> = mgr
+            .audit_log()
+            .entries()
+            .iter()
+            .filter(|e| e.outcome == audit_log::AuditOutcome::Denied)
+            .collect();
+        assert!(!denied.is_empty(), "rejected plugin must produce audit entry");
+    }
+
+    // --- File-system access control tests ---
+
+    #[test]
+    fn test_fs_access_no_policy_rejects() {
+        let mgr = SecurityManager::new();
+        let err = mgr.validate_fs_access(std::path::Path::new("anything.txt"));
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn test_fs_access_with_policy() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let config_dir = tmp.path().join("config");
+        std::fs::create_dir_all(&config_dir).unwrap();
+        let file = config_dir.join("profile.json");
+        std::fs::write(&file, b"{}").unwrap();
+
+        let mut mgr = SecurityManager::new();
+        mgr.set_fs_policy(FsAccessPolicy::new(&[config_dir]));
+
+        assert!(mgr.validate_fs_access(&file).is_ok());
+        assert!(mgr.validate_fs_access(tmp.path().join("other.txt").as_path()).is_err());
     }
 }
