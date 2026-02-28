@@ -47,6 +47,7 @@ pub mod injection;
 pub mod mapping;
 pub mod sanity_gate;
 pub mod session;
+pub mod simconnect_bridge;
 pub mod subscription;
 pub mod transport;
 pub mod var_registry;
@@ -87,4 +88,8 @@ pub use connection::{
 };
 pub use control_injection::{
     AxisId, ControlInjectorConfig, InjectionCommand, RateLimiter, SimControlInjector,
+};
+pub use simconnect_bridge::{
+    AircraftChanged, BackendError, BridgeConfig, DispatchMessage, MockSimConnectBackend,
+    SimConnectBackend, SimConnectBridge, VarSnapshot,
 };
