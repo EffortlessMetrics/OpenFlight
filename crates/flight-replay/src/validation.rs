@@ -561,10 +561,9 @@ mod tests {
     #[tokio::test]
     async fn test_validator_creation() {
         let config = ValidationConfig::default();
-        let validator = ReplayValidator::new(config);
+        let _validator = ReplayValidator::new(config);
 
         // Validator should be created successfully
-        assert!(true);
     }
 
     #[tokio::test]

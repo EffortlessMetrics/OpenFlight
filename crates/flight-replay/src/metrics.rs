@@ -365,7 +365,7 @@ mod tests {
         }
 
         let performance = metrics.get_performance_metrics();
-        assert_eq!(performance.frames_per_second > 0.0, true);
+        assert!(performance.frames_per_second > 0.0);
         assert!(performance.total_duration > Duration::from_secs(0));
     }
 
@@ -406,7 +406,7 @@ mod tests {
 
         // Record frames with some jitter
         let timestamps = [0, 4_100_000, 8_050_000, 12_200_000]; // Some timing variation
-        for (i, &timestamp) in timestamps.iter().enumerate() {
+        for &timestamp in timestamps.iter() {
             metrics.record_frame_processed(timestamp, 0.5, 2.0);
         }
 

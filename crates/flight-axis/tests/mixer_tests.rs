@@ -368,7 +368,6 @@ fn test_mixer_zero_allocation_constraint() {
     }
 
     // If we get here without panicking, no allocations occurred
-    assert!(true);
 }
 
 #[test]

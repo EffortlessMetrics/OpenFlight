@@ -501,7 +501,7 @@ mod tests {
         let led_target = LedTarget::Panel(target.to_string());
         let state = controller.get_led_state(&led_target);
         assert!(
-            state.map_or(false, |s| s.on),
+            state.is_some_and(|s| s.on),
             "LED should still be ON — immediate off write should be rate-limited"
         );
 
@@ -514,7 +514,7 @@ mod tests {
 
         let state = controller.get_led_state(&led_target);
         assert!(
-            state.map_or(false, |s| !s.on),
+            state.is_some_and(|s| !s.on),
             "LED should be OFF after min_interval has elapsed"
         );
     }

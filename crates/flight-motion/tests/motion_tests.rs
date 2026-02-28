@@ -35,8 +35,7 @@ fn test_neutral_snapshot_washes_out() {
 
 #[test]
 fn test_intensity_zero_always_neutral() {
-    let mut config = MotionConfig::default();
-    config.intensity = 0.0;
+    let config = MotionConfig { intensity: 0.0, ..Default::default() };
     let mut mapper = MotionMapper::new(config, 1.0 / 60.0);
     let frame = mapper.process(&BusSnapshot::default());
     assert!(frame.is_neutral());

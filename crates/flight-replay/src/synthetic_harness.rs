@@ -390,9 +390,11 @@ mod tests {
 
     #[test]
     fn test_steady_flight_pattern() {
-        let mut config = SyntheticHarnessConfig::default();
-        config.pattern = TelemetryPattern::SteadyFlight;
-        config.duration = Duration::from_millis(100);
+        let config = SyntheticHarnessConfig {
+            pattern: TelemetryPattern::SteadyFlight,
+            duration: Duration::from_millis(100),
+            ..Default::default()
+        };
 
         let mut harness = SyntheticHarness::new(config).unwrap();
 
@@ -411,9 +413,11 @@ mod tests {
 
     #[test]
     fn test_gentle_bank_pattern() {
-        let mut config = SyntheticHarnessConfig::default();
-        config.pattern = TelemetryPattern::GentleBank;
-        config.duration = Duration::from_millis(100);
+        let config = SyntheticHarnessConfig {
+            pattern: TelemetryPattern::GentleBank,
+            duration: Duration::from_millis(100),
+            ..Default::default()
+        };
 
         let mut harness = SyntheticHarness::new(config).unwrap();
 
@@ -455,9 +459,11 @@ mod tests {
         ];
 
         for pattern in patterns {
-            let mut config = SyntheticHarnessConfig::default();
-            config.pattern = pattern;
-            config.duration = Duration::from_millis(50);
+            let config = SyntheticHarnessConfig {
+                pattern,
+                duration: Duration::from_millis(50),
+                ..Default::default()
+            };
 
             let mut harness = SyntheticHarness::new(config).unwrap();
 
@@ -481,11 +487,13 @@ mod tests {
 
     #[test]
     fn test_harness_results() {
-        let mut results = HarnessResults::default();
-        results.total_frames = 100;
-        results.success_count = 100;
-        results.error_count = 0;
-        results.duration = Duration::from_secs(1);
+        let results = HarnessResults {
+            total_frames: 100,
+            success_count: 100,
+            error_count: 0,
+            duration: Duration::from_secs(1),
+            ..Default::default()
+        };
 
         assert!(results.is_successful());
         assert_eq!(results.success_rate(), 1.0);

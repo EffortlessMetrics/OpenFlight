@@ -403,7 +403,7 @@ mod tests {
     #[test]
     fn test_mode_negotiator_creation() {
         let negotiator = ModeNegotiator::new();
-        assert_eq!(negotiator.policy().prefer_raw_torque, true);
+        assert!(negotiator.policy().prefer_raw_torque);
         assert_eq!(negotiator.policy().min_update_rate_hz, 250);
     }
 
@@ -417,7 +417,7 @@ mod tests {
         };
 
         let negotiator = ModeNegotiator::with_policy(policy.clone());
-        assert_eq!(negotiator.policy().prefer_raw_torque, false);
+        assert!(!negotiator.policy().prefer_raw_torque);
         assert_eq!(negotiator.policy().min_update_rate_hz, 500);
     }
 

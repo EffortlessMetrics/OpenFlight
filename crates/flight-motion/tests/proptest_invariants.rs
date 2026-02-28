@@ -227,7 +227,7 @@ proptest! {
         let frame = MotionFrame { surge, sway, heave, roll, pitch, yaw };
         let c = frame.clamped();
         for &v in &[c.surge, c.sway, c.heave, c.roll, c.pitch, c.yaw] {
-            prop_assert!(v >= -1.0 && v <= 1.0, "clamped value out of range: {v}");
+            prop_assert!((-1.0..=1.0).contains(&v), "clamped value out of range: {v}");
         }
     }
 
@@ -283,7 +283,7 @@ proptest! {
             .collect();
         prop_assert_eq!(values.len(), 6, "expected 6 SimTools channel values");
         for &v in &values {
-            prop_assert!(v >= -100 && v <= 100, "SimTools value {v} out of [-100, 100]");
+            prop_assert!((-100..=100).contains(&v), "SimTools value {v} out of [-100, 100]");
         }
     }
 
@@ -335,8 +335,7 @@ proptest! {
         snapshot.kinematics.pitch          = ValidatedAngle::new_degrees(pitch_deg).unwrap();
         snapshot.angular_rates.r           = yaw_rate;
 
-        let mut config = MotionConfig::default();
-        config.intensity = intensity;
+        let config = MotionConfig { intensity, ..Default::default() };
         let mut mapper = MotionMapper::new(config, 1.0 / 60.0);
 
         let frame = mapper.process(&snapshot);
@@ -368,8 +367,7 @@ proptest! {
         snapshot.kinematics.pitch          = ValidatedAngle::new_degrees(pitch_deg).unwrap();
         snapshot.angular_rates.r           = yaw_rate;
 
-        let mut config = MotionConfig::default();
-        config.intensity = intensity;
+        let config = MotionConfig { intensity, ..Default::default() };
         let mut mapper = MotionMapper::new(config, 1.0 / 60.0);
 
         for _ in 0..10 {
@@ -399,9 +397,8 @@ proptest! {
         snapshot.kinematics.g_lateral      = GForce::new(g_lat).unwrap();
         snapshot.kinematics.g_longitudinal = GForce::new(g_lon).unwrap();
 
-        let mut config = MotionConfig::default();
+        let mut config = MotionConfig { intensity, ..Default::default() };
         config.surge.enabled = false;
-        config.intensity = intensity;
         let mut mapper = MotionMapper::new(config, 1.0 / 60.0);
 
         let frame = mapper.process(&snapshot);
@@ -425,9 +422,7 @@ proptest! {
         snapshot.kinematics.bank = ValidatedAngle::new_degrees(bank_deg).unwrap();
 
         // Large max_angle_deg prevents saturation, isolating the sign relationship.
-        let mut base = MotionConfig::default();
-        base.intensity = intensity;
-        base.max_angle_deg = 360.0;
+        let mut base = MotionConfig { intensity, max_angle_deg: 360.0, ..Default::default() };
         base.roll.gain = 1.0;
         // Disable all other channels so only roll contributes.
         base.surge.enabled = false;

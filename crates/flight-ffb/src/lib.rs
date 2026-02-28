@@ -34,6 +34,7 @@ use std::time::{Duration, Instant};
 pub mod audio;
 pub mod blackbox;
 pub mod crosswind;
+pub mod device;
 pub mod device_health;
 pub mod dinput_backend;
 #[cfg(windows)]
@@ -62,6 +63,8 @@ pub mod safety_envelope;
 pub mod safety_envelope_integration_tests;
 pub mod safety_interlock;
 #[cfg(test)]
+pub mod safety_tests;
+#[cfg(test)]
 pub mod safety_threshold_validation;
 pub mod soft_stop;
 pub mod telemetry_synth;
@@ -81,6 +84,7 @@ mod tests;
 pub use audio::*;
 pub use blackbox::*;
 pub use crosswind::*;
+pub use device::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;

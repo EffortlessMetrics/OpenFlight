@@ -252,7 +252,6 @@ fn test_zero_allocation_constraint_validation() {
     }
 
     // If we get here without panicking, no allocations occurred
-    assert!(true);
 }
 
 #[test]
