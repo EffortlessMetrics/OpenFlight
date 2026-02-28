@@ -48,9 +48,9 @@ fn parse_first_data_record(pkt: &[u8]) -> (i32, [f32; 8]) {
         pkt[offset + 3],
     ]);
     let mut values = [0.0f32; 8];
-    for i in 0..8 {
+    for (i, val) in values.iter_mut().enumerate() {
         let o = offset + 4 + i * 4;
-        values[i] = f32::from_le_bytes([pkt[o], pkt[o + 1], pkt[o + 2], pkt[o + 3]]);
+        *val = f32::from_le_bytes([pkt[o], pkt[o + 1], pkt[o + 2], pkt[o + 3]]);
     }
     (index, values)
 }

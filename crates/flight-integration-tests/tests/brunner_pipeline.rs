@@ -10,7 +10,7 @@
 
 use flight_bus::{
     BusPublisher, SubscriptionConfig,
-    snapshot::{BusSnapshot, ControlInputs},
+    snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
 use flight_hotas_brunner::{CLS_E_MIN_REPORT_BYTES, parse_cls_e_report};

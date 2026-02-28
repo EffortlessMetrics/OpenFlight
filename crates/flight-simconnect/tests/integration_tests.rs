@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Integration tests for MSFS SimConnect adapter
 //!
 //! These tests validate the adapter functionality using recorded session fixtures

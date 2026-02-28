@@ -51,7 +51,6 @@ mod tests {
 
     /// Test that service layer properly handles system resources
     #[cfg(unix)]
-    #[cfg(unix)]
     #[test]
     fn test_service_system_resource_safety() {
         // This test ensures that service layer implementations use proper
