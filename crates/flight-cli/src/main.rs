@@ -5,7 +5,6 @@
 
 #![allow(unused)]
 
-
 #[cfg(feature = "cli")]
 use clap::{Parser, Subcommand};
 #[cfg(feature = "cli")]

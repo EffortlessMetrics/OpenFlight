@@ -46,5 +46,4 @@ Feature: WinWing HOTAS HID parsing
     When parse_orion2_throttle_report is called
     Then a TooShort or similar error SHALL be returned and no panic SHALL occur
     And an empty buffer SHALL also return an error
-    And parse_f16ex_stick_report, parse_super_taurus_report, parse_skywalker_rudder_report,
-      parse_winwing_tfrp_report, and parse_ufc_panel_report SHALL all return errors for under-length buffers
+    And parse_f16ex_stick_report, parse_super_taurus_report, parse_skywalker_rudder_report, parse_winwing_tfrp_report, and parse_ufc_panel_report SHALL all return errors for under-length buffers
