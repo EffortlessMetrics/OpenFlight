@@ -135,8 +135,8 @@ pub struct AircraftAutoSwitchService {
     aircraft_switch_count: Arc<AtomicU64>,
     /// Milliseconds since UNIX epoch of the last successful aircraft detection.
     last_detection_time_ms: Arc<AtomicU64>,
-    /// Processing latency (ms) of the most recent aircraft detection call.
-    detection_latency_ms: Arc<AtomicU64>,
+    /// Processing latency (µs) of the most recent aircraft detection call.
+    detection_latency_us: Arc<AtomicU64>,
     /// Total adapter errors across all adapters.
     adapter_errors: Arc<AtomicU64>,
 }
@@ -222,8 +222,8 @@ pub struct ServiceMetrics {
     pub aircraft_switch_count: u64,
     /// Milliseconds since UNIX epoch of the last successful aircraft detection.
     pub last_detection_time_ms: u64,
-    /// Processing latency in ms of the most recent aircraft detection call.
-    pub detection_latency_ms: u64,
+    /// Processing latency in µs of the most recent aircraft detection call.
+    pub detection_latency_us: u64,
     /// Total adapter errors since service creation.
     pub adapter_errors: u64,
 }
@@ -316,7 +316,7 @@ impl AircraftAutoSwitchService {
             adapter_metrics: Arc::new(RwLock::new(HashMap::new())),
             aircraft_switch_count: Arc::new(AtomicU64::new(0)),
             last_detection_time_ms: Arc::new(AtomicU64::new(0)),
-            detection_latency_ms: Arc::new(AtomicU64::new(0)),
+            detection_latency_us: Arc::new(AtomicU64::new(0)),
             adapter_errors: Arc::new(AtomicU64::new(0)),
         }
     }
@@ -356,7 +356,7 @@ impl AircraftAutoSwitchService {
         let adapter_metrics = Arc::clone(&self.adapter_metrics);
         let aircraft_switch_count = Arc::clone(&self.aircraft_switch_count);
         let last_detection_time_ms = Arc::clone(&self.last_detection_time_ms);
-        let detection_latency_ms = Arc::clone(&self.detection_latency_ms);
+        let detection_latency_us = Arc::clone(&self.detection_latency_us);
         let adapter_errors = Arc::clone(&self.adapter_errors);
 
         tokio::spawn(async move {
@@ -457,8 +457,8 @@ impl AircraftAutoSwitchService {
                                 .unwrap_or_default()
                                 .as_millis() as u64;
                             last_detection_time_ms.store(now_ms, Ordering::Relaxed);
-                            detection_latency_ms
-                                .store(elapsed.as_millis() as u64, Ordering::Relaxed);
+                            detection_latency_us
+                                .store(elapsed.as_micros() as u64, Ordering::Relaxed);
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
@@ -550,7 +550,7 @@ impl AircraftAutoSwitchService {
             adapter_metrics,
             aircraft_switch_count: self.aircraft_switch_count.load(Ordering::Relaxed),
             last_detection_time_ms: self.last_detection_time_ms.load(Ordering::Relaxed),
-            detection_latency_ms: self.detection_latency_ms.load(Ordering::Relaxed),
+            detection_latency_us: self.detection_latency_us.load(Ordering::Relaxed),
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
         }
     }
@@ -563,10 +563,7 @@ impl AircraftAutoSwitchService {
     pub fn metrics(&self) -> AutoSwitchCounters {
         AutoSwitchCounters {
             aircraft_switches: self.aircraft_switch_count.load(Ordering::Relaxed),
-            detection_time_us: self
-                .detection_latency_ms
-                .load(Ordering::Relaxed)
-                .saturating_mul(1_000),
+            detection_time_us: self.detection_latency_us.load(Ordering::Relaxed),
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
         }
     }
@@ -1417,5 +1414,37 @@ mod tests {
         assert_eq!(states.len(), 2);
         assert_eq!(states[&BusSimId::Msfs], AdapterState::Running);
         assert_eq!(states[&BusSimId::Dcs], AdapterState::Error);
+    }
+
+    /// Atomic counters track switches, latency (in µs), and errors correctly.
+    #[tokio::test]
+    async fn test_atomic_counters_precision() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+
+        // Initial counters are zero
+        let c = service.metrics();
+        assert_eq!(c.aircraft_switches, 0);
+        assert_eq!(c.detection_time_us, 0);
+        assert_eq!(c.adapter_errors, 0);
+
+        // Simulate an aircraft detection with sub-ms latency
+        service.aircraft_switch_count.store(3, Ordering::Relaxed);
+        // Store 250 µs latency
+        service.detection_latency_us.store(250, Ordering::Relaxed);
+        service.adapter_errors.store(1, Ordering::Relaxed);
+
+        let c = service.metrics();
+        assert_eq!(c.aircraft_switches, 3);
+        assert_eq!(
+            c.detection_time_us, 250,
+            "sub-ms latency must be preserved in µs"
+        );
+        assert_eq!(c.adapter_errors, 1);
+
+        // Verify get_metrics reads the same values
+        let m = service.get_metrics().await;
+        assert_eq!(m.aircraft_switch_count, 3);
+        assert_eq!(m.detection_latency_us, 250);
+        assert_eq!(m.adapter_errors, 1);
     }
 }

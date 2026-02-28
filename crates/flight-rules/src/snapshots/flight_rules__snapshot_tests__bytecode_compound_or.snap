@@ -6,12 +6,11 @@ instructions:
   - LoadVar: 0
   - LoadConst: 0
   - Compare: NotEqual
-  - JumpFalse: 8
   - LoadVar: 1
   - LoadConst: 0
   - Compare: NotEqual
-  - And
-  - JumpFalse: 10
+  - Or
+  - JumpFalse: 9
   - Action: 0
 variable_map:
   flaps_extended: 1

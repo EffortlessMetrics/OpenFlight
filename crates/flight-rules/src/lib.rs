@@ -1258,7 +1258,38 @@ mod tests {
 #[cfg(test)]
 mod snapshot_tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
+
+    /// Deterministic projection of a `BytecodeProgram` for snapshot stability.
+    /// Uses `BTreeMap` so key order is independent of HashMap seed randomisation.
+    #[derive(Debug, serde::Serialize)]
+    struct StableBytecode {
+        instructions: Vec<BytecodeOp>,
+        variable_map: BTreeMap<String, u16>,
+        hysteresis_map: BTreeMap<String, u16>,
+        actions: Vec<Action>,
+        stack_size: usize,
+    }
+
+    impl From<&BytecodeProgram> for StableBytecode {
+        fn from(bc: &BytecodeProgram) -> Self {
+            Self {
+                instructions: bc.instructions.clone(),
+                variable_map: bc
+                    .variable_map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), *v))
+                    .collect(),
+                hysteresis_map: bc
+                    .hysteresis_map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), *v))
+                    .collect(),
+                actions: bc.actions.clone(),
+                stack_size: bc.stack_size,
+            }
+        }
+    }
 
     /// Snapshot the bytecode output for a gear-down panel rule.
     /// Fails if bytecode shape regresses across refactors.
@@ -1306,7 +1337,7 @@ mod snapshot_tests {
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![Rule {
-                when: "gear_down && flaps_extended".to_string(),
+                when: "gear_down and flaps_extended".to_string(),
                 do_action: "led.panel('LAND').on()".to_string(),
                 action: "led.panel('LAND').on()".to_string(),
             }],
@@ -1314,7 +1345,26 @@ mod snapshot_tests {
         };
 
         let compiled = rules.compile().expect("AND rule should compile");
-        insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_compound_and", stable);
+    }
+
+    /// Snapshot a compound OR condition.
+    #[test]
+    fn snapshot_bytecode_compound_or() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down or flaps_extended".to_string(),
+                do_action: "led.panel('LAND').on()".to_string(),
+                action: "led.panel('LAND').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("OR rule should compile");
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_compound_or", stable);
     }
 
     /// Snapshot the error message for a malformed condition (invalid number).

@@ -84,7 +84,8 @@ pub use one_click_resolver::{
 };
 pub use power::{PowerCheck, PowerCheckStatus, PowerChecker, PowerStatus, RemediationStep};
 pub use safe_mode::{
-    RtPrivilegeStatus, SafeModeConfig, SafeModeManager, SafeModeStatus, ValidationResult,
+    RtPrivilegeStatus, SafeModeConfig, SafeModeDiagnostic, SafeModeManager, SafeModeStatus,
+    ValidationResult,
 };
 pub use service::{FlightService, FlightServiceConfig, ServiceState, TFlightYawPolicyConfig};
 pub use stecs_runtime::{

@@ -80,6 +80,21 @@ pub struct ValidationResult {
     pub execution_time_ms: u64,
 }
 
+/// Diagnostic bundle produced when safe mode activates.
+///
+/// Captures *why* the service degraded and what the operator should look at.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SafeModeDiagnostic {
+    /// Human-readable explanation of why safe mode was entered.
+    pub reason: String,
+    /// Specific subsystems that triggered degradation.
+    pub failed_components: Vec<String>,
+    /// Recommended operator actions.
+    pub recommended_actions: Vec<String>,
+    /// Snapshot of the validation results at activation time.
+    pub validation_snapshot: Vec<ValidationResult>,
+}
+
 /// Safe mode manager
 pub struct SafeModeManager {
     config: SafeModeConfig,
@@ -612,7 +627,7 @@ impl SafeModeManager {
             "yaw".to_string(),
             AxisConfig {
                 deadzone: Some(0.05),
-                expo: Some(0.15),
+                expo: Some(0.1),
                 slew_rate: None,
                 detents: vec![],
                 curve: None,
@@ -671,6 +686,65 @@ impl SafeModeManager {
 
         info!("Safe mode shutdown completed");
         Ok(())
+    }
+
+    /// Build a diagnostic bundle explaining why safe mode was activated.
+    pub fn build_diagnostic(&self, results: &[ValidationResult]) -> SafeModeDiagnostic {
+        let failed: Vec<String> = results
+            .iter()
+            .filter(|r| !r.success)
+            .map(|r| r.component.clone())
+            .collect();
+
+        let reason = if failed.is_empty() {
+            "Safe mode activated by operator request (no component failures).".to_string()
+        } else {
+            format!(
+                "Safe mode activated because the following subsystems failed validation: {}",
+                failed.join(", ")
+            )
+        };
+
+        let mut recommended_actions: Vec<String> = Vec::new();
+        for r in results.iter().filter(|r| !r.success) {
+            match r.component.as_str() {
+                "Power Configuration" => {
+                    recommended_actions
+                        .push("Check power plan — switch to High Performance.".into());
+                }
+                "RT Privileges" => {
+                    recommended_actions.push(
+                        "Ensure RT privileges are available (run as admin or install rtkit)."
+                            .into(),
+                    );
+                }
+                "Axis Engine" => {
+                    recommended_actions
+                        .push("Check HID device connectivity and driver health.".into());
+                }
+                "Basic Profile" => {
+                    recommended_actions.push(
+                        "Profile validation failed — inspect profile JSON for errors.".into(),
+                    );
+                }
+                other => {
+                    recommended_actions.push(format!("Investigate {other} failure."));
+                }
+            }
+        }
+
+        if recommended_actions.is_empty() {
+            recommended_actions.push("No failures detected — safe mode can be exited.".into());
+        }
+
+        info!("Diagnostic bundle: {reason}");
+
+        SafeModeDiagnostic {
+            reason,
+            failed_components: failed,
+            recommended_actions,
+            validation_snapshot: results.to_vec(),
+        }
     }
 }
 
@@ -732,7 +806,7 @@ mod tests {
         // Yaw (rudder) — wider deadzone, less expo
         let yaw = &profile.axes["yaw"];
         assert_eq!(yaw.deadzone, Some(0.05));
-        assert_eq!(yaw.expo, Some(0.15));
+        assert_eq!(yaw.expo, Some(0.1));
 
         // Throttle — linear (no expo)
         let throttle = &profile.axes["throttle"];
@@ -752,5 +826,42 @@ mod tests {
         let _status = manager.initialize().await.unwrap();
         let result = manager.shutdown().await;
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_diagnostic_bundle_no_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![ValidationResult {
+            component: "Axis Engine".to_string(),
+            success: true,
+            message: "OK".to_string(),
+            execution_time_ms: 1,
+        }];
+        let diag = manager.build_diagnostic(&results);
+        assert!(diag.failed_components.is_empty());
+        assert!(diag.reason.contains("operator request"));
+    }
+
+    #[test]
+    fn test_diagnostic_bundle_with_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![
+            ValidationResult {
+                component: "RT Privileges".to_string(),
+                success: false,
+                message: "unavailable".to_string(),
+                execution_time_ms: 2,
+            },
+            ValidationResult {
+                component: "Axis Engine".to_string(),
+                success: true,
+                message: "OK".to_string(),
+                execution_time_ms: 1,
+            },
+        ];
+        let diag = manager.build_diagnostic(&results);
+        assert_eq!(diag.failed_components, vec!["RT Privileges"]);
+        assert!(diag.reason.contains("RT Privileges"));
+        assert!(!diag.recommended_actions.is_empty());
     }
 }

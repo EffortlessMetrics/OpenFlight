@@ -687,7 +687,7 @@ impl AircraftAutoSwitch {
         }
 
         // Load and compile profile
-        let compiled_profile = Self::load_and_compile_profile(
+        let (compiled_profile, cache_hit) = Self::load_and_compile_profile(
             &aircraft.aircraft_id,
             aircraft.sim,
             profile_cache,
@@ -699,6 +699,13 @@ impl AircraftAutoSwitch {
         let old_aircraft = {
             let mut state_guard = state.write().await;
             let old = state_guard.current_aircraft.clone();
+
+            // Track cache hit/miss
+            if cache_hit {
+                state_guard.metrics.cache_hits += 1;
+            } else {
+                state_guard.metrics.cache_misses += 1;
+            }
 
             // Check if aircraft ID changed (profile switch semantics: count only on ID change)
             let aircraft_id_changed = state_guard
@@ -837,8 +844,9 @@ impl AircraftAutoSwitch {
         sim: SimId,
         profile_cache: &Arc<RwLock<ProfileCache>>,
         config: &AutoSwitchConfig,
-    ) -> Result<CompiledProfile> {
+    ) -> Result<(CompiledProfile, bool)> {
         // Check cache first
+        let cache_hit;
         {
             let cache = profile_cache.read().await;
             if let Some(cached) = cache.profiles.get(aircraft_id)
@@ -846,9 +854,10 @@ impl AircraftAutoSwitch {
                 && timestamp.elapsed() < cache.cache_ttl
             {
                 debug!("Using cached profile for aircraft: {}", aircraft_id);
-                return Ok(cached.compiled.clone());
+                return Ok((cached.compiled.clone(), true));
             }
         }
+        cache_hit = false;
 
         // Load profile hierarchy: Global → Sim → Aircraft
         let profiles = Self::load_profile_hierarchy(aircraft_id, sim, config).await?;
@@ -883,7 +892,7 @@ impl AircraftAutoSwitch {
                 .insert(aircraft_id.clone(), Instant::now());
         }
 
-        Ok(compiled)
+        Ok((compiled, cache_hit))
     }
 
     /// Load profile hierarchy for aircraft.
@@ -2023,6 +2032,67 @@ async fn test_committed_switches_counter() {
     assert_eq!(
         metrics_after_force_same.committed_switches, 1,
         "Force switch to same aircraft should not increment counter"
+    );
+}
+
+#[tokio::test]
+async fn test_cache_hit_miss_tracking() {
+    let config = test_profile_repo();
+    let auto_switch = AircraftAutoSwitch::new(config);
+    auto_switch.start().await.unwrap();
+
+    let initial = auto_switch.get_metrics().await;
+    assert_eq!(initial.cache_hits, 0);
+    assert_eq!(initial.cache_misses, 0);
+
+    // First detection of C172 → cache miss
+    let aircraft1 = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("C172"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
+    auto_switch
+        .on_aircraft_detected(aircraft1.clone())
+        .await
+        .unwrap();
+
+    let mut misses = 0u64;
+    for _ in 0..20 {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        misses = auto_switch.get_metrics().await.cache_misses;
+        if misses > 0 {
+            break;
+        }
+    }
+    assert!(misses > 0, "first detection should record a cache miss");
+
+    // Switch to A320 → cache miss (new aircraft)
+    let aircraft2 = DetectedAircraft {
+        sim: SimId::Msfs,
+        aircraft_id: AircraftId::new("A320"),
+        process_name: "FlightSimulator.exe".to_string(),
+        detection_time: Instant::now(),
+        confidence: 0.9,
+    };
+    auto_switch.on_aircraft_detected(aircraft2).await.unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let after_second = auto_switch.get_metrics().await;
+    assert!(
+        after_second.cache_misses >= 2,
+        "second new aircraft should also be a cache miss"
+    );
+
+    // Switch back to C172 → should be cache hit (still in profile cache)
+    auto_switch.on_aircraft_detected(aircraft1).await.unwrap();
+    tokio::time::sleep(Duration::from_millis(100)).await;
+
+    let after_revisit = auto_switch.get_metrics().await;
+    assert!(
+        after_revisit.cache_hits > 0,
+        "revisiting a cached aircraft should record a cache hit"
     );
 }
 

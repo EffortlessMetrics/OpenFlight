@@ -133,8 +133,8 @@ async fn test_adapter_metrics_initial_state_is_zero() {
         "aircraft_switch_count must start at zero"
     );
     assert_eq!(
-        metrics.detection_latency_ms, 0,
-        "detection_latency_ms must start at zero"
+        metrics.detection_latency_us, 0,
+        "detection_latency_us must start at zero"
     );
 
     // Any pre-existing adapter entries (if any) must show zero errors.
