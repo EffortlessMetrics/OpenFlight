@@ -88,12 +88,12 @@ impl InputReport {
 
     /// Normalise the `x` axis to `[-1.0, 1.0]`.
     pub fn x_norm(&self) -> f32 {
-        self.x as f32 / 32767.0
+        (self.x as f32 / 32767.0).clamp(-1.0, 1.0)
     }
 
     /// Normalise the `y` axis to `[-1.0, 1.0]`.
     pub fn y_norm(&self) -> f32 {
-        self.y as f32 / 32767.0
+        (self.y as f32 / 32767.0).clamp(-1.0, 1.0)
     }
 
     /// Normalise the throttle to `[0.0, 1.0]`.

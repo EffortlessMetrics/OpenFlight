@@ -181,9 +181,9 @@ mod tests {
         fn axes_always_in_range(x in 0u16..=u16::MAX, y in 0u16..=u16::MAX, z in 0u16..=u16::MAX) {
             let r = make_report(x, y, z, 0, 0);
             let s = parse_fighterstick(&r).unwrap();
-            prop_assert!(normalize_axis(s.x) >= -1.0 && normalize_axis(s.x) <= 1.0);
-            prop_assert!(normalize_axis(s.y) >= -1.0 && normalize_axis(s.y) <= 1.0);
-            prop_assert!(normalize_axis(s.z) >= -1.0 && normalize_axis(s.z) <= 1.0);
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.x)));
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.y)));
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.z)));
         }
 
         #[test]

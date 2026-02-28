@@ -136,13 +136,13 @@ pub const G_FLIGHT_YOKE_AXIS_CENTER: f32 = 2047.5;
 /// Normalize a 12-bit centered axis (0..4095) to −1.0..=1.0.
 #[inline]
 fn normalize_12bit_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 2047.5) / 2047.5
+    ((raw as f32 - 2047.5) / 2047.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize an 8-bit unipolar axis (0..255) to 0.0..=1.0.
 #[inline]
 fn normalize_8bit_unipolar(raw: u8) -> f32 {
-    raw as f32 / 255.0
+    (raw as f32 / 255.0).clamp(0.0, 1.0)
 }
 
 /// Parse an 8-byte HID input report from the Logitech G Flight Yoke System.

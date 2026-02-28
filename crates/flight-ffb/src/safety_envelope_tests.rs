@@ -319,7 +319,7 @@ mod tests {
         // Check progress immediately after trigger
         let progress = envelope.get_fault_ramp_progress().unwrap();
         assert!(
-            progress >= 0.0 && progress <= 0.1,
+            (0.0..=0.1).contains(&progress),
             "Progress should be near 0 immediately after trigger: {}",
             progress
         );
@@ -330,7 +330,7 @@ mod tests {
 
         let progress = envelope.get_fault_ramp_progress().unwrap();
         assert!(
-            progress >= 0.4 && progress <= 0.6,
+            (0.4..=0.6).contains(&progress),
             "Progress should be around 0.5 after 25ms: {}",
             progress
         );

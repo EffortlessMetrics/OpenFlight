@@ -45,7 +45,7 @@ proptest! {
     fn prop_alpha_roll_in_range(roll in 0u16..=u16::MAX) {
         let state = parse_alpha_report(&make_alpha_report(roll, 2048, 0, 15)).unwrap();
         prop_assert!(
-            state.axes.roll >= -1.001 && state.axes.roll <= 1.001,
+            (-1.001..=1.001).contains(&state.axes.roll),
             "roll out of range: {}", state.axes.roll
         );
     }
@@ -55,7 +55,7 @@ proptest! {
     fn prop_alpha_pitch_in_range(pitch in 0u16..=u16::MAX) {
         let state = parse_alpha_report(&make_alpha_report(2048, pitch, 0, 15)).unwrap();
         prop_assert!(
-            state.axes.pitch >= -1.001 && state.axes.pitch <= 1.001,
+            (-1.001..=1.001).contains(&state.axes.pitch),
             "pitch out of range: {}", state.axes.pitch
         );
     }
@@ -121,13 +121,13 @@ proptest! {
         let state =
             parse_bravo_report(&make_bravo_report([t1, t2, t3, t4, t5, flap, spoiler], 0))
                 .unwrap();
-        prop_assert!(state.axes.throttle1  >= 0.0 && state.axes.throttle1  <= 1.0);
-        prop_assert!(state.axes.throttle2  >= 0.0 && state.axes.throttle2  <= 1.0);
-        prop_assert!(state.axes.throttle3  >= 0.0 && state.axes.throttle3  <= 1.0);
-        prop_assert!(state.axes.throttle4  >= 0.0 && state.axes.throttle4  <= 1.0);
-        prop_assert!(state.axes.throttle5  >= 0.0 && state.axes.throttle5  <= 1.0);
-        prop_assert!(state.axes.flap_lever >= 0.0 && state.axes.flap_lever <= 1.0);
-        prop_assert!(state.axes.spoiler    >= 0.0 && state.axes.spoiler    <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle1));
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle2));
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle3));
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle4));
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle5));
+        prop_assert!((0.0..=1.0).contains(&state.axes.flap_lever));
+        prop_assert!((0.0..=1.0).contains(&state.axes.spoiler));
     }
 
     /// All Bravo axes are always finite (no NaN or Inf).

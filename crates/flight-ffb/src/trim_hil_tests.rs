@@ -438,7 +438,7 @@ impl HilTrimTestSuite {
             // Validate freeze timing (should be 100ms + ramp time)
             let timing_valid = if let Some(duration) = freeze_duration {
                 let duration_ms = duration.as_millis();
-                duration_ms >= 50 && duration_ms <= 500 // Reasonable range
+                (50..=500).contains(&duration_ms) // Reasonable range
             } else {
                 false
             };

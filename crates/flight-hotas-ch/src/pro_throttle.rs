@@ -142,7 +142,7 @@ mod tests {
         #[test]
         fn throttle_always_in_range(raw in 0u16..=u16::MAX) {
             let n = normalize_throttle(raw);
-            prop_assert!(n >= 0.0 && n <= 1.0);
+            prop_assert!((0.0..=1.0).contains(&n));
         }
 
         #[test]

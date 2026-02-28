@@ -1276,7 +1276,7 @@ mod trim_correctness_tests {
 
                 let progress_value = progress.unwrap();
                 assert!(
-                    progress_value >= 0.0 && progress_value <= 1.0,
+                    (0.0..=1.0).contains(&progress_value),
                     "Progress should be between 0 and 1: {}",
                     progress_value
                 );

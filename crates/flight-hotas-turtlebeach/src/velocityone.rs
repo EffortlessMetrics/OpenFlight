@@ -171,13 +171,13 @@ pub fn parse_rudder_report(bytes: &[u8]) -> Result<VelocityOneRudderReport, Turt
 /// Maps raw 0 → −1.0, 32767 ≈ 0.0, 65535 ≈ 1.0.
 #[inline]
 fn normalize_u16_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 32767.5) / 32767.5
+    ((raw as f32 - 32767.5) / 32767.5).clamp(-1.0, 1.0)
 }
 
 /// Normalise an 8-bit unsigned value to 0.0..=1.0.
 #[inline]
 fn normalize_u8_unipolar(raw: u8) -> f32 {
-    raw as f32 / 255.0
+    (raw as f32 / 255.0).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]
@@ -314,13 +314,13 @@ mod tests {
             bytes in proptest::collection::vec(any::<u8>(), 16..=64)
         ) {
             let r = parse_flightdeck_report(&bytes).unwrap();
-            prop_assert!(r.roll >= -1.0 && r.roll <= 1.0,
+            prop_assert!((-1.0..=1.0).contains(&r.roll),
                 "roll out of bounds: {}", r.roll);
-            prop_assert!(r.pitch >= -1.0 && r.pitch <= 1.0,
+            prop_assert!((-1.0..=1.0).contains(&r.pitch),
                 "pitch out of bounds: {}", r.pitch);
-            prop_assert!(r.throttle_left >= 0.0 && r.throttle_left <= 1.0,
+            prop_assert!((0.0..=1.0).contains(&r.throttle_left),
                 "throttle_left out of bounds: {}", r.throttle_left);
-            prop_assert!(r.throttle_right >= 0.0 && r.throttle_right <= 1.0,
+            prop_assert!((0.0..=1.0).contains(&r.throttle_right),
                 "throttle_right out of bounds: {}", r.throttle_right);
         }
 
@@ -329,11 +329,11 @@ mod tests {
             bytes in proptest::collection::vec(any::<u8>(), 8..=32)
         ) {
             let r = parse_rudder_report(&bytes).unwrap();
-            prop_assert!(r.rudder >= -1.0 && r.rudder <= 1.0,
+            prop_assert!((-1.0..=1.0).contains(&r.rudder),
                 "rudder out of bounds: {}", r.rudder);
-            prop_assert!(r.brake_left >= 0.0 && r.brake_left <= 1.0,
+            prop_assert!((0.0..=1.0).contains(&r.brake_left),
                 "brake_left out of bounds: {}", r.brake_left);
-            prop_assert!(r.brake_right >= 0.0 && r.brake_right <= 1.0,
+            prop_assert!((0.0..=1.0).contains(&r.brake_right),
                 "brake_right out of bounds: {}", r.brake_right);
         }
     }

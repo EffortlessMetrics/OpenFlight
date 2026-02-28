@@ -99,7 +99,7 @@ fn read_u16(data: &[u8], offset: usize) -> u16 {
 
 /// Normalise a signed 16-bit integer to the range \[−1.0, 1.0\].
 fn norm_i16(v: i16) -> f32 {
-    v as f32 / 32767.0
+    (v as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ mod tests {
         fn prop_rudder_always_in_range(raw: i16) {
             let s = parse_tfrp_report(&make_report(raw, 0, 0)).unwrap();
             prop_assert!(
-                s.axes.rudder >= -1.001 && s.axes.rudder <= 1.001,
+                (-1.001..=1.001).contains(&s.axes.rudder),
                 "rudder out of range: {}",
                 s.axes.rudder
             );
@@ -217,12 +217,12 @@ mod tests {
         fn prop_brakes_always_in_range(bl: u16, br: u16) {
             let s = parse_tfrp_report(&make_report(0, bl, br)).unwrap();
             prop_assert!(
-                s.axes.brake_left >= 0.0 && s.axes.brake_left <= 1.0,
+                (0.0..=1.0).contains(&s.axes.brake_left),
                 "left brake out of range: {}",
                 s.axes.brake_left
             );
             prop_assert!(
-                s.axes.brake_right >= 0.0 && s.axes.brake_right <= 1.0,
+                (0.0..=1.0).contains(&s.axes.brake_right),
                 "right brake out of range: {}",
                 s.axes.brake_right
             );

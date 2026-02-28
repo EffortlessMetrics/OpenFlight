@@ -156,13 +156,13 @@ pub enum CougarParseError {
 /// Normalize a centred u16 axis (0..65535) to −1.0..=1.0.
 #[inline]
 fn normalize_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 32767.5) / 32767.5
+    ((raw as f32 - 32767.5) / 32767.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize a unipolar u16 axis (0..65535) to 0.0..=1.0.
 #[inline]
 fn normalize_unipolar(raw: u16) -> f32 {
-    raw as f32 / 65535.0
+    (raw as f32 / 65535.0).clamp(0.0, 1.0)
 }
 
 // ─── Parser ──────────────────────────────────────────────────────────────────

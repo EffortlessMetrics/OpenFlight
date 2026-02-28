@@ -512,9 +512,7 @@ impl SafeModeManager {
         // 1. rtkit is available (can acquire RT via D-Bus without root), OR
         // 2. RLIMIT_RTPRIO is sufficient AND direct scheduling works, OR
         // 3. Direct scheduling works (CAP_SYS_NICE or root)
-        let rt_available = rtkit_available
-            || direct_sched_available
-            || (rlimit_sufficient && direct_sched_available);
+        let rt_available = rtkit_available || direct_sched_available || rlimit_sufficient;
 
         if !rt_available {
             warn!(

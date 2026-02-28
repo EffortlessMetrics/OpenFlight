@@ -583,7 +583,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.test_name, "test_validation");
-        assert!(result.score >= 0.0 && result.score <= 1.0);
+        assert!((0.0..=1.0).contains(&result.score));
     }
 
     #[tokio::test]

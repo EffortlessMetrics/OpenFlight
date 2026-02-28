@@ -261,14 +261,14 @@ mod tests {
             #[test]
             fn roll_within_bounds(raw in 0u16..=4095u16) {
                 let state = parse_alpha_report(&super::alpha_report(raw, 2048, 0, 15)).unwrap();
-                prop_assert!(state.axes.roll >= -1.001 && state.axes.roll <= 1.001,
+                prop_assert!((-1.001..=1.001).contains(&state.axes.roll),
                     "roll out of range: {}", state.axes.roll);
             }
 
             #[test]
             fn pitch_within_bounds(raw in 0u16..=4095u16) {
                 let state = parse_alpha_report(&super::alpha_report(2048, raw, 0, 15)).unwrap();
-                prop_assert!(state.axes.pitch >= -1.001 && state.axes.pitch <= 1.001,
+                prop_assert!((-1.001..=1.001).contains(&state.axes.pitch),
                     "pitch out of range: {}", state.axes.pitch);
             }
 

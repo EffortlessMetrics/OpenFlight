@@ -768,10 +768,10 @@ mod tests {
             assert_eq!(snapshot.tick_number, i + 1);
 
             // Verify values are in valid ranges
-            assert!(snapshot.pitch >= -1.0 && snapshot.pitch <= 1.0);
-            assert!(snapshot.roll >= -1.0 && snapshot.roll <= 1.0);
-            assert!(snapshot.yaw >= -1.0 && snapshot.yaw <= 1.0);
-            assert!(snapshot.throttle >= 0.0 && snapshot.throttle <= 1.0);
+            assert!((-1.0..=1.0).contains(&snapshot.pitch));
+            assert!((-1.0..=1.0).contains(&snapshot.roll));
+            assert!((-1.0..=1.0).contains(&snapshot.yaw));
+            assert!((0.0..=1.0).contains(&snapshot.throttle));
 
             // Verify no NaN/Inf
             assert!(!snapshot.has_nan_or_inf());
@@ -876,13 +876,13 @@ mod prop_tests {
                 let snapshot = generator.next_snapshot();
 
                 // All axis values should be in valid ranges
-                prop_assert!(snapshot.pitch >= -1.0 && snapshot.pitch <= 1.0,
+                prop_assert!((-1.0..=1.0).contains(&snapshot.pitch),
                     "pitch {} out of range", snapshot.pitch);
-                prop_assert!(snapshot.roll >= -1.0 && snapshot.roll <= 1.0,
+                prop_assert!((-1.0..=1.0).contains(&snapshot.roll),
                     "roll {} out of range", snapshot.roll);
-                prop_assert!(snapshot.yaw >= -1.0 && snapshot.yaw <= 1.0,
+                prop_assert!((-1.0..=1.0).contains(&snapshot.yaw),
                     "yaw {} out of range", snapshot.yaw);
-                prop_assert!(snapshot.throttle >= 0.0 && snapshot.throttle <= 1.0,
+                prop_assert!((0.0..=1.0).contains(&snapshot.throttle),
                     "throttle {} out of range", snapshot.throttle);
 
                 // No NaN or Inf values

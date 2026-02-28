@@ -423,10 +423,9 @@ impl PowerChecker {
         if let Ok(out) = Command::new("systemctl")
             .args(["is-active", "--quiet", "rtkit-daemon"])
             .output()
+            && out.status.success()
         {
-            if out.status.success() {
-                return true;
-            }
+            return true;
         }
         // Fall back: check if the daemon binary exists
         std::path::Path::new("/usr/lib/rtkit/rtkit-daemon").exists()
@@ -448,7 +447,7 @@ impl PowerChecker {
                 if r.rlim_cur == libc::RLIM_INFINITY {
                     return u64::MAX;
                 }
-                return r.rlim_cur as u64;
+                return r.rlim_cur;
             }
         }
         // Fallback: conservative default

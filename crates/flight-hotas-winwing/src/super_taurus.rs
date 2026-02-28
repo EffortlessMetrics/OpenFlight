@@ -128,7 +128,7 @@ fn read_u16(data: &[u8], offset: usize) -> u16 {
 
 /// Normalise a signed 16-bit integer to the range \[−1.0, 1.0\].
 fn norm_i16(v: i16) -> f32 {
-    v as f32 / 32767.0
+    (v as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ mod tests {
         fn prop_left_throttle_in_range(raw: u16) {
             let s = parse_super_taurus_report(&make_report(raw, 0)).unwrap();
             prop_assert!(
-                s.axes.throttle_left >= 0.0 && s.axes.throttle_left <= 1.0,
+                (0.0..=1.0).contains(&s.axes.throttle_left),
                 "left throttle out of range: {}",
                 s.axes.throttle_left
             );
@@ -249,7 +249,7 @@ mod tests {
         fn prop_right_throttle_in_range(raw: u16) {
             let s = parse_super_taurus_report(&make_report(0, raw)).unwrap();
             prop_assert!(
-                s.axes.throttle_right >= 0.0 && s.axes.throttle_right <= 1.0,
+                (0.0..=1.0).contains(&s.axes.throttle_right),
                 "right throttle out of range: {}",
                 s.axes.throttle_right
             );

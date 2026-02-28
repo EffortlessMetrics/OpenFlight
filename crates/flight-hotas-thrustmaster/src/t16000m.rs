@@ -125,7 +125,7 @@ fn norm_14bit_centered(raw: u16) -> f32 {
 /// Normalise a 16-bit raw axis value to 0.0 … 1.0 (unipolar).
 #[inline]
 fn norm_16bit_unipolar(raw: u16) -> f32 {
-    raw as f32 / u16::MAX as f32
+    (raw as f32 / u16::MAX as f32).clamp(0.0, 1.0)
 }
 
 /// Normalise a 16-bit raw axis value to −1.0 … 1.0 (centered, bipolar).
@@ -470,10 +470,10 @@ mod tests {
             ) {
                 let report = make_joystick_report(x, y, rz, slider, 0, 0x0F);
                 let state = parse_t16000m_report(&report).unwrap();
-                prop_assert!(state.axes.x >= -1.0 && state.axes.x <= 1.0);
-                prop_assert!(state.axes.y >= -1.0 && state.axes.y <= 1.0);
-                prop_assert!(state.axes.twist >= -1.0 && state.axes.twist <= 1.0);
-                prop_assert!(state.axes.throttle >= 0.0 && state.axes.throttle <= 1.0);
+                prop_assert!((-1.0..=1.0).contains(&state.axes.x));
+                prop_assert!((-1.0..=1.0).contains(&state.axes.y));
+                prop_assert!((-1.0..=1.0).contains(&state.axes.twist));
+                prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
             }
 
             #[test]
@@ -485,10 +485,10 @@ mod tests {
             ) {
                 let report = make_twcs_report(throttle, rx, ry, rz, 0);
                 let state = parse_twcs_report(&report).unwrap();
-                prop_assert!(state.axes.throttle >= 0.0 && state.axes.throttle <= 1.0);
-                prop_assert!(state.axes.mini_stick_x >= -1.0 && state.axes.mini_stick_x <= 1.0);
-                prop_assert!(state.axes.mini_stick_y >= -1.0 && state.axes.mini_stick_y <= 1.0);
-                prop_assert!(state.axes.rocker >= -1.0 && state.axes.rocker <= 1.0);
+                prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
+                prop_assert!((-1.0..=1.0).contains(&state.axes.mini_stick_x));
+                prop_assert!((-1.0..=1.0).contains(&state.axes.mini_stick_y));
+                prop_assert!((-1.0..=1.0).contains(&state.axes.rocker));
             }
 
             #[test]

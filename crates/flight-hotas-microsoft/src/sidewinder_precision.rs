@@ -108,17 +108,17 @@ pub const SIDEWINDER_P2_MIN_REPORT_BYTES: usize = 7;
 
 #[inline]
 fn normalize_10bit_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 511.5) / 511.5
+    ((raw as f32 - 511.5) / 511.5).clamp(-1.0, 1.0)
 }
 
 #[inline]
 fn normalize_8bit_bipolar(raw: u8) -> f32 {
-    (raw as f32 - 127.5) / 127.5
+    ((raw as f32 - 127.5) / 127.5).clamp(-1.0, 1.0)
 }
 
 #[inline]
 fn normalize_8bit_unipolar(raw: u8) -> f32 {
-    raw as f32 / 255.0
+    (raw as f32 / 255.0).clamp(0.0, 1.0)
 }
 
 /// Parse a 7-byte HID input report from a Microsoft SideWinder Precision 2.

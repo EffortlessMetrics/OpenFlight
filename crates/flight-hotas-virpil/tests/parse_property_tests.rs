@@ -176,11 +176,11 @@ proptest! {
     ) {
         let report = make_5ax_report([raw0, raw1, raw2, raw3, raw4], [0u8; 4]);
         let s = parse_warbrd_report(&report, WarBrdVariant::D).unwrap();
-        prop_assert!(s.inner.axes.x >= 0.0 && s.inner.axes.x <= 1.0);
-        prop_assert!(s.inner.axes.y >= 0.0 && s.inner.axes.y <= 1.0);
-        prop_assert!(s.inner.axes.z >= 0.0 && s.inner.axes.z <= 1.0);
-        prop_assert!(s.inner.axes.sz >= 0.0 && s.inner.axes.sz <= 1.0);
-        prop_assert!(s.inner.axes.sl >= 0.0 && s.inner.axes.sl <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&s.inner.axes.x));
+        prop_assert!((0.0..=1.0).contains(&s.inner.axes.y));
+        prop_assert!((0.0..=1.0).contains(&s.inner.axes.z));
+        prop_assert!((0.0..=1.0).contains(&s.inner.axes.sz));
+        prop_assert!((0.0..=1.0).contains(&s.inner.axes.sl));
     }
 
     /// Truncated reports always return a parse error.
@@ -263,11 +263,11 @@ proptest! {
     ) {
         let report = make_5ax_report([raw0, raw1, raw2, raw3, raw4], [0u8; 4]);
         let s = parse_alpha_prime_report(&report, AlphaPrimeVariant::Left).unwrap();
-        prop_assert!(s.axes.x >= 0.0 && s.axes.x <= 1.0);
-        prop_assert!(s.axes.y >= 0.0 && s.axes.y <= 1.0);
-        prop_assert!(s.axes.z >= 0.0 && s.axes.z <= 1.0);
-        prop_assert!(s.axes.sz >= 0.0 && s.axes.sz <= 1.0);
-        prop_assert!(s.axes.sl >= 0.0 && s.axes.sl <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&s.axes.x));
+        prop_assert!((0.0..=1.0).contains(&s.axes.y));
+        prop_assert!((0.0..=1.0).contains(&s.axes.z));
+        prop_assert!((0.0..=1.0).contains(&s.axes.sz));
+        prop_assert!((0.0..=1.0).contains(&s.axes.sl));
     }
 
     /// Truncated reports always return a parse error.
@@ -347,8 +347,8 @@ proptest! {
         let s = parse_panel2_report(&report).unwrap();
         let n1 = s.axes.a1_normalised();
         let n2 = s.axes.a2_normalised();
-        prop_assert!(n1 >= 0.0 && n1 <= 1.0, "a1_normalised={n1} out of range");
-        prop_assert!(n2 >= 0.0 && n2 <= 1.0, "a2_normalised={n2} out of range");
+        prop_assert!((0.0..=1.0).contains(&n1), "a1_normalised={n1} out of range");
+        prop_assert!((0.0..=1.0).contains(&n2), "a2_normalised={n2} out of range");
         prop_assert!(n1.is_finite(), "a1_normalised={n1} not finite");
         prop_assert!(n2.is_finite(), "a2_normalised={n2} not finite");
     }

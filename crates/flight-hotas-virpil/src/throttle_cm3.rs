@@ -260,12 +260,12 @@ mod tests {
         ) {
             let report = make_cm3_report([raw0, raw1, raw2, raw3, raw4, raw5], [0u8; 10]);
             let state = parse_cm3_throttle_report(&report).unwrap();
-            assert!(state.axes.left_throttle >= 0.0 && state.axes.left_throttle <= 1.0);
-            assert!(state.axes.right_throttle >= 0.0 && state.axes.right_throttle <= 1.0);
-            assert!(state.axes.flaps >= 0.0 && state.axes.flaps <= 1.0);
-            assert!(state.axes.scx >= 0.0 && state.axes.scx <= 1.0);
-            assert!(state.axes.scy >= 0.0 && state.axes.scy <= 1.0);
-            assert!(state.axes.slider >= 0.0 && state.axes.slider <= 1.0);
+            assert!((0.0..=1.0).contains(&state.axes.left_throttle));
+            assert!((0.0..=1.0).contains(&state.axes.right_throttle));
+            assert!((0.0..=1.0).contains(&state.axes.flaps));
+            assert!((0.0..=1.0).contains(&state.axes.scx));
+            assert!((0.0..=1.0).contains(&state.axes.scy));
+            assert!((0.0..=1.0).contains(&state.axes.slider));
         }
 
         #[test]

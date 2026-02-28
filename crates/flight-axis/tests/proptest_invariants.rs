@@ -58,7 +58,7 @@ proptest! {
         node.step(&mut frame);
 
         prop_assert!(
-            frame.out >= -1.0 && frame.out <= 1.0,
+            (-1.0..=1.0).contains(&frame.out),
             "expo curve output {} out of [-1, 1] for input={}, expo={}",
             frame.out, input, expo
         );
@@ -112,7 +112,7 @@ proptest! {
         let clamped = input.clamp(-1.0_f32, 1.0_f32);
 
         prop_assert!(
-            clamped >= -1.0 && clamped <= 1.0,
+            (-1.0..=1.0).contains(&clamped),
             "clamp({}) = {} exceeded bounds [-1.0, 1.0]",
             input, clamped
         );

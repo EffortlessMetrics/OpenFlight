@@ -970,7 +970,7 @@ mod tests {
 
         // Priority should be in valid range
         assert!(
-            rt.priority() >= 0 && rt.priority() <= 99,
+            (0..=99).contains(&rt.priority()),
             "Priority should be in valid range"
         );
 
@@ -1392,7 +1392,7 @@ mod property_tests {
 
             // Property: priority MUST be in valid range [0, 99]
             prop_assert!(
-                metrics.priority >= 0 && metrics.priority <= 99,
+                (0..=99).contains(&metrics.priority),
                 "Priority {} out of valid range [0, 99]",
                 metrics.priority
             );
@@ -1400,7 +1400,7 @@ mod property_tests {
             // Property: if RT is enabled, priority should be in RT range [1, 99]
             if metrics.rt_enabled {
                 prop_assert!(
-                    metrics.priority >= 1 && metrics.priority <= 99,
+                    (1..=99).contains(&metrics.priority),
                     "RT enabled but priority {} not in RT range [1, 99]",
                     metrics.priority
                 );
@@ -1501,7 +1501,7 @@ mod property_tests {
 
             // Property: priority is always in valid range regardless of input
             prop_assert!(
-                metrics.priority >= 0 && metrics.priority <= 99,
+                (0..=99).contains(&metrics.priority),
                 "Priority {} out of valid range [0, 99] for requested priority {}",
                 metrics.priority,
                 requested_priority
@@ -1950,7 +1950,7 @@ mod jitter_tests {
         // p99 should be close to max deviation (500μs = 500,000 ns)
         // With 5 samples, p99 index = (5 * 99) / 100 = 4, which is the max
         assert!(
-            stats.p99_ns >= 400_000 && stats.p99_ns <= 600_000,
+            (400_000..=600_000).contains(&stats.p99_ns),
             "p99 should be around 500μs, got {} ns",
             stats.p99_ns
         );
@@ -1976,7 +1976,7 @@ mod jitter_tests {
         // Should have ~49 samples (300 - 250 warmup - 1 baseline)
         // The first tick after warmup establishes the new baseline
         assert!(
-            stats.samples >= 48 && stats.samples <= 50,
+            (48..=50).contains(&stats.samples),
             "Expected ~49 samples after warmup, got {}",
             stats.samples
         );

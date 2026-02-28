@@ -144,9 +144,9 @@ mod tests {
         fn axes_always_in_range(rz in 0u16..=u16::MAX, z in 0u16..=u16::MAX, rx in 0u16..=u16::MAX) {
             let report = make_tfrp_report(rz, z, rx);
             let state = parse_tfrp_report(&report).unwrap();
-            assert!(state.axes.rudder >= 0.0 && state.axes.rudder <= 1.0);
-            assert!(state.axes.right_pedal >= 0.0 && state.axes.right_pedal <= 1.0);
-            assert!(state.axes.left_pedal >= 0.0 && state.axes.left_pedal <= 1.0);
+            assert!((0.0..=1.0).contains(&state.axes.rudder));
+            assert!((0.0..=1.0).contains(&state.axes.right_pedal));
+            assert!((0.0..=1.0).contains(&state.axes.left_pedal));
         }
 
         #[test]

@@ -348,7 +348,7 @@ fn test_conditional_60hz_target() {
     // This is enforced through the publish_rate configuration
     let min_interval = Duration::from_secs_f32(1.0 / config.publish_rate);
     // ~16.67ms for 60 Hz (allow for floating point precision)
-    assert!(min_interval.as_millis() >= 16 && min_interval.as_millis() <= 17);
+    assert!((16..=17).contains(&min_interval.as_millis()));
 }
 
 /// Test aircraft change detection via TITLE SimVar

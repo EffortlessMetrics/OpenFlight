@@ -51,7 +51,7 @@ proptest! {
     fn prop_deadzone_always_in_valid_range(idx in 0usize..6) {
         let preset = recommended_preset(all_models()[idx]);
         prop_assert!(
-            preset.deadzone >= 0.0 && preset.deadzone <= 0.1,
+            (0.0..=0.1).contains(&preset.deadzone),
             "deadzone {:.4} outside [0.0, 0.1] for {:?}",
             preset.deadzone,
             preset.device,
@@ -63,7 +63,7 @@ proptest! {
     fn prop_expo_always_in_valid_range(idx in 0usize..6) {
         let preset = recommended_preset(all_models()[idx]);
         prop_assert!(
-            preset.expo >= 0.0 && preset.expo <= 0.5,
+            (0.0..=0.5).contains(&preset.expo),
             "expo {:.4} outside [0.0, 0.5] for {:?}",
             preset.expo,
             preset.device,

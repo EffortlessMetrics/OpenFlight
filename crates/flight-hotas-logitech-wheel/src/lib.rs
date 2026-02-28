@@ -40,7 +40,7 @@ pub enum WheelError {
 /// `32768` maps to approximately `0.0` (center).
 #[inline]
 pub fn normalize_wheel(raw: u16) -> f32 {
-    (raw as f32 - 32767.5) / 32767.5
+    ((raw as f32 - 32767.5) / 32767.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize a 16-bit pedal axis (0–65535) to 0.0..=1.0.
@@ -48,5 +48,5 @@ pub fn normalize_wheel(raw: u16) -> f32 {
 /// `0` = fully released, `65535` = fully depressed.
 #[inline]
 pub fn normalize_pedal(raw: u16) -> f32 {
-    raw as f32 / 65535.0
+    (raw as f32 / 65535.0).clamp(0.0, 1.0)
 }

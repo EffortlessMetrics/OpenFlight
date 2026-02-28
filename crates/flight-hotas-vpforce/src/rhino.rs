@@ -277,12 +277,12 @@ mod tests {
         ) {
             let r = make_report([roll, pitch, z, rx, ry, rz], 0, 0xFF);
             let state = parse_rhino_report(&r).unwrap();
-            prop_assert!(state.axes.roll >= -1.0 && state.axes.roll <= 1.0);
-            prop_assert!(state.axes.pitch >= -1.0 && state.axes.pitch <= 1.0);
-            prop_assert!(state.axes.throttle >= 0.0 && state.axes.throttle <= 1.0);
-            prop_assert!(state.axes.rocker >= -1.0 && state.axes.rocker <= 1.0);
-            prop_assert!(state.axes.twist >= -1.0 && state.axes.twist <= 1.0);
-            prop_assert!(state.axes.ry >= -1.0 && state.axes.ry <= 1.0);
+            prop_assert!((-1.0..=1.0).contains(&state.axes.roll));
+            prop_assert!((-1.0..=1.0).contains(&state.axes.pitch));
+            prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
+            prop_assert!((-1.0..=1.0).contains(&state.axes.rocker));
+            prop_assert!((-1.0..=1.0).contains(&state.axes.twist));
+            prop_assert!((-1.0..=1.0).contains(&state.axes.ry));
         }
 
         #[test]

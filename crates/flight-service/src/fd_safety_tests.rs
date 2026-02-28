@@ -32,7 +32,7 @@ mod tests {
         let _ = (
             example_service_function_with_owned_fd,
             example_service_function_with_borrowed_fd,
-            example_service_function_with_as_fd,
+            example_service_function_with_as_fd::<OwnedFd>,
         );
     }
 

@@ -273,9 +273,9 @@ mod tests {
         fn axes_always_in_range(roll in i16::MIN..=i16::MAX, pitch in i16::MIN..=i16::MAX) {
             let report = make_report(roll, pitch, [0u8; 4]);
             let state = parse_cls_e_report(&report).unwrap();
-            prop_assert!(state.axes.roll >= -1.0 && state.axes.roll <= 1.0,
+            prop_assert!((-1.0..=1.0).contains(&state.axes.roll),
                 "roll={} out of range for raw={}", state.axes.roll, roll);
-            prop_assert!(state.axes.pitch >= -1.0 && state.axes.pitch <= 1.0,
+            prop_assert!((-1.0..=1.0).contains(&state.axes.pitch),
                 "pitch={} out of range for raw={}", state.axes.pitch, pitch);
         }
 

@@ -48,7 +48,7 @@ fuzz_target!(|data: &[u8]| {
 
     // Invariant: output must always be in [-1.0, 1.0].
     assert!(
-        output >= -1.0 && output <= 1.0,
+        (-1.0..=1.0).contains(&output),
         "Pipeline output {output} out of bounds for raw={raw_u16} alpha={alpha} max_rate={max_rate} trim={trim_offset}"
     );
 });
