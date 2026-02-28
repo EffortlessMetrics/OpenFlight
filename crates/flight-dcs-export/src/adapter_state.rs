@@ -17,6 +17,8 @@ pub enum DcsAdapterState {
     Disconnected,
     /// Socket bound, waiting for DCS Export.lua connection.
     Connecting,
+    /// Socket ready and actively listening for incoming DCS data.
+    Listening,
     /// Handshake completed, waiting for first telemetry.
     Connected,
     /// Receiving valid telemetry from DCS.
@@ -32,6 +34,7 @@ impl std::fmt::Display for DcsAdapterState {
         match self {
             DcsAdapterState::Disconnected => write!(f, "Disconnected"),
             DcsAdapterState::Connecting => write!(f, "Connecting"),
+            DcsAdapterState::Listening => write!(f, "Listening"),
             DcsAdapterState::Connected => write!(f, "Connected"),
             DcsAdapterState::Active => write!(f, "Active"),
             DcsAdapterState::Stale => write!(f, "Stale"),
@@ -45,12 +48,16 @@ impl std::fmt::Display for DcsAdapterState {
 pub enum DcsAdapterEvent {
     /// TCP/UDP socket successfully bound and listening.
     SocketBound,
+    /// Socket is ready and actively listening for incoming data (UDP).
+    ListeningStarted,
     /// DCS Export.lua handshake completed successfully.
     HandshakeCompleted,
     /// Valid telemetry packet received from DCS.
     TelemetryReceived,
     /// No telemetry within the stale threshold.
     TelemetryTimeout,
+    /// Stale count exceeded `max_stale_before_disconnect`.
+    StaleExhausted,
     /// Socket-level or connection error.
     ConnectionError(String),
     /// DCS process exited or Export.lua disconnected.
@@ -82,6 +89,7 @@ pub struct DcsAdapterStateMachine {
     error_count: u32,
     max_retries: u32,
     consecutive_stale_count: u32,
+    max_stale_before_disconnect: u32,
     reconnect_delay: Duration,
     base_reconnect_delay: Duration,
     max_reconnect_delay: Duration,
@@ -97,10 +105,27 @@ impl DcsAdapterStateMachine {
             error_count: 0,
             max_retries,
             consecutive_stale_count: 0,
+            max_stale_before_disconnect: 10,
             reconnect_delay: Duration::from_secs(1),
             base_reconnect_delay: Duration::from_secs(1),
             max_reconnect_delay: Duration::from_secs(30),
         }
+    }
+
+    /// Create with a custom `max_stale_before_disconnect` threshold.
+    pub fn with_max_stale(mut self, max_stale: u32) -> Self {
+        self.max_stale_before_disconnect = max_stale;
+        self
+    }
+
+    /// Maximum consecutive stale timeouts before auto-disconnect.
+    pub fn max_stale_before_disconnect(&self) -> u32 {
+        self.max_stale_before_disconnect
+    }
+
+    /// Whether the stale count has reached the disconnect threshold.
+    pub fn is_stale_exhausted(&self) -> bool {
+        self.consecutive_stale_count >= self.max_stale_before_disconnect
     }
 
     /// Current state.
@@ -197,13 +222,30 @@ impl DcsAdapterStateMachine {
             }
 
             // DcsDisconnected from connected states → Disconnected
-            (Connected | Active | Stale, DcsDisconnected) => {
+            (Listening | Connected | Active | Stale, DcsDisconnected) => {
                 self.consecutive_stale_count = 0;
                 Disconnected
             }
 
             // Disconnected → Connecting (socket bound)
             (Disconnected, SocketBound) => Connecting,
+
+            // Connecting → Listening (UDP socket ready, waiting for data)
+            (Connecting, ListeningStarted) => Listening,
+
+            // Listening → Connected (handshake done via TCP or identified protocol)
+            (Listening, HandshakeCompleted) => {
+                self.consecutive_stale_count = 0;
+                Connected
+            }
+
+            // Listening → Active (UDP shortcut: first telemetry without handshake)
+            (Listening, TelemetryReceived) => {
+                self.error_count = 0;
+                self.consecutive_stale_count = 0;
+                self.reconnect_delay = self.base_reconnect_delay;
+                Active
+            }
 
             // Connecting → Connected (handshake done)
             (Connecting, HandshakeCompleted) => {
@@ -240,6 +282,12 @@ impl DcsAdapterStateMachine {
                 self.consecutive_stale_count = 0;
                 self.reconnect_delay = self.base_reconnect_delay;
                 Active
+            }
+
+            // Stale → Disconnected (stale count exhausted)
+            (Stale, StaleExhausted) => {
+                self.consecutive_stale_count = 0;
+                Disconnected
             }
 
             // Error → Connecting (retry if allowed)
@@ -751,6 +799,7 @@ mod tests {
     fn display_all_states() {
         assert_eq!(DcsAdapterState::Disconnected.to_string(), "Disconnected");
         assert_eq!(DcsAdapterState::Connecting.to_string(), "Connecting");
+        assert_eq!(DcsAdapterState::Listening.to_string(), "Listening");
         assert_eq!(DcsAdapterState::Connected.to_string(), "Connected");
         assert_eq!(DcsAdapterState::Active.to_string(), "Active");
         assert_eq!(DcsAdapterState::Stale.to_string(), "Stale");
@@ -765,5 +814,86 @@ mod tests {
         assert!(sm.reconnect_delay() > Duration::from_secs(1));
         sm.transition(DcsAdapterEvent::Shutdown).unwrap();
         assert_eq!(sm.reconnect_delay(), Duration::from_secs(1));
+    }
+
+    // --- Listening state transitions ---
+
+    #[test]
+    fn connecting_to_listening_on_listening_started() {
+        let mut sm = sm();
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        let next = sm.transition(DcsAdapterEvent::ListeningStarted).unwrap();
+        assert_eq!(next, DcsAdapterState::Listening);
+    }
+
+    #[test]
+    fn listening_to_connected_on_handshake() {
+        let mut sm = sm();
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        sm.transition(DcsAdapterEvent::ListeningStarted).unwrap();
+        let next = sm.transition(DcsAdapterEvent::HandshakeCompleted).unwrap();
+        assert_eq!(next, DcsAdapterState::Connected);
+    }
+
+    #[test]
+    fn listening_to_active_on_telemetry_udp_shortcut() {
+        let mut sm = sm();
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        sm.transition(DcsAdapterEvent::ListeningStarted).unwrap();
+        let next = sm.transition(DcsAdapterEvent::TelemetryReceived).unwrap();
+        assert_eq!(next, DcsAdapterState::Active);
+        assert_eq!(sm.error_count(), 0);
+    }
+
+    #[test]
+    fn listening_to_disconnected_on_dcs_disconnect() {
+        let mut sm = sm();
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        sm.transition(DcsAdapterEvent::ListeningStarted).unwrap();
+        let next = sm.transition(DcsAdapterEvent::DcsDisconnected).unwrap();
+        assert_eq!(next, DcsAdapterState::Disconnected);
+    }
+
+    #[test]
+    fn display_listening_state() {
+        assert_eq!(DcsAdapterState::Listening.to_string(), "Listening");
+    }
+
+    // --- Stale exhaustion ---
+
+    #[test]
+    fn stale_to_disconnected_on_stale_exhausted() {
+        let mut sm = sm();
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        sm.transition(DcsAdapterEvent::HandshakeCompleted).unwrap();
+        sm.transition(DcsAdapterEvent::TelemetryReceived).unwrap();
+        sm.transition(DcsAdapterEvent::TelemetryTimeout).unwrap();
+        let next = sm.transition(DcsAdapterEvent::StaleExhausted).unwrap();
+        assert_eq!(next, DcsAdapterState::Disconnected);
+        assert_eq!(sm.consecutive_stale_count(), 0);
+    }
+
+    #[test]
+    fn is_stale_exhausted_false_initially() {
+        let sm = sm();
+        assert!(!sm.is_stale_exhausted());
+    }
+
+    #[test]
+    fn is_stale_exhausted_after_max_stale() {
+        let mut sm = DcsAdapterStateMachine::new(2000, 3).with_max_stale(2);
+        sm.transition(DcsAdapterEvent::SocketBound).unwrap();
+        sm.transition(DcsAdapterEvent::HandshakeCompleted).unwrap();
+        sm.transition(DcsAdapterEvent::TelemetryReceived).unwrap();
+        sm.transition(DcsAdapterEvent::TelemetryTimeout).unwrap();
+        assert!(!sm.is_stale_exhausted());
+        sm.transition(DcsAdapterEvent::TelemetryTimeout).unwrap();
+        assert!(sm.is_stale_exhausted());
+    }
+
+    #[test]
+    fn with_max_stale_configures_threshold() {
+        let sm = DcsAdapterStateMachine::new(2000, 3).with_max_stale(5);
+        assert_eq!(sm.max_stale_before_disconnect(), 5);
     }
 }

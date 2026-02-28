@@ -776,6 +776,120 @@ mod tests {
             }
         }
 
+        // Prop: profile merge is associative: merge(merge(a,b), c) == merge(a, merge(b,c))
+        #[test]
+        fn prop_merge_associative(
+            dz_a in 0.0f32..0.5,
+            dz_b in 0.0f32..0.5,
+            dz_c in 0.0f32..0.5,
+            expo_a in 0.0f32..1.0,
+            expo_b in 0.0f32..1.0,
+            expo_c in 0.0f32..1.0,
+        ) {
+            let mk = |name: &str, dz: f32, expo: f32| -> Profile {
+                let mut axes = HashMap::new();
+                axes.insert(
+                    name.to_string(),
+                    AxisConfig {
+                        deadzone: Some(dz),
+                        expo: Some(expo),
+                        slew_rate: None,
+                        detents: vec![],
+                        curve: None,
+                        filter: None,
+                    },
+                );
+                Profile {
+                    schema: PROFILE_SCHEMA_VERSION.to_string(),
+                    sim: Some("msfs".to_string()),
+                    aircraft: None,
+                    axes,
+                    pof_overrides: None,
+                }
+            };
+            let a = mk("pitch", dz_a, expo_a);
+            let b = mk("pitch", dz_b, expo_b);
+            let c = mk("pitch", dz_c, expo_c);
+
+            let ab_c = a.merge_with(&b).unwrap().merge_with(&c).unwrap();
+            let a_bc = a.merge_with(&b.merge_with(&c).unwrap()).unwrap();
+            prop_assert_eq!(ab_c, a_bc, "merge is not associative");
+        }
+
+        // Prop: merged profile has at least as many axes as the base
+        #[test]
+        fn prop_merge_preserves_base_axes(
+            dz in 0.0f32..0.5,
+            expo in 0.0f32..1.0,
+        ) {
+            let mut base_axes = HashMap::new();
+            base_axes.insert("pitch".to_string(), AxisConfig {
+                deadzone: Some(dz), expo: Some(expo), slew_rate: None,
+                detents: vec![], curve: None, filter: None,
+            });
+            base_axes.insert("roll".to_string(), AxisConfig {
+                deadzone: Some(dz), expo: Some(expo), slew_rate: None,
+                detents: vec![], curve: None, filter: None,
+            });
+            let base = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None, aircraft: None, axes: base_axes, pof_overrides: None,
+            };
+            let override_p = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None, aircraft: None, axes: HashMap::new(), pof_overrides: None,
+            };
+            let merged = base.merge_with(&override_p).unwrap();
+            prop_assert!(
+                merged.axes.len() >= base.axes.len(),
+                "merged has {} axes, base has {}",
+                merged.axes.len(), base.axes.len()
+            );
+        }
+
+        // Prop: serialization round-trip preserves equality (via export_json)
+        #[test]
+        fn prop_serialization_roundtrip(
+            deadzone in 0.0f32..0.5,
+            expo in 0.0f32..1.0,
+            slew_rate in 0.0f32..100.0,
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert("pitch".to_string(), AxisConfig {
+                deadzone: Some(deadzone), expo: Some(expo),
+                slew_rate: Some(slew_rate), detents: vec![], curve: None, filter: None,
+            });
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: Some("msfs".to_string()),
+                aircraft: Some(AircraftId { icao: "C172".to_string() }),
+                axes, pof_overrides: None,
+            };
+            let json = profile.export_json().unwrap();
+            let restored: Profile = serde_json::from_str(&json).unwrap();
+            prop_assert_eq!(profile, restored, "serialization round-trip failed");
+        }
+
+        // Prop: validation never panics on arbitrary f32 inputs
+        #[test]
+        fn prop_validation_never_panics(
+            dz in proptest::num::f32::ANY,
+            expo in proptest::num::f32::ANY,
+            slew in proptest::num::f32::ANY,
+        ) {
+            let mut axes = HashMap::new();
+            axes.insert("test".to_string(), AxisConfig {
+                deadzone: Some(dz), expo: Some(expo),
+                slew_rate: Some(slew), detents: vec![], curve: None, filter: None,
+            });
+            let profile = Profile {
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
+                sim: None, aircraft: None, axes, pof_overrides: None,
+            };
+            // Must not panic — either Ok or Err is fine
+            let _ = profile.validate();
+        }
+
         // Prop: any normal f32 expo that passes validation is within [0.0, 1.0]
         #[test]
         fn prop_expo_clamped_by_validation(e in proptest::num::f32::NORMAL) {

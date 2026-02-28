@@ -402,4 +402,52 @@ mod tests {
         assert_eq!(ErrorCategory::Device.to_string(), "Device");
         assert_eq!(ErrorCategory::Config.to_string(), "Configuration");
     }
+
+    // ── Property-based tests ──────────────────────────────────────────────
+
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Error codes are unique (verified via random sampling of the catalog).
+        #[test]
+        fn prop_error_codes_unique(idx in 0usize..100) {
+            let all = ErrorCatalog::all();
+            if idx < all.len() {
+                let code = all[idx].code;
+                let count = all.iter().filter(|e| e.code == code).count();
+                prop_assert_eq!(count, 1, "duplicate error code: {}", code);
+            }
+        }
+
+        /// lookup() never panics for any string input.
+        #[test]
+        fn prop_lookup_never_panics(code in ".*") {
+            let _ = ErrorCatalog::lookup(&code);
+        }
+
+        /// format_error() never panics for any string input.
+        #[test]
+        fn prop_format_error_never_panics(code in ".*") {
+            let _ = ErrorCatalog::format_error(&code);
+        }
+
+        /// Every error in the catalog can be looked up by its own code.
+        #[test]
+        fn prop_catalog_self_consistent(idx in 0usize..100) {
+            let all = ErrorCatalog::all();
+            if idx < all.len() {
+                let info = &all[idx];
+                let looked_up = ErrorCatalog::lookup(info.code);
+                prop_assert!(
+                    looked_up.is_some(),
+                    "code {} not found via lookup",
+                    info.code
+                );
+                prop_assert_eq!(
+                    looked_up.unwrap().code, info.code,
+                    "lookup returned wrong code"
+                );
+            }
+        }
+    }
 }

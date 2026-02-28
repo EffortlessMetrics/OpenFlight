@@ -45,13 +45,22 @@ pub use aircraft_detection::{
 };
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
 pub use control_injection::{
-    DcsCommandDef, DcsControlCommand, DcsControlInjector, DcsDevice, DcsUdpSender,
+    AircraftAxisMapping, Clickable, DcsActionType, DcsCommandDef, DcsControlCommand,
+    DcsControlInjector, DcsDevice, DcsUdpSender, WireParseError, lookup_aircraft_axis,
+    parse_wire_command, parse_wire_payload,
 };
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use installer::{DcsInstaller, InstallResult, InstallStatus};
-pub use lua_bridge::{HookAction, LuaBridgeConfig, SnippetStatus};
+pub use lua_bridge::{
+    DcsInstance, HookAction, LuaBridgeConfig, MultiInstanceResult, SnippetIssue, SnippetStatus,
+    detect_dcs_instances, install_all_instances, remove_all_instances, validate_snippet,
+};
 pub use mission_state::{MissionPhase, MissionStateMachine, MissionTelemetry};
 pub use mp_detection::{MpSession, SessionType};
-pub use protocol::{DcsExportEntry, DcsFlightData, DcsTelemetryPacket, ParseError};
+pub use protocol::{
+    DcsExportEntry, DcsFlightData, DcsTelemetryPacket, DeviceArgEntry, InstrumentReading,
+    ParseError, dcs_to_ned, m_to_ft, ms_to_knots, parse_aircraft_type, parse_device_arg_block,
+    parse_instrument_block, rad_to_deg,
+};
 pub use socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};

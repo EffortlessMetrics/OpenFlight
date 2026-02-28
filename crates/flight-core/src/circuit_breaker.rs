@@ -337,4 +337,115 @@ mod tests {
         let cb = CircuitBreaker::new(default_config());
         assert!((cb.rejection_rate() - 0.0).abs() < f64::EPSILON);
     }
+
+    // ── Property-based tests ──────────────────────────────────────────────
+
+    use proptest::prelude::*;
+
+    /// Strategy for generating random circuit breaker event sequences.
+    fn event_strategy() -> impl Strategy<Value = Vec<u8>> {
+        proptest::collection::vec(0u8..3, 1..50)
+    }
+
+    proptest! {
+        /// State machine transitions never panic regardless of event sequence.
+        /// Events: 0 = call_allowed, 1 = record_success, 2 = record_failure.
+        #[test]
+        fn prop_circuit_breaker_never_panics(events in event_strategy()) {
+            let cfg = CircuitBreakerConfig {
+                failure_threshold: 3,
+                success_threshold: 2,
+                timeout: Duration::from_millis(1),
+            };
+            let mut cb = CircuitBreaker::new(cfg);
+            for event in events {
+                match event {
+                    0 => { let _ = cb.call_allowed(); }
+                    1 => cb.record_success(),
+                    _ => cb.record_failure(),
+                }
+            }
+            // State must always be a valid variant
+            let _ = cb.state();
+        }
+
+        /// State is always one of the three valid states after any sequence.
+        #[test]
+        fn prop_state_always_valid(events in event_strategy()) {
+            let cfg = CircuitBreakerConfig {
+                failure_threshold: 2,
+                success_threshold: 1,
+                timeout: Duration::from_millis(1),
+            };
+            let mut cb = CircuitBreaker::new(cfg);
+            for event in events {
+                match event {
+                    0 => { let _ = cb.call_allowed(); }
+                    1 => cb.record_success(),
+                    _ => cb.record_failure(),
+                }
+                let state = cb.state();
+                prop_assert!(
+                    state == CircuitState::Closed
+                        || state == CircuitState::Open
+                        || state == CircuitState::HalfOpen,
+                    "invalid state: {:?}", state
+                );
+            }
+        }
+
+        /// total_calls is monotonically non-decreasing and counts every call_allowed().
+        #[test]
+        fn prop_total_calls_monotonic(events in event_strategy()) {
+            let mut cb = CircuitBreaker::new(default_config());
+            let mut prev_total = 0u64;
+            for event in events {
+                match event {
+                    0 => { let _ = cb.call_allowed(); }
+                    1 => cb.record_success(),
+                    _ => cb.record_failure(),
+                }
+                prop_assert!(
+                    cb.total_calls() >= prev_total,
+                    "total_calls decreased: {} -> {}",
+                    prev_total, cb.total_calls()
+                );
+                prev_total = cb.total_calls();
+            }
+        }
+
+        /// rejection_rate is always in [0.0, 1.0].
+        #[test]
+        fn prop_rejection_rate_bounded(events in event_strategy()) {
+            let mut cb = CircuitBreaker::new(default_config());
+            for event in events {
+                match event {
+                    0 => { let _ = cb.call_allowed(); }
+                    1 => cb.record_success(),
+                    _ => cb.record_failure(),
+                }
+            }
+            let rate = cb.rejection_rate();
+            prop_assert!(
+                (0.0..=1.0).contains(&rate),
+                "rejection_rate {} out of [0.0, 1.0]", rate
+            );
+        }
+
+        /// reset() always returns to Closed state regardless of history.
+        #[test]
+        fn prop_reset_always_closes(events in event_strategy()) {
+            let mut cb = CircuitBreaker::new(default_config());
+            for event in events {
+                match event {
+                    0 => { let _ = cb.call_allowed(); }
+                    1 => cb.record_success(),
+                    _ => cb.record_failure(),
+                }
+            }
+            cb.reset();
+            prop_assert_eq!(cb.state(), CircuitState::Closed);
+            prop_assert_eq!(cb.failure_count(), 0);
+        }
+    }
 }

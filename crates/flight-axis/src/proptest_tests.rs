@@ -448,3 +448,138 @@ proptest! {
         );
     }
 }
+
+// ── Additional property tests: filter convergence, expo origin, deadzone non-zero ─
+
+use crate::smoothing::{AdaptiveEmaConfig, AdaptiveEmaSmoother, EmaFilter};
+
+proptest! {
+    // ── EmaFilter convergence ───────────────────────────────────────────────
+
+    /// EmaFilter output converges to constant input: after many iterations
+    /// of the same value, the filter output is within epsilon of that value.
+    #[test]
+    fn ema_filter_converges_to_constant_input(
+        alpha in 0.01f32..=1.0f32,
+        target in -1.0f32..=1.0f32,
+    ) {
+        let mut filter = EmaFilter::new(alpha);
+        for _ in 0..200 {
+            filter.apply(target);
+        }
+        prop_assert!(
+            (filter.state() - target).abs() < 1e-3,
+            "EmaFilter(alpha={}) did not converge to {}: state={}",
+            alpha, target, filter.state()
+        );
+    }
+
+    /// EmaFilter output is always bounded by min/max of inputs seen so far.
+    #[test]
+    fn ema_filter_output_bounded_by_inputs(
+        alpha in 0.0f32..=1.0f32,
+        v1 in -1.0f32..=1.0f32,
+        v2 in -1.0f32..=1.0f32,
+        v3 in -1.0f32..=1.0f32,
+    ) {
+        let mut filter = EmaFilter::new(alpha);
+        let inputs = [v1, v2, v3];
+        let lo = inputs.iter().copied().reduce(f32::min).unwrap();
+        let hi = inputs.iter().copied().reduce(f32::max).unwrap();
+        for &inp in &inputs {
+            let out = filter.apply(inp);
+            prop_assert!(
+                out >= lo - 1e-5 && out <= hi + 1e-5,
+                "EmaFilter output {} outside input range [{}, {}]",
+                out, lo, hi
+            );
+        }
+    }
+
+    // ── AdaptiveEmaSmoother convergence ─────────────────────────────────────
+
+    /// AdaptiveEmaSmoother converges to constant input after many iterations.
+    #[test]
+    fn adaptive_ema_converges_to_constant(
+        target in -1.0f32..=1.0f32,
+    ) {
+        let config = AdaptiveEmaConfig::default();
+        let mut smoother = AdaptiveEmaSmoother::new(config).unwrap();
+        for _ in 0..2000 {
+            smoother.process(target);
+        }
+        prop_assert!(
+            (smoother.current_output() - target).abs() < 1e-2,
+            "AdaptiveEma did not converge to {}: output={}",
+            target, smoother.current_output()
+        );
+    }
+
+    // ── Expo curves pass through origin ─────────────────────────────────────
+
+    /// ExpoCurveConfig always maps 0.0 → 0.0 (passes through origin).
+    #[test]
+    fn expo_passes_through_origin(
+        expo in -1.0f32..=1.0f32,
+    ) {
+        let cfg = ExpoCurveConfig::new(expo);
+        let out = cfg.apply(0.0);
+        prop_assert!(
+            out.abs() < 1e-6,
+            "expo(0.0) should be 0.0, got {} with expo={}",
+            out, expo
+        );
+    }
+
+    // ── Deadzone: non-zero outside range ────────────────────────────────────
+
+    /// DeadzoneProcessor produces non-zero output for inputs well outside the deadzone.
+    #[test]
+    fn deadzone_nonzero_outside_range(
+        threshold in 0.0f32..=0.4f32,
+        input in 0.5f32..=1.0f32,
+    ) {
+        prop_assume!(input > threshold + 0.05);
+        let cfg = DeadzoneConfig::center_only(threshold).unwrap();
+        let proc = DeadzoneProcessor::new(cfg);
+        let out = proc.apply(input);
+        prop_assert!(
+            out > 0.0,
+            "deadzone output should be positive for input={} > threshold={}, got {}",
+            input, threshold, out
+        );
+    }
+
+    /// DeadzoneProcessor produces non-zero negative output for large negative inputs.
+    #[test]
+    fn deadzone_nonzero_negative_outside_range(
+        threshold in 0.0f32..=0.4f32,
+        input in 0.5f32..=1.0f32,
+    ) {
+        prop_assume!(input > threshold + 0.05);
+        let cfg = DeadzoneConfig::center_only(threshold).unwrap();
+        let proc = DeadzoneProcessor::new(cfg);
+        let out = proc.apply(-input);
+        prop_assert!(
+            out < 0.0,
+            "deadzone output should be negative for input={} < -threshold={}, got {}",
+            -input, threshold, out
+        );
+    }
+
+    // ── ResponseCurve: linear identity ──────────────────────────────────────
+
+    /// ResponseCurve::linear_identity() is the identity for inputs in [0, 1].
+    #[test]
+    fn response_curve_linear_identity(
+        x in 0.0f32..=1.0f32,
+    ) {
+        let curve = ResponseCurve::linear_identity();
+        let y = curve.evaluate(x);
+        prop_assert!(
+            (y - x).abs() < 1e-4,
+            "linear_identity: evaluate({})={}, expected {}",
+            x, y, x
+        );
+    }
+}

@@ -99,6 +99,10 @@ pub struct SafeModeDiagnostic {
 pub struct SafeModeManager {
     config: SafeModeConfig,
     axis_engine: Option<Arc<AxisEngine>>,
+    /// Stored status from the last `initialize()` call.
+    last_status: Option<SafeModeStatus>,
+    /// Diagnostic bundle built during initialization.
+    last_diagnostic: Option<SafeModeDiagnostic>,
 }
 
 impl SafeModeManager {
@@ -109,6 +113,8 @@ impl SafeModeManager {
         Self {
             config,
             axis_engine: None,
+            last_status: None,
+            last_diagnostic: None,
         }
     }
 
@@ -207,6 +213,11 @@ impl SafeModeManager {
             rt_privileges,
             validation_results,
         };
+
+        // Build diagnostic bundle capturing *why* we entered safe mode.
+        let diagnostic = self.build_diagnostic(&status.validation_results);
+        self.last_diagnostic = Some(diagnostic);
+        self.last_status = Some(status.clone());
 
         info!("Safe mode initialization completed");
         Ok(status)
@@ -643,8 +654,15 @@ impl SafeModeManager {
         }
     }
 
-    /// Get current safe mode status
+    /// Get current safe mode status.
+    ///
+    /// Returns the status captured during `initialize()` if available,
+    /// otherwise returns a minimal placeholder status.
     pub fn get_status(&self) -> SafeModeStatus {
+        if let Some(status) = &self.last_status {
+            return status.clone();
+        }
+        // Fallback before initialize() has been called.
         SafeModeStatus {
             active: true,
             config: self.config.clone(),
@@ -660,6 +678,11 @@ impl SafeModeManager {
             },
             validation_results: Vec::new(),
         }
+    }
+
+    /// Return the diagnostic bundle built during initialization, if any.
+    pub fn get_diagnostic(&self) -> Option<&SafeModeDiagnostic> {
+        self.last_diagnostic.as_ref()
     }
 
     /// Shutdown safe mode
@@ -916,5 +939,47 @@ mod tests {
         assert!(diag.reason.contains("Basic Profile"));
         assert!(diag.recommended_actions.len() >= 2);
         assert_eq!(diag.validation_snapshot.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_status_returns_initialization_status() {
+        let mut manager = SafeModeManager::new(SafeModeConfig::default());
+        let status = manager.initialize().await.unwrap();
+        assert!(status.active);
+
+        // get_status() should now return the real captured status, not placeholders
+        let retrieved = manager.get_status();
+        assert!(retrieved.active);
+        assert!(!retrieved.validation_results.is_empty());
+        // RT Privileges validation should have been recorded
+        assert!(
+            retrieved
+                .validation_results
+                .iter()
+                .any(|r| r.component == "RT Privileges"),
+            "RT Privileges check should be in validation results"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_diagnostic_stored_during_init() {
+        let mut manager = SafeModeManager::new(SafeModeConfig::default());
+        // Before init, no diagnostic
+        assert!(manager.get_diagnostic().is_none());
+
+        let _status = manager.initialize().await.unwrap();
+        // After init, diagnostic should be present
+        let diag = manager.get_diagnostic().expect("diagnostic should be stored");
+        assert!(!diag.reason.is_empty());
+        assert!(!diag.recommended_actions.is_empty());
+    }
+
+    #[test]
+    fn test_get_status_before_init_returns_placeholder() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let status = manager.get_status();
+        assert!(status.active);
+        assert_eq!(status.rt_privileges.details, "Status not checked");
+        assert!(status.validation_results.is_empty());
     }
 }

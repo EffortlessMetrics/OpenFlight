@@ -567,4 +567,40 @@ mod tests {
         assert_eq!(publisher.drop_count(), 5);
         assert_eq!(publisher.stats().backpressure_drops, 5);
     }
+
+    // ── Property-based tests ──────────────────────────────────────────────
+
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Publishing to a publisher with no subscribers never panics.
+        #[test]
+        fn prop_publish_no_subscribers_never_panics(
+            rate in 30.0f32..=60.0f32,
+        ) {
+            let mut publisher = BusPublisher::new(rate);
+            let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+            // Must not panic regardless of rate
+            let _ = publisher.publish(snapshot);
+        }
+
+        /// Subscriber count is accurate after subscribing.
+        #[test]
+        fn prop_subscriber_count_accurate(
+            n in 1usize..=5usize,
+        ) {
+            let mut publisher = BusPublisher::new(60.0);
+            let mut subs = Vec::new();
+            for _ in 0..n {
+                subs.push(publisher.subscribe(SubscriptionConfig::default()).unwrap());
+            }
+            prop_assert_eq!(
+                publisher.subscriber_count(), n,
+                "expected {} subscribers, got {}",
+                n, publisher.subscriber_count()
+            );
+            // Keep subscribers alive for the assertion
+            drop(subs);
+        }
+    }
 }

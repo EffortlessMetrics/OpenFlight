@@ -389,6 +389,181 @@ pub fn export_lua_path(dcs_saved_games: &Path) -> PathBuf {
 }
 
 // ---------------------------------------------------------------------------
+// Multi-DCS-instance support
+// ---------------------------------------------------------------------------
+
+/// Known DCS installation variants, matching `export_lua::DcsVariant`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DcsInstance {
+    /// DCS World (stable release channel).
+    Stable,
+    /// DCS World OpenBeta.
+    OpenBeta,
+    /// DCS World OpenAlpha (rare, early-access builds).
+    OpenAlpha,
+}
+
+impl DcsInstance {
+    /// The saved-games folder name for this DCS variant.
+    pub fn saved_games_folder(&self) -> &'static str {
+        match self {
+            DcsInstance::Stable => "DCS",
+            DcsInstance::OpenBeta => "DCS.openbeta",
+            DcsInstance::OpenAlpha => "DCS.openalpha",
+        }
+    }
+
+    /// All known DCS instance variants.
+    pub const ALL: &'static [DcsInstance] = &[
+        DcsInstance::Stable,
+        DcsInstance::OpenBeta,
+        DcsInstance::OpenAlpha,
+    ];
+}
+
+impl fmt::Display for DcsInstance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DcsInstance::Stable => write!(f, "DCS (Stable)"),
+            DcsInstance::OpenBeta => write!(f, "DCS (OpenBeta)"),
+            DcsInstance::OpenAlpha => write!(f, "DCS (OpenAlpha)"),
+        }
+    }
+}
+
+/// Result of a multi-instance install or uninstall operation.
+#[derive(Debug, Clone)]
+pub struct MultiInstanceResult {
+    /// Per-instance results.
+    pub results: Vec<(DcsInstance, Result<HookAction, String>)>,
+}
+
+impl MultiInstanceResult {
+    /// Number of instances that were successfully installed/updated.
+    pub fn success_count(&self) -> usize {
+        self.results.iter().filter(|(_, r)| r.is_ok()).count()
+    }
+
+    /// Number of instances that failed.
+    pub fn failure_count(&self) -> usize {
+        self.results.iter().filter(|(_, r)| r.is_err()).count()
+    }
+}
+
+/// Detect which DCS instances are present on disk.
+///
+/// Looks for `<saved_games_root>/<variant>/Scripts/` directories.
+pub fn detect_dcs_instances(saved_games_root: &Path) -> Vec<DcsInstance> {
+    DcsInstance::ALL
+        .iter()
+        .filter(|inst| {
+            saved_games_root
+                .join(inst.saved_games_folder())
+                .join("Scripts")
+                .is_dir()
+        })
+        .copied()
+        .collect()
+}
+
+/// Install the Flight Hub snippet into all detected DCS instances.
+pub fn install_all_instances(
+    saved_games_root: &Path,
+    config: &LuaBridgeConfig,
+) -> MultiInstanceResult {
+    let instances = detect_dcs_instances(saved_games_root);
+    let results = instances
+        .into_iter()
+        .map(|inst| {
+            let path = export_lua_path(&saved_games_root.join(inst.saved_games_folder()));
+            let result = install_hook(&path, config).map_err(|e| e.to_string());
+            (inst, result)
+        })
+        .collect();
+    MultiInstanceResult { results }
+}
+
+/// Remove the Flight Hub snippet from all detected DCS instances.
+pub fn remove_all_instances(saved_games_root: &Path) -> MultiInstanceResult {
+    let instances = detect_dcs_instances(saved_games_root);
+    let results = instances
+        .into_iter()
+        .map(|inst| {
+            let path = export_lua_path(&saved_games_root.join(inst.saved_games_folder()));
+            let result = remove_hook(&path).map_err(|e| e.to_string());
+            (inst, result)
+        })
+        .collect();
+    MultiInstanceResult { results }
+}
+
+// ---------------------------------------------------------------------------
+// Snippet validation
+// ---------------------------------------------------------------------------
+
+/// Validation issues found in a Lua snippet.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SnippetIssue {
+    /// Missing begin marker.
+    MissingBeginMarker,
+    /// Missing end marker.
+    MissingEndMarker,
+    /// Required Lua function hook is missing.
+    MissingHook(String),
+    /// The UDP socket setup is missing.
+    MissingUdpSetup,
+    /// The `LoGetSelfData` call is missing.
+    MissingLoGetSelfData,
+}
+
+impl fmt::Display for SnippetIssue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SnippetIssue::MissingBeginMarker => write!(f, "Missing begin marker"),
+            SnippetIssue::MissingEndMarker => write!(f, "Missing end marker"),
+            SnippetIssue::MissingHook(name) => write!(f, "Missing hook: {name}"),
+            SnippetIssue::MissingUdpSetup => write!(f, "Missing UDP socket setup"),
+            SnippetIssue::MissingLoGetSelfData => write!(f, "Missing LoGetSelfData call"),
+        }
+    }
+}
+
+/// Validate a generated snippet for structural correctness.
+///
+/// Returns an empty `Vec` if the snippet is valid.
+pub fn validate_snippet(snippet: &str) -> Vec<SnippetIssue> {
+    let mut issues = Vec::new();
+
+    if !snippet.contains(SNIPPET_BEGIN_MARKER) {
+        issues.push(SnippetIssue::MissingBeginMarker);
+    }
+    if !snippet.contains(SNIPPET_END_MARKER) {
+        issues.push(SnippetIssue::MissingEndMarker);
+    }
+
+    let required_hooks = [
+        "LuaExportStart",
+        "LuaExportStop",
+        "LuaExportAfterNextFrame",
+        "LuaExportActivityNextEvent",
+    ];
+    for hook in &required_hooks {
+        if !snippet.contains(hook) {
+            issues.push(SnippetIssue::MissingHook((*hook).to_string()));
+        }
+    }
+
+    if !snippet.contains("socket.udp()") {
+        issues.push(SnippetIssue::MissingUdpSetup);
+    }
+    if !snippet.contains("LoGetSelfData") {
+        issues.push(SnippetIssue::MissingLoGetSelfData);
+    }
+
+    issues
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -742,5 +917,108 @@ mod tests {
         let p = export_lua_path(Path::new("/home/user/Saved Games/DCS"));
         assert!(p.ends_with("Export.lua"));
         assert!(p.to_string_lossy().contains("Scripts"));
+    }
+
+    // --- Multi-instance support ---
+
+    #[test]
+    fn test_dcs_instance_saved_games_folder() {
+        assert_eq!(DcsInstance::Stable.saved_games_folder(), "DCS");
+        assert_eq!(DcsInstance::OpenBeta.saved_games_folder(), "DCS.openbeta");
+        assert_eq!(DcsInstance::OpenAlpha.saved_games_folder(), "DCS.openalpha");
+    }
+
+    #[test]
+    fn test_dcs_instance_display() {
+        assert_eq!(DcsInstance::Stable.to_string(), "DCS (Stable)");
+        assert_eq!(DcsInstance::OpenBeta.to_string(), "DCS (OpenBeta)");
+        assert_eq!(DcsInstance::OpenAlpha.to_string(), "DCS (OpenAlpha)");
+    }
+
+    #[test]
+    fn test_detect_dcs_instances_none() {
+        let tmp = TempDir::new().unwrap();
+        let instances = detect_dcs_instances(tmp.path());
+        assert!(instances.is_empty());
+    }
+
+    #[test]
+    fn test_detect_dcs_instances_stable_only() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("DCS").join("Scripts")).unwrap();
+        let instances = detect_dcs_instances(tmp.path());
+        assert_eq!(instances, vec![DcsInstance::Stable]);
+    }
+
+    #[test]
+    fn test_detect_dcs_instances_multiple() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("DCS").join("Scripts")).unwrap();
+        fs::create_dir_all(tmp.path().join("DCS.openbeta").join("Scripts")).unwrap();
+        let instances = detect_dcs_instances(tmp.path());
+        assert!(instances.contains(&DcsInstance::Stable));
+        assert!(instances.contains(&DcsInstance::OpenBeta));
+    }
+
+    #[test]
+    fn test_install_all_instances() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("DCS").join("Scripts")).unwrap();
+        fs::create_dir_all(tmp.path().join("DCS.openbeta").join("Scripts")).unwrap();
+
+        let result = install_all_instances(tmp.path(), &default_config());
+        assert_eq!(result.success_count(), 2);
+        assert_eq!(result.failure_count(), 0);
+
+        // Verify files exist
+        let stable_path = export_lua_path(&tmp.path().join("DCS"));
+        let beta_path = export_lua_path(&tmp.path().join("DCS.openbeta"));
+        assert!(stable_path.exists());
+        assert!(beta_path.exists());
+    }
+
+    #[test]
+    fn test_remove_all_instances() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("DCS").join("Scripts")).unwrap();
+        fs::create_dir_all(tmp.path().join("DCS.openbeta").join("Scripts")).unwrap();
+
+        install_all_instances(tmp.path(), &default_config());
+        let result = remove_all_instances(tmp.path());
+        assert_eq!(result.success_count(), 2);
+    }
+
+    // --- Snippet validation ---
+
+    #[test]
+    fn test_validate_snippet_valid() {
+        let snippet = generate_snippet(&default_config());
+        let issues = validate_snippet(&snippet);
+        assert!(issues.is_empty(), "Expected no issues, got: {issues:?}");
+    }
+
+    #[test]
+    fn test_validate_snippet_missing_markers() {
+        let issues = validate_snippet("-- just some lua");
+        assert!(issues.contains(&SnippetIssue::MissingBeginMarker));
+        assert!(issues.contains(&SnippetIssue::MissingEndMarker));
+    }
+
+    #[test]
+    fn test_validate_snippet_missing_hooks() {
+        let bad = format!("{}\n-- no hooks\n{}", SNIPPET_BEGIN_MARKER, SNIPPET_END_MARKER);
+        let issues = validate_snippet(&bad);
+        assert!(issues.iter().any(|i| matches!(i, SnippetIssue::MissingHook(_))));
+        assert!(issues.contains(&SnippetIssue::MissingUdpSetup));
+        assert!(issues.contains(&SnippetIssue::MissingLoGetSelfData));
+    }
+
+    #[test]
+    fn test_snippet_issue_display() {
+        assert_eq!(SnippetIssue::MissingBeginMarker.to_string(), "Missing begin marker");
+        assert_eq!(
+            SnippetIssue::MissingHook("LuaExportStart".to_string()).to_string(),
+            "Missing hook: LuaExportStart"
+        );
     }
 }

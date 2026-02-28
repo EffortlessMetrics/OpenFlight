@@ -354,6 +354,165 @@ pub fn parse_device_arg(raw: &str) -> Result<(u32, u32, f64), ParseError> {
 }
 
 // ---------------------------------------------------------------------------
+// Multiline device-argument block parsing
+// ---------------------------------------------------------------------------
+
+/// Marker for the beginning of a device-argument block.
+pub const ARGS_BEGIN: &str = "ARGS_BEGIN";
+/// Marker for the end of a device-argument block.
+pub const ARGS_END: &str = "ARGS_END";
+
+/// A parsed device-argument entry (cockpit clickable state).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeviceArgEntry {
+    /// DCS device ID.
+    pub device_id: u32,
+    /// Argument (command) index within the device.
+    pub arg_number: u32,
+    /// Current argument value.
+    pub value: f64,
+}
+
+/// Parse a multiline device-argument block.
+///
+/// The block is enclosed in `ARGS_BEGIN` / `ARGS_END` markers and contains
+/// one `device_id:arg_number:value` triple per line:
+///
+/// ```text
+/// ARGS_BEGIN
+/// 0:71:0.500000
+/// 0:85:1.000000
+/// ARGS_END
+/// ```
+pub fn parse_device_arg_block(data: &str) -> Result<Vec<DeviceArgEntry>, ParseError> {
+    let mut entries = Vec::new();
+    let mut inside = false;
+
+    for line in data.lines() {
+        let trimmed = line.trim();
+        if trimmed == ARGS_BEGIN {
+            inside = true;
+            continue;
+        }
+        if trimmed == ARGS_END {
+            break;
+        }
+        if !inside || trimmed.is_empty() {
+            continue;
+        }
+        let (device_id, command_id, value) = parse_device_arg(trimmed)?;
+        entries.push(DeviceArgEntry {
+            device_id,
+            arg_number: command_id,
+            value,
+        });
+    }
+
+    Ok(entries)
+}
+
+// ---------------------------------------------------------------------------
+// Instrument data parsing
+// ---------------------------------------------------------------------------
+
+/// Instrument gauge reading from a DCS cockpit.
+#[derive(Debug, Clone, PartialEq)]
+pub struct InstrumentReading {
+    /// Gauge identifier (e.g. `"AltimeterPressure"`).
+    pub name: String,
+    /// Numeric value of the gauge.
+    pub value: f64,
+}
+
+/// Parse an `INSTRUMENTS` section from a telemetry batch.
+///
+/// Expected format after the header:
+/// ```text
+/// INSTRUMENTS_BEGIN
+/// AltimeterPressure=29.92
+/// ADI_Pitch=5.3
+/// INSTRUMENTS_END
+/// ```
+pub fn parse_instrument_block(data: &str) -> Result<Vec<InstrumentReading>, ParseError> {
+    let mut readings = Vec::new();
+    let mut inside = false;
+
+    for line in data.lines() {
+        let trimmed = line.trim();
+        if trimmed == "INSTRUMENTS_BEGIN" {
+            inside = true;
+            continue;
+        }
+        if trimmed == "INSTRUMENTS_END" {
+            break;
+        }
+        if !inside || trimmed.is_empty() {
+            continue;
+        }
+        let entry = parse_export_line(trimmed)?;
+        let value = parse_indicator_value(&entry.value)?;
+        readings.push(InstrumentReading {
+            name: entry.key,
+            value,
+        });
+    }
+
+    Ok(readings)
+}
+
+/// Parse aircraft type from DCS metadata string.
+///
+/// DCS `LoGetSelfData().Name` returns the internal module name. This function
+/// strips common suffixes (e.g. `_pilot`, `_copilot`) and normalises the name.
+pub fn parse_aircraft_type(raw: &str) -> String {
+    let trimmed = raw.trim();
+    // Strip known pilot/copilot suffixes (case-insensitive)
+    let upper = trimmed.to_ascii_uppercase();
+    let suffixes = ["_PILOT", "_COPILOT", "_PLAYER"];
+    for suffix in &suffixes {
+        if upper.ends_with(suffix) {
+            return trimmed[..trimmed.len() - suffix.len()].to_string();
+        }
+    }
+    trimmed.to_string()
+}
+
+// ---------------------------------------------------------------------------
+// DCS coordinate system conversion
+// ---------------------------------------------------------------------------
+
+/// Convert DCS internal coordinates (meters, right-handed Z-up) to
+/// standard aviation convention (latitude, longitude, altitude in feet).
+///
+/// DCS uses:
+///   - X: East (metres)
+///   - Y: Up   (metres)
+///   - Z: North (metres, but mapped to South in some exports)
+///
+/// Returns `(x_east_m, y_up_m, z_north_m)` normalised from raw DCS body-frame
+/// to a consistent North-East-Down (NED) convention:
+///   `(north_m, east_m, down_m)`.
+pub fn dcs_to_ned(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
+    // DCS: X=north, Y=up, Z=east  →  NED: north=X, east=Z, down=-Y
+    (x, z, -y)
+}
+
+/// Convert metres to feet.
+pub const fn m_to_ft(m: f64) -> f64 {
+    m * 3.280_84
+}
+
+/// Convert metres/second to knots.
+pub const fn ms_to_knots(ms: f64) -> f64 {
+    ms * 1.943_844
+}
+
+/// Convert radians to degrees.
+pub fn rad_to_deg(rad: f64) -> f64 {
+    rad.to_degrees()
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -752,5 +911,99 @@ mod tests {
         assert!((fd.mach - 0.92).abs() < 1e-10);
         assert!((fd.vertical_speed_ms - (-5.0)).abs() < f64::EPSILON);
         assert!((fd.fuel_total_kg - 4500.0).abs() < f64::EPSILON);
+    }
+
+    // --- Device argument block parsing tests ---
+
+    #[test]
+    fn test_parse_device_arg_block_basic() {
+        let block = "ARGS_BEGIN\n0:71:0.500000\n0:85:1.000000\nARGS_END\n";
+        let entries = parse_device_arg_block(block).unwrap();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0].device_id, 0);
+        assert_eq!(entries[0].arg_number, 71);
+        assert!((entries[0].value - 0.5).abs() < 1e-6);
+        assert_eq!(entries[1].arg_number, 85);
+        assert!((entries[1].value - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_parse_device_arg_block_empty() {
+        let block = "ARGS_BEGIN\nARGS_END\n";
+        let entries = parse_device_arg_block(block).unwrap();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_parse_device_arg_block_ignores_lines_outside() {
+        let block = "some junk\nARGS_BEGIN\n1:100:0.25\nARGS_END\nmore junk";
+        let entries = parse_device_arg_block(block).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].device_id, 1);
+    }
+
+    // --- Instrument block parsing tests ---
+
+    #[test]
+    fn test_parse_instrument_block_basic() {
+        let block = "INSTRUMENTS_BEGIN\nAltimeterPressure=29.92\nADI_Pitch=5.3\nINSTRUMENTS_END\n";
+        let readings = parse_instrument_block(block).unwrap();
+        assert_eq!(readings.len(), 2);
+        assert_eq!(readings[0].name, "AltimeterPressure");
+        assert!((readings[0].value - 29.92).abs() < 1e-6);
+        assert_eq!(readings[1].name, "ADI_Pitch");
+    }
+
+    #[test]
+    fn test_parse_instrument_block_empty() {
+        let block = "INSTRUMENTS_BEGIN\nINSTRUMENTS_END\n";
+        let readings = parse_instrument_block(block).unwrap();
+        assert!(readings.is_empty());
+    }
+
+    // --- Aircraft type parsing tests ---
+
+    #[test]
+    fn test_parse_aircraft_type_strips_pilot_suffix() {
+        assert_eq!(parse_aircraft_type("AH-64D_pilot"), "AH-64D");
+        assert_eq!(parse_aircraft_type("AH-64D_PILOT"), "AH-64D");
+    }
+
+    #[test]
+    fn test_parse_aircraft_type_strips_copilot() {
+        assert_eq!(parse_aircraft_type("AH-64D_copilot"), "AH-64D");
+    }
+
+    #[test]
+    fn test_parse_aircraft_type_no_suffix() {
+        assert_eq!(parse_aircraft_type("F-16C"), "F-16C");
+    }
+
+    // --- Coordinate conversion tests ---
+
+    #[test]
+    fn test_dcs_to_ned_conversion() {
+        let (n, e, d) = dcs_to_ned(100.0, 50.0, 200.0);
+        assert!((n - 100.0).abs() < f64::EPSILON);
+        assert!((e - 200.0).abs() < f64::EPSILON);
+        assert!((d - (-50.0)).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_m_to_ft() {
+        let ft = m_to_ft(1.0);
+        assert!((ft - 3.28084).abs() < 1e-3);
+    }
+
+    #[test]
+    fn test_ms_to_knots() {
+        let kts = ms_to_knots(1.0);
+        assert!((kts - 1.943844).abs() < 1e-3);
+    }
+
+    #[test]
+    fn test_rad_to_deg() {
+        let deg = rad_to_deg(std::f64::consts::PI);
+        assert!((deg - 180.0).abs() < 1e-10);
     }
 }

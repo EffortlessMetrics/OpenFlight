@@ -704,6 +704,198 @@ pub mod ah64d {
 }
 
 // ---------------------------------------------------------------------------
+// Wire command parsing (deserialization)
+// ---------------------------------------------------------------------------
+
+/// Errors when parsing a wire-format command line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WireParseError {
+    /// Missing or unrecognised prefix (CMD, BTN, TGL).
+    UnknownPrefix(String),
+    /// Incorrect number of fields after the prefix.
+    BadFieldCount { expected: usize, got: usize },
+    /// A numeric field could not be parsed.
+    InvalidNumber(String),
+}
+
+impl std::fmt::Display for WireParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WireParseError::UnknownPrefix(p) => write!(f, "unknown prefix: {p}"),
+            WireParseError::BadFieldCount { expected, got } => {
+                write!(f, "expected {expected} fields, got {got}")
+            }
+            WireParseError::InvalidNumber(s) => write!(f, "invalid number: {s}"),
+        }
+    }
+}
+
+impl std::error::Error for WireParseError {}
+
+/// Parse a single wire-format command line back into a [`DcsControlCommand`].
+///
+/// Accepted formats:
+/// - `CMD:<device_id>,<command_id>,<value>`
+/// - `BTN:<device_id>,<command_id>,<value>`
+/// - `TGL:<device_id>,<command_id>,<value>`
+pub fn parse_wire_command(line: &str) -> Result<DcsControlCommand, WireParseError> {
+    let trimmed = line.trim();
+    let (prefix, rest) = trimmed
+        .split_once(':')
+        .ok_or_else(|| WireParseError::UnknownPrefix(trimmed.to_string()))?;
+
+    let parts: Vec<&str> = rest.split(',').collect();
+    if parts.len() != 3 {
+        return Err(WireParseError::BadFieldCount {
+            expected: 3,
+            got: parts.len(),
+        });
+    }
+
+    let device_id: u32 = parts[0]
+        .trim()
+        .parse()
+        .map_err(|_| WireParseError::InvalidNumber(parts[0].to_string()))?;
+    let command_id: u32 = parts[1]
+        .trim()
+        .parse()
+        .map_err(|_| WireParseError::InvalidNumber(parts[1].to_string()))?;
+    let value: f64 = parts[2]
+        .trim()
+        .parse()
+        .map_err(|_| WireParseError::InvalidNumber(parts[2].to_string()))?;
+
+    let action_type = match prefix {
+        "CMD" => DcsActionType::Axis,
+        "BTN" => {
+            if value > 0.5 {
+                DcsActionType::ButtonPress
+            } else {
+                DcsActionType::ButtonRelease
+            }
+        }
+        "TGL" => DcsActionType::Toggle,
+        other => return Err(WireParseError::UnknownPrefix(other.to_string())),
+    };
+
+    Ok(DcsControlCommand {
+        device_id,
+        command_id,
+        value,
+        action_type,
+    })
+}
+
+/// Parse a multi-line wire payload into a sequence of commands.
+pub fn parse_wire_payload(payload: &str) -> Vec<Result<DcsControlCommand, WireParseError>> {
+    payload
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(parse_wire_command)
+        .collect()
+}
+
+// ---------------------------------------------------------------------------
+// Clickable cockpit abstraction
+// ---------------------------------------------------------------------------
+
+/// A cockpit clickable control (switch, knob, button) identified by its
+/// DCS device, button/arg number, and a human-readable label.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Clickable {
+    /// Human-readable label (e.g. "Master Arm Switch").
+    pub label: &'static str,
+    /// DCS device ID.
+    pub device_id: u32,
+    /// Button/argument number.
+    pub button: u32,
+    /// Minimum value (typically 0.0 for switches, -1.0 for 3-pos).
+    pub min_value: f64,
+    /// Maximum value (typically 1.0).
+    pub max_value: f64,
+}
+
+impl Clickable {
+    /// Create a [`DcsControlCommand`] to set this clickable to the given value.
+    pub fn command(&self, value: f64) -> DcsControlCommand {
+        let clamped = value.clamp(self.min_value, self.max_value);
+        DcsControlCommand {
+            device_id: self.device_id,
+            command_id: self.button,
+            value: clamped,
+            action_type: if (self.max_value - self.min_value).abs() > 0.01 {
+                DcsActionType::Axis
+            } else {
+                DcsActionType::Toggle
+            },
+        }
+    }
+
+    /// Create a press command (value = `max_value`).
+    pub fn press(&self) -> DcsControlCommand {
+        self.command(self.max_value)
+    }
+
+    /// Create a release command (value = `min_value`).
+    pub fn release(&self) -> DcsControlCommand {
+        self.command(self.min_value)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Per-aircraft axis mapping (bus axis name → DCS device arg)
+// ---------------------------------------------------------------------------
+
+/// Mapping from a Flight Hub bus axis name to a DCS device/command pair
+/// for a specific aircraft module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AircraftAxisMapping {
+    /// Flight Hub bus axis name (e.g. "pitch", "throttle_left").
+    pub bus_axis: &'static str,
+    /// DCS device ID.
+    pub device_id: u32,
+    /// DCS command/argument ID.
+    pub command_id: u32,
+}
+
+/// F/A-18C Hornet axis mappings.
+pub static FA18C_AXES: &[AircraftAxisMapping] = &[
+    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
+    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
+    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
+    AircraftAxisMapping { bus_axis: "throttle_left", device_id: 0, command_id: 2005 },
+    AircraftAxisMapping { bus_axis: "throttle_right", device_id: 0, command_id: 2006 },
+];
+
+/// F-16C Viper axis mappings.
+pub static F16C_AXES: &[AircraftAxisMapping] = &[
+    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
+    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
+    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
+    AircraftAxisMapping { bus_axis: "throttle", device_id: 0, command_id: 2004 },
+];
+
+/// A-10C Warthog axis mappings.
+pub static A10C_AXES: &[AircraftAxisMapping] = &[
+    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
+    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
+    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
+    AircraftAxisMapping { bus_axis: "throttle_left", device_id: 0, command_id: 2005 },
+    AircraftAxisMapping { bus_axis: "throttle_right", device_id: 0, command_id: 2006 },
+];
+
+/// Look up per-aircraft axis mapping by module name and bus axis.
+pub fn lookup_aircraft_axis(module: &str, bus_axis: &str) -> Option<&'static AircraftAxisMapping> {
+    let table: &[AircraftAxisMapping] = match module {
+        "FA-18C_hornet" | "FA-18C" => FA18C_AXES,
+        "F-16C_50" | "F-16C" => F16C_AXES,
+        "A-10C" | "A-10C_2" => A10C_AXES,
+        _ => return None,
+    };
+    table.iter().find(|m| m.bus_axis == bus_axis)
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -1163,5 +1355,158 @@ mod tests {
         let mut inj = DcsControlInjector::new(16);
         let sent = sender.flush_and_send(&mut inj).unwrap();
         assert_eq!(sent, 0);
+    }
+
+    // --- Wire command parsing tests ---
+
+    #[test]
+    fn test_parse_wire_command_axis() {
+        let cmd = parse_wire_command("CMD:0,2001,0.500000").unwrap();
+        assert_eq!(cmd.device_id, 0);
+        assert_eq!(cmd.command_id, 2001);
+        assert!((cmd.value - 0.5).abs() < 1e-6);
+        assert_eq!(cmd.action_type, DcsActionType::Axis);
+    }
+
+    #[test]
+    fn test_parse_wire_command_button_press() {
+        let cmd = parse_wire_command("BTN:25,3001,1.000000").unwrap();
+        assert_eq!(cmd.device_id, 25);
+        assert_eq!(cmd.command_id, 3001);
+        assert_eq!(cmd.action_type, DcsActionType::ButtonPress);
+    }
+
+    #[test]
+    fn test_parse_wire_command_button_release() {
+        let cmd = parse_wire_command("BTN:25,3001,0.000000").unwrap();
+        assert_eq!(cmd.action_type, DcsActionType::ButtonRelease);
+    }
+
+    #[test]
+    fn test_parse_wire_command_toggle() {
+        let cmd = parse_wire_command("TGL:2,500,1.000000").unwrap();
+        assert_eq!(cmd.action_type, DcsActionType::Toggle);
+    }
+
+    #[test]
+    fn test_parse_wire_command_unknown_prefix() {
+        let res = parse_wire_command("XYZ:0,1,0.5");
+        assert!(matches!(res, Err(WireParseError::UnknownPrefix(_))));
+    }
+
+    #[test]
+    fn test_parse_wire_command_bad_field_count() {
+        let res = parse_wire_command("CMD:0,1");
+        assert!(matches!(
+            res,
+            Err(WireParseError::BadFieldCount { expected: 3, got: 2 })
+        ));
+    }
+
+    #[test]
+    fn test_parse_wire_command_invalid_number() {
+        let res = parse_wire_command("CMD:abc,1,0.5");
+        assert!(matches!(res, Err(WireParseError::InvalidNumber(_))));
+    }
+
+    #[test]
+    fn test_parse_wire_roundtrip() {
+        let original = DcsControlCommand::axis(0, 2001, 0.75);
+        let wire = original.to_wire();
+        let parsed = parse_wire_command(&wire).unwrap();
+        assert_eq!(parsed.device_id, original.device_id);
+        assert_eq!(parsed.command_id, original.command_id);
+        assert!((parsed.value - original.value).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_parse_wire_payload() {
+        let payload = "CMD:0,2001,0.5\nBTN:25,3001,1.0\nTGL:2,500,1.0\n";
+        let results = parse_wire_payload(payload);
+        assert_eq!(results.len(), 3);
+        assert!(results.iter().all(|r| r.is_ok()));
+    }
+
+    // --- Clickable tests ---
+
+    #[test]
+    fn test_clickable_command() {
+        let master_arm = Clickable {
+            label: "Master Arm",
+            device_id: 1,
+            button: 100,
+            min_value: 0.0,
+            max_value: 1.0,
+        };
+        let cmd = master_arm.command(0.5);
+        assert_eq!(cmd.device_id, 1);
+        assert_eq!(cmd.command_id, 100);
+        assert!((cmd.value - 0.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_clickable_press_release() {
+        let sw = Clickable {
+            label: "Test Switch",
+            device_id: 5,
+            button: 200,
+            min_value: 0.0,
+            max_value: 1.0,
+        };
+        let press = sw.press();
+        assert!((press.value - 1.0).abs() < f64::EPSILON);
+        let release = sw.release();
+        assert!(release.value.abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_clickable_clamps_value() {
+        let knob = Clickable {
+            label: "Volume",
+            device_id: 5,
+            button: 300,
+            min_value: 0.0,
+            max_value: 1.0,
+        };
+        let cmd = knob.command(2.0);
+        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+    }
+
+    // --- Per-aircraft axis mapping tests ---
+
+    #[test]
+    fn test_lookup_aircraft_axis_fa18c() {
+        let mapping = lookup_aircraft_axis("FA-18C", "pitch").unwrap();
+        assert_eq!(mapping.device_id, 0);
+        assert_eq!(mapping.command_id, 2001);
+    }
+
+    #[test]
+    fn test_lookup_aircraft_axis_f16c() {
+        let mapping = lookup_aircraft_axis("F-16C", "throttle").unwrap();
+        assert_eq!(mapping.device_id, 0);
+        assert_eq!(mapping.command_id, 2004);
+    }
+
+    #[test]
+    fn test_lookup_aircraft_axis_unknown_module() {
+        assert!(lookup_aircraft_axis("MiG-29", "pitch").is_none());
+    }
+
+    #[test]
+    fn test_lookup_aircraft_axis_unknown_axis() {
+        assert!(lookup_aircraft_axis("FA-18C", "flaps").is_none());
+    }
+
+    #[test]
+    fn test_wire_parse_error_display() {
+        assert_eq!(
+            WireParseError::UnknownPrefix("XYZ".into()).to_string(),
+            "unknown prefix: XYZ"
+        );
+        assert_eq!(
+            WireParseError::BadFieldCount { expected: 3, got: 2 }.to_string(),
+            "expected 3 fields, got 2"
+        );
     }
 }

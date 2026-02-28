@@ -244,4 +244,108 @@ mod tests {
         let router = EventRouter::default();
         assert_eq!(router.route_count(), 0);
     }
+
+    // ── Property-based tests ──────────────────────────────────────────────
+
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Publishing (routing) to no subscribers never panics.
+        #[test]
+        fn prop_route_event_no_subscribers_never_panics(
+            topic in "[a-z]{1,8}",
+            priority in 0u8..=255u8,
+        ) {
+            let router = EventRouter::new();
+            let _ = router.route_event(&topic, None, priority);
+        }
+
+        /// Adding a route and routing to it always returns the subscriber.
+        #[test]
+        fn prop_add_route_then_find(
+            topic in "[a-z]{1,8}",
+            sub_id in "[a-z]{1,8}",
+            priority in 0u8..=100u8,
+        ) {
+            let mut router = EventRouter::new();
+            router.add_route(
+                sub_id.clone(),
+                EventFilter {
+                    topic: topic.clone(),
+                    device_id: None,
+                    min_priority: 0,
+                },
+            );
+            let matched = router.route_event(&topic, None, priority);
+            prop_assert!(
+                matched.contains(&sub_id.as_str()),
+                "subscriber {} not found for topic {}",
+                sub_id, topic
+            );
+        }
+
+        /// Subscribing to same topic twice doesn't lose messages:
+        /// both routes are found when routing.
+        #[test]
+        fn prop_duplicate_subscription_both_found(
+            topic in "[a-z]{1,8}",
+            priority in 0u8..=255u8,
+        ) {
+            let mut router = EventRouter::new();
+            router.add_route(
+                "sub1",
+                EventFilter { topic: topic.clone(), device_id: None, min_priority: 0 },
+            );
+            router.add_route(
+                "sub1",
+                EventFilter { topic: topic.clone(), device_id: None, min_priority: 0 },
+            );
+            let matched = router.route_event(&topic, None, priority);
+            // sub1 appears twice because it has two routes
+            prop_assert!(
+                matched.len() >= 2,
+                "expected at least 2 matches for duplicate subscription, got {}",
+                matched.len()
+            );
+        }
+
+        /// Event ordering is preserved: subscribers added first appear first in results.
+        #[test]
+        fn prop_routing_preserves_insertion_order(
+            topic in "[a-z]{1,8}",
+            n in 1usize..=10usize,
+        ) {
+            let mut router = EventRouter::new();
+            let sub_ids: Vec<String> = (0..n).map(|i| format!("sub{}", i)).collect();
+            for id in &sub_ids {
+                router.add_route(
+                    id.as_str(),
+                    EventFilter { topic: topic.clone(), device_id: None, min_priority: 0 },
+                );
+            }
+            let matched = router.route_event(&topic, None, 5);
+            for (i, id) in sub_ids.iter().enumerate() {
+                prop_assert_eq!(
+                    matched[i], id.as_str(),
+                    "ordering violated at index {}", i
+                );
+            }
+        }
+
+        /// remove_routes + route_event never panics regardless of input.
+        #[test]
+        fn prop_remove_then_route_never_panics(
+            topic in "[a-z]{1,8}",
+            sub_id in "[a-z]{1,8}",
+        ) {
+            let mut router = EventRouter::new();
+            router.add_route(
+                sub_id.as_str(),
+                EventFilter { topic: topic.clone(), device_id: None, min_priority: 0 },
+            );
+            router.remove_routes(&sub_id);
+            let matched = router.route_event(&topic, None, 0);
+            prop_assert!(matched.is_empty(), "should be empty after removing all routes");
+        }
+    }
 }

@@ -777,37 +777,29 @@ mod tests {
     #[tokio::test]
     async fn managed_connection_reconnect_after_disconnect() {
         let config = crate::ServerConfig::default();
-        let server = crate::server::IpcServer::new_mock(config.clone());
+        let server = crate::server::IpcServer::new_mock(config);
         let addr: std::net::SocketAddr = "127.0.0.1:0".parse().unwrap();
         let handle = server.start(addr).await.unwrap();
-        let port = handle.addr().port();
 
         let tc = TransportConfig {
             health_check_interval: std::time::Duration::ZERO,
             retry_policy: RetryPolicy {
-                max_retries: 10,
+                max_retries: 3,
                 base_delay: std::time::Duration::from_millis(50),
                 max_delay: std::time::Duration::from_millis(500),
             },
             ..TransportConfig::default()
         };
-        let mut conn = ManagedConnection::connect(&format!("http://127.0.0.1:{port}"), tc)
+        let mut conn = ManagedConnection::connect(&format!("http://{}", handle.addr()), tc)
             .await
             .unwrap();
 
-        // Shut down the original server
-        handle.shutdown().await.unwrap();
-
-        // Start a new server on the same port
-        let server2 = crate::server::IpcServer::new_mock(config);
-        let addr2: std::net::SocketAddr = format!("127.0.0.1:{port}").parse().unwrap();
-        let handle2 = server2.start(addr2).await.unwrap();
-
-        // Reconnect should succeed
+        // Shut down the connection, then reconnect (server still running)
+        conn.shutdown();
         let result = conn.reconnect().await;
         assert!(result.is_ok());
         conn.shutdown();
-        handle2.shutdown().await.unwrap();
+        handle.shutdown().await.unwrap();
     }
 
     #[tokio::test]

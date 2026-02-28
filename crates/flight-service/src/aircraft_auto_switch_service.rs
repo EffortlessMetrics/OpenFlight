@@ -139,6 +139,8 @@ pub struct AircraftAutoSwitchService {
     detection_latency_us: Arc<AtomicU64>,
     /// Total adapter errors across all adapters.
     adapter_errors: Arc<AtomicU64>,
+    /// Minimum detection confidence observed (stored as `f64::to_bits`).
+    min_confidence_bits: Arc<AtomicU64>,
 }
 
 /// Simulator adapters
@@ -226,10 +228,12 @@ pub struct ServiceMetrics {
     pub detection_latency_us: u64,
     /// Total adapter errors since service creation.
     pub adapter_errors: u64,
+    /// Minimum detection confidence observed across all aircraft detections.
+    pub min_confidence: f64,
 }
 
 /// Lightweight snapshot of the three key service counters, readable without acquiring async locks.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AutoSwitchCounters {
     /// Total aircraft profile switches since service creation.
     pub aircraft_switches: u64,
@@ -237,6 +241,8 @@ pub struct AutoSwitchCounters {
     pub detection_time_us: u64,
     /// Total adapter errors since service creation.
     pub adapter_errors: u64,
+    /// Minimum detection confidence observed (1.0 if no detection yet).
+    pub min_confidence: f64,
 }
 
 /// Lifecycle state of a simulator adapter.
@@ -341,6 +347,7 @@ impl AircraftAutoSwitchService {
             last_detection_time_ms: Arc::new(AtomicU64::new(0)),
             detection_latency_us: Arc::new(AtomicU64::new(0)),
             adapter_errors: Arc::new(AtomicU64::new(0)),
+            min_confidence_bits: Arc::new(AtomicU64::new(1.0_f64.to_bits())),
         }
     }
 
@@ -381,6 +388,7 @@ impl AircraftAutoSwitchService {
         let last_detection_time_ms = Arc::clone(&self.last_detection_time_ms);
         let detection_latency_us = Arc::clone(&self.detection_latency_us);
         let adapter_errors = Arc::clone(&self.adapter_errors);
+        let min_confidence_bits = Arc::clone(&self.min_confidence_bits);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -454,6 +462,7 @@ impl AircraftAutoSwitchService {
                             detection_time: detection_start,
                             confidence: 0.9,
                         };
+                        let confidence = detected_aircraft.confidence;
 
                         if let Err(e) = auto_switch.on_aircraft_detected(detected_aircraft).await {
                             error!("Failed to handle aircraft detection: {}", e);
@@ -484,6 +493,19 @@ impl AircraftAutoSwitchService {
                             last_detection_time_ms.store(now_ms, Ordering::Relaxed);
                             detection_latency_us
                                 .store(elapsed.as_micros() as u64, Ordering::Relaxed);
+                            // Track minimum confidence observed
+                            let conf_bits = (confidence as f64).to_bits();
+                            let _ = min_confidence_bits.fetch_update(
+                                Ordering::Relaxed,
+                                Ordering::Relaxed,
+                                |cur| {
+                                    if f64::from_bits(conf_bits) < f64::from_bits(cur) {
+                                        Some(conf_bits)
+                                    } else {
+                                        None
+                                    }
+                                },
+                            );
                         }
                     }
                     ServiceEvent::TelemetryUpdate(snapshot) => {
@@ -577,6 +599,7 @@ impl AircraftAutoSwitchService {
             last_detection_time_ms: self.last_detection_time_ms.load(Ordering::Relaxed),
             detection_latency_us: self.detection_latency_us.load(Ordering::Relaxed),
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
+            min_confidence: f64::from_bits(self.min_confidence_bits.load(Ordering::Relaxed)),
         }
     }
 
@@ -590,6 +613,7 @@ impl AircraftAutoSwitchService {
             aircraft_switches: self.aircraft_switch_count.load(Ordering::Relaxed),
             detection_time_us: self.detection_latency_us.load(Ordering::Relaxed),
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
+            min_confidence: f64::from_bits(self.min_confidence_bits.load(Ordering::Relaxed)),
         }
     }
 
@@ -1717,5 +1741,43 @@ mod tests {
         // Global error count
         assert_eq!(service.adapter_errors.load(Ordering::Relaxed), 2);
         assert_eq!(service.metrics().adapter_errors, 2);
+    }
+
+    // ======================================================================
+    // Confidence tracking tests
+    // ======================================================================
+
+    /// Minimum confidence defaults to 1.0 (no detection yet).
+    #[tokio::test]
+    async fn test_min_confidence_initial_value() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let c = service.metrics();
+        assert!(
+            (c.min_confidence - 1.0).abs() < f64::EPSILON,
+            "initial min_confidence should be 1.0, got {}",
+            c.min_confidence
+        );
+    }
+
+    /// Minimum confidence is tracked correctly via atomic update.
+    #[tokio::test]
+    async fn test_min_confidence_tracks_lowest() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+
+        // Simulate detections with decreasing then increasing confidence
+        service
+            .min_confidence_bits
+            .store(0.9_f64.to_bits(), Ordering::Relaxed);
+        assert!((service.metrics().min_confidence - 0.9).abs() < f64::EPSILON);
+
+        // Lower value → should update
+        service
+            .min_confidence_bits
+            .store(0.7_f64.to_bits(), Ordering::Relaxed);
+        assert!((service.metrics().min_confidence - 0.7).abs() < f64::EPSILON);
+
+        // get_metrics also reports it
+        let m = service.get_metrics().await;
+        assert!((m.min_confidence - 0.7).abs() < f64::EPSILON);
     }
 }

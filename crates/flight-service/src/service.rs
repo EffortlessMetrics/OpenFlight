@@ -824,10 +824,13 @@ impl FlightService {
             );
             self.health.warning("service", &msg).await;
             warn!("{msg}");
+            // Partial failure → degrade the service so operators notice
+            self.transition_to_degraded(&msg).await;
         } else if failed_count > 0 {
             let msg = format!("Profile apply failed: all {} axes failed", total_count);
             self.health.warning("service", &msg).await;
             warn!("{msg}");
+            self.transition_to_degraded(&msg).await;
         } else {
             self.health
                 .info("service", "Profile applied successfully")
@@ -835,6 +838,34 @@ impl FlightService {
         }
 
         Ok(())
+    }
+
+    /// Transition the service to `Degraded` if the current state allows it.
+    async fn transition_to_degraded(&self, reason: &str) {
+        let mut state = self.state.write().await;
+        if state.can_transition_to(ServiceState::Degraded) {
+            info!("Service degraded: {reason}");
+            *state = ServiceState::Degraded;
+        }
+    }
+
+    /// Attempt to recover from `Degraded` back to `Running` by re-applying
+    /// the given profile.  Returns `true` on a successful recovery.
+    pub async fn try_recover(&self, profile: &Profile) -> Result<bool> {
+        {
+            let current = *self.state.read().await;
+            if current != ServiceState::Degraded {
+                return Ok(false);
+            }
+        }
+        // Re-apply the profile; if it succeeds fully, restore Running.
+        self.apply_profile(profile).await?;
+        let mut state = self.state.write().await;
+        if *state == ServiceState::Degraded {
+            *state = ServiceState::Running;
+            info!("Service recovered from Degraded → Running");
+        }
+        Ok(true)
     }
 
     /// Get current service state
@@ -1356,6 +1387,78 @@ mod tests {
         assert!(r1.is_ok());
         let r2 = service.start().await;
         assert!(r2.is_err(), "double start should be rejected");
+        let _ = service.shutdown().await;
+    }
+
+    // -----------------------------------------------------------------------
+    // Degraded state & recovery tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_transition_to_degraded_from_running() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        service.transition_to_degraded("test reason").await;
+        assert_eq!(service.get_state().await, ServiceState::Degraded);
+
+        let _ = service.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_transition_to_degraded_ignored_from_stopped() {
+        let config = FlightServiceConfig::default();
+        let service = FlightService::new(config);
+        // Stopped → Degraded is not a valid transition
+        service.transition_to_degraded("should be ignored").await;
+        assert_eq!(service.get_state().await, ServiceState::Stopped);
+    }
+
+    #[tokio::test]
+    async fn test_try_recover_from_degraded() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        let _ = service.initialize_axis_engine().await;
+
+        // Force into degraded state
+        service.transition_to_degraded("partial failure").await;
+        assert_eq!(service.get_state().await, ServiceState::Degraded);
+
+        // Recover with a valid profile
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let recovered = service.try_recover(&profile).await.unwrap();
+        assert!(recovered, "should recover from Degraded");
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        let _ = service.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_try_recover_noop_when_running() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let recovered = service.try_recover(&profile).await.unwrap();
+        assert!(!recovered, "should not recover when already Running");
+
         let _ = service.shutdown().await;
     }
 }
