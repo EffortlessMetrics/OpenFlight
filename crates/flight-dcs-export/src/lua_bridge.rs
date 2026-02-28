@@ -1006,16 +1006,26 @@ mod tests {
 
     #[test]
     fn test_validate_snippet_missing_hooks() {
-        let bad = format!("{}\n-- no hooks\n{}", SNIPPET_BEGIN_MARKER, SNIPPET_END_MARKER);
+        let bad = format!(
+            "{}\n-- no hooks\n{}",
+            SNIPPET_BEGIN_MARKER, SNIPPET_END_MARKER
+        );
         let issues = validate_snippet(&bad);
-        assert!(issues.iter().any(|i| matches!(i, SnippetIssue::MissingHook(_))));
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, SnippetIssue::MissingHook(_)))
+        );
         assert!(issues.contains(&SnippetIssue::MissingUdpSetup));
         assert!(issues.contains(&SnippetIssue::MissingLoGetSelfData));
     }
 
     #[test]
     fn test_snippet_issue_display() {
-        assert_eq!(SnippetIssue::MissingBeginMarker.to_string(), "Missing begin marker");
+        assert_eq!(
+            SnippetIssue::MissingBeginMarker.to_string(),
+            "Missing begin marker"
+        );
         assert_eq!(
             SnippetIssue::MissingHook("LuaExportStart".to_string()).to_string(),
             "Missing hook: LuaExportStart"

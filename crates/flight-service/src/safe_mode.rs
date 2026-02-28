@@ -969,7 +969,9 @@ mod tests {
 
         let _status = manager.initialize().await.unwrap();
         // After init, diagnostic should be present
-        let diag = manager.get_diagnostic().expect("diagnostic should be stored");
+        let diag = manager
+            .get_diagnostic()
+            .expect("diagnostic should be stored");
         assert!(!diag.reason.is_empty());
         assert!(!diag.recommended_actions.is_empty());
     }

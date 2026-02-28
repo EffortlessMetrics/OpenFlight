@@ -860,28 +860,84 @@ pub struct AircraftAxisMapping {
 
 /// F/A-18C Hornet axis mappings.
 pub static FA18C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
-    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
-    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
-    AircraftAxisMapping { bus_axis: "throttle_left", device_id: 0, command_id: 2005 },
-    AircraftAxisMapping { bus_axis: "throttle_right", device_id: 0, command_id: 2006 },
+    AircraftAxisMapping {
+        bus_axis: "pitch",
+        device_id: 0,
+        command_id: 2001,
+    },
+    AircraftAxisMapping {
+        bus_axis: "roll",
+        device_id: 0,
+        command_id: 2002,
+    },
+    AircraftAxisMapping {
+        bus_axis: "yaw",
+        device_id: 0,
+        command_id: 2003,
+    },
+    AircraftAxisMapping {
+        bus_axis: "throttle_left",
+        device_id: 0,
+        command_id: 2005,
+    },
+    AircraftAxisMapping {
+        bus_axis: "throttle_right",
+        device_id: 0,
+        command_id: 2006,
+    },
 ];
 
 /// F-16C Viper axis mappings.
 pub static F16C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
-    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
-    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
-    AircraftAxisMapping { bus_axis: "throttle", device_id: 0, command_id: 2004 },
+    AircraftAxisMapping {
+        bus_axis: "pitch",
+        device_id: 0,
+        command_id: 2001,
+    },
+    AircraftAxisMapping {
+        bus_axis: "roll",
+        device_id: 0,
+        command_id: 2002,
+    },
+    AircraftAxisMapping {
+        bus_axis: "yaw",
+        device_id: 0,
+        command_id: 2003,
+    },
+    AircraftAxisMapping {
+        bus_axis: "throttle",
+        device_id: 0,
+        command_id: 2004,
+    },
 ];
 
 /// A-10C Warthog axis mappings.
 pub static A10C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping { bus_axis: "pitch", device_id: 0, command_id: 2001 },
-    AircraftAxisMapping { bus_axis: "roll", device_id: 0, command_id: 2002 },
-    AircraftAxisMapping { bus_axis: "yaw", device_id: 0, command_id: 2003 },
-    AircraftAxisMapping { bus_axis: "throttle_left", device_id: 0, command_id: 2005 },
-    AircraftAxisMapping { bus_axis: "throttle_right", device_id: 0, command_id: 2006 },
+    AircraftAxisMapping {
+        bus_axis: "pitch",
+        device_id: 0,
+        command_id: 2001,
+    },
+    AircraftAxisMapping {
+        bus_axis: "roll",
+        device_id: 0,
+        command_id: 2002,
+    },
+    AircraftAxisMapping {
+        bus_axis: "yaw",
+        device_id: 0,
+        command_id: 2003,
+    },
+    AircraftAxisMapping {
+        bus_axis: "throttle_left",
+        device_id: 0,
+        command_id: 2005,
+    },
+    AircraftAxisMapping {
+        bus_axis: "throttle_right",
+        device_id: 0,
+        command_id: 2006,
+    },
 ];
 
 /// Look up per-aircraft axis mapping by module name and bus axis.
@@ -1399,7 +1455,10 @@ mod tests {
         let res = parse_wire_command("CMD:0,1");
         assert!(matches!(
             res,
-            Err(WireParseError::BadFieldCount { expected: 3, got: 2 })
+            Err(WireParseError::BadFieldCount {
+                expected: 3,
+                got: 2
+            })
         ));
     }
 
@@ -1505,7 +1564,11 @@ mod tests {
             "unknown prefix: XYZ"
         );
         assert_eq!(
-            WireParseError::BadFieldCount { expected: 3, got: 2 }.to_string(),
+            WireParseError::BadFieldCount {
+                expected: 3,
+                got: 2
+            }
+            .to_string(),
             "expected 3 fields, got 2"
         );
     }
