@@ -1,0 +1,12 @@
+[Unit]
+Description=Flight Hub daemon
+Documentation=https://github.com/EffortlessMetrics/OpenFlight
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/flightd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

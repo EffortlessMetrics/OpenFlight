@@ -20,17 +20,34 @@
 pub mod channels;
 pub mod delta;
 pub mod integration_docs;
+pub mod manifest;
 pub mod packaging;
+pub mod policy;
 pub mod rollback;
 pub mod signature;
+pub mod signed_manifest;
+pub mod update_manifest;
 pub mod updater;
 
 pub use channels::{Channel, ChannelConfig};
-pub use delta::{DeltaApplier, DeltaPatch};
+pub use delta::{DeltaApplier, DeltaPatch, calculate_delta, verify_install};
 pub use integration_docs::{IntegrationDocsManager, SimIntegrationDocs, ValidationReport};
+pub use manifest::{
+    FileOperation, FileUpdate, SemVer, UpdateManifest as SignedUpdateManifest,
+    parse as parse_manifest, verify_signature as verify_manifest_signature,
+};
 pub use packaging::{MsiPackageBuilder, PackageConfig, SystemdPackageBuilder};
-pub use rollback::{RollbackManager, VersionInfo};
+pub use policy::{
+    CurrentState, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy, should_apply,
+};
+pub use rollback::{
+    ArtifactFile, FileSystem, JournalEntry, RealFileSystem, RollbackManager, UpdateJournal,
+    UpdateRollbackConfig, UpdateRollbackManager, UpdateState, VersionInfo,
+};
 pub use signature::{SignatureVerifier, UpdateSignature};
+pub use update_manifest::{
+    ManifestUpdateManager, UpdateChannel, UpdateManifest, UpdateRecord, VersionEntry,
+};
 pub use updater::{UpdateConfig, UpdateManager, UpdateResult};
 
 use thiserror::Error;

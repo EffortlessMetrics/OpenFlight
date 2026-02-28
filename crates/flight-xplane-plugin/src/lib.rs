@@ -38,6 +38,7 @@
 
 mod bridge;
 mod protocol;
+pub mod xplm;
 
 use bridge::Bridge;
 use std::sync::{Mutex, OnceLock};

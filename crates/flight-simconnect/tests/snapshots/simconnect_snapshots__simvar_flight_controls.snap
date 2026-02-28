@@ -1,0 +1,61 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: vars
+---
+[
+    (
+        "AILERON POSITION",
+        "position",
+        true,
+    ),
+    (
+        "AILERON TRIM PCT",
+        "percent over 100",
+        true,
+    ),
+    (
+        "ELEVATOR POSITION",
+        "position",
+        true,
+    ),
+    (
+        "ELEVATOR TRIM POSITION",
+        "degrees",
+        true,
+    ),
+    (
+        "FLAPS HANDLE INDEX",
+        "number",
+        true,
+    ),
+    (
+        "FLAPS HANDLE PERCENT",
+        "percent over 100",
+        true,
+    ),
+    (
+        "RUDDER POSITION",
+        "position",
+        true,
+    ),
+    (
+        "RUDDER TRIM PCT",
+        "percent over 100",
+        true,
+    ),
+    (
+        "SPOILERS HANDLE POSITION",
+        "percent over 100",
+        true,
+    ),
+    (
+        "TRAILING EDGE FLAPS LEFT ANGLE",
+        "degrees",
+        false,
+    ),
+    (
+        "TRAILING EDGE FLAPS RIGHT ANGLE",
+        "degrees",
+        false,
+    ),
+]

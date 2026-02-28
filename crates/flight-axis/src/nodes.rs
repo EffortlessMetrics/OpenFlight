@@ -1203,8 +1203,8 @@ mod unit_tests {
         // Zone near edge — bounds should be clamped to [-1, 1]
         let zone = DetentZone::new(0.95, 0.2, 0.05, DetentRole::Takeoff);
         let (lo, hi) = zone.entry_bounds();
-        assert!(lo >= -1.0 && lo <= 1.0);
-        assert!(hi >= -1.0 && hi <= 1.0);
+        assert!((-1.0..=1.0).contains(&lo));
+        assert!((-1.0..=1.0).contains(&hi));
         assert!(lo <= hi);
     }
 

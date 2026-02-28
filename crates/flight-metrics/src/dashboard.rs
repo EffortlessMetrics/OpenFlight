@@ -59,6 +59,38 @@ pub struct RtMetrics {
     pub jitter_us: Option<HistogramSummary>,
 }
 
+/// Typed snapshot of axis processing metrics.
+#[derive(Debug, Clone, Default)]
+pub struct AxisMetrics {
+    /// Axis processing latency histogram, if samples exist
+    pub processing_latency_us: Option<HistogramSummary>,
+}
+
+/// Typed snapshot of bus metrics.
+#[derive(Debug, Clone, Default)]
+pub struct BusMetrics {
+    /// Events dispatched per second
+    pub events_per_second: f64,
+    /// Total bus events dispatched
+    pub events_total: u64,
+}
+
+/// Typed snapshot of device inventory metrics.
+#[derive(Debug, Clone, Default)]
+pub struct DeviceMetrics {
+    /// Number of currently connected devices
+    pub connected_count: f64,
+}
+
+/// Typed snapshot of watchdog metrics.
+#[derive(Debug, Clone, Default)]
+pub struct WatchdogMetrics {
+    /// Dead-man's switch triggers
+    pub dms_triggers_total: u64,
+    /// Hardware watchdog timeouts
+    pub hw_timeouts_total: u64,
+}
+
 /// Aggregated dashboard snapshot built from a raw metrics snapshot.
 ///
 /// Construct with [`MetricsDashboard::from_snapshot`].
@@ -70,6 +102,14 @@ pub struct DashboardSnapshot {
     pub ffb: FfbMetrics,
     /// Real-time scheduler metrics
     pub rt: RtMetrics,
+    /// Axis processing metrics
+    pub axis: AxisMetrics,
+    /// Event bus metrics
+    pub bus: BusMetrics,
+    /// Device inventory metrics
+    pub devices: DeviceMetrics,
+    /// Watchdog metrics
+    pub watchdog: WatchdogMetrics,
 }
 
 /// Builder that converts a raw [`Vec<Metric>`] snapshot into a
@@ -96,6 +136,11 @@ impl MetricsDashboard {
                     common::FFB_EMERGENCY_STOP_TOTAL => snap.ffb.emergency_stop_total = *value,
                     common::RT_TICKS_TOTAL => snap.rt.ticks_total = *value,
                     common::RT_MISSED_DEADLINES_TOTAL => snap.rt.missed_deadlines_total = *value,
+                    common::BUS_EVENTS_TOTAL => snap.bus.events_total = *value,
+                    common::WATCHDOG_DMS_TRIGGERS_TOTAL => {
+                        snap.watchdog.dms_triggers_total = *value
+                    }
+                    common::WATCHDOG_HW_TIMEOUTS_TOTAL => snap.watchdog.hw_timeouts_total = *value,
                     _ => {}
                 },
                 Metric::Gauge { name, value } => match name.as_str() {
@@ -104,6 +149,8 @@ impl MetricsDashboard {
                     common::SIM_LAST_PACKET_AGE_MS => snap.sim.last_packet_age_ms = *value,
                     common::FFB_MAX_TORQUE_NM => snap.ffb.max_torque_nm = *value,
                     common::FFB_CURRENT_TORQUE_NM => snap.ffb.current_torque_nm = *value,
+                    common::BUS_EVENTS_PER_SECOND => snap.bus.events_per_second = *value,
+                    common::DEVICES_CONNECTED_COUNT => snap.devices.connected_count = *value,
                     _ => {}
                 },
                 Metric::Histogram { name, summary } => match name.as_str() {
@@ -114,6 +161,9 @@ impl MetricsDashboard {
                         snap.ffb.effect_latency_ms = Some(summary.clone())
                     }
                     common::RT_JITTER_US => snap.rt.jitter_us = Some(summary.clone()),
+                    common::AXIS_PROCESSING_LATENCY_US => {
+                        snap.axis.processing_latency_us = Some(summary.clone())
+                    }
                     _ => {}
                 },
             }
@@ -237,7 +287,7 @@ mod tests {
             },
             Metric::Gauge {
                 name: "unknown.gauge".to_string(),
-                value: 3.14,
+                value: 4.56,
             },
             Metric::Histogram {
                 name: "unknown.hist".to_string(),

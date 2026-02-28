@@ -317,7 +317,7 @@ impl OfflineFfbEngine {
 mod tests {
     use super::*;
     use flight_axis::AxisFrame;
-    use flight_bus::{AircraftConfig, BusSnapshot, Kinematics};
+    use flight_bus::BusSnapshot;
 
     #[test]
     fn test_offline_axis_engine_creation() {
@@ -436,7 +436,7 @@ mod tests {
             ..Default::default()
         };
 
-        let output = engine
+        let _output = engine
             .process_telemetry("test_device", &snapshot, 1000000)
             .unwrap();
 

@@ -32,6 +32,7 @@ ipc-tests = []  # Enable integration tests
 [dependencies]
 prost.workspace = true
 tonic.workspace = true
+tonic-prost.workspace = true
 tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros"] }
 anyhow.workspace = true
 thiserror.workspace = true
@@ -39,6 +40,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true  # Required by library error types
 tracing.workspace = true
 tokio-stream = { workspace = true, features = ["sync"] }
+tokio-util.workspace = true
 futures-core = { workspace = true }
 flight-core = { path = "../flight-core" }
 flight-hid = { path = "../flight-hid" }
@@ -57,6 +59,7 @@ libc.workspace = true
 
 [build-dependencies]
 tonic-build.workspace = true
+tonic-prost-build = "0.14.3"
 prost-build.workspace = true
 # Vendored protoc: eliminates `protoc` install requirement on fresh machines.
 # Prefers an explicit PROTOC env-var; falls back to the vendored binary.

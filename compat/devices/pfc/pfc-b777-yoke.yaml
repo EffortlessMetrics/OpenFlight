@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Professional Flight Controls"
+  name: "PFC Boeing 777 Yoke"
+  usb:
+    vid: "0x04D8"
+    pid: "0x0180"
+  type: "yoke"
+capabilities:
+  axes: 3
+  buttons: 12
+  hats: 1
+  ffb: false
+support:
+  tier: 2
+  notes: "PFC Boeing 777 replica yoke for professional simulators."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

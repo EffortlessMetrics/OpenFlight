@@ -37,8 +37,8 @@ async fn test_auto_switch_metrics_are_zero_before_any_start() {
         "aircraft_switch_count must start at zero"
     );
     assert_eq!(
-        metrics.detection_latency_ms, 0,
-        "detection_latency_ms must start at zero"
+        metrics.detection_latency_us, 0,
+        "detection_latency_us must start at zero"
     );
     assert_eq!(
         metrics.last_detection_time_ms, 0,
@@ -194,8 +194,10 @@ async fn test_safe_mode_axis_engine_initializes_in_safe_mode() {
 /// with active == true.
 #[tokio::test]
 async fn test_safe_mode_service_exposes_active_status() {
-    let mut cfg = FlightServiceConfig::default();
-    cfg.safe_mode = true;
+    let cfg = FlightServiceConfig {
+        safe_mode: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(cfg);
 

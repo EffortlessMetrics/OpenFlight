@@ -1,0 +1,45 @@
+# CH Products Multi-Function Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Programmable button panel with 25 keys for sim cockpit use.
+
+schema_version: "1"
+
+device:
+  name: "CH Products Multi-Function Panel"
+  vendor: "CH Products"
+  usb:
+    vendor_id: 0x068E
+    product_id: 0x00FC
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 25
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x068E confirmed CH Products. PID 0x00FC community estimate."
+  - id: PANEL_DEVICE
+    description: "25-key programmable button panel. CH Control Manager software."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CH Products Multi-Function Panel. 25-key programmable panel. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

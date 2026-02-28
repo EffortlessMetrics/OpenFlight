@@ -60,8 +60,10 @@ mod usb_stall_tests {
         let endpoint_id = "test_timeout_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.usb_timeout = Duration::from_millis(10); // Very short timeout for testing
+        let config = WatchdogConfig {
+            usb_timeout: Duration::from_millis(10), // Very short timeout for testing
+            ..Default::default()
+        };
 
         watchdog.register_component(component, config);
 
@@ -201,8 +203,10 @@ mod plugin_overrun_tests {
         let plugin_id = "quarantine_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.max_consecutive_failures = 3; // Lower threshold for testing
+        let config = WatchdogConfig {
+            max_consecutive_failures: 3, // Lower threshold for testing
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -230,8 +234,10 @@ mod nan_guard_tests {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("test_axis".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.enable_nan_guards = true;
+        let config = WatchdogConfig {
+            enable_nan_guards: true,
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -263,8 +269,10 @@ mod nan_guard_tests {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("test_axis".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.enable_nan_guards = false; // Disabled
+        let config = WatchdogConfig {
+            enable_nan_guards: false, // Disabled
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -281,9 +289,11 @@ mod nan_guard_tests {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("critical_axis".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.enable_nan_guards = true;
-        config.is_critical = true; // Critical component
+        let config = WatchdogConfig {
+            enable_nan_guards: true,
+            is_critical: true, // Critical component
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -305,8 +315,10 @@ mod quarantine_tests {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::UsbEndpoint("quarantine_test".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.max_consecutive_failures = 2;
+        let config = WatchdogConfig {
+            max_consecutive_failures: 2,
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -373,9 +385,11 @@ mod quarantine_tests {
         let endpoint_id = "rate_test_endpoint";
         let component = ComponentType::UsbEndpoint(endpoint_id.to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.max_failures_per_window = 5;
-        config.failure_rate_window = Duration::from_secs(10);
+        let config = WatchdogConfig {
+            max_failures_per_window: 5,
+            failure_rate_window: Duration::from_secs(10),
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 
@@ -395,8 +409,10 @@ mod quarantine_tests {
         let usb_component = ComponentType::UsbEndpoint("usb_test".to_string());
         let plugin_component = ComponentType::NativePlugin("plugin_test".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.max_consecutive_failures = 1; // Immediate quarantine for testing
+        let config = WatchdogConfig {
+            max_consecutive_failures: 1, // Immediate quarantine for testing
+            ..Default::default()
+        };
 
         watchdog.register_component(usb_component.clone(), config.clone());
         watchdog.register_component(plugin_component.clone(), config);
@@ -506,8 +522,10 @@ mod fault_injection_tests {
         let mut watchdog = WatchdogSystem::new();
         let component = ComponentType::AxisNode("injection_axis_test".to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.enable_nan_guards = true;
+        let config = WatchdogConfig {
+            enable_nan_guards: true,
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
         watchdog.enable_fault_injection();
@@ -614,8 +632,10 @@ mod health_tests {
 
         // Register an axis component for NaN testing
         let axis_component = ComponentType::AxisNode("axis1".to_string());
-        let mut axis_config = WatchdogConfig::default();
-        axis_config.enable_nan_guards = true;
+        let axis_config = WatchdogConfig {
+            enable_nan_guards: true,
+            ..Default::default()
+        };
         watchdog.register_component(axis_component.clone(), axis_config);
 
         // Generate some recent events
@@ -724,8 +744,10 @@ mod integration_tests {
         let plugin_id = "lifecycle_test_plugin";
         let component = ComponentType::NativePlugin(plugin_id.to_string());
 
-        let mut config = WatchdogConfig::default();
-        config.max_consecutive_failures = 3;
+        let config = WatchdogConfig {
+            max_consecutive_failures: 3,
+            ..Default::default()
+        };
 
         watchdog.register_component(component.clone(), config);
 

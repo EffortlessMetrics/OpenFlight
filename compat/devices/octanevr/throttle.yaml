@@ -31,8 +31,8 @@ polling:
   max_jitter_ms: 5
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x04D8 / PID 0xF503 are placeholders; verify with lsusb on physical hardware."
+  - id: VID_MICROCHIP_BRIDGE
+    description: "VID 0x04D8 (Microchip Technology) is plausible â many indie controllers use Microchip MCUs. PID 0xF503 requires verification."
   - id: MAGNETIC_DETENTS
     description: >
       Throttle lever uses magnetic detents for IDLE, CLIMB, and MAX positions.

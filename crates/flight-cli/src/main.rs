@@ -4,9 +4,6 @@
 //! Flight Hub CLI - Command line interface with full parity to UI functionality
 
 #![allow(unused)]
-#![allow(clippy::collapsible_if)]
-#![allow(clippy::ptr_arg)]
-#![allow(clippy::field_reassign_with_default)]
 
 #[cfg(feature = "cli")]
 use clap::{Parser, Subcommand};
@@ -19,6 +16,7 @@ use std::process;
 
 #[cfg(feature = "cli")]
 mod axis_monitor;
+pub mod batch;
 #[cfg(feature = "cli")]
 mod client_manager;
 #[cfg(feature = "cli")]
@@ -30,6 +28,7 @@ mod device_list;
 mod output;
 #[cfg(feature = "cli")]
 mod profile_diff;
+pub mod scripting;
 #[cfg(feature = "cli")]
 mod version_check;
 
@@ -49,6 +48,10 @@ struct Cli {
     /// Output format (human-readable or JSON)
     #[arg(long, short, value_enum, default_value = "human")]
     output: OutputFormat,
+
+    /// Shorthand for --output json
+    #[arg(long)]
+    json: bool,
 
     /// Verbose output
     #[arg(long, short)]
@@ -126,6 +129,11 @@ enum Commands {
         #[command(subcommand)]
         action: CloudProfilesAction,
     },
+    /// Simulator adapter management
+    Adapters {
+        #[command(subcommand)]
+        action: AdaptersAction,
+    },
     /// VR overlay management (show/hide/notify)
     Overlay {
         #[command(subcommand)]
@@ -135,6 +143,12 @@ enum Commands {
     Status,
     /// Show service information
     Info,
+    /// Show version information with build metadata
+    Version,
+    /// Enter safe mode (zero FFB, passthrough axes)
+    SafeMode,
+    /// Run diagnostic checks (shorthand for diag health)
+    Diagnostics,
     /// Show product posture summary
     #[command(name = "--show-posture", hide = true)]
     ShowPosture,
@@ -143,11 +157,18 @@ enum Commands {
 #[cfg(feature = "cli")]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
+    let mut cli = Cli::parse();
+
+    // --json flag overrides --output
+    if cli.json {
+        cli.output = OutputFormat::Json;
+    }
 
     // Initialize client manager
-    let mut client_config = ClientConfig::default();
-    client_config.connection_timeout_ms = cli.timeout;
+    let client_config = ClientConfig {
+        connection_timeout_ms: cli.timeout,
+        ..ClientConfig::default()
+    };
 
     let client_manager = ClientManager::new(client_config);
 
@@ -227,6 +248,9 @@ async fn execute_command(
         Commands::CloudProfiles { action } => {
             commands::cloud_profiles::execute(action, cli.output, cli.verbose, client_manager).await
         }
+        Commands::Adapters { action } => {
+            commands::adapters::execute(action, cli.output, cli.verbose, client_manager).await
+        }
         Commands::Overlay { action } => {
             commands::overlay::execute(action, cli.output, cli.verbose, client_manager).await
         }
@@ -234,6 +258,21 @@ async fn execute_command(
             commands::status::execute(cli.output, cli.verbose, client_manager).await
         }
         Commands::Info => commands::info::execute(cli.output, cli.verbose, client_manager).await,
+        Commands::Version => {
+            commands::version::execute(cli.output, cli.verbose, client_manager).await
+        }
+        Commands::SafeMode => {
+            commands::safe_mode::execute(cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Diagnostics => {
+            commands::diag::execute(
+                &commands::DiagAction::Health,
+                cli.output,
+                cli.verbose,
+                client_manager,
+            )
+            .await
+        }
         Commands::ShowPosture => {
             commands::posture::execute(cli.output, cli.verbose, client_manager).await
         }
@@ -340,6 +379,24 @@ mod tests {
     }
 
     #[test]
+    fn parse_version_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "version"]).unwrap();
+        assert!(matches!(cli.command, Commands::Version));
+    }
+
+    #[test]
+    fn parse_safe_mode_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "safe-mode"]).unwrap();
+        assert!(matches!(cli.command, Commands::SafeMode));
+    }
+
+    #[test]
+    fn parse_diagnostics_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diagnostics"]).unwrap();
+        assert!(matches!(cli.command, Commands::Diagnostics));
+    }
+
+    #[test]
     fn parse_devices_list_subcommand() {
         let cli = Cli::try_parse_from(["flightctl", "devices", "list"]).unwrap();
         assert!(matches!(
@@ -363,6 +420,226 @@ mod tests {
         } = cli.command
         {
             assert!(include_disconnected);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_json_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "--json", "status"]).unwrap();
+        assert!(cli.json);
+    }
+
+    #[test]
+    fn parse_json_flag_sets_output_to_json() {
+        let mut cli = Cli::try_parse_from(["flightctl", "--json", "status"]).unwrap();
+        if cli.json {
+            cli.output = OutputFormat::Json;
+        }
+        assert!(matches!(cli.output, OutputFormat::Json));
+    }
+
+    #[test]
+    fn parse_no_json_flag_keeps_human_default() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert!(!cli.json);
+        assert!(matches!(cli.output, OutputFormat::Human));
+    }
+
+    #[test]
+    fn parse_devices_calibrate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "devices", "calibrate", "dev-1"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Devices {
+                action: commands::DeviceAction::Calibrate { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_devices_test_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "devices", "test", "dev-1"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Devices {
+                action: commands::DeviceAction::Test { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_devices_test_with_options() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "devices",
+            "test",
+            "dev-1",
+            "--interval-ms",
+            "50",
+            "--count",
+            "10",
+        ])
+        .unwrap();
+        if let Commands::Devices {
+            action:
+                commands::DeviceAction::Test {
+                    device_id,
+                    interval_ms,
+                    count,
+                },
+        } = cli.command
+        {
+            assert_eq!(device_id, "dev-1");
+            assert_eq!(interval_ms, 50);
+            assert_eq!(count, Some(10));
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_profile_list_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "list"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Profile {
+                action: commands::ProfileAction::List { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_profile_activate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "activate", "combat"]).unwrap();
+        if let Commands::Profile {
+            action: commands::ProfileAction::Activate { name },
+        } = cli.command
+        {
+            assert_eq!(name, "combat");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_profile_validate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "validate", "test.json"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Profile {
+                action: commands::ProfileAction::Validate { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_profile_export_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "export", "combat", "output.json"])
+            .unwrap();
+        if let Commands::Profile {
+            action: commands::ProfileAction::Export { name, path },
+        } = cli.command
+        {
+            assert_eq!(name, "combat");
+            assert_eq!(path, std::path::PathBuf::from("output.json"));
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_status_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "status"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Adapters {
+                action: commands::AdaptersAction::Status
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_adapters_enable_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "enable", "msfs"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Enable { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "msfs");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_disable_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "disable", "xplane"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Disable { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "xplane");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_reconnect_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "reconnect", "dcs"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Reconnect { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "dcs");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_diag_bundle_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "bundle"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::Bundle { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_health_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "health"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::Health
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_metrics_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "metrics"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::DiagMetrics { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_trace_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "trace", "30"]).unwrap();
+        if let Commands::Diag {
+            action: commands::DiagAction::Trace { duration, .. },
+        } = cli.command
+        {
+            assert_eq!(duration, 30);
         } else {
             panic!("unexpected command variant");
         }

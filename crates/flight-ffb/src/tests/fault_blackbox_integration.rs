@@ -307,7 +307,7 @@ fn test_latched_fault_persists_until_reset() {
     }
 
     // Reset from fault (requires power cycle)
-    engine.reset_from_fault(true).unwrap();
+    engine.reset_after_power_cycle(true).unwrap();
 
     // Verify fault is cleared
     assert!(!engine.has_latched_fault());

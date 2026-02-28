@@ -448,7 +448,7 @@ mod tests {
             let mut ev = make_events();
             let (out, _) = proc.process(input, &mut ev);
             prop_assert!(
-                out >= 0.0 && out <= 1.0,
+                (0.0..=1.0).contains(&out),
                 "output {} out of [0, 1] for input {}",
                 out, input
             );

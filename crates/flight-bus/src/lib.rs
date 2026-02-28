@@ -20,11 +20,16 @@
 pub mod adapter_fixtures;
 pub mod adapters;
 pub mod e2e_test;
+pub mod event_router;
 pub mod fixtures;
+pub mod health;
 pub mod integration_test;
+pub mod metrics;
 pub mod publisher;
 pub mod replay;
+pub mod routing;
 pub mod snapshot;
+pub mod telemetry_aggregator;
 pub mod types;
 
 // Re-export main types for convenience
@@ -37,17 +42,25 @@ pub use e2e_test::{
     FrameHistoryEntry, MockFfbEngine, MockTelemetryBus, SafetyViolationDetail, SafetyViolationType,
     SnapshotStateInfo,
 };
+pub use event_router::{EventFilter, EventRouter, RoutingEntry};
 pub use fixtures::{ScenarioType, SnapshotFixture, SnapshotValidator, ValidationTolerance};
+pub use health::{BusHealth, assess_health};
 pub use integration_test::{
     AdapterIntegrationTest, AdapterType, IntegrationTestResult, MockAdapter, PhaseResult, TestError,
 };
+pub use metrics::{BusMetrics, BusMetricsSnapshot};
 pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, SubscriptionConfig};
+pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
+pub use routing::{
+    BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
+    EventRouter as RoutingEventRouter, RouteId, RouteInfo, RouteMatches, RoutePattern, SourceType,
+};
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
     Navigation,
 };
+pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};
 pub use types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearPosition, GearState, Mach, Percentage,
     SimId, ValidatedAngle, ValidatedSpeed,
 };
-pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};

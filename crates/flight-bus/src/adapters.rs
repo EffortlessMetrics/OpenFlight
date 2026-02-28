@@ -563,7 +563,7 @@ mod tests {
                 prop_assert!(result.is_ok(), "conversion failed for {degrees}");
                 let deg = result.unwrap().to_degrees();
                 prop_assert!(
-                    deg >= -180.0 && deg <= 180.0,
+                    (-180.0..=180.0).contains(&deg),
                     "angle {deg} outside [-180,180] for input {degrees}"
                 );
             }

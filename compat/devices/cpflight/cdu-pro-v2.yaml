@@ -1,0 +1,45 @@
+# CPFlight CDU Pro V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Second generation control display unit with full QWERTY and line select keys.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight CDU Pro V2"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0CD8
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 72
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0CD8 community estimate."
+  - id: PANEL_DEVICE
+    description: "CDU panel with QWERTY layout and line select keys. Backlit LCD."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight CDU Pro V2 control display unit. Full keyboard and LSKs. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

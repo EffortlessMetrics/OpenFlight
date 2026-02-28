@@ -38,11 +38,7 @@ impl DeviceInfo {
     }
 
     fn ffb_str(&self) -> &'static str {
-        if self.ffb_capable {
-            "Yes"
-        } else {
-            "No"
-        }
+        if self.ffb_capable { "Yes" } else { "No" }
     }
 }
 

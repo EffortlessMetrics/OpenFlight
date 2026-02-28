@@ -1,0 +1,52 @@
+# Collins Aerospace HGS Sim HUD
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xD001 estimated.
+# Collins Aerospace HGS (Head-up Guidance System) sim version for
+# professional flight training simulators.
+schema_version: "1"
+
+device:
+  name: "Collins Aerospace HGS Sim HUD"
+  vendor: "Collins Aerospace"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xD001
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 1
+    names: [brightness]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 8
+
+quirks:
+  - id: HGS_SIM_HUD
+    description: >
+      Sim version of the Collins HGS HUD. Combiner glass with
+      projected symbology from sim data. Brightness control axis.
+      Control panel buttons for HUD mode selection.
+  - id: PROFESSIONAL_FSTD
+    description: >
+      Intended for professional flight training device (FSTD)
+      installations. Requires Collins data interface for symbology
+      generation.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Collins Aerospace HGS Sim HUD. PID 0xD001 estimated.
+    Professional FSTD equipment. Last reviewed: 2026-06.

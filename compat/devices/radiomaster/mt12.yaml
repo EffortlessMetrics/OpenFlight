@@ -1,0 +1,43 @@
+# Radiomaster MT12 Surface TX (USB HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-97 addition.
+schema_version: "1"
+
+device:
+  name: "Radiomaster MT12 Surface TX (USB HID)"
+  vendor: "Radiomaster"
+  usb:
+    vendor_id: 0x0483       # Confirmed
+    product_id: 0x5748      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 10
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0483 (STMicroelectronics — used by EdgeTX). PID 0x5748 estimated for MT12. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Radiomaster MT12 — surface RC transmitter with EdgeTX USB joystick mode. Wheel + trigger layout.
+    Wave-97 addition. Last reviewed: 2026-07.

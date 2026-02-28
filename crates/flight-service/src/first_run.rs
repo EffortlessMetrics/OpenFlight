@@ -120,7 +120,8 @@ mod tests {
     #[test]
     fn test_profile_content_is_valid_yaml() {
         let yaml = default_profile_yaml();
-        let value: serde_yaml::Value = serde_yaml::from_str(yaml).expect("default profile must be valid YAML");
+        let value: serde_yaml::Value =
+            serde_yaml::from_str(yaml).expect("default profile must be valid YAML");
         assert!(value.is_mapping());
     }
 
@@ -129,9 +130,9 @@ mod tests {
         let yaml = default_profile_yaml();
         let value: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         let axes = value["axes"].as_mapping().expect("axes must be a mapping");
-        assert!(axes.contains_key(&serde_yaml::Value::String("pitch".to_string())));
-        assert!(axes.contains_key(&serde_yaml::Value::String("roll".to_string())));
-        assert!(axes.contains_key(&serde_yaml::Value::String("yaw".to_string())));
+        assert!(axes.contains_key(serde_yaml::Value::String("pitch".to_string())));
+        assert!(axes.contains_key(serde_yaml::Value::String("roll".to_string())));
+        assert!(axes.contains_key(serde_yaml::Value::String("yaw".to_string())));
     }
 
     #[test]

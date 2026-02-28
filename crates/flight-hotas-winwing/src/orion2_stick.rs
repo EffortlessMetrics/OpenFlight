@@ -133,7 +133,7 @@ pub enum Orion2StickParseError {
 
 /// Normalise a signed 16-bit integer to the range \[−1.0, 1.0\].
 fn norm_i16(v: i16) -> f32 {
-    v as f32 / 32767.0
+    (v as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -273,7 +273,7 @@ mod tests {
         fn prop_roll_always_in_range(raw: i16) {
             let s = parse_orion2_stick_report(&make_report(raw, 0)).unwrap();
             prop_assert!(
-                s.axes.roll >= -1.001 && s.axes.roll <= 1.001,
+                (-1.001..=1.001).contains(&s.axes.roll),
                 "roll out of range: {}",
                 s.axes.roll
             );
@@ -283,7 +283,7 @@ mod tests {
         fn prop_pitch_always_in_range(raw: i16) {
             let s = parse_orion2_stick_report(&make_report(0, raw)).unwrap();
             prop_assert!(
-                s.axes.pitch >= -1.001 && s.axes.pitch <= 1.001,
+                (-1.001..=1.001).contains(&s.axes.pitch),
                 "pitch out of range: {}",
                 s.axes.pitch
             );

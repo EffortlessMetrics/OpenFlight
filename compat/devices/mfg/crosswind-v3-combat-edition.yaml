@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "MFG"
+  name: "MFG Crosswind V3 Combat Edition"
+  usb:
+    vid: "0x1551"
+    pid: "0x0031"
+  type: "rudder"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "MFG Crosswind V3 Combat Edition with stiffer springs."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

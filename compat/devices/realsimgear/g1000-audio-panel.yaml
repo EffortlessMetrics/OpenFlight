@@ -1,0 +1,46 @@
+# RealSimGear G1000 Audio Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x2341 (Arduino-based). PID 0xEF91 estimated for G1000 Audio Panel.
+# GMA 1347 audio panel companion for G1000 suite.
+schema_version: "1"
+
+device:
+  name: "RealSimGear G1000 Audio Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x2341
+    product_id: 0xEF91
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 1
+    names: [volume]
+    resolution_bits: 8
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: AUDIO_PANEL
+    description: >
+      GMA 1347 audio panel with COM1/COM2/NAV1/NAV2 select buttons,
+      marker beacon, DME audio, and speaker/headphone toggle. Volume
+      knob as analog axis.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear G1000 Audio Panel. PID 0xEF91 estimated.
+    Last reviewed: 2026-06.

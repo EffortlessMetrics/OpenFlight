@@ -223,7 +223,7 @@ fn norm_i16_u16(v: u16) -> f32 {
 }
 
 fn norm_i16_val(v: i16) -> f32 {
-    v as f32 / 32767.0
+    (v as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]

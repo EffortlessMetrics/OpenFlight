@@ -1,0 +1,43 @@
+# Thermal Feedback Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Thermal Feedback Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x0011      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [temp_left, temp_right]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x0011 are placeholders for thermal feedback controllers.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thermal feedback controller — Peltier-based temperature feedback for environmental immersion in flight simulation.
+    Wave-100 addition. Last reviewed: 2026-07.

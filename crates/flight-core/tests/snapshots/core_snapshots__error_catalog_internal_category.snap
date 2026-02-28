@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "INT-001: RT spine overrun",
+    "INT-002: Bus queue full",
+    "INT-003: Unexpected state",
+    "INT-004: Allocation in RT path",
+]

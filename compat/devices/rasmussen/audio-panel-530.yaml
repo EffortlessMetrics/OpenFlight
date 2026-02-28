@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "PJ Rasmussen"
+  name: "PJ Rasmussen Audio Panel 530"
+  usb:
+    vid: "0x04D8"
+    pid: "0xE530"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "PJ Rasmussen Audio Panel 530 for GA cockpit audio management."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

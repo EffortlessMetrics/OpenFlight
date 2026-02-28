@@ -1,0 +1,43 @@
+# Brain-Computer Interface (BCI) Adapter
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Brain-Computer Interface (BCI) Adapter"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF03       # Community estimate
+    product_id: 0x0008      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 2
+    names: [concentration, relaxation]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF03 / PID 0x0008 are placeholders for BCI adapters.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Brain-computer interface adapter — EEG-based input mapping cognitive states to sim parameters. Experimental HID mapping.
+    Wave-100 addition. Last reviewed: 2026-07.

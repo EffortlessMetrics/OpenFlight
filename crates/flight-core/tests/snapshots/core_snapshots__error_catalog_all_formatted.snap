@@ -1,0 +1,102 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[CFG-001] Config file missing — The configuration file was not found at the expected path.
+Resolution: Create a default config file or specify the path explicitly.
+
+[CFG-002] Config parse error — The configuration file contains invalid syntax.
+Resolution: Validate the file with a TOML/JSON linter.
+
+[CFG-003] Config value out of range — A configuration value is outside its acceptable range.
+Resolution: Consult docs/reference for valid ranges.
+
+[CFG-004] Config migration required — The config file uses a deprecated schema version.
+Resolution: Run `flightctl config migrate` to update.
+
+[DEV-001] Device not found — The requested HID device could not be located on any USB bus.
+Resolution: Reconnect the device and check USB cables.
+
+[DEV-002] Device open failed — The operating system refused to open the HID device.
+Resolution: Run as administrator or check udev rules on Linux.
+
+[DEV-003] Device read timeout — No data received from device within the expected interval.
+Resolution: Check device firmware and USB connection.
+
+[DEV-004] Device write failed — Failed to send data to the HID device.
+Resolution: Verify device supports output reports and is connected.
+
+[DEV-005] Calibration data missing — No calibration data found for this device.
+Resolution: Run the calibration wizard for this device.
+
+[INT-001] RT spine overrun — The RT tick exceeded its time budget.
+Resolution: Check system load and disable non-essential plugins.
+
+[INT-002] Bus queue full — A lock-free queue dropped messages due to overflow.
+Resolution: Reduce producer rate or increase queue capacity in config.
+
+[INT-003] Unexpected state — An internal state machine reached an unexpected state.
+Resolution: File a bug report with diagnostic bundle attached.
+
+[INT-004] Allocation in RT path — A heap allocation was detected on the RT hot path.
+Resolution: This is a bug — report it with a backtrace.
+
+[NET-001] gRPC bind failed — The IPC server could not bind to the requested port.
+Resolution: Check if the port is already in use.
+
+[NET-002] gRPC connection refused — Could not connect to the gRPC endpoint.
+Resolution: Ensure flightd is running and the port is correct.
+
+[NET-003] TLS handshake failed — The TLS handshake with the remote endpoint failed.
+Resolution: Verify certificates and TLS configuration.
+
+[NET-004] Cloud sync failed — Profile cloud synchronisation failed.
+Resolution: Check internet connectivity and authentication.
+
+[PLG-001] Plugin load failed — The plugin could not be loaded from disk.
+Resolution: Verify plugin file exists and is a valid WASM/native module.
+
+[PLG-002] Plugin capability denied — The plugin requested a capability it is not allowed.
+Resolution: Review plugin manifest and grant required capabilities.
+
+[PLG-003] Plugin timeout — The plugin exceeded its per-tick time budget.
+Resolution: Optimise the plugin or increase the budget in config.
+
+[PLG-004] Plugin panic — The plugin panicked during execution.
+Resolution: Check plugin logs and report the bug to the plugin author.
+
+[PRF-001] Profile parse error — The profile JSON/TOML could not be parsed.
+Resolution: Validate profile syntax with the profile linter.
+
+[PRF-002] Profile schema invalid — The profile does not conform to the expected schema.
+Resolution: Compare against the profile JSON schema in docs/reference.
+
+[PRF-003] Profile merge conflict — Two profiles define conflicting axis assignments.
+Resolution: Resolve overlapping assignments in the more-specific profile.
+
+[PRF-004] Profile not found — The specified profile file does not exist.
+Resolution: Check the profile path and file name.
+
+[SIM-001] SimConnect unavailable — The MSFS SimConnect library could not be loaded.
+Resolution: Ensure MSFS is installed and SimConnect SDK is available.
+
+[SIM-002] Sim connection lost — The connection to the simulator was unexpectedly closed.
+Resolution: Restart the simulator and reconnect.
+
+[SIM-003] Sim variable not found — The requested simulator variable does not exist.
+Resolution: Check variable name against the sim's SDK documentation.
+
+[SIM-004] Sim version mismatch — The simulator version is not compatible with this adapter.
+Resolution: Update OpenFlight or check compatibility matrix.
+
+[SVC-001] Service start failed — The flightd daemon could not start.
+Resolution: Check logs for port conflicts or permission issues.
+
+[SVC-002] Instance lock held — Another flightd instance is already running.
+Resolution: Stop the existing instance before starting a new one.
+
+[SVC-003] Graceful shutdown timeout — The service did not shut down within the allowed time.
+Resolution: Force-kill the process and check for stuck tasks.
+
+[SVC-004] Health check failed — One or more subsystem health checks returned unhealthy.
+Resolution: Run diagnostic bundle and inspect component status.

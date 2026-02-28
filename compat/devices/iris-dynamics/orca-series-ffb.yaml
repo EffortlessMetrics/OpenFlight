@@ -1,0 +1,51 @@
+# IRIS Dynamics Orca Series FFB Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x16D0 (MCS Electronics). PID 0x0F02 estimated for Orca Series FFB.
+# Direct-drive linear actuator force feedback controller.
+schema_version: "1"
+
+device:
+  name: "IRIS Dynamics Orca Series FFB Controller"
+  vendor: "IRIS Dynamics"
+  usb:
+    vendor_id: 0x16D0
+    product_id: 0x0F02
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 0.5
+
+quirks:
+  - id: ORCA_LINEAR_ACTUATOR
+    description: >
+      Uses IRIS Dynamics Orca series linear actuators for direct-drive
+      force feedback. Sub-millisecond force response latency. Requires
+      IRIS Dynamics SDK for FFB configuration.
+  - id: HIGH_BANDWIDTH_FFB
+    description: >
+      1000 Hz FFB update rate with USB high-speed connection.
+      Supports complex force effects including texture, spring,
+      damper, and custom waveforms via SDK.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    IRIS Dynamics Orca Series FFB Controller. PID 0x0F02 estimated.
+    Direct-drive linear actuator FFB. Last reviewed: 2026-06.

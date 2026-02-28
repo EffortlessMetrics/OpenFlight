@@ -23,6 +23,7 @@ fn make_stecs_report(rx: u16, ry: u16, x: u16, y: u16, z: u16, buttons: u32) -> 
     r
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_gladiator_report(
     roll: u16,
     pitch: u16,
@@ -82,11 +83,11 @@ proptest! {
         let report = make_stecs_report(rx, ry, x, y, z, 0);
         let state = handler.parse_interface_report(&report).unwrap();
         let axes = state.axes.expect("axes must be present in a 14-byte report");
-        prop_assert!(axes.rx >= 0.0 && axes.rx <= 1.0, "rx={}", axes.rx);
-        prop_assert!(axes.ry >= 0.0 && axes.ry <= 1.0, "ry={}", axes.ry);
-        prop_assert!(axes.x  >= 0.0 && axes.x  <= 1.0, "x={}",  axes.x);
-        prop_assert!(axes.y  >= 0.0 && axes.y  <= 1.0, "y={}",  axes.y);
-        prop_assert!(axes.z  >= 0.0 && axes.z  <= 1.0, "z={}",  axes.z);
+        prop_assert!((0.0..=1.0).contains(&axes.rx), "rx={}", axes.rx);
+        prop_assert!((0.0..=1.0).contains(&axes.ry), "ry={}", axes.ry);
+        prop_assert!((0.0..=1.0).contains(&axes.x),  "x={}",  axes.x);
+        prop_assert!((0.0..=1.0).contains(&axes.y),  "y={}",  axes.y);
+        prop_assert!((0.0..=1.0).contains(&axes.z),  "z={}",  axes.z);
     }
 
     /// STECS axes are always finite (no NaN or Inf).
@@ -148,11 +149,11 @@ proptest! {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
         let report = make_gladiator_report(roll, pitch, yaw, mx, my, 0x8000, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
-        prop_assert!(state.axes.roll   >= -1.0 && state.axes.roll   <= 1.0, "roll={}",   state.axes.roll);
-        prop_assert!(state.axes.pitch  >= -1.0 && state.axes.pitch  <= 1.0, "pitch={}",  state.axes.pitch);
-        prop_assert!(state.axes.yaw    >= -1.0 && state.axes.yaw    <= 1.0, "yaw={}",    state.axes.yaw);
-        prop_assert!(state.axes.mini_x >= -1.0 && state.axes.mini_x <= 1.0, "mini_x={}", state.axes.mini_x);
-        prop_assert!(state.axes.mini_y >= -1.0 && state.axes.mini_y <= 1.0, "mini_y={}", state.axes.mini_y);
+        prop_assert!((-1.0..=1.0).contains(&state.axes.roll),   "roll={}",   state.axes.roll);
+        prop_assert!((-1.0..=1.0).contains(&state.axes.pitch),  "pitch={}",  state.axes.pitch);
+        prop_assert!((-1.0..=1.0).contains(&state.axes.yaw),    "yaw={}",    state.axes.yaw);
+        prop_assert!((-1.0..=1.0).contains(&state.axes.mini_x), "mini_x={}", state.axes.mini_x);
+        prop_assert!((-1.0..=1.0).contains(&state.axes.mini_y), "mini_y={}", state.axes.mini_y);
     }
 
     /// Throttle wheel is always in [0.0, 1.0].
@@ -163,7 +164,7 @@ proptest! {
             make_gladiator_report(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!(
-            state.axes.throttle >= 0.0 && state.axes.throttle <= 1.0,
+            (0.0..=1.0).contains(&state.axes.throttle),
             "throttle={}", state.axes.throttle
         );
     }
@@ -234,10 +235,10 @@ proptest! {
     ) {
         let report = make_stecs_mt_report(throttle, mini_left, mini_right, rotary, 0, 0);
         let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
-        prop_assert!(state.axes.throttle   >= 0.0 && state.axes.throttle   <= 1.0);
-        prop_assert!(state.axes.mini_left  >= 0.0 && state.axes.mini_left  <= 1.0);
-        prop_assert!(state.axes.mini_right >= 0.0 && state.axes.mini_right <= 1.0);
-        prop_assert!(state.axes.rotary     >= 0.0 && state.axes.rotary     <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
+        prop_assert!((0.0..=1.0).contains(&state.axes.mini_left));
+        prop_assert!((0.0..=1.0).contains(&state.axes.mini_right));
+        prop_assert!((0.0..=1.0).contains(&state.axes.rotary));
     }
 
     /// All STECS Modern Throttle axes are always finite (no NaN or Inf).

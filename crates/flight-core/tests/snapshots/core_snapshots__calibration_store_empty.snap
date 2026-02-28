@@ -1,0 +1,7 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: store
+---
+{
+  "calibrations": {}
+}

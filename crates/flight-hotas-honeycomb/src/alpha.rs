@@ -138,7 +138,7 @@ pub enum AlphaParseError {
 /// Normalise a 12-bit unsigned value centred at 2048 to \[−1.0, +1.0\].
 fn norm_12bit_centered(raw: u16) -> f32 {
     let raw = raw.min(4095);
-    (raw as f32 - 2048.0) / 2047.0
+    ((raw as f32 - 2048.0) / 2048.0).clamp(-1.0, 1.0)
 }
 
 /// Convert a 4-bit hat raw value (0–15) to an 8-way direction.
@@ -261,14 +261,14 @@ mod tests {
             #[test]
             fn roll_within_bounds(raw in 0u16..=4095u16) {
                 let state = parse_alpha_report(&super::alpha_report(raw, 2048, 0, 15)).unwrap();
-                prop_assert!(state.axes.roll >= -1.001 && state.axes.roll <= 1.001,
+                prop_assert!((-1.001..=1.001).contains(&state.axes.roll),
                     "roll out of range: {}", state.axes.roll);
             }
 
             #[test]
             fn pitch_within_bounds(raw in 0u16..=4095u16) {
                 let state = parse_alpha_report(&super::alpha_report(2048, raw, 0, 15)).unwrap();
-                prop_assert!(state.axes.pitch >= -1.001 && state.axes.pitch <= 1.001,
+                prop_assert!((-1.001..=1.001).contains(&state.axes.pitch),
                     "pitch out of range: {}", state.axes.pitch);
             }
 

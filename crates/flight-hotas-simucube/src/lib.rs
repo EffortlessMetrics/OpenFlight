@@ -360,7 +360,7 @@ mod tests {
             pos in 0u32..=ENCODER_MAX,
         ) {
             let v = normalize_angle(pos, 22);
-            prop_assert!(v >= -1.0 && v <= 1.0, "got {}", v);
+            prop_assert!((-1.0..=1.0).contains(&v), "got {}", v);
         }
     }
 }

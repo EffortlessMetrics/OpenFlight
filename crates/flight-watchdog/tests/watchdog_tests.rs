@@ -18,10 +18,7 @@
 //! 9. External state query reflects current component health
 //! 10. proptest: arbitrary tick/failure sequences stay in a valid state
 
-use flight_watchdog::{
-    ComponentType, QuarantineStatus, SyntheticFault, WatchdogConfig, WatchdogEventType,
-    WatchdogSystem,
-};
+use flight_watchdog::{ComponentType, QuarantineStatus, WatchdogConfig, WatchdogSystem};
 use std::time::Duration;
 
 // ── 1. Healthy tick resets the watchdog timer ────────────────────────────────

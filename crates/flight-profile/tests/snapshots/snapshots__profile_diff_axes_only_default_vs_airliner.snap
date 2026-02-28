@@ -1,0 +1,58 @@
+---
+source: crates/flight-profile/tests/snapshots.rs
+expression: axes_only.to_text()
+---
+Profile diff: default_flight vs airliner
+Changes: 39 added, 11 removed, 2 changed
+  ~ axes.pitch.expo: 0.20000000298023224 -> 0.25
+  ~ axes.roll.expo: 0.15000000596046448 -> 0.20000000298023224
+  - axes.throttle.curve[0].input: 0.0
+  - axes.throttle.curve[0].output: 0.0
+  - axes.throttle.curve[1].input: 1.0
+  - axes.throttle.curve[1].output: 1.0
+  - axes.throttle.deadzone: 0.019999999552965164
+  - axes.throttle.detents[0].position: 0.0
+  - axes.throttle.detents[0].role: idle
+  - axes.throttle.detents[0].width: 0.029999999329447746
+  - axes.throttle.expo: null
+  - axes.throttle.filter: null
+  - axes.throttle.slew_rate: 5.0
+  + axes.speedbrake.curve[0].input: 0.0
+  + axes.speedbrake.curve[0].output: 0.0
+  + axes.speedbrake.curve[1].input: 1.0
+  + axes.speedbrake.curve[1].output: 1.0
+  + axes.speedbrake.deadzone: 0.019999999552965164
+  + axes.speedbrake.detents[0].position: 0.0
+  + axes.speedbrake.detents[0].role: retracted
+  + axes.speedbrake.detents[0].width: 0.03999999910593033
+  + axes.speedbrake.expo: null
+  + axes.speedbrake.filter: null
+  + axes.speedbrake.slew_rate: 3.0
+  + axes.throttle_1.curve[0].input: 0.0
+  + axes.throttle_1.curve[0].output: 0.0
+  + axes.throttle_1.curve[1].input: 1.0
+  + axes.throttle_1.curve[1].output: 1.0
+  + axes.throttle_1.deadzone: 0.009999999776482582
+  + axes.throttle_1.detents[0].position: 0.0
+  + axes.throttle_1.detents[0].role: idle
+  + axes.throttle_1.detents[0].width: 0.029999999329447746
+  + axes.throttle_1.detents[1].position: 0.949999988079071
+  + axes.throttle_1.detents[1].role: toga
+  + axes.throttle_1.detents[1].width: 0.029999999329447746
+  + axes.throttle_1.expo: null
+  + axes.throttle_1.filter: null
+  + axes.throttle_1.slew_rate: 4.0
+  + axes.throttle_2.curve[0].input: 0.0
+  + axes.throttle_2.curve[0].output: 0.0
+  + axes.throttle_2.curve[1].input: 1.0
+  + axes.throttle_2.curve[1].output: 1.0
+  + axes.throttle_2.deadzone: 0.009999999776482582
+  + axes.throttle_2.detents[0].position: 0.0
+  + axes.throttle_2.detents[0].role: idle
+  + axes.throttle_2.detents[0].width: 0.029999999329447746
+  + axes.throttle_2.detents[1].position: 0.949999988079071
+  + axes.throttle_2.detents[1].role: toga
+  + axes.throttle_2.detents[1].width: 0.029999999329447746
+  + axes.throttle_2.expo: null
+  + axes.throttle_2.filter: null
+  + axes.throttle_2.slew_rate: 4.0

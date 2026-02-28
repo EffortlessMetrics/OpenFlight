@@ -2,7 +2,7 @@
 name = "flight-simconnect-fuzz"
 version = "0.0.0"
 publish = false
-edition = "2021"
+edition = "2024"
 
 [workspace]
 
@@ -23,5 +23,17 @@ debug = 1
 [[bin]]
 name = "fuzz_simconnect_fixture"
 path = "fuzz_targets/fuzz_simconnect_fixture.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_weather_simvars"
+path = "fuzz_targets/fuzz_weather_simvars.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_engine_params"
+path = "fuzz_targets/fuzz_engine_params.rs"
 test = false
 doc = false

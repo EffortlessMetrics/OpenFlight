@@ -648,7 +648,6 @@ impl Default for AcceptanceTestConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
 
     #[test]
     fn test_acceptance_test_runner_creation() {
@@ -697,7 +696,7 @@ mod tests {
     fn test_comparison_operators() {
         use ComparisonOperator::*;
 
-        let operators = vec![
+        let operators = [
             GreaterThan,
             GreaterThanOrEqual,
             LessThan,

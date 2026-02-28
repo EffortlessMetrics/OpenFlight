@@ -77,13 +77,13 @@ pub fn parse_x65f_report(report: &[u8]) -> Option<HotasInputState> {
 /// Normalise an 11-bit unsigned value to −1.0..=1.0.
 #[inline]
 fn normalize_11bit(raw: u16) -> f32 {
-    (raw as f32 / 1023.5) - 1.0
+    ((raw as f32 / 1023.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 /// Normalise a 10-bit unsigned value to −1.0..=1.0.
 #[inline]
 fn normalize_10bit(raw: u16) -> f32 {
-    (raw as f32 / 511.5) - 1.0
+    ((raw as f32 / 511.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]

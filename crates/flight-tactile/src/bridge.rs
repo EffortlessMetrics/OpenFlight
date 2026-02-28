@@ -470,8 +470,10 @@ mod tests {
 
     #[test]
     fn test_tactile_bridge_invalid_config() {
-        let mut config = TactileConfig::default();
-        config.update_rate_hz = 0.0; // Invalid
+        let config = TactileConfig {
+            update_rate_hz: 0.0, // Invalid
+            ..Default::default()
+        };
 
         let enabled = Arc::new(RwLock::new(true));
         let bridge = TactileBridge::new(config, enabled);

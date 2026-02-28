@@ -1,0 +1,34 @@
+---
+source: crates/flight-rules/tests/snapshots.rs
+expression: snap
+---
+{
+  "instructions": [
+    {
+      "LoadVar": 0
+    },
+    {
+      "LoadConst": 18000.0
+    },
+    {
+      "Compare": "GreaterEqual"
+    },
+    {
+      "JumpFalse": 5
+    },
+    {
+      "Action": 0
+    }
+  ],
+  "variable_map": {
+    "altitude": 0
+  },
+  "actions": [
+    {
+      "LedOn": {
+        "target": "FL"
+      }
+    }
+  ],
+  "stack_size": 8
+}

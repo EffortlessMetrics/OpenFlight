@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "AITrack Compatible Camera"
+  usb:
+    vid: "0x0000"
+    pid: "0x0000"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "AITrack AI-powered webcam head tracking software."
+  driver: "software protocol"
+quirks:
+  - id: SOFTWARE_ONLY
+    description: "Uses any webcam; AI-based face tracking via opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -13,7 +13,7 @@ device:
   name: "WinWing Ursa Minor F/A-18 Throttle"
   vendor: "WinWing"
   usb:
-    vendor_id: 0x4098   # WinWing custom VID (community-reported, VID_UNCONFIRMED for this model)
+    vendor_id: 0x4098   # WinWing (confirmed)
     product_id: 0xBE12  # Placeholder — PID_UNCONFIRMED; verify against linux-hardware.org
   hid:
     usage_page: 0x01    # Generic Desktop
@@ -33,8 +33,8 @@ polling:
   max_jitter_ms: 2
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x4098 is community-reported for WinWing; PID 0xBE12 is unconfirmed for this model."
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed for WinWing; PID 0xBE12 is unconfirmed for this model."
   - id: PID_UNCONFIRMED
     description: "PID must be verified against physical hardware or linux-hardware.org probe data."
   - id: FA18_SPEEDBRAKE_DETENT

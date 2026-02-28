@@ -1,0 +1,43 @@
+# DJI RC Pro (USB Joystick Mode)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-97 addition.
+schema_version: "1"
+
+device:
+  name: "DJI RC Pro (USB Joystick Mode)"
+  vendor: "DJI"
+  usb:
+    vendor_id: 0x2CA3       # Confirmed
+    product_id: 0x001B      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [x, y, z, rz]
+    resolution_bits: 12
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2CA3 confirmed (DJI). PID 0x001B estimated for RC Pro in USB mode. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DJI RC Pro controller in USB joystick mode. High-resolution Hall gimbals with built-in screen.
+    Wave-97 addition. Last reviewed: 2026-07.

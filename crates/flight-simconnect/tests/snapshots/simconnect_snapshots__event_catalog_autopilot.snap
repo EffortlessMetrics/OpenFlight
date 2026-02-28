@@ -1,0 +1,46 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: items
+---
+[
+    (
+        "AP_ALT_HOLD",
+        true,
+    ),
+    (
+        "AP_APR_HOLD",
+        true,
+    ),
+    (
+        "AP_BC_HOLD",
+        true,
+    ),
+    (
+        "AP_HDG_HOLD",
+        true,
+    ),
+    (
+        "AP_LOC_HOLD",
+        true,
+    ),
+    (
+        "AP_MASTER",
+        true,
+    ),
+    (
+        "AP_NAV1_HOLD",
+        true,
+    ),
+    (
+        "AP_SPD_HOLD",
+        true,
+    ),
+    (
+        "AP_VS_HOLD",
+        true,
+    ),
+    (
+        "FLIGHT_LEVEL_CHANGE",
+        true,
+    ),
+]

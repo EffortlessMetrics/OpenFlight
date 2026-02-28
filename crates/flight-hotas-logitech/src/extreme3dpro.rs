@@ -115,19 +115,19 @@ pub const EXTREME_3D_PRO_MIN_REPORT_BYTES: usize = 7;
 /// Normalize a 10-bit centered axis (0..1023) to −1.0..=1.0.
 #[inline]
 fn normalize_10bit_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 511.5) / 511.5
+    ((raw as f32 - 511.5) / 511.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize an 8-bit centered axis (0..255) to −1.0..=1.0.
 #[inline]
 fn normalize_8bit_bipolar(raw: u8) -> f32 {
-    (raw as f32 - 127.5) / 127.5
+    ((raw as f32 - 127.5) / 127.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize a 7-bit unipolar axis (0..127) to 0.0..=1.0.
 #[inline]
 fn normalize_7bit_unipolar(raw: u8) -> f32 {
-    raw as f32 / 127.0
+    (raw as f32 / 127.0).clamp(0.0, 1.0)
 }
 
 /// Parse a 7-byte HID input report from the Logitech Extreme 3D Pro.

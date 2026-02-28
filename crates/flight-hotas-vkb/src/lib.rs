@@ -8,6 +8,8 @@
 
 pub mod health;
 pub mod input;
+pub mod profiles;
+pub mod protocol;
 pub mod stecs_modern;
 
 pub use flight_hid_support::device_support::{
@@ -28,6 +30,19 @@ pub use input::{
     GladiatorInputState, GladiatorParseError, HatDirection, STECS_BUTTONS_PER_VIRTUAL_CONTROLLER,
     STECS_MAX_BUTTONS, STECS_MAX_VIRTUAL_CONTROLLERS, StecsAxes, StecsInputAggregator,
     StecsInputHandler, StecsInputState, StecsInterfaceState, StecsParseError,
+};
+pub use profiles::{
+    AxisMapping, AxisNormMode, ButtonKind, ButtonMapping, HatKind, HatMapping, VkbDeviceProfile,
+    all_profiles, gladiator_nxt_evo_profile, gunfighter_mcg_profile, profile_for_pid,
+    sem_thq_profile, stecs_throttle_profile, t_rudder_profile,
+};
+pub use protocol::{
+    GLADIATOR_NXT_EVO_SHIFT, GUNFIGHTER_MAX_BUTTONS, GUNFIGHTER_MAX_HATS, GUNFIGHTER_MCG_SHIFT,
+    GunfighterAxes, GunfighterInputHandler, GunfighterInputState, GunfighterParseError,
+    GunfighterVariant, SemThqAxes, SemThqInputHandler, SemThqInputState, SemThqParseError,
+    VKB_AXIS_16BIT, VKB_JOYSTICK_STANDARD_LAYOUT, VKB_LED_REPORT_ID, VKB_SEM_THQ_LAYOUT,
+    VkbAxisResolution, VkbDeviceFamily, VkbJoystickReportLayout, VkbLedColor, VkbLedIndex,
+    VkbShiftMode, build_led_command, is_vkb_joystick, report_layout_for_family, vkb_device_family,
 };
 pub use stecs_modern::{
     StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,

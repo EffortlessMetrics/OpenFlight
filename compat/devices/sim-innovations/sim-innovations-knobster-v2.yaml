@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sim Innovations"
+  name: "Sim Innovations Knobster V2"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF701"
+  type: "panel"
+capabilities:
+  axes: 2
+  buttons: 10
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sim Innovations Knobster V2 enhanced rotary encoder panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

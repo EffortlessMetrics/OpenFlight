@@ -748,7 +748,7 @@ mod tests {
         // Wait and check age increases
         std::thread::sleep(std::time::Duration::from_millis(50));
         let age = snapshot.age_ms();
-        assert!(age >= 50 && age < 100);
+        assert!((50..100).contains(&age));
     }
 
     // Core field range validation tests

@@ -1,0 +1,45 @@
+# GoFlight GF-P8 Mk2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0E9F (GoFlight). PID 0x0080 estimated for GF-P8 Mk2.
+# Second-generation 8-encoder avionics panel.
+schema_version: "1"
+
+device:
+  name: "GoFlight GF-P8 Mk2"
+  vendor: "GoFlight"
+  usb:
+    vendor_id: 0x0E9F
+    product_id: 0x0080
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 20
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: ROTARY_ENCODERS_MK2
+    description: >
+      Mk2 revision with improved rotary encoder detent feel and
+      updated 7-segment displays with better contrast.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    GoFlight GF-P8 Mk2. PID 0x0080 estimated.
+    VID 0x0E9F (GoFlight). Last reviewed: 2026-06.

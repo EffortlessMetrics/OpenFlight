@@ -1,0 +1,45 @@
+# VKB TECS Max Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Maximum configuration TECS with all lever modules installed.
+
+schema_version: "1"
+
+device:
+  name: "VKB TECS Max Throttle"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0285
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [throttle1, throttle2, prop1, prop2, mixture, condition]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x231D confirmed VKB. PID 0x0285 community estimate for TECS Max."
+  - id: MODULAR_LEVERS
+    description: "Full six-lever configuration for twin-engine aircraft."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB TECS Max throttle. Six-lever twin-engine configuration. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

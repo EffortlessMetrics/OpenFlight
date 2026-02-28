@@ -1,0 +1,43 @@
+# Logitech CyberMan 2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Logitech CyberMan 2"
+  vendor: "Logitech"
+  usb:
+    vendor_id: 0x046D       # Confirmed
+    product_id: 0xC101      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x8             # Multi-axis Controller
+
+capabilities:
+  axes:
+    count: 6
+    names: [x, y, z, rx, ry, rz]
+    resolution_bits: 8
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x046D confirmed (Logitech). PID 0xC101 estimated for CyberMan 2. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Logitech CyberMan 2 — 6-DOF controller from 1994. Rare vintage device with full 3D movement axes for space sims.
+    Wave-99 addition. Last reviewed: 2026-07.

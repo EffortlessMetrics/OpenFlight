@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VKB"
+  name: "VKB Kosmosima SCG Premium Left"
+  usb:
+    vid: "0x231D"
+    pid: "0x0152"
+  type: "joystick"
+capabilities:
+  axes: 5
+  buttons: 28
+  hats: 2
+  ffb: false
+support:
+  tier: 2
+  notes: "VKB Kosmosima Space Combat Grip premium left-hand variant."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

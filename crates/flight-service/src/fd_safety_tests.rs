@@ -32,7 +32,7 @@ mod tests {
         let _ = (
             example_service_function_with_owned_fd,
             example_service_function_with_borrowed_fd,
-            example_service_function_with_as_fd,
+            example_service_function_with_as_fd::<OwnedFd>,
         );
     }
 
@@ -50,7 +50,6 @@ mod tests {
     }
 
     /// Test that service layer properly handles system resources
-    #[cfg(unix)]
     #[cfg(unix)]
     #[test]
     fn test_service_system_resource_safety() {

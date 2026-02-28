@@ -1,3 +1,4 @@
+#![cfg(windows)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -52,7 +53,7 @@ fn test_session_config_poll_interval_is_approximately_60hz() {
     let cfg = SessionConfig::default();
     let ms = cfg.poll_interval.as_millis();
     assert!(
-        ms >= 15 && ms <= 17,
+        (15..=17).contains(&ms),
         "poll_interval should be ~16 ms for 60 Hz, got {} ms",
         ms
     );
@@ -77,7 +78,7 @@ fn test_adapter_config_publish_rate_60hz_target() {
     // Minimum interval between publishes at 60 Hz
     let min_interval = Duration::from_secs_f32(1.0 / cfg.publish_rate);
     assert!(
-        min_interval.as_millis() >= 16 && min_interval.as_millis() <= 17,
+        (16..=17).contains(&min_interval.as_millis()),
         "60 Hz interval should be ~16 ms, got {} ms",
         min_interval.as_millis()
     );

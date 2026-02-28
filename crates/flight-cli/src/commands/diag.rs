@@ -18,6 +18,33 @@ pub async fn execute(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
+        DiagAction::Bundle {
+            output,
+            include_recordings,
+        } => {
+            create_bundle(
+                output.as_deref(),
+                *include_recordings,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
+        }
+        DiagAction::Health => health_summary(output_format, verbose, client_manager).await,
+        DiagAction::DiagMetrics { reset } => {
+            diag_metrics(*reset, output_format, verbose, client_manager).await
+        }
+        DiagAction::Trace { duration, output } => {
+            trace_recording(
+                *duration,
+                output.as_deref(),
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
+        }
         DiagAction::Record {
             output,
             duration,
@@ -71,6 +98,251 @@ pub async fn execute(
     }
 }
 
+async fn create_bundle(
+    output_path: Option<&Path>,
+    include_recordings: bool,
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    // Determine output path
+    let default_name = format!(
+        "openflight-diag-{}.zip",
+        chrono::Utc::now().format("%Y%m%d-%H%M%S")
+    );
+    let out_path = output_path
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from(&default_name));
+
+    // Try to contact daemon for live data
+    let daemon_reachable = match client_manager.get_client().await {
+        Ok(mut client) => {
+            let _ = client.get_service_info().await;
+            true
+        }
+        Err(_) => false,
+    };
+
+    let mut result = json!({
+        "bundle_path": out_path.display().to_string(),
+        "daemon_reachable": daemon_reachable,
+        "include_recordings": include_recordings,
+        "contents": [
+            "system_info.json",
+            "service_status.json",
+            "device_list.json",
+            "active_profile.json",
+            "recent_logs.txt",
+            "metrics_snapshot.json"
+        ],
+        "message": format!("Diagnostic bundle will be written to '{}'", out_path.display()),
+        "note": "Full bundle creation requires GetSupportBundle RPC to be implemented in the service",
+    });
+
+    if include_recordings {
+        result["contents"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!("blackbox_recordings/"));
+    }
+
+    if verbose {
+        result["collection_details"] = json!({
+            "system_info": "OS version, CPU, memory, Rust version",
+            "service_status": "Daemon version, uptime, health events",
+            "device_list": "All connected devices with capabilities",
+            "active_profile": "Current effective profile JSON",
+            "recent_logs": "Last 1000 lines from service log",
+            "metrics_snapshot": "Current performance counters",
+        });
+    }
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+async fn health_summary(
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    let mut client = client_manager.get_client().await?;
+
+    let service_info = client.get_service_info().await?;
+
+    let devices_response = client
+        .list_devices(flight_ipc::ListDevicesRequest {
+            include_disconnected: true,
+            filter_types: vec![],
+        })
+        .await?;
+
+    let connected_count = devices_response
+        .devices
+        .iter()
+        .filter(|d| d.status() == flight_ipc::DeviceStatus::Connected)
+        .count();
+    let faulted_count = devices_response
+        .devices
+        .iter()
+        .filter(|d| {
+            d.status() == flight_ipc::DeviceStatus::Faulted
+                || d.status() == flight_ipc::DeviceStatus::Error
+        })
+        .count();
+
+    let overall_status = if faulted_count > 0 {
+        "degraded"
+    } else {
+        "healthy"
+    };
+
+    let mut result = json!({
+        "overall_status": overall_status,
+        "service_status": service_status_to_string(service_info.status()),
+        "service_version": service_info.version,
+        "uptime_seconds": service_info.uptime_seconds,
+        "devices": {
+            "connected": connected_count,
+            "total": devices_response.total_count,
+            "faulted": faulted_count,
+        },
+    });
+
+    if verbose {
+        let device_details: Vec<serde_json::Value> = devices_response
+            .devices
+            .iter()
+            .map(|d| {
+                json!({
+                    "id": d.id,
+                    "name": d.name,
+                    "status": device_status_to_string(d.status()),
+                })
+            })
+            .collect();
+        result["device_details"] = json!(device_details);
+    }
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+async fn diag_metrics(
+    reset: bool,
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    // Verify daemon is reachable
+    let mut client = client_manager.get_client().await?;
+    let _service_info = client.get_service_info().await?;
+
+    let mut result = json!({
+        "captured_at": chrono::Utc::now().to_rfc3339(),
+        "reset_after_capture": reset,
+        "rt": {
+            "ticks_total": 0,
+            "missed_deadlines_total": 0,
+            "jitter_p99_us": 0.0,
+            "jitter_max_us": 0.0,
+        },
+        "hid": {
+            "write_latency_p99_us": 0.0,
+            "read_errors_total": 0,
+            "write_errors_total": 0,
+        },
+        "ipc": {
+            "requests_total": 0,
+            "request_latency_p99_ms": 0.0,
+            "active_subscriptions": 0,
+        },
+        "note": "Full metrics snapshot requires GetMetrics RPC to be implemented in the service",
+    });
+
+    if verbose {
+        result["ffb"] = json!({
+            "effects_applied_total": 0,
+            "fault_count_total": 0,
+            "envelope_clamp_total": 0,
+            "emergency_stop_total": 0,
+        });
+        result["memory"] = json!({
+            "heap_bytes": 0,
+            "resident_bytes": 0,
+        });
+    }
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+async fn trace_recording(
+    duration: u64,
+    output_path: Option<&Path>,
+    output_format: OutputFormat,
+    verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    // Verify daemon is reachable
+    let mut client = client_manager.get_client().await?;
+    let _service_info = client.get_service_info().await?;
+
+    let default_name = format!(
+        "openflight-trace-{}.json",
+        chrono::Utc::now().format("%Y%m%d-%H%M%S")
+    );
+    let out_path = output_path
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| std::path::PathBuf::from(&default_name));
+
+    let mut result = json!({
+        "trace_started": true,
+        "duration_seconds": duration,
+        "output_file": out_path.display().to_string(),
+        "estimated_end_time": chrono::Utc::now().timestamp() + duration as i64,
+        "message": format!("Trace recording for {}s to '{}'", duration, out_path.display()),
+        "note": "Full trace recording requires StartTrace RPC to be implemented in the service",
+    });
+
+    if verbose {
+        result["trace_details"] = json!({
+            "capture_sources": [
+                "axis_pipeline",
+                "ffb_engine",
+                "scheduler_ticks",
+                "ipc_messages",
+                "device_events"
+            ],
+            "format": "Chrome Trace Event Format (JSON)",
+            "estimated_size_mb_per_second": 0.5,
+        });
+    }
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+fn service_status_to_string(status: flight_ipc::ServiceStatus) -> &'static str {
+    match status {
+        flight_ipc::ServiceStatus::Unspecified => "unspecified",
+        flight_ipc::ServiceStatus::Starting => "starting",
+        flight_ipc::ServiceStatus::Running => "running",
+        flight_ipc::ServiceStatus::Degraded => "degraded",
+        flight_ipc::ServiceStatus::Stopping => "stopping",
+    }
+}
+
+fn device_status_to_string(status: flight_ipc::DeviceStatus) -> &'static str {
+    match status {
+        flight_ipc::DeviceStatus::Unspecified => "unspecified",
+        flight_ipc::DeviceStatus::Connected => "connected",
+        flight_ipc::DeviceStatus::Disconnected => "disconnected",
+        flight_ipc::DeviceStatus::Error => "error",
+        flight_ipc::DeviceStatus::Faulted => "faulted",
+    }
+}
+
 async fn start_recording(
     output_path: &Path,
     duration: Option<u64>,
@@ -80,13 +352,13 @@ async fn start_recording(
     client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     // Validate output path
-    if let Some(parent) = output_path.parent() {
-        if !parent.exists() {
-            return Err(anyhow::anyhow!(
-                "Output directory '{}' does not exist",
-                parent.display()
-            ));
-        }
+    if let Some(parent) = output_path.parent()
+        && !parent.exists()
+    {
+        return Err(anyhow::anyhow!(
+            "Output directory '{}' does not exist",
+            parent.display()
+        ));
     }
 
     // Check file extension
@@ -347,4 +619,130 @@ async fn stop_recording(
 
     let output = output_format.success(result);
     Ok(Some(output))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn service_status_to_string_covers_all_variants() {
+        assert_eq!(
+            service_status_to_string(flight_ipc::ServiceStatus::Unspecified),
+            "unspecified"
+        );
+        assert_eq!(
+            service_status_to_string(flight_ipc::ServiceStatus::Starting),
+            "starting"
+        );
+        assert_eq!(
+            service_status_to_string(flight_ipc::ServiceStatus::Running),
+            "running"
+        );
+        assert_eq!(
+            service_status_to_string(flight_ipc::ServiceStatus::Degraded),
+            "degraded"
+        );
+        assert_eq!(
+            service_status_to_string(flight_ipc::ServiceStatus::Stopping),
+            "stopping"
+        );
+    }
+
+    #[test]
+    fn device_status_to_string_covers_all_variants() {
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Connected),
+            "connected"
+        );
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Faulted),
+            "faulted"
+        );
+    }
+
+    #[test]
+    fn bundle_result_json_format() {
+        let result = json!({
+            "bundle_path": "diag-bundle.zip",
+            "daemon_reachable": false,
+            "include_recordings": false,
+            "contents": ["system_info.json", "service_status.json"],
+        });
+        let output = OutputFormat::Json.success(result);
+        let parsed: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert!(parsed["data"]["contents"].is_array());
+        assert_eq!(parsed["data"]["daemon_reachable"], false);
+    }
+
+    #[test]
+    fn health_result_json_format() {
+        let result = json!({
+            "overall_status": "healthy",
+            "service_status": "running",
+            "devices": {
+                "connected": 3,
+                "total": 5,
+                "faulted": 0,
+            },
+        });
+        let output = OutputFormat::Json.success(result);
+        let parsed: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert_eq!(parsed["data"]["overall_status"], "healthy");
+        assert_eq!(parsed["data"]["devices"]["connected"], 3);
+    }
+
+    #[test]
+    fn health_result_human_format() {
+        let result = json!({
+            "overall_status": "degraded",
+            "devices": {"faulted": 1},
+        });
+        let output = OutputFormat::Human.success(result);
+        assert!(output.contains("degraded"));
+    }
+
+    #[test]
+    fn metrics_result_json_format() {
+        let result = json!({
+            "captured_at": "2024-01-15T10:00:00Z",
+            "reset_after_capture": false,
+            "rt": {
+                "ticks_total": 100,
+                "missed_deadlines_total": 0,
+            },
+        });
+        let output = OutputFormat::Json.success(result);
+        let parsed: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert_eq!(parsed["data"]["rt"]["ticks_total"], 100);
+    }
+
+    #[test]
+    fn trace_result_json_format() {
+        let result = json!({
+            "trace_started": true,
+            "duration_seconds": 30,
+            "output_file": "trace.json",
+        });
+        let output = OutputFormat::Json.success(result);
+        let parsed: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert_eq!(parsed["data"]["trace_started"], true);
+        assert_eq!(parsed["data"]["duration_seconds"], 30);
+    }
+
+    #[test]
+    fn recording_status_json_format() {
+        let result = json!({
+            "recording_active": false,
+            "drops_detected": 0,
+        });
+        let output = OutputFormat::Json.success(result);
+        let parsed: Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(parsed["success"], true);
+        assert_eq!(parsed["data"]["recording_active"], false);
+    }
 }

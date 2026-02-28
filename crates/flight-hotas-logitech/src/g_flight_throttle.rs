@@ -90,7 +90,7 @@ pub const G_FLIGHT_THROTTLE_MIN_REPORT_BYTES: usize = 6;
 /// Normalize a 12-bit unipolar axis (0..4095) to 0.0..=1.0.
 #[inline]
 fn normalize_12bit_unipolar(raw: u16) -> f32 {
-    raw as f32 / 4095.0
+    (raw as f32 / 4095.0).clamp(0.0, 1.0)
 }
 
 /// Parse a 6-byte HID input report from the Logitech G Flight Throttle Quadrant.

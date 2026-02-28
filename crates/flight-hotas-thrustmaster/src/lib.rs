@@ -6,6 +6,9 @@
 //! This crate provides support for:
 //! - T.Flight HOTAS 4 and HOTAS One controllers
 //! - T.16000M FCS joystick and TWCS Throttle
+//! - HOTAS Warthog joystick and throttle
+//! - TFRP / TPR rudder pedals
+//! - HOTAS Cougar (legacy)
 
 pub mod cougar;
 pub mod detents;
@@ -13,6 +16,8 @@ pub mod health;
 pub mod input;
 pub mod pc_mode;
 pub mod presets;
+pub mod profiles;
+pub mod protocol;
 pub mod t16000m;
 pub mod tfrp;
 pub mod tpr;
@@ -54,4 +59,10 @@ pub use warthog::{
     WarthogParseError, WarthogStickAxes, WarthogStickButtons, WarthogStickInputState,
     WarthogThrottleAxes, WarthogThrottleButtons, WarthogThrottleInputState, parse_warthog_stick,
     parse_warthog_throttle,
+};
+
+pub use profiles::{AxisDescriptor, AxisNormalization, DeviceProfile, device_profile};
+pub use protocol::{
+    DEVICE_TABLE, DeviceEntry, LedState, ThrustmasterDevice, VENDOR_ID, build_led_report,
+    identify_device, is_pinkie_held, is_throttle_split, resolve_shifted_button,
 };

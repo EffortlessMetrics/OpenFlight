@@ -478,18 +478,18 @@ impl TFlightInputHandler {
 
 /// Normalize a 16-bit axis value to -1.0..1.0 range.
 fn normalize_axis_16bit(raw: u16) -> f32 {
-    (raw as f32 / 32767.5) - 1.0
+    ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 /// Normalize an 8-bit axis value (centered at 128) to -1.0..1.0 range.
 fn normalize_axis_8bit_centered(raw: u8) -> f32 {
-    (raw as f32 / 127.5) - 1.0
+    ((raw as f32 / 127.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 /// Normalize an 8-bit throttle value to 0.0..1.0 range.
 fn normalize_throttle_8bit(raw: u8, invert: bool) -> f32 {
     let normalized = raw as f32 / 255.0;
-    if invert { 1.0 - normalized } else { normalized }
+    (if invert { 1.0 - normalized } else { normalized }).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]

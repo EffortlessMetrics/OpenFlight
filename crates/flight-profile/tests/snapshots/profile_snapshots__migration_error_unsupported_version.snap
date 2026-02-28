@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/tests/profile_snapshots.rs
+expression: err.to_string()
+---
+unsupported version: no migration path from v0 to v3

@@ -49,13 +49,15 @@ async fn test_service_lifecycle() {
 /// Test safe mode service functionality
 #[tokio::test]
 async fn test_safe_mode_service() {
-    let mut config = FlightServiceConfig::default();
-    config.safe_mode = true;
-    config.safe_mode_config = SafeModeConfig {
-        axis_only: true,
-        use_basic_profile: true,
-        skip_power_checks: false,
-        minimal_mode: true,
+    let config = FlightServiceConfig {
+        safe_mode: true,
+        safe_mode_config: SafeModeConfig {
+            axis_only: true,
+            use_basic_profile: true,
+            skip_power_checks: false,
+            minimal_mode: true,
+        },
+        ..Default::default()
     };
 
     let mut service = FlightService::new(config);
@@ -132,8 +134,10 @@ async fn test_health_monitoring() {
 /// Test power configuration checking
 #[tokio::test]
 async fn test_power_configuration() {
-    let mut config = FlightServiceConfig::default();
-    config.enable_power_checks = true;
+    let config = FlightServiceConfig {
+        enable_power_checks: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(config);
 
@@ -164,8 +168,10 @@ async fn test_power_configuration() {
 /// Test service with power checks disabled
 #[tokio::test]
 async fn test_power_checks_disabled() {
-    let mut config = FlightServiceConfig::default();
-    config.enable_power_checks = false;
+    let config = FlightServiceConfig {
+        enable_power_checks: false,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(config);
 
@@ -304,9 +310,11 @@ fn create_test_profile() -> flight_core::profile::Profile {
 /// Test comprehensive service functionality with all components
 #[tokio::test]
 async fn test_comprehensive_service_functionality() {
-    let mut config = FlightServiceConfig::default();
-    config.enable_health_monitoring = true;
-    config.enable_power_checks = true;
+    let config = FlightServiceConfig {
+        enable_health_monitoring: true,
+        enable_power_checks: true,
+        ..Default::default()
+    };
 
     let mut service = FlightService::new(config);
 

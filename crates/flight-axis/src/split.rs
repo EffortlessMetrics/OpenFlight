@@ -155,7 +155,7 @@ mod tests {
             let v = i as f32 / 50.0;
             let out = s.split(v);
             assert!(
-                out.positive >= 0.0 && out.positive <= 1.0,
+                (0.0..=1.0).contains(&out.positive),
                 "positive={} out of range for input={v}",
                 out.positive
             );
@@ -169,7 +169,7 @@ mod tests {
             let v = i as f32 / 50.0;
             let out = s.split(v);
             assert!(
-                out.negative >= 0.0 && out.negative <= 1.0,
+                (0.0..=1.0).contains(&out.negative),
                 "negative={} out of range for input={v}",
                 out.negative
             );

@@ -74,8 +74,8 @@ impl CrashReport {
     pub fn write_to_dir(&self, crash_dir: &Path) -> std::io::Result<()> {
         fs::create_dir_all(crash_dir)?;
         let path = crash_dir.join(CRASH_FILE_NAME);
-        let json = serde_json::to_string_pretty(self)
-            .map_err(|e| std::io::Error::other(e.to_string()))?;
+        let json =
+            serde_json::to_string_pretty(self).map_err(|e| std::io::Error::other(e.to_string()))?;
         fs::write(path, json)
     }
 }
@@ -99,8 +99,7 @@ pub fn install_crash_hook(
             "unknown panic".to_string()
         };
 
-        let report =
-            CrashReport::from_panic(&version, &config_hash, &last_state, &msg);
+        let report = CrashReport::from_panic(&version, &config_hash, &last_state, &msg);
 
         if let Err(e) = report.write_to_dir(&crash_dir) {
             eprintln!("Failed to write crash report: {e}");

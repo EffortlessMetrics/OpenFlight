@@ -1,0 +1,43 @@
+# Jumper T16 (USB HID)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-97 addition.
+schema_version: "1"
+
+device:
+  name: "Jumper T16 (USB HID)"
+  vendor: "Jumper"
+  usb:
+    vendor_id: 0x16C0       # Confirmed
+    product_id: 0x0485      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+    resolution_bits: 10
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 50
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x16C0 (PJRC/community). PID 0x0485 estimated for T16. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Jumper T16 — full-size multi-protocol RC transmitter with OpenTX/EdgeTX USB joystick output.
+    Wave-97 addition. Last reviewed: 2026-07.

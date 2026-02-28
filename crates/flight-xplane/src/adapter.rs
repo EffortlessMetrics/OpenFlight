@@ -7,6 +7,7 @@
 //! aircraft detection, and telemetry publishing to the flight bus.
 
 use crate::{
+    adapter_state::{AdapterEvent, AdapterStateMachine, XPlaneAdapterState},
     aircraft::{AircraftDetector, DetectedAircraft},
     dataref::{DataRef, DataRefManager, DataRefValue},
     latency::{LatencyBudget, LatencyTracker},
@@ -146,6 +147,7 @@ pub struct XPlaneAdapter {
     latency_tracker: LatencyTracker,
     bus_publisher: Arc<Mutex<BusPublisher>>,
     state: Arc<RwLock<AdapterState>>,
+    state_machine: Arc<Mutex<AdapterStateMachine>>,
     metrics: Arc<RwLock<AdapterMetrics>>,
     metrics_registry: Arc<MetricsRegistry>,
     current_aircraft: Arc<RwLock<Option<DetectedAircraft>>>,
@@ -187,6 +189,9 @@ impl XPlaneAdapter {
             config.latency_budget_ms,
         )));
 
+        let connection_timeout = Duration::from_secs(2); // XPLANE-INT-01.13: 2 second timeout
+        let max_retries = config.max_retries;
+
         Ok(Self {
             config,
             udp_client,
@@ -197,12 +202,16 @@ impl XPlaneAdapter {
             latency_tracker,
             bus_publisher,
             state: Arc::new(RwLock::new(AdapterState::Disconnected)),
+            state_machine: Arc::new(Mutex::new(AdapterStateMachine::new(
+                connection_timeout.as_millis() as u64,
+                max_retries,
+            ))),
             metrics: Arc::new(RwLock::new(AdapterMetrics::new())),
             metrics_registry: Arc::new(MetricsRegistry::new()),
             current_aircraft: Arc::new(RwLock::new(None)),
             running: Arc::new(RwLock::new(false)),
             last_packet_time: Arc::new(RwLock::new(None)),
-            connection_timeout: Duration::from_secs(2), // XPLANE-INT-01.13: 2 second timeout
+            connection_timeout,
             start_time: Instant::now(),
         })
     }
@@ -370,7 +379,7 @@ impl XPlaneAdapter {
                         connection_timeout.as_secs()
                     );
                     metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-                    *state.write().unwrap() = AdapterState::Disconnected;
+                    *state.write().unwrap() = AdapterState::Error;
                     // Publish a stale/invalid snapshot so subscribers know data is no longer valid.
                     // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
                     let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
@@ -1110,6 +1119,69 @@ impl XPlaneAdapter {
     pub fn time_since_last_packet(&self) -> Option<Duration> {
         let last_packet = self.last_packet_time.read().unwrap();
         last_packet.map(|time| time.elapsed())
+    }
+
+    /// Get the X-Plane-specific adapter state from the internal state machine.
+    pub fn xplane_state(&self) -> XPlaneAdapterState {
+        self.state_machine.lock().unwrap().state()
+    }
+
+    /// Process a telemetry snapshot: transition the state machine to Active and publish.
+    pub fn process_telemetry(&self, snapshot: BusSnapshot) -> Result<()> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::TelemetryReceived,
+        );
+        self.publish_snapshot(snapshot)
+    }
+
+    /// Handle a telemetry timeout: transition the state machine to Stale and publish
+    /// a stale snapshot so downstream consumers stop using outdated data.
+    pub fn handle_telemetry_timeout(&self) -> Result<()> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::TelemetryTimeout,
+        );
+        self.publish_stale_snapshot()
+    }
+
+    /// Drive the state machine with an event and synchronize the common AdapterState.
+    fn apply_event(
+        state_machine: &Mutex<AdapterStateMachine>,
+        adapter_state: &RwLock<AdapterState>,
+        event: AdapterEvent,
+    ) -> Option<XPlaneAdapterState> {
+        let mut sm = state_machine.lock().unwrap();
+        match sm.transition(event) {
+            Ok(new_state) => {
+                *adapter_state.write().unwrap() = Self::map_xplane_state(new_state);
+                Some(new_state)
+            }
+            Err(e) => {
+                warn!("State transition rejected: {}", e);
+                None
+            }
+        }
+    }
+
+    /// Map X-Plane-specific state to the common adapter state.
+    fn map_xplane_state(state: XPlaneAdapterState) -> AdapterState {
+        match state {
+            XPlaneAdapterState::Disconnected => AdapterState::Disconnected,
+            XPlaneAdapterState::Connecting => AdapterState::Connecting,
+            XPlaneAdapterState::Connected => AdapterState::Connected,
+            XPlaneAdapterState::Active => AdapterState::Active,
+            XPlaneAdapterState::Stale => AdapterState::Disconnected,
+            XPlaneAdapterState::Error => AdapterState::Error,
+        }
+    }
+
+    #[cfg(test)]
+    fn advance_to_connected(&self) {
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
     }
 }
 

@@ -145,10 +145,7 @@ mod tests {
     #[test]
     fn test_neutral_snapshot_produces_neutral_frame() {
         let mut mapper = MotionMapper::new(MotionConfig::default(), 1.0 / 250.0);
-        let frame = mapper.process(&neutral_snapshot());
-        // With a neutral snapshot (all zeros, g_force=0), output should be near zero.
-        // Heave gets -1G normalized = -0.333, but HP filter passes it on first tick.
-        // After many neutral ticks, all channels should wash out to zero.
+        let _frame = mapper.process(&neutral_snapshot());
         for _ in 0..5000 {
             mapper.process(&neutral_snapshot());
         }
@@ -172,8 +169,10 @@ mod tests {
 
     #[test]
     fn test_zero_intensity_returns_neutral() {
-        let mut config = MotionConfig::default();
-        config.intensity = 0.0;
+        let config = MotionConfig {
+            intensity: 0.0,
+            ..Default::default()
+        };
         let mut mapper = MotionMapper::new(config, 1.0 / 250.0);
         let frame = mapper.process(&neutral_snapshot());
         assert!(frame.is_neutral());
@@ -236,8 +235,7 @@ mod tests {
             snapshot.kinematics.bank = ValidatedAngle::new_degrees(bank_deg).unwrap();
             snapshot.kinematics.pitch = ValidatedAngle::new_degrees(pitch_deg).unwrap();
 
-            let mut config = MotionConfig::default();
-            config.intensity = intensity;
+            let config = MotionConfig { intensity, ..Default::default() };
             let mut mapper = MotionMapper::new(config, 1.0 / 250.0);
 
             for _ in 0..5 {

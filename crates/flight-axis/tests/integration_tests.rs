@@ -183,7 +183,7 @@ fn test_runtime_counters_averaging() {
 
     // Average should be somewhere between 100 and 300
     let avg = counters.avg_frame_time_us();
-    assert!(avg >= 100 && avg <= 300);
+    assert!((100..=300).contains(&avg));
 }
 
 #[test]
@@ -252,7 +252,6 @@ fn test_zero_allocation_constraint_validation() {
     }
 
     // If we get here without panicking, no allocations occurred
-    assert!(true);
 }
 
 #[test]

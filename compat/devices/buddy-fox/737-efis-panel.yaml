@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Buddy Fox"
+  name: "Buddy Fox 737 EFIS Panel"
+  usb:
+    vid: "0x2FD0"
+    pid: "0x0004"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 20
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Buddy Fox 737 EFIS control panel for captain or first officer."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

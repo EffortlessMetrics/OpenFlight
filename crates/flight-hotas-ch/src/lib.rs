@@ -7,17 +7,27 @@
 //! Eclipse Yoke, Flight Yoke) use VID `0x068E`.
 //!
 //! This crate provides:
-//! - Raw HID report parsers: [`fighterstick`], [`pro_throttle`], [`pro_pedals`]
+//! - Raw HID report parsers: [`fighterstick`], [`pro_throttle`], [`pro_pedals`],
+//!   [`combatstick`], [`eclipse_yoke`], [`flight_yoke`]
+//! - Device identification database ([`devices`])
+//! - HID protocol constants and helpers ([`protocol`])
+//! - Per-device input profiles with axis/button definitions ([`profiles`])
 //! - Recommended axis presets per device model ([`presets`])
 //! - Device health/connectivity status types ([`health`])
 
 use thiserror::Error;
 
+pub mod combatstick;
+pub mod devices;
+pub mod eclipse_yoke;
 pub mod fighterstick;
+pub mod flight_yoke;
 pub mod health;
 pub mod presets;
 pub mod pro_pedals;
 pub mod pro_throttle;
+pub mod profiles;
+pub mod protocol;
 
 /// Parse error shared by all CH Products HID report parsers.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
@@ -51,3 +61,19 @@ pub use pro_throttle::{
 pub use pro_pedals::{
     PRO_PEDALS_MIN_REPORT_BYTES, PRO_PEDALS_PID, ProPedalsState, normalize_pedal, parse_pro_pedals,
 };
+
+pub use combatstick::{
+    COMBATSTICK_MIN_REPORT_BYTES, COMBATSTICK_PID, CombatstickState, parse_combatstick,
+};
+
+pub use eclipse_yoke::{
+    ECLIPSE_YOKE_MIN_REPORT_BYTES, ECLIPSE_YOKE_PID, EclipseYokeState, parse_eclipse_yoke,
+};
+
+pub use flight_yoke::{
+    FLIGHT_YOKE_MIN_REPORT_BYTES, FLIGHT_YOKE_PID, FlightYokeState, parse_flight_yoke,
+};
+
+pub use devices::{ChDevice, DEVICE_TABLE, DeviceEntry, identify_device};
+pub use profiles::{AxisDescriptor, AxisNormalization, DeviceProfile, device_profile};
+pub use protocol::{FourWayHat, PovDirection};

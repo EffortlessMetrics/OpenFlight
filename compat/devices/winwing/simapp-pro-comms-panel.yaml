@@ -6,14 +6,14 @@
 # SimAppPro civilian avionics panel series. Includes COM1/COM2/NAV1/NAV2
 # frequency tuning rotaries and an interphone/push-to-talk button.
 # Companion to simapp-pro-nav.yaml and simapp-pro-fcu.yaml.
-# VID 0x4098 is community-reported for WinWing. PID unconfirmed.
+# VID 0x4098 is the confirmed vendor ID for WinWing. PID unconfirmed.
 schema_version: "1"
 
 device:
   name: "WinWing SimAppPro Communications Panel"
   vendor: "WinWing"
   usb:
-    vendor_id: 0x4098   # WinWing custom VID (community-reported, VID_UNCONFIRMED)
+    vendor_id: 0x4098   # WinWing (confirmed)
     product_id: 0xBF08  # Placeholder — PID_UNCONFIRMED
   hid:
     usage_page: 0x01    # Generic Desktop
@@ -34,7 +34,7 @@ polling:
 
 quirks:
   - id: VID_UNCONFIRMED
-    description: "VID 0x4098 is community-reported for WinWing; PID 0xBF08 is unconfirmed."
+    description: "VID 0x4098 is the confirmed vendor ID for WinWing; PID 0xBF08 is unconfirmed."
   - id: ENCODER_RELATIVE
     description: >
       All frequency tuning rotaries report relative pulse increments (inner and

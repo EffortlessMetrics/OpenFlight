@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Leo Bodnar"
+  name: "Leo Bodnar BBI-128 Rev 2"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x1020"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 128
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Leo Bodnar BBI-128 Rev 2 128-button interface board."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

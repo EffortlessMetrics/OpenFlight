@@ -1,0 +1,58 @@
+# X-Plane 12 — UDP DataRef + Web API Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "X-Plane 12"
+  id: xplane12
+  developer: "Laminar Research"
+
+integration:
+  mechanism: "UDP DataRef + Web API"
+  crate: flight-xplane
+  protocol_version: "XPlane12"
+
+supported_versions:
+  - "12.0.x"
+  - "12.1.x"
+
+version_notes:
+  notes: >
+    X-Plane 12 reorganised several position and performance datarefs relative to XP11.
+    OpenFlight's adapter detects the simulator version from the VERS dataref at runtime
+    and prefers XP12 paths where they exist:
+      • Vertical speed: sim/flightmodel2/position/vh_ind_fpm2
+      • Acceleration axes: sim/flightmodel2/position/Nrot_{roll,pitch,yaw}
+      • Airspeed (cockpit): sim/cockpit2/gauges/indicators/airspeed_kts_pilot
+    XP11 dataref names are always tried first so that a single profile works on both
+    simulator versions without user configuration.
+
+features:
+  telemetry_read: true
+  control_injection:
+    dataref_write: true
+    commands: true
+  force_feedback_translation: false
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false
+  integration_tests: true
+  fuzz_coverage: true
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: XP12_VERT_SPEED_FALLBACK
+    description: >
+      sim/flightmodel2/position/vh_ind_fpm2 is preferred in XP12 but the adapter
+      currently reads sim/flightmodel/position/vh_ind (m/s path) for both versions.
+      The XP12 preferred path is tracked for a future adapter update.
+    workaround: "Vertical speed data is still accurate via the XP11 dataref on XP12."
+  - id: PLUGIN_INTERFACE_OPTIONAL
+    description: >
+      The plugin interface (flight-xplane::plugin) is optional and disabled by default.
+      UDP-only mode is the default and fully tested.

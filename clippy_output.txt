@@ -1,0 +1,71 @@
+    Checking flight-session v0.1.0 (H:\Code\Rust\OpenFlight\crates\flight-session)
+    Checking flight-core v0.1.0 (H:\Code\Rust\OpenFlight\crates\flight-core)
+    Checking flight-axis v0.1.0 (H:\Code\Rust\OpenFlight\crates\flight-axis)
+error: the loop variable `i` is used to index `values`
+   --> crates\flight-axis\src\mixer.rs:119:26
+    |
+119 |                 for i in 0..n {
+    |                          ^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.93.0/index.html#needless_range_loop
+    = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator and enumerate()
+    |
+119 -                 for i in 0..n {
+119 +                 for (i, <item>) in values.iter().enumerate().take(n) {
+    |
+
+error: large size difference between variants
+   --> crates\flight-axis\src\stages.rs:129:1
+    |
+129 | /  pub enum CurveType {
+130 | |      /// Linear pass-through (identity).
+131 | |      Linear,
+132 | |      /// Exponential curve: `sign(x) * |x|^(1 + expo)`.
+133 | |      Expo(f64),
+    | |      --------- the second-largest variant contains at least 8 bytes
+...   |
+136 | |/     Custom {
+137 | ||         /// Control points array.
+138 | ||         points: [(f64, f64); MAX_CURVE_POINTS],
+139 | ||         /// Number of valid points (must be ΓëÑ 2).
+140 | ||         count: usize,
+141 | ||     },
+    | ||_____- the largest variant contains at least 264 bytes
+142 | |  }
+    | |__^ the entire enum is at least 272 bytes
+    |
+note: boxing a variant would require the type no longer be `Copy`
+   --> crates\flight-axis\src\stages.rs:129:10
+    |
+129 | pub enum CurveType {
+    |          ^^^^^^^^^
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   --> crates\flight-axis\src\stages.rs:136:5
+    |
+136 | /     Custom {
+137 | |         /// Control points array.
+138 | |         points: [(f64, f64); MAX_CURVE_POINTS],
+139 | |         /// Number of valid points (must be ΓëÑ 2).
+140 | |         count: usize,
+141 | |     },
+    | |_____^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.93.0/index.html#large_enum_variant
+    = note: `-D clippy::large-enum-variant` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::large_enum_variant)]`
+
+error: the loop variable `i` is used to index `entries`
+   --> crates\flight-axis\src\stages.rs:742:18
+    |
+742 |         for i in 0..self.count {
+    |                  ^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.93.0/index.html#needless_range_loop
+help: consider using an iterator and enumerate()
+    |
+742 -         for i in 0..self.count {
+742 +         for (i, <item>) in entries.iter_mut().enumerate().take(self.count) {
+    |
+
+error: could not compile `flight-axis` (lib) due to 3 previous errors

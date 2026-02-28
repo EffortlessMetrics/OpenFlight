@@ -1,0 +1,46 @@
+# DOF Reality P6 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Professional 6-DOF motion platform with higher payload capacity.
+
+schema_version: "1"
+
+device:
+  name: "DOF Reality P6 Motion Platform"
+  vendor: "DOF Reality"
+  type: platform
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x3007
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 6
+    names: [pitch, roll, yaw, surge, sway, heave]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes) / PID 0x3007 community estimate. Verify with lsusb."
+  - id: MOTION_OUTPUT_ONLY
+    description: "Professional motion platform. Receives motion cues from SimTools."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DOF Reality P6 professional 6-DOF motion platform. Higher payload. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

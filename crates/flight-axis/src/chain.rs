@@ -5,6 +5,7 @@
 //!
 //! Pipeline order: `calibration → invert → deadzone → curve → ema_smoothing → rate_limit → trim → normalize`
 
+use crate::stages::StageSlot;
 use crate::{
     AxisCalibration, AxisInvert, AxisNormalizer, AxisRateLimiter, AxisTrim, DeadzoneConfig,
     DeadzoneProcessor, EmaFilter, NormalizeConfig, ResponseCurve,
@@ -186,9 +187,169 @@ impl AxisChain {
     }
 }
 
+// ---------------------------------------------------------------------------
+// RtAxisChain — zero-allocation ordered chain with enable/disable
+// ---------------------------------------------------------------------------
+
+/// Maximum number of stages in an [`RtAxisChain`].
+pub const MAX_CHAIN_STAGES: usize = 8;
+
+/// A chain slot: a stage with an independent enable flag.
+#[derive(Debug, Clone, Copy)]
+struct ChainSlot {
+    stage: StageSlot,
+    enabled: bool,
+}
+
+impl Default for ChainSlot {
+    fn default() -> Self {
+        Self {
+            stage: StageSlot::Empty,
+            enabled: true,
+        }
+    }
+}
+
+/// Zero-allocation axis processing chain with per-stage enable/disable.
+///
+/// Composes up to [`MAX_CHAIN_STAGES`] processing stages into an ordered
+/// pipeline. Each stage can be individually enabled or disabled at runtime
+/// without reallocating. All state lives on the stack (ADR-004).
+///
+/// # Example
+///
+/// ```rust
+/// use flight_axis::chain::RtAxisChain;
+/// use flight_axis::stages::{
+///     StageSlot, DeadzoneStage, DeadzoneShape, SaturationStage,
+/// };
+///
+/// let mut chain = RtAxisChain::new();
+/// chain.push(StageSlot::Deadzone(DeadzoneStage::new(0.0, 0.05, DeadzoneShape::Linear)));
+/// chain.push(StageSlot::Saturation(SaturationStage::bipolar()));
+///
+/// let output = chain.process(0.5);
+/// assert!(output >= -1.0 && output <= 1.0);
+///
+/// // Disable deadzone
+/// chain.set_enabled(0, false);
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct RtAxisChain {
+    slots: [ChainSlot; MAX_CHAIN_STAGES],
+    count: usize,
+}
+
+impl RtAxisChain {
+    /// Creates an empty chain (passthrough).
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            slots: [ChainSlot::default(); MAX_CHAIN_STAGES],
+            count: 0,
+        }
+    }
+
+    /// Process an input value through all enabled stages in order.
+    #[inline]
+    pub fn process(&mut self, input: f64) -> f64 {
+        let mut value = input;
+        for slot in &mut self.slots[..self.count] {
+            if slot.enabled {
+                value = slot.stage.process(value);
+            }
+        }
+        value
+    }
+
+    /// Appends a stage to the end. Returns `true` on success, `false` if full.
+    pub fn push(&mut self, stage: StageSlot) -> bool {
+        if self.count >= MAX_CHAIN_STAGES {
+            return false;
+        }
+        self.slots[self.count] = ChainSlot {
+            stage,
+            enabled: true,
+        };
+        self.count += 1;
+        true
+    }
+
+    /// Replaces the stage at `index` with a new stage slot.
+    ///
+    /// Returns `true` on success, `false` if index is out of range.
+    pub fn configure(&mut self, index: usize, stage: StageSlot) -> bool {
+        if index >= self.count {
+            return false;
+        }
+        self.slots[index].stage = stage;
+        true
+    }
+
+    /// Enables or disables the stage at `index`.
+    ///
+    /// Returns `true` on success, `false` if index is out of range.
+    pub fn set_enabled(&mut self, index: usize, enabled: bool) -> bool {
+        if index >= self.count {
+            return false;
+        }
+        self.slots[index].enabled = enabled;
+        true
+    }
+
+    /// Returns whether the stage at `index` is enabled.
+    #[must_use]
+    pub fn is_enabled(&self, index: usize) -> Option<bool> {
+        if index >= self.count {
+            return None;
+        }
+        Some(self.slots[index].enabled)
+    }
+
+    /// Returns the number of stages (including disabled ones).
+    #[must_use]
+    pub fn stage_count(&self) -> usize {
+        self.count
+    }
+
+    /// Returns the name of the stage at `index`, or `None` if out of range.
+    #[must_use]
+    pub fn stage_name(&self, index: usize) -> Option<&'static str> {
+        if index >= self.count {
+            return None;
+        }
+        Some(self.slots[index].stage.name())
+    }
+
+    /// Removes the stage at `index`, shifting later stages left.
+    ///
+    /// Returns `true` on success, `false` if index is out of range.
+    pub fn remove(&mut self, index: usize) -> bool {
+        if index >= self.count {
+            return false;
+        }
+        for i in index..self.count - 1 {
+            self.slots[i] = self.slots[i + 1];
+        }
+        self.slots[self.count - 1] = ChainSlot::default();
+        self.count -= 1;
+        true
+    }
+}
+
+impl Default for RtAxisChain {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::stages::{
+        ClampStage, CurveStage, CurveType, DeadzoneShape, DeadzoneStage, DetentPosition,
+        DetentStage, SaturationStage, SlewRateLimiter, SmoothingStage,
+    };
     use crate::{AxisCalibration, AxisInvert, DeadzoneConfig, ResponseCurve};
     use proptest::prelude::*;
 
@@ -370,7 +531,7 @@ mod tests {
         for raw in [0u16, 16384, 32767, 49151, 65535] {
             let (output, _) = chain.process_raw(raw);
             assert!(
-                output >= -1.0 && output <= 1.0,
+                (-1.0..=1.0).contains(&output),
                 "output {output} out of [-1.0, 1.0] for raw={raw}"
             );
         }
@@ -414,7 +575,7 @@ mod tests {
             let mut chain = AxisChain::new(config);
             let (output, _) = chain.process_f32(input);
             prop_assert!(
-                output >= -1.0 && output <= 1.0,
+                (-1.0..=1.0).contains(&output),
                 "output {output} out of [-1.0, 1.0] for input={input}"
             );
         }
@@ -428,5 +589,240 @@ mod tests {
                 "identity chain should passthrough: input={input}, output={output}"
             );
         }
+    }
+
+    // =====================================================================
+    // RtAxisChain tests
+    // =====================================================================
+
+    const TOL: f64 = 1e-10;
+
+    fn approx(a: f64, b: f64) -> bool {
+        (a - b).abs() < TOL
+    }
+
+    #[test]
+    fn rt_chain_empty_passthrough() {
+        let mut chain = RtAxisChain::new();
+        assert!(approx(chain.process(0.75), 0.75));
+        assert_eq!(chain.stage_count(), 0);
+    }
+
+    #[test]
+    fn rt_chain_push_and_process() {
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Clamp(ClampStage::new(-0.5, 0.5)));
+        assert_eq!(chain.stage_count(), 1);
+        assert!(approx(chain.process(0.8), 0.5));
+        assert!(approx(chain.process(-0.8), -0.5));
+        assert!(approx(chain.process(0.3), 0.3));
+    }
+
+    #[test]
+    fn rt_chain_multi_stage_ordering() {
+        let mut chain = RtAxisChain::new();
+        // deadzone → curve → saturation
+        chain.push(StageSlot::Deadzone(DeadzoneStage::new(
+            0.0,
+            0.1,
+            DeadzoneShape::Linear,
+        )));
+        chain.push(StageSlot::Curve(CurveStage::expo(1.0)));
+        chain.push(StageSlot::Saturation(SaturationStage::bipolar()));
+        assert_eq!(chain.stage_count(), 3);
+
+        // Input 0.05 → within deadzone → 0.0
+        assert!(approx(chain.process(0.05), 0.0));
+
+        // Input 0.55 → after deadzone: (0.55-0.1)/0.9 = 0.5 → after expo: 0.5^2 = 0.25
+        assert!(approx(chain.process(0.55), 0.25));
+    }
+
+    #[test]
+    fn rt_chain_disable_enable() {
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Deadzone(DeadzoneStage::new(
+            0.0,
+            0.1,
+            DeadzoneShape::Linear,
+        )));
+        chain.push(StageSlot::Saturation(SaturationStage::bipolar()));
+
+        // Deadzone enabled: input 0.05 → 0.0
+        assert!(approx(chain.process(0.05), 0.0));
+
+        // Disable deadzone
+        assert!(chain.set_enabled(0, false));
+        assert_eq!(chain.is_enabled(0), Some(false));
+        assert_eq!(chain.is_enabled(1), Some(true));
+
+        // Deadzone disabled: input 0.05 passes through
+        assert!(approx(chain.process(0.05), 0.05));
+
+        // Re-enable deadzone
+        assert!(chain.set_enabled(0, true));
+        assert!(approx(chain.process(0.05), 0.0));
+    }
+
+    #[test]
+    fn rt_chain_configure_replaces_stage() {
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Clamp(ClampStage::new(-0.5, 0.5)));
+
+        assert!(approx(chain.process(0.8), 0.5));
+
+        // Replace with wider clamp
+        assert!(chain.configure(0, StageSlot::Clamp(ClampStage::new(-1.0, 1.0))));
+        assert!(approx(chain.process(0.8), 0.8));
+    }
+
+    #[test]
+    fn rt_chain_configure_out_of_range() {
+        let mut chain = RtAxisChain::new();
+        assert!(!chain.configure(0, StageSlot::Clamp(ClampStage::unit())));
+    }
+
+    #[test]
+    fn rt_chain_enable_out_of_range() {
+        let chain = RtAxisChain::new();
+        assert_eq!(chain.is_enabled(0), None);
+    }
+
+    #[test]
+    fn rt_chain_set_enabled_out_of_range() {
+        let mut chain = RtAxisChain::new();
+        assert!(!chain.set_enabled(0, false));
+    }
+
+    #[test]
+    fn rt_chain_remove() {
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Deadzone(DeadzoneStage::new(
+            0.0,
+            0.1,
+            DeadzoneShape::Linear,
+        )));
+        chain.push(StageSlot::Clamp(ClampStage::new(-0.5, 0.5)));
+        assert_eq!(chain.stage_count(), 2);
+
+        assert!(chain.remove(0));
+        assert_eq!(chain.stage_count(), 1);
+        assert_eq!(chain.stage_name(0), Some("clamp"));
+
+        // Deadzone removed: input 0.05 goes to clamp as-is
+        assert!(approx(chain.process(0.05), 0.05));
+    }
+
+    #[test]
+    fn rt_chain_remove_out_of_range() {
+        let mut chain = RtAxisChain::new();
+        assert!(!chain.remove(0));
+    }
+
+    #[test]
+    fn rt_chain_stage_names() {
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Deadzone(DeadzoneStage::new(
+            0.0,
+            0.05,
+            DeadzoneShape::Linear,
+        )));
+        chain.push(StageSlot::Curve(CurveStage::linear()));
+        chain.push(StageSlot::Saturation(SaturationStage::bipolar()));
+
+        assert_eq!(chain.stage_name(0), Some("deadzone"));
+        assert_eq!(chain.stage_name(1), Some("curve"));
+        assert_eq!(chain.stage_name(2), Some("saturation"));
+        assert_eq!(chain.stage_name(3), None);
+    }
+
+    #[test]
+    fn rt_chain_max_stages() {
+        let mut chain = RtAxisChain::new();
+        for _ in 0..MAX_CHAIN_STAGES {
+            assert!(chain.push(StageSlot::Clamp(ClampStage::unit())));
+        }
+        assert_eq!(chain.stage_count(), MAX_CHAIN_STAGES);
+        assert!(!chain.push(StageSlot::Clamp(ClampStage::unit())));
+    }
+
+    #[test]
+    fn rt_chain_full_pipeline_with_detents() {
+        let mut det = DetentStage::new();
+        det.add(0.0, 0.05, 1.0);
+        det.add(1.0, 0.05, 1.0);
+
+        let mut chain = RtAxisChain::new();
+        chain.push(StageSlot::Deadzone(DeadzoneStage::new(
+            0.0,
+            0.02,
+            DeadzoneShape::Linear,
+        )));
+        chain.push(StageSlot::Curve(CurveStage::expo(0.3)));
+        chain.push(StageSlot::Smoothing(SmoothingStage::ema(0.8)));
+        chain.push(StageSlot::SlewRate(SlewRateLimiter::new(0.1)));
+        chain.push(StageSlot::Detent(det));
+        chain.push(StageSlot::Saturation(SaturationStage::bipolar()));
+        assert_eq!(chain.stage_count(), 6);
+
+        // Process several ticks — output always in [-1.0, 1.0]
+        for input in [0.0, 0.01, 0.3, 0.5, 0.99, 1.0, -0.5, -1.0] {
+            let out = chain.process(input);
+            assert!(
+                (-1.0..=1.0).contains(&out),
+                "output {out} out of [-1.0, 1.0] for input={input}"
+            );
+        }
+    }
+
+    #[test]
+    fn rt_chain_ordering_matters() {
+        // Clamp then invert vs. invert then clamp
+        let mut chain_clamp_first = RtAxisChain::new();
+        chain_clamp_first.push(StageSlot::Clamp(ClampStage::new(0.0, 1.0)));
+        chain_clamp_first.push(StageSlot::Curve(CurveStage::expo(1.0)));
+
+        let mut chain_expo_first = RtAxisChain::new();
+        chain_expo_first.push(StageSlot::Curve(CurveStage::expo(1.0)));
+        chain_expo_first.push(StageSlot::Clamp(ClampStage::new(0.0, 1.0)));
+
+        // Input -0.5:
+        // clamp_first: clamp(-0.5) = 0.0, expo(0.0) = 0.0
+        let out1 = chain_clamp_first.process(-0.5);
+        // expo_first: expo(-0.5) = -0.25, clamp(-0.25) = 0.0
+        let out2 = chain_expo_first.process(-0.5);
+
+        assert!(approx(out1, 0.0));
+        assert!(approx(out2, 0.0));
+
+        // Input 0.5:
+        // clamp_first: clamp(0.5) = 0.5, expo(0.5) = 0.25
+        let out3 = chain_clamp_first.process(0.5);
+        // expo_first: expo(0.5) = 0.25, clamp(0.25) = 0.25
+        let out4 = chain_expo_first.process(0.5);
+
+        assert!(approx(out3, 0.25));
+        assert!(approx(out4, 0.25));
+
+        // Input 0.8: ordering gives different results
+        // clamp_first: clamp(0.8)=0.8, expo(0.8)=0.64
+        let out5 = chain_clamp_first.process(0.8);
+        // expo_first: expo(0.8)=0.64, clamp(0.64)=0.64
+        let out6 = chain_expo_first.process(0.8);
+
+        assert!(approx(out5, 0.64));
+        assert!(approx(out6, 0.64));
+    }
+
+    #[test]
+    fn rt_chain_is_copy() {
+        fn assert_copy<T: Copy>() {}
+        assert_copy::<RtAxisChain>();
+    }
+
+    #[test]
+    fn rt_chain_default_is_empty() {
+        let chain = RtAxisChain::default();
+        assert_eq!(chain.stage_count(), 0);
     }
 }

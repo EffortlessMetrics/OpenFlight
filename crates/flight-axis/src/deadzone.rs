@@ -393,7 +393,7 @@ mod tests {
                 let proc = DeadzoneProcessor::new(config);
                 let out = proc.apply(input);
                 prop_assert!(
-                    out >= -1.0 && out <= 1.0,
+                    (-1.0..=1.0).contains(&out),
                     "output {out} out of [-1,1] for input={input}, center={center}, edge={edge}"
                 );
             }

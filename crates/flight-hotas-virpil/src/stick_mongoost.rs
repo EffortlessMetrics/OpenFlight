@@ -281,11 +281,11 @@ mod tests {
         ) {
             let report = make_mongoost_report([raw0, raw1, raw2, raw3, raw4], [0u8; 4]);
             let state = parse_mongoost_stick_report(&report).unwrap();
-            assert!(state.axes.x >= 0.0 && state.axes.x <= 1.0);
-            assert!(state.axes.y >= 0.0 && state.axes.y <= 1.0);
-            assert!(state.axes.z >= 0.0 && state.axes.z <= 1.0);
-            assert!(state.axes.sz >= 0.0 && state.axes.sz <= 1.0);
-            assert!(state.axes.sl >= 0.0 && state.axes.sl <= 1.0);
+            assert!((0.0..=1.0).contains(&state.axes.x));
+            assert!((0.0..=1.0).contains(&state.axes.y));
+            assert!((0.0..=1.0).contains(&state.axes.z));
+            assert!((0.0..=1.0).contains(&state.axes.sz));
+            assert!((0.0..=1.0).contains(&state.axes.sl));
         }
 
         #[test]

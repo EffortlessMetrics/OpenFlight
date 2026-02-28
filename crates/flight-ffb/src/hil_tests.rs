@@ -602,7 +602,7 @@ impl HilTestSuite {
         let passed_tests = results.iter().filter(|r| r.passed).count();
         let failed_tests = total_tests - passed_tests;
 
-        report.push_str(&format!("## Summary\n"));
+        report.push_str("## Summary\n");
         report.push_str(&format!("- Total Tests: {}\n", total_tests));
         report.push_str(&format!("- Passed: {}\n", passed_tests));
         report.push_str(&format!("- Failed: {}\n", failed_tests));

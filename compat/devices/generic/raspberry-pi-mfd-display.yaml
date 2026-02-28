@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Raspberry Pi MFD Display Controller"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x010F"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 20
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Raspberry Pi based MFD display with USB HID button frame."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

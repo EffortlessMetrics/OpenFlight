@@ -8,9 +8,11 @@
 //! SimConnect adapter for Flight Hub.
 
 use crate::aircraft::{AircraftDetector, AircraftInfo, DetectionError};
+use crate::aircraft_db::MsfsAircraftDb;
 use crate::events::{EventError, EventManager};
 use crate::mapping::{MappingConfig, MappingError, VariableMapping};
 use crate::session::{SessionConfig, SessionError, SessionEvent, SimConnectSession};
+use crate::var_registry::SimVarRegistry;
 use flight_adapter_common::{AdapterMetrics, AdapterState};
 use flight_bus::adapters::SimAdapter;
 use flight_bus::publisher::BusPublisher;
@@ -98,6 +100,10 @@ pub struct MsfsAdapter {
     event_manager: EventManager,
     /// Variable mapping
     variable_mapping: Option<VariableMapping>,
+    /// SimVar registry for variable validation and lookup
+    var_registry: SimVarRegistry,
+    /// Aircraft database for enriched identification and profile selection
+    aircraft_db: MsfsAircraftDb,
     /// Current adapter state
     state: Arc<RwLock<AdapterState>>,
     /// Current aircraft information
@@ -140,6 +146,8 @@ impl MsfsAdapter {
             aircraft_detector: AircraftDetector::new(),
             event_manager: EventManager::new(),
             variable_mapping: None,
+            var_registry: SimVarRegistry::new(),
+            aircraft_db: MsfsAircraftDb::new(),
             state: Arc::new(RwLock::new(AdapterState::Disconnected)),
             current_aircraft: Arc::new(RwLock::new(None)),
             current_snapshot: Arc::new(RwLock::new(None)),
@@ -532,7 +540,16 @@ impl MsfsAdapter {
         &mut self,
         aircraft_info: AircraftInfo,
     ) -> Result<(), MsfsAdapterError> {
-        info!("Aircraft detected: {}", aircraft_info.title);
+        // Enrich with aircraft database info when available
+        let icao = &aircraft_info.atc_model;
+        if let Some(db_info) = self.aircraft_db.get(icao) {
+            info!(
+                "Aircraft detected: {} ({}, profile: {})",
+                aircraft_info.title, db_info.display_name, db_info.default_profile
+            );
+        } else {
+            info!("Aircraft detected: {} ({})", aircraft_info.title, icao);
+        }
         self.detection_started_at = None;
         *self.current_aircraft.write().await = Some(aircraft_info.clone());
 
@@ -577,17 +594,30 @@ impl MsfsAdapter {
         &mut self,
         aircraft_info: &AircraftInfo,
     ) -> Result<(), MsfsAdapterError> {
-        info!(
-            "Setting up variable mapping for aircraft: {}",
-            aircraft_info.atc_model
-        );
+        let icao = &aircraft_info.atc_model;
 
-        let mut mapping = VariableMapping::new(self.config.mapping.clone());
+        // Use the aircraft DB to build an enriched mapping config when the
+        // aircraft is known, falling back to the default mapping otherwise.
+        let mapping_config = if let Some(db_info) = self.aircraft_db.get(icao) {
+            info!(
+                "Setting up variable mapping for {} ({:?}, profile: {})",
+                icao, db_info.category, db_info.default_profile
+            );
+            crate::mapping::create_mapping_for_aircraft(db_info, &self.var_registry)
+        } else {
+            info!(
+                "Setting up default variable mapping for unknown aircraft: {}",
+                icao
+            );
+            self.config.mapping.clone()
+        };
+
+        let mut mapping = VariableMapping::new(mapping_config);
 
         if let Some(session) = &self.session
             && let Some(handle) = session.handle()
         {
-            mapping.setup_aircraft_definitions(session.api(), handle, &aircraft_info.atc_model)?;
+            mapping.setup_aircraft_definitions(session.api(), handle, icao)?;
             mapping.start_data_requests(session.api(), handle)?;
         }
 
@@ -708,6 +738,16 @@ impl MsfsAdapter {
     /// Get metrics summary string
     pub async fn metrics_summary(&self) -> String {
         self.metrics.read().await.summary()
+    }
+
+    /// Get reference to the SimVar registry.
+    pub fn var_registry(&self) -> &SimVarRegistry {
+        &self.var_registry
+    }
+
+    /// Get reference to the MSFS aircraft database.
+    pub fn aircraft_db(&self) -> &MsfsAircraftDb {
+        &self.aircraft_db
     }
 }
 
@@ -1095,5 +1135,50 @@ mod tests {
         // Validity flags must all be false — safe_for_ffb=false ensures FFB is disabled.
         assert!(!snap.validity.safe_for_ffb);
         assert!(!snap.validity.attitude_valid);
+    }
+
+    /// Test that the adapter initialises with a populated var registry and aircraft DB.
+    #[tokio::test]
+    async fn test_adapter_has_registry_and_db() {
+        let config = MsfsAdapterConfig::default();
+        match MsfsAdapter::new(config) {
+            Ok(adapter) => {
+                assert!(
+                    adapter.var_registry().len() >= 50,
+                    "var registry must be populated"
+                );
+                assert!(
+                    adapter.aircraft_db().len() >= 25,
+                    "aircraft DB must be populated"
+                );
+                // Verify cross-referencing: a known aircraft's special vars exist in the registry
+                let c172 = adapter.aircraft_db().get("C172").unwrap();
+                assert!(
+                    adapter.var_registry().contains(c172.special_vars[0]),
+                    "special var should be in registry"
+                );
+            }
+            Err(MsfsAdapterError::Session(SessionError::SimConnect(
+                flight_simconnect_sys::SimConnectError::LibraryNotFound,
+            ))) => {
+                println!("SimConnect library not found");
+            }
+            Err(e) => panic!("Unexpected error: {}", e),
+        }
+    }
+
+    /// Test that the aircraft DB is used to provide profile hints for known aircraft.
+    #[test]
+    fn test_aircraft_db_profile_lookup() {
+        let db = crate::aircraft_db::MsfsAircraftDb::new();
+
+        let c172 = db.get("C172").unwrap();
+        assert_eq!(c172.default_profile, "ga-single-piston");
+
+        let a320 = db.get("A320").unwrap();
+        assert_eq!(a320.default_profile, "airliner-narrowbody");
+
+        // Unknown ICAO returns None, so default mapping applies
+        assert!(db.get("XXXX").is_none());
     }
 }

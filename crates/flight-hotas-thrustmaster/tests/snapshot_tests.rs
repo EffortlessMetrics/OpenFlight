@@ -22,6 +22,7 @@ fn stick_report(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: u8) ->
     r
 }
 
+#[allow(clippy::too_many_arguments)]
 fn throttle_report(
     scx: u16,
     scy: u16,
@@ -34,8 +35,8 @@ fn throttle_report(
     toggles: u8,
     hat_dms: u8,
     hat_csl: u8,
-) -> [u8; 20] {
-    let mut r = [0u8; 20];
+) -> Vec<u8> {
+    let mut r = vec![0u8; 20];
     r[0..2].copy_from_slice(&scx.to_le_bytes());
     r[2..4].copy_from_slice(&scy.to_le_bytes());
     r[4..6].copy_from_slice(&tl.to_le_bytes());

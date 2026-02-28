@@ -18,6 +18,15 @@ keywords = ["flight-sim", "openflight", "ui", "settings"]
 [dependencies]
 flight-core = { path = "../flight-core" }
 thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+axum = { workspace = true, features = ["ws"] }
+tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros", "sync", "time"] }
+tower-http = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+axum-test = { workspace = true }
+tokio-test = { workspace = true }

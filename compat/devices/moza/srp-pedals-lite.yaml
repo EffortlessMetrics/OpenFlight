@@ -13,8 +13,8 @@ device:
   name: "MOZA SR-P Lite Pedals"
   vendor: "MOZA Racing"
   usb:
-    vendor_id: 0x346E   # MOZA Racing registered VID (community-confirmed)
-    product_id: 0x0006  # Placeholder — PID_UNCONFIRMED for SR-P Lite
+    vendor_id: 0x346E   # MOZA Racing (Gudsen Technology) â confirmed in USB ID database
+    product_id: 0x0006  # Estimated — PID_UNCONFIRMED for SR-P Lite; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick

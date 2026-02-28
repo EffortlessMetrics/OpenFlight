@@ -1,0 +1,45 @@
+# PFT Puma Cyclic Stick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Full-size helicopter cyclic stick with force gradient system.
+
+schema_version: "1"
+
+device:
+  name: "PFT Puma Cyclic Stick"
+  vendor: "Pro Flight Trainer"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE002
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [cyclic_roll, cyclic_pitch]
+    resolution_bits: 14
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xE002 community estimate."
+  - id: FORCE_GRADIENT
+    description: "Spring-loaded force gradient system simulating hydraulic feel."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFT Puma helicopter cyclic stick. Force gradient system. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

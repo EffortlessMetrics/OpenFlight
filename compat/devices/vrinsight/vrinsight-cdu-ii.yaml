@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VRInsight"
+  name: "VRInsight CDU II"
+  usb:
+    vid: "0x14B8"
+    pid: "0x0062"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 64
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "VRInsight CDU II FMS control display unit."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

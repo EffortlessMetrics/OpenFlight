@@ -1,0 +1,50 @@
+# FSSB R3 Pro Force Sensing Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x0483 (STMicroelectronics). PID 0x5742 estimated for FSSB R3 Pro.
+# Professional force sensing (non-moving) joystick for fighter sim.
+schema_version: "1"
+
+device:
+  name: "FSSB R3 Pro Force Sensing Joystick"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x0483
+    product_id: 0x5742
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING_STICK
+    description: >
+      Non-moving force sensing joystick. Measures applied force rather
+      than deflection. Replicates F-16 sidestick feel. Load cells provide
+      16-bit resolution force measurement.
+  - id: ADJUSTABLE_FORCE_CURVES
+    description: >
+      Configurable force curves via FSSB software. Adjustable breakout
+      force, sensitivity, and response curves for each axis independently.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R3 Pro Force Sensing Joystick. PID 0x5742 estimated.
+    Non-moving force sensing stick. Last reviewed: 2026-06.

@@ -1,0 +1,45 @@
+# VIRPIL VPC Collective CP4
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fourth generation VPC helicopter collective with enhanced button layout.
+
+schema_version: "1"
+
+device:
+  name: "VIRPIL VPC Collective CP4"
+  vendor: "VIRPIL Controls"
+  usb:
+    vendor_id: 0x3344
+    product_id: 0x8220
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 7
+    names: [collective, twist, friction, thumbx, thumby, slider, rotary]
+    resolution_bits: 14
+  buttons: 48
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed VIRPIL. PID 0x8220 community estimate for CP4."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Collective axis is unipolar [0, max]; map to [0.0, 1.0]."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VIRPIL VPC Collective CP4. Fourth-gen helicopter collective. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

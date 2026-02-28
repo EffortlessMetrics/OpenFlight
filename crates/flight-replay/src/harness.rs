@@ -590,7 +590,7 @@ mod tests {
         assert!(result.success);
         assert!(result.comparison.is_some());
 
-        let comparison = result.comparison.unwrap();
+        let _comparison = result.comparison.unwrap();
         // Note: In the current implementation, comparisons are not actually performed
         // during replay since we're comparing against the same engine outputs
         // This is expected behavior for the offline replay harness

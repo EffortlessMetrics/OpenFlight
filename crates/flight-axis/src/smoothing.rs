@@ -353,11 +353,11 @@ mod tests {
         let mut f = EmaFilter::new(0.5);
         for _ in 0..50 {
             let out = f.apply(0.8);
-            assert!(out >= -1.0 && out <= 1.0, "out={out} outside [-1.0, 1.0]");
+            assert!((-1.0..=1.0).contains(&out), "out={out} outside [-1.0, 1.0]");
         }
         for _ in 0..50 {
             let out = f.apply(-0.8);
-            assert!(out >= -1.0 && out <= 1.0, "out={out} outside [-1.0, 1.0]");
+            assert!((-1.0..=1.0).contains(&out), "out={out} outside [-1.0, 1.0]");
         }
     }
 
@@ -474,7 +474,7 @@ mod tests {
         for &inp in inputs {
             let out = s.process(inp);
             assert!(
-                out >= -1.0 && out <= 1.0 && out.is_finite(),
+                (-1.0..=1.0).contains(&out) && out.is_finite(),
                 "out={out} not in [-1.0, 1.0] for inp={inp}"
             );
         }
@@ -562,7 +562,7 @@ mod tests {
             for _ in 0..50 {
                 let out = f.apply(input);
                 prop_assert!(
-                    out >= -1.0 && out <= 1.0,
+                    (-1.0..=1.0).contains(&out),
                     "out={out} not in [-1.0, 1.0]"
                 );
             }

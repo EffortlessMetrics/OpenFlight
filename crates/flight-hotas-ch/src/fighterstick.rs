@@ -5,7 +5,7 @@
 //!
 //! # Device identifier
 //!
-//! VID 0x068E (CH Products), PID 0x00F0 (estimated).
+//! VID 0x068E (CH Products), PID 0x00F3 (from Linux kernel hid-ids.h).
 //!
 //! # Report format (minimum 9 bytes)
 //!
@@ -26,8 +26,8 @@ use crate::ChError;
 /// VID for all CH Products devices.
 pub const CH_VID: u16 = 0x068E;
 
-/// PID for the CH Products Fighterstick (estimated).
-pub const FIGHTERSTICK_PID: u16 = 0x00F0;
+/// PID for the CH Products Fighterstick (confirmed from Linux kernel hid-ids.h).
+pub const FIGHTERSTICK_PID: u16 = 0x00F3;
 
 /// Minimum byte count for a Fighterstick HID report.
 pub const FIGHTERSTICK_MIN_REPORT_BYTES: usize = 9;
@@ -181,9 +181,9 @@ mod tests {
         fn axes_always_in_range(x in 0u16..=u16::MAX, y in 0u16..=u16::MAX, z in 0u16..=u16::MAX) {
             let r = make_report(x, y, z, 0, 0);
             let s = parse_fighterstick(&r).unwrap();
-            prop_assert!(normalize_axis(s.x) >= -1.0 && normalize_axis(s.x) <= 1.0);
-            prop_assert!(normalize_axis(s.y) >= -1.0 && normalize_axis(s.y) <= 1.0);
-            prop_assert!(normalize_axis(s.z) >= -1.0 && normalize_axis(s.z) <= 1.0);
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.x)));
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.y)));
+            prop_assert!((-1.0..=1.0).contains(&normalize_axis(s.z)));
         }
 
         #[test]

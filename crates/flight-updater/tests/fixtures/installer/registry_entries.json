@@ -1,0 +1,37 @@
+{
+  "entries": [
+    {
+      "root": "HKLM",
+      "key": "SOFTWARE\\OpenFlight\\Flight Hub",
+      "values": [
+        { "name": "InstallPath", "type": "string", "value": "[INSTALLFOLDER]" },
+        { "name": "Version", "type": "string", "value": "[ProductVersion]" },
+        { "name": "BinPath", "type": "string", "value": "[BinFolder]" },
+        { "name": "ConfigPath", "type": "string", "value": "[ConfigFolder]" }
+      ]
+    },
+    {
+      "root": "HKLM",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\FlightHub",
+      "values": [
+        { "name": "ImagePath", "type": "expandString", "value": "\"[BinFolder]flightd.exe\" --service" }
+      ]
+    },
+    {
+      "root": "HKLM",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\FlightHub\\Parameters",
+      "values": [
+        { "name": "ConfigPath", "type": "string", "value": "[ConfigFolder]config.toml" },
+        { "name": "LogPath", "type": "string", "value": "[LogsFolder]" }
+      ]
+    },
+    {
+      "root": "HKLM",
+      "key": "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\FlightHub",
+      "values": [
+        { "name": "EventMessageFile", "type": "expandString", "value": "[BinFolder]flightd.exe" },
+        { "name": "TypesSupported", "type": "integer", "value": "7" }
+      ]
+    }
+  ]
+}

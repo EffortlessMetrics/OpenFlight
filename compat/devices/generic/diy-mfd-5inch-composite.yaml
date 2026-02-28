@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY 5-inch Composite MFD"
+  usb:
+    vid: "0x1209"
+    pid: "0xAF03"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 16
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY 5-inch composite video MFD with USB button interface."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

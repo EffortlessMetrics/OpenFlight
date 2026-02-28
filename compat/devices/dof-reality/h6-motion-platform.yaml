@@ -1,0 +1,46 @@
+# DOF Reality H6 Motion Platform
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 6-degrees-of-freedom motion platform (pitch, roll, yaw, surge, sway, heave).
+
+schema_version: "1"
+
+device:
+  name: "DOF Reality H6 Motion Platform"
+  vendor: "DOF Reality"
+  type: platform
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x3006
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 6
+    names: [pitch, roll, yaw, surge, sway, heave]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 60
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes) / PID 0x3006 community estimate. Verify with lsusb."
+  - id: MOTION_OUTPUT_ONLY
+    description: "Receives motion commands from PC via SimTools. No HID input events."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DOF Reality H6 6-DOF motion platform. Motion output device driven by SimTools.
+    Last reviewed: 2026-07.

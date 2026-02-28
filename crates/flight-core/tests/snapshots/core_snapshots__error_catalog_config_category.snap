@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "CFG-001: Config file missing",
+    "CFG-002: Config parse error",
+    "CFG-003: Config value out of range",
+    "CFG-004: Config migration required",
+]

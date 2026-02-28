@@ -1,0 +1,46 @@
+# Aerosoft CRJ MCDU Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xCE01 estimated for CRJ MCDU.
+# Bombardier CRJ-series MCDU panel for FMS operation.
+schema_version: "1"
+
+device:
+  name: "Aerosoft CRJ MCDU Panel"
+  vendor: "Aerosoft"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xCE01
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 52
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: CRJ_MCDU_LAYOUT
+    description: >
+      CRJ-specific MCDU layout with alphanumeric keypad, line-select
+      keys, and function keys. Integrated LCD display for FMS page
+      rendering. Designed for Aerosoft CRJ add-on.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Aerosoft CRJ MCDU Panel. PID 0xCE01 estimated.
+    Last reviewed: 2026-06.

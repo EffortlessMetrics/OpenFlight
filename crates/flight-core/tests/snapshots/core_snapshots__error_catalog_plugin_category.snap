@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "PLG-001: Plugin load failed",
+    "PLG-002: Plugin capability denied",
+    "PLG-003: Plugin timeout",
+    "PLG-004: Plugin panic",
+]

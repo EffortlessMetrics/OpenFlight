@@ -374,7 +374,8 @@ mod tests {
 
     #[test]
     fn test_detect_breaking_changes_removed_message() {
-        let old = "message OldMessage {\n  string field = 1;\n}\nmessage KeepMe {\n  int32 x = 1;\n}";
+        let old =
+            "message OldMessage {\n  string field = 1;\n}\nmessage KeepMe {\n  int32 x = 1;\n}";
         let new = "message KeepMe {\n  int32 x = 1;\n}";
         let changes = detect_breaking_changes(old, new).unwrap();
         assert!(!changes.is_empty(), "should detect removed message");

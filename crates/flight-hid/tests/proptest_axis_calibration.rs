@@ -161,7 +161,7 @@ proptest! {
             cal.raw_min, cal.raw_max, cal.output_min, cal.output_max, cal.deadzone
         );
         prop_assert!(
-            out >= cal.output_min && out <= cal.output_max,
+            (cal.output_min..=cal.output_max).contains(&out),
             "normalize({raw}) = {out} is outside [{}, {}]; \
              raw_range=[{},{}] dz={} reversed={}",
             cal.output_min, cal.output_max,
@@ -402,7 +402,7 @@ proptest! {
 
         prop_assert!(out.is_finite(), "10-bit: raw={raw} → {out} is not finite");
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "10-bit: raw={raw} → {out} is outside [-1, 1]"
         );
     }
@@ -427,7 +427,7 @@ proptest! {
 
         prop_assert!(out.is_finite(), "12-bit: raw={raw} → {out} is not finite");
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "12-bit: raw={raw} → {out} is outside [-1, 1]"
         );
     }
@@ -452,7 +452,7 @@ proptest! {
 
         prop_assert!(out.is_finite(), "16-bit: raw={raw} → {out} is not finite");
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "16-bit: raw={raw} → {out} is outside [-1, 1]"
         );
     }
@@ -476,7 +476,7 @@ proptest! {
 
         prop_assert!(out.is_finite(), "throttle: raw={raw} → {out} is not finite");
         prop_assert!(
-            out >= 0.0 && out <= 1.0,
+            (0.0..=1.0).contains(&out),
             "throttle: raw={raw} → {out} is outside [0, 1]"
         );
     }

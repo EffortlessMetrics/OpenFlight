@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY Generic Pressurization Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xEC06"
+  type: "panel"
+capabilities:
+  axes: 1
+  buttons: 6
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY generic pressurization panel for GA/turboprop cockpit builds."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

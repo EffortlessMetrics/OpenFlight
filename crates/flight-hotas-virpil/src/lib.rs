@@ -31,16 +31,23 @@ pub mod stick_mongoost;
 pub mod stick_warbrd;
 pub mod throttle_cm3;
 
+pub mod collective_tcs;
+pub mod pedals_ace;
+pub mod profiles;
+pub mod protocol;
+pub mod throttle_ace_torq;
+
 /// Maximum raw axis value for all VIRPIL VPC devices (14-bit resolution).
 ///
 /// From Buzzec/virpil source: `u16::from_le_bytes([0, 64])` = 16384.
 pub const VIRPIL_AXIS_MAX: u16 = 16384;
 
 pub use flight_hid_support::device_support::{
-    VIRPIL_CM3_THROTTLE_PID, VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
-    VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID, VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID,
-    VIRPIL_MONGOOST_STICK_PID, VIRPIL_PANEL1_PID, VIRPIL_PANEL2_PID, VIRPIL_VENDOR_ID,
-    VIRPIL_WARBRD_D_PID, VIRPIL_WARBRD_PID, VirpilModel, is_virpil_device, virpil_model,
+    VIRPIL_ACE_PEDALS_PID, VIRPIL_ACE_TORQ_PID, VIRPIL_CM3_THROTTLE_PID,
+    VIRPIL_CONSTELLATION_ALPHA_LEFT_PID, VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID,
+    VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID, VIRPIL_MONGOOST_STICK_PID, VIRPIL_PANEL1_PID,
+    VIRPIL_PANEL2_PID, VIRPIL_ROTOR_TCS_PLUS_PID, VIRPIL_VENDOR_ID, VIRPIL_WARBRD_D_PID,
+    VIRPIL_WARBRD_PID, VirpilModel, is_virpil_device, virpil_model,
 };
 
 pub use throttle_cm3::{
@@ -76,4 +83,19 @@ pub use stick_alpha_prime::{
 pub use stick_warbrd::{
     VPC_WARBRD_MIN_REPORT_BYTES, VpcWarBrdInputState, VpcWarBrdParseError, WarBrdVariant,
     parse_warbrd_report,
+};
+
+pub use pedals_ace::{
+    ACE_PEDALS_BUTTON_COUNT, VPC_ACE_PEDALS_MIN_REPORT_BYTES, VpcAcePedalsAxes,
+    VpcAcePedalsButtons, VpcAcePedalsInputState, VpcAcePedalsParseError, parse_ace_pedals_report,
+};
+
+pub use collective_tcs::{
+    ROTOR_TCS_BUTTON_COUNT, VPC_ROTOR_TCS_MIN_REPORT_BYTES, VpcRotorTcsAxes, VpcRotorTcsButtons,
+    VpcRotorTcsInputState, VpcRotorTcsParseError, parse_rotor_tcs_report,
+};
+
+pub use throttle_ace_torq::{
+    ACE_TORQ_BUTTON_COUNT, VPC_ACE_TORQ_MIN_REPORT_BYTES, VpcAceTorqAxis, VpcAceTorqButtons,
+    VpcAceTorqInputState, VpcAceTorqParseError, parse_ace_torq_report,
 };

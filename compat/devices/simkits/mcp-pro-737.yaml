@@ -1,0 +1,50 @@
+# SimKits MCP Pro 737
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF020 estimated for SimKits MCP Pro 737.
+# Professional-grade Boeing 737 MCP panel replica.
+schema_version: "1"
+
+device:
+  name: "SimKits MCP Pro 737"
+  vendor: "SimKits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF020
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 32
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: MCP_PRO_737
+    description: >
+      Professional 737 MCP replica with rotary encoders for speed,
+      heading, altitude, and VS. LED displays for selected values.
+      A/T, VNAV, LNAV, HDG SEL, ALT HLD, and APP mode buttons.
+  - id: IOCARDS_COMPATIBLE
+    description: >
+      Compatible with SimKits IOCards ecosystem. Can be used standalone
+      or daisy-chained with other SimKits panels.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimKits MCP Pro 737. PID 0xF020 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

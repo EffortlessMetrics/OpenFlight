@@ -1,0 +1,46 @@
+# OpenCockpits Servo Card V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x040B estimated for Servo Card V2.
+# USB servo motor controller for driving analog gauge needles.
+schema_version: "1"
+
+device:
+  name: "OpenCockpits Servo Card V2"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x040B
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: SERVO_OUTPUT_CARD
+    description: >
+      V2 servo card driving up to 6 servo motors for analog gauge
+      needles. Improved PWM resolution and smoother needle movement.
+      Part of IOCards ecosystem.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits Servo Card V2. PID 0x040B estimated.
+    Part of IOCards ecosystem. Last reviewed: 2026-06.

@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "SIM-001: SimConnect unavailable",
+    "SIM-002: Sim connection lost",
+    "SIM-003: Sim variable not found",
+    "SIM-004: Sim version mismatch",
+]

@@ -394,12 +394,12 @@ mod tests {
         ) {
             let pkt = TrackIrPacket { x, y, z, yaw, pitch, roll };
             let pose = normalize_pose(pkt);
-            prop_assert!(pose.x >= -1.0 && pose.x <= 1.0);
-            prop_assert!(pose.y >= -1.0 && pose.y <= 1.0);
-            prop_assert!(pose.z >= -1.0 && pose.z <= 1.0);
-            prop_assert!(pose.yaw >= -1.0 && pose.yaw <= 1.0);
-            prop_assert!(pose.pitch >= -1.0 && pose.pitch <= 1.0);
-            prop_assert!(pose.roll >= -1.0 && pose.roll <= 1.0);
+            prop_assert!((-1.0..=1.0).contains(&pose.x));
+            prop_assert!((-1.0..=1.0).contains(&pose.y));
+            prop_assert!((-1.0..=1.0).contains(&pose.z));
+            prop_assert!((-1.0..=1.0).contains(&pose.yaw));
+            prop_assert!((-1.0..=1.0).contains(&pose.pitch));
+            prop_assert!((-1.0..=1.0).contains(&pose.roll));
         }
     }
 }

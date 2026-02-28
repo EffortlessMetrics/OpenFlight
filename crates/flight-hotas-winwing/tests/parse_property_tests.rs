@@ -38,9 +38,9 @@ proptest! {
     ) {
         let r = make_throttle_report(tl, tr, friction, 32768, 32768);
         let s = parse_throttle_report(&r).unwrap();
-        prop_assert!(s.axes.throttle_left >= 0.0 && s.axes.throttle_left <= 1.0);
-        prop_assert!(s.axes.throttle_right >= 0.0 && s.axes.throttle_right <= 1.0);
-        prop_assert!(s.axes.friction >= 0.0 && s.axes.friction <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&s.axes.throttle_left));
+        prop_assert!((0.0..=1.0).contains(&s.axes.throttle_right));
+        prop_assert!((0.0..=1.0).contains(&s.axes.friction));
         // combined is average of left + right
         let expected = (s.axes.throttle_left + s.axes.throttle_right) * 0.5;
         prop_assert!((s.axes.throttle_combined - expected).abs() < 1e-5);
@@ -84,8 +84,8 @@ proptest! {
     ) {
         let r = make_stick_report(roll, pitch, 0);
         let s = parse_stick_report(&r).unwrap();
-        prop_assert!(s.axes.roll >= -1.0 && s.axes.roll <= 1.0);
-        prop_assert!(s.axes.pitch >= -1.0 && s.axes.pitch <= 1.0);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.roll));
+        prop_assert!((-1.0..=1.0).contains(&s.axes.pitch));
     }
 
     /// Stick buttons 1–20 match the mask bits.
@@ -132,11 +132,11 @@ proptest! {
     ) {
         let r = make_rudder_report(rudder, brake_l, brake_r);
         let s = parse_rudder_report(&r).unwrap();
-        prop_assert!(s.rudder >= -1.0 && s.rudder <= 1.0,
+        prop_assert!((-1.0..=1.0).contains(&s.rudder),
             "rudder out of range: {}", s.rudder);
-        prop_assert!(s.brake_left >= 0.0 && s.brake_left <= 1.0,
+        prop_assert!((0.0..=1.0).contains(&s.brake_left),
             "brake_left out of range: {}", s.brake_left);
-        prop_assert!(s.brake_right >= 0.0 && s.brake_right <= 1.0,
+        prop_assert!((0.0..=1.0).contains(&s.brake_right),
             "brake_right out of range: {}", s.brake_right);
     }
 

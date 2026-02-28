@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "VRInsight"
+  name: "VRInsight Throttle Quadrant"
+  usb:
+    vid: "0x14B8"
+    pid: "0x0063"
+  type: "panel"
+capabilities:
+  axes: 6
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "VRInsight multi-engine throttle quadrant panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

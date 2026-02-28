@@ -1,0 +1,45 @@
+# RealSimGear Cessna Throttle Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cessna 172-specific throttle/mixture panel with vernier controls.
+
+schema_version: "1"
+
+device:
+  name: "RealSimGear Cessna Throttle Panel"
+  vendor: "RealSimGear"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF252
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [throttle, mixture]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x04D8 (Microchip/RealSimGear). PID 0xF252 community estimate."
+  - id: VERNIER_CONTROLS
+    description: "Vernier-style push-pull controls for throttle and mixture."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    RealSimGear Cessna throttle panel with vernier controls. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

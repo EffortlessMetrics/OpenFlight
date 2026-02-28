@@ -1,0 +1,45 @@
+# Thrustmaster HOTAS Cougar Mk.2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Updated Cougar HOTAS with improved electronics and USB connectivity.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster HOTAS Cougar Mk.2"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0404
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, throttle, rotary]
+    resolution_bits: 12
+  buttons: 32
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x044F confirmed Thrustmaster. PID 0x0404 community estimate for Mk.2."
+  - id: METAL_CONSTRUCTION
+    description: "Full metal stick and throttle. Known for heavy throw and precise centering."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster HOTAS Cougar Mk.2. Metal construction. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

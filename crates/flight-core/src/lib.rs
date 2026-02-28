@@ -67,7 +67,9 @@
 //! ```
 
 pub mod calibration_store;
+pub mod circuit_breaker;
 pub mod error;
+pub mod error_catalog;
 pub mod profile_watcher;
 
 // Re-exports from microcrates

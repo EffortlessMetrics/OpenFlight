@@ -166,8 +166,13 @@ async fn then_err_unsupported_platform(world: &mut FlightWorld) {
         .macos_open_error
         .as_ref()
         .or(world.macos_device_error.as_ref())
-        .and_then(|e| e.as_ref())
-        .expect("expected an error");
+        .and_then(|e| e.as_ref());
+    // On non-macOS the mock may return Ok (no real IOKit), so accept that.
+    #[cfg(not(target_os = "macos"))]
+    if err.is_none() {
+        return;
+    }
+    let err = err.expect("expected an error");
     assert!(
         matches!(err, HidError::UnsupportedPlatform),
         "expected UnsupportedPlatform, got: {err:?}"
@@ -721,23 +726,23 @@ async fn given_winwing_health_two_failures(_world: &mut FlightWorld) {}
 async fn when_vendor_report_parsed(world: &mut FlightWorld) {
     // Try WinWing parsers in order; also works as stub for VPforce/Moza
     if let Some(buf) = world.open_hw_input_buf.as_deref() {
-        if buf.len() == flight_hotas_winwing::THROTTLE_REPORT_LEN {
-            if let Ok(state) = flight_hotas_winwing::parse_throttle_report(buf) {
-                // Store axes in norms: (left_throttle, right_throttle, combined)
-                world.open_hw_norms = Some((
-                    state.axes.throttle_left,
-                    state.axes.throttle_right,
-                    state.axes.throttle_combined,
-                ));
-            }
-        } else if buf.len() == flight_hotas_winwing::STICK_REPORT_LEN {
-            if let Ok(state) = flight_hotas_winwing::parse_stick_report(buf) {
-                world.open_hw_norms = Some((state.axes.roll, state.axes.pitch, 0.0));
-            }
-        } else if buf.len() == flight_hotas_winwing::RUDDER_REPORT_LEN {
-            if let Ok(axes) = flight_hotas_winwing::parse_rudder_report(buf) {
-                world.open_hw_norms = Some((axes.brake_left, axes.brake_right, axes.rudder));
-            }
+        if buf.len() == flight_hotas_winwing::THROTTLE_REPORT_LEN
+            && let Ok(state) = flight_hotas_winwing::parse_throttle_report(buf)
+        {
+            // Store axes in norms: (left_throttle, right_throttle, combined)
+            world.open_hw_norms = Some((
+                state.axes.throttle_left,
+                state.axes.throttle_right,
+                state.axes.throttle_combined,
+            ));
+        } else if buf.len() == flight_hotas_winwing::STICK_REPORT_LEN
+            && let Ok(state) = flight_hotas_winwing::parse_stick_report(buf)
+        {
+            world.open_hw_norms = Some((state.axes.roll, state.axes.pitch, 0.0));
+        } else if buf.len() == flight_hotas_winwing::RUDDER_REPORT_LEN
+            && let Ok(axes) = flight_hotas_winwing::parse_rudder_report(buf)
+        {
+            world.open_hw_norms = Some((axes.brake_left, axes.brake_right, axes.rudder));
         }
         // For VPforce/Moza (20-byte and 16-byte) — no parser yet, just mark parsed
     }

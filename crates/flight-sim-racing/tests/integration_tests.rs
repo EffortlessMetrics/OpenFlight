@@ -13,6 +13,7 @@ use flight_sim_racing::{
 // ── Helper ────────────────────────────────────────────────────────────────────
 
 /// Build a valid 42-byte generic UDP racing packet.
+#[allow(clippy::too_many_arguments)]
 fn build_packet(
     gear: i8,
     speed_ms: f32,

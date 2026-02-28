@@ -24,12 +24,13 @@ fuzz_target!(|data: &[u8]| {
     ]);
 
     // Build a representative default pipeline (deadzone + curve)
-    let Ok(pipeline) = PipelineBuilder::new()
+    let Ok(builder) = PipelineBuilder::new()
         .deadzone(0.03)
         .curve(0.3)
-        .unwrap()
-        .compile()
     else {
+        return;
+    };
+    let Ok(pipeline) = builder.compile() else {
         return;
     };
 

@@ -365,7 +365,7 @@ mod tests {
         }
 
         let performance = metrics.get_performance_metrics();
-        assert_eq!(performance.frames_per_second > 0.0, true);
+        assert!(performance.frames_per_second > 0.0);
         assert!(performance.total_duration > Duration::from_secs(0));
     }
 
@@ -374,7 +374,7 @@ mod tests {
         let mut metrics = ReplayMetrics::new(true);
 
         // Record frames with known values
-        let values = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let values = [1.0, 2.0, 3.0, 4.0, 5.0];
         for (i, &value) in values.iter().enumerate() {
             metrics.record_frame_processed(i as u64 * 4_000_000, value, value * 2.0);
         }
@@ -405,8 +405,8 @@ mod tests {
         let mut metrics = ReplayMetrics::new(true);
 
         // Record frames with some jitter
-        let timestamps = vec![0, 4_100_000, 8_050_000, 12_200_000]; // Some timing variation
-        for (i, &timestamp) in timestamps.iter().enumerate() {
+        let timestamps = [0, 4_100_000, 8_050_000, 12_200_000]; // Some timing variation
+        for &timestamp in timestamps.iter() {
             metrics.record_frame_processed(timestamp, 0.5, 2.0);
         }
 

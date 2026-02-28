@@ -1,0 +1,45 @@
+# Honeycomb Bravo Throttle Quadrant Helicopter Edition
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Helicopter-specific Bravo variant with collective and twist grip.
+
+schema_version: "1"
+
+device:
+  name: "Honeycomb Bravo Throttle Quadrant Helicopter Edition"
+  vendor: "Honeycomb Aeronautical"
+  usb:
+    vendor_id: 0x294B
+    product_id: 0x1906
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [collective, twist_grip, governor, friction]
+    resolution_bits: 16
+  buttons: 20
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x294B confirmed Honeycomb. PID 0x1906 community estimate."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Collective axis is unipolar [0, max]; map to [0.0, 1.0]."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Honeycomb Bravo Helicopter Edition. Collective and twist grip. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

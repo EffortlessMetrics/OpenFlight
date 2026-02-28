@@ -1,0 +1,50 @@
+# Flight Illusion Airspeed Indicator
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF101 estimated for FI Airspeed Indicator.
+# Servo-driven analog airspeed indicator gauge.
+schema_version: "1"
+
+device:
+  name: "Flight Illusion Airspeed Indicator"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF101
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: SERVO_DRIVEN_GAUGE
+    description: >
+      Servo-driven analog airspeed indicator. USB-connected with stepper
+      motor driving the needle. Host sends airspeed value via USB HID
+      output report; gauge positions needle accordingly.
+  - id: OUTPUT_ONLY
+    description: >
+      Output-only device — no buttons or axes for input. Purely displays
+      airspeed information from the simulator.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion Airspeed Indicator. PID 0xF101 estimated.
+    Servo-driven analog gauge. Last reviewed: 2026-06.

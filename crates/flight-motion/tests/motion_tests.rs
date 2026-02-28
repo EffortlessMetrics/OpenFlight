@@ -5,7 +5,7 @@
 
 use approx::assert_abs_diff_eq;
 use flight_bus::BusSnapshot;
-use flight_motion::{MotionConfig, MotionFrame, MotionMapper, WashoutConfig};
+use flight_motion::{DoFConfig, MotionConfig, MotionFrame, MotionMapper, WashoutConfig};
 
 fn default_mapper() -> MotionMapper {
     MotionMapper::new(MotionConfig::default(), 1.0 / 60.0)
@@ -35,8 +35,10 @@ fn test_neutral_snapshot_washes_out() {
 
 #[test]
 fn test_intensity_zero_always_neutral() {
-    let mut config = MotionConfig::default();
-    config.intensity = 0.0;
+    let config = MotionConfig {
+        intensity: 0.0,
+        ..Default::default()
+    };
     let mut mapper = MotionMapper::new(config, 1.0 / 60.0);
     let frame = mapper.process(&BusSnapshot::default());
     assert!(frame.is_neutral());
@@ -149,10 +151,15 @@ fn test_clamped_frame() {
 
 #[test]
 fn test_inverted_channel() {
-    let mut config = MotionConfig::default();
-    config.intensity = 1.0;
-    config.roll.invert = true;
-    config.roll.gain = 1.0;
+    let config = MotionConfig {
+        intensity: 1.0,
+        roll: DoFConfig {
+            invert: true,
+            gain: 1.0,
+            ..DoFConfig::default()
+        },
+        ..MotionConfig::default()
+    };
     // Manually test inversion logic via mapper config access
     let mapper = MotionMapper::new(config, 1.0 / 60.0);
     assert!(mapper.config().roll.invert);

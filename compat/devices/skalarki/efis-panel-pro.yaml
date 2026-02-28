@@ -1,0 +1,46 @@
+# Skalarki EFIS Panel Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0BCD estimated for Skalarki EFIS Pro.
+# Professional EFIS control panel with dual captain/FO sections.
+schema_version: "1"
+
+device:
+  name: "Skalarki EFIS Panel Pro"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0BCD
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: EFIS_PRO_DUAL
+    description: >
+      Pro EFIS panel with dual captain and first officer sections.
+      Barometric pressure selectors, ND range/mode selectors, and
+      display filter buttons. LED-backlit panel labels.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki EFIS Panel Pro. PID 0x0BCD estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

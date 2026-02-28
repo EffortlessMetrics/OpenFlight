@@ -365,7 +365,7 @@ mod tests {
         )
         .unwrap();
         let v = curve.evaluate(0.5);
-        assert!(v >= 0.0 && v <= 1.0);
+        assert!((0.0..=1.0).contains(&v));
         assert!(approx_eq(v, 0.3, 1e-4));
     }
 
@@ -466,7 +466,7 @@ mod tests {
             )
             .unwrap();
             let y = curve.evaluate(x);
-            prop_assert!(y >= 0.0 && y <= 1.0, "output {y} out of [0, 1] for x={x}");
+            prop_assert!((0.0..=1.0).contains(&y), "output {y} out of [0, 1] for x={x}");
         }
 
         /// Linear identity: evaluate(x) == x for all x in [0.0, 1.0].

@@ -19,7 +19,6 @@
 #![allow(clippy::vec_init_then_push)]
 #![allow(clippy::redundant_pattern_matching)]
 #![allow(clippy::single_char_add_str)]
-#![allow(dead_code)]
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -34,6 +33,7 @@ use std::time::{Duration, Instant};
 pub mod audio;
 pub mod blackbox;
 pub mod crosswind;
+pub mod device;
 pub mod device_health;
 pub mod dinput_backend;
 #[cfg(windows)]
@@ -41,6 +41,7 @@ pub mod dinput_com;
 pub mod dinput_device;
 #[cfg(windows)]
 pub mod dinput_window;
+pub mod effects;
 pub mod engine_vibration;
 pub mod fault;
 pub mod ffb_pipeline;
@@ -54,10 +55,14 @@ pub mod mode_negotiation;
 pub mod ofp1_integration;
 #[cfg(test)]
 pub mod performance_validation;
+pub mod ramp;
 pub mod safety;
 pub mod safety_envelope;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
+pub mod safety_interlock;
+#[cfg(test)]
+pub mod safety_tests;
 #[cfg(test)]
 pub mod safety_threshold_validation;
 pub mod soft_stop;
@@ -68,7 +73,7 @@ pub mod trim_hil_tests;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
-pub mod ramp;
+pub mod weather_ffb;
 pub mod wheel_shimmy;
 pub mod xinput_rumble;
 
@@ -78,9 +83,11 @@ mod tests;
 pub use audio::*;
 pub use blackbox::*;
 pub use crosswind::*;
+pub use device::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;
+pub use effects::*;
 pub use engine_vibration::*;
 pub use fault::*;
 pub use ffb_pipeline::*;
@@ -92,8 +99,10 @@ pub use mode_negotiation::*;
 pub use ofp1_integration::*;
 #[cfg(test)]
 pub use performance_validation::*;
+pub use ramp::*;
 pub use safety::*;
 pub use safety_envelope::*;
+pub use safety_interlock::*;
 pub use soft_stop::*;
 pub use telemetry_synth::*;
 pub use trim::*;
@@ -102,7 +111,6 @@ pub use trim_hil_tests::*;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
-pub use ramp::*;
 pub use wheel_shimmy::*;
 pub use xinput_rumble::*;
 

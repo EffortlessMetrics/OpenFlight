@@ -10,13 +10,16 @@ use anyhow::Result;
 use flight_hotas_thrustmaster::TFlightYawPolicy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 use flight_axis::{
-    AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult,
+    AxisEngine, DetentRole, DetentZone as AxisDetentZone, EngineConfig, PipelineBuilder,
+    UpdateResult,
 };
+use flight_bus::BusPublisher;
 use flight_core::{
     profile::{AxisConfig, Profile},
     watchdog::{WatchdogConfig, WatchdogSystem},
@@ -138,6 +141,58 @@ impl Default for FlightServiceConfig {
     }
 }
 
+impl FlightServiceConfig {
+    /// Load configuration from a JSON file.
+    ///
+    /// Falls back to defaults on any error (missing file, parse failure) and
+    /// logs a warning so the service can still start in a degraded state.
+    pub fn load_from_file(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| anyhow::anyhow!("Failed to read config file '{}': {e}", path.display()))?;
+        Self::load_from_str(&content)
+    }
+
+    /// Parse configuration from a JSON string.
+    pub fn load_from_str(json: &str) -> Result<Self> {
+        let config: Self = serde_json::from_str(json)
+            .map_err(|e| anyhow::anyhow!("Failed to parse service config: {e}"))?;
+        config.validate()?;
+        Ok(config)
+    }
+
+    /// Validate configuration values are within acceptable ranges.
+    pub fn validate(&self) -> Result<()> {
+        if self.axis_config.max_frame_time_us == 0 {
+            return Err(anyhow::anyhow!("axis_config.max_frame_time_us must be > 0"));
+        }
+        if self.tflight_poll_hz == 0 {
+            return Err(anyhow::anyhow!("tflight_poll_hz must be > 0"));
+        }
+        if self.stecs_poll_hz == 0 {
+            return Err(anyhow::anyhow!("stecs_poll_hz must be > 0"));
+        }
+        Ok(())
+    }
+
+    /// Try to load from `path`; on failure log a warning and return defaults.
+    pub fn load_or_default(path: impl AsRef<Path>) -> Self {
+        match Self::load_from_file(path.as_ref()) {
+            Ok(cfg) => {
+                info!("Loaded service config from '{}'", path.as_ref().display());
+                cfg
+            }
+            Err(e) => {
+                warn!(
+                    "Could not load config from '{}': {e}; using defaults",
+                    path.as_ref().display()
+                );
+                Self::default()
+            }
+        }
+    }
+}
+
 /// Service state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ServiceState {
@@ -155,6 +210,26 @@ pub enum ServiceState {
     Stopped,
     /// Service has failed
     Failed,
+}
+
+impl ServiceState {
+    /// Returns `true` if transitioning from `self` to `target` is a valid
+    /// state machine move.
+    pub fn can_transition_to(self, target: Self) -> bool {
+        matches!(
+            (self, target),
+            (Self::Stopped, Self::Starting)
+                | (Self::Starting, Self::Running)
+                | (Self::Starting, Self::SafeMode)
+                | (Self::Starting, Self::Failed)
+                | (Self::Running, Self::Degraded)
+                | (Self::Running, Self::Stopping)
+                | (Self::SafeMode, Self::Stopping)
+                | (Self::Degraded, Self::Running)
+                | (Self::Degraded, Self::Stopping)
+                | (Self::Stopping, Self::Stopped)
+        )
+    }
 }
 
 /// Build an `AxisEngine` pipeline from an `AxisConfig`.
@@ -245,6 +320,8 @@ pub struct FlightService {
     safe_mode: Option<SafeModeManager>,
     /// Axis engine
     axis_engine: Option<Arc<AxisEngine>>,
+    /// Bus publisher for telemetry distribution
+    bus_publisher: Option<BusPublisher>,
     /// Auto-switch service
     auto_switch: Option<AircraftAutoSwitchService>,
     /// Curve conflict service
@@ -278,6 +355,7 @@ impl FlightService {
             error_taxonomy,
             safe_mode: None,
             axis_engine: None,
+            bus_publisher: None,
             auto_switch: None,
             curve_conflict: None,
             capability_service: None,
@@ -305,9 +383,15 @@ impl FlightService {
     pub async fn start(&mut self) -> Result<()> {
         info!("Starting Flight Hub service");
 
-        // Update state to starting
+        // Validate state transition
         {
             let mut state = self.state.write().await;
+            if !state.can_transition_to(ServiceState::Starting) {
+                return Err(anyhow::anyhow!(
+                    "Cannot start service from state {:?}",
+                    *state
+                ));
+            }
             *state = ServiceState::Starting;
         }
 
@@ -450,7 +534,14 @@ impl FlightService {
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine");
 
-        let engine = AxisEngine::new();
+        let engine_config = EngineConfig {
+            enable_rt_checks: self.config.axis_config.enable_rt_checks,
+            max_frame_time_us: self.config.axis_config.max_frame_time_us,
+            enable_counters: self.config.axis_config.enable_counters,
+            enable_conflict_detection: self.config.axis_config.enable_conflict_detection,
+            ..EngineConfig::default()
+        };
+        let engine = AxisEngine::with_config("primary".to_string(), engine_config);
         self.axis_engine = Some(Arc::new(engine));
         self.health
             .info("axis_engine", "Axis engine initialized")
@@ -462,7 +553,20 @@ impl FlightService {
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
 
+        let bus_rate_hz = self
+            .config
+            .auto_switch_config
+            .bus_subscription
+            .telemetry_rate;
+        let mut bus_publisher = BusPublisher::new(bus_rate_hz);
+
         let auto_switch = AircraftAutoSwitchService::new(self.config.auto_switch_config.clone());
+        auto_switch
+            .start(&mut bus_publisher)
+            .await
+            .map_err(|e| anyhow::anyhow!("Auto-switch start failed: {e}"))?;
+
+        self.bus_publisher = Some(bus_publisher);
         self.auto_switch = Some(auto_switch);
         self.health
             .info("auto_switch", "Auto-switch service initialized")
@@ -644,7 +748,12 @@ impl FlightService {
         Ok(status)
     }
 
-    /// Apply a profile
+    /// Apply a profile by compiling pipelines off-thread and swapping
+    /// atomically into the axis engine (ADR-001 RT-safe pattern).
+    ///
+    /// Each axis pipeline is compiled on a blocking thread pool so the RT
+    /// spine is never blocked. Individual axis compilation failures are
+    /// logged and skipped — the remaining axes are still applied.
     pub async fn apply_profile(&self, profile: &Profile) -> Result<()> {
         info!("Applying profile: {:?}", profile);
 
@@ -653,46 +762,110 @@ impl FlightService {
             .validate()
             .map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
 
-        if let Some(engine) = &self.axis_engine {
-            // Choose the primary axis: prefer "pitch" (main control axis), fall back
-            // to the first available axis in the profile.
-            let primary = profile
-                .axes
-                .get("pitch")
-                .map(|c| ("pitch", c))
-                .or_else(|| profile.axes.iter().next().map(|(n, c)| (n.as_str(), c)));
+        let engine = match &self.axis_engine {
+            Some(e) => Arc::clone(e),
+            None => {
+                let msg = "Cannot apply profile - axis engine not initialized";
+                self.health.warning("service", msg).await;
+                return Err(anyhow::anyhow!(msg));
+            }
+        };
 
-            if let Some((axis_name, axis_config)) = primary {
-                match build_pipeline_for_axis(axis_name, axis_config) {
-                    Ok(pipeline) => match engine.update_pipeline(pipeline) {
-                        UpdateResult::Pending => {
-                            info!("Axis pipeline update pending for axis '{axis_name}'");
-                        }
-                        UpdateResult::Success => {
-                            info!("Axis pipeline updated for axis '{axis_name}'");
-                        }
-                        UpdateResult::Failed(msg) => {
-                            warn!("Axis pipeline update failed for axis '{axis_name}': {msg}");
-                        }
-                        UpdateResult::Rejected(msg) => {
-                            warn!("Axis pipeline update rejected for axis '{axis_name}': {msg}");
-                        }
-                    },
-                    Err(e) => {
-                        warn!("Failed to compile pipeline for axis '{axis_name}': {e}");
+        // Compile all pipelines off-thread (non-RT) then swap into the engine.
+        let axes: Vec<(String, AxisConfig)> = profile
+            .axes
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        let compiled = tokio::task::spawn_blocking(move || {
+            let mut results = Vec::with_capacity(axes.len());
+            for (axis_name, axis_config) in &axes {
+                let pipeline_result = build_pipeline_for_axis(axis_name, axis_config);
+                results.push((axis_name.clone(), pipeline_result));
+            }
+            results
+        })
+        .await
+        .map_err(|e| anyhow::anyhow!("Pipeline compilation task panicked: {e}"))?;
+
+        let mut failed_count = 0u32;
+        let total_count = compiled.len();
+
+        for (axis_name, pipeline_result) in compiled {
+            match pipeline_result {
+                Ok(pipeline) => match engine.update_pipeline(pipeline) {
+                    UpdateResult::Pending => {
+                        info!("Axis pipeline update pending for axis '{axis_name}'");
                     }
+                    UpdateResult::Success => {
+                        info!("Axis pipeline updated for axis '{axis_name}'");
+                    }
+                    UpdateResult::Failed(msg) => {
+                        warn!("Axis pipeline update failed for axis '{axis_name}': {msg}");
+                        failed_count += 1;
+                    }
+                    UpdateResult::Rejected(msg) => {
+                        warn!("Axis pipeline update rejected for axis '{axis_name}': {msg}");
+                        failed_count += 1;
+                    }
+                },
+                Err(e) => {
+                    error!("Failed to compile pipeline for axis '{axis_name}': {e}");
+                    failed_count += 1;
                 }
             }
+        }
 
+        if failed_count > 0 && failed_count < total_count as u32 {
+            let msg = format!(
+                "Profile partially applied ({} of {} axes failed)",
+                failed_count, total_count
+            );
+            self.health.warning("service", &msg).await;
+            warn!("{msg}");
+            // Partial failure → degrade the service so operators notice
+            self.transition_to_degraded(&msg).await;
+        } else if failed_count > 0 {
+            let msg = format!("Profile apply failed: all {} axes failed", total_count);
+            self.health.warning("service", &msg).await;
+            warn!("{msg}");
+            self.transition_to_degraded(&msg).await;
+        } else {
             self.health
                 .info("service", "Profile applied successfully")
                 .await;
-            Ok(())
-        } else {
-            let msg = "Cannot apply profile - axis engine not initialized";
-            self.health.warning("service", msg).await;
-            Err(anyhow::anyhow!(msg))
         }
+
+        Ok(())
+    }
+
+    /// Transition the service to `Degraded` if the current state allows it.
+    async fn transition_to_degraded(&self, reason: &str) {
+        let mut state = self.state.write().await;
+        if state.can_transition_to(ServiceState::Degraded) {
+            info!("Service degraded: {reason}");
+            *state = ServiceState::Degraded;
+        }
+    }
+
+    /// Attempt to recover from `Degraded` back to `Running` by re-applying
+    /// the given profile.  Returns `true` on a successful recovery.
+    pub async fn try_recover(&self, profile: &Profile) -> Result<bool> {
+        {
+            let current = *self.state.read().await;
+            if current != ServiceState::Degraded {
+                return Ok(false);
+            }
+        }
+        // Re-apply the profile; if it succeeds fully, restore Running.
+        self.apply_profile(profile).await?;
+        let mut state = self.state.write().await;
+        if *state == ServiceState::Degraded {
+            *state = ServiceState::Running;
+            info!("Service recovered from Degraded → Running");
+        }
+        Ok(true)
     }
 
     /// Get current service state
@@ -767,9 +940,12 @@ impl FlightService {
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down Flight Hub service");
 
-        // Update state
+        // Validate state transition
         {
             let mut state = self.state.write().await;
+            if !state.can_transition_to(ServiceState::Stopping) {
+                warn!("Shutdown requested from state {:?}, forcing stop", *state);
+            }
             *state = ServiceState::Stopping;
         }
 
@@ -804,8 +980,15 @@ impl FlightService {
             debug!("Curve conflict service dropped");
         }
 
-        if let Some(_auto_switch) = self.auto_switch.take() {
-            debug!("Auto-switch service dropped");
+        if let Some(auto_switch) = self.auto_switch.take() {
+            if let Err(e) = auto_switch.stop().await {
+                warn!("Auto-switch service stop error: {}", e);
+            }
+            debug!("Auto-switch service stopped");
+        }
+
+        if let Some(_bus_publisher) = self.bus_publisher.take() {
+            debug!("Bus publisher dropped");
         }
 
         // Shutdown axis engine last
@@ -849,8 +1032,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_safe_mode_service() {
-        let mut config = FlightServiceConfig::default();
-        config.safe_mode = true;
+        let config = FlightServiceConfig {
+            safe_mode: true,
+            ..Default::default()
+        };
 
         let mut service = FlightService::new(config);
         let result = service.start().await;
@@ -913,8 +1098,10 @@ mod tests {
         use flight_core::profile::{AxisConfig, Profile};
         use std::collections::HashMap;
 
-        let mut config = FlightServiceConfig::default();
-        config.safe_mode = false;
+        let config = FlightServiceConfig {
+            safe_mode: false,
+            ..Default::default()
+        };
         let mut service = FlightService::new(config);
         let _ = service.initialize_axis_engine().await;
 
@@ -952,5 +1139,332 @@ mod tests {
             engine.active_version().is_some() || engine.swap_ack_count() == 0,
             "pipeline should be queued or active"
         );
+    }
+
+    #[tokio::test]
+    async fn test_axis_engine_uses_service_config() {
+        let mut config = FlightServiceConfig::default();
+        config.axis_config.enable_rt_checks = true;
+        config.axis_config.max_frame_time_us = 2_000;
+        config.axis_config.enable_counters = false;
+        config.axis_config.enable_conflict_detection = true;
+
+        let mut service = FlightService::new(config);
+        let result = service.initialize_axis_engine().await;
+        assert!(result.is_ok(), "axis engine init should succeed");
+        assert!(
+            service.axis_engine.is_some(),
+            "axis engine should be present after init"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_auto_switch_creates_bus_publisher() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let result = service.initialize_auto_switch().await;
+        assert!(result.is_ok(), "auto-switch init should succeed");
+        assert!(
+            service.bus_publisher.is_some(),
+            "bus publisher should be created during auto-switch init"
+        );
+        assert!(
+            service.auto_switch.is_some(),
+            "auto-switch service should be present"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_all_axes() {
+        use flight_core::profile::{AxisConfig, Profile};
+        use std::collections::HashMap;
+
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.2),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        axes.insert(
+            "roll".to_string(),
+            AxisConfig {
+                deadzone: Some(0.05),
+                expo: Some(0.4),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        axes.insert(
+            "yaw".to_string(),
+            AxisConfig {
+                deadzone: Some(0.08),
+                expo: None,
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes,
+            pof_overrides: None,
+        };
+
+        let result = service.apply_profile(&profile).await;
+        assert!(
+            result.is_ok(),
+            "apply_profile with multiple axes should succeed: {:?}",
+            result.err()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Config loading tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_config_load_from_str_valid() {
+        let json = serde_json::to_string(&FlightServiceConfig::default()).unwrap();
+        let loaded = FlightServiceConfig::load_from_str(&json);
+        assert!(loaded.is_ok(), "valid JSON should load: {:?}", loaded.err());
+    }
+
+    #[test]
+    fn test_config_load_from_str_invalid_json() {
+        let result = FlightServiceConfig::load_from_str("not json at all");
+        assert!(result.is_err(), "garbage input should fail");
+    }
+
+    #[test]
+    fn test_config_load_from_str_validation_failure() {
+        // Construct JSON with an invalid field value (poll_hz = 0).
+        let cfg = FlightServiceConfig {
+            tflight_poll_hz: 0,
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&cfg).unwrap();
+        let result = FlightServiceConfig::load_from_str(&json);
+        assert!(result.is_err(), "zero poll_hz should fail validation");
+    }
+
+    #[test]
+    fn test_config_load_from_file_missing() {
+        let result = FlightServiceConfig::load_from_file("nonexistent_config_42.json");
+        assert!(result.is_err(), "missing file should fail");
+    }
+
+    #[test]
+    fn test_config_load_from_file_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("service.json");
+        let json = serde_json::to_string_pretty(&FlightServiceConfig::default()).unwrap();
+        std::fs::write(&path, json).unwrap();
+
+        let loaded = FlightServiceConfig::load_from_file(&path);
+        assert!(
+            loaded.is_ok(),
+            "file load should succeed: {:?}",
+            loaded.err()
+        );
+    }
+
+    #[test]
+    fn test_config_load_or_default_missing_file() {
+        let cfg = FlightServiceConfig::load_or_default("does_not_exist.json");
+        // Should silently fall back to default
+        assert_eq!(cfg.tflight_poll_hz, 250);
+    }
+
+    #[test]
+    fn test_config_validate_defaults() {
+        let cfg = FlightServiceConfig::default();
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn test_config_validate_zero_frame_time() {
+        let mut cfg = FlightServiceConfig::default();
+        cfg.axis_config.max_frame_time_us = 0;
+        assert!(cfg.validate().is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // Profile application tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_apply_profile_no_engine_returns_error() {
+        let config = FlightServiceConfig::default();
+        let service = FlightService::new(config);
+        // Engine is not initialized — apply should fail gracefully.
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(result.is_err(), "should fail without axis engine");
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_empty_axes_succeeds() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(
+            result.is_ok(),
+            "empty axes profile should succeed: {:?}",
+            result.err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_invalid_profile_returns_error() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+        let profile = Profile {
+            schema: "bad_schema".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(result.is_err(), "invalid schema should fail validation");
+    }
+
+    // -----------------------------------------------------------------------
+    // State transition tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_state_valid_transitions() {
+        assert!(ServiceState::Stopped.can_transition_to(ServiceState::Starting));
+        assert!(ServiceState::Starting.can_transition_to(ServiceState::Running));
+        assert!(ServiceState::Starting.can_transition_to(ServiceState::SafeMode));
+        assert!(ServiceState::Running.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::Running.can_transition_to(ServiceState::Degraded));
+        assert!(ServiceState::Degraded.can_transition_to(ServiceState::Running));
+        assert!(ServiceState::Degraded.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::SafeMode.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::Stopping.can_transition_to(ServiceState::Stopped));
+    }
+
+    #[test]
+    fn test_state_invalid_transitions() {
+        assert!(!ServiceState::Running.can_transition_to(ServiceState::Starting));
+        assert!(!ServiceState::Stopped.can_transition_to(ServiceState::Running));
+        assert!(!ServiceState::Stopping.can_transition_to(ServiceState::Running));
+        assert!(!ServiceState::Failed.can_transition_to(ServiceState::Running));
+    }
+
+    #[tokio::test]
+    async fn test_double_start_rejected() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let r1 = service.start().await;
+        assert!(r1.is_ok());
+        let r2 = service.start().await;
+        assert!(r2.is_err(), "double start should be rejected");
+        let _ = service.shutdown().await;
+    }
+
+    // -----------------------------------------------------------------------
+    // Degraded state & recovery tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_transition_to_degraded_from_running() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        service.transition_to_degraded("test reason").await;
+        assert_eq!(service.get_state().await, ServiceState::Degraded);
+
+        let _ = service.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_transition_to_degraded_ignored_from_stopped() {
+        let config = FlightServiceConfig::default();
+        let service = FlightService::new(config);
+        // Stopped → Degraded is not a valid transition
+        service.transition_to_degraded("should be ignored").await;
+        assert_eq!(service.get_state().await, ServiceState::Stopped);
+    }
+
+    #[tokio::test]
+    async fn test_try_recover_from_degraded() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        let _ = service.initialize_axis_engine().await;
+
+        // Force into degraded state
+        service.transition_to_degraded("partial failure").await;
+        assert_eq!(service.get_state().await, ServiceState::Degraded);
+
+        // Recover with a valid profile
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let recovered = service.try_recover(&profile).await.unwrap();
+        assert!(recovered, "should recover from Degraded");
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        let _ = service.shutdown().await;
+    }
+
+    #[tokio::test]
+    async fn test_try_recover_noop_when_running() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        service.start().await.unwrap();
+        assert_eq!(service.get_state().await, ServiceState::Running);
+
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let recovered = service.try_recover(&profile).await.unwrap();
+        assert!(!recovered, "should not recover when already Running");
+
+        let _ = service.shutdown().await;
     }
 }

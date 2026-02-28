@@ -6,6 +6,8 @@
 //! Provides mapping between SimConnect variables and normalized Flight Hub telemetry,
 //! with support for different aircraft types and variable coverage matrices.
 
+use crate::aircraft_db::{AircraftType, MsfsAircraftInfo};
+use crate::var_registry::SimVarRegistry;
 use flight_bus::adapters::msfs::MsfsConverter;
 use flight_bus::snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, Navigation,
@@ -1639,6 +1641,99 @@ pub fn create_default_mapping() -> MappingConfig {
     }
 }
 
+/// Create a mapping configuration for a known aircraft using the registry and aircraft DB.
+///
+/// This uses the aircraft type (single prop, twin jet, helicopter, etc.) to decide
+/// how many engines to map and whether helicopter variables are needed.  The
+/// `SimVarRegistry` is consulted to validate that referenced variables exist.
+pub fn create_mapping_for_aircraft(
+    db_info: &MsfsAircraftInfo,
+    registry: &SimVarRegistry,
+) -> MappingConfig {
+    let base = create_default_mapping();
+
+    // Determine engine count from the aircraft type.
+    let engine_count: u8 = match db_info.category {
+        AircraftType::SingleProp | AircraftType::Turboprop | AircraftType::SingleJet => 1,
+        AircraftType::TwinProp | AircraftType::TwinJet => 2,
+        AircraftType::Helicopter => 1,
+        AircraftType::Glider => 0,
+    };
+
+    // Build engine mappings from the registry.
+    let engines: Vec<EngineMapping> = (0..engine_count)
+        .map(|i| {
+            let idx = i + 1; // SimConnect engines are 1-indexed
+            let rpm_var = format!("GENERAL ENG RPM:{idx}");
+            let use_n1 = db_info.special_vars.iter().any(|v| v.starts_with("ENG N1"));
+
+            EngineMapping {
+                index: i,
+                running: format!("GENERAL ENG COMBUSTION:{idx}"),
+                rpm: if use_n1 {
+                    format!("ENG N1 RPM:{idx}")
+                } else if registry.contains(&rpm_var) {
+                    rpm_var
+                } else {
+                    format!("GENERAL ENG RPM:{idx}")
+                },
+                manifold_pressure: if matches!(
+                    db_info.category,
+                    AircraftType::SingleProp | AircraftType::TwinProp
+                ) {
+                    Some(format!("RECIP ENG MANIFOLD PRESSURE:{idx}"))
+                } else {
+                    None
+                },
+                egt: Some(format!("GENERAL ENG EXHAUST GAS TEMPERATURE:{idx}")),
+                cht: if matches!(
+                    db_info.category,
+                    AircraftType::SingleProp | AircraftType::TwinProp
+                ) {
+                    Some(format!("RECIP ENG CYLINDER HEAD TEMPERATURE:{idx}"))
+                } else {
+                    None
+                },
+                fuel_flow: Some(format!("GENERAL ENG FUEL FLOW GPH:{idx}")),
+                oil_pressure: Some(format!("GENERAL ENG OIL PRESSURE:{idx}")),
+                oil_temperature: Some(format!("GENERAL ENG OIL TEMPERATURE:{idx}")),
+            }
+        })
+        .collect();
+
+    // Helicopter-specific mapping when the DB says it's a helo.
+    let helicopter = if db_info.category == AircraftType::Helicopter {
+        Some(HeloMapping {
+            nr: "ROTOR RPM:1".to_string(),
+            np: "TURB ENG FREE TURBINE TORQUE:1".to_string(),
+            torque: "ENG TORQUE PERCENT:1".to_string(),
+            collective: "COLLECTIVE POSITION".to_string(),
+            pedals: "RUDDER POSITION".to_string(),
+        })
+    } else {
+        None
+    };
+
+    let aircraft_mapping = AircraftMapping {
+        kinematics: base.default_mapping.kinematics.clone(),
+        config: base.default_mapping.config.clone(),
+        engines,
+        environment: base.default_mapping.environment.clone(),
+        navigation: base.default_mapping.navigation.clone(),
+        helicopter,
+    };
+
+    // Register the aircraft-specific mapping under its ICAO code.
+    let mut aircraft_mappings = HashMap::new();
+    aircraft_mappings.insert(db_info.icao_code.to_string(), aircraft_mapping.clone());
+
+    MappingConfig {
+        aircraft_mappings,
+        default_mapping: aircraft_mapping,
+        update_rates: base.update_rates,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1665,5 +1760,329 @@ mod tests {
         let mapping = VariableMapping::new(config);
         assert_eq!(mapping.next_definition_id, DATA_DEFINITION_AIRCRAFT);
         assert_eq!(mapping.next_request_id, REQUEST_AIRCRAFT_DATA);
+    }
+
+    #[test]
+    fn test_create_mapping_for_single_prop() {
+        let registry = SimVarRegistry::new();
+        let db = crate::aircraft_db::MsfsAircraftDb::new();
+        let c172 = db.get("C172").unwrap();
+        let config = create_mapping_for_aircraft(c172, &registry);
+
+        // Single-prop → one engine
+        assert_eq!(config.default_mapping.engines.len(), 1);
+        assert!(
+            config.default_mapping.engines[0]
+                .manifold_pressure
+                .is_some()
+        );
+        assert!(config.default_mapping.engines[0].cht.is_some());
+        assert!(config.default_mapping.helicopter.is_none());
+        assert!(config.aircraft_mappings.contains_key("C172"));
+    }
+
+    #[test]
+    fn test_create_mapping_for_twin_jet() {
+        let registry = SimVarRegistry::new();
+        let db = crate::aircraft_db::MsfsAircraftDb::new();
+        let a320 = db.get("A320").unwrap();
+        let config = create_mapping_for_aircraft(a320, &registry);
+
+        // Twin jet → two engines, using N1 because special_vars contain "ENG N1"
+        assert_eq!(config.default_mapping.engines.len(), 2);
+        assert!(config.default_mapping.engines[0].rpm.contains("N1"));
+        // Jets have no manifold pressure or CHT
+        assert!(
+            config.default_mapping.engines[0]
+                .manifold_pressure
+                .is_none()
+        );
+        assert!(config.default_mapping.engines[0].cht.is_none());
+        assert!(config.default_mapping.helicopter.is_none());
+    }
+
+    #[test]
+    fn test_create_mapping_for_helicopter() {
+        let registry = SimVarRegistry::new();
+        let db = crate::aircraft_db::MsfsAircraftDb::new();
+        let b06 = db.get("B06").unwrap();
+        let config = create_mapping_for_aircraft(b06, &registry);
+
+        assert_eq!(config.default_mapping.engines.len(), 1);
+        assert!(config.default_mapping.helicopter.is_some());
+        let helo = config.default_mapping.helicopter.as_ref().unwrap();
+        assert_eq!(helo.nr, "ROTOR RPM:1");
+    }
+
+    #[test]
+    fn test_create_mapping_for_glider() {
+        let registry = SimVarRegistry::new();
+        let db = crate::aircraft_db::MsfsAircraftDb::new();
+        let dg1t = db.get("DG1T").unwrap();
+        let config = create_mapping_for_aircraft(dg1t, &registry);
+
+        assert!(config.default_mapping.engines.is_empty());
+        assert!(config.default_mapping.helicopter.is_none());
+    }
+
+    // ── Data conversion pipeline tests ─────────────────────────────────
+
+    /// Helper: write an f64 value as little-endian bytes into a buffer.
+    fn write_f64(buf: &mut Vec<u8>, value: f64) {
+        buf.extend_from_slice(&value.to_le_bytes());
+    }
+
+    /// Helper: write an i32 value as little-endian bytes into a buffer.
+    fn write_i32(buf: &mut Vec<u8>, value: i32) {
+        buf.extend_from_slice(&value.to_le_bytes());
+    }
+
+    /// Build a VariableMapping with a kinematics definition already set up.
+    fn build_kinematics_mapping() -> (VariableMapping, SIMCONNECT_REQUESTID) {
+        let config = create_default_mapping();
+        let mut mapping = VariableMapping::new(config);
+        // Manually build a kinematics definition so we can test convert_to_snapshot
+        // without needing a real SimConnect API.
+        let def_id = mapping.next_definition_id;
+        mapping.next_definition_id += 1;
+        let request_id = mapping.next_request_id;
+        mapping.next_request_id += 1;
+
+        let fields = [
+            "AIRSPEED INDICATED",
+            "AIRSPEED TRUE",
+            "GROUND VELOCITY",
+            "INCIDENCE ALPHA",
+            "INCIDENCE BETA",
+            "PLANE BANK DEGREES",
+            "PLANE PITCH DEGREES",
+            "PLANE HEADING DEGREES MAGNETIC",
+            "G FORCE",
+            "ACCELERATION BODY X",
+            "ACCELERATION BODY Z",
+            "AIRSPEED MACH",
+            "VERTICAL SPEED",
+        ];
+        let mut vars = Vec::new();
+        let mut offset = 0;
+        for name in &fields {
+            vars.push(VariableDefinition {
+                name: name.to_string(),
+                units: "".to_string(),
+                data_type: SIMCONNECT_DATATYPE::FLOAT64,
+                offset,
+                size: 8,
+            });
+            offset += 8;
+        }
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
+        mapping.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Kinematics,
+                period: SIMCONNECT_PERIOD::VISUAL_FRAME,
+                engine_index: None,
+            },
+        );
+        (mapping, request_id)
+    }
+
+    #[test]
+    fn test_convert_kinematics_data_pipeline() {
+        let (mapping, request_id) = build_kinematics_mapping();
+
+        // Construct a raw data buffer matching the kinematics definition layout.
+        let mut buf = Vec::new();
+        write_f64(&mut buf, 120.0); // IAS (knots)
+        write_f64(&mut buf, 130.0); // TAS
+        write_f64(&mut buf, 115.0); // ground speed
+        write_f64(&mut buf, 5.0); // AoA (degrees)
+        write_f64(&mut buf, 1.0); // sideslip
+        write_f64(&mut buf, -10.0); // bank
+        write_f64(&mut buf, 3.0); // pitch
+        write_f64(&mut buf, 90.0); // heading
+        write_f64(&mut buf, 1.2); // g-force
+        write_f64(&mut buf, 3.2174); // g-lateral (ft/s², ~0.1G)
+        write_f64(&mut buf, 0.0); // g-longitudinal
+        write_f64(&mut buf, 0.18); // mach
+        write_f64(&mut buf, 500.0); // VS (fpm)
+
+        let mut snapshot = BusSnapshot::default();
+        mapping
+            .convert_to_snapshot(request_id, &buf, &mut snapshot)
+            .expect("conversion must succeed");
+
+        assert!((snapshot.kinematics.ias.to_knots() - 120.0).abs() < 0.1);
+        assert!((snapshot.kinematics.tas.to_knots() - 130.0).abs() < 0.1);
+        assert!((snapshot.kinematics.pitch.to_degrees() - 3.0).abs() < 0.1);
+        assert!((snapshot.kinematics.heading.to_degrees() - 90.0).abs() < 0.1);
+        assert!((snapshot.kinematics.vertical_speed - 500.0).abs() < 0.1);
+        assert!(snapshot.validity.attitude_valid);
+        assert!(snapshot.validity.velocities_valid);
+        assert!(snapshot.validity.kinematics_valid);
+    }
+
+    #[test]
+    fn test_convert_kinematics_insufficient_data() {
+        let (mapping, request_id) = build_kinematics_mapping();
+
+        let buf = vec![0u8; 4]; // Way too small
+        let mut snapshot = BusSnapshot::default();
+        assert!(
+            mapping
+                .convert_to_snapshot(request_id, &buf, &mut snapshot)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn test_convert_environment_data_pipeline() {
+        let config = create_default_mapping();
+        let mut mapping = VariableMapping::new(config);
+
+        let def_id = mapping.next_definition_id;
+        mapping.next_definition_id += 1;
+        let request_id = mapping.next_request_id;
+        mapping.next_request_id += 1;
+
+        let fields = [
+            "INDICATED ALTITUDE",
+            "PRESSURE ALTITUDE",
+            "AMBIENT TEMPERATURE",
+            "AMBIENT WIND VELOCITY",
+            "AMBIENT WIND DIRECTION",
+            "AMBIENT VISIBILITY",
+            "AMBIENT CLOUD COVERAGE",
+        ];
+        let mut vars = Vec::new();
+        let mut offset = 0;
+        for name in &fields {
+            vars.push(VariableDefinition {
+                name: name.to_string(),
+                units: "".to_string(),
+                data_type: SIMCONNECT_DATATYPE::FLOAT64,
+                offset,
+                size: 8,
+            });
+            offset += 8;
+        }
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
+        mapping.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Environment,
+                period: SIMCONNECT_PERIOD::SECOND,
+                engine_index: None,
+            },
+        );
+
+        let mut buf = Vec::new();
+        write_f64(&mut buf, 5000.0); // altitude
+        write_f64(&mut buf, 5200.0); // pressure alt
+        write_f64(&mut buf, 15.0); // OAT
+        write_f64(&mut buf, 10.0); // wind speed
+        write_f64(&mut buf, 270.0); // wind dir
+        write_f64(&mut buf, 10.0); // visibility
+        write_f64(&mut buf, 25.0); // cloud coverage
+
+        let mut snapshot = BusSnapshot::default();
+        mapping
+            .convert_to_snapshot(request_id, &buf, &mut snapshot)
+            .expect("conversion must succeed");
+
+        assert!((snapshot.environment.altitude - 5000.0).abs() < 0.1);
+        assert!((snapshot.environment.oat - 15.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_convert_engine_data_pipeline() {
+        let config = create_default_mapping();
+        let mut mapping = VariableMapping::new(config);
+
+        let def_id = mapping.next_definition_id;
+        mapping.next_definition_id += 1;
+        let request_id = mapping.next_request_id;
+        mapping.next_request_id += 1;
+
+        let mut vars = Vec::new();
+        let mut offset = 0;
+        // running (i32)
+        vars.push(VariableDefinition {
+            name: "GENERAL ENG COMBUSTION:1".to_string(),
+            units: "bool".to_string(),
+            data_type: SIMCONNECT_DATATYPE::INT32,
+            offset,
+            size: 4,
+        });
+        offset += 4;
+        // rpm (f64)
+        vars.push(VariableDefinition {
+            name: "GENERAL ENG RPM:1".to_string(),
+            units: "percent".to_string(),
+            data_type: SIMCONNECT_DATATYPE::FLOAT64,
+            offset,
+            size: 8,
+        });
+        offset += 8;
+
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
+        mapping.request_mappings.insert(
+            request_id,
+            RequestMapping {
+                request_id,
+                definition_id: def_id,
+                category: DataCategory::Engines,
+                period: SIMCONNECT_PERIOD::SIM_FRAME,
+                engine_index: Some(0),
+            },
+        );
+
+        let mut buf = Vec::new();
+        write_i32(&mut buf, 1); // running = true
+        write_f64(&mut buf, 75.0); // RPM 75%
+
+        let mut snapshot = BusSnapshot::default();
+        mapping
+            .convert_to_snapshot(request_id, &buf, &mut snapshot)
+            .expect("conversion must succeed");
+
+        assert_eq!(snapshot.engines.len(), 1);
+        assert!(snapshot.engines[0].running);
+        assert!((snapshot.engines[0].rpm.value() - 75.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_unknown_request_id_returns_error() {
+        let config = create_default_mapping();
+        let mapping = VariableMapping::new(config);
+
+        let mut snapshot = BusSnapshot::default();
+        let result = mapping.convert_to_snapshot(9999, &[0u8; 8], &mut snapshot);
+        assert!(result.is_err());
     }
 }

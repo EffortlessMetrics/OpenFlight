@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "NaturalPoint Inc."
+  name: "NaturalPoint TrackIR 4 Plus"
+  usb:
+    vid: "0x131D"
+    pid: "0x0159"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "TrackIR 4 Plus 6DOF head tracker."
+  driver: "TrackIR SDK"
+quirks:
+  - id: PROPRIETARY_PROTOCOL
+    description: "Uses NaturalPoint proprietary protocol; opentrack compatible."
+tested_games: ["msfs", "xplane", "dcs"]

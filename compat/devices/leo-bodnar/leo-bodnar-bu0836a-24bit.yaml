@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Leo Bodnar"
+  name: "Leo Bodnar BU0836A 24-bit"
+  usb:
+    vid: "0x1DD2"
+    pid: "0x000E"
+  type: "joystick"
+capabilities:
+  axes: 12
+  buttons: 32
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Leo Bodnar BU0836A 24-bit high-resolution axis interface."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

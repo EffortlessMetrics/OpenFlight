@@ -27,7 +27,11 @@ pub struct QuantizeConfig {
 impl QuantizeConfig {
     /// Creates a configuration with `steps` levels over `[-1.0, 1.0]`.
     pub const fn new(steps: u32) -> Self {
-        Self { steps, min: -1.0, max: 1.0 }
+        Self {
+            steps,
+            min: -1.0,
+            max: 1.0,
+        }
     }
 
     /// Creates a configuration with `steps` levels over `[min, max]`.
@@ -69,7 +73,10 @@ impl AxisQuantize {
     pub fn new(config: QuantizeConfig) -> Self {
         let steps = config.steps.max(2);
         let step_size = (config.max - config.min) / (steps - 1) as f32;
-        Self { config: QuantizeConfig { steps, ..config }, step_size }
+        Self {
+            config: QuantizeConfig { steps, ..config },
+            step_size,
+        }
     }
 
     /// Returns the quantized value nearest to `value`. RT-safe.

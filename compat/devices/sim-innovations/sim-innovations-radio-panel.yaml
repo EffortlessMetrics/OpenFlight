@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sim Innovations"
+  name: "Sim Innovations Radio Panel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF703"
+  type: "button_box"
+capabilities:
+  axes: 4
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sim Innovations radio stack panel with encoders."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

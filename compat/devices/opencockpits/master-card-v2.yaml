@@ -1,0 +1,50 @@
+# OpenCockpits Master Card V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0409 estimated for Master Card V2.
+# V2 of the OpenCockpits IOCards Master Card with expanded I/O.
+schema_version: "1"
+
+device:
+  name: "OpenCockpits Master Card V2"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0409
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 4
+    names: [analog1, analog2, analog3, analog4]
+    resolution_bits: 10
+  buttons: 72
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: IOCARDS_MASTER_V2
+    description: >
+      V2 Master Card with expanded digital I/O (72 inputs) and 4 analog
+      inputs. Supports daisy-chaining with expansion cards. Core of the
+      OpenCockpits IOCards ecosystem.
+  - id: SIOC_REQUIRED
+    description: >
+      Requires SIOC (Simulator I/O Controller) software for configuration
+      and sim variable mapping. SIOC scripting language controls I/O.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits Master Card V2. PID 0x0409 estimated.
+    Part of IOCards ecosystem. Last reviewed: 2026-06.

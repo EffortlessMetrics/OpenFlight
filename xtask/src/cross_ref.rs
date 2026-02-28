@@ -780,11 +780,8 @@ mod tests {
         );
 
         // Should not be external crate
-        match result {
-            TestValidationResult::ExternalCrate(_) => {
-                panic!("Should not be external crate")
-            }
-            _ => {} // Valid or Missing is acceptable
+        if let TestValidationResult::ExternalCrate(_) = result {
+            panic!("Should not be external crate")
         }
     }
 

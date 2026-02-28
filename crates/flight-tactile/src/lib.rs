@@ -10,6 +10,9 @@
 pub mod bridge;
 pub mod channel;
 pub mod effects;
+pub mod engine;
+pub mod mixer;
+pub mod presets;
 pub mod simshaker;
 
 use flight_core::Result;
@@ -20,6 +23,9 @@ use std::sync::Arc;
 pub use bridge::{TactileBridge, TactileConfig, TactileStats};
 pub use channel::{ChannelId, ChannelMapping, ChannelRouter};
 pub use effects::{EffectEvent, EffectIntensity, EffectProcessor, EffectType};
+pub use engine::{MAX_EFFECTS, TICK_RATE_HZ, TactileEffect, TactileEngine, TexturePattern};
+pub use mixer::{FrequencyBand, MixerOutput, TactileMixer};
+pub use presets::TactilePresets;
 pub use simshaker::{SimShakerBridge, SimShakerConfig, SimShakerStatus};
 
 /// Main tactile manager for coordinating all tactile feedback

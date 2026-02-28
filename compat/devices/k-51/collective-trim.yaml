@@ -1,0 +1,45 @@
+# K-51 Collective Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Auxiliary trim and RPM panel for K-51 collective integration.
+
+schema_version: "1"
+
+device:
+  name: "K-51 Collective Trim Panel"
+  vendor: "K-51"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF002
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [rpm_trim]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF002 community estimate."
+  - id: PANEL_DEVICE
+    description: "Auxiliary panel. Pairs with K-51 collective for trim control."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    K-51 Collective Trim Panel. Auxiliary trim and RPM control. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

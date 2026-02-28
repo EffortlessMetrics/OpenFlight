@@ -3,7 +3,9 @@
 
 //! Delta update system for efficient binary patches
 
+use crate::manifest::{FileOperation, FileUpdate, UpdateManifest};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
@@ -492,6 +494,236 @@ impl Default for DeltaGenerator {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Manifest-driven helpers
+// ---------------------------------------------------------------------------
+
+/// Compute the SHA-256 hex digest of `data`.
+fn sha256_hex(data: &[u8]) -> String {
+    let mut h = Sha256::new();
+    h.update(data);
+    hex::encode(h.finalize())
+}
+
+/// Compare two sets of files and produce a `Vec<FileUpdate>` describing the
+/// differences.
+///
+/// Both `old_files` and `new_files` map *relative path* → *file content*.
+pub fn calculate_delta(
+    old_files: &HashMap<String, Vec<u8>>,
+    new_files: &HashMap<String, Vec<u8>>,
+) -> Vec<FileUpdate> {
+    let mut updates = Vec::new();
+
+    // Added or modified files
+    for (path, new_content) in new_files {
+        match old_files.get(path) {
+            None => {
+                updates.push(FileUpdate {
+                    path: path.clone(),
+                    hash_before: String::new(),
+                    hash_after: sha256_hex(new_content),
+                    size: new_content.len() as u64,
+                    operation: FileOperation::Add,
+                });
+            }
+            Some(old_content) => {
+                let old_hash = sha256_hex(old_content);
+                let new_hash = sha256_hex(new_content);
+                if old_hash != new_hash {
+                    updates.push(FileUpdate {
+                        path: path.clone(),
+                        hash_before: old_hash,
+                        hash_after: new_hash,
+                        size: new_content.len() as u64,
+                        operation: FileOperation::Modify,
+                    });
+                }
+            }
+        }
+    }
+
+    // Removed files
+    for path in old_files.keys() {
+        if !new_files.contains_key(path) {
+            let old_content = &old_files[path];
+            updates.push(FileUpdate {
+                path: path.clone(),
+                hash_before: sha256_hex(old_content),
+                hash_after: String::new(),
+                size: 0,
+                operation: FileOperation::Remove,
+            });
+        }
+    }
+
+    updates.sort_by(|a, b| a.path.cmp(&b.path));
+    updates
+}
+
+/// Post-apply verification: every `hash_after` in the manifest must match the
+/// corresponding file on disk. Returns `Ok(())` when all hashes match.
+pub async fn verify_install(manifest: &UpdateManifest, install_dir: &Path) -> crate::Result<()> {
+    for file_update in &manifest.files {
+        match file_update.operation {
+            FileOperation::Remove => {
+                let p = install_dir.join(&file_update.path);
+                if p.exists() {
+                    return Err(crate::UpdateError::DeltaPatch(format!(
+                        "file should have been removed: {}",
+                        file_update.path
+                    )));
+                }
+            }
+            FileOperation::Add | FileOperation::Modify => {
+                let p = install_dir.join(&file_update.path);
+                let content = fs::read(&p).await.map_err(|e| {
+                    crate::UpdateError::DeltaPatch(format!("cannot read {}: {e}", file_update.path))
+                })?;
+                let actual = sha256_hex(&content);
+                if actual != file_update.hash_after {
+                    return Err(crate::UpdateError::DeltaPatch(format!(
+                        "hash mismatch for {}: expected {}, got {}",
+                        file_update.path, file_update.hash_after, actual
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+impl DeltaApplier {
+    /// Apply an `UpdateManifest` to `install_dir`.
+    ///
+    /// 1. **Pre-check** — verify all `hash_before` values match current files.
+    /// 2. **Apply** — process each `FileUpdate` by reading content from
+    ///    `content_dir` (for Add/Modify).
+    /// 3. **Rollback** — if any step fails, restore every file that was
+    ///    already touched.
+    pub async fn apply_manifest(
+        &self,
+        manifest: &UpdateManifest,
+        install_dir: &Path,
+        content_dir: &Path,
+    ) -> crate::Result<()> {
+        // --- pre-check ---
+        for fu in &manifest.files {
+            match fu.operation {
+                FileOperation::Add => {
+                    let p = install_dir.join(&fu.path);
+                    if p.exists() {
+                        return Err(crate::UpdateError::DeltaPatch(format!(
+                            "file already exists for Add operation: {}",
+                            fu.path
+                        )));
+                    }
+                }
+                FileOperation::Modify => {
+                    let content = fs::read(install_dir.join(&fu.path)).await.map_err(|e| {
+                        crate::UpdateError::DeltaPatch(format!(
+                            "pre-check: cannot read {}: {e}",
+                            fu.path
+                        ))
+                    })?;
+                    let actual = sha256_hex(&content);
+                    if actual != fu.hash_before {
+                        return Err(crate::UpdateError::DeltaPatch(format!(
+                            "pre-check hash mismatch for {}: expected {}, got {}",
+                            fu.path, fu.hash_before, actual
+                        )));
+                    }
+                }
+                FileOperation::Remove => {
+                    let content = fs::read(install_dir.join(&fu.path)).await.map_err(|e| {
+                        crate::UpdateError::DeltaPatch(format!(
+                            "pre-check: cannot read {}: {e}",
+                            fu.path
+                        ))
+                    })?;
+                    let actual = sha256_hex(&content);
+                    if actual != fu.hash_before {
+                        return Err(crate::UpdateError::DeltaPatch(format!(
+                            "pre-check hash mismatch for {}: expected {}, got {}",
+                            fu.path, fu.hash_before, actual
+                        )));
+                    }
+                }
+            }
+        }
+
+        // --- apply with rollback tracking ---
+        // Each entry: (path, Option<original_bytes>)  — None means file was
+        // newly created and should be deleted on rollback.
+        let mut applied: Vec<(PathBuf, Option<Vec<u8>>)> = Vec::new();
+
+        let result = self
+            .apply_manifest_inner(manifest, install_dir, content_dir, &mut applied)
+            .await;
+
+        if let Err(ref _e) = result {
+            // rollback everything we already touched
+            for (path, original) in applied.into_iter().rev() {
+                match original {
+                    Some(bytes) => {
+                        let _ = fs::write(&path, &bytes).await;
+                    }
+                    None => {
+                        let _ = fs::remove_file(&path).await;
+                    }
+                }
+            }
+        }
+
+        result
+    }
+
+    /// Inner apply loop — separated so the caller can handle rollback.
+    async fn apply_manifest_inner(
+        &self,
+        manifest: &UpdateManifest,
+        install_dir: &Path,
+        content_dir: &Path,
+        applied: &mut Vec<(PathBuf, Option<Vec<u8>>)>,
+    ) -> crate::Result<()> {
+        for fu in &manifest.files {
+            let target = install_dir.join(&fu.path);
+            match fu.operation {
+                FileOperation::Add => {
+                    if let Some(parent) = target.parent() {
+                        fs::create_dir_all(parent).await?;
+                    }
+                    let new_content = fs::read(content_dir.join(&fu.path)).await.map_err(|e| {
+                        crate::UpdateError::DeltaPatch(format!(
+                            "cannot read new content for {}: {e}",
+                            fu.path
+                        ))
+                    })?;
+                    fs::write(&target, &new_content).await?;
+                    applied.push((target, None));
+                }
+                FileOperation::Modify => {
+                    let old_content = fs::read(&target).await?;
+                    let new_content = fs::read(content_dir.join(&fu.path)).await.map_err(|e| {
+                        crate::UpdateError::DeltaPatch(format!(
+                            "cannot read new content for {}: {e}",
+                            fu.path
+                        ))
+                    })?;
+                    fs::write(&target, &new_content).await?;
+                    applied.push((target, Some(old_content)));
+                }
+                FileOperation::Remove => {
+                    let old_content = fs::read(&target).await?;
+                    fs::remove_file(&target).await?;
+                    applied.push((target, Some(old_content)));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -752,5 +984,293 @@ mod tests {
 
         let result = applier.apply_patch(&patch, &source_dir, &output_dir).await;
         assert!(result.is_err(), "mismatched source hash must return error");
+    }
+
+    // ===================================================================
+    // Tests for calculate_delta, verify_install, apply_manifest + rollback
+    // ===================================================================
+
+    fn hash(data: &[u8]) -> String {
+        super::sha256_hex(data)
+    }
+
+    // -- calculate_delta -------------------------------------------------
+
+    #[test]
+    fn calculate_delta_detects_added_file() {
+        let old = HashMap::new();
+        let mut new = HashMap::new();
+        new.insert("a.txt".into(), b"hello".to_vec());
+
+        let delta = super::calculate_delta(&old, &new);
+        assert_eq!(delta.len(), 1);
+        assert_eq!(delta[0].operation, FileOperation::Add);
+        assert_eq!(delta[0].path, "a.txt");
+    }
+
+    #[test]
+    fn calculate_delta_detects_removed_file() {
+        let mut old = HashMap::new();
+        old.insert("a.txt".into(), b"hello".to_vec());
+        let new = HashMap::new();
+
+        let delta = super::calculate_delta(&old, &new);
+        assert_eq!(delta.len(), 1);
+        assert_eq!(delta[0].operation, FileOperation::Remove);
+    }
+
+    #[test]
+    fn calculate_delta_detects_modified_file() {
+        let mut old = HashMap::new();
+        old.insert("a.txt".into(), b"old".to_vec());
+        let mut new = HashMap::new();
+        new.insert("a.txt".into(), b"new".to_vec());
+
+        let delta = super::calculate_delta(&old, &new);
+        assert_eq!(delta.len(), 1);
+        assert_eq!(delta[0].operation, FileOperation::Modify);
+        assert_eq!(delta[0].hash_before, hash(b"old"));
+        assert_eq!(delta[0].hash_after, hash(b"new"));
+    }
+
+    #[test]
+    fn calculate_delta_ignores_unchanged_file() {
+        let mut old = HashMap::new();
+        old.insert("a.txt".into(), b"same".to_vec());
+        let mut new = HashMap::new();
+        new.insert("a.txt".into(), b"same".to_vec());
+
+        let delta = super::calculate_delta(&old, &new);
+        assert!(delta.is_empty());
+    }
+
+    #[test]
+    fn calculate_delta_mixed_operations() {
+        let mut old = HashMap::new();
+        old.insert("keep.txt".into(), b"same".to_vec());
+        old.insert("modify.txt".into(), b"old".to_vec());
+        old.insert("remove.txt".into(), b"gone".to_vec());
+
+        let mut new = HashMap::new();
+        new.insert("keep.txt".into(), b"same".to_vec());
+        new.insert("modify.txt".into(), b"new".to_vec());
+        new.insert("add.txt".into(), b"brand new".to_vec());
+
+        let delta = super::calculate_delta(&old, &new);
+        assert_eq!(delta.len(), 3); // add, modify, remove
+        assert!(delta.iter().any(|d| d.operation == FileOperation::Add));
+        assert!(delta.iter().any(|d| d.operation == FileOperation::Modify));
+        assert!(delta.iter().any(|d| d.operation == FileOperation::Remove));
+    }
+
+    // -- verify_install --------------------------------------------------
+
+    #[tokio::test]
+    async fn verify_install_succeeds_when_hashes_match() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path();
+
+        fs::write(dir.join("a.txt"), b"hello").await.unwrap();
+
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(1, 0, 0),
+            channel: crate::Channel::Stable,
+            files: vec![FileUpdate {
+                path: "a.txt".into(),
+                hash_before: String::new(),
+                hash_after: hash(b"hello"),
+                size: 5,
+                operation: FileOperation::Add,
+            }],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        assert!(super::verify_install(&manifest, dir).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn verify_install_fails_on_hash_mismatch() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path();
+
+        fs::write(dir.join("a.txt"), b"wrong content")
+            .await
+            .unwrap();
+
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(1, 0, 0),
+            channel: crate::Channel::Stable,
+            files: vec![FileUpdate {
+                path: "a.txt".into(),
+                hash_before: String::new(),
+                hash_after: hash(b"expected content"),
+                size: 16,
+                operation: FileOperation::Add,
+            }],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        assert!(super::verify_install(&manifest, dir).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn verify_install_fails_when_removed_file_still_exists() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path();
+
+        fs::write(dir.join("old.txt"), b"still here").await.unwrap();
+
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(1, 0, 0),
+            channel: crate::Channel::Stable,
+            files: vec![FileUpdate {
+                path: "old.txt".into(),
+                hash_before: hash(b"still here"),
+                hash_after: String::new(),
+                size: 0,
+                operation: FileOperation::Remove,
+            }],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        assert!(super::verify_install(&manifest, dir).await.is_err());
+    }
+
+    // -- apply_manifest + rollback ---------------------------------------
+
+    #[tokio::test]
+    async fn apply_manifest_add_file() {
+        let temp = TempDir::new().unwrap();
+        let install = temp.path().join("install");
+        let content = temp.path().join("content");
+        fs::create_dir_all(&install).await.unwrap();
+        fs::create_dir_all(&content).await.unwrap();
+
+        fs::write(content.join("new.txt"), b"new data")
+            .await
+            .unwrap();
+
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(1, 1, 0),
+            channel: crate::Channel::Stable,
+            files: vec![FileUpdate {
+                path: "new.txt".into(),
+                hash_before: String::new(),
+                hash_after: hash(b"new data"),
+                size: 8,
+                operation: FileOperation::Add,
+            }],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        let applier = DeltaApplier::new(temp.path()).unwrap();
+        applier
+            .apply_manifest(&manifest, &install, &content)
+            .await
+            .unwrap();
+
+        let result = fs::read(install.join("new.txt")).await.unwrap();
+        assert_eq!(result, b"new data");
+    }
+
+    #[tokio::test]
+    async fn apply_manifest_rollback_on_failure() {
+        let temp = TempDir::new().unwrap();
+        let install = temp.path().join("install");
+        let content = temp.path().join("content");
+        fs::create_dir_all(&install).await.unwrap();
+        fs::create_dir_all(&content).await.unwrap();
+
+        // Existing file that will be modified
+        fs::write(install.join("existing.txt"), b"original")
+            .await
+            .unwrap();
+        fs::write(content.join("existing.txt"), b"updated")
+            .await
+            .unwrap();
+
+        // Second file's content is intentionally missing from content_dir
+        // so apply will fail mid-way.
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(2, 0, 0),
+            channel: crate::Channel::Stable,
+            files: vec![
+                FileUpdate {
+                    path: "existing.txt".into(),
+                    hash_before: hash(b"original"),
+                    hash_after: hash(b"updated"),
+                    size: 7,
+                    operation: FileOperation::Modify,
+                },
+                FileUpdate {
+                    path: "missing.txt".into(),
+                    hash_before: String::new(),
+                    hash_after: hash(b"x"),
+                    size: 1,
+                    operation: FileOperation::Add,
+                },
+            ],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        let applier = DeltaApplier::new(temp.path()).unwrap();
+        let result = applier.apply_manifest(&manifest, &install, &content).await;
+
+        assert!(
+            result.is_err(),
+            "should fail because missing.txt content doesn't exist"
+        );
+
+        // existing.txt should have been rolled back to its original content
+        let rolled_back = fs::read(install.join("existing.txt")).await.unwrap();
+        assert_eq!(
+            rolled_back, b"original",
+            "existing.txt must be rolled back to original"
+        );
+
+        // missing.txt should not exist
+        assert!(
+            !install.join("missing.txt").exists(),
+            "missing.txt must not remain after rollback"
+        );
+    }
+
+    #[tokio::test]
+    async fn apply_manifest_precheck_rejects_wrong_hash() {
+        let temp = TempDir::new().unwrap();
+        let install = temp.path().join("install");
+        let content = temp.path().join("content");
+        fs::create_dir_all(&install).await.unwrap();
+        fs::create_dir_all(&content).await.unwrap();
+
+        fs::write(install.join("f.txt"), b"actual").await.unwrap();
+        fs::write(content.join("f.txt"), b"new").await.unwrap();
+
+        let manifest = crate::manifest::UpdateManifest {
+            version: crate::manifest::SemVer::new(2, 0, 0),
+            channel: crate::Channel::Stable,
+            files: vec![FileUpdate {
+                path: "f.txt".into(),
+                hash_before: hash(b"expected-but-wrong"),
+                hash_after: hash(b"new"),
+                size: 3,
+                operation: FileOperation::Modify,
+            }],
+            signature: String::new(),
+            min_version: None,
+        };
+
+        let applier = DeltaApplier::new(temp.path()).unwrap();
+        let result = applier.apply_manifest(&manifest, &install, &content).await;
+        assert!(result.is_err());
+
+        // File should be unchanged because pre-check failed before any writes
+        let unchanged = fs::read(install.join("f.txt")).await.unwrap();
+        assert_eq!(unchanged, b"actual");
     }
 }

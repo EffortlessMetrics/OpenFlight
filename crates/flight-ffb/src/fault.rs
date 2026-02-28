@@ -316,7 +316,7 @@ pub struct SoftStopRecord {
 #[derive(Debug)]
 pub struct FaultDetector {
     /// Maximum response time for critical faults
-    max_response_time: Duration,
+    _max_response_time: Duration,
     /// History of detected faults
     fault_history: VecDeque<FaultRecord>,
     /// History of soft-stop events
@@ -428,7 +428,7 @@ impl FaultDetector {
     /// Create new fault detector
     pub fn new(max_response_time: Duration) -> Self {
         Self {
-            max_response_time,
+            _max_response_time: max_response_time,
             fault_history: VecDeque::new(),
             soft_stop_history: VecDeque::new(),
             max_history_size: 1000,

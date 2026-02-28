@@ -6,8 +6,8 @@
 //! Signals all registered components to stop and waits for them to
 //! acknowledge completion within a configurable timeout.
 
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 /// Result of a drain operation.
@@ -161,7 +161,13 @@ mod tests {
         h2.mark_drained();
 
         let result = coord.wait_for_drain();
-        assert_eq!(result, DrainResult::TimedOut { completed: 1, total: 2 });
+        assert_eq!(
+            result,
+            DrainResult::TimedOut {
+                completed: 1,
+                total: 2
+            }
+        );
     }
 
     #[test]

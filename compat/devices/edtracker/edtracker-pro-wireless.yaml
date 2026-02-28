@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "EDTracker"
+  name: "EDTracker Pro Wireless"
+  usb:
+    vid: "0x2341"
+    pid: "0x8043"
+  type: "head_tracker"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "EDTracker Pro wireless Bluetooth head tracker."
+  driver: "Bluetooth HID"
+quirks:
+  - id: GYRO_ONLY
+    description: "Provides 3DOF rotation only; Bluetooth connection."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/tests/profile_snapshots.rs
+expression: err.to_string()
+---
+Validation error: axes.pitch.expo: Expo must be between 0.0 and 0.3 in Kid mode

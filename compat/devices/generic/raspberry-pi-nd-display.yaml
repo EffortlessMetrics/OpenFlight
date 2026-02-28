@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Raspberry Pi Nav Display Controller"
+  usb:
+    vid: "0x2E8A"
+    pid: "0x0111"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 14
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Raspberry Pi based navigation display with USB HID controls."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

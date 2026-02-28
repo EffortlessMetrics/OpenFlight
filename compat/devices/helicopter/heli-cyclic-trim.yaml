@@ -1,0 +1,45 @@
+# Generic Helicopter Cyclic Trim Controller
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# USB cyclic trim release and force trim system controller.
+
+schema_version: "1"
+
+device:
+  name: "Generic Helicopter Cyclic Trim Controller"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF031
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 6
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF031 community estimate."
+  - id: TRIM_RELEASE
+    description: "Force trim release button and trim position memory for cyclic control."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic helicopter cyclic trim controller. Trim release and position memory. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -221,7 +221,7 @@ proptest! {
 
         let out = step(&pipeline, &mut state, input, 1_000_000);
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "deadzone→curve output {out} out of [-1, 1] for \
              input={input}, threshold={threshold}, expo={expo}"
         );
@@ -277,7 +277,7 @@ proptest! {
         let out = step(&pipeline, &mut state, input, 8_000_000);
 
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "full pipeline output {out} out of [-1, 1] for \
              init={init}, input={input}, threshold={threshold}, expo={expo}"
         );

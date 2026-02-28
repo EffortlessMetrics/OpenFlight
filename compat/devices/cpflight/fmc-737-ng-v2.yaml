@@ -1,0 +1,45 @@
+# CPFlight FMC 737 NG V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Second generation Boeing 737 NG flight management computer panel.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight FMC 737 NG V2"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0CDA
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 64
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0CDA community estimate."
+  - id: PANEL_DEVICE
+    description: "FMC panel with full CDU keypad and line select keys. Integrated display."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight FMC 737 NG V2 flight management computer panel. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

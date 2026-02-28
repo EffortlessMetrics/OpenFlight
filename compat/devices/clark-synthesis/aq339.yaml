@@ -1,0 +1,47 @@
+# Clark Synthesis AQ339 Aquasonic Transducer
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Waterproof tactile transducer for enclosed simulation pods.
+
+schema_version: "1"
+
+device:
+  name: "Clark Synthesis AQ339 Aquasonic Transducer"
+  vendor: "Clark Synthesis"
+  usb:
+    vendor_id: 0x0000
+    product_id: 0x0000
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Audio-driven transducer. No USB HID interface."
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: "Waterproof design for enclosed sim pods. Audio-driven."
+  - id: NO_HID_INPUT
+    description: "No HID input events. Tracked for sim-rig accessory compatibility."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Clark Synthesis AQ339 Aquasonic waterproof tactile transducer. Audio-driven.
+    Last reviewed: 2026-07.

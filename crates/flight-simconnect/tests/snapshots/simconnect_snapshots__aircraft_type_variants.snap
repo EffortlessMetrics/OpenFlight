@@ -1,0 +1,13 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: types
+---
+[
+    SingleProp,
+    TwinProp,
+    Turboprop,
+    SingleJet,
+    TwinJet,
+    Helicopter,
+    Glider,
+]

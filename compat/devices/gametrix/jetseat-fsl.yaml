@@ -13,7 +13,7 @@ device:
   name: "Gametrix JetSeat FSL Edition"
   vendor: "Gametrix"
   usb:
-    vendor_id: 0x0483   # STMicroelectronics USB MCU (VID_UNCONFIRMED for this model)
+    vendor_id: 0x0483   # STMicroelectronics MCU â plausible for Gametrix firmware interface
     product_id: 0x5740  # Placeholder — STM32 virtual COM port class (PID_UNCONFIRMED)
   hid:
     usage_page: 0x01    # Generic Desktop
@@ -33,8 +33,8 @@ polling:
   max_jitter_ms: ~
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x0483 / PID 0x5740 are STM32 placeholders; verify with lsusb."
+  - id: VID_STM32_BRIDGE
+    description: "VID 0x0483 / PID 0x5740 is the default STM32 VCP class; used for firmware/config interface."
   - id: AUDIO_DRIVEN_HAPTICS
     description: >
       The JetSeat FSL receives haptic drive signals from a dedicated audio

@@ -1,0 +1,22 @@
+---
+source: crates/flight-profile/tests/profile_snapshots.rs
+expression: merged
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "xplane",
+  "aircraft": {
+    "icao": "B738"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "expo": 0.2,
+      "slew_rate": 1.2,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    }
+  },
+  "pof_overrides": null
+}

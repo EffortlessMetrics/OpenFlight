@@ -138,7 +138,15 @@ mod tests {
     fn forces_clamped_to_range() {
         // Extreme crosswind with very low airspeed just above threshold
         let out = compute_crosswind_forces(200.0, 90.0, 0.0, 6.0);
-        assert!((-1.0..=1.0).contains(&out.yaw_force), "yaw out of range: {}", out.yaw_force);
-        assert!((-1.0..=1.0).contains(&out.roll_force), "roll out of range: {}", out.roll_force);
+        assert!(
+            (-1.0..=1.0).contains(&out.yaw_force),
+            "yaw out of range: {}",
+            out.yaw_force
+        );
+        assert!(
+            (-1.0..=1.0).contains(&out.roll_force),
+            "roll out of range: {}",
+            out.roll_force
+        );
     }
 }

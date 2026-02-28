@@ -1611,7 +1611,7 @@ mod tests {
         assert_eq!(MIN_BUFFER_SIZE_3S_250HZ, 750);
 
         // Default buffer should be larger than minimum
-        assert!(DEFAULT_BUFFER_SIZE >= MIN_BUFFER_SIZE_3S_250HZ);
+        const _: () = assert!(DEFAULT_BUFFER_SIZE >= MIN_BUFFER_SIZE_3S_250HZ);
 
         // Minimum capture rate
         assert_eq!(MIN_CAPTURE_RATE_HZ, 250);

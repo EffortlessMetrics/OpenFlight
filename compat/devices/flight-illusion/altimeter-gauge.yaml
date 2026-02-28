@@ -1,0 +1,46 @@
+# Flight Illusion Altimeter Gauge
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0xF102 estimated for FI Altimeter.
+# Servo-driven analog altimeter gauge with Kollsman window.
+schema_version: "1"
+
+device:
+  name: "Flight Illusion Altimeter Gauge"
+  vendor: "Flight Illusion"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0xF102
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 1
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: SERVO_ALTIMETER
+    description: >
+      Servo-driven analog altimeter with Kollsman window. Multiple
+      needles (100ft, 1000ft, 10000ft) driven by stepper motors.
+      Rotary knob for barometric pressure setting reports as button.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Flight Illusion Altimeter Gauge. PID 0xF102 estimated.
+    Servo-driven analog gauge. Last reviewed: 2026-06.

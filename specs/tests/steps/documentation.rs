@@ -8,7 +8,7 @@ use cucumber::{given, then, when};
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
-use std::path::PathBuf;
+
 use walkdir::WalkDir;
 
 // AC-1.1: Documentation organization
@@ -162,7 +162,7 @@ async fn given_multiple_docs(world: &mut FlightWorld) {
 }
 
 #[when("the system validates documentation")]
-async fn when_system_validates(world: &mut FlightWorld) {
+async fn when_system_validates(_world: &mut FlightWorld) {
     // Validation happens in the assertion step
 }
 
@@ -201,7 +201,7 @@ async fn given_docs_with_front_matter(_world: &mut FlightWorld) {
 }
 
 #[when("generating documentation indexes")]
-async fn when_generating_indexes(world: &mut FlightWorld) {
+async fn when_generating_indexes(_world: &mut FlightWorld) {
     // Index generation would happen via cargo xtask normalize-docs
     // For this test, we just verify the capability exists
 }
@@ -263,7 +263,7 @@ async fn given_crate_referenced(_world: &mut FlightWorld) {
 }
 
 #[when("checking documentation coverage")]
-async fn when_checking_coverage(world: &mut FlightWorld) {
+async fn when_checking_coverage(_world: &mut FlightWorld) {
     // Coverage check happens in assertion
 }
 
@@ -390,12 +390,11 @@ fn collect_doc_ids_from_filesystem() -> Vec<String> {
         .collect::<Result<Vec<_>, _>>()
     {
         for entry in entries {
-            if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    if let Ok(fm) = extract_and_parse_front_matter(&content) {
-                        doc_ids.push(fm.doc_id);
-                    }
-                }
+            if entry.path().extension().and_then(|s| s.to_str()) == Some("md")
+                && let Ok(content) = fs::read_to_string(entry.path())
+                && let Ok(fm) = extract_and_parse_front_matter(&content)
+            {
+                doc_ids.push(fm.doc_id);
             }
         }
     }
@@ -411,12 +410,11 @@ fn collect_docs_with_front_matter() -> Vec<FrontMatter> {
         .collect::<Result<Vec<_>, _>>()
     {
         for entry in entries {
-            if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    if let Ok(fm) = extract_and_parse_front_matter(&content) {
-                        docs.push(fm);
-                    }
-                }
+            if entry.path().extension().and_then(|s| s.to_str()) == Some("md")
+                && let Ok(content) = fs::read_to_string(entry.path())
+                && let Ok(fm) = extract_and_parse_front_matter(&content)
+            {
+                docs.push(fm);
             }
         }
     }
@@ -449,12 +447,11 @@ fn get_concept_doc_areas() -> HashSet<String> {
         .collect::<Result<Vec<_>, _>>()
     {
         for entry in entries {
-            if entry.path().extension().and_then(|s| s.to_str()) == Some("md") {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    if let Ok(fm) = extract_and_parse_front_matter(&content) {
-                        areas.insert(fm.area);
-                    }
-                }
+            if entry.path().extension().and_then(|s| s.to_str()) == Some("md")
+                && let Ok(content) = fs::read_to_string(entry.path())
+                && let Ok(fm) = extract_and_parse_front_matter(&content)
+            {
+                areas.insert(fm.area);
             }
         }
     }

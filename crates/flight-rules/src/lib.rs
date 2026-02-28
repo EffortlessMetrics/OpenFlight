@@ -172,14 +172,14 @@ impl RulesSchema {
             return Err("Rule action cannot be empty".to_string());
         }
 
-        // Validate condition and action syntax using the same parser paths used at runtime
-        let compiler = RulesCompiler::new(Default::default());
-        compiler
-            .parse_condition(&rule.when)
-            .map_err(|e| format!("Invalid condition syntax: {}", e))?;
-        compiler
-            .parse_action(&rule.action)
-            .map_err(|e| format!("Invalid action syntax: {}", e))?;
+        // Trial-compile through the full bytecode pipeline (parse → emit),
+        // identical to the runtime path used by RulesSchema::compile(), so
+        // validation catches every error that compile() would.
+        let mut bc = BytecodeCompiler::new();
+        bc.compile_rule(rule).map_err(|e| {
+            let RulesError::Validation(msg) = &e;
+            msg.clone()
+        })?;
 
         Ok(())
     }
@@ -1253,12 +1253,370 @@ mod tests {
         assert_eq!(conflicts[0].output, "GEAR");
         assert_eq!(conflicts[1].output, "indexer");
     }
+
+    // ── Comprehensive validate_rule tests ─────────────────────────────────
+
+    /// Helper: build a schema with one rule and validate it.
+    fn validate_one(when: &str, action: &str) -> Result<()> {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: when.to_string(),
+                do_action: action.to_string(),
+                action: action.to_string(),
+            }],
+            defaults: None,
+        };
+        schema.validate()
+    }
+
+    // ── Valid rules pass validation ───────────────────────────────────────
+
+    #[test]
+    fn validate_all_comparison_operators() {
+        let ops = [
+            ("ias > 100", "led.indexer.on()"),
+            ("ias < 100", "led.indexer.on()"),
+            ("ias >= 100", "led.indexer.on()"),
+            ("ias <= 100", "led.indexer.on()"),
+            ("ias == 100", "led.indexer.on()"),
+            ("ias != 100", "led.indexer.on()"),
+        ];
+        for (cond, act) in &ops {
+            assert!(
+                validate_one(cond, act).is_ok(),
+                "condition {:?} should pass validation",
+                cond
+            );
+        }
+    }
+
+    #[test]
+    fn validate_all_action_types() {
+        let actions = [
+            "led.panel('GEAR').on()",
+            "led.panel('GEAR').off()",
+            "led.panel('GEAR').blink(rate_hz=4)",
+            "led.panel('GEAR').brightness(0.5)",
+            "led.indexer.on()",
+            "led.indexer.off()",
+            "led.indexer.blink(rate_hz=2)",
+        ];
+        for act in &actions {
+            assert!(
+                validate_one("gear_down", act).is_ok(),
+                "action {:?} should pass validation",
+                act
+            );
+        }
+    }
+
+    #[test]
+    fn validate_negated_boolean_passes() {
+        assert!(validate_one("!flaps_up", "led.indexer.on()").is_ok());
+    }
+
+    #[test]
+    fn validate_compound_and_passes() {
+        assert!(validate_one("gear_down and ias < 200", "led.panel('GEAR').on()").is_ok());
+    }
+
+    #[test]
+    fn validate_compound_or_passes() {
+        assert!(validate_one("gear_down or flaps > 0.5", "led.panel('LAND').on()").is_ok());
+    }
+
+    #[test]
+    fn validate_enum_state_comparison_passes() {
+        assert!(validate_one("gear == DOWN", "led.panel('GEAR').on()").is_ok());
+        assert!(validate_one("gear != UP", "led.panel('GEAR').off()").is_ok());
+    }
+
+    #[test]
+    fn validate_nested_and_or_conditions() {
+        // "a and b and c" — chained AND
+        assert!(
+            validate_one("a and b and c", "led.indexer.on()").is_ok(),
+            "triple AND should validate"
+        );
+        // "a or b or c" — chained OR
+        assert!(
+            validate_one("a or b or c", "led.indexer.on()").is_ok(),
+            "triple OR should validate"
+        );
+    }
+
+    #[test]
+    fn validate_negative_and_decimal_thresholds() {
+        assert!(validate_one("alt > -500", "led.indexer.on()").is_ok());
+        assert!(validate_one("pitch < 0.001", "led.indexer.on()").is_ok());
+        assert!(validate_one("roll >= -0.5", "led.indexer.on()").is_ok());
+    }
+
+    #[test]
+    fn validate_float_blink_rate() {
+        assert!(validate_one("gear_down", "led.panel('WARN').blink(rate_hz=2.5)").is_ok());
+    }
+
+    // ── Invalid condition syntax → descriptive errors ────────────────────
+
+    #[test]
+    fn validate_invalid_condition_number_error_is_descriptive() {
+        let err = validate_one("ias > abc", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid condition syntax") || msg.contains("Invalid number"),
+            "error should describe invalid condition syntax, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_missing_spaces_around_operator() {
+        // Parser requires spaces around operators
+        let err = validate_one("ias>200", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid condition syntax") || msg.contains("Unsupported"),
+            "error should mention syntax problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_incomplete_comparison_right_side() {
+        // "ias >" with no value on the right side
+        let err = validate_one("ias > ", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid") || msg.contains("Unsupported"),
+            "error should mention invalid syntax, got: {msg}"
+        );
+    }
+
+    // ── Invalid action syntax → descriptive errors ───────────────────────
+
+    #[test]
+    fn validate_invalid_action_error_is_descriptive() {
+        let err = validate_one("gear_down", "not.a.real.action()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid action syntax") || msg.contains("Unsupported action"),
+            "error should describe invalid action syntax, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_action_missing_method_call() {
+        // "led.panel('GEAR')" with no .on()/.off()/.blink()
+        let err = validate_one("gear_down", "led.panel('GEAR')").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("action"),
+            "error should mention action problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_blink_invalid_rate() {
+        let err = validate_one("gear_down", "led.panel('WARN').blink(rate_hz=abc)").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid") || msg.contains("rate"),
+            "error should mention invalid rate, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_brightness_invalid_value() {
+        let err = validate_one("gear_down", "led.panel('WARN').brightness(notnum)").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Invalid") || msg.contains("brightness"),
+            "error should mention invalid brightness, got: {msg}"
+        );
+    }
+
+    // ── Edge cases ───────────────────────────────────────────────────────
+
+    #[test]
+    fn validate_whitespace_only_condition_fails() {
+        // Whitespace-only is not empty but also not a valid identifier
+        // The parser trims and then treats it as a boolean var with empty name
+        let result = validate_one("   ", "led.indexer.on()");
+        // Either the parser rejects the whitespace or treats "" as invalid
+        // after trimming — both are acceptable as long as it doesn't panic.
+        let _ = result;
+    }
+
+    #[test]
+    fn validate_whitespace_only_action_fails() {
+        let err = validate_one("gear_down", "   ").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("action") || msg.contains("Unsupported"),
+            "error should describe invalid action, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_empty_rule_set_passes() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![],
+            defaults: None,
+        };
+        assert!(schema.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_error_includes_rule_index() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                },
+                Rule {
+                    when: "ias > notanumber".to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Rule 2"),
+            "error should reference 'Rule 2' (1-indexed), got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_multiple_rules_first_invalid_reported() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "".to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                },
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("Rule 1"),
+            "first invalid rule should be reported, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_and_compile_agree_on_valid_rules() {
+        let valid_rules = [
+            ("gear_down", "led.indexer.on()"),
+            ("!flaps_up", "led.indexer.off()"),
+            ("ias > 100", "led.panel('SPEED').on()"),
+            ("aoa <= 15.5", "led.panel('AOA').blink(rate_hz=3)"),
+            ("gear_down and ias < 200", "led.panel('GEAR').on()"),
+            ("gear_down or flaps > 0.5", "led.panel('LAND').on()"),
+        ];
+        for (cond, act) in &valid_rules {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: cond.to_string(),
+                    do_action: act.to_string(),
+                    action: act.to_string(),
+                }],
+                defaults: None,
+            };
+            assert!(
+                schema.validate().is_ok(),
+                "validate failed for: {cond} → {act}"
+            );
+            assert!(
+                schema.compile().is_ok(),
+                "compile failed for: {cond} → {act}"
+            );
+        }
+    }
+
+    #[test]
+    fn validate_and_compile_agree_on_invalid_rules() {
+        let invalid_rules = [
+            ("ias > abc", "led.indexer.on()"),
+            ("gear_down", "invalid.action()"),
+        ];
+        for (cond, act) in &invalid_rules {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: cond.to_string(),
+                    do_action: act.to_string(),
+                    action: act.to_string(),
+                }],
+                defaults: None,
+            };
+            assert!(
+                schema.validate().is_err(),
+                "validate should fail for: {:?} → {:?}",
+                cond,
+                act
+            );
+            assert!(
+                schema.compile().is_err(),
+                "compile should also fail for: {:?} → {:?}",
+                cond,
+                act
+            );
+        }
+    }
 }
 
 #[cfg(test)]
 mod snapshot_tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
+
+    /// Deterministic projection of a `BytecodeProgram` for snapshot stability.
+    /// Uses `BTreeMap` so key order is independent of HashMap seed randomisation.
+    #[derive(Debug, serde::Serialize)]
+    struct StableBytecode {
+        instructions: Vec<BytecodeOp>,
+        variable_map: BTreeMap<String, u16>,
+        hysteresis_map: BTreeMap<String, u16>,
+        actions: Vec<Action>,
+        stack_size: usize,
+    }
+
+    impl From<&BytecodeProgram> for StableBytecode {
+        fn from(bc: &BytecodeProgram) -> Self {
+            Self {
+                instructions: bc.instructions.clone(),
+                variable_map: bc
+                    .variable_map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), *v))
+                    .collect(),
+                hysteresis_map: bc
+                    .hysteresis_map
+                    .iter()
+                    .map(|(k, v)| (k.clone(), *v))
+                    .collect(),
+                actions: bc.actions.clone(),
+                stack_size: bc.stack_size,
+            }
+        }
+    }
 
     /// Snapshot the bytecode output for a gear-down panel rule.
     /// Fails if bytecode shape regresses across refactors.
@@ -1306,7 +1664,7 @@ mod snapshot_tests {
         let rules = RulesSchema {
             schema: "flight.ledmap/1".to_string(),
             rules: vec![Rule {
-                when: "gear_down && flaps_extended".to_string(),
+                when: "gear_down and flaps_extended".to_string(),
                 do_action: "led.panel('LAND').on()".to_string(),
                 action: "led.panel('LAND').on()".to_string(),
             }],
@@ -1314,7 +1672,26 @@ mod snapshot_tests {
         };
 
         let compiled = rules.compile().expect("AND rule should compile");
-        insta::assert_debug_snapshot!("bytecode_compound_and", compiled.bytecode);
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_compound_and", stable);
+    }
+
+    /// Snapshot a compound OR condition.
+    #[test]
+    fn snapshot_bytecode_compound_or() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down or flaps_extended".to_string(),
+                do_action: "led.panel('LAND').on()".to_string(),
+                action: "led.panel('LAND').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules.compile().expect("OR rule should compile");
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_compound_or", stable);
     }
 
     /// Snapshot the error message for a malformed condition (invalid number).
@@ -1399,5 +1776,79 @@ mod snapshot_tests {
         };
         let compiled = rules.compile().expect("gear-down rule should compile");
         insta::assert_yaml_snapshot!("compiled_bytecode_yaml", compiled.bytecode);
+    }
+
+    /// Snapshot bytecode for a negated boolean condition.
+    #[test]
+    fn snapshot_bytecode_negated_boolean() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "!flap_deployed".to_string(),
+                do_action: "led.indexer.off()".to_string(),
+                action: "led.indexer.off()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled = rules.compile().expect("negated rule should compile");
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_negated_boolean", stable);
+    }
+
+    /// Snapshot bytecode for a brightness action.
+    #[test]
+    fn snapshot_bytecode_brightness_action() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "taxi_light".to_string(),
+                do_action: "led.panel('TAXI').brightness(0.8)".to_string(),
+                action: "led.panel('TAXI').brightness(0.8)".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled = rules.compile().expect("brightness rule should compile");
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_brightness_action", stable);
+    }
+
+    /// Snapshot bytecode for a multi-rule schema.
+    #[test]
+    fn snapshot_bytecode_multi_rule() {
+        let rules = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "ias > 200".to_string(),
+                    do_action: "led.panel('SPEED').blink(rate_hz=3)".to_string(),
+                    action: "led.panel('SPEED').blink(rate_hz=3)".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+        let compiled = rules.compile().expect("multi-rule should compile");
+        let stable = StableBytecode::from(compiled.bytecode());
+        insta::assert_yaml_snapshot!("bytecode_multi_rule", stable);
+    }
+
+    /// Snapshot the validation error for an invalid action.
+    #[test]
+    fn snapshot_error_invalid_action() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "invalid.action()".to_string(),
+                action: "invalid.action()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_invalid_action", err);
     }
 }

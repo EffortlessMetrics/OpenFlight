@@ -1,0 +1,45 @@
+# HPG H145 Helicopter Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Airbus H145 replica collective with twist grip and panel switches.
+
+schema_version: "1"
+
+device:
+  name: "HPG H145 Helicopter Collective"
+  vendor: "HPG Simulation"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF010
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, twist_throttle]
+    resolution_bits: 12
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF010 community estimate."
+  - id: THROTTLE_NOT_CENTERED
+    description: "Collective axis is unipolar [0, max]; map to [0.0, 1.0]."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG H145 helicopter collective replica. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

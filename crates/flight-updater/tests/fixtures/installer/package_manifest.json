@@ -1,0 +1,45 @@
+{
+  "app_name": "Flight Hub",
+  "version": "1.2.0",
+  "publisher": "OpenFlight",
+  "description": "Flight Hub - Flight Simulation Input Management",
+  "install_dir": "FlightHub",
+  "files": {
+    "binaries": [
+      { "path": "bin/flightd.exe", "vital": true },
+      { "path": "bin/flightctl.exe", "vital": true }
+    ],
+    "config": [
+      { "path": "config/config.toml", "vital": true },
+      { "path": "config/default.profile.toml", "vital": false }
+    ],
+    "docs": [
+      { "path": "docs/README.md", "vital": false },
+      { "path": "docs/integration/INSTALLER_SUMMARY.md", "vital": false }
+    ],
+    "directories": [
+      "bin",
+      "config",
+      "logs",
+      "docs",
+      "docs/integration"
+    ]
+  },
+  "features": {
+    "Core": {
+      "level": 1,
+      "required": true,
+      "components": ["CoreBinaries", "CoreConfig", "CoreRegistry"]
+    },
+    "CLI": {
+      "level": 2,
+      "required": false,
+      "components": ["CLIBinaries"]
+    },
+    "PathEnv": {
+      "level": 2,
+      "required": false,
+      "components": ["PathEnvVar"]
+    }
+  }
+}

@@ -260,7 +260,7 @@ fn test_many_components_independent_failure_tracking() {
     }
 
     let quarantined = watchdog.get_quarantined_components();
-    let expected_quarantined = (n + 1) / 2; // indices 0, 2, 4
+    let expected_quarantined = n.div_ceil(2); // indices 0, 2, 4
     assert_eq!(quarantined.len(), expected_quarantined);
 
     // Odd-indexed endpoints should still be active.

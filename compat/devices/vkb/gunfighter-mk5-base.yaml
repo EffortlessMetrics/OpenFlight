@@ -1,0 +1,45 @@
+# VKB Gunfighter Mk.5 Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fifth generation Gunfighter gimbal base with improved bearings.
+
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.5 Base"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0500
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x231D confirmed VKB. PID 0x0500 community estimate for Mk.5."
+  - id: BASE_ONLY
+    description: "Gimbal base only. Grip sold separately. Axes report from base sensors."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    VKB Gunfighter Mk.5 gimbal base. Improved bearings over Mk.4. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

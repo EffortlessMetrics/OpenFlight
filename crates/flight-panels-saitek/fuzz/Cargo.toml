@@ -1,0 +1,37 @@
+[package]
+name = "flight-panels-saitek-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.flight-panels-saitek]
+path = ".."
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_radio_panel"
+path = "fuzz_targets/fuzz_radio_panel.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_multi_panel"
+path = "fuzz_targets/fuzz_multi_panel.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_switch_panel"
+path = "fuzz_targets/fuzz_switch_panel.rs"
+test = false
+doc = false

@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "PRF-001: Profile parse error",
+    "PRF-002: Profile schema invalid",
+    "PRF-003: Profile merge conflict",
+    "PRF-004: Profile not found",
+]

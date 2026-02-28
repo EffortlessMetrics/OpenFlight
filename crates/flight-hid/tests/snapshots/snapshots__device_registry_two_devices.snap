@@ -1,0 +1,30 @@
+---
+source: crates/flight-hid/tests/snapshots.rs
+expression: reg
+---
+{
+  "devices": {
+    "4318028894697146547": {
+      "vid": 8989,
+      "pid": 310,
+      "serial": "VKB001",
+      "manufacturer": "VKB",
+      "product": "Gladiator NXT EVO",
+      "interface_number": null,
+      "usage_page": 1,
+      "usage": 4,
+      "usb_path": "1-4.1"
+    },
+    "4796806231374257220": {
+      "vid": 1103,
+      "pid": 1026,
+      "serial": "WH001",
+      "manufacturer": "Thrustmaster",
+      "product": "HOTAS Warthog Joystick",
+      "interface_number": 0,
+      "usage_page": 1,
+      "usage": 4,
+      "usb_path": "1-2.3"
+    }
+  }
+}

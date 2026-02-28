@@ -34,8 +34,8 @@ polling:
   max_jitter_ms: ~
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x25B6 / PID 0x0001 are unconfirmed placeholders; verify with lsusb."
+  - id: VID_ESTIMATED
+    description: "VID 0x25B6 / PID 0x0001 are estimated; D-BOX uses proprietary USB or Ethernet protocol."
   - id: PROPRIETARY_PROTOCOL
     description: >
       D-BOX motion platforms communicate over a proprietary USB or Ethernet
@@ -50,6 +50,13 @@ quirks:
     description: >
       May appear as a composite USB device (actuator controller + USB audio
       for audio-haptic sync) depending on the interface card version.
+
+motion:
+  dof: 3
+  actuator_type: linear_electric
+  travel_mm: 76
+  update_rate_hz: 500
+  connection: [usb, ethernet]
 
 support:
   tier: 3

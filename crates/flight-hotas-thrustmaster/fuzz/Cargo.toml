@@ -36,3 +36,9 @@ name = "fuzz_t16000m"
 path = "fuzz_targets/fuzz_t16000m.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_cougar"
+path = "fuzz_targets/fuzz_cougar.rs"
+test = false
+doc = false

@@ -1,0 +1,209 @@
+---
+source: crates/flight-profile/tests/snapshots.rs
+expression: profile
+---
+{
+  "schema": "flight.profile/1",
+  "sim": null,
+  "aircraft": null,
+  "axes": {
+    "pitch": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "roll": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "strafe_x": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "strafe_y": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "strafe_z": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "throttle": {
+      "deadzone": 0.02,
+      "expo": null,
+      "slew_rate": 8.0,
+      "detents": [
+        {
+          "position": 0.0,
+          "width": 0.04,
+          "role": "zero_thrust"
+        }
+      ],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "yaw": {
+      "deadzone": 0.04,
+      "expo": 0.2,
+      "slew_rate": null,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.25,
+          "output": 0.1
+        },
+        {
+          "input": 0.5,
+          "output": 0.3
+        },
+        {
+          "input": 0.75,
+          "output": 0.6
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    }
+  },
+  "pof_overrides": null
+}

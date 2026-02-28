@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Fanatec"
+  name: "Fanatec CSL Pedals Load Cell Kit"
+  usb:
+    vid: "0x0EB7"
+    pid: "0x183A"
+  type: "pedals"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Fanatec CSL Pedals with load cell brake kit."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

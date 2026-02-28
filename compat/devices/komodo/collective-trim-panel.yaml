@@ -1,0 +1,45 @@
+# Komodo Simulations Collective Trim Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Trim and governor control panel for helicopter collective integration.
+
+schema_version: "1"
+
+device:
+  name: "Komodo Simulations Collective Trim Panel"
+  vendor: "Komodo Simulations"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF021
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [governor_trim]
+    resolution_bits: 12
+  buttons: 10
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF021 community estimate."
+  - id: PANEL_DEVICE
+    description: "Trim panel for collective integration. Governor and RPM controls."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Komodo Simulations collective trim panel. Governor and RPM controls. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

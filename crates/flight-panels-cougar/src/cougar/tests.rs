@@ -10,6 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// Mock HID adapter for testing
+#[allow(dead_code)]
 struct MockHidAdapter {
     devices: Vec<HidDeviceInfo>,
     write_latency: Duration,
@@ -50,10 +51,12 @@ impl MockHidAdapter {
         }
     }
 
+    #[allow(dead_code)]
     fn set_write_latency(&mut self, latency: Duration) {
         self.write_latency = latency;
     }
 
+    #[allow(dead_code)]
     fn set_should_fail(&mut self, should_fail: bool) {
         self.should_fail = should_fail;
     }

@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "PJRC"
+  name: "Teensy 4.1 USB HID Panel Controller"
+  usb:
+    vid: "0x16C0"
+    pid: "0x0488"
+  type: "button_box"
+capabilities:
+  axes: 4
+  buttons: 64
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Teensy 4.1 configured as USB HID panel controller."
+  driver: "built-in HID"
+quirks:
+  - id: DIY_DEVICE
+    description: "PID depends on firmware; Teensy 4.1 supports multiple HID endpoints."
+tested_games: ["msfs", "xplane", "dcs"]

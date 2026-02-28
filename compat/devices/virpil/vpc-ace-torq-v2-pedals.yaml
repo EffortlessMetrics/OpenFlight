@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Virpil Controls"
+  name: "Virpil VPC ACE Torq V2 Pedals"
+  usb:
+    vid: "0x3344"
+    pid: "0x0285"
+  type: "rudder"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Virpil VPC ACE Torq V2 helicopter-style rudder pedals."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

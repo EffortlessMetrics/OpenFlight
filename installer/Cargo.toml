@@ -1,0 +1,17 @@
+[package]
+name = "flight-installer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Install manifest, rollback transactions, and lifecycle verification for Flight Hub"
+publish = false
+
+[dependencies]
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

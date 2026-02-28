@@ -1,0 +1,43 @@
+# One-Handed Accessible Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "One-Handed Accessible Joystick"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0xFF01       # Community estimate
+    product_id: 0x0008      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 10
+  buttons: 8
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF01 / PID 0x0008 are placeholders for one-handed accessible joysticks.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Generic one-handed accessible joystick — compact single-hand controller with programmable buttons for full sim control.
+    Wave-98 addition. Last reviewed: 2026-07.

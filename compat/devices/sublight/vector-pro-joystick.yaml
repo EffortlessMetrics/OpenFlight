@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sublight Dynamics"
+  name: "Sublight Dynamics Vector Pro Joystick"
+  usb:
+    vid: "0x2FC8"
+    pid: "0x0003"
+  type: "joystick"
+capabilities:
+  axes: 5
+  buttons: 16
+  hats: 1
+  ffb: false
+support:
+  tier: 2
+  notes: "Sublight Dynamics Vector Pro enhanced space sim joystick."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

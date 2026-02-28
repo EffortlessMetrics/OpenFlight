@@ -1,0 +1,45 @@
+# FSSB R4 Force Sensing Base
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Fourth generation force sensing stick base with improved sensor linearity.
+
+schema_version: "1"
+
+device:
+  name: "FSSB R4 Force Sensing Base"
+  vendor: "FSSB"
+  usb:
+    vendor_id: 0x0738
+    product_id: 0xA004
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, z]
+    resolution_bits: 16
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING
+    description: "Fourth-gen force sensing with improved sensor linearity and temperature compensation."
+  - id: PID_UNCONFIRMED
+    description: "VID/PID community estimates. Verify with lsusb on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    FSSB R4 force sensing stick base. Improved linearity over R3. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -20,24 +20,35 @@
 pub mod aircraft_auto_switch_service;
 pub mod audit_log;
 pub mod capability_service;
+pub mod config_validator;
 pub mod config_watcher;
 pub mod crash_report;
 pub mod curve_conflict_service;
+pub mod degradation_manager;
 pub mod diagnostic_bundle;
+pub mod diagnostics;
 pub mod error_taxonomy;
+pub mod event_journal;
 pub mod first_run;
 pub mod graceful_drain;
 pub mod health;
 pub mod health_http;
+pub mod health_report;
 pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
 pub mod one_click_resolver;
+pub mod orchestrator;
+pub mod perf_profiler;
+pub mod plugin;
+pub mod plugin_registry;
 pub mod power;
 pub mod safe_mode;
 pub mod service;
+pub mod shutdown_coordinator;
 pub mod startup_sequence;
 pub mod stecs_runtime;
+pub mod task_supervisor;
 
 #[cfg(feature = "tflight-hidapi")]
 pub mod hidapi_source;
@@ -64,7 +75,11 @@ pub use capability_service::{
 };
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy, StableError};
-pub use health::{ComponentHealth, HealthEvent, HealthStatus, HealthStream};
+pub use health::{
+    AdapterHealthInput, ComponentHealth, DeviceHealthInput, HealthCheck, HealthCheckReport,
+    HealthChecker, HealthEvent, HealthStatus, HealthStream, MemoryHealthInput, OverallStatus,
+    SchedulerHealthInput,
+};
 pub use input_runtime::{
     SimulatedTFlightReportSource, TFlightInputRuntime, TFlightReportSource, TFlightRuntimeConfig,
     TFlightSnapshot,
@@ -75,10 +90,20 @@ pub use one_click_resolver::{
 };
 pub use power::{PowerCheck, PowerCheckStatus, PowerChecker, PowerStatus, RemediationStep};
 pub use safe_mode::{
-    RtPrivilegeStatus, SafeModeConfig, SafeModeManager, SafeModeStatus, ValidationResult,
+    RtPrivilegeStatus, SafeModeConfig, SafeModeDiagnostic, SafeModeManager, SafeModeStatus,
+    ValidationResult,
 };
 pub use service::{FlightService, FlightServiceConfig, ServiceState, TFlightYawPolicyConfig};
 pub use stecs_runtime::{
     SimulatedVkbStecsReportSource, VkbStecsInputRuntime, VkbStecsReportSource,
     VkbStecsRuntimeConfig, VkbStecsSnapshot,
 };
+
+pub use orchestrator::{
+    AdapterEvent, BootSequence, CompiledProfile, DeviceEvent, OrchestratorError,
+    OrchestratorStatus, ServiceConfig, ServiceOrchestrator, SubsystemHandle, SubsystemHealth,
+    SubsystemStatus,
+};
+pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
+pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
+pub use plugin_registry::PluginRegistry;

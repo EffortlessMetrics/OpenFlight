@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Sony"
+  name: "PS3 Eye IR Camera (Modified)"
+  usb:
+    vid: "0x1415"
+    pid: "0x2000"
+  type: "head_tracker"
+capabilities:
+  axes: 0
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Modified PS3 Eye camera with IR filter for head tracking."
+  driver: "UVC camera"
+quirks:
+  - id: IR_MODIFIED
+    description: "Standard PS3 Eye modified with IR pass filter; use with opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

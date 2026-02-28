@@ -78,6 +78,7 @@ pub mod blackbox;
 pub mod buttons;
 pub mod bypass;
 pub mod calibration;
+pub mod calibration_wizard;
 pub mod chain;
 pub mod combine;
 pub mod compiler;
@@ -98,6 +99,7 @@ pub mod history;
 pub mod input_validator;
 pub mod invert;
 pub mod lag_compensator;
+pub mod mixer;
 pub mod mode_switch;
 pub mod nodes;
 pub mod noise_floor;
@@ -110,9 +112,10 @@ pub mod quantize;
 pub mod rate_limit;
 pub mod recording;
 pub mod scale;
-pub mod trace_replay;
 pub mod smoothing;
+pub mod stages;
 pub mod throttle_zone;
+pub mod trace_replay;
 pub mod trim;
 pub mod velocity;
 
@@ -123,10 +126,13 @@ pub use buttons::{
 };
 pub use bypass::{BypassBank, BypassConfig, BypassGate};
 pub use calibration::{AxisCalibration, CalibrationBank};
-pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
+pub use calibration_wizard::{
+    CalibrationError, CalibrationResult, CalibrationSample, CalibrationStep, CalibrationWizard,
+};
+pub use chain::{AxisChain, AxisChainConfig, ChainStageValues, MAX_CHAIN_STAGES, RtAxisChain};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
-pub use conditional_scale::{ConditionalScale, ScaleCondition, MAX_CONDITIONS};
+pub use conditional_scale::{ConditionalScale, MAX_CONDITIONS, ScaleCondition};
 pub use conflict::{
     ConflictDetectorConfig, ConflictMetadata, ConflictResolution, ConflictSeverity, ConflictType,
     CurveConflict, CurveConflictDetector, ResolutionType,
@@ -152,6 +158,7 @@ pub use history::{
 pub use input_validator::InputValidator;
 pub use invert::{AxisInvert, InvertBank};
 pub use lag_compensator::{LagCompensator, LagCompensatorConfig};
+pub use mixer::{AxisMixer, MAX_MIXER_INPUTS, MixMode};
 pub use mode_switch::{AxisMode, ModeSwitcher};
 pub use nodes::{
     CurveCompiledState, CurveNode, DeadzoneCompiledState, DeadzoneNode, DetentEvent, DetentNode,
@@ -162,15 +169,27 @@ pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
-pub use pipeline::{Pipeline, PipelineState};
+pub use pipeline::{
+    AxisPipeline, AxisStage, ClampStage, CurveStage, DeadzoneStage, Pipeline, PipelineState,
+    SensitivityStage, SmoothingStage,
+};
 pub use pipeline_bypass::{PipelineStage, StageBypass};
 pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};
 pub use recording::{AxisPlayback, AxisRecording, AxisSample};
-pub use trace_replay::{AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches};
 pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
+pub use stages::{
+    ClampStage as RtClampStage, CurveType, DeadzoneShape, DeadzoneStage as RtDeadzoneStage,
+    DetentPosition, DetentStage as RtDetentStage, InvertStage as RtInvertStage, MAX_CURVE_POINTS,
+    MAX_DETENTS, MAX_SMA_WINDOW, MAX_STAGES, NoiseGate, PipelineDiagnostics, RescaleStage,
+    RtAxisPipeline, RtPipelineBuilder, SaturationStage, SlewRateLimiter,
+    SmoothingStage as RtSmoothingStage, SmoothingType, Stage, StageDiagnostic, StageSlot,
+};
 pub use throttle_zone::{
     ThrottleZoneConfig, ThrottleZoneProcessor, ZoneError, ZoneEvent, ZoneName,
+};
+pub use trace_replay::{
+    AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches,
 };
 pub use trim::{AxisTrim, AxisTrimBank};

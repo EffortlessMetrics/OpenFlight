@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Generic USB PTT Switch Dual"
+  usb:
+    vid: "0x0C45"
+    pid: "0x7414"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 2
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Dual USB PTT switch for COM1/COM2 transmit selection."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "RealSimGear"
+  name: "RealSimGear GTX Transponder Panel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF248"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 18
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "RealSimGear GTX series transponder bezel panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

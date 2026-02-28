@@ -80,10 +80,29 @@ pub struct ValidationResult {
     pub execution_time_ms: u64,
 }
 
+/// Diagnostic bundle produced when safe mode activates.
+///
+/// Captures *why* the service degraded and what the operator should look at.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SafeModeDiagnostic {
+    /// Human-readable explanation of why safe mode was entered.
+    pub reason: String,
+    /// Specific subsystems that triggered degradation.
+    pub failed_components: Vec<String>,
+    /// Recommended operator actions.
+    pub recommended_actions: Vec<String>,
+    /// Snapshot of the validation results at activation time.
+    pub validation_snapshot: Vec<ValidationResult>,
+}
+
 /// Safe mode manager
 pub struct SafeModeManager {
     config: SafeModeConfig,
     axis_engine: Option<Arc<AxisEngine>>,
+    /// Stored status from the last `initialize()` call.
+    last_status: Option<SafeModeStatus>,
+    /// Diagnostic bundle built during initialization.
+    last_diagnostic: Option<SafeModeDiagnostic>,
 }
 
 impl SafeModeManager {
@@ -94,6 +113,8 @@ impl SafeModeManager {
         Self {
             config,
             axis_engine: None,
+            last_status: None,
+            last_diagnostic: None,
         }
     }
 
@@ -192,6 +213,11 @@ impl SafeModeManager {
             rt_privileges,
             validation_results,
         };
+
+        // Build diagnostic bundle capturing *why* we entered safe mode.
+        let diagnostic = self.build_diagnostic(&status.validation_results);
+        self.last_diagnostic = Some(diagnostic);
+        self.last_status = Some(status.clone());
 
         info!("Safe mode initialization completed");
         Ok(status)
@@ -497,9 +523,7 @@ impl SafeModeManager {
         // 1. rtkit is available (can acquire RT via D-Bus without root), OR
         // 2. RLIMIT_RTPRIO is sufficient AND direct scheduling works, OR
         // 3. Direct scheduling works (CAP_SYS_NICE or root)
-        let rt_available = rtkit_available
-            || direct_sched_available
-            || (rlimit_sufficient && direct_sched_available);
+        let rt_available = rtkit_available || direct_sched_available || rlimit_sufficient;
 
         if !rt_available {
             warn!(
@@ -593,8 +617,9 @@ impl SafeModeManager {
         use std::collections::HashMap;
         let mut axes = HashMap::new();
 
-        // Pitch & roll: mild expo for precision near centre
-        for name in &["pitch", "roll"] {
+        // Pitch, roll, yaw: 3% deadzone + mild expo for precision near centre.
+        // Uniform across all flight axes so behaviour is predictable.
+        for name in &["pitch", "roll", "yaw"] {
             axes.insert(
                 name.to_string(),
                 AxisConfig {
@@ -607,18 +632,6 @@ impl SafeModeManager {
                 },
             );
         }
-        // Yaw (rudder): wider deadzone and less expo — pedals are less precise
-        axes.insert(
-            "yaw".to_string(),
-            AxisConfig {
-                deadzone: Some(0.05),
-                expo: Some(0.15),
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            },
-        );
         // Throttle: tiny deadzone, linear response (no expo)
         axes.insert(
             "throttle".to_string(),
@@ -641,8 +654,15 @@ impl SafeModeManager {
         }
     }
 
-    /// Get current safe mode status
+    /// Get current safe mode status.
+    ///
+    /// Returns the status captured during `initialize()` if available,
+    /// otherwise returns a minimal placeholder status.
     pub fn get_status(&self) -> SafeModeStatus {
+        if let Some(status) = &self.last_status {
+            return status.clone();
+        }
+        // Fallback before initialize() has been called.
         SafeModeStatus {
             active: true,
             config: self.config.clone(),
@@ -660,6 +680,11 @@ impl SafeModeManager {
         }
     }
 
+    /// Return the diagnostic bundle built during initialization, if any.
+    pub fn get_diagnostic(&self) -> Option<&SafeModeDiagnostic> {
+        self.last_diagnostic.as_ref()
+    }
+
     /// Shutdown safe mode
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down safe mode");
@@ -671,6 +696,65 @@ impl SafeModeManager {
 
         info!("Safe mode shutdown completed");
         Ok(())
+    }
+
+    /// Build a diagnostic bundle explaining why safe mode was activated.
+    pub fn build_diagnostic(&self, results: &[ValidationResult]) -> SafeModeDiagnostic {
+        let failed: Vec<String> = results
+            .iter()
+            .filter(|r| !r.success)
+            .map(|r| r.component.clone())
+            .collect();
+
+        let reason = if failed.is_empty() {
+            "Safe mode activated by operator request (no component failures).".to_string()
+        } else {
+            format!(
+                "Safe mode activated because the following subsystems failed validation: {}",
+                failed.join(", ")
+            )
+        };
+
+        let mut recommended_actions: Vec<String> = Vec::new();
+        for r in results.iter().filter(|r| !r.success) {
+            match r.component.as_str() {
+                "Power Configuration" => {
+                    recommended_actions
+                        .push("Check power plan — switch to High Performance.".into());
+                }
+                "RT Privileges" => {
+                    recommended_actions.push(
+                        "Ensure RT privileges are available (run as admin or install rtkit)."
+                            .into(),
+                    );
+                }
+                "Axis Engine" => {
+                    recommended_actions
+                        .push("Check HID device connectivity and driver health.".into());
+                }
+                "Basic Profile" => {
+                    recommended_actions.push(
+                        "Profile validation failed — inspect profile JSON for errors.".into(),
+                    );
+                }
+                other => {
+                    recommended_actions.push(format!("Investigate {other} failure."));
+                }
+            }
+        }
+
+        if recommended_actions.is_empty() {
+            recommended_actions.push("No failures detected — safe mode can be exited.".into());
+        }
+
+        info!("Diagnostic bundle: {reason}");
+
+        SafeModeDiagnostic {
+            reason,
+            failed_components: failed,
+            recommended_actions,
+            validation_snapshot: results.to_vec(),
+        }
     }
 }
 
@@ -716,10 +800,7 @@ mod tests {
 
         // All four primary axes must be present
         for name in &["pitch", "roll", "yaw", "throttle"] {
-            assert!(
-                profile.axes.contains_key(*name),
-                "missing axis: {name}"
-            );
+            assert!(profile.axes.contains_key(*name), "missing axis: {name}");
         }
 
         // Pitch
@@ -732,10 +813,10 @@ mod tests {
         assert_eq!(roll.deadzone, Some(0.03));
         assert_eq!(roll.expo, Some(0.2));
 
-        // Yaw (rudder) — wider deadzone, less expo
+        // Yaw (rudder) — same 3% deadzone + 0.2 expo as pitch/roll
         let yaw = &profile.axes["yaw"];
-        assert_eq!(yaw.deadzone, Some(0.05));
-        assert_eq!(yaw.expo, Some(0.15));
+        assert_eq!(yaw.deadzone, Some(0.03));
+        assert_eq!(yaw.expo, Some(0.2));
 
         // Throttle — linear (no expo)
         let throttle = &profile.axes["throttle"];
@@ -755,5 +836,152 @@ mod tests {
         let _status = manager.initialize().await.unwrap();
         let result = manager.shutdown().await;
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_diagnostic_bundle_no_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![ValidationResult {
+            component: "Axis Engine".to_string(),
+            success: true,
+            message: "OK".to_string(),
+            execution_time_ms: 1,
+        }];
+        let diag = manager.build_diagnostic(&results);
+        assert!(diag.failed_components.is_empty());
+        assert!(diag.reason.contains("operator request"));
+    }
+
+    #[test]
+    fn test_diagnostic_bundle_with_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![
+            ValidationResult {
+                component: "RT Privileges".to_string(),
+                success: false,
+                message: "unavailable".to_string(),
+                execution_time_ms: 2,
+            },
+            ValidationResult {
+                component: "Axis Engine".to_string(),
+                success: true,
+                message: "OK".to_string(),
+                execution_time_ms: 1,
+            },
+        ];
+        let diag = manager.build_diagnostic(&results);
+        assert_eq!(diag.failed_components, vec!["RT Privileges"]);
+        assert!(diag.reason.contains("RT Privileges"));
+        assert!(!diag.recommended_actions.is_empty());
+    }
+
+    #[test]
+    fn test_safe_profile_no_inversion_full_range() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            // No custom curve means no inversion — output follows input monotonically
+            assert!(
+                axis.curve.is_none(),
+                "axis '{name}' must not have a custom curve"
+            );
+            // No detents that could trap the axis
+            assert!(
+                axis.detents.is_empty(),
+                "axis '{name}' must have no detents"
+            );
+            // No slew-rate limiter that could clamp full-range sweeps
+            assert!(
+                axis.slew_rate.is_none(),
+                "axis '{name}' must have no slew limit"
+            );
+        }
+    }
+
+    #[test]
+    fn test_safe_profile_pipelines_compile() {
+        use crate::service::build_pipeline_for_axis;
+
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_diagnostic_explains_multiple_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![
+            ValidationResult {
+                component: "Power Configuration".to_string(),
+                success: false,
+                message: "battery".to_string(),
+                execution_time_ms: 1,
+            },
+            ValidationResult {
+                component: "Basic Profile".to_string(),
+                success: false,
+                message: "bad JSON".to_string(),
+                execution_time_ms: 1,
+            },
+        ];
+        let diag = manager.build_diagnostic(&results);
+        assert_eq!(diag.failed_components.len(), 2);
+        assert!(diag.reason.contains("Power Configuration"));
+        assert!(diag.reason.contains("Basic Profile"));
+        assert!(diag.recommended_actions.len() >= 2);
+        assert_eq!(diag.validation_snapshot.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_get_status_returns_initialization_status() {
+        let mut manager = SafeModeManager::new(SafeModeConfig::default());
+        let status = manager.initialize().await.unwrap();
+        assert!(status.active);
+
+        // get_status() should now return the real captured status, not placeholders
+        let retrieved = manager.get_status();
+        assert!(retrieved.active);
+        assert!(!retrieved.validation_results.is_empty());
+        // RT Privileges validation should have been recorded
+        assert!(
+            retrieved
+                .validation_results
+                .iter()
+                .any(|r| r.component == "RT Privileges"),
+            "RT Privileges check should be in validation results"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_diagnostic_stored_during_init() {
+        let mut manager = SafeModeManager::new(SafeModeConfig::default());
+        // Before init, no diagnostic
+        assert!(manager.get_diagnostic().is_none());
+
+        let _status = manager.initialize().await.unwrap();
+        // After init, diagnostic should be present
+        let diag = manager
+            .get_diagnostic()
+            .expect("diagnostic should be stored");
+        assert!(!diag.reason.is_empty());
+        assert!(!diag.recommended_actions.is_empty());
+    }
+
+    #[test]
+    fn test_get_status_before_init_returns_placeholder() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let status = manager.get_status();
+        assert!(status.active);
+        assert_eq!(status.rt_privileges.details, "Status not checked");
+        assert!(status.validation_results.is_empty());
     }
 }

@@ -269,7 +269,7 @@ mod tests {
             let mut t = AxisTrim::new(1.0, 0.01);
             t.set_offset(offset);
             let out = t.apply(input);
-            prop_assert!(out >= -1.0 && out <= 1.0, "out={out}");
+            prop_assert!((-1.0..=1.0).contains(&out), "out={out}");
         }
 
         #[test]

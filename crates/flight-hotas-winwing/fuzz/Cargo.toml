@@ -54,3 +54,9 @@ name = "fuzz_winwing_joystick"
 path = "fuzz_targets/fuzz_winwing_joystick.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_winwing_protocol"
+path = "fuzz_targets/fuzz_winwing_protocol.rs"
+test = false
+doc = false

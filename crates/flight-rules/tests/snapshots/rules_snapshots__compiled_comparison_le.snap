@@ -1,0 +1,35 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: snap
+---
+{
+  "instructions": [
+    {
+      "LoadVar": 0
+    },
+    {
+      "LoadConst": 60.0
+    },
+    {
+      "Compare": "LessEqual"
+    },
+    {
+      "JumpFalse": 5
+    },
+    {
+      "Action": 0
+    }
+  ],
+  "variable_map": {
+    "speed": 0
+  },
+  "actions": [
+    {
+      "LedBlink": {
+        "target": "STALL",
+        "rate_hz": 2.0
+      }
+    }
+  ],
+  "stack_size": 8
+}

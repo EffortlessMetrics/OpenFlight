@@ -1,0 +1,11 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "DEV-001: Device not found",
+    "DEV-002: Device open failed",
+    "DEV-003: Device read timeout",
+    "DEV-004: Device write failed",
+    "DEV-005: Calibration data missing",
+]

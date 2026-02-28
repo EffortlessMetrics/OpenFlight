@@ -1,0 +1,47 @@
+# Thrustmaster MFD Cougar Pack V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Updated MFD panel pair with improved buttons and USB-C.
+
+schema_version: "1"
+
+device:
+  name: "Thrustmaster MFD Cougar Pack V2"
+  vendor: "Thrustmaster"
+  usb:
+    vendor_id: 0x044F
+    product_id: 0x0408
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 40
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x044F confirmed Thrustmaster. PID 0x0408 community estimate."
+  - id: PANEL_DEVICE
+    description: "Pair of MFD panels. 20 OSB buttons per panel around bezel."
+  - id: USB_C
+    description: "Updated V2 with USB-C connection."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Thrustmaster MFD Cougar Pack V2. Updated MFD pair with USB-C. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

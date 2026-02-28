@@ -1,0 +1,19 @@
+---
+source: crates/flight-hid/tests/snapshots.rs
+expression: summary
+---
+[044F:B10A] 3 quirk(s)
+  NoisyAxis { axis_name: "X", noise_floor: 0.02 }
+  NoisyAxis { axis_name: "Y", noise_floor: 0.02 }
+  NoisyAxis { axis_name: "Rz", noise_floor: 0.03 }
+[044F:B687] 2 quirk(s)
+  NoisyAxis { axis_name: "Slider", noise_floor: 0.015 }
+  SlowInit { delay_ms: 500 }
+[068E:00F4] 1 quirk(s)
+  InvertedAxis { axis_name: "ministick_y" }
+[06A3:0762] 1 quirk(s)
+  OffsetCenter { axis_name: "X", offset: 0.02 }
+[231D:0200] 1 quirk(s)
+  SlowInit { delay_ms: 300 }
+[046D:C215] 1 quirk(s)
+  NoisyAxis { axis_name: "Rz", noise_floor: 0.04 }

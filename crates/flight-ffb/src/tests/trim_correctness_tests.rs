@@ -399,7 +399,7 @@ fn test_spring_ramp_progress() {
             assert!(progress.is_some(), "Should have ramp progress");
             
             let progress_value = progress.unwrap();
-            assert!(progress_value >= 0.0 && progress_value <= 1.0, 
+            assert!((0.0..=1.0).contains(&progress_value), 
                 "Progress should be between 0 and 1: {}", progress_value);
             break;
         }

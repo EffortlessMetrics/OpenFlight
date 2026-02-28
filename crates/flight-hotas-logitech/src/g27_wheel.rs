@@ -86,13 +86,13 @@ pub enum G27ParseError {
 /// Normalize a 16-bit big-endian bipolar axis (0..65535) to −1.0..=1.0.
 #[inline]
 fn normalize_wheel_16bit_be(raw: u16) -> f32 {
-    (raw as f32 - 32767.5) / 32767.5
+    ((raw as f32 - 32767.5) / 32767.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize an 8-bit unipolar axis (0..255) to 0.0..=1.0.
 #[inline]
 fn normalize_pedal_8bit(raw: u8) -> f32 {
-    raw as f32 / 255.0
+    (raw as f32 / 255.0).clamp(0.0, 1.0)
 }
 
 /// Parse an 8-byte HID input report from the Logitech G27 Racing Wheel.

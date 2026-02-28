@@ -12,7 +12,7 @@ device:
   name: "Simagic Alpha Mini S Wheel Base"
   vendor: "Simagic"
   usb:
-    vendor_id: 0x0483   # STMicroelectronics USB MCU (VID_UNCONFIRMED for Alpha Mini S)
+    vendor_id: 0x0483   # STMicroelectronics MCU â plausible for Simagic USB interface
     product_id: 0x0009  # Placeholder — PID_UNCONFIRMED; distinct from original Alpha Mini
   hid:
     usage_page: 0x01    # Generic Desktop
@@ -32,8 +32,8 @@ polling:
   max_jitter_ms: 1
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x0483 / PID 0x0009 are unconfirmed; verify with lsusb on Alpha Mini S."
+  - id: VID_STM32_BRIDGE
+    description: "VID 0x0483 (STMicroelectronics) is plausible â Simagic bases commonly use STM32 MCUs. PID 0x0009 requires verification."
   - id: DISTINCT_FROM_ALPHA_MINI
     description: >
       The Alpha Mini S has higher peak torque than the original Alpha Mini

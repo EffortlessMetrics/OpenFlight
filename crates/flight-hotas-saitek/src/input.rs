@@ -196,7 +196,7 @@ impl HotasInputHandler {
 
 /// Normalize a 16-bit axis value to -1.0..1.0 range.
 fn normalize_axis_16bit(raw: u16) -> f32 {
-    (raw as f32 / 32767.5) - 1.0
+    ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]

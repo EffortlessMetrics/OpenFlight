@@ -155,7 +155,7 @@ impl HilTrimTestSuite {
         let mut timing_analysis = TimingAnalysis::default();
         let mut update_periods = Vec::new();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result: TrimValidationResult = {
             let mut engine = self.create_test_engine();
 
             // Configure for high-performance FFB mode
@@ -279,7 +279,7 @@ impl HilTrimTestSuite {
                 passed: !rate_violation && !timing_failure,
                 duration: start_time.elapsed(),
                 error: if rate_violation {
-                    Some(format!("Rate limit exceeded with hardware timing"))
+                    Some("Rate limit exceeded with hardware timing".to_string())
                 } else if timing_failure {
                     Some(format!(
                         "Missed {} timing deadlines",
@@ -294,7 +294,7 @@ impl HilTrimTestSuite {
                     ..Default::default()
                 },
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -309,7 +309,7 @@ impl HilTrimTestSuite {
         let mut hardware_metrics = HardwareMetrics::default();
         let mut timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result: TrimValidationResult = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::ForceFeedback);
@@ -367,7 +367,7 @@ impl HilTrimTestSuite {
                 passed: !jerk_violation,
                 duration: start_time.elapsed(),
                 error: if jerk_violation {
-                    Some(format!("Jerk limit exceeded with hardware timing"))
+                    Some("Jerk limit exceeded with hardware timing".to_string())
                 } else {
                     None
                 },
@@ -377,7 +377,7 @@ impl HilTrimTestSuite {
                     ..Default::default()
                 },
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -392,7 +392,7 @@ impl HilTrimTestSuite {
         let mut hardware_metrics = HardwareMetrics::default();
         let mut timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::SpringCentered);
@@ -438,7 +438,7 @@ impl HilTrimTestSuite {
             // Validate freeze timing (should be 100ms + ramp time)
             let timing_valid = if let Some(duration) = freeze_duration {
                 let duration_ms = duration.as_millis();
-                duration_ms >= 50 && duration_ms <= 500 // Reasonable range
+                (50..=500).contains(&duration_ms) // Reasonable range
             } else {
                 false
             };
@@ -461,7 +461,7 @@ impl HilTrimTestSuite {
                     ..Default::default()
                 },
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -476,7 +476,7 @@ impl HilTrimTestSuite {
         let hardware_metrics = HardwareMetrics::default();
         let timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::SpringCentered);
@@ -553,7 +553,7 @@ impl HilTrimTestSuite {
                     ..Default::default()
                 },
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -568,7 +568,7 @@ impl HilTrimTestSuite {
         let mut hardware_metrics = HardwareMetrics::default();
         let mut timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::ForceFeedback);
@@ -644,7 +644,7 @@ impl HilTrimTestSuite {
                 measurements,
                 metrics: Default::default(),
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -659,7 +659,7 @@ impl HilTrimTestSuite {
         let mut hardware_metrics = HardwareMetrics::default();
         let timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::ForceFeedback);
@@ -673,7 +673,7 @@ impl HilTrimTestSuite {
 
                 let target_nm = if i % 2 == 0 { 8.0 } else { -8.0 };
                 let change = SetpointChange {
-                    target_nm: target_nm,
+                    target_nm,
                     limits: TrimLimits::default(),
                 };
 
@@ -741,7 +741,7 @@ impl HilTrimTestSuite {
                 measurements,
                 metrics: Default::default(),
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -756,7 +756,7 @@ impl HilTrimTestSuite {
         let hardware_metrics = HardwareMetrics::default();
         let timing_analysis = TimingAnalysis::default();
 
-        let validation_result = (|| -> TrimValidationResult {
+        let validation_result = {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
             trim_controller.set_mode(TrimMode::ForceFeedback);
@@ -802,7 +802,7 @@ impl HilTrimTestSuite {
                 measurements,
                 metrics: Default::default(),
             }
-        })();
+        };
 
         HilTrimTestResult {
             validation_result,
@@ -817,6 +817,7 @@ impl HilTrimTestSuite {
         let hardware_metrics = HardwareMetrics::default();
         let timing_analysis = TimingAnalysis::default();
 
+        #[allow(clippy::redundant_closure_call)]
         let validation_result = (|| -> TrimValidationResult {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();
@@ -895,6 +896,7 @@ impl HilTrimTestSuite {
         let hardware_metrics = HardwareMetrics::default();
         let timing_analysis = TimingAnalysis::default();
 
+        #[allow(clippy::redundant_closure_call)]
         let validation_result = (|| -> TrimValidationResult {
             let mut engine = self.create_test_engine();
             let trim_controller = engine.get_trim_controller_mut();

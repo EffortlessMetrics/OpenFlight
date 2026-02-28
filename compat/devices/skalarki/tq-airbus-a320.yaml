@@ -1,0 +1,45 @@
+# Skalarki TQ Airbus A320
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Airbus A320 replica thrust lever assembly with thrust reversers.
+
+schema_version: "1"
+
+device:
+  name: "Skalarki TQ Airbus A320"
+  vendor: "Skalarki Electronics"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0BD8
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [engine1, engine2, speedbrake, flap_lever]
+    resolution_bits: 16
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0BD8 community estimate."
+  - id: DETENT_GATES
+    description: "TOGA, FLX/MCT, CL, and idle detent gates on thrust levers."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Skalarki TQ Airbus A320 thrust lever replica. Detent gates. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

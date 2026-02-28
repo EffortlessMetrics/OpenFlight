@@ -1,0 +1,47 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: store
+---
+{
+  "calibrations": {
+    "044F:B10A": [
+      {
+        "axis_id": 0,
+        "raw_min": 0,
+        "raw_max": 65535,
+        "raw_center": 32768,
+        "updated_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "axis_id": 1,
+        "raw_min": 0,
+        "raw_max": 65535,
+        "raw_center": 32768,
+        "updated_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "axis_id": 2,
+        "raw_min": 0,
+        "raw_max": 65535,
+        "raw_center": 32768,
+        "updated_at": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "06A3:0C2D": [
+      {
+        "axis_id": 0,
+        "raw_min": 100,
+        "raw_max": 65000,
+        "raw_center": 32550,
+        "updated_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "axis_id": 1,
+        "raw_min": 50,
+        "raw_max": 64000,
+        "raw_center": 32000,
+        "updated_at": "2024-01-01T00:00:00Z"
+      }
+    ]
+  }
+}

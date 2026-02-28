@@ -37,6 +37,8 @@ pub mod orion2_stick;
 pub mod orion2_throttle;
 pub mod orion_joystick;
 pub mod presets;
+pub mod profiles;
+pub mod protocol;
 pub mod skywalker_rudder;
 pub mod super_taurus;
 pub mod tfrp;
@@ -79,6 +81,20 @@ pub use orion2_throttle::{
     parse_orion2_throttle_report,
 };
 pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
+pub use profiles::{
+    ButtonGroupDescriptor, DetentDescriptor, DeviceProfile, DisplayFieldDescriptor,
+    EncoderDescriptor, HatDescriptor, a10_grip_profile, all_profiles, combat_ready_panel_profile,
+    efis_panel_profile, f16ex_grip_profile, f18_grip_profile, fcu_panel_profile,
+    orion2_base_profile, orion2_throttle_profile, profile_by_pid, take_off_panel_profile,
+};
+pub use protocol::{
+    BacklightSubCommand, CommandCategory, DetentName, DetentPosition, DetentReport,
+    DetentSubCommand, DisplaySubCommand, FeatureReportFrame, ParsedFrame, ProtocolError,
+    build_backlight_all_command, build_backlight_all_rgb_command, build_backlight_single_command,
+    build_backlight_single_rgb_command, build_detent_query_command, build_detent_set_command,
+    build_display_brightness_command, build_display_clear_command, build_display_segment_command,
+    build_display_text_command, parse_detent_response, parse_feature_report,
+};
 pub use skywalker_rudder::{
     MIN_REPORT_BYTES as SKYWALKER_RUDDER_REPORT_LEN, SKYWALKER_RUDDER_PID, SkywalkerAxes,
     SkywalkerParseError, SkywalkerRudderInputState, parse_skywalker_rudder_report,

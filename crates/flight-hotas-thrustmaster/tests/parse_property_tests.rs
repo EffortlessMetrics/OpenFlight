@@ -27,6 +27,7 @@ fn make_warthog_stick(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: 
     r
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_warthog_throttle(
     scx: u16,
     scy: u16,
@@ -96,9 +97,9 @@ proptest! {
     ) {
         let r = make_warthog_stick(x, y, rz, 0, 0, 0xFF);
         let s = parse_warthog_stick(&r).unwrap();
-        prop_assert!(s.axes.x >= -1.0 && s.axes.x <= 1.0, "x={}", s.axes.x);
-        prop_assert!(s.axes.y >= -1.0 && s.axes.y <= 1.0, "y={}", s.axes.y);
-        prop_assert!(s.axes.rz >= -1.0 && s.axes.rz <= 1.0, "rz={}", s.axes.rz);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.x), "x={}", s.axes.x);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.y), "y={}", s.axes.y);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.rz), "rz={}", s.axes.rz);
     }
 
     /// Warthog stick axes are always finite (no NaN or Inf).
@@ -164,8 +165,8 @@ proptest! {
     ) {
         let r = make_warthog_throttle(scx, scy, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF);
         let s = parse_warthog_throttle(&r).unwrap();
-        prop_assert!(s.axes.slew_x >= -1.0 && s.axes.slew_x <= 1.0, "slew_x={}", s.axes.slew_x);
-        prop_assert!(s.axes.slew_y >= -1.0 && s.axes.slew_y <= 1.0, "slew_y={}", s.axes.slew_y);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.slew_x), "slew_x={}", s.axes.slew_x);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.slew_y), "slew_y={}", s.axes.slew_y);
     }
 
     /// Warthog throttle unipolar axes are always within [0.0, 1.0].
@@ -178,15 +179,15 @@ proptest! {
         let r = make_warthog_throttle(32768, 32768, tl, tr, tc, 0, 0, 0, 0, 0xFF, 0xFF);
         let s = parse_warthog_throttle(&r).unwrap();
         prop_assert!(
-            s.axes.throttle_left >= 0.0 && s.axes.throttle_left <= 1.0,
+            (0.0..=1.0).contains(&s.axes.throttle_left),
             "throttle_left={}", s.axes.throttle_left
         );
         prop_assert!(
-            s.axes.throttle_right >= 0.0 && s.axes.throttle_right <= 1.0,
+            (0.0..=1.0).contains(&s.axes.throttle_right),
             "throttle_right={}", s.axes.throttle_right
         );
         prop_assert!(
-            s.axes.throttle_combined >= 0.0 && s.axes.throttle_combined <= 1.0,
+            (0.0..=1.0).contains(&s.axes.throttle_combined),
             "throttle_combined={}", s.axes.throttle_combined
         );
     }
@@ -256,11 +257,11 @@ proptest! {
     ) {
         let r = make_t16000m(x, y, rz, slider, 0, 0x0F);
         let s = parse_t16000m_report(&r).unwrap();
-        prop_assert!(s.axes.x >= -1.0 && s.axes.x <= 1.0, "x={}", s.axes.x);
-        prop_assert!(s.axes.y >= -1.0 && s.axes.y <= 1.0, "y={}", s.axes.y);
-        prop_assert!(s.axes.twist >= -1.0 && s.axes.twist <= 1.0, "twist={}", s.axes.twist);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.x), "x={}", s.axes.x);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.y), "y={}", s.axes.y);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.twist), "twist={}", s.axes.twist);
         prop_assert!(
-            s.axes.throttle >= 0.0 && s.axes.throttle <= 1.0,
+            (0.0..=1.0).contains(&s.axes.throttle),
             "throttle={}", s.axes.throttle
         );
     }
@@ -310,19 +311,19 @@ proptest! {
         let r = make_twcs(throttle, rx, ry, rz, 0);
         let s = parse_twcs_report(&r).unwrap();
         prop_assert!(
-            s.axes.throttle >= 0.0 && s.axes.throttle <= 1.0,
+            (0.0..=1.0).contains(&s.axes.throttle),
             "throttle={}", s.axes.throttle
         );
         prop_assert!(
-            s.axes.mini_stick_x >= -1.0 && s.axes.mini_stick_x <= 1.0,
+            (-1.0..=1.0).contains(&s.axes.mini_stick_x),
             "mini_stick_x={}", s.axes.mini_stick_x
         );
         prop_assert!(
-            s.axes.mini_stick_y >= -1.0 && s.axes.mini_stick_y <= 1.0,
+            (-1.0..=1.0).contains(&s.axes.mini_stick_y),
             "mini_stick_y={}", s.axes.mini_stick_y
         );
         prop_assert!(
-            s.axes.rocker >= -1.0 && s.axes.rocker <= 1.0,
+            (-1.0..=1.0).contains(&s.axes.rocker),
             "rocker={}", s.axes.rocker
         );
     }
@@ -375,13 +376,13 @@ proptest! {
     ) {
         let r = make_tfrp(rz, z, rx);
         let s = parse_tfrp_report(&r).unwrap();
-        prop_assert!(s.axes.rudder >= 0.0 && s.axes.rudder <= 1.0, "rudder={}", s.axes.rudder);
+        prop_assert!((0.0..=1.0).contains(&s.axes.rudder), "rudder={}", s.axes.rudder);
         prop_assert!(
-            s.axes.right_pedal >= 0.0 && s.axes.right_pedal <= 1.0,
+            (0.0..=1.0).contains(&s.axes.right_pedal),
             "right_pedal={}", s.axes.right_pedal
         );
         prop_assert!(
-            s.axes.left_pedal >= 0.0 && s.axes.left_pedal <= 1.0,
+            (0.0..=1.0).contains(&s.axes.left_pedal),
             "left_pedal={}", s.axes.left_pedal
         );
     }
@@ -417,9 +418,9 @@ proptest! {
     ) {
         let r = make_tfrp(rz, z, rx);
         let s = parse_tpr_report(&r).unwrap();
-        prop_assert!(s.axes.rudder >= 0.0 && s.axes.rudder <= 1.0);
-        prop_assert!(s.axes.right_pedal >= 0.0 && s.axes.right_pedal <= 1.0);
-        prop_assert!(s.axes.left_pedal >= 0.0 && s.axes.left_pedal <= 1.0);
+        prop_assert!((0.0..=1.0).contains(&s.axes.rudder));
+        prop_assert!((0.0..=1.0).contains(&s.axes.right_pedal));
+        prop_assert!((0.0..=1.0).contains(&s.axes.left_pedal));
     }
 }
 

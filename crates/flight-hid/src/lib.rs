@@ -19,9 +19,17 @@ pub use flight_hid_support::device_support;
 mod fd_safety_tests;
 pub use flight_hid_support::hid_descriptor;
 pub mod calibration;
+pub mod descriptor_parser;
+pub mod device_id;
+pub mod discovery;
+pub mod health_monitor;
 pub mod hid_writer;
 pub mod hotplug;
+pub mod input_viz;
 pub mod ofp1;
+pub mod quirks;
+pub mod report_builder;
+pub mod stable_id;
 pub use hotplug::{
     HotplugEvent, HotplugMonitor, MockHotplugMonitor, ReconnectManager, ReconnectState,
 };

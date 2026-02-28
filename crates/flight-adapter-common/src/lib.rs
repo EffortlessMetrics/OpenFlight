@@ -6,12 +6,14 @@
 pub mod config;
 pub mod error;
 pub mod metrics;
+pub mod reconnect_backoff;
 pub mod reconnection;
 pub mod state;
 
 pub use config::AdapterConfig;
 pub use error::AdapterError;
 pub use metrics::AdapterMetrics;
+pub use reconnect_backoff::ExponentialBackoff;
 pub use reconnection::ReconnectionStrategy;
 pub use state::AdapterState;
 

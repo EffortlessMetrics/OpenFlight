@@ -13,6 +13,7 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 serde_json = "1"
 serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
+toml = "0.8"
 
 [dependencies.flight-profile]
 path = ".."
@@ -35,5 +36,11 @@ doc = false
 [[bin]]
 name = "fuzz_profile_yaml"
 path = "fuzz_targets/fuzz_profile_yaml.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_profile_toml"
+path = "fuzz_targets/fuzz_profile_toml.rs"
 test = false
 doc = false

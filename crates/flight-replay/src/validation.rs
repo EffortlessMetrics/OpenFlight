@@ -561,10 +561,9 @@ mod tests {
     #[tokio::test]
     async fn test_validator_creation() {
         let config = ValidationConfig::default();
-        let validator = ReplayValidator::new(config);
+        let _validator = ReplayValidator::new(config);
 
         // Validator should be created successfully
-        assert!(true);
     }
 
     #[tokio::test]
@@ -583,7 +582,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.test_name, "test_validation");
-        assert!(result.score >= 0.0 && result.score <= 1.0);
+        assert!((0.0..=1.0).contains(&result.score));
     }
 
     #[tokio::test]

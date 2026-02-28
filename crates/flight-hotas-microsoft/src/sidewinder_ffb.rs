@@ -125,19 +125,19 @@ pub const SIDEWINDER_FFB_MIN_REPORT_BYTES: usize = 7;
 /// Normalise a 10-bit centered axis (0..1023) to −1.0..=1.0.
 #[inline]
 fn normalize_10bit_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 511.5) / 511.5
+    ((raw as f32 - 511.5) / 511.5).clamp(-1.0, 1.0)
 }
 
 /// Normalise an 8-bit centered axis (0..255) to −1.0..=1.0.
 #[inline]
 fn normalize_8bit_bipolar(raw: u8) -> f32 {
-    (raw as f32 - 127.5) / 127.5
+    ((raw as f32 - 127.5) / 127.5).clamp(-1.0, 1.0)
 }
 
 /// Normalise an 8-bit unipolar axis (0..255) to 0.0..=1.0.
 #[inline]
 fn normalize_8bit_unipolar(raw: u8) -> f32 {
-    raw as f32 / 255.0
+    (raw as f32 / 255.0).clamp(0.0, 1.0)
 }
 
 /// Internal bit-extraction common to both FFB variants.

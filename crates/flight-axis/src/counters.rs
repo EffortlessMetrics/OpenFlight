@@ -32,6 +32,9 @@ pub struct RuntimeCounters {
     ///
     /// Computed RT-safely as `engine_start_epoch_ns + Instant::elapsed().as_nanos()`.
     last_capability_clamp_ns: AtomicU64,
+    /// Maximum absolute output value observed before a capability clamp (stored as f32 bits).
+    /// Useful for diagnostics — shows how far beyond the limit an axis was driven.
+    max_value_before_clamp: AtomicU32,
     /// UNIX epoch timestamp (ns) captured once at construction — used to derive
     /// wall-clock timestamps from `Instant::elapsed()` on the RT path.
     engine_start_epoch_ns: u64,
@@ -62,6 +65,7 @@ impl RuntimeCounters {
             avg_frame_time_us: AtomicU32::new(0),
             capability_clamp_events: AtomicU64::new(0),
             last_capability_clamp_ns: AtomicU64::new(0),
+            max_value_before_clamp: AtomicU32::new(0),
             engine_start_epoch_ns: epoch_ns,
             created_at,
         }
@@ -118,14 +122,18 @@ impl RuntimeCounters {
         self.rt_lock_acquisitions.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Increment capability clamp counter and record timestamp (RT-safe).
+    /// Increment capability clamp counter, record timestamp, and track max pre-clamp
+    /// value (RT-safe).
+    ///
+    /// `original_abs` is the absolute output value *before* clamping — used for
+    /// diagnostics (tracks the worst-case overshoot observed so far).
     ///
     /// The UNIX-epoch timestamp is derived by adding `Instant::elapsed()` to
     /// the epoch anchor captured at construction time.  This avoids calling
     /// `SystemTime::now()` on the RT path (which would be a syscall), while
     /// still producing a meaningful wall-clock value.
     #[inline(always)]
-    pub fn increment_capability_clamps(&self) {
+    pub fn increment_capability_clamps(&self, original_abs: f32) {
         self.capability_clamp_events.fetch_add(1, Ordering::Relaxed);
         // RT-safe: Instant::elapsed() uses QueryPerformanceCounter (Windows) or
         // VDSO clock_gettime (Linux) — no kernel trap.
@@ -133,6 +141,25 @@ impl RuntimeCounters {
         let now_ns = self.engine_start_epoch_ns.saturating_add(elapsed_ns);
         self.last_capability_clamp_ns
             .store(now_ns, Ordering::Relaxed);
+
+        // Atomically update the maximum pre-clamp value (CAS loop, lock-free).
+        let new_bits = original_abs.to_bits();
+        let mut current = self.max_value_before_clamp.load(Ordering::Relaxed);
+        loop {
+            let current_val = f32::from_bits(current);
+            if original_abs <= current_val {
+                break;
+            }
+            match self.max_value_before_clamp.compare_exchange_weak(
+                current,
+                new_bits,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => break,
+                Err(x) => current = x,
+            }
+        }
     }
 
     /// Get total frames processed
@@ -180,6 +207,12 @@ impl RuntimeCounters {
         self.last_capability_clamp_ns.load(Ordering::Relaxed)
     }
 
+    /// Get the maximum absolute output value observed before any capability clamp.
+    /// Returns 0.0 if no clamp has occurred.
+    pub fn max_value_before_clamp(&self) -> f32 {
+        f32::from_bits(self.max_value_before_clamp.load(Ordering::Relaxed))
+    }
+
     /// Get uptime since counter creation
     pub fn uptime(&self) -> Duration {
         self.created_at.elapsed()
@@ -196,6 +229,7 @@ impl RuntimeCounters {
         self.avg_frame_time_us.store(0, Ordering::Relaxed);
         self.capability_clamp_events.store(0, Ordering::Relaxed);
         self.last_capability_clamp_ns.store(0, Ordering::Relaxed);
+        self.max_value_before_clamp.store(0, Ordering::Relaxed);
     }
 
     /// Check if RT constraints are violated
@@ -386,14 +420,23 @@ mod tests {
         let counters = RuntimeCounters::new();
         assert_eq!(counters.capability_clamp_events(), 0);
         assert_eq!(counters.last_capability_clamp_ns(), 0);
+        assert_eq!(counters.max_value_before_clamp(), 0.0);
 
-        counters.increment_capability_clamps();
+        counters.increment_capability_clamps(0.85);
         assert_eq!(counters.capability_clamp_events(), 1);
         // Timestamp should now be non-zero
         assert!(counters.last_capability_clamp_ns() > 0);
+        assert!((counters.max_value_before_clamp() - 0.85).abs() < f32::EPSILON);
 
-        counters.increment_capability_clamps();
+        counters.increment_capability_clamps(0.75);
         assert_eq!(counters.capability_clamp_events(), 2);
+        // Max should remain 0.85 (higher than 0.75)
+        assert!((counters.max_value_before_clamp() - 0.85).abs() < f32::EPSILON);
+
+        counters.increment_capability_clamps(0.95);
+        assert_eq!(counters.capability_clamp_events(), 3);
+        // Max should now be 0.95
+        assert!((counters.max_value_before_clamp() - 0.95).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -420,7 +463,7 @@ mod tests {
         counters.record_frame_time(Duration::from_micros(100));
         counters.increment_pipeline_swaps();
         counters.increment_deadline_misses();
-        counters.increment_capability_clamps();
+        counters.increment_capability_clamps(0.9);
 
         counters.reset();
 
@@ -429,6 +472,7 @@ mod tests {
         assert_eq!(counters.deadline_misses(), 0);
         assert_eq!(counters.capability_clamp_events(), 0);
         assert_eq!(counters.last_capability_clamp_ns(), 0);
+        assert_eq!(counters.max_value_before_clamp(), 0.0);
         assert_eq!(counters.max_frame_time_us(), 0);
         assert_eq!(counters.avg_frame_time_us(), 0);
     }

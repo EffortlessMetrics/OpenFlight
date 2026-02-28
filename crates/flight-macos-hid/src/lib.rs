@@ -5,36 +5,44 @@
 //!
 //! This crate provides a platform-consistent API for HID device enumeration
 //! and report I/O. On **macOS** the implementation is backed by IOKit's
-//! `IOHIDManager`. On other platforms all methods return
-//! [`HidError::UnsupportedPlatform`] so the workspace compiles everywhere
-//! while the real port lives behind `#[cfg(target_os = "macos")]`.
+//! `IOHIDManager` with real `IOHIDManagerCreate`, device matching/removal
+//! callbacks, `IOHIDDeviceGetProperty` queries, and report-based input via
+//! `IOHIDDeviceRegisterInputReportCallback`.
+//!
+//! On **other platforms** all types compile with a mock/stub backend that
+//! supports device injection and report simulation for cross-platform testing.
 //!
 //! # Usage
 //!
-//! ```no_run
-//! use flight_macos_hid::{HidManager, HidError};
+//! ```
+//! use flight_macos_hid::{MacHidManager, HidError};
 //!
-//! fn main() -> Result<(), HidError> {
-//!     let mut mgr = HidManager::new()?;
-//!     // Match joysticks: usage page 0x01, usage 0x04
-//!     mgr.set_device_matching(0x01, 0x04);
-//!     mgr.open()?;
-//!     for dev in mgr.devices() {
-//!         println!("{:04x}:{:04x} – {}", dev.vendor_id, dev.product_id, dev.product_string);
-//!     }
-//!     Ok(())
+//! # #[cfg(not(target_os = "macos"))]
+//! # {
+//! let mut mgr = MacHidManager::new().expect("create manager");
+//! mgr.set_device_matching(0x01, 0x04); // joysticks
+//! mgr.open().expect("open");
+//! for dev in mgr.devices() {
+//!     println!("{:04x}:{:04x} – {}", dev.vendor_id, dev.product_id, dev.product_string);
 //! }
+//! # }
 //! ```
 
+pub mod callback;
 pub mod device;
 pub mod error;
+#[cfg(target_os = "macos")]
+pub mod ffi;
 pub mod manager;
 pub mod timing;
+pub mod traits;
 
-pub use device::{HidDevice, HidDeviceInfo};
+pub use callback::{HotplugEventQueue, InputReport, InputReportQueue};
+pub use device::{HidDevice, HidDeviceInfo, MacHidDevice};
 pub use error::HidError;
-pub use manager::HidManager;
+pub use manager::{DeviceMatchCriteria, HidManager, MacHidManager};
 pub use timing::MacosClock;
+pub use traits::{MacDeviceScanner, MacHotplugEvent, MacHotplugMonitor, MacInputReportReader};
 
 #[cfg(test)]
 mod tests {
@@ -79,5 +87,15 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn test_all_public_types_accessible() {
+        // Verify that the public API surface is importable.
+        let _: fn() -> Result<super::MacHidManager, super::HidError> = super::MacHidManager::new;
+        let _ = super::DeviceMatchCriteria::default();
+        let _ = super::HotplugEventQueue::new();
+        let _ = super::InputReportQueue::new();
+        let _ = super::MacosClock::new();
     }
 }

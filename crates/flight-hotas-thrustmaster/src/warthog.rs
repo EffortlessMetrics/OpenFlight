@@ -189,13 +189,13 @@ pub const WARTHOG_THROTTLE_MIN_REPORT_BYTES: usize = 18;
 /// Normalize a centered u16 axis (0..65535) to −1.0..=1.0.
 #[inline]
 fn normalize_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 32767.5) / 32767.5
+    ((raw as f32 - 32767.5) / 32767.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize a unipolar u16 axis (0..65535) to 0.0..=1.0.
 #[inline]
 fn normalize_unipolar(raw: u16) -> f32 {
-    raw as f32 / 65535.0
+    (raw as f32 / 65535.0).clamp(0.0, 1.0)
 }
 
 /// Parse a HID input report from the Warthog Joystick.
@@ -301,6 +301,7 @@ mod tests {
         buf
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn throttle_report(
         scx: u16,
         scy: u16,

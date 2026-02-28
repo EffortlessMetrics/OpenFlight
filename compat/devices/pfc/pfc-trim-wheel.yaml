@@ -33,8 +33,8 @@ polling:
   max_jitter_ms: 20
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x04D8 is a placeholder for PFC; field verification required."
+  - id: VID_MICROCHIP_BRIDGE
+    description: "VID 0x04D8 (Microchip Technology) is plausible â PFC devices typically use Microchip USB MCU bridges."
   - id: PID_UNCONFIRMED
     description: "PID 0x0104 is a placeholder; must be verified against real hardware."
   - id: ENCODER_AS_AXIS

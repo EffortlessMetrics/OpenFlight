@@ -30,7 +30,7 @@ proptest! {
         let mut frame = AxisFrame::new(input, 1_000_000);
         curve.step(&mut frame);
         prop_assert!(
-            frame.out >= -1.0 && frame.out <= 1.0,
+            (-1.0..=1.0).contains(&frame.out),
             "curve output {} out of [-1, 1] for input={}, expo={}",
             frame.out, input, expo
         );
@@ -133,7 +133,7 @@ proptest! {
         let mut frame = AxisFrame::new(input, 1_000_000);
         deadzone.step(&mut frame);
         prop_assert!(
-            frame.out >= -1.0 && frame.out <= 1.0,
+            (-1.0..=1.0).contains(&frame.out),
             "deadzone output {} out of [-1, 1] for input={}, threshold={}",
             frame.out, input, threshold
         );
@@ -154,7 +154,7 @@ proptest! {
         let mut out = 0.0f32;
         mixer.process_inputs(&[val_a, val_b], &mut out);
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "mixer clamped output {} out of [-1, 1]",
             out
         );
@@ -222,5 +222,364 @@ proptest! {
                 pos_below, center, half_width
             );
         }
+    }
+}
+
+// ── Additional property tests: curve, scale, normalize, invert ──────────────
+
+use crate::{
+    curve::{ControlPoint, ExpoCurveConfig, InterpolationMode, ResponseCurve},
+    deadzone::{AsymmetricDeadzoneConfig, DeadzoneConfig, DeadzoneProcessor},
+    invert::AxisInvert,
+    normalize::{AxisNormalizer, NormalizeConfig},
+    scale::AxisScale,
+};
+
+proptest! {
+    // ── ExpoCurveConfig invariants ──────────────────────────────────────────
+
+    /// ExpoCurveConfig.apply() always returns values in [-1.0, 1.0].
+    #[test]
+    fn expo_output_always_bounded(
+        input in -2.0f32..=2.0f32,
+        expo in -1.0f32..=1.0f32,
+    ) {
+        let cfg = ExpoCurveConfig::new(expo);
+        let out = cfg.apply(input);
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "expo output {} out of [-1, 1] for input={}, expo={}",
+            out, input, expo
+        );
+    }
+
+    /// ExpoCurveConfig is monotone: for a <= b, apply(a) <= apply(b).
+    #[test]
+    fn expo_is_monotone(
+        a in -1.0f32..=1.0f32,
+        b in -1.0f32..=1.0f32,
+        expo in -1.0f32..=1.0f32,
+    ) {
+        let (lo, hi) = if a <= b { (a, b) } else { (b, a) };
+        let cfg = ExpoCurveConfig::new(expo);
+        let out_lo = cfg.apply(lo);
+        let out_hi = cfg.apply(hi);
+        prop_assert!(
+            out_lo <= out_hi + 1e-5,
+            "expo monotonicity violated: apply({})={} > apply({})={} with expo={}",
+            lo, out_lo, hi, out_hi, expo
+        );
+    }
+
+    /// ExpoCurveConfig is an odd function: apply(-x) == -apply(x).
+    #[test]
+    fn expo_is_antisymmetric(
+        input in -1.0f32..=1.0f32,
+        expo in -1.0f32..=1.0f32,
+    ) {
+        let cfg = ExpoCurveConfig::new(expo);
+        let pos = cfg.apply(input);
+        let neg = cfg.apply(-input);
+        prop_assert!(
+            (pos + neg).abs() < 1e-5,
+            "expo antisymmetry violated: apply({})={}, apply({})={}, sum={}",
+            input, pos, -input, neg, pos + neg
+        );
+    }
+
+    // ── ResponseCurve invariants ────────────────────────────────────────────
+
+    /// ResponseCurve.evaluate() always returns [0.0, 1.0] for any input,
+    /// regardless of interpolation mode.
+    #[test]
+    fn response_curve_output_bounded(
+        x in -0.5f32..=1.5f32,
+        mid_y in 0.0f32..=1.0f32,
+        mode_idx in 0u8..3u8,
+    ) {
+        let mode = match mode_idx {
+            0 => InterpolationMode::Linear,
+            1 => InterpolationMode::CubicHermite,
+            _ => InterpolationMode::MonotoneCubic,
+        };
+        let curve = ResponseCurve::from_points(
+            vec![
+                ControlPoint::new(0.0, 0.0),
+                ControlPoint::new(0.5, mid_y),
+                ControlPoint::new(1.0, 1.0),
+            ],
+            mode,
+        )
+        .unwrap();
+        let y = curve.evaluate(x);
+        prop_assert!(
+            (0.0..=1.0).contains(&y),
+            "ResponseCurve output {} out of [0, 1] for x={}, mid_y={}, mode={:?}",
+            y, x, mid_y, mode
+        );
+    }
+
+    /// MonotoneCubic preserves monotonicity for arbitrary non-decreasing control points.
+    #[test]
+    fn response_curve_monotone_cubic_preserves_order(
+        a_raw in 0.0f32..=0.5f32,
+        b_raw in 0.0f32..=0.5f32,
+        y0 in 0.0f32..=0.3f32,
+        y1 in 0.3f32..=0.7f32,
+        y2 in 0.7f32..=1.0f32,
+    ) {
+        let (lo, hi) = if a_raw <= b_raw { (a_raw, b_raw) } else { (b_raw, a_raw) };
+        let curve = ResponseCurve::from_points(
+            vec![
+                ControlPoint::new(0.0, y0),
+                ControlPoint::new(0.5, y1),
+                ControlPoint::new(1.0, y2),
+            ],
+            InterpolationMode::MonotoneCubic,
+        )
+        .unwrap();
+        let out_lo = curve.evaluate(lo);
+        let out_hi = curve.evaluate(hi);
+        prop_assert!(
+            out_lo <= out_hi + 1e-5,
+            "monotone cubic violated: evaluate({})={} > evaluate({})={} with points y=[{},{},{}]",
+            lo, out_lo, hi, out_hi, y0, y1, y2
+        );
+    }
+
+    // ── AxisScale invariants ────────────────────────────────────────────────
+
+    /// AxisScale.apply() output is always within [min, max].
+    #[test]
+    fn scale_output_within_bounds(
+        input in -2.0f32..=2.0f32,
+        factor in -3.0f32..=3.0f32,
+    ) {
+        prop_assume!(factor.is_finite());
+        let scale = AxisScale::new(factor, -1.0, 1.0).unwrap();
+        let out = scale.apply(input);
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "AxisScale output {} out of [-1, 1] for input={}, factor={}",
+            out, input, factor
+        );
+    }
+
+    /// Default AxisScale is the identity for inputs in [-1.0, 1.0].
+    #[test]
+    fn scale_default_is_identity(input in -1.0f32..=1.0f32) {
+        let scale = AxisScale::default();
+        let out = scale.apply(input);
+        prop_assert!(
+            (out - input).abs() < f32::EPSILON * 4.0,
+            "default scale should be identity: input={}, output={}",
+            input, out
+        );
+    }
+
+    // ── AxisNormalizer invariants ────────────────────────────────────────────
+
+    /// AxisNormalizer.process() always returns values in [-1.0, 1.0].
+    #[test]
+    fn normalizer_output_always_bounded(input in -100.0f32..=100.0f32) {
+        let mut norm = AxisNormalizer::new(NormalizeConfig::default());
+        let out = norm.process(input);
+        prop_assert!(
+            (-1.0..=1.0).contains(&out),
+            "normalizer output {} out of [-1, 1] for input={}",
+            out, input
+        );
+    }
+
+    /// AxisNormalizer sanitizes NaN and Inf to 0.0.
+    #[test]
+    fn normalizer_sanitizes_nonfinite(
+        mode in 0u8..3u8,
+    ) {
+        let input = match mode {
+            0 => f32::NAN,
+            1 => f32::INFINITY,
+            _ => f32::NEG_INFINITY,
+        };
+        let mut norm = AxisNormalizer::new(NormalizeConfig::default());
+        let out = norm.process(input);
+        prop_assert_eq!(out, 0.0, "non-finite input {} should map to 0.0, got {}", input, out);
+        prop_assert_eq!(norm.nan_count(), 1);
+    }
+
+    // ── AxisInvert invariants ───────────────────────────────────────────────
+
+    /// Applying inversion twice is the identity.
+    #[test]
+    fn invert_is_involution(input in -1.0f32..=1.0f32) {
+        let inv = AxisInvert::new(true);
+        let once = inv.apply(input);
+        let twice = inv.apply(once);
+        prop_assert!(
+            (twice - input).abs() < f32::EPSILON,
+            "invert is not involution: input={}, once={}, twice={}",
+            input, once, twice
+        );
+    }
+
+    /// Disabled inversion is the identity.
+    #[test]
+    fn invert_disabled_is_identity(input in -1.0f32..=1.0f32) {
+        let inv = AxisInvert::new(false);
+        let out = inv.apply(input);
+        prop_assert_eq!(out, input, "disabled invert should be identity");
+    }
+
+    // ── Deadzone symmetry (symmetric AsymmetricDeadzoneConfig) ──────────────
+
+    /// AsymmetricDeadzoneConfig::symmetric behaves antisymmetrically: apply(-x) == -apply(x).
+    #[test]
+    fn asymmetric_dz_symmetric_is_antisymmetric(
+        input in 0.0f32..=1.0f32,
+        width in 0.0f32..=0.99f32,
+    ) {
+        let cfg = AsymmetricDeadzoneConfig::symmetric(width);
+        let pos = cfg.apply(input);
+        let neg = cfg.apply(-input);
+        prop_assert!(
+            (pos + neg).abs() < 1e-5,
+            "symmetric AsymmetricDZ antisymmetry violated: apply({})={}, apply({})={}",
+            input, pos, -input, neg
+        );
+    }
+}
+
+// ── Additional property tests: filter convergence, expo origin, deadzone non-zero ─
+
+use crate::smoothing::{AdaptiveEmaConfig, AdaptiveEmaSmoother, EmaFilter};
+
+proptest! {
+    // ── EmaFilter convergence ───────────────────────────────────────────────
+
+    /// EmaFilter output converges to constant input: after many iterations
+    /// of the same value, the filter output is within epsilon of that value.
+    #[test]
+    fn ema_filter_converges_to_constant_input(
+        alpha in 0.01f32..=1.0f32,
+        target in -1.0f32..=1.0f32,
+    ) {
+        let mut filter = EmaFilter::new(alpha);
+        for _ in 0..200 {
+            filter.apply(target);
+        }
+        prop_assert!(
+            (filter.state() - target).abs() < 1e-3,
+            "EmaFilter(alpha={}) did not converge to {}: state={}",
+            alpha, target, filter.state()
+        );
+    }
+
+    /// EmaFilter output is always bounded by min/max of inputs seen so far.
+    #[test]
+    fn ema_filter_output_bounded_by_inputs(
+        alpha in 0.0f32..=1.0f32,
+        v1 in -1.0f32..=1.0f32,
+        v2 in -1.0f32..=1.0f32,
+        v3 in -1.0f32..=1.0f32,
+    ) {
+        let mut filter = EmaFilter::new(alpha);
+        let inputs = [v1, v2, v3];
+        let lo = inputs.iter().copied().reduce(f32::min).unwrap();
+        let hi = inputs.iter().copied().reduce(f32::max).unwrap();
+        for &inp in &inputs {
+            let out = filter.apply(inp);
+            prop_assert!(
+                out >= lo - 1e-5 && out <= hi + 1e-5,
+                "EmaFilter output {} outside input range [{}, {}]",
+                out, lo, hi
+            );
+        }
+    }
+
+    // ── AdaptiveEmaSmoother convergence ─────────────────────────────────────
+
+    /// AdaptiveEmaSmoother converges to constant input after many iterations.
+    #[test]
+    fn adaptive_ema_converges_to_constant(
+        target in -1.0f32..=1.0f32,
+    ) {
+        let config = AdaptiveEmaConfig::default();
+        let mut smoother = AdaptiveEmaSmoother::new(config).unwrap();
+        for _ in 0..2000 {
+            smoother.process(target);
+        }
+        prop_assert!(
+            (smoother.current_output() - target).abs() < 1e-2,
+            "AdaptiveEma did not converge to {}: output={}",
+            target, smoother.current_output()
+        );
+    }
+
+    // ── Expo curves pass through origin ─────────────────────────────────────
+
+    /// ExpoCurveConfig always maps 0.0 → 0.0 (passes through origin).
+    #[test]
+    fn expo_passes_through_origin(
+        expo in -1.0f32..=1.0f32,
+    ) {
+        let cfg = ExpoCurveConfig::new(expo);
+        let out = cfg.apply(0.0);
+        prop_assert!(
+            out.abs() < 1e-6,
+            "expo(0.0) should be 0.0, got {} with expo={}",
+            out, expo
+        );
+    }
+
+    // ── Deadzone: non-zero outside range ────────────────────────────────────
+
+    /// DeadzoneProcessor produces non-zero output for inputs well outside the deadzone.
+    #[test]
+    fn deadzone_nonzero_outside_range(
+        threshold in 0.0f32..=0.4f32,
+        input in 0.5f32..=1.0f32,
+    ) {
+        prop_assume!(input > threshold + 0.05);
+        let cfg = DeadzoneConfig::center_only(threshold).unwrap();
+        let proc = DeadzoneProcessor::new(cfg);
+        let out = proc.apply(input);
+        prop_assert!(
+            out > 0.0,
+            "deadzone output should be positive for input={} > threshold={}, got {}",
+            input, threshold, out
+        );
+    }
+
+    /// DeadzoneProcessor produces non-zero negative output for large negative inputs.
+    #[test]
+    fn deadzone_nonzero_negative_outside_range(
+        threshold in 0.0f32..=0.4f32,
+        input in 0.5f32..=1.0f32,
+    ) {
+        prop_assume!(input > threshold + 0.05);
+        let cfg = DeadzoneConfig::center_only(threshold).unwrap();
+        let proc = DeadzoneProcessor::new(cfg);
+        let out = proc.apply(-input);
+        prop_assert!(
+            out < 0.0,
+            "deadzone output should be negative for input={} < -threshold={}, got {}",
+            -input, threshold, out
+        );
+    }
+
+    // ── ResponseCurve: linear identity ──────────────────────────────────────
+
+    /// ResponseCurve::linear_identity() is the identity for inputs in [0, 1].
+    #[test]
+    fn response_curve_linear_identity(
+        x in 0.0f32..=1.0f32,
+    ) {
+        let curve = ResponseCurve::linear_identity();
+        let y = curve.evaluate(x);
+        prop_assert!(
+            (y - x).abs() < 1e-4,
+            "linear_identity: evaluate({})={}, expected {}",
+            x, y, x
+        );
     }
 }

@@ -1,0 +1,15 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: ctx
+---
+{
+  "mode": "Demo",
+  "limits": {
+    "max_axis_output": 0.8,
+    "max_ffb_torque": 20.0,
+    "allow_high_torque": false,
+    "max_expo": 0.6,
+    "max_slew_rate": 50.0
+  },
+  "audit_enabled": false
+}

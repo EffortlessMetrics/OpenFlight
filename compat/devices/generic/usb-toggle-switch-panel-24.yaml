@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "USB Toggle Switch Panel 24-Position"
+  usb:
+    vid: "0x1B4F"
+    pid: "0x9302"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Generic 24-position USB toggle switch panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

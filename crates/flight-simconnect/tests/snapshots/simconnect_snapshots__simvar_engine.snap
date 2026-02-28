@@ -1,0 +1,111 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: vars
+---
+[
+    (
+        "ENG EXHAUST GAS TEMPERATURE:1",
+        "rankine",
+        false,
+    ),
+    (
+        "ENG FUEL FLOW GPH:1",
+        "gallons per hour",
+        false,
+    ),
+    (
+        "ENG FUEL FLOW GPH:2",
+        "gallons per hour",
+        false,
+    ),
+    (
+        "ENG ITT:1",
+        "rankine",
+        false,
+    ),
+    (
+        "ENG N1 RPM:1",
+        "percent",
+        false,
+    ),
+    (
+        "ENG N1 RPM:2",
+        "percent",
+        false,
+    ),
+    (
+        "ENG N2 RPM:1",
+        "percent",
+        false,
+    ),
+    (
+        "ENG N2 RPM:2",
+        "percent",
+        false,
+    ),
+    (
+        "ENG OIL PRESSURE:1",
+        "psf",
+        false,
+    ),
+    (
+        "ENG OIL TEMPERATURE:1",
+        "rankine",
+        false,
+    ),
+    (
+        "ENG TORQUE PERCENT:1",
+        "percent",
+        false,
+    ),
+    (
+        "GENERAL ENG MIXTURE LEVER POSITION:1",
+        "percent",
+        true,
+    ),
+    (
+        "GENERAL ENG MIXTURE LEVER POSITION:2",
+        "percent",
+        true,
+    ),
+    (
+        "GENERAL ENG RPM:1",
+        "rpm",
+        false,
+    ),
+    (
+        "GENERAL ENG RPM:2",
+        "rpm",
+        false,
+    ),
+    (
+        "GENERAL ENG THROTTLE LEVER POSITION:1",
+        "percent",
+        true,
+    ),
+    (
+        "GENERAL ENG THROTTLE LEVER POSITION:2",
+        "percent",
+        true,
+    ),
+    (
+        "PROP RPM:1",
+        "rpm",
+        false,
+    ),
+    (
+        "PROP RPM:2",
+        "rpm",
+        false,
+    ),
+    (
+        "TURB ENG CORRECTED N1:1",
+        "percent",
+        false,
+    ),
+    (
+        "TURB ENG CORRECTED N1:2",
+        "percent",
+        false,
+    ),
+]

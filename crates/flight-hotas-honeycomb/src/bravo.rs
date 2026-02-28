@@ -191,7 +191,7 @@ pub enum BravoParseError {
 /// Normalise a 12-bit unsigned value to \[0.0, 1.0\].
 fn norm_12bit_unipolar(raw: u16) -> f32 {
     let raw = raw.min(4095);
-    raw as f32 / 4095.0
+    (raw as f32 / 4095.0).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]
@@ -280,8 +280,8 @@ mod tests {
                 let state = parse_bravo_report(&super::bravo_report(
                     [t1, t2, 0, 0, 0, 0, 0], 0
                 )).unwrap();
-                prop_assert!(state.axes.throttle1 >= 0.0 && state.axes.throttle1 <= 1.0001);
-                prop_assert!(state.axes.throttle2 >= 0.0 && state.axes.throttle2 <= 1.0001);
+                prop_assert!((0.0..=1.0001).contains(&state.axes.throttle1));
+                prop_assert!((0.0..=1.0001).contains(&state.axes.throttle2));
             }
 
             #[test]

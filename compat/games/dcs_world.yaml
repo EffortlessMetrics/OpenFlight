@@ -1,0 +1,55 @@
+# DCS World — Export Script Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "DCS World"
+  id: dcs_world
+  developer: "Eagle Dynamics"
+
+integration:
+  mechanism: "Lua Export Script + UDP"
+  crate: flight-dcs-export
+  protocol_notes: >
+    DCS World exposes simulation data through a Lua export script installed in
+    Saved Games/DCS/Scripts/Export.lua. The script sends structured UDP packets
+    to OpenFlight on localhost. Telemetry is read-only; DCS does not expose a
+    public control injection API.
+
+supported_versions:
+  - "DCS World 2.8.x"
+  - "DCS World 2.9.x"
+
+version_notes:
+  notes: >
+    The Lua Export script format (LoGetSelfData, LoGetObjectById, etc.) is
+    consistent across DCS World 2.8 and 2.9. No version-specific branches are
+    required in the export hook. Newer 2.9 builds may expose additional module
+    data tables, but unrecognised keys are silently ignored by the parser.
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false
+  force_feedback_translation: false
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: false
+  integration_tests: false
+  fuzz_coverage: true
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: EXPORT_SCRIPT_INSTALL
+    description: >
+      Users must manually install or the installer must place the Export.lua hook.
+      The installer reference documents the required file locations.
+  - id: NO_CONTROL_INJECTION
+    description: >
+      DCS does not expose a control injection API. HOTAS inputs are handled
+      via standard DirectInput device binding inside DCS.

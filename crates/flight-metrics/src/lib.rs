@@ -6,10 +6,15 @@
 pub mod collector;
 pub mod common;
 pub mod dashboard;
+pub mod export;
+pub mod prometheus_export;
 pub mod registry;
 pub mod types;
 
 pub use collector::MetricsCollector;
-pub use dashboard::{DashboardSnapshot, FfbMetrics, MetricsDashboard, RtMetrics, SimMetrics};
+pub use dashboard::{
+    AxisMetrics, BusMetrics, DashboardSnapshot, DeviceMetrics, FfbMetrics, MetricsDashboard,
+    RtMetrics, SimMetrics, WatchdogMetrics,
+};
 pub use registry::MetricsRegistry;
 pub use types::{HistogramSummary, Metric};

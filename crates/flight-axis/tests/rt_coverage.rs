@@ -353,7 +353,7 @@ proptest! {
     ) {
         let out = combine_differential(left, right);
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "combine_differential({left}, {right}) = {out} out of [-1, 1]"
         );
     }

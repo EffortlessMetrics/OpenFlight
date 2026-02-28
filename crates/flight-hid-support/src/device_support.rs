@@ -414,6 +414,24 @@ pub const VIRPIL_WARBRD_PID: u16 = 0x40CC;
 /// `ID 3344:43f5 Leaguer Microelectronics (LME) R-VPC Stick WarBRD-D`.
 pub const VIRPIL_WARBRD_D_PID: u16 = 0x43F5;
 
+/// USB Product ID for the VIRPIL VPC ACE Torq (single-axis throttle quadrant).
+///
+/// Source: community-documented PID from linux-hardware.org probe data
+/// ("VPC ACE Torq", VID 0x3344). HIL validation pending.
+pub const VIRPIL_ACE_TORQ_PID: u16 = 0x0198;
+
+/// USB Product ID for the VIRPIL VPC ACE Collection Pedals (rudder + toe brakes).
+///
+/// Source: community-documented PID from linux-hardware.org probe data
+/// ("VPC ACE Pedals", VID 0x3344). HIL validation pending.
+pub const VIRPIL_ACE_PEDALS_PID: u16 = 0x019C;
+
+/// USB Product ID for the VIRPIL VPC Rotor TCS Plus (helicopter collective).
+///
+/// Source: community-documented PID from linux-hardware.org probe data
+/// ("VPC Rotor TCS Plus", VID 0x3344). HIL validation pending.
+pub const VIRPIL_ROTOR_TCS_PLUS_PID: u16 = 0x01A0;
+
 /// USB Vendor ID for CH Products.
 ///
 /// Source: Linux kernel `drivers/hid/hid-ids.h`
@@ -1128,6 +1146,12 @@ pub enum VirpilModel {
     WarBrd,
     /// VPC WarBRD-D (revised right-hand base). VID 0x3344, PID 0x43F5.
     WarBrdD,
+    /// VPC ACE Torq (single-axis throttle quadrant). VID 0x3344, PID 0x0198.
+    AceTorq,
+    /// VPC ACE Collection Pedals (rudder + toe brakes). VID 0x3344, PID 0x019C.
+    AcePedals,
+    /// VPC Rotor TCS Plus (helicopter collective). VID 0x3344, PID 0x01A0.
+    RotorTcsPlus,
 }
 
 impl VirpilModel {
@@ -1145,6 +1169,9 @@ impl VirpilModel {
             VirpilModel::ConstellationAlphaPrimeRight => "VPC Constellation Alpha Prime Right",
             VirpilModel::WarBrd => "VPC WarBRD Stick",
             VirpilModel::WarBrdD => "VPC WarBRD-D Stick",
+            VirpilModel::AceTorq => "VPC ACE Torq",
+            VirpilModel::AcePedals => "VPC ACE Collection Pedals",
+            VirpilModel::RotorTcsPlus => "VPC Rotor TCS Plus",
         }
     }
 }
@@ -1166,6 +1193,9 @@ pub fn is_virpil_device(vendor_id: u16, product_id: u16) -> bool {
                 | VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID
                 | VIRPIL_WARBRD_PID
                 | VIRPIL_WARBRD_D_PID
+                | VIRPIL_ACE_TORQ_PID
+                | VIRPIL_ACE_PEDALS_PID
+                | VIRPIL_ROTOR_TCS_PLUS_PID
         )
 }
 
@@ -1186,6 +1216,9 @@ pub fn virpil_model(product_id: u16) -> Option<VirpilModel> {
         }
         VIRPIL_WARBRD_PID => Some(VirpilModel::WarBrd),
         VIRPIL_WARBRD_D_PID => Some(VirpilModel::WarBrdD),
+        VIRPIL_ACE_TORQ_PID => Some(VirpilModel::AceTorq),
+        VIRPIL_ACE_PEDALS_PID => Some(VirpilModel::AcePedals),
+        VIRPIL_ROTOR_TCS_PLUS_PID => Some(VirpilModel::RotorTcsPlus),
         _ => None,
     }
 }

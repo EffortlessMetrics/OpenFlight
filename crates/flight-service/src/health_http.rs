@@ -125,10 +125,7 @@ mod tests {
 
     #[test]
     fn test_health_status_serialization() {
-        assert_eq!(
-            serde_json::to_string(&HealthStatus::Ok).unwrap(),
-            r#""ok""#
-        );
+        assert_eq!(serde_json::to_string(&HealthStatus::Ok).unwrap(), r#""ok""#);
         assert_eq!(
             serde_json::to_string(&HealthStatus::Degraded).unwrap(),
             r#""degraded""#

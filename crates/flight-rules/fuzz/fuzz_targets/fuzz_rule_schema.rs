@@ -24,7 +24,8 @@ fuzz_target!(|data: &[u8]| {
     };
 
     // Split input in half: first half → condition, second half → action.
-    let mid = input.len() / 2;
+    // Ensure the split point is on a char boundary to avoid panicking.
+    let mid = input.floor_char_boundary(input.len() / 2);
     let (cond_str, action_str) = input.split_at(mid);
 
     // Fixed hysteresis entry so the compiler exercises the hysteresis path.

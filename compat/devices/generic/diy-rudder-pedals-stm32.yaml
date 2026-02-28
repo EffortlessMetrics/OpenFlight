@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY STM32 Rudder Pedals"
+  usb:
+    vid: "0x0483"
+    pid: "0x5751"
+  type: "rudder"
+capabilities:
+  axes: 3
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY STM32-based rudder pedals with Hall effect sensors."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

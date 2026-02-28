@@ -1,0 +1,45 @@
+# CPFlight Throttle Quadrant Pro
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Professional throttle quadrant with motorized trim indicators.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight Throttle Quadrant Pro"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0CD0
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [engine1, engine2, speedbrake, flap_lever]
+    resolution_bits: 16
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0CD0 community estimate."
+  - id: MOTORIZED_TRIM
+    description: "Motorized trim wheel indicator for visual feedback."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight Throttle Quadrant Pro with motorized trim. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

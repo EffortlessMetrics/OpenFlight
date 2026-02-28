@@ -5,7 +5,6 @@
 
 use crate::{AxisPipelineState, FlightWorld, SchedulerState};
 use cucumber::{given, then, when};
-use std::time::{Duration, Instant};
 
 // AC-1.1: Processing latency under load
 
@@ -139,7 +138,7 @@ fn simulate_scheduler_jitter(rate_hz: u32, duration_secs: u64, warmup_secs: u64)
     let mut measurements = Vec::with_capacity(num_samples);
 
     // Expected interval in milliseconds
-    let expected_interval_ms = 1000.0 / rate_hz as f64;
+    let _expected_interval_ms = 1000.0 / rate_hz as f64;
 
     for i in 0..num_samples {
         // Simulate jitter with realistic distribution
@@ -156,7 +155,7 @@ fn calculate_percentile(data: &[f64], percentile: f64) -> f64 {
         "Cannot calculate percentile of empty data"
     );
     assert!(
-        percentile >= 0.0 && percentile <= 100.0,
+        (0.0..=100.0).contains(&percentile),
         "Percentile must be between 0 and 100"
     );
 
@@ -169,7 +168,8 @@ fn calculate_percentile(data: &[f64], percentile: f64) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    #[allow(unused_imports)]
+    use super::calculate_percentile;
 
     #[test]
     fn test_calculate_percentile() {
@@ -198,7 +198,7 @@ mod tests {
 
         // Verify jitter measurements are in reasonable range
         for &jitter in &measurements {
-            assert!(jitter >= 0.0 && jitter < 1.0);
+            assert!((0.0..1.0).contains(&jitter));
         }
     }
 }

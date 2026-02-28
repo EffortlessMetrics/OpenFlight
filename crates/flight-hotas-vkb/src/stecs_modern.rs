@@ -301,10 +301,10 @@ mod tests {
         ) {
             let report = make_report(throttle, mini_left, mini_right, rotary, 0, 0);
             let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
-            prop_assert!(state.axes.throttle   >= 0.0 && state.axes.throttle   <= 1.0);
-            prop_assert!(state.axes.mini_left  >= 0.0 && state.axes.mini_left  <= 1.0);
-            prop_assert!(state.axes.mini_right >= 0.0 && state.axes.mini_right <= 1.0);
-            prop_assert!(state.axes.rotary     >= 0.0 && state.axes.rotary     <= 1.0);
+            prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
+            prop_assert!((0.0..=1.0).contains(&state.axes.mini_left));
+            prop_assert!((0.0..=1.0).contains(&state.axes.mini_right));
+            prop_assert!((0.0..=1.0).contains(&state.axes.rotary));
         }
 
         #[test]

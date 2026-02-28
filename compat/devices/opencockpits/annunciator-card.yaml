@@ -1,0 +1,50 @@
+# OpenCockpits Annunciator Card
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0408 estimated for Annunciator Card.
+# OpenCockpits annunciator output card for LED indicator control.
+schema_version: "1"
+
+device:
+  name: "OpenCockpits Annunciator Card"
+  vendor: "OpenCockpits"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0408
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: OUTPUT_ONLY_CARD
+    description: >
+      Output-only card for driving LED annunciators and indicators.
+      No input buttons — purely drives LEDs via USB HID output reports.
+      Part of the OpenCockpits IOCards ecosystem.
+  - id: IOCARDS_ECOSYSTEM
+    description: >
+      Uses OpenCockpits SIOC protocol. Requires SIOC software for
+      configuration and sim variable mapping.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    OpenCockpits Annunciator Card. PID 0x0408 estimated.
+    Part of IOCards ecosystem. Last reviewed: 2026-06.

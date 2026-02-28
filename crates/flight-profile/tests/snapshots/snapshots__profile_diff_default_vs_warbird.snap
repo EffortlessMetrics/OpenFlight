@@ -1,0 +1,28 @@
+---
+source: crates/flight-profile/tests/snapshots.rs
+expression: diff.to_text()
+---
+Profile diff: default_flight vs warbird
+Changes: 22 added, 0 removed, 0 changed
+  + axes.mixture.curve[0].input: 0.0
+  + axes.mixture.curve[0].output: 0.0
+  + axes.mixture.curve[1].input: 1.0
+  + axes.mixture.curve[1].output: 1.0
+  + axes.mixture.deadzone: 0.009999999776482582
+  + axes.mixture.detents[0].position: 0.0
+  + axes.mixture.detents[0].role: cutoff
+  + axes.mixture.detents[0].width: 0.029999999329447746
+  + axes.mixture.detents[1].position: 1.0
+  + axes.mixture.detents[1].role: full_rich
+  + axes.mixture.detents[1].width: 0.029999999329447746
+  + axes.mixture.expo: null
+  + axes.mixture.filter: null
+  + axes.mixture.slew_rate: 3.0
+  + axes.prop_pitch.curve[0].input: 0.0
+  + axes.prop_pitch.curve[0].output: 0.0
+  + axes.prop_pitch.curve[1].input: 1.0
+  + axes.prop_pitch.curve[1].output: 1.0
+  + axes.prop_pitch.deadzone: 0.009999999776482582
+  + axes.prop_pitch.expo: null
+  + axes.prop_pitch.filter: null
+  + axes.prop_pitch.slew_rate: 3.0

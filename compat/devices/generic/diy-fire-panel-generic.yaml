@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY Generic Fire Control Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xEC14"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 8
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY generic fire test and suppression panel for cockpit builds."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

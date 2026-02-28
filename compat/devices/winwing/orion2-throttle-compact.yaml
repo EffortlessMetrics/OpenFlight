@@ -1,0 +1,45 @@
+# WinWing Orion2 Throttle Compact
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Compact desktop version of the Orion2 throttle.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion2 Throttle Compact"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0235
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 4
+    names: [left_throttle, right_throttle, speedbrake, flaps]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed WinWing. PID 0x0235 community estimate."
+  - id: COMPACT_FORM
+    description: "Desktop-sized throttle. Reduced button count vs full Orion2."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion2 Throttle Compact. Desktop form factor. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

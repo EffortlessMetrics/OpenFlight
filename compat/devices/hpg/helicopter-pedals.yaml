@@ -1,0 +1,45 @@
+# HPG Helicopter Anti-Torque Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Helicopter-specific anti-torque pedals with wide throw.
+
+schema_version: "1"
+
+device:
+  name: "HPG Helicopter Anti-Torque Pedals"
+  vendor: "HPG Simulation"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xF015
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 1
+    names: [rudder]
+    resolution_bits: 12
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xF015 community estimate."
+  - id: ANTI_TORQUE
+    description: "Helicopter pedal geometry with wider travel range than fixed-wing rudder."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    HPG helicopter anti-torque pedals. Wide throw for rotary-wing. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

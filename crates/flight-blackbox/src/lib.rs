@@ -9,6 +9,9 @@
 //! - Zero-drop guarantee for 10-minute captures
 //! - Size target <30MB/3min
 
+pub mod analysis;
+pub mod export;
+pub mod recorder;
 mod time;
 
 pub use time::to_ns_from_ms;

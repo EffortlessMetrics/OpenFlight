@@ -956,7 +956,7 @@ mod tests {
         for (name, config) in presets {
             let ms = config.debounce_threshold.as_millis();
             assert!(
-                ms >= 10 && ms <= 50,
+                (10..=50).contains(&ms),
                 "Preset {} has debounce {}ms outside valid 10-50ms range",
                 name,
                 ms

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "MOZA Racing"
+  name: "MOZA R5 Direct Drive Base"
+  usb:
+    vid: "0x346E"
+    pid: "0x0010"
+  type: "wheel"
+capabilities:
+  axes: 3
+  buttons: 12
+  hats: 1
+  ffb: true
+support:
+  tier: 2
+  notes: "MOZA R5 entry-level direct drive base for flight sim."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

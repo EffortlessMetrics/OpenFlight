@@ -1,3 +1,4 @@
+#![cfg(windows)]
 //! Integration tests for MSFS SimConnect adapter
 //!
 //! These tests validate the adapter functionality using recorded session fixtures
@@ -172,7 +173,7 @@ fn test_variable_mapping_configuration() {
     assert!(!config.default_mapping.engines.is_empty());
     assert_eq!(config.update_rates.kinematics, 60.0);
 
-    let mapping = VariableMapping::new(config);
+    let _mapping = VariableMapping::new(config);
     // Basic creation test - more detailed tests would require SimConnect connection
 }
 
@@ -348,7 +349,7 @@ fn test_conditional_60hz_target() {
     // This is enforced through the publish_rate configuration
     let min_interval = Duration::from_secs_f32(1.0 / config.publish_rate);
     // ~16.67ms for 60 Hz (allow for floating point precision)
-    assert!(min_interval.as_millis() >= 16 && min_interval.as_millis() <= 17);
+    assert!((16..=17).contains(&min_interval.as_millis()));
 }
 
 /// Test aircraft change detection via TITLE SimVar
@@ -439,9 +440,11 @@ async fn test_adapter_lifecycle_with_fixtures() {
 /// Requirements: SIM-TEST-01.7
 #[tokio::test]
 async fn test_reconnection_behavior() {
-    let mut config = MsfsAdapterConfig::default();
-    config.auto_reconnect = true;
-    config.max_reconnect_attempts = 3;
+    let config = MsfsAdapterConfig {
+        auto_reconnect: true,
+        max_reconnect_attempts: 3,
+        ..Default::default()
+    };
 
     match MsfsAdapter::new(config) {
         Ok(adapter) => {

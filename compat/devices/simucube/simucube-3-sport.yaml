@@ -12,8 +12,8 @@ device:
   name: "Simucube 3 Sport"
   vendor: "Granite Devices (Simucube)"
   usb:
-    vendor_id: 0x16D0   # Granite Devices MCS USB VID (confirmed for SC2 series)
-    product_id: 0x0D70  # Placeholder — PID_UNCONFIRMED for SC3 Sport
+    vendor_id: 0x16D0   # Granite Devices â confirmed in USB ID database (SC2 and SC3)
+    product_id: 0x0D70  # Estimated — PID_UNCONFIRMED for SC3 Sport; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick

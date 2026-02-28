@@ -20,17 +20,47 @@
 //! - Clear UI messaging when features are unavailable
 
 pub mod adapter;
+pub mod adapter_state;
+pub mod aircraft_db;
+pub mod aircraft_detection;
 pub mod auto_deploy;
+pub mod control_injection;
 pub mod export_lua;
 pub mod installer;
+pub mod lua_bridge;
+pub mod mission_state;
 pub mod mp_detection;
+pub mod protocol;
 pub mod socket_bridge;
 pub mod tcp;
 
 pub use adapter::{DcsAdapter, DcsAdapterConfig, DcsAdapterError};
+pub use adapter_state::{
+    DcsAdapterEvent, DcsAdapterState, DcsAdapterStateMachine, DcsTransitionError,
+};
+pub use aircraft_db::{AircraftCategory, AxesProfile, DcsAircraftInfo};
+pub use aircraft_detection::{
+    AircraftDetection, CockpitSeat, ModuleFidelity, detect_aircraft, detect_axes_profile,
+    detect_category,
+};
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
+pub use control_injection::{
+    AircraftAxisMapping, Clickable, DcsActionType, DcsCommandDef, DcsControlCommand,
+    DcsControlInjector, DcsDevice, DcsUdpSender, WireParseError, lookup_aircraft_axis,
+    parse_wire_command, parse_wire_payload,
+};
 pub use export_lua::{ExportLuaConfig, ExportLuaGenerator};
 pub use flight_adapter_common::{AdapterMetrics, AdapterState};
 pub use installer::{DcsInstaller, InstallResult, InstallStatus};
+pub use lua_bridge::{
+    DcsInstance, HookAction, LuaBridgeConfig, MultiInstanceResult, SnippetIssue, SnippetStatus,
+    detect_dcs_instances, install_all_instances, remove_all_instances, validate_snippet,
+};
+pub use mission_state::{MissionPhase, MissionStateMachine, MissionTelemetry};
 pub use mp_detection::{MpSession, SessionType};
+pub use protocol::{
+    DcsExportEntry, DcsFlightData, DcsTelemetryPacket, DeviceArgEntry, InstrumentReading,
+    ParseError, dcs_to_ned, m_to_ft, ms_to_knots, parse_aircraft_type, parse_device_arg_block,
+    parse_instrument_block, rad_to_deg,
+};
 pub use socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};

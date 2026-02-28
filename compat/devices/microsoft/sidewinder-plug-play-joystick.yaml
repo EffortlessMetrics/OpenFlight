@@ -1,0 +1,45 @@
+# Microsoft SideWinder Plug and Play Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Budget USB joystick from the SideWinder line with basic axes and buttons.
+
+schema_version: "1"
+
+device:
+  name: "Microsoft SideWinder Plug and Play Joystick"
+  vendor: "Microsoft"
+  usb:
+    vendor_id: 0x045E
+    product_id: 0x001A
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [x, y, throttle]
+    resolution_bits: 8
+  buttons: 6
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x045E confirmed Microsoft. PID 0x001A community estimate."
+  - id: LEGACY_DEVICE
+    description: "Legacy budget SideWinder. Basic 3-axis joystick with throttle slider."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Microsoft SideWinder Plug and Play joystick. Budget legacy device. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

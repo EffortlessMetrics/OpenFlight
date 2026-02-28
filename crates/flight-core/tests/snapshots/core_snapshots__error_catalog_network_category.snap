@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "NET-001: gRPC bind failed",
+    "NET-002: gRPC connection refused",
+    "NET-003: TLS handshake failed",
+    "NET-004: Cloud sync failed",
+]

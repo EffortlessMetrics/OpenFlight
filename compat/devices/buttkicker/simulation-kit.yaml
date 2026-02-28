@@ -1,0 +1,47 @@
+# ButtKicker Simulation Kit
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Complete simulation haptic kit with transducer, amplifier, and mounting.
+
+schema_version: "1"
+
+device:
+  name: "ButtKicker Simulation Kit"
+  vendor: "ButtKicker (Guitammer)"
+  usb:
+    vendor_id: 0x0000
+    product_id: 0x0000
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Simulation kit is audio-driven. USB presence varies."
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: "Audio-driven haptic output via included amplifier and transducer."
+  - id: NO_HID_INPUT
+    description: "No HID input events. Tracked for sim-rig accessory compatibility."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    ButtKicker Simulation Kit. Complete haptic kit for sim rigs. Audio-driven.
+    Last reviewed: 2026-07.

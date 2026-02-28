@@ -1,0 +1,45 @@
+# Desktop Aviator 8-Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0016 estimated for DAV 8-Switch Panel.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator 8-Switch Panel"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0016
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: DAV_SWITCH_8
+    description: >
+      8-switch toggle panel in Desktop Aviator panel format.
+      Toggle switches with on/off state reporting. Panel-mount
+      compatible with DAV cockpit enclosures.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator 8-Switch Panel. PID 0x0016 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

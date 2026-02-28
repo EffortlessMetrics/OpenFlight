@@ -1,0 +1,45 @@
+# WinWing Orion3 Throttle V2
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Third-generation throttle base with improved mechanics and USB-C.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Orion3 Throttle V2"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0240
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 6
+    names: [left_throttle, right_throttle, friction, rotary1, rotary2, slider]
+    resolution_bits: 16
+  buttons: 52
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 250
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed WinWing. PID 0x0240 community estimate."
+  - id: USB_C
+    description: "USB-C connection. Improved internal mechanics over Orion2."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Orion3 Throttle V2. Third-gen throttle base. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "created_at": "2025-01-15T12:00:00Z",
+  "baselines": {
+    "event_router_register_route": {
+      "mean_ns": 25.0,
+      "description": "Register a single route in the EventRouter"
+    },
+    "event_router_route_event_8_routes": {
+      "mean_ns": 80.0,
+      "description": "Route one event through 8 registered routes"
+    },
+    "event_router_route_event_64_routes": {
+      "mean_ns": 500.0,
+      "description": "Route one event through 64 registered routes (MAX_ROUTES)"
+    },
+    "bus_event_creation": {
+      "mean_ns": 10.0,
+      "description": "Create a BusEvent with axis payload"
+    }
+  }
+}

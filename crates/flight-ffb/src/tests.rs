@@ -142,12 +142,12 @@ mod safety_violation_tests {
         assert_eq!(engine.safety_state(), SafetyState::Faulted);
 
         // Try to reset without power cycle
-        let result = engine.reset_from_fault(false);
+        let result = engine.reset_after_power_cycle(false);
         assert!(result.is_ok());
         assert_eq!(engine.safety_state(), SafetyState::Faulted); // Should remain faulted
 
         // Reset with power cycle
-        let result = engine.reset_from_fault(true);
+        let result = engine.reset_after_power_cycle(true);
         assert!(result.is_ok());
         assert_eq!(engine.safety_state(), SafetyState::SafeTorque);
     }
@@ -444,7 +444,7 @@ mod integration_tests {
         assert_eq!(faults[0].fault_type, FaultType::OverTemp);
 
         // Reset from fault with power cycle
-        engine.reset_from_fault(true).unwrap();
+        engine.reset_after_power_cycle(true).unwrap();
         assert_eq!(engine.safety_state(), SafetyState::SafeTorque);
 
         // Verify interlock is reset
@@ -1276,7 +1276,7 @@ mod trim_correctness_tests {
 
                 let progress_value = progress.unwrap();
                 assert!(
-                    progress_value >= 0.0 && progress_value <= 1.0,
+                    (0.0..=1.0).contains(&progress_value),
                     "Progress should be between 0 and 1: {}",
                     progress_value
                 );
@@ -1875,7 +1875,7 @@ mod device_disconnect_tests {
         assert_eq!(engine.safety_state(), SafetyState::Faulted);
 
         // Reset from fault (simulating power cycle / reconnection)
-        engine.reset_from_fault(true).unwrap();
+        engine.reset_after_power_cycle(true).unwrap();
 
         // Should be back to SafeTorque
         assert_eq!(

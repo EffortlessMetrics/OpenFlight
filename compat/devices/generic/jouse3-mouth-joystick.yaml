@@ -1,0 +1,43 @@
+# Jouse3 Mouth Joystick
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-98 addition.
+schema_version: "1"
+
+device:
+  name: "Jouse3 Mouth Joystick"
+  vendor: "Jouse"
+  usb:
+    vendor_id: 0xFF01       # Community estimate
+    product_id: 0x0003      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0xFF01 / PID 0x0003 are placeholders for Jouse3. Verify actual USB HID descriptor.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Jouse3 — mouth-operated joystick with sip/puff buttons. Provides 2-axis cursor/view control for flight sims.
+    Wave-98 addition. Last reviewed: 2026-07.

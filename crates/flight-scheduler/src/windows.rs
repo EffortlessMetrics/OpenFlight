@@ -747,7 +747,7 @@ mod tests {
         // Original priority should be a valid value
         // THREAD_PRIORITY_NORMAL is 0, but other values are possible
         assert!(
-            rt.original_priority() >= -15 && rt.original_priority() <= 15,
+            (-15..=15).contains(&rt.original_priority()),
             "Original priority should be in valid range"
         );
     }
@@ -916,7 +916,7 @@ mod tests {
         // Should have waited approximately 4ms (250Hz period)
         // Allow some tolerance for system scheduling
         assert!(
-            elapsed.as_millis() >= 2 && elapsed.as_millis() <= 10,
+            (2..=10).contains(&elapsed.as_millis()),
             "Wait should be approximately 4ms, got {:?}",
             elapsed
         );
@@ -1166,7 +1166,7 @@ mod prop_tests {
             // The original priority should be a valid Windows thread priority value
             let orig_priority = rt.original_priority();
             prop_assert!(
-                orig_priority >= -15 && orig_priority <= 15,
+                (-15..=15).contains(&orig_priority),
                 "Original priority ({}) should be in valid range [-15, 15]",
                 orig_priority
             );
@@ -1775,12 +1775,12 @@ mod prop_tests {
         // p50 should be around 5000ns (middle of 100-9900 range)
         // p99 should be around 9800ns (99th percentile of 99 values)
         assert!(
-            stats.p50_ns >= 4500 && stats.p50_ns <= 5500,
+            (4500..=5500).contains(&stats.p50_ns),
             "p50 ({}) should be around 5000ns",
             stats.p50_ns
         );
         assert!(
-            stats.p99_ns >= 9500 && stats.p99_ns <= 10000,
+            (9500..=10000).contains(&stats.p99_ns),
             "p99 ({}) should be around 9800ns",
             stats.p99_ns
         );
@@ -1806,7 +1806,7 @@ mod prop_tests {
         // Should have ~249 samples (500 - 250 warmup - 1 for baseline)
         // The first tick after warmup establishes the baseline
         assert!(
-            stats.samples >= 248 && stats.samples <= 250,
+            (248..=250).contains(&stats.samples),
             "Should have ~249 samples after warmup, got {}",
             stats.samples
         );

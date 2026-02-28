@@ -1,0 +1,30 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: exported
+---
+[
+    (
+        "btn_1",
+        "GEAR_TOGGLE",
+    ),
+    (
+        "btn_1",
+        "TOGGLE_NAV_LIGHTS",
+    ),
+    (
+        "btn_2",
+        "AP_MASTER",
+    ),
+    (
+        "btn_3",
+        "FLAPS_INCR",
+    ),
+    (
+        "hat_down",
+        "ELEV_TRIM_DN",
+    ),
+    (
+        "hat_up",
+        "ELEV_TRIM_UP",
+    ),
+]

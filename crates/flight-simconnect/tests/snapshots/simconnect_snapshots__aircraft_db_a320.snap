@@ -1,0 +1,15 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: info
+---
+MsfsAircraftInfo {
+    icao_code: "A320",
+    display_name: "Airbus A320neo",
+    category: TwinJet,
+    default_profile: "airliner-narrowbody",
+    special_vars: [
+        "ENG N1 RPM:1",
+        "ENG N1 RPM:2",
+        "FLY BY WIRE ALPHA PROTECTION",
+    ],
+}

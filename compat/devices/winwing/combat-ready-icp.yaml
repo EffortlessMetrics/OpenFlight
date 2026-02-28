@@ -1,0 +1,45 @@
+# WinWing Combat Ready ICP Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Integrated control panel for F-16 DED/ICP functions.
+
+schema_version: "1"
+
+device:
+  name: "WinWing Combat Ready ICP Panel"
+  vendor: "WinWing"
+  usb:
+    vendor_id: 0x4098
+    product_id: 0x0252
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 28
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x4098 confirmed WinWing. PID 0x0252 community estimate."
+  - id: PANEL_DEVICE
+    description: "F-16 ICP/DED panel. Rotary encoders and push buttons for DED navigation."
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    WinWing Combat Ready ICP panel. F-16 DED/ICP functions. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

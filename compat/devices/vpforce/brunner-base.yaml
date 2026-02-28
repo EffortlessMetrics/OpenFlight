@@ -12,8 +12,8 @@ device:
   name: "VPForce-Compatible Brunner Base (speculative)"
   vendor: "VPforce"
   usb:
-    vendor_id: 0x0483    # STMicroelectronics (VPforce USB VID)
-    product_id: 0xA1C5   # Community estimate -- unverified placeholder
+    vendor_id: 0x0483    # STMicroelectronics MCU â used by VPforce direct-drive bases
+    product_id: 0xA1C5   # Estimated â speculative product; verify before use
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x04          # Joystick

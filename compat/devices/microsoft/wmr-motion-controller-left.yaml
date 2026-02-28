@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Microsoft Corporation"
+  name: "WMR Motion Controller (Left)"
+  usb:
+    vid: "0x045E"
+    pid: "0x065B"
+  type: "vr_controller"
+capabilities:
+  axes: 4
+  buttons: 7
+  hats: 0
+  ffb: true
+support:
+  tier: 3
+  notes: "Generic Windows Mixed Reality left motion controller."
+  driver: "WMR/SteamVR"
+quirks:
+  - id: VR_API_ONLY
+    description: "Requires WMR Portal or SteamVR with WMR plugin."
+tested_games: ["msfs", "xplane", "dcs"]

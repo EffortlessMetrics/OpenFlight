@@ -441,7 +441,7 @@ fn decode_hat_nibble(nibble: u8) -> Option<HatDirection> {
 ///
 /// 0x0000 → −1.0, 0x8000 → 0.0, 0xFFFF → ≈1.0
 fn normalize_axis_signed(raw: u16) -> f32 {
-    (raw as f32 / 32767.5) - 1.0
+    ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 fn le_u16(bytes: &[u8], offset: usize) -> u16 {
@@ -459,7 +459,7 @@ fn le_u32(bytes: &[u8], offset: usize) -> u32 {
 }
 
 fn normalize_axis_16bit(raw: u16) -> f32 {
-    raw as f32 / u16::MAX as f32
+    (raw as f32 / u16::MAX as f32).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]

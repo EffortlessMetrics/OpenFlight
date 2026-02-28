@@ -569,8 +569,8 @@ mod tests {
         #[test]
         fn prop_eight_way_axes_in_range(raw in 0u16..=8u16) {
             let out = eight_way().decode(raw).unwrap();
-            prop_assert!(out.x >= -1.0 && out.x <= 1.0, "x={} out of range", out.x);
-            prop_assert!(out.y >= -1.0 && out.y <= 1.0, "y={} out of range", out.y);
+            prop_assert!((-1.0..=1.0).contains(&out.x), "x={} out of range", out.x);
+            prop_assert!((-1.0..=1.0).contains(&out.y), "y={} out of range", out.y);
         }
 
         /// Output vector magnitude is always ≤ √2 for any valid 8-way value.

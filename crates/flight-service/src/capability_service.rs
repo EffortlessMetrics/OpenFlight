@@ -57,6 +57,8 @@ pub struct AxisCapabilityStatus {
     pub audit_enabled: bool,
     pub clamp_events_count: u64,
     pub last_clamp_timestamp: Option<i64>,
+    /// Maximum absolute output value seen before a clamp (diagnostics)
+    pub max_value_before_clamp: f32,
 }
 
 impl CapabilityService {
@@ -233,6 +235,7 @@ impl CapabilityService {
                         let ns = engine.counters().last_capability_clamp_ns();
                         if ns == 0 { None } else { Some(ns as i64) }
                     },
+                    max_value_before_clamp: engine.counters().max_value_before_clamp(),
                 });
             }
         }
@@ -315,6 +318,65 @@ impl CapabilityService {
         }
 
         Ok(restricted)
+    }
+
+    /// Get the total number of clamp events across all registered axes.
+    pub fn total_clamp_events(&self) -> Result<u64, String> {
+        let engines = self
+            .engines
+            .read()
+            .map_err(|e| format!("Lock error: {}", e))?;
+
+        let total = engines
+            .values()
+            .map(|e| e.counters().capability_clamp_events())
+            .sum();
+        Ok(total)
+    }
+
+    /// Get the highest absolute output value observed before any clamp, across
+    /// all registered axes.  Returns 0.0 if no clamp has ever occurred.
+    pub fn max_value_before_clamp(&self) -> Result<f32, String> {
+        let engines = self
+            .engines
+            .read()
+            .map_err(|e| format!("Lock error: {}", e))?;
+
+        let max = engines
+            .values()
+            .map(|e| e.counters().max_value_before_clamp())
+            .fold(0.0_f32, f32::max);
+        Ok(max)
+    }
+
+    /// Reset clamp counters for all axes (or a specific set of axes).
+    pub fn reset_clamp_counters(
+        &self,
+        axis_names: Option<&[String]>,
+    ) -> Result<Vec<String>, String> {
+        let engines = self
+            .engines
+            .read()
+            .map_err(|e| format!("Lock error: {}", e))?;
+
+        let mut reset_axes = Vec::new();
+        match axis_names {
+            Some(names) => {
+                for name in names {
+                    if let Some(engine) = engines.get(name) {
+                        engine.reset_counters();
+                        reset_axes.push(name.clone());
+                    }
+                }
+            }
+            None => {
+                for (name, engine) in engines.iter() {
+                    engine.reset_counters();
+                    reset_axes.push(name.clone());
+                }
+            }
+        }
+        Ok(reset_axes)
     }
 }
 
@@ -483,6 +545,7 @@ mod tests {
         assert_eq!(status.mode, CapabilityMode::Full);
         assert_eq!(status.clamp_events_count, 0);
         assert!(status.last_clamp_timestamp.is_none());
+        assert_eq!(status.max_value_before_clamp, 0.0);
         assert_eq!(status.limits.max_axis_output, 1.0);
         assert_eq!(status.limits.max_ffb_torque, 50.0);
     }
@@ -555,5 +618,249 @@ mod tests {
         let status = service.get_capability_status(None).unwrap();
         assert_eq!(status[0].clamp_events_count, 1);
         assert!(status[0].last_clamp_timestamp.is_some());
+        assert!((status[0].max_value_before_clamp - 0.9).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn demo_mode_clamps_and_records_evidence() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_demo_mode(true).unwrap();
+
+        // Frame within demo limits — no clamp expected
+        let mut frame_ok = AxisFrame::new(0.7, 1000);
+        frame_ok.out = 0.7;
+        engine.process(&mut frame_ok).unwrap();
+        assert_eq!(frame_ok.out, 0.7);
+        assert_eq!(service.total_clamp_events().unwrap(), 0);
+
+        // Frame exceeding demo limit (0.8) — clamp expected
+        let mut frame_over = AxisFrame::new(0.95, 2000);
+        frame_over.out = 0.95;
+        engine.process(&mut frame_over).unwrap();
+        assert_eq!(frame_over.out, 0.8);
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].clamp_events_count, 1);
+        assert!(status[0].last_clamp_timestamp.is_some());
+        assert!((status[0].max_value_before_clamp - 0.95).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn kid_mode_clamps_and_records_evidence() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("roll".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Frame within kid limits — no clamp expected
+        let mut frame_ok = AxisFrame::new(0.4, 1000);
+        frame_ok.out = 0.4;
+        engine.process(&mut frame_ok).unwrap();
+        assert_eq!(frame_ok.out, 0.4);
+        assert_eq!(service.total_clamp_events().unwrap(), 0);
+
+        // Frame exceeding kid limit (0.5) — clamp expected
+        let mut frame_over = AxisFrame::new(0.8, 2000);
+        frame_over.out = 0.8;
+        engine.process(&mut frame_over).unwrap();
+        assert_eq!(frame_over.out, 0.5);
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].clamp_events_count, 1);
+        assert!(status[0].last_clamp_timestamp.is_some());
+        assert!((status[0].max_value_before_clamp - 0.8).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn counters_increment_across_multiple_clamp_events() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("throttle".to_string()));
+        service
+            .register_axis("throttle".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Send three frames that all exceed the kid-mode limit
+        for i in 0..3 {
+            let mut frame = AxisFrame::new(0.9, 1000 + i * 100);
+            frame.out = 0.9;
+            engine.process(&mut frame).unwrap();
+        }
+
+        let status = service.get_capability_status(None).unwrap();
+        assert_eq!(status[0].clamp_events_count, 3);
+        assert!(status[0].last_clamp_timestamp.is_some());
+    }
+
+    #[test]
+    fn timestamps_update_on_successive_clamp_events() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("yaw".to_string()));
+        service
+            .register_axis("yaw".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // First clamp
+        let mut f1 = AxisFrame::new(0.9, 1000);
+        f1.out = 0.9;
+        engine.process(&mut f1).unwrap();
+
+        let ts1 = service.get_capability_status(None).unwrap()[0]
+            .last_clamp_timestamp
+            .expect("timestamp should be set after first clamp");
+
+        // Small delay to ensure monotonic advance
+        std::thread::sleep(std::time::Duration::from_millis(2));
+
+        // Second clamp
+        let mut f2 = AxisFrame::new(0.9, 2000);
+        f2.out = 0.9;
+        engine.process(&mut f2).unwrap();
+
+        let ts2 = service.get_capability_status(None).unwrap()[0]
+            .last_clamp_timestamp
+            .expect("timestamp should be set after second clamp");
+
+        assert!(ts2 > ts1, "second clamp timestamp must be later than first");
+    }
+
+    #[test]
+    fn total_clamp_events_aggregates_across_axes() {
+        let service = CapabilityService::new();
+        let engine1 = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        let engine2 = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine1.clone())
+            .unwrap();
+        service
+            .register_axis("roll".to_string(), engine2.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Clamp on pitch
+        let mut f1 = AxisFrame::new(0.9, 1000);
+        f1.out = 0.9;
+        engine1.process(&mut f1).unwrap();
+
+        // Two clamps on roll
+        for ts in [2000, 3000] {
+            let mut f = AxisFrame::new(0.8, ts);
+            f.out = 0.8;
+            engine2.process(&mut f).unwrap();
+        }
+
+        assert_eq!(service.total_clamp_events().unwrap(), 3);
+    }
+
+    #[test]
+    fn max_value_before_clamp_tracks_worst_case() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("throttle".to_string()));
+        service
+            .register_axis("throttle".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Moderate overshoot
+        let mut f1 = AxisFrame::new(0.7, 1000);
+        f1.out = 0.7;
+        engine.process(&mut f1).unwrap();
+
+        assert!((service.max_value_before_clamp().unwrap() - 0.7).abs() < f32::EPSILON);
+
+        // Larger overshoot — max should update
+        let mut f2 = AxisFrame::new(0.95, 2000);
+        f2.out = 0.95;
+        engine.process(&mut f2).unwrap();
+
+        assert!((service.max_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
+
+        // Smaller overshoot — max should stay at 0.95
+        let mut f3 = AxisFrame::new(0.6, 3000);
+        f3.out = 0.6;
+        engine.process(&mut f3).unwrap();
+
+        assert!((service.max_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn reset_clamp_counters_clears_all_axes() {
+        let service = CapabilityService::new();
+        let engine1 = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        let engine2 = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine1.clone())
+            .unwrap();
+        service
+            .register_axis("roll".to_string(), engine2.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Generate clamp events on both axes
+        let mut f1 = AxisFrame::new(0.9, 1000);
+        f1.out = 0.9;
+        engine1.process(&mut f1).unwrap();
+
+        let mut f2 = AxisFrame::new(0.8, 2000);
+        f2.out = 0.8;
+        engine2.process(&mut f2).unwrap();
+
+        assert_eq!(service.total_clamp_events().unwrap(), 2);
+
+        // Reset all
+        let reset = service.reset_clamp_counters(None).unwrap();
+        assert_eq!(reset.len(), 2);
+        assert_eq!(service.total_clamp_events().unwrap(), 0);
+        assert_eq!(service.max_value_before_clamp().unwrap(), 0.0);
+    }
+
+    #[test]
+    fn reset_clamp_counters_targets_specific_axis() {
+        let service = CapabilityService::new();
+        let engine1 = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        let engine2 = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine1.clone())
+            .unwrap();
+        service
+            .register_axis("roll".to_string(), engine2.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        let mut f1 = AxisFrame::new(0.9, 1000);
+        f1.out = 0.9;
+        engine1.process(&mut f1).unwrap();
+
+        let mut f2 = AxisFrame::new(0.8, 2000);
+        f2.out = 0.8;
+        engine2.process(&mut f2).unwrap();
+
+        // Reset only pitch
+        let reset = service
+            .reset_clamp_counters(Some(&["pitch".to_string()]))
+            .unwrap();
+        assert_eq!(reset, vec!["pitch"]);
+
+        // pitch should be 0, roll should still be 1
+        let statuses = service.get_capability_status(None).unwrap();
+        let pitch = statuses.iter().find(|s| s.axis_name == "pitch").unwrap();
+        let roll = statuses.iter().find(|s| s.axis_name == "roll").unwrap();
+        assert_eq!(pitch.clamp_events_count, 0);
+        assert_eq!(roll.clamp_events_count, 1);
     }
 }

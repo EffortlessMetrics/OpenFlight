@@ -1,0 +1,15 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: s
+---
+{
+  "schema": "flight.ledmap/1",
+  "rules": [
+    {
+      "when": "gear_down",
+      "do_action": "led.panel('GEAR').on()",
+      "do": "led.panel('GEAR').on()"
+    }
+  ],
+  "defaults": null
+}

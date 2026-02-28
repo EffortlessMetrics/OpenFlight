@@ -1,0 +1,57 @@
+# Microsoft Flight Simulator 2024 — SimConnect Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Microsoft Flight Simulator 2024"
+  id: msfs2024
+  developer: "Asobo Studio"
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+  sdk_version: "0.23.x"
+
+supported_versions:
+  - "Launch (all patches)"
+
+version_notes:
+  simconnect_sdk: "0.23.x"
+  notes: >
+    MSFS 2024 ships SimConnect SDK 0.23.x with new SimVars for military jets
+    and improved helicopter systems. Some legacy SimVars from 2020 are deprecated:
+    AUTOPILOT HEADING LOCK DIR is superseded by AUTOPILOT HEADING LOCK DIRECTION.
+    The B-var/H-var (SimConnect_SetInputEvent) API is present but blocked by
+    the INPUT_EVENTS_STUBBED issue until the SDK dependency is upgraded.
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false
+  force_feedback_translation: true
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: true
+  integration_tests: false
+  fuzz_coverage: true
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: INPUT_EVENTS_STUBBED
+    description: >
+      SimConnect_SetInputEvent is not available in the currently vendored sys crate.
+      Requires an SDK upgrade to fully support B-var/H-var controls.
+    workaround: "Use standard client events (AXIS_ELEVATOR_SET etc.) for legacy aircraft."
+  - id: MSFS2024_DEPRECATED_SIMVARS
+    description: >
+      MSFS 2024 deprecated several SimVars present in 2020. Notable:
+      AUTOPILOT HEADING LOCK DIR → AUTOPILOT HEADING LOCK DIRECTION.
+      OpenFlight reads the legacy names; broken behaviour may occur on
+      2024-only aircraft that omit the compatibility aliases.
+    workaround: "Profile writers can map both old and new SimVar names via the writers diff table."

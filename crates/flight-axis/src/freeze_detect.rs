@@ -104,8 +104,8 @@ mod tests {
         let mut fd = FreezeDetector::new(3);
         assert!(!fd.update(0.5)); // tick 1
         assert!(!fd.update(0.5)); // tick 2
-        assert!(fd.update(0.5));  // tick 3 — frozen
-        assert!(fd.update(0.5));  // tick 4 — still frozen
+        assert!(fd.update(0.5)); // tick 3 — frozen
+        assert!(fd.update(0.5)); // tick 4 — still frozen
     }
 
     #[test]

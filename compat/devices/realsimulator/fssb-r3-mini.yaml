@@ -1,0 +1,45 @@
+# Real Simulator FSSB R3 Mini
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Miniature force sensing base for space-constrained cockpit builds.
+
+schema_version: "1"
+
+device:
+  name: "Real Simulator FSSB R3 Mini"
+  vendor: "Real Simulator"
+  usb:
+    vendor_id: 0x04F3
+    product_id: 0x0174
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 16
+  buttons: 2
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 500
+  max_jitter_ms: 1
+
+quirks:
+  - id: FORCE_SENSING
+    description: "Miniature form factor; two axes. For tight cockpit builds."
+  - id: PID_UNCONFIRMED
+    description: "VID/PID community estimates. Verify with lsusb on hardware."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Real Simulator FSSB R3 Mini compact force sensing base. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

@@ -214,7 +214,7 @@ pub fn parse_orion2_throttle(report: &[u8]) -> Result<Orion2ThrottleState, crate
 ///
 /// Center (32767/32768) maps to approximately 0.0.
 pub fn normalize_axis_16bit(raw: u16) -> f32 {
-    (raw as f32 / 32767.5) - 1.0
+    ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 /// Normalize a 16-bit throttle (0–65535) to 0.0 … 1.0.
@@ -231,7 +231,7 @@ fn read_u16(data: &[u8], offset: usize) -> u16 {
 /// Treat an unsigned u16 as bipolar relative to midpoint 32768 → \[−1.0, 1.0\].
 fn norm_u16_bipolar(v: u16) -> f32 {
     let signed = v.wrapping_sub(32768) as i16;
-    signed as f32 / 32767.0
+    (signed as f32 / 32767.0).clamp(-1.0, 1.0)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -359,22 +359,22 @@ mod tests {
             r[5..7].copy_from_slice(&fr.to_le_bytes());
             let s = parse_orion2_throttle_report(&r).unwrap();
             prop_assert!(
-                s.axes.throttle_left >= 0.0 && s.axes.throttle_left <= 1.0,
+                (0.0..=1.0).contains(&s.axes.throttle_left),
                 "throttle_left out of [0,1]: {}",
                 s.axes.throttle_left
             );
             prop_assert!(
-                s.axes.throttle_right >= 0.0 && s.axes.throttle_right <= 1.0,
+                (0.0..=1.0).contains(&s.axes.throttle_right),
                 "throttle_right out of [0,1]: {}",
                 s.axes.throttle_right
             );
             prop_assert!(
-                s.axes.throttle_combined >= 0.0 && s.axes.throttle_combined <= 1.0,
+                (0.0..=1.0).contains(&s.axes.throttle_combined),
                 "throttle_combined out of [0,1]: {}",
                 s.axes.throttle_combined
             );
             prop_assert!(
-                s.axes.friction >= 0.0 && s.axes.friction <= 1.0,
+                (0.0..=1.0).contains(&s.axes.friction),
                 "friction out of [0,1]: {}",
                 s.axes.friction
             );
@@ -387,12 +387,12 @@ mod tests {
             r[9..11].copy_from_slice(&my.to_le_bytes());
             let s = parse_orion2_throttle_report(&r).unwrap();
             prop_assert!(
-                s.axes.mouse_x >= -1.001 && s.axes.mouse_x <= 1.001,
+                (-1.001..=1.001).contains(&s.axes.mouse_x),
                 "mouse_x out of [-1,1]: {}",
                 s.axes.mouse_x
             );
             prop_assert!(
-                s.axes.mouse_y >= -1.001 && s.axes.mouse_y <= 1.001,
+                (-1.001..=1.001).contains(&s.axes.mouse_y),
                 "mouse_y out of [-1,1]: {}",
                 s.axes.mouse_y
             );

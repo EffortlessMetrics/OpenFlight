@@ -1,0 +1,45 @@
+# Saitek Pro Flight Cessna Yoke
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Cessna-branded yoke with integrated trim wheel and USB hub.
+
+schema_version: "1"
+
+device:
+  name: "Saitek Pro Flight Cessna Yoke"
+  vendor: "Saitek"
+  usb:
+    vendor_id: 0x06A3
+    product_id: 0x0BAC
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [pitch, roll, trim]
+    resolution_bits: 10
+  buttons: 16
+  hats: 1
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 5
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x06A3 confirmed Saitek. PID 0x0BAC community estimate."
+  - id: INTEGRATED_TRIM
+    description: "Trim wheel axis integrated into yoke body."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Saitek Pro Flight Cessna branded yoke with trim wheel. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

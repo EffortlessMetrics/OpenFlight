@@ -1,0 +1,7 @@
+---
+source: crates/flight-rules/src/lib.rs
+expression: err
+---
+Validation(
+    "Rule 1: Unsupported action syntax: invalid.action()",
+)

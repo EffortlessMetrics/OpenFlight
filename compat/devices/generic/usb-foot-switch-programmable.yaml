@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "Generic USB Programmable Foot Switch"
+  usb:
+    vid: "0x0C45"
+    pid: "0x7412"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 6
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Programmable USB foot switch with 6 pedals for sim use."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

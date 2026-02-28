@@ -27,7 +27,7 @@
           "kind": {
             "type": "string",
             "description": "Optional requirement kind for filtering",
-            "enum": ["product", "infra"]
+            "enum": ["product", "infra", "functional", "operational", "quality", "security"]
           },
           "status": {
             "type": "string",

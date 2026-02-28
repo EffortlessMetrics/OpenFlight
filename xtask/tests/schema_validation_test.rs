@@ -12,7 +12,6 @@ use std::path::PathBuf;
 fn test_schema_module_exists() {
     // This test verifies that the schema module compiles successfully
     // The actual functionality is tested in the unit tests within schema.rs
-    assert!(true, "Schema module compiled successfully");
 }
 
 #[test]

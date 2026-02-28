@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Bit Shape Software"
+  name: "GyrOSC Phone Head Tracker"
+  usb:
+    vid: "0x0000"
+    pid: "0x0000"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 3
+  notes: "GyrOSC phone gyro to OSC for head tracking."
+  driver: "OSC protocol"
+quirks:
+  - id: SOFTWARE_ONLY
+    description: "Phone gyro data sent via OSC protocol to opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,43 @@
+# Custom DIY Controller Kit (RP2040)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-100 addition.
+schema_version: "1"
+
+device:
+  name: "Custom DIY Controller Kit (RP2040)"
+  vendor: "Generic"
+  usb:
+    vendor_id: 0x2E8A       # Confirmed
+    product_id: 0x000A      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x4             # Joystick
+
+capabilities:
+  axes:
+    count: 8
+    names: [x, y, z, rx, ry, rz, slider1, slider2]
+    resolution_bits: 12
+  buttons: 32
+  hats: 2
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x2E8A confirmed (Raspberry Pi Foundation — RP2040). PID 0x000A estimated for DIY kit firmware. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Custom DIY controller kit based on RP2040 — configurable axes and buttons for building custom flight sim controllers.
+    Wave-100 addition. Last reviewed: 2026-07.

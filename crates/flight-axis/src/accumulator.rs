@@ -22,12 +22,22 @@ pub struct AccumulatorConfig {
 impl AccumulatorConfig {
     /// Creates a clamping accumulator config.
     pub const fn new(min: f32, max: f32, scale: f32) -> Self {
-        Self { min, max, scale, wrap: false }
+        Self {
+            min,
+            max,
+            scale,
+            wrap: false,
+        }
     }
 
     /// Creates a wrapping accumulator config.
     pub const fn wrapping(min: f32, max: f32, scale: f32) -> Self {
-        Self { min, max, scale, wrap: true }
+        Self {
+            min,
+            max,
+            scale,
+            wrap: true,
+        }
     }
 }
 
@@ -180,7 +190,11 @@ mod tests {
         }
         assert!((acc.position() - 0.5).abs() < EPS);
         acc.reset_to_zero();
-        assert!(acc.position().abs() < EPS, "after reset: {}", acc.position());
+        assert!(
+            acc.position().abs() < EPS,
+            "after reset: {}",
+            acc.position()
+        );
     }
 
     #[test]

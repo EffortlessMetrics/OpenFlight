@@ -27,11 +27,11 @@ fuzz_target!(|data: &[u8]| {
         let state = handler.parse_report(data);
 
         // All axis values must be within [-1.0, 1.0]
-        assert!(state.axes.stick_x >= -1.0 && state.axes.stick_x <= 1.0,
+        assert!((-1.0..=1.0).contains(&state.axes.stick_x),
             "stick_x OOB: {}", state.axes.stick_x);
-        assert!(state.axes.throttle >= -1.0 && state.axes.throttle <= 1.0,
+        assert!((-1.0..=1.0).contains(&state.axes.throttle),
             "throttle OOB: {}", state.axes.throttle);
-        assert!(state.axes.throttle2 >= -1.0 && state.axes.throttle2 <= 1.0,
+        assert!((-1.0..=1.0).contains(&state.axes.throttle2),
             "throttle2 OOB: {}", state.axes.throttle2);
     }
 });

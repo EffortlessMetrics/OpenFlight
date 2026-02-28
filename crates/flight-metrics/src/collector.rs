@@ -115,7 +115,7 @@ mod tests {
     fn custom_collector_usable_as_dyn_trait() {
         let metrics = vec![Metric::Gauge {
             name: "g".to_string(),
-            value: 3.14,
+            value: 4.56,
         }];
         let collector: Box<dyn MetricsCollector> = Box::new(FakeCollector::new(metrics));
         assert_eq!(collector.collect().len(), 1);

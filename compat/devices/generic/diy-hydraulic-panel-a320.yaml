@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Generic"
+  name: "DIY A320 Hydraulic Panel"
+  usb:
+    vid: "0x1209"
+    pid: "0xEC10"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 12
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "DIY Airbus A320 hydraulic system panel with PTU controls."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

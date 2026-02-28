@@ -17,6 +17,12 @@ categories = ["development-tools::testing"]
 
 [dev-dependencies]
 flight-bus = { path = "../flight-bus" }
+flight-axis = { path = "../flight-axis" }
+flight-core = { path = "../flight-core" }
+flight-profile = { path = "../flight-profile" }
+flight-service = { path = "../flight-service" }
+flight-adapter-common = { path = "../flight-adapter-common" }
+flight-test-helpers = { path = "../flight-test-helpers" }
 flight-hotas-virpil = { path = "../flight-hotas-virpil" }
 flight-hotas-thrustmaster = { path = "../flight-hotas-thrustmaster" }
 flight-hotas-winwing = { path = "../flight-hotas-winwing" }
@@ -28,5 +34,7 @@ flight-hotas-logitech = { path = "../flight-hotas-logitech" }
 flight-hotas-honeycomb = { path = "../flight-hotas-honeycomb" }
 flight-hotas-ch = { path = "../flight-hotas-ch" }
 flight-hid-support = { path = "../flight-hid-support" }
+tokio.workspace = true
+serde_json.workspace = true
 serde_yaml.workspace = true
 walkdir.workspace = true

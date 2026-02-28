@@ -1,0 +1,45 @@
+# Desktop Aviator 16-Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x04D8 (Microchip). PID 0x0017 estimated for DAV 16-Switch Panel.
+schema_version: "1"
+
+device:
+  name: "Desktop Aviator 16-Switch Panel"
+  vendor: "Desktop Aviator"
+  usb:
+    vendor_id: 0x04D8
+    product_id: 0x0017
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 16
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 30
+  max_jitter_ms: 16
+
+quirks:
+  - id: DAV_SWITCH_16
+    description: >
+      16-switch toggle panel in Desktop Aviator panel format.
+      Dual-row layout of toggle switches for comprehensive
+      systems control (electrical, fuel, lights, etc.).
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Desktop Aviator 16-Switch Panel. PID 0x0017 estimated.
+    VID 0x04D8 (Microchip-based). Last reviewed: 2026-06.

@@ -8,9 +8,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         unsafe { std::env::set_var("PROTOC", path) };
     }
 
-    // Use prost-build to generate protobuf types only
-    // We'll manually implement the gRPC service traits for now
-    prost_build::compile_protos(&["proto/flight.v1.proto"], &["proto"])?;
+    // Generate protobuf types AND gRPC server/client stubs via tonic-prost-build
+    tonic_prost_build::configure()
+        .build_server(true)
+        .build_client(true)
+        .compile_protos(&["proto/flight.v1.proto"], &["proto"])?;
 
     // Generate version info for breaking change detection
     println!("cargo:rerun-if-changed=proto/flight.v1.proto");

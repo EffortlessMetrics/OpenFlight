@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Delan Clip"
+  name: "Delan Clip Gamer"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF375"
+  type: "head_tracker"
+capabilities:
+  axes: 0
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Delan Clip Gamer budget IR LED clip."
+  driver: "passive accessory"
+quirks:
+  - id: ACCESSORY_ONLY
+    description: "IR LED clip; requires camera and opentrack or FaceTrackNoIR."
+tested_games: ["msfs", "xplane", "dcs"]

@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "Sim Innovations"
+  name: "Sim Innovations Switch Panel"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF702"
+  type: "button_box"
+capabilities:
+  axes: 0
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Sim Innovations toggle switch panel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

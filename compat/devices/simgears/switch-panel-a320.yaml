@@ -1,0 +1,46 @@
+# SimGears A320 Switch Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x1209 (Generic). PID 0xB320 estimated for SimGears A320 panel.
+# Airbus A320-specific switch panel for overhead systems simulation.
+schema_version: "1"
+
+device:
+  name: "SimGears A320 Switch Panel"
+  vendor: "SimGears"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xB320
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 10
+  max_jitter_ms: 50
+
+quirks:
+  - id: A320_SWITCH_LAYOUT
+    description: >
+      A320-specific switch panel replicating overhead panel sections.
+      Toggle and guard switches for electrical, hydraulic, and bleed
+      air systems. LED indicators driven by USB output reports.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    SimGears A320 Switch Panel. PID 0xB320 estimated.
+    Last reviewed: 2026-06.

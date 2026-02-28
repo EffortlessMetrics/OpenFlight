@@ -223,11 +223,11 @@ mod tests {
         ) {
             let report = make_prime_report([raw0, raw1, raw2, raw3, raw4], [0u8; 4]);
             let state = parse_alpha_prime_report(&report, AlphaPrimeVariant::Left).unwrap();
-            prop_assert!(state.axes.x  >= 0.0 && state.axes.x  <= 1.0);
-            prop_assert!(state.axes.y  >= 0.0 && state.axes.y  <= 1.0);
-            prop_assert!(state.axes.z  >= 0.0 && state.axes.z  <= 1.0);
-            prop_assert!(state.axes.sz >= 0.0 && state.axes.sz <= 1.0);
-            prop_assert!(state.axes.sl >= 0.0 && state.axes.sl <= 1.0);
+            prop_assert!((0.0..=1.0).contains(&state.axes.x));
+            prop_assert!((0.0..=1.0).contains(&state.axes.y));
+            prop_assert!((0.0..=1.0).contains(&state.axes.z));
+            prop_assert!((0.0..=1.0).contains(&state.axes.sz));
+            prop_assert!((0.0..=1.0).contains(&state.axes.sl));
         }
 
         #[test]

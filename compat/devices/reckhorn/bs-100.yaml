@@ -1,0 +1,48 @@
+# Reckhorn BS-100 Body Shaker
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# 100W compact body shaker for desktop sim rigs.
+# Audio-driven tactile hardware for sim rig haptic feedback.
+
+schema_version: "1"
+
+device:
+  name: "Reckhorn BS-100 Body Shaker"
+  vendor: "Reckhorn"
+  usb:
+    vendor_id: 0x0000
+    product_id: 0x0000
+  hid:
+    usage_page: 0x01
+    usage: 0x00
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: ~
+  max_jitter_ms: ~
+
+quirks:
+  - id: VID_UNCONFIRMED
+    description: "Audio-driven transducer/amplifier. No USB HID interface."
+  - id: AUDIO_DRIVEN_OUTPUT
+    description: "Haptic output driven by audio signal from SimHub or SimShaker."
+  - id: NO_HID_INPUT
+    description: "No HID input events. Tracked for sim-rig accessory compatibility."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Reckhorn BS-100 Body Shaker. Audio-driven haptic hardware for sim rigs.
+    Last reviewed: 2026-07.

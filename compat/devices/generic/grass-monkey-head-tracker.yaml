@@ -1,0 +1,21 @@
+schema_version: "1"
+device:
+  vendor: "Grass Monkey Simulations"
+  name: "Grass Monkey Head Tracker"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF390"
+  type: "head_tracker"
+capabilities:
+  axes: 6
+  buttons: 0
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "Grass Monkey IR clip-based head tracker with camera."
+  driver: "UVC camera"
+quirks:
+  - id: OPENTRACK_REQUIRED
+    description: "Uses IR clip and modified camera; requires opentrack."
+tested_games: ["msfs", "xplane", "dcs"]

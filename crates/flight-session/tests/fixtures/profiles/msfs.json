@@ -1,0 +1,16 @@
+{
+  "schema": "flight.profile/1",
+  "sim": "msfs",
+  "axes": {
+    "pitch": {
+      "deadzone": 0.02,
+      "expo": 0.25,
+      "detents": []
+    },
+    "roll": {
+      "deadzone": 0.02,
+      "expo": 0.25,
+      "detents": []
+    }
+  }
+}

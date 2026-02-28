@@ -1,0 +1,45 @@
+# PFT Puma Overhead Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Helicopter overhead panel with engine start, governor, and electrical switches.
+
+schema_version: "1"
+
+device:
+  name: "PFT Puma Overhead Panel"
+  vendor: "Pro Flight Trainer"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0xE004
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0xE004 community estimate."
+  - id: PANEL_DEVICE
+    description: "Overhead panel with toggle switches and rotary selectors."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    PFT Puma helicopter overhead panel. Engine start and electrical systems. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

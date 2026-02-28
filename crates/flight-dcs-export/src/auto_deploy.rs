@@ -102,10 +102,7 @@ fn find_dcs_via_registry() -> Option<PathBuf> {
 /// same version the deployment is skipped as `AlreadyUpToDate`. If versions
 /// differ and the existing script is a Flight Hub script, returns
 /// `VersionSkipped` so the caller can decide whether to force-overwrite.
-pub fn deploy_export_script(
-    dcs_dir: &Path,
-    script_content: &str,
-) -> anyhow::Result<DeployResult> {
+pub fn deploy_export_script(dcs_dir: &Path, script_content: &str) -> anyhow::Result<DeployResult> {
     let scripts_dir = dcs_dir.join("Scripts");
     std::fs::create_dir_all(&scripts_dir)?;
 
@@ -148,7 +145,8 @@ mod tests {
         let result = deploy_export_script(tmp.path(), content).unwrap();
         assert_eq!(result, DeployResult::Deployed);
 
-        let written = std::fs::read_to_string(tmp.path().join("Scripts").join("Export.lua")).unwrap();
+        let written =
+            std::fs::read_to_string(tmp.path().join("Scripts").join("Export.lua")).unwrap();
         assert_eq!(written, content);
     }
 
@@ -208,7 +206,8 @@ mod tests {
         let result = deploy_export_script(tmp.path(), new_content).unwrap();
         assert_eq!(result, DeployResult::Deployed);
 
-        let written = std::fs::read_to_string(tmp.path().join("Scripts").join("Export.lua")).unwrap();
+        let written =
+            std::fs::read_to_string(tmp.path().join("Scripts").join("Export.lua")).unwrap();
         assert_eq!(written, new_content);
     }
 }

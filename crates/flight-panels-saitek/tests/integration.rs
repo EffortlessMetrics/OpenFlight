@@ -9,7 +9,7 @@
 //! - Verify-matrix configuration lifecycle
 //! - Error handling for unregistered panels
 
-use flight_hid::{HidAdapter, HidDeviceInfo};
+use flight_hid::HidAdapter;
 use flight_panels_saitek::{
     DriftAction, DriftAnalysis, PanelType, SaitekPanelWriter, VerifyMatrix, VerifyStep,
     VerifyStepResult, VerifyTestResult,

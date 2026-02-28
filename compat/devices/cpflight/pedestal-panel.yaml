@@ -1,0 +1,45 @@
+# CPFlight 737 Pedestal Panel
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Boeing 737 center pedestal panel with radio and autopilot controls.
+
+schema_version: "1"
+
+device:
+  name: "CPFlight 737 Pedestal Panel"
+  vendor: "CPFlight"
+  usb:
+    vendor_id: 0x1209
+    product_id: 0x0CD5
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 0
+    names: []
+    resolution_bits: 0
+  buttons: 48
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 100
+  max_jitter_ms: 10
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: "VID 0x1209 (pid.codes). PID 0x0CD5 community estimate."
+  - id: PANEL_DEVICE
+    description: "Center pedestal panel. Rotary encoders report as incremental button presses."
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    CPFlight 737 center pedestal panel. Radio and autopilot controls. VID/PID unconfirmed.
+    Last reviewed: 2026-07.

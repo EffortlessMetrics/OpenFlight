@@ -1,0 +1,19 @@
+schema_version: "1"
+device:
+  vendor: "RealSimGear"
+  name: "RealSimGear G500H TXi"
+  usb:
+    vid: "0x04D8"
+    pid: "0xF243"
+  type: "panel"
+capabilities:
+  axes: 0
+  buttons: 24
+  hats: 0
+  ffb: false
+support:
+  tier: 2
+  notes: "RealSimGear G500H TXi helicopter-specific glass cockpit bezel."
+  driver: "built-in HID"
+quirks: []
+tested_games: ["msfs", "xplane", "dcs"]

@@ -6,7 +6,9 @@
 //! Main adapter that coordinates socket bridge, MP detection, and telemetry publishing.
 //! Enforces MP integrity contract and provides clear user messaging.
 
+use crate::aircraft_db;
 use crate::mp_detection::{MpDetectionError, MpDetector, SessionType};
+use crate::protocol::DcsTelemetryPacket;
 use crate::socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
 use anyhow::Result;
 use flight_adapter_common::{AdapterConfig, AdapterError, AdapterMetrics, AdapterState};
@@ -578,6 +580,126 @@ impl DcsAdapter {
         }
 
         Ok(snapshot)
+    }
+
+    /// Convert a protocol-parsed [`DcsTelemetryPacket`] (from raw Export.lua UDP
+    /// data) into a [`BusSnapshot`] suitable for bus publishing.
+    ///
+    /// Unit conversions applied:
+    /// - `airspeed_ms` (m/s) → knots
+    /// - `vertical_speed_ms` (m/s) → ft/min  
+    /// - `altitude_m` (m) → stored as-is (adapter convention: pass-through)
+    /// - angles: degrees pass-through
+    pub fn convert_packet_to_bus_snapshot(
+        &self,
+        packet: &DcsTelemetryPacket,
+    ) -> Result<BusSnapshot, DcsAdapterError> {
+        const MS_TO_KNOTS: f64 = 1.943_844;
+
+        let aircraft = self.detect_aircraft(&packet.aircraft_name);
+        let mut snapshot = BusSnapshot::new(SimId::Dcs, aircraft);
+
+        // Monotonic timestamp
+        static START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+        let start = START.get_or_init(Instant::now);
+        snapshot.timestamp = Instant::now().duration_since(*start).as_nanos() as u64;
+
+        let fd = &packet.flight_data;
+
+        // Airspeed: m/s → knots
+        let ias_knots = fd.airspeed_ms * MS_TO_KNOTS;
+        snapshot.kinematics.ias = ValidatedSpeed::new_knots(ias_knots as f32).map_err(|_| {
+            DcsAdapterError::TelemetryParsing {
+                field: "airspeed_ms".to_string(),
+            }
+        })?;
+
+        // Heading, pitch, roll, AoA — already in degrees
+        snapshot.kinematics.heading =
+            ValidatedAngle::new_degrees(fd.heading_deg as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "heading_deg".to_string(),
+                }
+            })?;
+        snapshot.kinematics.pitch =
+            ValidatedAngle::new_degrees(fd.pitch_deg as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "pitch_deg".to_string(),
+                }
+            })?;
+        snapshot.kinematics.bank =
+            ValidatedAngle::new_degrees(fd.roll_deg as f32).map_err(|_| {
+                DcsAdapterError::TelemetryParsing {
+                    field: "roll_deg".to_string(),
+                }
+            })?;
+        snapshot.kinematics.aoa = ValidatedAngle::new_degrees(fd.aoa_deg as f32).map_err(|_| {
+            DcsAdapterError::TelemetryParsing {
+                field: "aoa_deg".to_string(),
+            }
+        })?;
+
+        // Altitude (meters, pass-through)
+        snapshot.environment.altitude = fd.altitude_m as f32;
+
+        // Vertical speed (m/s, pass-through)
+        snapshot.kinematics.vertical_speed = fd.vertical_speed_ms as f32;
+
+        // G-load
+        snapshot.kinematics.g_force =
+            GForce::new(fd.g_load as f32).map_err(|_| DcsAdapterError::TelemetryParsing {
+                field: "g_load".to_string(),
+            })?;
+
+        // Gear positions
+        for (i, &pos) in fd.gear_position.iter().enumerate() {
+            let gear_pos = if pos > 0.9 {
+                GearPosition::Down
+            } else if pos < 0.1 {
+                GearPosition::Up
+            } else {
+                GearPosition::Transitioning
+            };
+            match i {
+                0 => snapshot.config.gear.nose = gear_pos,
+                1 => snapshot.config.gear.left = gear_pos,
+                2 => snapshot.config.gear.right = gear_pos,
+                _ => {}
+            }
+        }
+
+        // Engine RPM percentages
+        for (i, &rpm) in fd.engine_rpm_percent.iter().enumerate() {
+            let engine = EngineData {
+                index: i as u8,
+                running: rpm > 0.0,
+                rpm: Percentage::new(rpm.clamp(0.0, 100.0) as f32)
+                    .unwrap_or_else(|_| Percentage::new(0.0).unwrap()),
+                manifold_pressure: None,
+                egt: None,
+                cht: None,
+                fuel_flow: None,
+                oil_pressure: None,
+                oil_temperature: None,
+            };
+            snapshot.engines.push(engine);
+        }
+
+        Ok(snapshot)
+    }
+
+    /// Detect aircraft using the DCS aircraft database for metadata enrichment.
+    ///
+    /// If the aircraft is found in the database, the display name is used as the
+    /// variant; otherwise a plain [`AircraftId`] is created from the raw name.
+    pub fn detect_aircraft(&self, dcs_name: &str) -> AircraftId {
+        if let Some(info) = aircraft_db::lookup(dcs_name) {
+            AircraftId::with_variant(dcs_name, info.display_name)
+        } else if let Some(info) = aircraft_db::lookup_fuzzy(dcs_name) {
+            AircraftId::with_variant(info.dcs_name, info.display_name)
+        } else {
+            AircraftId::new(dcs_name)
+        }
     }
 
     /// Publish snapshot to bus

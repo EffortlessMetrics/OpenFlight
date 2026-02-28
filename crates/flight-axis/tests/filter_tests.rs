@@ -134,7 +134,7 @@ fn test_filter_output_bounded_for_valid_inputs() {
     for (i, &input) in inputs.iter().enumerate() {
         let out = step(&pipeline, &mut state, input, (i as u64 + 1) * 1_000);
         assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "Filter output {out} out of [-1, 1] for input {input}"
         );
     }
@@ -222,7 +222,7 @@ proptest! {
         let out = step(&pipeline, &mut state, input, 2_000);
 
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "filter output {out} out of [-1, 1] for init={init}, input={input}, alpha={alpha}"
         );
     }

@@ -1,0 +1,43 @@
+# Gravis PC GamePad USB
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Wave-99 addition.
+schema_version: "1"
+
+device:
+  name: "Gravis PC GamePad USB"
+  vendor: "Gravis"
+  usb:
+    vendor_id: 0x0428       # Confirmed
+    product_id: 0x4001      # Community estimate — verify with lsusb
+  hid:
+    usage_page: 0x01     # Generic Desktop
+    usage: 0x5             # Game Pad
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 8
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 3
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID 0x0428 confirmed (Gravis). PID 0x4001 estimated for PC GamePad USB variant. Verify with lsusb.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    Gravis PC GamePad USB — USB-adapted version of the classic Gravis gamepad. Limited axes but iconic design.
+    Wave-99 addition. Last reviewed: 2026-07.

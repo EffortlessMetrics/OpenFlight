@@ -165,13 +165,13 @@ pub enum G940ParseError {
 /// Normalize a 12-bit bipolar axis (0..4095) to −1.0..=1.0.
 #[inline]
 fn normalize_12bit_bipolar(raw: u16) -> f32 {
-    (raw as f32 - 2047.5) / 2047.5
+    ((raw as f32 - 2047.5) / 2047.5).clamp(-1.0, 1.0)
 }
 
 /// Normalize a 12-bit unipolar axis (0..4095) to 0.0..=1.0.
 #[inline]
 fn normalize_12bit_unipolar(raw: u16) -> f32 {
-    raw as f32 / 4095.0
+    (raw as f32 / 4095.0).clamp(0.0, 1.0)
 }
 
 /// Extract the lower 12-bit value from a 3-byte, two-value 12-bit pack.
