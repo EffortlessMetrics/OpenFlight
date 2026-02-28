@@ -300,6 +300,49 @@ impl AxisPipeline {
     pub fn stage_names(&self) -> Vec<&str> {
         self.stages.iter().map(|s| s.name()).collect()
     }
+
+    /// Returns a slice of all stages for introspection.
+    #[must_use]
+    pub fn stages(&self) -> &[Box<dyn AxisStage>] {
+        &self.stages
+    }
+
+    /// Inserts a stage at the given index, shifting later stages right.
+    ///
+    /// If `index` is beyond the current length, the stage is appended.
+    pub fn insert_stage(&mut self, index: usize, stage: Box<dyn AxisStage>) {
+        let clamped = index.min(self.stages.len());
+        self.stages.insert(clamped, stage);
+        self.bypass.insert(clamped, false);
+    }
+
+    /// Removes and returns the stage at the given index.
+    ///
+    /// Returns `None` if the index is out of bounds.
+    pub fn remove_stage(&mut self, index: usize) -> Option<Box<dyn AxisStage>> {
+        if index >= self.stages.len() {
+            return None;
+        }
+        self.bypass.remove(index);
+        Some(self.stages.remove(index))
+    }
+
+    /// Runs the pipeline and returns per-stage input/output diagnostics.
+    ///
+    /// **Warning**: calling this modifies stateful stages (e.g. smoothing).
+    #[must_use]
+    pub fn diagnostics(&self, input: f64, dt_secs: f64) -> Vec<(&str, f64, f64)> {
+        let mut result = Vec::with_capacity(self.stages.len());
+        let mut value = input;
+        for (stage, &bypassed) in self.stages.iter().zip(&self.bypass) {
+            let stage_input = value;
+            if !bypassed {
+                value = stage.process(value, dt_secs);
+            }
+            result.push((stage.name(), stage_input, value));
+        }
+        result
+    }
 }
 
 impl Default for AxisPipeline {
@@ -594,5 +637,101 @@ mod tests {
     fn test_default_pipeline_is_empty() {
         let pipeline = AxisPipeline::default();
         assert_eq!(pipeline.stage_count(), 0);
+    }
+
+    // --- insert_stage / remove_stage / stages / diagnostics tests ---
+
+    #[test]
+    fn test_insert_stage_at_beginning() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        pipeline.insert_stage(0, Box::new(SensitivityStage { multiplier: 2.0 }));
+        assert_eq!(pipeline.stage_count(), 2);
+        assert_eq!(pipeline.stage_names(), vec!["sensitivity", "clamp"]);
+        let out = pipeline.process(0.8, 0.004);
+        assert!((out - 1.0).abs() < 1e-10); // 0.8*2=1.6, clamped to 1.0
+    }
+
+    #[test]
+    fn test_insert_stage_at_end() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.insert_stage(99, Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        })); // beyond length → appends
+        assert_eq!(pipeline.stage_count(), 2);
+        assert_eq!(pipeline.stage_names(), vec!["sensitivity", "clamp"]);
+    }
+
+    #[test]
+    fn test_remove_stage_returns_stage() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        let removed = pipeline.remove_stage(0);
+        assert!(removed.is_some());
+        assert_eq!(removed.unwrap().name(), "sensitivity");
+        assert_eq!(pipeline.stage_count(), 1);
+        assert_eq!(pipeline.stage_names(), vec!["clamp"]);
+    }
+
+    #[test]
+    fn test_remove_stage_out_of_bounds() {
+        let mut pipeline = AxisPipeline::new();
+        assert!(pipeline.remove_stage(0).is_none());
+    }
+
+    #[test]
+    fn test_stages_accessor() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 1.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        let stages = pipeline.stages();
+        assert_eq!(stages.len(), 2);
+        assert_eq!(stages[0].name(), "sensitivity");
+        assert_eq!(stages[1].name(), "clamp");
+    }
+
+    #[test]
+    fn test_diagnostics_captures_per_stage_io() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        let diag = pipeline.diagnostics(0.4, 0.004);
+        assert_eq!(diag.len(), 2);
+        assert_eq!(diag[0].0, "sensitivity");
+        assert!((diag[0].1 - 0.4).abs() < 1e-10); // input to sensitivity
+        assert!((diag[0].2 - 0.8).abs() < 1e-10); // output of sensitivity
+        assert_eq!(diag[1].0, "clamp");
+        assert!((diag[1].1 - 0.8).abs() < 1e-10); // input to clamp
+        assert!((diag[1].2 - 0.8).abs() < 1e-10); // output of clamp (within range)
+    }
+
+    #[test]
+    fn test_diagnostics_respects_bypass() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        pipeline.bypass_stage(0); // bypass sensitivity
+        let diag = pipeline.diagnostics(0.4, 0.004);
+        // Sensitivity is bypassed: input=output=0.4
+        assert!((diag[0].1 - 0.4).abs() < 1e-10);
+        assert!((diag[0].2 - 0.4).abs() < 1e-10);
     }
 }

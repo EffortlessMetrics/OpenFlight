@@ -132,6 +132,11 @@ enum Commands {
         #[command(subcommand)]
         action: CloudProfilesAction,
     },
+    /// Simulator adapter management
+    Adapters {
+        #[command(subcommand)]
+        action: AdaptersAction,
+    },
     /// VR overlay management (show/hide/notify)
     Overlay {
         #[command(subcommand)]
@@ -237,6 +242,9 @@ async fn execute_command(
         }
         Commands::CloudProfiles { action } => {
             commands::cloud_profiles::execute(action, cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Adapters { action } => {
+            commands::adapters::execute(action, cli.output, cli.verbose, client_manager).await
         }
         Commands::Overlay { action } => {
             commands::overlay::execute(action, cli.output, cli.verbose, client_manager).await
@@ -399,5 +407,203 @@ mod tests {
         let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
         assert!(!cli.json);
         assert!(matches!(cli.output, OutputFormat::Human));
+    }
+
+    #[test]
+    fn parse_devices_calibrate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "devices", "calibrate", "dev-1"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Devices {
+                action: commands::DeviceAction::Calibrate { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_devices_test_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "devices", "test", "dev-1"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Devices {
+                action: commands::DeviceAction::Test { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_devices_test_with_options() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "devices",
+            "test",
+            "dev-1",
+            "--interval-ms",
+            "50",
+            "--count",
+            "10",
+        ])
+        .unwrap();
+        if let Commands::Devices {
+            action:
+                commands::DeviceAction::Test {
+                    device_id,
+                    interval_ms,
+                    count,
+                },
+        } = cli.command
+        {
+            assert_eq!(device_id, "dev-1");
+            assert_eq!(interval_ms, 50);
+            assert_eq!(count, Some(10));
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_profile_list_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "list"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Profile {
+                action: commands::ProfileAction::List { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_profile_activate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "activate", "combat"]).unwrap();
+        if let Commands::Profile {
+            action: commands::ProfileAction::Activate { name },
+        } = cli.command
+        {
+            assert_eq!(name, "combat");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_profile_validate_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "validate", "test.json"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Profile {
+                action: commands::ProfileAction::Validate { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_profile_export_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "export", "combat", "output.json"])
+            .unwrap();
+        if let Commands::Profile {
+            action: commands::ProfileAction::Export { name, path },
+        } = cli.command
+        {
+            assert_eq!(name, "combat");
+            assert_eq!(path, std::path::PathBuf::from("output.json"));
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_status_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "status"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Adapters {
+                action: commands::AdaptersAction::Status
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_adapters_enable_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "enable", "msfs"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Enable { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "msfs");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_disable_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "disable", "xplane"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Disable { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "xplane");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_adapters_reconnect_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "adapters", "reconnect", "dcs"]).unwrap();
+        if let Commands::Adapters {
+            action: commands::AdaptersAction::Reconnect { sim },
+        } = cli.command
+        {
+            assert_eq!(sim, "dcs");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_diag_bundle_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "bundle"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::Bundle { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_health_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "health"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::Health
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_metrics_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "metrics"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Diag {
+                action: commands::DiagAction::DiagMetrics { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_trace_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diag", "trace", "30"]).unwrap();
+        if let Commands::Diag {
+            action: commands::DiagAction::Trace { duration, .. },
+        } = cli.command
+        {
+            assert_eq!(duration, 30);
+        } else {
+            panic!("unexpected command variant");
+        }
     }
 }

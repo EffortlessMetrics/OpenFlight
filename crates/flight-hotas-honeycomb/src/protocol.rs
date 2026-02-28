@@ -592,7 +592,10 @@ mod tests {
     #[test]
     fn test_gear_up_state() {
         let mask: u64 = 1 << 30;
-        assert_eq!(GearIndicatorState::from_button_mask(mask), GearIndicatorState::Up);
+        assert_eq!(
+            GearIndicatorState::from_button_mask(mask),
+            GearIndicatorState::Up
+        );
     }
 
     #[test]

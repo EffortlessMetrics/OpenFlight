@@ -1,0 +1,54 @@
+# Microsoft Flight Simulator 2020 — SimConnect Integration
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+schema_version: "1"
+
+game:
+  name: "Microsoft Flight Simulator 2020"
+  id: msfs2020
+  developer: "Asobo Studio"
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+  sdk_version: "0.22.x"
+
+supported_versions:
+  - "SU12+"
+  - "SU15 (final)"
+
+version_notes:
+  simconnect_sdk: "0.22.x"
+  notes: >
+    MSFS 2020 uses SimConnect SDK 0.22.x (shipped with MSFS SDK v0.20.4+).
+    Standard SimVars and client events are fully supported.
+    SimConnect_SetInputEvent (B-var/H-var) is not available in this SDK version.
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false
+  force_feedback_translation: true
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: true
+  integration_tests: false
+  fuzz_coverage: true
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: INPUT_EVENTS_STUBBED
+    description: >
+      SimConnect_SetInputEvent is not available in SDK 0.22.x.
+      flight-simconnect::EventManager::transmit_input_event() returns
+      EventError::NotSupported. Affects modern aircraft using B-var/H-var controls.
+    workaround: "Use standard client events (AXIS_ELEVATOR_SET etc.) for legacy aircraft."
+  - id: SU15_END_OF_LIFE
+    description: >
+      MSFS 2020 received its final Sim Update (SU15). No further patches
+      or SDK updates are expected. The SimConnect 0.22.x interface is frozen.

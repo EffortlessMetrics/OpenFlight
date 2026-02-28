@@ -7,7 +7,10 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
+pub mod migration;
+pub mod recovery;
 pub mod state_persistence;
+pub mod store;
 
 use flight_profile::{CapabilityContext, CapabilityMode, Profile, merge_axis_configs};
 use serde::{Deserialize, Serialize};

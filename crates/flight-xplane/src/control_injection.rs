@@ -159,10 +159,8 @@ impl XPlaneControlInjector {
     ///
     /// The socket is **not** bound yet — call [`Self::bind`] before sending.
     pub fn new(config: ControlInjectorConfig) -> Self {
-        let rate_limiter = RateLimiter::new(
-            config.max_packets_per_second,
-            config.min_dataref_interval,
-        );
+        let rate_limiter =
+            RateLimiter::new(config.max_packets_per_second, config.min_dataref_interval);
         Self {
             socket: None,
             config,
@@ -185,10 +183,8 @@ impl XPlaneControlInjector {
     ///
     /// Useful for testing or when the caller manages the socket lifetime.
     pub fn with_socket(config: ControlInjectorConfig, socket: UdpSocket) -> Self {
-        let rate_limiter = RateLimiter::new(
-            config.max_packets_per_second,
-            config.min_dataref_interval,
-        );
+        let rate_limiter =
+            RateLimiter::new(config.max_packets_per_second, config.min_dataref_interval);
         Self {
             socket: Some(socket),
             config,
@@ -228,10 +224,7 @@ impl XPlaneControlInjector {
     }
 
     /// Send a named X-Plane command via a CMND packet.
-    pub async fn send_command(
-        &mut self,
-        command_path: &str,
-    ) -> Result<(), ControlInjectionError> {
+    pub async fn send_command(&mut self, command_path: &str) -> Result<(), ControlInjectionError> {
         Self::validate_path(command_path)?;
 
         let now = Instant::now();
@@ -253,11 +246,7 @@ impl XPlaneControlInjector {
     /// Set a primary flight axis value in `[-1.0, +1.0]`.
     ///
     /// `axis_id`: 0 = pitch, 1 = roll, 2 = yaw.
-    pub async fn set_axis(
-        &mut self,
-        axis_id: u8,
-        value: f32,
-    ) -> Result<(), ControlInjectionError> {
+    pub async fn set_axis(&mut self, axis_id: u8, value: f32) -> Result<(), ControlInjectionError> {
         let path = AXIS_DATAREFS
             .get(axis_id as usize)
             .ok_or(ControlInjectionError::UnknownAxis { id: axis_id })?;
@@ -613,7 +602,10 @@ mod tests {
         sender.connect(recv_addr).await.unwrap();
 
         let mut injector = XPlaneControlInjector::with_socket(cfg, sender);
-        let err = injector.set_dataref("sim/test", f32::NAN).await.unwrap_err();
+        let err = injector
+            .set_dataref("sim/test", f32::NAN)
+            .await
+            .unwrap_err();
         assert!(matches!(err, ControlInjectionError::InvalidValue { .. }));
     }
 

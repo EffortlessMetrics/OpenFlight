@@ -590,10 +590,7 @@ mod tests {
             inj.axis_event_name(AxisId::Elevator),
             Some(&"AXIS_ELEVATOR_SET")
         );
-        assert_eq!(
-            inj.axis_event_name(AxisId::Flaps),
-            Some(&"AXIS_FLAPS_SET")
-        );
+        assert_eq!(inj.axis_event_name(AxisId::Flaps), Some(&"AXIS_FLAPS_SET"));
     }
 
     #[test]

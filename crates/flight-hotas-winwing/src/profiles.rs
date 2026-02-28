@@ -1069,10 +1069,11 @@ mod tests {
     #[test]
     fn test_fcu_has_annunciators() {
         let p = fcu_panel_profile();
-        assert!(p
-            .displays
-            .iter()
-            .any(|d| d.display_type == "led-annunciator"));
+        assert!(
+            p.displays
+                .iter()
+                .any(|d| d.display_type == "led-annunciator")
+        );
     }
 
     #[test]
@@ -1158,11 +1159,7 @@ mod tests {
             fcu_panel_profile(),
             efis_panel_profile(),
         ] {
-            assert!(
-                p.axes.is_empty(),
-                "{} should have no axes",
-                p.name
-            );
+            assert!(p.axes.is_empty(), "{} should have no axes", p.name);
         }
     }
 
@@ -1174,11 +1171,7 @@ mod tests {
             f18_grip_profile(),
             a10_grip_profile(),
         ] {
-            assert!(
-                !p.axes.is_empty(),
-                "{} should have axes",
-                p.name
-            );
+            assert!(!p.axes.is_empty(), "{} should have axes", p.name);
         }
     }
 

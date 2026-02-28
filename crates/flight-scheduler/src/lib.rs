@@ -28,21 +28,25 @@ pub mod unix;
 #[cfg(windows)]
 pub mod windows;
 
+pub mod budget;
 pub mod metrics;
 pub mod pll;
 pub mod ring;
 pub mod soak;
+pub mod timer;
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
+pub use budget::TickBudget;
 pub use metrics::{JitterMetrics, TimingStats};
-pub use pll::Pll;
+pub use pll::{PhaseLockLoop, Pll};
 pub use ring::{RingStats, SpscRing};
 pub use soak::{
     SoakDiagnostics, SoakFailureReason, SoakMetrics, SoakTest, SoakTestConfig, SoakTestResult,
     SyntheticTelemetryGenerator, TelemetrySnapshot, get_rss_bytes,
 };
+pub use timer::{FallbackTimer, HighResTimer, TimerStats};
 
 // Re-export Windows-specific types when on Windows
 #[cfg(windows)]

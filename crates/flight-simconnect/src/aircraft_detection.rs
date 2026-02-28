@@ -226,9 +226,22 @@ impl AircraftDetectionEngine {
         let lower = title.to_lowercase();
         // Community mods often contain these patterns.
         let mod_indicators = [
-            "livery", "mod", "addon", "custom", "repaint", "package",
-            "workingtitle", "flybywire", "pmdg", "fenix", "inibuilds",
-            "justflight", "aerosoft", "blacksquare", "milviz", "carenado",
+            "livery",
+            "mod",
+            "addon",
+            "custom",
+            "repaint",
+            "package",
+            "workingtitle",
+            "flybywire",
+            "pmdg",
+            "fenix",
+            "inibuilds",
+            "justflight",
+            "aerosoft",
+            "blacksquare",
+            "milviz",
+            "carenado",
         ];
         mod_indicators.iter().any(|kw| lower.contains(kw))
     }
@@ -268,10 +281,7 @@ fn fuzzy_score(pattern: &str, input: &str) -> f32 {
     if p_tokens.is_empty() || i_tokens.is_empty() {
         return 0.0;
     }
-    let common = p_tokens
-        .iter()
-        .filter(|t| i_tokens.contains(t))
-        .count();
+    let common = p_tokens.iter().filter(|t| i_tokens.contains(t)).count();
     let union = p_tokens.len().max(i_tokens.len());
     common as f32 / union as f32 * 0.6
 }

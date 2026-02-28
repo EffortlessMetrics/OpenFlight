@@ -106,31 +106,17 @@ pub enum PluginProtoMessage {
         entries: Vec<DatarefEntry>,
     },
     /// Subscribe to one or more datarefs.
-    Subscribe {
-        datarefs: Vec<SubscriptionRequest>,
-    },
+    Subscribe { datarefs: Vec<SubscriptionRequest> },
     /// Unsubscribe from datarefs.
-    Unsubscribe {
-        dataref_ids: Vec<u32>,
-    },
+    Unsubscribe { dataref_ids: Vec<u32> },
     /// Set a dataref to a float value.
-    SetDataref {
-        path: String,
-        value: f32,
-    },
+    SetDataref { path: String, value: f32 },
     /// Execute a named X-Plane command.
-    ExecuteCommand {
-        path: String,
-    },
+    ExecuteCommand { path: String },
     /// Keep-alive ping/pong.
-    Heartbeat {
-        timestamp_us: u64,
-    },
+    Heartbeat { timestamp_us: u64 },
     /// Error from the plugin.
-    Error {
-        code: u16,
-        message: String,
-    },
+    Error { code: u16, message: String },
 }
 
 /// A single dataref value inside a [`PluginProtoMessage::DatarefBatch`].
@@ -176,7 +162,9 @@ pub fn encode(msg: &PluginProtoMessage) -> Result<Vec<u8>, ProtocolError> {
     let (msg_type, payload) = encode_payload(msg)?;
 
     if payload.len() > MAX_PAYLOAD {
-        return Err(ProtocolError::PayloadTooLarge { size: payload.len() });
+        return Err(ProtocolError::PayloadTooLarge {
+            size: payload.len(),
+        });
     }
 
     let mut buf = Vec::with_capacity(HEADER_LEN + payload.len());
@@ -345,8 +333,14 @@ fn decode_payload(
             ensure_remaining(payload, 0, 4 + 8 + 4)?;
             let sequence = u32::from_le_bytes([payload[0], payload[1], payload[2], payload[3]]);
             let timestamp_us = u64::from_le_bytes([
-                payload[4], payload[5], payload[6], payload[7], payload[8], payload[9],
-                payload[10], payload[11],
+                payload[4],
+                payload[5],
+                payload[6],
+                payload[7],
+                payload[8],
+                payload[9],
+                payload[10],
+                payload[11],
             ]);
             let count =
                 u32::from_le_bytes([payload[12], payload[13], payload[14], payload[15]]) as usize;
@@ -354,8 +348,12 @@ fn decode_payload(
             let mut off = 16;
             for _ in 0..count {
                 ensure_remaining(payload, off, 8)?;
-                let id =
-                    u32::from_le_bytes([payload[off], payload[off + 1], payload[off + 2], payload[off + 3]]);
+                let id = u32::from_le_bytes([
+                    payload[off],
+                    payload[off + 1],
+                    payload[off + 2],
+                    payload[off + 3],
+                ]);
                 let value = f32::from_le_bytes([
                     payload[off + 4],
                     payload[off + 5],
@@ -378,8 +376,12 @@ fn decode_payload(
             let mut off = 2;
             for _ in 0..count {
                 ensure_remaining(payload, off, 4)?;
-                let id =
-                    u32::from_le_bytes([payload[off], payload[off + 1], payload[off + 2], payload[off + 3]]);
+                let id = u32::from_le_bytes([
+                    payload[off],
+                    payload[off + 1],
+                    payload[off + 2],
+                    payload[off + 3],
+                ]);
                 off += 4;
                 let (path, new_off) = read_string(payload, off)?;
                 off = new_off;
@@ -401,8 +403,12 @@ fn decode_payload(
             let mut off = 2;
             for _ in 0..count {
                 ensure_remaining(payload, off, 4)?;
-                let id =
-                    u32::from_le_bytes([payload[off], payload[off + 1], payload[off + 2], payload[off + 3]]);
+                let id = u32::from_le_bytes([
+                    payload[off],
+                    payload[off + 1],
+                    payload[off + 2],
+                    payload[off + 3],
+                ]);
                 ids.push(id);
                 off += 4;
             }
@@ -426,8 +432,8 @@ fn decode_payload(
         MessageType::Heartbeat => {
             ensure_remaining(payload, 0, 8)?;
             let ts = u64::from_le_bytes([
-                payload[0], payload[1], payload[2], payload[3], payload[4], payload[5],
-                payload[6], payload[7],
+                payload[0], payload[1], payload[2], payload[3], payload[4], payload[5], payload[6],
+                payload[7],
             ]);
             Ok(PluginProtoMessage::Heartbeat { timestamp_us: ts })
         }
@@ -543,7 +549,11 @@ impl PluginDiscovery {
     }
 
     /// Build a heartbeat message if the interval has elapsed.
-    pub fn maybe_heartbeat(&mut self, now: Instant, timestamp_us: u64) -> Option<PluginProtoMessage> {
+    pub fn maybe_heartbeat(
+        &mut self,
+        now: Instant,
+        timestamp_us: u64,
+    ) -> Option<PluginProtoMessage> {
         if !self.is_connected() {
             return None;
         }
@@ -792,7 +802,10 @@ mod tests {
     fn decode_unsupported_version() {
         let buf = [b'O', b'F', b'X', b'P', 99, 0x30, 0, 0];
         let err = decode(&buf).unwrap_err();
-        assert!(matches!(err, ProtocolError::UnsupportedVersion { version: 99 }));
+        assert!(matches!(
+            err,
+            ProtocolError::UnsupportedVersion { version: 99 }
+        ));
     }
 
     #[test]
@@ -975,7 +988,10 @@ mod tests {
         // First call should produce a heartbeat
         let hb = pd.maybe_heartbeat(Instant::now(), 999);
         assert!(hb.is_some());
-        assert!(matches!(hb.unwrap(), PluginProtoMessage::Heartbeat { timestamp_us: 999 }));
+        assert!(matches!(
+            hb.unwrap(),
+            PluginProtoMessage::Heartbeat { timestamp_us: 999 }
+        ));
 
         // Immediately after — interval not elapsed
         let hb2 = pd.maybe_heartbeat(Instant::now(), 1000);

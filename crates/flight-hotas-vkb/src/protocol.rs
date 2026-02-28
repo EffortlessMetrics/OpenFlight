@@ -28,11 +28,10 @@
 //! treated as hints.  Prefer descriptor-first discovery when available.
 
 use flight_hid_support::device_support::{
-    VKB_GLADIATOR_MK2_PID, VKB_GLADIATOR_MODERN_COMBAT_PRO_PID,
-    VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
-    VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID,
-    VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID, VKB_SPACE_GUNFIGHTER_PID,
-    VKB_VENDOR_ID,
+    VKB_GLADIATOR_MK2_PID, VKB_GLADIATOR_MODERN_COMBAT_PRO_PID, VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+    VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID,
+    VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID,
+    VKB_SPACE_GUNFIGHTER_PID, VKB_VENDOR_ID,
 };
 
 // ─── Device family classification ─────────────────────────────────────────────
@@ -675,8 +674,14 @@ mod tests {
 
     #[test]
     fn is_vkb_joystick_known_device() {
-        assert!(is_vkb_joystick(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID));
-        assert!(is_vkb_joystick(VKB_VENDOR_ID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID));
+        assert!(is_vkb_joystick(
+            VKB_VENDOR_ID,
+            VKB_GLADIATOR_NXT_EVO_RIGHT_PID
+        ));
+        assert!(is_vkb_joystick(
+            VKB_VENDOR_ID,
+            VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID
+        ));
     }
 
     #[test]
@@ -739,13 +744,18 @@ mod tests {
     #[test]
     fn gladiator_shift_model() {
         assert_eq!(GLADIATOR_NXT_EVO_SHIFT.layer_count, 2);
-        assert!(GLADIATOR_NXT_EVO_SHIFT.logical_button_count >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count);
+        assert!(
+            GLADIATOR_NXT_EVO_SHIFT.logical_button_count
+                >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count
+        );
     }
 
     #[test]
     fn gunfighter_mcg_shift_model() {
         assert_eq!(GUNFIGHTER_MCG_SHIFT.layer_count, 3);
-        assert!(GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count);
+        assert!(
+            GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count
+        );
     }
 
     // ─── LED commands ─────────────────────────────────────────────────────
@@ -815,12 +825,7 @@ mod tests {
 
     // ─── Gunfighter report parsing ────────────────────────────────────────
 
-    fn make_gunfighter_report(
-        axes: [u16; 6],
-        btn_lo: u32,
-        btn_hi: u32,
-        hat_byte: u8,
-    ) -> Vec<u8> {
+    fn make_gunfighter_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
         let mut report = vec![0u8; 21];
         for (i, &v) in axes.iter().enumerate() {
             let bytes = v.to_le_bytes();
@@ -849,12 +854,8 @@ mod tests {
     #[test]
     fn gunfighter_centre_axes_normalise_to_zero() {
         let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
-        let report = make_gunfighter_report(
-            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000],
-            0,
-            0,
-            0xFF,
-        );
+        let report =
+            make_gunfighter_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         assert!(state.axes.roll.abs() < 0.01);
         assert!(state.axes.pitch.abs() < 0.01);
@@ -866,12 +867,8 @@ mod tests {
     #[test]
     fn gunfighter_full_deflection_axes() {
         let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
-        let report = make_gunfighter_report(
-            [0xFFFF, 0x0000, 0xFFFF, 0x8000, 0x8000, 0xFFFF],
-            0,
-            0,
-            0xFF,
-        );
+        let report =
+            make_gunfighter_report([0xFFFF, 0x0000, 0xFFFF, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         assert!((state.axes.roll - 1.0).abs() < 0.01);
         assert!((state.axes.pitch - (-1.0)).abs() < 0.01);
@@ -906,8 +903,8 @@ mod tests {
 
     #[test]
     fn gunfighter_with_report_id() {
-        let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro)
-            .with_report_id(true);
+        let handler =
+            GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro).with_report_id(true);
         let mut report = vec![0x01u8];
         report.extend_from_slice(&make_gunfighter_report(
             [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF],

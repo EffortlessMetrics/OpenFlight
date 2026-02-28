@@ -36,14 +36,7 @@ impl std::fmt::Display for ModuleFidelity {
 
 /// FC3-level module names (simplified cockpits).
 static FC3_MODULES: &[&str] = &[
-    "Su-25T",
-    "Su-27",
-    "Su-33",
-    "MiG-29A",
-    "MiG-29S",
-    "F-15C",
-    "J-11A",
-    "Su-25",
+    "Su-25T", "Su-27", "Su-33", "MiG-29A", "MiG-29S", "F-15C", "J-11A", "Su-25",
 ];
 
 /// Determine fidelity level for a DCS module name.
@@ -213,10 +206,16 @@ mod tests {
 
     #[test]
     fn test_full_fidelity_modules() {
-        assert_eq!(classify_fidelity("FA-18C_hornet"), ModuleFidelity::FullFidelity);
+        assert_eq!(
+            classify_fidelity("FA-18C_hornet"),
+            ModuleFidelity::FullFidelity
+        );
         assert_eq!(classify_fidelity("F-16C_50"), ModuleFidelity::FullFidelity);
         assert_eq!(classify_fidelity("A-10C_2"), ModuleFidelity::FullFidelity);
-        assert_eq!(classify_fidelity("AH-64D_BLK_II"), ModuleFidelity::FullFidelity);
+        assert_eq!(
+            classify_fidelity("AH-64D_BLK_II"),
+            ModuleFidelity::FullFidelity
+        );
     }
 
     #[test]
@@ -336,10 +335,7 @@ mod tests {
         assert_eq!(det.base_name, "AH-64D_BLK_II");
         assert_eq!(det.seat, CockpitSeat::Rear);
         assert!(det.multi_crew);
-        assert_eq!(
-            det.db_info.unwrap().category,
-            AircraftCategory::Helicopter
-        );
+        assert_eq!(det.db_info.unwrap().category, AircraftCategory::Helicopter);
     }
 
     #[test]
@@ -369,10 +365,7 @@ mod tests {
 
     #[test]
     fn test_detect_axes_profile_warbird() {
-        assert_eq!(
-            detect_axes_profile("TF-51D"),
-            AxesProfile::Warbird4Axis
-        );
+        assert_eq!(detect_axes_profile("TF-51D"), AxesProfile::Warbird4Axis);
     }
 
     #[test]

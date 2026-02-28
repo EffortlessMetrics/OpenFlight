@@ -86,9 +86,7 @@ pub struct VpcAceTorqInputState {
 }
 
 /// Parse one raw HID report from the VPC ACE Torq.
-pub fn parse_ace_torq_report(
-    data: &[u8],
-) -> Result<VpcAceTorqInputState, VpcAceTorqParseError> {
+pub fn parse_ace_torq_report(data: &[u8]) -> Result<VpcAceTorqInputState, VpcAceTorqParseError> {
     if data.len() < VPC_ACE_TORQ_MIN_REPORT_BYTES {
         return Err(VpcAceTorqParseError::TooShort(data.len()));
     }

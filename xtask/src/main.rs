@@ -64,6 +64,9 @@ enum Commands {
 
     /// Generate COMPATIBILITY.md from compat/ manifests
     GenCompat,
+
+    /// Generate COMPATIBILITY.md and compatibility.json from compat/ manifests
+    GenerateCompat,
 }
 
 fn main() -> Result<()> {
@@ -105,6 +108,7 @@ fn main() -> Result<()> {
         }
         Commands::Hotas { command } => hotas::run(command),
         Commands::GenCompat => compat::run_gen_compat(),
+        Commands::GenerateCompat => compat::run_gen_compat(),
     }
 }
 

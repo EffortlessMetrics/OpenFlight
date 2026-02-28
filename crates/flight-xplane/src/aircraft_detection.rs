@@ -59,10 +59,7 @@ pub struct AircraftDbMatch {
 #[derive(Debug, Clone, PartialEq)]
 pub enum AircraftChange {
     /// Aircraft type changed (different ICAO).
-    TypeChanged {
-        old_icao: String,
-        new_icao: String,
-    },
+    TypeChanged { old_icao: String, new_icao: String },
     /// Same aircraft type but livery changed.
     LiveryChanged {
         icao: String,
@@ -78,20 +75,15 @@ pub enum AircraftChange {
 /// A representative set of well-known ICAO type designators.
 const STANDARD_ICAO_CODES: &[&str] = &[
     // GA
-    "C150", "C152", "C172", "C182", "C206", "C208", "C210", "PA28", "PA32", "PA34", "PA46",
-    "SR20", "SR22", "BE36", "BE58", "M20P", "M20T", "DA40", "DA42", "DA62", "RV7", "RV10",
+    "C150", "C152", "C172", "C182", "C206", "C208", "C210", "PA28", "PA32", "PA34", "PA46", "SR20",
+    "SR22", "BE36", "BE58", "M20P", "M20T", "DA40", "DA42", "DA62", "RV7", "RV10",
     // Turboprop
-    "PC12", "TBM9", "B350", "C90", "DHC6", "ATR7",
-    // Airliners
-    "A318", "A319", "A320", "A321", "A330", "A340", "A350", "A380",
-    "B737", "B738", "B739", "B744", "B748", "B752", "B763", "B772", "B77L", "B77W",
-    "B787", "B788", "B789", "MD11", "MD80",
-    "CRJ2", "CRJ7", "E145", "E170", "E175", "E190",
-    // Military
-    "F16", "F18", "F22", "F35", "A10", "C130", "C17", "B1", "B2", "B52",
-    // Helicopters
-    "R22", "R44", "B206", "B407", "EC35", "S76", "UH1H", "AH64", "H60",
-    // Gliders
+    "PC12", "TBM9", "B350", "C90", "DHC6", "ATR7", // Airliners
+    "A318", "A319", "A320", "A321", "A330", "A340", "A350", "A380", "B737", "B738", "B739", "B744",
+    "B748", "B752", "B763", "B772", "B77L", "B77W", "B787", "B788", "B789", "MD11", "MD80", "CRJ2",
+    "CRJ7", "E145", "E170", "E175", "E190", // Military
+    "F16", "F18", "F22", "F35", "A10", "C130", "C17", "B1", "B2", "B52", // Helicopters
+    "R22", "R44", "B206", "B407", "EC35", "S76", "UH1H", "AH64", "H60", // Gliders
     "ASK2", "DG80", "LS8",
 ];
 
@@ -131,10 +123,7 @@ impl EnhancedAircraftDetector {
     /// `raw_values` maps dataref paths (e.g. `DATAREF_ACF_ICAO`) to their
     /// string representation. Float-array string datarefs should already be
     /// decoded to a Rust `String`.
-    pub fn identify(
-        &mut self,
-        raw_values: &HashMap<String, String>,
-    ) -> EnhancedAircraftId {
+    pub fn identify(&mut self, raw_values: &HashMap<String, String>) -> EnhancedAircraftId {
         let raw_icao = raw_values
             .get(DATAREF_ACF_ICAO)
             .cloned()
@@ -279,7 +268,11 @@ impl EnhancedAircraftDetector {
             display_name: entry.display_name.to_owned(),
             category: entry.category,
             default_profile: entry.default_profile.to_owned(),
-            custom_datarefs: entry.custom_datarefs.iter().map(|s| s.to_string()).collect(),
+            custom_datarefs: entry
+                .custom_datarefs
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
         }
     }
 
@@ -302,8 +295,7 @@ impl EnhancedAircraftDetector {
             ("FL74", "B742"),
         ];
         for (from, to) in aliases {
-            self.icao_aliases
-                .insert(from.to_owned(), to.to_owned());
+            self.icao_aliases.insert(from.to_owned(), to.to_owned());
         }
     }
 }
@@ -327,11 +319,7 @@ mod tests {
         m
     }
 
-    fn make_raw_with_livery(
-        icao: &str,
-        descrip: &str,
-        livery: &str,
-    ) -> HashMap<String, String> {
+    fn make_raw_with_livery(icao: &str, descrip: &str, livery: &str) -> HashMap<String, String> {
         let mut m = make_raw(icao, descrip);
         m.insert(DATAREF_ACF_LIVERY.to_owned(), livery.to_owned());
         m

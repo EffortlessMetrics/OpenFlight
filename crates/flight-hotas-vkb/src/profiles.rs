@@ -196,47 +196,199 @@ static GLADIATOR_NXT_EVO_AXES: [AxisMapping; 6] = [
 ];
 
 static GLADIATOR_NXT_EVO_BUTTONS: [ButtonMapping; 34] = [
-    ButtonMapping { number: 1, name: "Trigger Stage 1", kind: ButtonKind::Trigger },
-    ButtonMapping { number: 2, name: "Trigger Stage 2", kind: ButtonKind::Trigger },
-    ButtonMapping { number: 3, name: "Side Button (A3)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 4, name: "Side Button (A4)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 5, name: "Pinkie Button", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 6, name: "Pinkie Lever", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 7, name: "HAT 2 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 8, name: "HAT 2 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 9, name: "HAT 2 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 10, name: "HAT 2 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 11, name: "HAT 3 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 12, name: "HAT 3 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 13, name: "HAT 3 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 14, name: "HAT 3 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 15, name: "HAT 4 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 16, name: "HAT 4 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 17, name: "HAT 4 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 18, name: "HAT 4 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 19, name: "Encoder CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 20, name: "Encoder CCW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 21, name: "Encoder Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 22, name: "Mini-stick Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 23, name: "Base Button (B1)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 24, name: "Base Button (B2)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 25, name: "Base Button (B3)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 26, name: "Base Button (B4)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 27, name: "Rapid Fire Fwd", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 28, name: "Rapid Fire Rev", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 29, name: "Flip Trigger Stage", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 30, name: "Throttle Brake", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 31, name: "Reserved 31", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 32, name: "Reserved 32", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 33, name: "Reserved 33", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 34, name: "Reserved 34", kind: ButtonKind::Pushbutton },
+    ButtonMapping {
+        number: 1,
+        name: "Trigger Stage 1",
+        kind: ButtonKind::Trigger,
+    },
+    ButtonMapping {
+        number: 2,
+        name: "Trigger Stage 2",
+        kind: ButtonKind::Trigger,
+    },
+    ButtonMapping {
+        number: 3,
+        name: "Side Button (A3)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 4,
+        name: "Side Button (A4)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 5,
+        name: "Pinkie Button",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 6,
+        name: "Pinkie Lever",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 7,
+        name: "HAT 2 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 8,
+        name: "HAT 2 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 9,
+        name: "HAT 2 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 10,
+        name: "HAT 2 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 11,
+        name: "HAT 3 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 12,
+        name: "HAT 3 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 13,
+        name: "HAT 3 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 14,
+        name: "HAT 3 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 15,
+        name: "HAT 4 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 16,
+        name: "HAT 4 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 17,
+        name: "HAT 4 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 18,
+        name: "HAT 4 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 19,
+        name: "Encoder CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 20,
+        name: "Encoder CCW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 21,
+        name: "Encoder Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 22,
+        name: "Mini-stick Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 23,
+        name: "Base Button (B1)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 24,
+        name: "Base Button (B2)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 25,
+        name: "Base Button (B3)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 26,
+        name: "Base Button (B4)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 27,
+        name: "Rapid Fire Fwd",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 28,
+        name: "Rapid Fire Rev",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 29,
+        name: "Flip Trigger Stage",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 30,
+        name: "Throttle Brake",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 31,
+        name: "Reserved 31",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 32,
+        name: "Reserved 32",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 33,
+        name: "Reserved 33",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 34,
+        name: "Reserved 34",
+        kind: ButtonKind::Pushbutton,
+    },
 ];
 
 static GLADIATOR_NXT_EVO_HATS: [HatMapping; 4] = [
-    HatMapping { index: 0, name: "POV Hat 1 (8-way)", kind: HatKind::Pov8Way },
-    HatMapping { index: 1, name: "Trim Hat 2 (4-way)", kind: HatKind::Trim4Way },
-    HatMapping { index: 2, name: "Trim Hat 3 (4-way)", kind: HatKind::Trim4Way },
-    HatMapping { index: 3, name: "Trim Hat 4 (4-way)", kind: HatKind::Trim4Way },
+    HatMapping {
+        index: 0,
+        name: "POV Hat 1 (8-way)",
+        kind: HatKind::Pov8Way,
+    },
+    HatMapping {
+        index: 1,
+        name: "Trim Hat 2 (4-way)",
+        kind: HatKind::Trim4Way,
+    },
+    HatMapping {
+        index: 2,
+        name: "Trim Hat 3 (4-way)",
+        kind: HatKind::Trim4Way,
+    },
+    HatMapping {
+        index: 3,
+        name: "Trim Hat 4 (4-way)",
+        kind: HatKind::Trim4Way,
+    },
 ];
 
 static GLADIATOR_NXT_EVO_NOTES: [&str; 3] = [
@@ -250,7 +402,10 @@ pub fn gladiator_nxt_evo_profile() -> VkbDeviceProfile {
     VkbDeviceProfile {
         device_name: "VKB Gladiator NXT EVO",
         vid: VKB_VENDOR_ID,
-        pids: &[VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_GLADIATOR_NXT_EVO_LEFT_PID],
+        pids: &[
+            VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+            VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+        ],
         axes: &GLADIATOR_NXT_EVO_AXES,
         buttons: &GLADIATOR_NXT_EVO_BUTTONS,
         hats: &GLADIATOR_NXT_EVO_HATS,
@@ -302,54 +457,234 @@ static GUNFIGHTER_MCG_AXES: [AxisMapping; 6] = [
 ];
 
 static GUNFIGHTER_MCG_BUTTONS: [ButtonMapping; 42] = [
-    ButtonMapping { number: 1, name: "Trigger Stage 1", kind: ButtonKind::Trigger },
-    ButtonMapping { number: 2, name: "Trigger Stage 2", kind: ButtonKind::Trigger },
-    ButtonMapping { number: 3, name: "Side Button (A3)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 4, name: "Side Button (A4)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 5, name: "Pinkie Button", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 6, name: "Pinkie Lever", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 7, name: "HAT 2 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 8, name: "HAT 2 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 9, name: "HAT 2 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 10, name: "HAT 2 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 11, name: "HAT 3 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 12, name: "HAT 3 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 13, name: "HAT 3 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 14, name: "HAT 3 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 15, name: "HAT 4 Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 16, name: "HAT 4 Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 17, name: "HAT 4 Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 18, name: "HAT 4 Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 19, name: "Encoder CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 20, name: "Encoder CCW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 21, name: "Encoder Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 22, name: "Mini-stick Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 23, name: "Folding Trigger", kind: ButtonKind::Trigger },
-    ButtonMapping { number: 24, name: "MCG Castle Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 25, name: "MCG Castle Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 26, name: "MCG Castle Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 27, name: "MCG Castle Left", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 28, name: "MCG Castle Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 29, name: "MCG Thumb Wheel Up", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 30, name: "MCG Thumb Wheel Down", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 31, name: "MCG Thumb Wheel Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 32, name: "MCG Brake Lever", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 33, name: "MCG TDC Slew Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 34, name: "MCG Paddle", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 35, name: "Base Button (B1)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 36, name: "Base Button (B2)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 37, name: "Base Button (B3)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 38, name: "Base Button (B4)", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 39, name: "Rapid Fire Fwd", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 40, name: "Rapid Fire Rev", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 41, name: "Reserved 41", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 42, name: "Reserved 42", kind: ButtonKind::Pushbutton },
+    ButtonMapping {
+        number: 1,
+        name: "Trigger Stage 1",
+        kind: ButtonKind::Trigger,
+    },
+    ButtonMapping {
+        number: 2,
+        name: "Trigger Stage 2",
+        kind: ButtonKind::Trigger,
+    },
+    ButtonMapping {
+        number: 3,
+        name: "Side Button (A3)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 4,
+        name: "Side Button (A4)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 5,
+        name: "Pinkie Button",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 6,
+        name: "Pinkie Lever",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 7,
+        name: "HAT 2 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 8,
+        name: "HAT 2 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 9,
+        name: "HAT 2 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 10,
+        name: "HAT 2 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 11,
+        name: "HAT 3 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 12,
+        name: "HAT 3 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 13,
+        name: "HAT 3 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 14,
+        name: "HAT 3 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 15,
+        name: "HAT 4 Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 16,
+        name: "HAT 4 Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 17,
+        name: "HAT 4 Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 18,
+        name: "HAT 4 Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 19,
+        name: "Encoder CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 20,
+        name: "Encoder CCW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 21,
+        name: "Encoder Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 22,
+        name: "Mini-stick Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 23,
+        name: "Folding Trigger",
+        kind: ButtonKind::Trigger,
+    },
+    ButtonMapping {
+        number: 24,
+        name: "MCG Castle Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 25,
+        name: "MCG Castle Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 26,
+        name: "MCG Castle Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 27,
+        name: "MCG Castle Left",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 28,
+        name: "MCG Castle Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 29,
+        name: "MCG Thumb Wheel Up",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 30,
+        name: "MCG Thumb Wheel Down",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 31,
+        name: "MCG Thumb Wheel Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 32,
+        name: "MCG Brake Lever",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 33,
+        name: "MCG TDC Slew Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 34,
+        name: "MCG Paddle",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 35,
+        name: "Base Button (B1)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 36,
+        name: "Base Button (B2)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 37,
+        name: "Base Button (B3)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 38,
+        name: "Base Button (B4)",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 39,
+        name: "Rapid Fire Fwd",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 40,
+        name: "Rapid Fire Rev",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 41,
+        name: "Reserved 41",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 42,
+        name: "Reserved 42",
+        kind: ButtonKind::Pushbutton,
+    },
 ];
 
 static GUNFIGHTER_MCG_HATS: [HatMapping; 4] = [
-    HatMapping { index: 0, name: "POV Hat 1 (8-way)", kind: HatKind::Pov8Way },
-    HatMapping { index: 1, name: "Trim Hat 2 (4-way)", kind: HatKind::Trim4Way },
-    HatMapping { index: 2, name: "Trim Hat 3 (4-way)", kind: HatKind::Trim4Way },
+    HatMapping {
+        index: 0,
+        name: "POV Hat 1 (8-way)",
+        kind: HatKind::Pov8Way,
+    },
+    HatMapping {
+        index: 1,
+        name: "Trim Hat 2 (4-way)",
+        kind: HatKind::Trim4Way,
+    },
+    HatMapping {
+        index: 2,
+        name: "Trim Hat 3 (4-way)",
+        kind: HatKind::Trim4Way,
+    },
     HatMapping {
         index: 3,
         name: "Castle Switch (4-way + press)",
@@ -419,30 +754,126 @@ static STECS_THROTTLE_AXES: [AxisMapping; 5] = [
 ];
 
 static STECS_THROTTLE_BUTTONS: [ButtonMapping; 24] = [
-    ButtonMapping { number: 1, name: "Detent Button 1", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 2, name: "Detent Button 2", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 3, name: "Throttle Idle Switch", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 4, name: "Throttle AB Switch", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 5, name: "Engine Start L", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 6, name: "Engine Start R", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 7, name: "Pinkie Switch", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 8, name: "Speed Brake", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 9, name: "Flaps Up", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 10, name: "Flaps Down", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 11, name: "Landing Gear Toggle", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 12, name: "EAC", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 13, name: "RDR Altimeter", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 14, name: "Autopilot Engage", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 15, name: "Encoder 1 CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 16, name: "Encoder 1 CCW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 17, name: "Encoder 1 Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 18, name: "Encoder 2 CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 19, name: "Encoder 2 CCW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 20, name: "Encoder 2 Press", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 21, name: "Coolie Hat Up", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 22, name: "Coolie Hat Right", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 23, name: "Coolie Hat Down", kind: ButtonKind::HatDirection },
-    ButtonMapping { number: 24, name: "Coolie Hat Left", kind: ButtonKind::HatDirection },
+    ButtonMapping {
+        number: 1,
+        name: "Detent Button 1",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 2,
+        name: "Detent Button 2",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 3,
+        name: "Throttle Idle Switch",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 4,
+        name: "Throttle AB Switch",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 5,
+        name: "Engine Start L",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 6,
+        name: "Engine Start R",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 7,
+        name: "Pinkie Switch",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 8,
+        name: "Speed Brake",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 9,
+        name: "Flaps Up",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 10,
+        name: "Flaps Down",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 11,
+        name: "Landing Gear Toggle",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 12,
+        name: "EAC",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 13,
+        name: "RDR Altimeter",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 14,
+        name: "Autopilot Engage",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 15,
+        name: "Encoder 1 CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 16,
+        name: "Encoder 1 CCW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 17,
+        name: "Encoder 1 Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 18,
+        name: "Encoder 2 CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 19,
+        name: "Encoder 2 CCW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 20,
+        name: "Encoder 2 Press",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 21,
+        name: "Coolie Hat Up",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 22,
+        name: "Coolie Hat Right",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 23,
+        name: "Coolie Hat Down",
+        kind: ButtonKind::HatDirection,
+    },
+    ButtonMapping {
+        number: 24,
+        name: "Coolie Hat Left",
+        kind: ButtonKind::HatDirection,
+    },
 ];
 
 static STECS_THROTTLE_HATS: [HatMapping; 0] = [];
@@ -501,18 +932,66 @@ static SEM_THQ_AXES: [AxisMapping; 4] = [
 ];
 
 static SEM_THQ_BUTTONS: [ButtonMapping; 12] = [
-    ButtonMapping { number: 1, name: "Detent Left", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 2, name: "Detent Right", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 3, name: "Idle Gate Left", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 4, name: "Idle Gate Right", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 5, name: "AB Gate Left", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 6, name: "AB Gate Right", kind: ButtonKind::Toggle },
-    ButtonMapping { number: 7, name: "Pinkie Left", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 8, name: "Pinkie Right", kind: ButtonKind::Pushbutton },
-    ButtonMapping { number: 9, name: "Encoder 1 CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 10, name: "Encoder 1 CCW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 11, name: "Encoder 2 CW", kind: ButtonKind::Encoder },
-    ButtonMapping { number: 12, name: "Encoder 2 CCW", kind: ButtonKind::Encoder },
+    ButtonMapping {
+        number: 1,
+        name: "Detent Left",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 2,
+        name: "Detent Right",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 3,
+        name: "Idle Gate Left",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 4,
+        name: "Idle Gate Right",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 5,
+        name: "AB Gate Left",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 6,
+        name: "AB Gate Right",
+        kind: ButtonKind::Toggle,
+    },
+    ButtonMapping {
+        number: 7,
+        name: "Pinkie Left",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 8,
+        name: "Pinkie Right",
+        kind: ButtonKind::Pushbutton,
+    },
+    ButtonMapping {
+        number: 9,
+        name: "Encoder 1 CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 10,
+        name: "Encoder 1 CCW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 11,
+        name: "Encoder 2 CW",
+        kind: ButtonKind::Encoder,
+    },
+    ButtonMapping {
+        number: 12,
+        name: "Encoder 2 CCW",
+        kind: ButtonKind::Encoder,
+    },
 ];
 
 static SEM_THQ_HATS: [HatMapping; 0] = [];
@@ -628,7 +1107,11 @@ mod tests {
         let p = gunfighter_mcg_profile();
         assert_eq!(p.axis_count(), 6, "Gunfighter+MCG should have 6 axes");
         assert!(p.button_count() >= 40, "MCG adds buttons over NXT EVO");
-        assert_eq!(p.hat_count(), 4, "Gunfighter+MCG should have 4 hat switches");
+        assert_eq!(
+            p.hat_count(),
+            4,
+            "Gunfighter+MCG should have 4 hat switches"
+        );
         assert!(!p.pids.is_empty());
     }
 
@@ -662,7 +1145,9 @@ mod tests {
     fn gladiator_joystick_axes_are_signed() {
         let p = gladiator_nxt_evo_profile();
         for name in &["roll", "pitch", "yaw", "mini_x", "mini_y"] {
-            let axis = p.axis_by_name(name).unwrap_or_else(|| panic!("missing axis: {name}"));
+            let axis = p
+                .axis_by_name(name)
+                .unwrap_or_else(|| panic!("missing axis: {name}"));
             assert_eq!(axis.mode, AxisNormMode::Signed, "{name} should be signed");
         }
     }

@@ -96,9 +96,7 @@ pub struct VpcRotorTcsInputState {
 }
 
 /// Parse one raw HID report from the VPC Rotor TCS Plus.
-pub fn parse_rotor_tcs_report(
-    data: &[u8],
-) -> Result<VpcRotorTcsInputState, VpcRotorTcsParseError> {
+pub fn parse_rotor_tcs_report(data: &[u8]) -> Result<VpcRotorTcsInputState, VpcRotorTcsParseError> {
     if data.len() < VPC_ROTOR_TCS_MIN_REPORT_BYTES {
         return Err(VpcRotorTcsParseError::TooShort(data.len()));
     }

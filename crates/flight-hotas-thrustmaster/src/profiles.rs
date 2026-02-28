@@ -368,9 +368,7 @@ pub fn device_profile(device: ThrustmasterDevice) -> Option<DeviceProfile> {
         ThrustmasterDevice::TwcsThrottle => Some(twcs_profile()),
         ThrustmasterDevice::WarthogJoystick => Some(warthog_stick_profile()),
         ThrustmasterDevice::WarthogThrottle => Some(warthog_throttle_profile()),
-        ThrustmasterDevice::TfrpRudderPedals | ThrustmasterDevice::TRudder => {
-            Some(tfrp_profile())
-        }
+        ThrustmasterDevice::TfrpRudderPedals | ThrustmasterDevice::TRudder => Some(tfrp_profile()),
         ThrustmasterDevice::TprPendular | ThrustmasterDevice::TprPendularBulk => {
             Some(tpr_profile())
         }

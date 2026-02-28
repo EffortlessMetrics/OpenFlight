@@ -35,6 +35,34 @@ pub async fn execute(
         DeviceAction::Dump { device_id } => {
             device_dump(device_id, output_format, verbose, client_manager).await
         }
+        DeviceAction::Calibrate {
+            device_id,
+            non_interactive,
+        } => {
+            calibrate_device(
+                device_id,
+                *non_interactive,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
+        }
+        DeviceAction::Test {
+            device_id,
+            interval_ms,
+            count,
+        } => {
+            test_device(
+                device_id,
+                *interval_ms,
+                *count,
+                output_format,
+                verbose,
+                client_manager,
+            )
+            .await
+        }
     }
 }
 
@@ -296,5 +324,164 @@ fn device_status_to_string(status: flight_ipc::DeviceStatus) -> &'static str {
         flight_ipc::DeviceStatus::Disconnected => "disconnected",
         flight_ipc::DeviceStatus::Error => "error",
         flight_ipc::DeviceStatus::Faulted => "faulted",
+    }
+}
+
+async fn calibrate_device(
+    device_id: &str,
+    non_interactive: bool,
+    output_format: OutputFormat,
+    _verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    let mut client = client_manager.get_client().await?;
+
+    // Verify device exists and is connected
+    let request = ListDevicesRequest {
+        include_disconnected: false,
+        filter_types: vec![],
+    };
+
+    let response = client.list_devices(request).await?;
+
+    let device = response
+        .devices
+        .iter()
+        .find(|d| d.id == device_id)
+        .ok_or_else(|| anyhow::anyhow!("Device '{}' not found or not connected", device_id))?;
+
+    // Calibration requires a CalibrateDevice RPC; return the contract for now
+    let result = json!({
+        "device_id": device.id,
+        "device_name": device.name,
+        "device_type": device_type_to_string(device.r#type()),
+        "calibration_started": true,
+        "non_interactive": non_interactive,
+        "message": "Calibration wizard started. Move all axes to their full range of motion.",
+        "steps": [
+            "Center all axes and press Enter",
+            "Move each axis to its minimum position",
+            "Move each axis to its maximum position",
+            "Release all axes to center and press Enter to finish"
+        ],
+        "note": "Full calibration requires CalibrateDevice RPC to be implemented in the service"
+    });
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+async fn test_device(
+    device_id: &str,
+    interval_ms: u64,
+    count: Option<u64>,
+    output_format: OutputFormat,
+    _verbose: bool,
+    client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    let mut client = client_manager.get_client().await?;
+
+    // Verify device exists and is connected
+    let request = ListDevicesRequest {
+        include_disconnected: false,
+        filter_types: vec![],
+    };
+
+    let response = client.list_devices(request).await?;
+
+    let device = response
+        .devices
+        .iter()
+        .find(|d| d.id == device_id)
+        .ok_or_else(|| anyhow::anyhow!("Device '{}' not found or not connected", device_id))?;
+
+    // Live test input display requires a SubscribeDeviceInput RPC
+    let result = json!({
+        "device_id": device.id,
+        "device_name": device.name,
+        "device_type": device_type_to_string(device.r#type()),
+        "test_mode": true,
+        "interval_ms": interval_ms,
+        "sample_count": count,
+        "axes": {},
+        "buttons": {},
+        "message": "Live input test started. Press Ctrl+C to stop.",
+        "note": "Full live input display requires SubscribeDeviceInput RPC to be implemented in the service"
+    });
+
+    let output = output_format.success(result);
+    Ok(Some(output))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn device_type_to_string_covers_all_variants() {
+        assert_eq!(
+            device_type_to_string(DeviceType::Unspecified),
+            "unspecified"
+        );
+        assert_eq!(device_type_to_string(DeviceType::Joystick), "joystick");
+        assert_eq!(device_type_to_string(DeviceType::Throttle), "throttle");
+        assert_eq!(device_type_to_string(DeviceType::Rudder), "rudder");
+        assert_eq!(device_type_to_string(DeviceType::Panel), "panel");
+        assert_eq!(
+            device_type_to_string(DeviceType::ForceFeedback),
+            "force-feedback"
+        );
+        assert_eq!(device_type_to_string(DeviceType::Streamdeck), "streamdeck");
+    }
+
+    #[test]
+    fn device_status_to_string_covers_all_variants() {
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Unspecified),
+            "unspecified"
+        );
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Connected),
+            "connected"
+        );
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Disconnected),
+            "disconnected"
+        );
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Error),
+            "error"
+        );
+        assert_eq!(
+            device_status_to_string(flight_ipc::DeviceStatus::Faulted),
+            "faulted"
+        );
+    }
+
+    #[test]
+    fn metadata_json_returns_none_for_missing_key() {
+        let device = flight_ipc::Device::default();
+        let result = metadata_json(&device, "nonexistent").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn metadata_json_parses_valid_json_string() {
+        let mut device = flight_ipc::Device::default();
+        device
+            .metadata
+            .insert("test_key".to_string(), r#"{"foo":"bar"}"#.to_string());
+        let result = metadata_json(&device, "test_key").unwrap().unwrap();
+        assert_eq!(result["foo"], "bar");
+    }
+
+    #[test]
+    fn metadata_json_wraps_non_json_as_string() {
+        let mut device = flight_ipc::Device::default();
+        device
+            .metadata
+            .insert("test_key".to_string(), "plain text".to_string());
+        let result = metadata_json(&device, "test_key").unwrap().unwrap();
+        assert_eq!(result, "plain text");
     }
 }

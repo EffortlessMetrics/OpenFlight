@@ -309,27 +309,98 @@ pub fn all_axis_names() -> Vec<&'static str> {
 pub mod fa18c {
     use super::{DcsCommandDef, DcsDevice};
 
-    pub const UFC: DcsDevice = DcsDevice { id: 25, name: "UFC" };
-    pub const HOTAS: DcsDevice = DcsDevice { id: 12, name: "HOTAS" };
-    pub const IFEI: DcsDevice = DcsDevice { id: 36, name: "IFEI" };
-    pub const LEFT_DDI: DcsDevice = DcsDevice { id: 35, name: "Left DDI" };
-    pub const RIGHT_DDI: DcsDevice = DcsDevice { id: 37, name: "Right DDI" };
+    pub const UFC: DcsDevice = DcsDevice {
+        id: 25,
+        name: "UFC",
+    };
+    pub const HOTAS: DcsDevice = DcsDevice {
+        id: 12,
+        name: "HOTAS",
+    };
+    pub const IFEI: DcsDevice = DcsDevice {
+        id: 36,
+        name: "IFEI",
+    };
+    pub const LEFT_DDI: DcsDevice = DcsDevice {
+        id: 35,
+        name: "Left DDI",
+    };
+    pub const RIGHT_DDI: DcsDevice = DcsDevice {
+        id: 37,
+        name: "Right DDI",
+    };
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef { device_id: 25, command_id: 3001, name: "UFC_1" },
-        DcsCommandDef { device_id: 25, command_id: 3002, name: "UFC_2" },
-        DcsCommandDef { device_id: 25, command_id: 3003, name: "UFC_3" },
-        DcsCommandDef { device_id: 25, command_id: 3004, name: "UFC_4" },
-        DcsCommandDef { device_id: 25, command_id: 3005, name: "UFC_5" },
-        DcsCommandDef { device_id: 25, command_id: 3006, name: "UFC_6" },
-        DcsCommandDef { device_id: 25, command_id: 3007, name: "UFC_7" },
-        DcsCommandDef { device_id: 25, command_id: 3008, name: "UFC_8" },
-        DcsCommandDef { device_id: 25, command_id: 3009, name: "UFC_9" },
-        DcsCommandDef { device_id: 25, command_id: 3010, name: "UFC_0" },
-        DcsCommandDef { device_id: 25, command_id: 3018, name: "UFC_ENT" },
-        DcsCommandDef { device_id: 25, command_id: 3019, name: "UFC_CLR" },
-        DcsCommandDef { device_id: 12, command_id: 3200, name: "MASTER_ARM_ON" },
-        DcsCommandDef { device_id: 12, command_id: 3201, name: "MASTER_ARM_OFF" },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3001,
+            name: "UFC_1",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3002,
+            name: "UFC_2",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3003,
+            name: "UFC_3",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3004,
+            name: "UFC_4",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3005,
+            name: "UFC_5",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3006,
+            name: "UFC_6",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3007,
+            name: "UFC_7",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3008,
+            name: "UFC_8",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3009,
+            name: "UFC_9",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3010,
+            name: "UFC_0",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3018,
+            name: "UFC_ENT",
+        },
+        DcsCommandDef {
+            device_id: 25,
+            command_id: 3019,
+            name: "UFC_CLR",
+        },
+        DcsCommandDef {
+            device_id: 12,
+            command_id: 3200,
+            name: "MASTER_ARM_ON",
+        },
+        DcsCommandDef {
+            device_id: 12,
+            command_id: 3201,
+            name: "MASTER_ARM_OFF",
+        },
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
@@ -342,26 +413,95 @@ pub mod fa18c {
 pub mod f16c {
     use super::{DcsCommandDef, DcsDevice};
 
-    pub const ICP: DcsDevice = DcsDevice { id: 17, name: "ICP" };
-    pub const UFC: DcsDevice = DcsDevice { id: 17, name: "UFC" };
-    pub const HOTAS: DcsDevice = DcsDevice { id: 12, name: "HOTAS" };
+    pub const ICP: DcsDevice = DcsDevice {
+        id: 17,
+        name: "ICP",
+    };
+    pub const UFC: DcsDevice = DcsDevice {
+        id: 17,
+        name: "UFC",
+    };
+    pub const HOTAS: DcsDevice = DcsDevice {
+        id: 12,
+        name: "HOTAS",
+    };
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef { device_id: 17, command_id: 3001, name: "ICP_0" },
-        DcsCommandDef { device_id: 17, command_id: 3002, name: "ICP_1" },
-        DcsCommandDef { device_id: 17, command_id: 3003, name: "ICP_2" },
-        DcsCommandDef { device_id: 17, command_id: 3004, name: "ICP_3" },
-        DcsCommandDef { device_id: 17, command_id: 3005, name: "ICP_4" },
-        DcsCommandDef { device_id: 17, command_id: 3006, name: "ICP_5" },
-        DcsCommandDef { device_id: 17, command_id: 3007, name: "ICP_6" },
-        DcsCommandDef { device_id: 17, command_id: 3008, name: "ICP_7" },
-        DcsCommandDef { device_id: 17, command_id: 3009, name: "ICP_8" },
-        DcsCommandDef { device_id: 17, command_id: 3010, name: "ICP_9" },
-        DcsCommandDef { device_id: 17, command_id: 3011, name: "ICP_ENTR" },
-        DcsCommandDef { device_id: 17, command_id: 3012, name: "ICP_RCL" },
-        DcsCommandDef { device_id: 17, command_id: 3015, name: "ICP_DCS_UP" },
-        DcsCommandDef { device_id: 17, command_id: 3016, name: "ICP_DCS_DOWN" },
-        DcsCommandDef { device_id: 12, command_id: 3100, name: "MASTER_ARM_TOGGLE" },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3001,
+            name: "ICP_0",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3002,
+            name: "ICP_1",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3003,
+            name: "ICP_2",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3004,
+            name: "ICP_3",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3005,
+            name: "ICP_4",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3006,
+            name: "ICP_5",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3007,
+            name: "ICP_6",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3008,
+            name: "ICP_7",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3009,
+            name: "ICP_8",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3010,
+            name: "ICP_9",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3011,
+            name: "ICP_ENTR",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3012,
+            name: "ICP_RCL",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3015,
+            name: "ICP_DCS_UP",
+        },
+        DcsCommandDef {
+            device_id: 17,
+            command_id: 3016,
+            name: "ICP_DCS_DOWN",
+        },
+        DcsCommandDef {
+            device_id: 12,
+            command_id: 3100,
+            name: "MASTER_ARM_TOGGLE",
+        },
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
@@ -374,25 +514,90 @@ pub mod f16c {
 pub mod a10c {
     use super::{DcsCommandDef, DcsDevice};
 
-    pub const CDU: DcsDevice = DcsDevice { id: 24, name: "CDU" };
-    pub const HOTAS: DcsDevice = DcsDevice { id: 12, name: "HOTAS" };
-    pub const CMSP: DcsDevice = DcsDevice { id: 39, name: "CMSP" };
+    pub const CDU: DcsDevice = DcsDevice {
+        id: 24,
+        name: "CDU",
+    };
+    pub const HOTAS: DcsDevice = DcsDevice {
+        id: 12,
+        name: "HOTAS",
+    };
+    pub const CMSP: DcsDevice = DcsDevice {
+        id: 39,
+        name: "CMSP",
+    };
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef { device_id: 24, command_id: 3001, name: "CDU_1" },
-        DcsCommandDef { device_id: 24, command_id: 3002, name: "CDU_2" },
-        DcsCommandDef { device_id: 24, command_id: 3003, name: "CDU_3" },
-        DcsCommandDef { device_id: 24, command_id: 3004, name: "CDU_4" },
-        DcsCommandDef { device_id: 24, command_id: 3005, name: "CDU_5" },
-        DcsCommandDef { device_id: 24, command_id: 3006, name: "CDU_6" },
-        DcsCommandDef { device_id: 24, command_id: 3007, name: "CDU_7" },
-        DcsCommandDef { device_id: 24, command_id: 3008, name: "CDU_8" },
-        DcsCommandDef { device_id: 24, command_id: 3009, name: "CDU_9" },
-        DcsCommandDef { device_id: 24, command_id: 3010, name: "CDU_0" },
-        DcsCommandDef { device_id: 12, command_id: 3250, name: "MASTER_ARM_ON" },
-        DcsCommandDef { device_id: 12, command_id: 3251, name: "MASTER_ARM_OFF" },
-        DcsCommandDef { device_id: 39, command_id: 3001, name: "CMSP_JMR" },
-        DcsCommandDef { device_id: 39, command_id: 3002, name: "CMSP_MWS" },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3001,
+            name: "CDU_1",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3002,
+            name: "CDU_2",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3003,
+            name: "CDU_3",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3004,
+            name: "CDU_4",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3005,
+            name: "CDU_5",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3006,
+            name: "CDU_6",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3007,
+            name: "CDU_7",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3008,
+            name: "CDU_8",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3009,
+            name: "CDU_9",
+        },
+        DcsCommandDef {
+            device_id: 24,
+            command_id: 3010,
+            name: "CDU_0",
+        },
+        DcsCommandDef {
+            device_id: 12,
+            command_id: 3250,
+            name: "MASTER_ARM_ON",
+        },
+        DcsCommandDef {
+            device_id: 12,
+            command_id: 3251,
+            name: "MASTER_ARM_OFF",
+        },
+        DcsCommandDef {
+            device_id: 39,
+            command_id: 3001,
+            name: "CMSP_JMR",
+        },
+        DcsCommandDef {
+            device_id: 39,
+            command_id: 3002,
+            name: "CMSP_MWS",
+        },
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
@@ -405,14 +610,36 @@ pub mod a10c {
 pub mod f14b {
     use super::{DcsCommandDef, DcsDevice};
 
-    pub const PILOT_STICK: DcsDevice = DcsDevice { id: 0, name: "Pilot Stick" };
-    pub const RIO_CAP: DcsDevice = DcsDevice { id: 42, name: "RIO CAP" };
+    pub const PILOT_STICK: DcsDevice = DcsDevice {
+        id: 0,
+        name: "Pilot Stick",
+    };
+    pub const RIO_CAP: DcsDevice = DcsDevice {
+        id: 42,
+        name: "RIO CAP",
+    };
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef { device_id: 0, command_id: 3014, name: "WING_SWEEP_AUTO" },
-        DcsCommandDef { device_id: 0, command_id: 3015, name: "WING_SWEEP_MANUAL" },
-        DcsCommandDef { device_id: 42, command_id: 3100, name: "RIO_CAP_TID_MODE" },
-        DcsCommandDef { device_id: 42, command_id: 3101, name: "RIO_CAP_LAUNCH" },
+        DcsCommandDef {
+            device_id: 0,
+            command_id: 3014,
+            name: "WING_SWEEP_AUTO",
+        },
+        DcsCommandDef {
+            device_id: 0,
+            command_id: 3015,
+            name: "WING_SWEEP_MANUAL",
+        },
+        DcsCommandDef {
+            device_id: 42,
+            command_id: 3100,
+            name: "RIO_CAP_TID_MODE",
+        },
+        DcsCommandDef {
+            device_id: 42,
+            command_id: 3101,
+            name: "RIO_CAP_LAUNCH",
+        },
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
@@ -425,17 +652,50 @@ pub mod f14b {
 pub mod ah64d {
     use super::{DcsCommandDef, DcsDevice};
 
-    pub const PILOT_KU: DcsDevice = DcsDevice { id: 29, name: "Pilot KU" };
-    pub const CPG_KU: DcsDevice = DcsDevice { id: 30, name: "CPG KU" };
-    pub const PILOT_TEDAC: DcsDevice = DcsDevice { id: 28, name: "Pilot TEDAC" };
+    pub const PILOT_KU: DcsDevice = DcsDevice {
+        id: 29,
+        name: "Pilot KU",
+    };
+    pub const CPG_KU: DcsDevice = DcsDevice {
+        id: 30,
+        name: "CPG KU",
+    };
+    pub const PILOT_TEDAC: DcsDevice = DcsDevice {
+        id: 28,
+        name: "Pilot TEDAC",
+    };
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef { device_id: 29, command_id: 3001, name: "PLT_KU_A" },
-        DcsCommandDef { device_id: 29, command_id: 3026, name: "PLT_KU_ENT" },
-        DcsCommandDef { device_id: 29, command_id: 3027, name: "PLT_KU_CLR" },
-        DcsCommandDef { device_id: 30, command_id: 3001, name: "CPG_KU_A" },
-        DcsCommandDef { device_id: 30, command_id: 3026, name: "CPG_KU_ENT" },
-        DcsCommandDef { device_id: 30, command_id: 3027, name: "CPG_KU_CLR" },
+        DcsCommandDef {
+            device_id: 29,
+            command_id: 3001,
+            name: "PLT_KU_A",
+        },
+        DcsCommandDef {
+            device_id: 29,
+            command_id: 3026,
+            name: "PLT_KU_ENT",
+        },
+        DcsCommandDef {
+            device_id: 29,
+            command_id: 3027,
+            name: "PLT_KU_CLR",
+        },
+        DcsCommandDef {
+            device_id: 30,
+            command_id: 3001,
+            name: "CPG_KU_A",
+        },
+        DcsCommandDef {
+            device_id: 30,
+            command_id: 3026,
+            name: "CPG_KU_ENT",
+        },
+        DcsCommandDef {
+            device_id: 30,
+            command_id: 3027,
+            name: "CPG_KU_CLR",
+        },
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
@@ -725,7 +985,11 @@ mod tests {
         let names = all_axis_names();
         assert!(names.len() >= 9);
         for name in &names {
-            assert!(lookup_axis(name).is_some(), "axis '{}' should resolve", name);
+            assert!(
+                lookup_axis(name).is_some(),
+                "axis '{}' should resolve",
+                name
+            );
         }
     }
 

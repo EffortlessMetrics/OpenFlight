@@ -23,6 +23,8 @@ pub mod xplane;
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
 
+pub mod adapters;
+
 pub use ac7::Ac7Action;
 pub use cloud_profiles::CloudProfilesAction;
 pub use dcs::DcsAction;
@@ -52,10 +54,38 @@ pub enum DeviceAction {
         /// Device ID to dump discovery data for
         device_id: String,
     },
+    /// Start calibration wizard for a device
+    Calibrate {
+        /// Device ID to calibrate
+        device_id: String,
+
+        /// Skip interactive prompts (use defaults)
+        #[arg(long)]
+        non_interactive: bool,
+    },
+    /// Show live input display (axis values, button states)
+    Test {
+        /// Device ID to test
+        device_id: String,
+
+        /// Update interval in milliseconds
+        #[arg(long, default_value = "100")]
+        interval_ms: u64,
+
+        /// Number of samples to capture (default: continuous)
+        #[arg(long)]
+        count: Option<u64>,
+    },
 }
 
 #[derive(Subcommand)]
 pub enum ProfileAction {
+    /// List available profiles
+    List {
+        /// Include built-in profiles
+        #[arg(long)]
+        include_builtin: bool,
+    },
     /// Apply a profile from file
     Apply {
         /// Path to profile JSON file
@@ -69,11 +99,33 @@ pub enum ProfileAction {
         #[arg(long)]
         force: bool,
     },
-    /// Show current effective profile
+    /// Show current effective profile or a named profile's configuration
     Show {
+        /// Profile name to display (default: current effective profile)
+        #[arg()]
+        name: Option<String>,
+
         /// Show raw JSON instead of formatted output
         #[arg(long)]
         raw: bool,
+    },
+    /// Switch the active profile
+    Activate {
+        /// Profile name to activate
+        name: String,
+    },
+    /// Validate a profile file without applying
+    Validate {
+        /// Path to profile JSON file
+        path: PathBuf,
+    },
+    /// Export a profile to a file
+    Export {
+        /// Profile name to export
+        name: String,
+
+        /// Output file path
+        path: PathBuf,
     },
 }
 
@@ -204,6 +256,34 @@ pub enum TorqueAction {
 
 #[derive(Subcommand)]
 pub enum DiagAction {
+    /// Create a diagnostic bundle for support
+    Bundle {
+        /// Output file path for the bundle
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+
+        /// Include full blackbox recordings in the bundle
+        #[arg(long)]
+        include_recordings: bool,
+    },
+    /// Show system health summary
+    Health,
+    /// Show current metrics snapshot
+    #[command(name = "metrics")]
+    DiagMetrics {
+        /// Reset metrics after capturing the snapshot
+        #[arg(long)]
+        reset: bool,
+    },
+    /// Record a trace for a specified duration
+    Trace {
+        /// Duration in seconds
+        duration: u64,
+
+        /// Output file path for the trace
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+    },
     /// Start recording diagnostics
     Record {
         /// Output file path for recording
@@ -266,5 +346,27 @@ pub enum MetricsAction {
         /// Reset metrics after capturing the snapshot
         #[arg(long)]
         reset: bool,
+    },
+}
+
+/// Simulator adapter control subcommands
+#[derive(Subcommand)]
+pub enum AdaptersAction {
+    /// Show adapter connection status
+    Status,
+    /// Enable a simulator adapter
+    Enable {
+        /// Simulator identifier (msfs, xplane, dcs)
+        sim: String,
+    },
+    /// Disable a simulator adapter
+    Disable {
+        /// Simulator identifier (msfs, xplane, dcs)
+        sim: String,
+    },
+    /// Force reconnect a simulator adapter
+    Reconnect {
+        /// Simulator identifier (msfs, xplane, dcs)
+        sim: String,
     },
 }

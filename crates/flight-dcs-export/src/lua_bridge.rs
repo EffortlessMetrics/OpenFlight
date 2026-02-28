@@ -330,9 +330,10 @@ pub fn remove_hook(export_lua_path: &Path) -> std::io::Result<HookAction> {
 
 /// Replace the Flight Hub block (markers inclusive) in `content` with `snippet`.
 fn replace_snippet_block(content: &str, snippet: &str) -> String {
-    if let (Some(start), Some(end_start)) =
-        (content.find(SNIPPET_BEGIN_MARKER), content.find(SNIPPET_END_MARKER))
-    {
+    if let (Some(start), Some(end_start)) = (
+        content.find(SNIPPET_BEGIN_MARKER),
+        content.find(SNIPPET_END_MARKER),
+    ) {
         let end = end_start + SNIPPET_END_MARKER.len();
         // Skip trailing newline after end marker
         let end = if content[end..].starts_with('\n') {
@@ -361,9 +362,10 @@ fn replace_snippet_block(content: &str, snippet: &str) -> String {
 
 /// Remove the Flight Hub block from `content`.
 fn remove_snippet_block(content: &str) -> String {
-    if let (Some(start), Some(end_start)) =
-        (content.find(SNIPPET_BEGIN_MARKER), content.find(SNIPPET_END_MARKER))
-    {
+    if let (Some(start), Some(end_start)) = (
+        content.find(SNIPPET_BEGIN_MARKER),
+        content.find(SNIPPET_END_MARKER),
+    ) {
         let end = end_start + SNIPPET_END_MARKER.len();
         let end = if content[end..].starts_with('\n') {
             end + 1
@@ -725,7 +727,10 @@ mod tests {
             .to_string(),
             "Updated from v0.9.0"
         );
-        assert_eq!(HookAction::AlreadyUpToDate.to_string(), "Already up to date");
+        assert_eq!(
+            HookAction::AlreadyUpToDate.to_string(),
+            "Already up to date"
+        );
         assert_eq!(HookAction::Removed.to_string(), "Removed");
         assert_eq!(HookAction::NothingToRemove.to_string(), "Nothing to remove");
     }

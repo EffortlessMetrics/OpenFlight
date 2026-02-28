@@ -126,13 +126,19 @@ mod tests {
     #[test]
     fn test_full_left_rudder() {
         let state = parse_charlie_report(&charlie_report(0, 0, 0)).unwrap();
-        assert!(state.axes.rudder < -0.99, "full left rudder should be ~-1.0");
+        assert!(
+            state.axes.rudder < -0.99,
+            "full left rudder should be ~-1.0"
+        );
     }
 
     #[test]
     fn test_full_right_rudder() {
         let state = parse_charlie_report(&charlie_report(4095, 0, 0)).unwrap();
-        assert!(state.axes.rudder > 0.99, "full right rudder should be ~+1.0");
+        assert!(
+            state.axes.rudder > 0.99,
+            "full right rudder should be ~+1.0"
+        );
     }
 
     #[test]

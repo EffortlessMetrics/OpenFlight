@@ -140,32 +140,92 @@ pub struct DeviceEntry {
 /// All entries share VID [`VENDOR_ID`] (`0x044F`).
 pub const DEVICE_TABLE: &[DeviceEntry] = &[
     // T.16000M family
-    DeviceEntry { pid: 0xB10A, device: ThrustmasterDevice::T16000mJoystick },
-    DeviceEntry { pid: 0xB687, device: ThrustmasterDevice::TwcsThrottle },
+    DeviceEntry {
+        pid: 0xB10A,
+        device: ThrustmasterDevice::T16000mJoystick,
+    },
+    DeviceEntry {
+        pid: 0xB687,
+        device: ThrustmasterDevice::TwcsThrottle,
+    },
     // Warthog
-    DeviceEntry { pid: 0x0402, device: ThrustmasterDevice::WarthogJoystick },
-    DeviceEntry { pid: 0x0404, device: ThrustmasterDevice::WarthogThrottle },
+    DeviceEntry {
+        pid: 0x0402,
+        device: ThrustmasterDevice::WarthogJoystick,
+    },
+    DeviceEntry {
+        pid: 0x0404,
+        device: ThrustmasterDevice::WarthogThrottle,
+    },
     // T.Flight HOTAS
-    DeviceEntry { pid: 0xB108, device: ThrustmasterDevice::TFlightHotasX },
-    DeviceEntry { pid: 0xB67B, device: ThrustmasterDevice::TFlightHotas4 },
-    DeviceEntry { pid: 0xB67A, device: ThrustmasterDevice::TFlightHotas4Legacy },
-    DeviceEntry { pid: 0xB67C, device: ThrustmasterDevice::TFlightHotas4V2 },
-    DeviceEntry { pid: 0xB68D, device: ThrustmasterDevice::TFlightHotasOne },
-    DeviceEntry { pid: 0xB68B, device: ThrustmasterDevice::TFlightHotasOneBulk },
+    DeviceEntry {
+        pid: 0xB108,
+        device: ThrustmasterDevice::TFlightHotasX,
+    },
+    DeviceEntry {
+        pid: 0xB67B,
+        device: ThrustmasterDevice::TFlightHotas4,
+    },
+    DeviceEntry {
+        pid: 0xB67A,
+        device: ThrustmasterDevice::TFlightHotas4Legacy,
+    },
+    DeviceEntry {
+        pid: 0xB67C,
+        device: ThrustmasterDevice::TFlightHotas4V2,
+    },
+    DeviceEntry {
+        pid: 0xB68D,
+        device: ThrustmasterDevice::TFlightHotasOne,
+    },
+    DeviceEntry {
+        pid: 0xB68B,
+        device: ThrustmasterDevice::TFlightHotasOneBulk,
+    },
     // T.Flight Stick X
-    DeviceEntry { pid: 0xB106, device: ThrustmasterDevice::TFlightStickX },
-    DeviceEntry { pid: 0xB107, device: ThrustmasterDevice::TFlightStickXV2 },
+    DeviceEntry {
+        pid: 0xB106,
+        device: ThrustmasterDevice::TFlightStickX,
+    },
+    DeviceEntry {
+        pid: 0xB107,
+        device: ThrustmasterDevice::TFlightStickXV2,
+    },
     // Pedals
-    DeviceEntry { pid: 0xB678, device: ThrustmasterDevice::TfrpRudderPedals },
-    DeviceEntry { pid: 0xB679, device: ThrustmasterDevice::TRudder },
-    DeviceEntry { pid: 0xB68F, device: ThrustmasterDevice::TprPendular },
-    DeviceEntry { pid: 0xB68E, device: ThrustmasterDevice::TprPendularBulk },
+    DeviceEntry {
+        pid: 0xB678,
+        device: ThrustmasterDevice::TfrpRudderPedals,
+    },
+    DeviceEntry {
+        pid: 0xB679,
+        device: ThrustmasterDevice::TRudder,
+    },
+    DeviceEntry {
+        pid: 0xB68F,
+        device: ThrustmasterDevice::TprPendular,
+    },
+    DeviceEntry {
+        pid: 0xB68E,
+        device: ThrustmasterDevice::TprPendularBulk,
+    },
     // Legacy
-    DeviceEntry { pid: 0x0400, device: ThrustmasterDevice::HotasCougar },
+    DeviceEntry {
+        pid: 0x0400,
+        device: ThrustmasterDevice::HotasCougar,
+    },
     // TCA Boeing
-    DeviceEntry { pid: 0xB68C, device: ThrustmasterDevice::TcaYokeBoeing },
-    DeviceEntry { pid: 0xB694, device: ThrustmasterDevice::TcaQuadrantBoeingEng12 },
-    DeviceEntry { pid: 0xB695, device: ThrustmasterDevice::TcaQuadrantBoeingEng34 },
+    DeviceEntry {
+        pid: 0xB68C,
+        device: ThrustmasterDevice::TcaYokeBoeing,
+    },
+    DeviceEntry {
+        pid: 0xB694,
+        device: ThrustmasterDevice::TcaQuadrantBoeingEng12,
+    },
+    DeviceEntry {
+        pid: 0xB695,
+        device: ThrustmasterDevice::TcaQuadrantBoeingEng34,
+    },
 ];
 
 /// Identify a Thrustmaster device by USB VID/PID.
@@ -528,7 +588,11 @@ mod tests {
     #[test]
     fn device_name_is_nonempty() {
         for entry in DEVICE_TABLE {
-            assert!(!entry.device.name().is_empty(), "empty name for {:?}", entry.device);
+            assert!(
+                !entry.device.name().is_empty(),
+                "empty name for {:?}",
+                entry.device
+            );
         }
     }
 

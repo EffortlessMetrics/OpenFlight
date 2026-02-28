@@ -1,27 +1,162 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Generate COMPATIBILITY.md from `compat/` YAML manifests.
+//! Generate COMPATIBILITY.md and compatibility.json from `compat/` YAML manifests.
 //!
-//! Run with: `cargo xtask gen-compat`
+//! Run with: `cargo xtask gen-compat` or `cargo xtask generate-compat`
 
 use anyhow::{Context, Result};
+use serde::Serialize;
 use std::{
+    collections::BTreeMap,
     fmt::Write as FmtWrite,
     fs,
     path::{Path, PathBuf},
 };
 
-/// Entry point for `cargo xtask gen-compat`.
+// ---------- validation types ----------
+
+/// A manifest validation error.
+struct ValidationError {
+    path: PathBuf,
+    message: String,
+}
+
+impl std::fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.path.display(), self.message)
+    }
+}
+
+// ---------- JSON output types ----------
+
+#[derive(Serialize)]
+struct CompatJson {
+    generated_by: &'static str,
+    devices: Vec<DeviceEntry>,
+    games: Vec<GameEntry>,
+    summary: Summary,
+}
+
+#[derive(Serialize)]
+struct DeviceEntry {
+    name: String,
+    vendor: String,
+    vendor_id: String,
+    product_id: String,
+    axes: u64,
+    buttons: u64,
+    force_feedback: bool,
+    tier: u64,
+    test_coverage: TestCoverage,
+}
+
+#[derive(Serialize)]
+struct GameEntry {
+    name: String,
+    id: String,
+    mechanism: String,
+    crate_name: String,
+    features: GameFeatures,
+    test_coverage: GameTestCoverage,
+    tier: u64,
+}
+
+#[derive(Serialize)]
+struct GameFeatures {
+    telemetry_read: bool,
+    control_injection: bool,
+    force_feedback_translation: bool,
+    aircraft_detection: bool,
+}
+
+#[derive(Serialize)]
+struct TestCoverage {
+    simulated: bool,
+    hil: bool,
+}
+
+#[derive(Serialize)]
+struct GameTestCoverage {
+    trace_replay: bool,
+    hil: bool,
+}
+
+#[derive(Serialize)]
+struct Summary {
+    total_devices: usize,
+    total_games: usize,
+    tier_distribution: BTreeMap<String, usize>,
+    game_tier_distribution: BTreeMap<String, usize>,
+}
+
+// ---------- entry point ----------
+
+/// Entry point for `cargo xtask gen-compat` / `cargo xtask generate-compat`.
 pub fn run_gen_compat() -> Result<()> {
     let compat_dir = Path::new("compat");
     if !compat_dir.exists() {
         anyhow::bail!("compat/ directory not found. Run from workspace root.");
     }
 
-    let devices = collect_manifests(&compat_dir.join("devices"))?;
-    let games = collect_manifests(&compat_dir.join("games"))?;
+    let device_paths = collect_manifests(&compat_dir.join("devices"))?;
+    let game_paths = collect_manifests(&compat_dir.join("games"))?;
 
+    // --- Validate manifests ---
+    let mut errors = Vec::new();
+    for p in &device_paths {
+        validate_device_manifest(p, &mut errors);
+    }
+    for p in &game_paths {
+        validate_game_manifest(p, &mut errors);
+    }
+    if !errors.is_empty() {
+        eprintln!(
+            "⚠ Manifest validation: {} warning(s) across {} device + {} game manifests:",
+            errors.len(),
+            device_paths.len(),
+            game_paths.len()
+        );
+        for e in &errors {
+            eprintln!("  {e}");
+        }
+        eprintln!();
+    }
+
+    // --- Parse manifests into structured data ---
+    let mut device_entries = Vec::new();
+    let mut game_entries = Vec::new();
+
+    for path in &device_paths {
+        if let Ok(entry) = parse_device(path) {
+            device_entries.push(entry);
+        }
+    }
+    for path in &game_paths {
+        if let Ok(entry) = parse_game(path) {
+            game_entries.push(entry);
+        }
+    }
+
+    // --- Compute summary statistics ---
+    let mut tier_dist: BTreeMap<String, usize> = BTreeMap::new();
+    for d in &device_entries {
+        *tier_dist.entry(format!("tier_{}", d.tier)).or_insert(0) += 1;
+    }
+    let mut game_tier_dist: BTreeMap<String, usize> = BTreeMap::new();
+    for g in &game_entries {
+        *game_tier_dist
+            .entry(format!("tier_{}", g.tier))
+            .or_insert(0) += 1;
+    }
+    let summary = Summary {
+        total_devices: device_entries.len(),
+        total_games: game_entries.len(),
+        tier_distribution: tier_dist.clone(),
+        game_tier_distribution: game_tier_dist.clone(),
+    };
+
+    // --- Generate COMPATIBILITY.md ---
     let mut out = String::new();
     writeln!(out, "# OpenFlight Compatibility Matrix")?;
     writeln!(out)?;
@@ -31,41 +166,72 @@ pub fn run_gen_compat() -> Result<()> {
     )?;
     writeln!(out)?;
 
-    // Devices section
+    // Summary statistics
+    writeln!(out, "## Summary")?;
+    writeln!(out)?;
+    writeln!(out, "- **Total devices:** {}", device_entries.len())?;
+    writeln!(out, "- **Total games:** {}", game_entries.len())?;
+    writeln!(out, "- **Tier distribution (devices):**")?;
+    for (tier, count) in &tier_dist {
+        writeln!(out, "  - {tier}: {count}")?;
+    }
+    writeln!(out, "- **Tier distribution (games):**")?;
+    for (tier, count) in &game_tier_dist {
+        writeln!(out, "  - {tier}: {count}")?;
+    }
+    writeln!(out)?;
+
+    // Device support matrix
     writeln!(out, "## Hardware Devices")?;
     writeln!(out)?;
     writeln!(
         out,
-        "| Device | Vendor ID | Product ID | Axes | Buttons | FFB | Tier |"
+        "| Device | Vendor | Vendor ID | Product ID | Axes | Buttons | FFB | Tier | Test Coverage |"
     )?;
     writeln!(
         out,
-        "|--------|-----------|------------|------|---------|-----|------|"
+        "|--------|--------|-----------|------------|------|---------|-----|------|---------------|"
     )?;
 
-    for path in &devices {
-        if let Ok(entry) = render_device_row(path) {
-            writeln!(out, "{}", entry)?;
-        }
+    for d in &device_entries {
+        let ffb = if d.force_feedback { "✓" } else { "✗" };
+        let coverage = match (d.test_coverage.simulated, d.test_coverage.hil) {
+            (true, true) => "sim + HIL",
+            (true, false) => "sim",
+            (false, true) => "HIL",
+            (false, false) => "none",
+        };
+        writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            d.name, d.vendor, d.vendor_id, d.product_id, d.axes, d.buttons, ffb, d.tier, coverage
+        )?;
     }
     writeln!(out)?;
 
-    // Games section
+    // Game support matrix
     writeln!(out, "## Game Integrations")?;
     writeln!(out)?;
     writeln!(
         out,
-        "| Game | Integration | Telemetry | Control Injection | FFB | HIL Tested |"
+        "| Game | Adapter | Integration | Telemetry | Control Injection | FFB | Aircraft Detection | Tier | HIL Tested |"
     )?;
     writeln!(
         out,
-        "|------|-------------|-----------|-------------------|-----|------------|"
+        "|------|---------|-------------|-----------|-------------------|-----|--------------------|------|------------|"
     )?;
 
-    for path in &games {
-        if let Ok(entry) = render_game_row(path) {
-            writeln!(out, "{}", entry)?;
-        }
+    for g in &game_entries {
+        let telemetry = bool_to_check(g.features.telemetry_read);
+        let control = bool_to_check(g.features.control_injection);
+        let ffb = bool_to_check(g.features.force_feedback_translation);
+        let ac_detect = bool_to_check(g.features.aircraft_detection);
+        let hil = bool_to_check(g.test_coverage.hil);
+        writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            g.name, g.crate_name, g.mechanism, telemetry, control, ffb, ac_detect, g.tier, hil
+        )?;
     }
     writeln!(out)?;
 
@@ -81,14 +247,226 @@ pub fn run_gen_compat() -> Result<()> {
     )?;
     writeln!(out, "| 3 | Compiles / best-effort — no guarantees |")?;
 
-    let output_path = "COMPATIBILITY.md";
-    fs::write(output_path, &out).with_context(|| format!("Failed to write {output_path}"))?;
+    let md_path = "COMPATIBILITY.md";
+    fs::write(md_path, &out).with_context(|| format!("Failed to write {md_path}"))?;
 
-    println!("✓ Written {output_path} ({} bytes)", out.len());
-    println!("  Devices: {}", devices.len());
-    println!("  Games:   {}", games.len());
+    // --- Generate compat/compatibility.json ---
+    let compat_json = CompatJson {
+        generated_by: "cargo xtask gen-compat",
+        devices: device_entries,
+        games: game_entries,
+        summary,
+    };
+    let json_path = "compat/compatibility.json";
+    let json_out = serde_json::to_string_pretty(&compat_json)
+        .context("Failed to serialize compatibility.json")?;
+    fs::write(json_path, format!("{json_out}\n"))
+        .with_context(|| format!("Failed to write {json_path}"))?;
+
+    println!("✓ Written {md_path} ({} bytes)", out.len());
+    println!("✓ Written {json_path} ({} bytes)", json_out.len());
+    println!(
+        "  Devices: {}  Games: {}",
+        compat_json.summary.total_devices, compat_json.summary.total_games
+    );
+    for (tier, count) in &tier_dist {
+        println!("  Device {tier}: {count}");
+    }
+    for (tier, count) in &game_tier_dist {
+        println!("  Game {tier}: {count}");
+    }
     Ok(())
 }
+
+// ---------- manifest validation ----------
+
+fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
+    let text = match fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("cannot read file: {e}"),
+            });
+            return;
+        }
+    };
+    let doc: serde_yaml::Value = match serde_yaml::from_str(&text) {
+        Ok(d) => d,
+        Err(e) => {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("invalid YAML: {e}"),
+            });
+            return;
+        }
+    };
+
+    let required = [
+        ("device.name", &doc["device"]["name"]),
+        ("device.vendor", &doc["device"]["vendor"]),
+        ("device.usb.vendor_id", &doc["device"]["usb"]["vendor_id"]),
+        ("device.usb.product_id", &doc["device"]["usb"]["product_id"]),
+        ("capabilities.axes", &doc["capabilities"]["axes"]),
+        ("capabilities.buttons", &doc["capabilities"]["buttons"]),
+        (
+            "capabilities.force_feedback",
+            &doc["capabilities"]["force_feedback"],
+        ),
+        ("support.tier", &doc["support"]["tier"]),
+    ];
+    for (field, val) in &required {
+        if val.is_null() {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("missing required field: {field}"),
+            });
+        }
+    }
+
+    if let Some(tier) = doc["support"]["tier"].as_u64()
+        && !(1..=3).contains(&tier)
+    {
+        errors.push(ValidationError {
+            path: path.to_path_buf(),
+            message: format!("support.tier must be 1, 2, or 3 (got {tier})"),
+        });
+    }
+}
+
+fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
+    let text = match fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) => {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("cannot read file: {e}"),
+            });
+            return;
+        }
+    };
+    let doc: serde_yaml::Value = match serde_yaml::from_str(&text) {
+        Ok(d) => d,
+        Err(e) => {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("invalid YAML: {e}"),
+            });
+            return;
+        }
+    };
+
+    let required = [
+        ("game.name", &doc["game"]["name"]),
+        ("game.id", &doc["game"]["id"]),
+        ("integration.mechanism", &doc["integration"]["mechanism"]),
+        ("integration.crate", &doc["integration"]["crate"]),
+        (
+            "features.telemetry_read",
+            &doc["features"]["telemetry_read"],
+        ),
+        (
+            "features.control_injection",
+            &doc["features"]["control_injection"],
+        ),
+        ("test_coverage.hil", &doc["test_coverage"]["hil"]),
+    ];
+    for (field, val) in &required {
+        if val.is_null() {
+            errors.push(ValidationError {
+                path: path.to_path_buf(),
+                message: format!("missing required field: {field}"),
+            });
+        }
+    }
+
+    if let Some(tier) = doc["support_tier"].as_u64()
+        && !(1..=3).contains(&tier)
+    {
+        errors.push(ValidationError {
+            path: path.to_path_buf(),
+            message: format!("support_tier must be 1, 2, or 3 (got {tier})"),
+        });
+    }
+}
+
+// ---------- manifest parsing ----------
+
+fn parse_device(path: &Path) -> Result<DeviceEntry> {
+    let text = fs::read_to_string(path)?;
+    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
+
+    Ok(DeviceEntry {
+        name: doc["device"]["name"].as_str().unwrap_or("?").to_string(),
+        vendor: doc["device"]["vendor"].as_str().unwrap_or("?").to_string(),
+        vendor_id: doc["device"]["usb"]["vendor_id"]
+            .as_u64()
+            .map_or_else(|| "?".to_string(), |v| format!("0x{v:04X}")),
+        product_id: doc["device"]["usb"]["product_id"]
+            .as_u64()
+            .map_or_else(|| "?".to_string(), |v| format!("0x{v:04X}")),
+        axes: doc["capabilities"]["axes"]["count"].as_u64().unwrap_or(0),
+        buttons: doc["capabilities"]["buttons"].as_u64().unwrap_or(0),
+        force_feedback: doc["capabilities"]["force_feedback"]
+            .as_bool()
+            .unwrap_or(false),
+        tier: doc["support"]["tier"].as_u64().unwrap_or(0),
+        test_coverage: TestCoverage {
+            simulated: doc["support"]["test_coverage"]["simulated"]
+                .as_bool()
+                .unwrap_or(false),
+            hil: doc["support"]["test_coverage"]["hil"]
+                .as_bool()
+                .unwrap_or(false),
+        },
+    })
+}
+
+fn parse_game(path: &Path) -> Result<GameEntry> {
+    let text = fs::read_to_string(path)?;
+    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
+
+    let control_injection = {
+        let ci = &doc["features"]["control_injection"];
+        let std_events = ci["standard_events"].as_bool().unwrap_or(false);
+        let direct = ci["direct"].as_bool().unwrap_or(false);
+        let dataref = ci["dataref_write"].as_bool().unwrap_or(false);
+        let commands = ci["commands"].as_bool().unwrap_or(false);
+        std_events || direct || dataref || commands
+    };
+
+    Ok(GameEntry {
+        name: doc["game"]["name"].as_str().unwrap_or("?").to_string(),
+        id: doc["game"]["id"].as_str().unwrap_or("?").to_string(),
+        mechanism: doc["integration"]["mechanism"]
+            .as_str()
+            .unwrap_or("?")
+            .to_string(),
+        crate_name: doc["integration"]["crate"]
+            .as_str()
+            .unwrap_or("?")
+            .to_string(),
+        features: GameFeatures {
+            telemetry_read: doc["features"]["telemetry_read"].as_bool().unwrap_or(false),
+            control_injection,
+            force_feedback_translation: doc["features"]["force_feedback_translation"]
+                .as_bool()
+                .unwrap_or(false),
+            aircraft_detection: doc["features"]["aircraft_detection"]
+                .as_bool()
+                .unwrap_or(false),
+        },
+        test_coverage: GameTestCoverage {
+            trace_replay: doc["test_coverage"]["trace_replay"]
+                .as_bool()
+                .unwrap_or(false),
+            hil: doc["test_coverage"]["hil"].as_bool().unwrap_or(false),
+        },
+        tier: doc["support_tier"].as_u64().unwrap_or(0),
+    })
+}
+
+// ---------- helpers ----------
 
 /// Collect `.yaml` manifest paths from a directory tree, sorted.
 fn collect_manifests(dir: &Path) -> Result<Vec<PathBuf>> {
@@ -115,77 +493,6 @@ fn collect_yaml(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
-fn render_device_row(path: &Path) -> Result<String> {
-    let text = fs::read_to_string(path)?;
-    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
-
-    let name = doc["device"]["name"].as_str().unwrap_or("?").to_string();
-    let vid = doc["device"]["usb"]["vendor_id"]
-        .as_u64()
-        .map_or_else(|| "?".to_string(), |v| format!("0x{v:04X}"));
-    let pid = doc["device"]["usb"]["product_id"]
-        .as_u64()
-        .map_or_else(|| "?".to_string(), |v| format!("0x{v:04X}"));
-    let axes = doc["capabilities"]["axes"]["count"]
-        .as_u64()
-        .map_or_else(|| "?".to_string(), |v| v.to_string());
-    let buttons = doc["capabilities"]["buttons"]
-        .as_u64()
-        .map_or_else(|| "?".to_string(), |v| v.to_string());
-    let ffb = if doc["capabilities"]["force_feedback"]
-        .as_bool()
-        .unwrap_or(false)
-    {
-        "✓"
-    } else {
-        "✗"
-    };
-    let tier = doc["support"]["tier"]
-        .as_u64()
-        .map_or_else(|| "?".to_string(), |v| v.to_string());
-
-    Ok(format!(
-        "| {name} | {vid} | {pid} | {axes} | {buttons} | {ffb} | {tier} |"
-    ))
-}
-
-fn render_game_row(path: &Path) -> Result<String> {
-    let text = fs::read_to_string(path)?;
-    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
-
-    let name = doc["game"]["name"].as_str().unwrap_or("?").to_string();
-    let mechanism = doc["integration"]["mechanism"]
-        .as_str()
-        .unwrap_or("?")
-        .to_string();
-    let telemetry = bool_to_check(doc["features"]["telemetry_read"].as_bool());
-    let control = {
-        let std_events = doc["features"]["control_injection"]["standard_events"]
-            .as_bool()
-            .unwrap_or(false);
-        let direct = doc["features"]["control_injection"]["direct"]
-            .as_bool()
-            .unwrap_or(false);
-        let dataref = doc["features"]["control_injection"]["dataref_write"]
-            .as_bool()
-            .unwrap_or(false);
-        if std_events || direct || dataref {
-            "✓"
-        } else {
-            "✗"
-        }
-    };
-    let ffb = bool_to_check(doc["features"]["force_feedback_translation"].as_bool());
-    let hil = bool_to_check(doc["test_coverage"]["hil"].as_bool());
-
-    Ok(format!(
-        "| {name} | {mechanism} | {telemetry} | {control} | {ffb} | {hil} |"
-    ))
-}
-
-fn bool_to_check(v: Option<bool>) -> &'static str {
-    match v {
-        Some(true) => "✓",
-        _ => "✗",
-    }
+fn bool_to_check(v: bool) -> &'static str {
+    if v { "✓" } else { "✗" }
 }

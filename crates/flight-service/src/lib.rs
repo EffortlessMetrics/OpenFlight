@@ -37,6 +37,7 @@ pub mod input_runtime;
 pub mod instance_lock;
 pub mod metrics_server;
 pub mod one_click_resolver;
+pub mod orchestrator;
 pub mod perf_profiler;
 pub mod plugin;
 pub mod plugin_registry;
@@ -93,6 +94,11 @@ pub use stecs_runtime::{
     VkbStecsRuntimeConfig, VkbStecsSnapshot,
 };
 
+pub use orchestrator::{
+    AdapterEvent, BootSequence, CompiledProfile, DeviceEvent, OrchestratorError,
+    OrchestratorStatus, ServiceConfig, ServiceOrchestrator, SubsystemHandle, SubsystemHealth,
+    SubsystemStatus,
+};
 pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
 pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
 pub use plugin_registry::PluginRegistry;

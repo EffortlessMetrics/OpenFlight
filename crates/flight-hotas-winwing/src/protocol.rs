@@ -201,7 +201,11 @@ impl FeatureReportFrame {
     ///
     /// Returns [`ProtocolError::PayloadTooLarge`] if `payload` exceeds
     /// [`MAX_PAYLOAD_LEN`].
-    pub fn new(category: CommandCategory, sub_cmd: u8, payload: &[u8]) -> Result<Self, ProtocolError> {
+    pub fn new(
+        category: CommandCategory,
+        sub_cmd: u8,
+        payload: &[u8],
+    ) -> Result<Self, ProtocolError> {
         if payload.len() > MAX_PAYLOAD_LEN {
             return Err(ProtocolError::PayloadTooLarge {
                 max: MAX_PAYLOAD_LEN,
@@ -270,9 +274,8 @@ pub fn parse_feature_report(data: &[u8]) -> Result<ParsedFrame<'_>, ProtocolErro
         return Err(ProtocolError::InvalidReportId { id: data[0] });
     }
 
-    let category = CommandCategory::from_byte(data[1]).ok_or(ProtocolError::UnknownCategory {
-        byte: data[1],
-    })?;
+    let category = CommandCategory::from_byte(data[1])
+        .ok_or(ProtocolError::UnknownCategory { byte: data[1] })?;
     let sub_command = data[2];
     let payload_len = u16::from_le_bytes([data[3], data[4]]) as usize;
 
@@ -490,9 +493,7 @@ pub fn build_detent_set_command(
 pub fn parse_detent_response(payload: &[u8]) -> Result<DetentReport, ProtocolError> {
     const ENTRY_SIZE: usize = 5;
     if !payload.is_empty() && !payload.len().is_multiple_of(ENTRY_SIZE) {
-        return Err(ProtocolError::InvalidDetentPayload {
-            len: payload.len(),
-        });
+        return Err(ProtocolError::InvalidDetentPayload { len: payload.len() });
     }
 
     let mut positions = Vec::with_capacity(payload.len() / ENTRY_SIZE);
@@ -569,8 +570,7 @@ mod tests {
     #[test]
     fn test_build_and_parse_with_payload() {
         let payload = [0xAA, 0xBB, 0xCC];
-        let frame =
-            FeatureReportFrame::new(CommandCategory::Display, 0x01, &payload).unwrap();
+        let frame = FeatureReportFrame::new(CommandCategory::Display, 0x01, &payload).unwrap();
         let bytes = frame.as_bytes();
         assert_eq!(bytes.len(), MIN_FRAME_LEN + 3);
 
@@ -608,8 +608,7 @@ mod tests {
     #[test]
     fn test_max_payload_succeeds() {
         let payload = [0xABu8; MAX_PAYLOAD_LEN];
-        let frame =
-            FeatureReportFrame::new(CommandCategory::Display, 0x02, &payload).unwrap();
+        let frame = FeatureReportFrame::new(CommandCategory::Display, 0x02, &payload).unwrap();
         assert_eq!(frame.len(), MAX_FRAME_LEN);
         let parsed = parse_feature_report(frame.as_bytes()).unwrap();
         assert_eq!(parsed.payload.len(), MAX_PAYLOAD_LEN);
@@ -816,10 +815,26 @@ mod tests {
         let ab_pos = 58000u16.to_le_bytes();
         let custom_pos = 32000u16.to_le_bytes();
         let payload = [
-            0, 0, idle_pos[0], idle_pos[1], 0, // left idle
-            0, 1, ab_pos[0], ab_pos[1], 0, // left afterburner
-            1, 0, idle_pos[0], idle_pos[1], 0, // right idle
-            1, 2, custom_pos[0], custom_pos[1], 0, // right custom #2
+            0,
+            0,
+            idle_pos[0],
+            idle_pos[1],
+            0, // left idle
+            0,
+            1,
+            ab_pos[0],
+            ab_pos[1],
+            0, // left afterburner
+            1,
+            0,
+            idle_pos[0],
+            idle_pos[1],
+            0, // right idle
+            1,
+            2,
+            custom_pos[0],
+            custom_pos[1],
+            0, // right custom #2
         ];
         let report = parse_detent_response(&payload).unwrap();
         assert_eq!(report.positions.len(), 4);
@@ -918,8 +933,7 @@ mod tests {
         // Verify various payload sizes work correctly
         for len in [0, 1, 2, 5, 10, 20, MAX_PAYLOAD_LEN] {
             let payload: Vec<u8> = (0..len).map(|i| i as u8).collect();
-            let frame =
-                FeatureReportFrame::new(CommandCategory::Display, 0x01, &payload).unwrap();
+            let frame = FeatureReportFrame::new(CommandCategory::Display, 0x01, &payload).unwrap();
             assert_eq!(frame.len(), MIN_FRAME_LEN + len);
 
             let parsed = parse_feature_report(frame.as_bytes()).unwrap();
@@ -929,8 +943,7 @@ mod tests {
 
     #[test]
     fn test_frame_is_empty() {
-        let frame =
-            FeatureReportFrame::new(CommandCategory::Display, 0x01, &[]).unwrap();
+        let frame = FeatureReportFrame::new(CommandCategory::Display, 0x01, &[]).unwrap();
         assert!(!frame.is_empty());
         assert!(frame.len() >= MIN_FRAME_LEN);
     }
@@ -940,8 +953,7 @@ mod tests {
     #[test]
     fn test_frame_declared_payload_exceeds_data() {
         // Build a valid frame, then truncate it
-        let frame =
-            FeatureReportFrame::new(CommandCategory::Display, 0x01, &[1, 2, 3]).unwrap();
+        let frame = FeatureReportFrame::new(CommandCategory::Display, 0x01, &[1, 2, 3]).unwrap();
         let bytes = frame.as_bytes();
         // Only give first 7 bytes (header + 1 byte of payload, missing rest + checksum)
         let err = parse_feature_report(&bytes[..7]).unwrap_err();

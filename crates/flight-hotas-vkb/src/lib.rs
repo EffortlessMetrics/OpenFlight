@@ -31,9 +31,10 @@ pub use input::{
     STECS_MAX_BUTTONS, STECS_MAX_VIRTUAL_CONTROLLERS, StecsAxes, StecsInputAggregator,
     StecsInputHandler, StecsInputState, StecsInterfaceState, StecsParseError,
 };
-pub use stecs_modern::{
-    StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
-    VkcStecsMtAxes, VkcStecsMtButtons, VkcStecsMtInputState, parse_stecs_mt_report,
+pub use profiles::{
+    AxisMapping, AxisNormMode, ButtonKind, ButtonMapping, HatKind, HatMapping, VkbDeviceProfile,
+    all_profiles, gladiator_nxt_evo_profile, gunfighter_mcg_profile, profile_for_pid,
+    sem_thq_profile, stecs_throttle_profile, t_rudder_profile,
 };
 pub use protocol::{
     GLADIATOR_NXT_EVO_SHIFT, GUNFIGHTER_MAX_BUTTONS, GUNFIGHTER_MAX_HATS, GUNFIGHTER_MCG_SHIFT,
@@ -43,8 +44,7 @@ pub use protocol::{
     VkbAxisResolution, VkbDeviceFamily, VkbJoystickReportLayout, VkbLedColor, VkbLedIndex,
     VkbShiftMode, build_led_command, is_vkb_joystick, report_layout_for_family, vkb_device_family,
 };
-pub use profiles::{
-    AxisMapping, AxisNormMode, ButtonKind, ButtonMapping, HatKind, HatMapping, VkbDeviceProfile,
-    all_profiles, gladiator_nxt_evo_profile, gunfighter_mcg_profile, profile_for_pid,
-    sem_thq_profile, stecs_throttle_profile, t_rudder_profile,
+pub use stecs_modern::{
+    StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
+    VkcStecsMtAxes, VkcStecsMtButtons, VkcStecsMtInputState, parse_stecs_mt_report,
 };

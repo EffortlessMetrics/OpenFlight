@@ -99,6 +99,7 @@ pub mod history;
 pub mod input_validator;
 pub mod invert;
 pub mod lag_compensator;
+pub mod mixer;
 pub mod mode_switch;
 pub mod nodes;
 pub mod noise_floor;
@@ -112,6 +113,7 @@ pub mod rate_limit;
 pub mod recording;
 pub mod scale;
 pub mod smoothing;
+pub mod stages;
 pub mod throttle_zone;
 pub mod trace_replay;
 pub mod trim;
@@ -163,6 +165,7 @@ pub use nodes::{
     MixerInput, MixerNode, MixerState, Node, NodeId, SlewCompiledState, SlewNode, SlewState,
 };
 pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64};
+pub use mixer::{AxisMixer, MixMode, MAX_MIXER_INPUTS};
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
@@ -181,5 +184,12 @@ pub use throttle_zone::{
 };
 pub use trace_replay::{
     AxisTrace, TraceRecorder, TraceReplayer, TraceSample, assert_trace_matches,
+};
+pub use stages::{
+    ClampStage as RtClampStage, CurveType, DeadzoneShape,
+    DeadzoneStage as RtDeadzoneStage, InvertStage as RtInvertStage, NoiseGate,
+    PipelineDiagnostics, RescaleStage, RtAxisPipeline, RtPipelineBuilder, SlewRateLimiter,
+    SmoothingStage as RtSmoothingStage, SmoothingType, Stage, StageDiagnostic, StageSlot,
+    MAX_CURVE_POINTS, MAX_SMA_WINDOW, MAX_STAGES,
 };
 pub use trim::{AxisTrim, AxisTrimBank};
