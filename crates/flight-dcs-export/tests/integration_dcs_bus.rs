@@ -773,3 +773,243 @@ async fn test_socket_bridge_receives_mp_telemetry_preserves_session_type() {
         other => panic!("expected Telemetry, got {:?}", other),
     }
 }
+
+// ============================================================================
+// 6. Protocol parser → BusSnapshot pipeline tests
+// ============================================================================
+
+/// Parse a raw Export.lua UDP batch through the protocol parser and convert
+/// the resulting `DcsTelemetryPacket` into a `BusSnapshot`.
+#[test]
+fn test_protocol_parser_to_bus_snapshot_full_pipeline() {
+    let adapter = create_adapter();
+
+    let raw_udp = [
+        "HEADER:timestamp=1234.5,model_time=600.0,aircraft=F-16C_50",
+        "altitude_m=5000.0",
+        "airspeed_ms=180.0",
+        "heading_deg=90.0",
+        "pitch_deg=5.0",
+        "roll_deg=-10.0",
+        "aoa_deg=3.2",
+        "g_load=1.5",
+        "mach=0.85",
+        "vertical_speed_ms=2.0",
+        "fuel_total_kg=3200.0",
+        "engine_rpm_0=95.0",
+        "engine_rpm_1=94.5",
+        "gear_nose=0.0",
+        "gear_left=0.0",
+        "gear_right=0.0",
+    ]
+    .join("\n");
+
+    let packet =
+        flight_dcs_export::protocol::parse_telemetry_batch(&raw_udp).expect("parse must succeed");
+
+    let snap = adapter
+        .convert_packet_to_bus_snapshot(&packet)
+        .expect("conversion must succeed");
+
+    // SimId must be DCS
+    assert_eq!(format!("{:?}", snap.sim), "Dcs");
+
+    // Aircraft detected via DB — should have variant from display name
+    assert_eq!(snap.aircraft.icao, "F-16C_50");
+    assert_eq!(
+        snap.aircraft.variant.as_deref(),
+        Some("F-16C Viper"),
+        "aircraft DB must enrich with display name"
+    );
+
+    // Airspeed: 180 m/s ≈ 349.9 knots
+    let expected_ias_knots = 180.0 * 1.943_844;
+    assert!(
+        (snap.kinematics.ias.value() as f64 - expected_ias_knots).abs() < 0.5,
+        "IAS: expected ~{:.1} knots, got {}",
+        expected_ias_knots,
+        snap.kinematics.ias.value()
+    );
+
+    // Angles pass through in degrees
+    assert!(
+        (snap.kinematics.heading.value() - 90.0_f32).abs() < 1e-3,
+        "heading"
+    );
+    assert!(
+        (snap.kinematics.pitch.value() - 5.0_f32).abs() < 1e-3,
+        "pitch"
+    );
+    assert!(
+        (snap.kinematics.bank.value() - (-10.0_f32)).abs() < 1e-3,
+        "bank/roll"
+    );
+    assert!((snap.kinematics.aoa.value() - 3.2_f32).abs() < 1e-3, "AoA");
+
+    // Altitude passes through
+    assert!(
+        (snap.environment.altitude - 5000.0_f32).abs() < 1.0,
+        "altitude"
+    );
+
+    // G-load
+    assert!(
+        (snap.kinematics.g_force.value() - 1.5_f32).abs() < 1e-3,
+        "g_force"
+    );
+
+    // Engines
+    assert_eq!(snap.engines.len(), 2, "two engines");
+
+    // Gear all up (0.0)
+    assert!(snap.config.gear.all_up(), "gear must be up");
+}
+
+/// Minimal packet (header + single field) through the full pipeline must succeed.
+#[test]
+fn test_protocol_parser_to_bus_snapshot_minimal_packet() {
+    let adapter = create_adapter();
+
+    let raw_udp = "HEADER:timestamp=0.0,model_time=0.0,aircraft=Su-25T\nairspeed_ms=100.0";
+
+    let packet =
+        flight_dcs_export::protocol::parse_telemetry_batch(raw_udp).expect("parse must succeed");
+
+    let snap = adapter
+        .convert_packet_to_bus_snapshot(&packet)
+        .expect("minimal packet must convert");
+
+    // 100 m/s ≈ 194.4 knots
+    assert!(
+        snap.kinematics.ias.value() > 190.0 && snap.kinematics.ias.value() < 200.0,
+        "IAS {} knots should be ~194",
+        snap.kinematics.ias.value()
+    );
+
+    // Default values for omitted fields
+    assert_eq!(snap.kinematics.pitch.value(), 0.0);
+    assert_eq!(snap.environment.altitude, 0.0);
+}
+
+/// Helicopter packet through the pipeline with gear down.
+#[test]
+fn test_protocol_parser_to_bus_snapshot_helicopter() {
+    let adapter = create_adapter();
+
+    let raw_udp = [
+        "HEADER:timestamp=50.0,model_time=50.0,aircraft=Ka-50_3",
+        "altitude_m=100.0",
+        "airspeed_ms=2.5",
+        "heading_deg=180.0",
+        "pitch_deg=2.0",
+        "roll_deg=1.0",
+        "g_load=1.0",
+        "engine_rpm_0=95.0",
+        "engine_rpm_1=95.0",
+        "gear_nose=1.0",
+        "gear_left=1.0",
+        "gear_right=1.0",
+    ]
+    .join("\n");
+
+    let packet =
+        flight_dcs_export::protocol::parse_telemetry_batch(&raw_udp).expect("parse must succeed");
+
+    let snap = adapter
+        .convert_packet_to_bus_snapshot(&packet)
+        .expect("helicopter packet must convert");
+
+    // Aircraft DB lookup
+    assert_eq!(snap.aircraft.icao, "Ka-50_3");
+    assert_eq!(
+        snap.aircraft.variant.as_deref(),
+        Some("Ka-50 Black Shark III")
+    );
+
+    // Gear all down
+    assert!(snap.config.gear.all_down(), "helicopter gear must be down");
+
+    // Two engines
+    assert_eq!(snap.engines.len(), 2);
+}
+
+/// A packet with Lua comments and blank lines must parse cleanly.
+#[test]
+fn test_protocol_parser_to_bus_snapshot_with_comments() {
+    let adapter = create_adapter();
+
+    let raw_udp = [
+        "HEADER:timestamp=0.0,model_time=0.0,aircraft=F-14B",
+        "",
+        "altitude_m=3000.0 -- cruising altitude",
+        "airspeed_ms=150.0",
+        "",
+        "heading_deg=45.0 -- north-east",
+        "g_load=1.0",
+    ]
+    .join("\n");
+
+    let packet =
+        flight_dcs_export::protocol::parse_telemetry_batch(&raw_udp).expect("parse must succeed");
+
+    let snap = adapter
+        .convert_packet_to_bus_snapshot(&packet)
+        .expect("packet with comments must convert");
+
+    assert_eq!(snap.aircraft.icao, "F-14B");
+    assert_eq!(snap.aircraft.variant.as_deref(), Some("F-14B Tomcat"));
+    assert!(
+        (snap.environment.altitude - 3000.0_f32).abs() < 1.0,
+        "altitude"
+    );
+}
+
+// ============================================================================
+// 7. Aircraft detection tests
+// ============================================================================
+
+/// Known DCS module names must be enriched with display names from the DB.
+#[test]
+fn test_aircraft_detection_known_modules() {
+    let adapter = create_adapter();
+
+    let cases = [
+        ("F-16C_50", "F-16C_50", Some("F-16C Viper")),
+        ("FA-18C_hornet", "FA-18C_hornet", Some("F/A-18C Hornet")),
+        ("Ka-50_3", "Ka-50_3", Some("Ka-50 Black Shark III")),
+        ("UH-1H", "UH-1H", Some("UH-1H Huey")),
+        ("TF-51D", "TF-51D", Some("P-51D Mustang")),
+    ];
+
+    for (dcs_name, expected_icao, expected_variant) in cases {
+        let aid = adapter.detect_aircraft(dcs_name);
+        assert_eq!(aid.icao, expected_icao, "icao for {dcs_name}");
+        assert_eq!(
+            aid.variant.as_deref(),
+            expected_variant,
+            "variant for {dcs_name}"
+        );
+    }
+}
+
+/// Unknown DCS module names must produce a plain AircraftId without variant.
+#[test]
+fn test_aircraft_detection_unknown_module() {
+    let adapter = create_adapter();
+    let aid = adapter.detect_aircraft("Boeing747_custom_mod");
+    assert_eq!(aid.icao, "Boeing747_custom_mod");
+    assert!(
+        aid.variant.is_none(),
+        "unknown module must not have a variant"
+    );
+}
+
+/// Fuzzy matching must resolve partial/case-variant names.
+#[test]
+fn test_aircraft_detection_fuzzy_match() {
+    let adapter = create_adapter();
+    // "f-16" should fuzzy-match to "F-16C_50"
+    let aid = adapter.detect_aircraft("f-16");
+    assert_eq!(aid.icao, "F-16C_50");
+    assert_eq!(aid.variant.as_deref(), Some("F-16C Viper"));
+}
