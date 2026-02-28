@@ -8,15 +8,26 @@ pub use flight_panels_core::led;
 pub mod bip;
 pub mod fip;
 pub mod multi_panel;
+pub mod radio_panel;
 pub mod saitek;
+pub mod switch_panel;
 pub mod verify_matrix;
 
 pub use multi_panel::{
     LcdDisplay, MULTI_PANEL_INPUT_MIN_BYTES, MULTI_PANEL_OUTPUT_BYTES, MultiPanelButtonState,
     MultiPanelLedMask, MultiPanelState, encode_segment, led_bits, parse_multi_panel_input,
 };
+pub use radio_panel::{
+    RADIO_PANEL_INPUT_MIN_BYTES, RADIO_PANEL_OUTPUT_BYTES, RadioDisplay, RadioMode,
+    RadioPanelButtonState, RadioPanelState, parse_radio_panel_input,
+};
 pub use saitek::{
     PanelHealthStatus, PanelInfo, PanelType, SaitekPanelWriter, VerifyStep, VerifyStepResult,
     VerifyTestResult,
+};
+pub use switch_panel::{
+    GearLedColor, MagnetoPosition, SWITCH_PANEL_INPUT_MIN_BYTES, SWITCH_PANEL_OUTPUT_BYTES,
+    SwitchPanelGearLeds, SwitchPanelState, SwitchPanelSwitchState, gear_led_bits,
+    parse_switch_panel_input,
 };
 pub use verify_matrix::{DriftAction, DriftAnalysis, MatrixTestResult, VerifyMatrix};

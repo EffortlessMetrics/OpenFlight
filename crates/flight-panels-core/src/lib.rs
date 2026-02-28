@@ -3,11 +3,14 @@
 
 //! Core panel rules evaluation and LED control.
 
+pub mod display;
 pub mod evaluator;
 pub mod led;
+pub mod protocol;
 
 pub use evaluator::RulesEvaluator;
 pub use led::{LatencyStats, LedController, LedState, LedTarget};
+pub use protocol::{PanelEvent, PanelId, PanelProtocol};
 
 #[cfg(test)]
 mod tests {
