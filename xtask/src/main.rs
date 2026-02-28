@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use std::env;
 
 mod ac_status;
+mod bench_compare;
 mod check;
 mod clean_worktrees;
 mod compat;
@@ -110,6 +111,17 @@ enum Commands {
         #[arg(long)]
         duration: Option<u64>,
     },
+
+    /// Compare benchmark results against stored baselines
+    BenchCompare {
+        /// Regression threshold percentage (default: 10)
+        #[arg(long, default_value_t = 10.0)]
+        threshold: f64,
+
+        /// Save current results as the new baseline
+        #[arg(long)]
+        save_baseline: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -157,6 +169,10 @@ fn main() -> Result<()> {
         Commands::DeviceReport { json } => device_report::run_device_report(json),
         Commands::CleanWorktrees { force } => clean_worktrees::run_clean_worktrees(force),
         Commands::FuzzSmoke { duration } => fuzz_smoke::run_fuzz_smoke(duration),
+        Commands::BenchCompare {
+            threshold,
+            save_baseline,
+        } => bench_compare::run_bench_compare(threshold, save_baseline),
     }
 }
 

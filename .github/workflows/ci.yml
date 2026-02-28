@@ -231,6 +231,30 @@ jobs:
         done
         echo "✅ All referenced ADRs exist"
 
+  performance-check:
+    name: Performance Regression Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+    continue-on-error: true  # Advisory only for now
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Install Linux HID build deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev
+
+    - name: Run performance regression check
+      run: cargo xtask bench-compare --threshold 15
+
   msrv-check:
     name: MSRV Check (Rust 1.92.0)
     runs-on: ubuntu-latest
