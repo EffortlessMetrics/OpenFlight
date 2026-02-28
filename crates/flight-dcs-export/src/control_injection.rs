@@ -7,6 +7,19 @@
 //! format for sending back to DCS via UDP. Commands are buffered and
 //! flushed once per frame to avoid flooding the socket.
 
+/// Type of control action to send to DCS.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DcsActionType {
+    /// Continuous axis value in `[-1.0, 1.0]`.
+    Axis,
+    /// Momentary button press (value `1.0` for press, `0.0` for release).
+    ButtonPress,
+    /// Button release.
+    ButtonRelease,
+    /// Toggle switch — sends value `1.0` to toggle, DCS handles the state.
+    Toggle,
+}
+
 /// A single DCS input command targeting a cockpit device.
 ///
 /// In DCS, devices are identified by numeric IDs (e.g. device 0 is the
@@ -20,6 +33,50 @@ pub struct DcsControlCommand {
     /// Command value, typically in the range `[-1.0, 1.0]` for axes or
     /// `0.0`/`1.0` for buttons.
     pub value: f64,
+    /// Type of control action.
+    pub action_type: DcsActionType,
+}
+
+impl DcsControlCommand {
+    /// Create an axis command.
+    pub fn axis(device_id: u32, command_id: u32, value: f64) -> Self {
+        Self {
+            device_id,
+            command_id,
+            value: value.clamp(-1.0, 1.0),
+            action_type: DcsActionType::Axis,
+        }
+    }
+
+    /// Create a button press command.
+    pub fn button_press(device_id: u32, command_id: u32) -> Self {
+        Self {
+            device_id,
+            command_id,
+            value: 1.0,
+            action_type: DcsActionType::ButtonPress,
+        }
+    }
+
+    /// Create a button release command.
+    pub fn button_release(device_id: u32, command_id: u32) -> Self {
+        Self {
+            device_id,
+            command_id,
+            value: 0.0,
+            action_type: DcsActionType::ButtonRelease,
+        }
+    }
+
+    /// Create a toggle command.
+    pub fn toggle(device_id: u32, command_id: u32) -> Self {
+        Self {
+            device_id,
+            command_id,
+            value: 1.0,
+            action_type: DcsActionType::Toggle,
+        }
+    }
 }
 
 /// Buffers and serialises control commands for DCS.
@@ -68,6 +125,8 @@ impl DcsControlInjector {
     /// The wire format is newline-separated entries:
     /// ```text
     /// CMD:<device_id>,<command_id>,<value>\n
+    /// BTN:<device_id>,<command_id>,<value>\n
+    /// TGL:<device_id>,<command_id>,<value>\n
     /// ```
     ///
     /// Values are formatted with up to 6 decimal places.
@@ -78,9 +137,14 @@ impl DcsControlInjector {
 
         let mut out = String::with_capacity(self.buffer.len() * 32);
         for cmd in self.buffer.drain(..) {
+            let prefix = match cmd.action_type {
+                DcsActionType::Axis => "CMD",
+                DcsActionType::ButtonPress | DcsActionType::ButtonRelease => "BTN",
+                DcsActionType::Toggle => "TGL",
+            };
             out.push_str(&format!(
-                "CMD:{},{},{:.6}\n",
-                cmd.device_id, cmd.command_id, cmd.value
+                "{}:{},{},{:.6}\n",
+                prefix, cmd.device_id, cmd.command_id, cmd.value
             ));
         }
         out.into_bytes()
@@ -107,11 +171,7 @@ mod tests {
     use super::*;
 
     fn axis_cmd(device: u32, cmd: u32, val: f64) -> DcsControlCommand {
-        DcsControlCommand {
-            device_id: device,
-            command_id: cmd,
-            value: val,
-        }
+        DcsControlCommand::axis(device, cmd, val)
     }
 
     #[test]
@@ -185,10 +245,10 @@ mod tests {
     #[test]
     fn test_value_precision() {
         let mut inj = DcsControlInjector::new(16);
-        inj.queue_command(axis_cmd(1, 1, std::f64::consts::PI));
+        inj.queue_command(axis_cmd(1, 1, std::f64::consts::PI / 4.0));
         let text = String::from_utf8(inj.flush()).unwrap();
-        // Should have 6 decimal places
-        assert!(text.contains("3.141593"));
+        // Value is clamped to [-1, 1], so PI/4 ≈ 0.785398
+        assert!(text.contains("0.785398"));
     }
 
     #[test]
@@ -205,5 +265,108 @@ mod tests {
         // First flush should not contain second command
         let t1 = String::from_utf8(p1).unwrap();
         assert!(!t1.contains("CMD:0,2,"));
+    }
+
+    // --- new command type tests ---
+
+    #[test]
+    fn test_button_press_command() {
+        let cmd = DcsControlCommand::button_press(4, 3001);
+        assert_eq!(cmd.device_id, 4);
+        assert_eq!(cmd.command_id, 3001);
+        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+        assert_eq!(cmd.action_type, DcsActionType::ButtonPress);
+    }
+
+    #[test]
+    fn test_button_release_command() {
+        let cmd = DcsControlCommand::button_release(4, 3001);
+        assert_eq!(cmd.device_id, 4);
+        assert_eq!(cmd.command_id, 3001);
+        assert!(cmd.value.abs() < f64::EPSILON);
+        assert_eq!(cmd.action_type, DcsActionType::ButtonRelease);
+    }
+
+    #[test]
+    fn test_toggle_command() {
+        let cmd = DcsControlCommand::toggle(2, 500);
+        assert_eq!(cmd.device_id, 2);
+        assert_eq!(cmd.command_id, 500);
+        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+        assert_eq!(cmd.action_type, DcsActionType::Toggle);
+    }
+
+    #[test]
+    fn test_axis_clamped() {
+        let cmd = DcsControlCommand::axis(0, 1, 2.0);
+        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+
+        let cmd2 = DcsControlCommand::axis(0, 1, -2.0);
+        assert!((cmd2.value - (-1.0)).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_button_press_wire_format() {
+        let mut inj = DcsControlInjector::new(16);
+        inj.queue_command(DcsControlCommand::button_press(4, 3001));
+        let text = String::from_utf8(inj.flush()).unwrap();
+        assert!(text.contains("BTN:4,3001,1.000000\n"));
+    }
+
+    #[test]
+    fn test_button_release_wire_format() {
+        let mut inj = DcsControlInjector::new(16);
+        inj.queue_command(DcsControlCommand::button_release(4, 3001));
+        let text = String::from_utf8(inj.flush()).unwrap();
+        assert!(text.contains("BTN:4,3001,0.000000\n"));
+    }
+
+    #[test]
+    fn test_toggle_wire_format() {
+        let mut inj = DcsControlInjector::new(16);
+        inj.queue_command(DcsControlCommand::toggle(2, 500));
+        let text = String::from_utf8(inj.flush()).unwrap();
+        assert!(text.contains("TGL:2,500,1.000000\n"));
+    }
+
+    #[test]
+    fn test_mixed_command_types() {
+        let mut inj = DcsControlInjector::new(16);
+        inj.queue_command(DcsControlCommand::axis(0, 1, 0.5));
+        inj.queue_command(DcsControlCommand::button_press(4, 3001));
+        inj.queue_command(DcsControlCommand::toggle(2, 500));
+        inj.queue_command(DcsControlCommand::button_release(4, 3001));
+
+        let text = String::from_utf8(inj.flush()).unwrap();
+        assert!(text.contains("CMD:0,1,"));
+        assert!(text.contains("BTN:4,3001,1.000000"));
+        assert!(text.contains("TGL:2,500,"));
+        assert!(text.contains("BTN:4,3001,0.000000"));
+    }
+
+    #[test]
+    fn test_axis_zero() {
+        let cmd = DcsControlCommand::axis(0, 1, 0.0);
+        assert!(cmd.value.abs() < f64::EPSILON);
+        assert_eq!(cmd.action_type, DcsActionType::Axis);
+    }
+
+    #[test]
+    fn test_axis_negative() {
+        let cmd = DcsControlCommand::axis(0, 1, -0.75);
+        assert!((cmd.value - (-0.75)).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_fill_buffer_then_clear_then_refill() {
+        let mut inj = DcsControlInjector::new(3);
+        assert!(inj.queue_command(axis_cmd(0, 1, 0.1)));
+        assert!(inj.queue_command(axis_cmd(0, 2, 0.2)));
+        assert!(inj.queue_command(axis_cmd(0, 3, 0.3)));
+        assert!(!inj.queue_command(axis_cmd(0, 4, 0.4))); // full
+        inj.clear();
+        assert_eq!(inj.pending_count(), 0);
+        assert!(inj.queue_command(axis_cmd(0, 5, 0.5))); // can add again
+        assert_eq!(inj.pending_count(), 1);
     }
 }

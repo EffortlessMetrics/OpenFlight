@@ -240,6 +240,143 @@ static AIRCRAFT_DB: &[DcsAircraftInfo] = &[
         has_ffb_profile: false,
         axes_config: AxesProfile::YokeThrottle,
     },
+    // --- Additional modern jets ---
+    DcsAircraftInfo {
+        dcs_name: "F-5E-3",
+        display_name: "F-5E Tiger II",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "MiG-21Bis",
+        display_name: "MiG-21bis Fishbed",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "F-14A-135-GR",
+        display_name: "F-14A Tomcat",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: true,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "A-10C",
+        display_name: "A-10C Thunderbolt",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: true,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "F-15C",
+        display_name: "F-15C Eagle",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "Su-33",
+        display_name: "Su-33 Flanker-D",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "MiG-29A",
+        display_name: "MiG-29A Fulcrum",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "A-4E-C",
+        display_name: "A-4E Skyhawk",
+        category: AircraftCategory::FixedWing,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "MB-339A",
+        display_name: "MB-339A",
+        category: AircraftCategory::TrainerJet,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    // --- Additional helicopters ---
+    DcsAircraftInfo {
+        dcs_name: "SA342M",
+        display_name: "SA342M Gazelle",
+        category: AircraftCategory::Helicopter,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::HelicopterCollective,
+    },
+    DcsAircraftInfo {
+        dcs_name: "OH58D",
+        display_name: "OH-58D Kiowa Warrior",
+        category: AircraftCategory::Helicopter,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::HelicopterCollective,
+    },
+    // --- Additional warbirds ---
+    DcsAircraftInfo {
+        dcs_name: "P-47D-30",
+        display_name: "P-47D Thunderbolt",
+        category: AircraftCategory::WarBird,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::Warbird4Axis,
+    },
+    DcsAircraftInfo {
+        dcs_name: "MosquitoFBMkVI",
+        display_name: "Mosquito FB Mk.VI",
+        category: AircraftCategory::WarBird,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::Warbird4Axis,
+    },
+    DcsAircraftInfo {
+        dcs_name: "F-86F Sabre",
+        display_name: "F-86F Sabre",
+        category: AircraftCategory::WarBird,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "MiG-15bis",
+        display_name: "MiG-15bis Fagot",
+        category: AircraftCategory::WarBird,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::StandardJet,
+    },
+    DcsAircraftInfo {
+        dcs_name: "I-16",
+        display_name: "I-16 Ishak",
+        category: AircraftCategory::WarBird,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::Warbird4Axis,
+    },
+    // --- Transport ---
+    DcsAircraftInfo {
+        dcs_name: "Hercules",
+        display_name: "C-130J Hercules",
+        category: AircraftCategory::TransportCargo,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::YokeThrottle,
+    },
+    DcsAircraftInfo {
+        dcs_name: "Yak-52",
+        display_name: "Yak-52",
+        category: AircraftCategory::TrainerJet,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::Warbird4Axis,
+    },
+    DcsAircraftInfo {
+        dcs_name: "Christen Eagle II",
+        display_name: "Christen Eagle II",
+        category: AircraftCategory::TrainerJet,
+        has_ffb_profile: false,
+        axes_config: AxesProfile::Warbird4Axis,
+    },
 ];
 
 // ---------------------------------------------------------------------------
@@ -288,8 +425,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_db_has_at_least_20_entries() {
-        assert!(all_aircraft().len() >= 20);
+    fn test_db_has_at_least_30_entries() {
+        assert!(all_aircraft().len() >= 30, "DB has {} entries", all_aircraft().len());
     }
 
     #[test]
@@ -409,5 +546,96 @@ mod tests {
             AxesProfile::HelicopterCollective.to_string(),
             "Helicopter Collective"
         );
+    }
+
+    // --- New aircraft lookup tests ---
+
+    #[test]
+    fn test_lookup_f5e() {
+        let info = lookup("F-5E-3").unwrap();
+        assert_eq!(info.display_name, "F-5E Tiger II");
+        assert_eq!(info.category, AircraftCategory::FixedWing);
+    }
+
+    #[test]
+    fn test_lookup_mig21() {
+        let info = lookup("MiG-21Bis").unwrap();
+        assert_eq!(info.display_name, "MiG-21bis Fishbed");
+    }
+
+    #[test]
+    fn test_lookup_gazelle() {
+        let info = lookup("SA342M").unwrap();
+        assert_eq!(info.category, AircraftCategory::Helicopter);
+        assert_eq!(info.axes_config, AxesProfile::HelicopterCollective);
+    }
+
+    #[test]
+    fn test_lookup_p47() {
+        let info = lookup("P-47D-30").unwrap();
+        assert_eq!(info.category, AircraftCategory::WarBird);
+        assert_eq!(info.axes_config, AxesProfile::Warbird4Axis);
+    }
+
+    #[test]
+    fn test_lookup_hercules() {
+        let info = lookup("Hercules").unwrap();
+        assert_eq!(info.category, AircraftCategory::TransportCargo);
+        assert_eq!(info.axes_config, AxesProfile::YokeThrottle);
+    }
+
+    #[test]
+    fn test_lookup_f86() {
+        let info = lookup("F-86F Sabre").unwrap();
+        assert_eq!(info.display_name, "F-86F Sabre");
+    }
+
+    #[test]
+    fn test_lookup_mig15() {
+        let info = lookup("MiG-15bis").unwrap();
+        assert_eq!(info.display_name, "MiG-15bis Fagot");
+    }
+
+    #[test]
+    fn test_fuzzy_lookup_partial_match() {
+        // "mosquito" should find MosquitoFBMkVI
+        let info = lookup_fuzzy("mosquito").unwrap();
+        assert_eq!(info.dcs_name, "MosquitoFBMkVI");
+    }
+
+    #[test]
+    fn test_by_category_transport() {
+        let transport = by_category(AircraftCategory::TransportCargo);
+        assert!(transport.len() >= 2);
+    }
+
+    #[test]
+    fn test_by_category_trainer() {
+        let trainers = by_category(AircraftCategory::TrainerJet);
+        assert!(trainers.len() >= 3);
+    }
+
+    #[test]
+    fn test_display_all_categories() {
+        assert_eq!(AircraftCategory::WarBird.to_string(), "Warbird");
+        assert_eq!(AircraftCategory::TrainerJet.to_string(), "Trainer Jet");
+        assert_eq!(
+            AircraftCategory::TransportCargo.to_string(),
+            "Transport/Cargo"
+        );
+    }
+
+    #[test]
+    fn test_display_all_axes_profiles() {
+        assert_eq!(AxesProfile::YokeThrottle.to_string(), "Yoke + Throttle");
+        assert_eq!(AxesProfile::Warbird4Axis.to_string(), "Warbird 4-Axis");
+    }
+
+    #[test]
+    fn test_all_aircraft_have_non_empty_names() {
+        for aircraft in all_aircraft() {
+            assert!(!aircraft.dcs_name.is_empty());
+            assert!(!aircraft.display_name.is_empty());
+        }
     }
 }

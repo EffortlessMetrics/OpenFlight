@@ -265,6 +265,88 @@ fn parse_comma_pairs(s: &str) -> Result<HashMap<String, String>, ParseError> {
     Ok(map)
 }
 
+/// Parse a LoGetSelfData-style structured position string.
+///
+/// DCS LoGetSelfData returns lat/lon/alt as a Lua table serialised like:
+/// `{lat=42.123,lon=-71.456,alt=5000.0}`
+///
+/// Returns `(latitude, longitude, altitude)` in degrees/metres.
+pub fn parse_position_data(raw: &str) -> Result<(f64, f64, f64), ParseError> {
+    let trimmed = raw.trim().trim_matches(|c| c == '{' || c == '}');
+    let pairs = parse_comma_pairs(trimmed)?;
+
+    let lat = pairs
+        .get("lat")
+        .ok_or_else(|| ParseError::MissingField("lat".into()))
+        .and_then(|v| {
+            parse_indicator_value(v).map_err(|_| ParseError::InvalidNumeric {
+                key: "lat".into(),
+                raw: v.clone(),
+            })
+        })?;
+    let lon = pairs
+        .get("lon")
+        .ok_or_else(|| ParseError::MissingField("lon".into()))
+        .and_then(|v| {
+            parse_indicator_value(v).map_err(|_| ParseError::InvalidNumeric {
+                key: "lon".into(),
+                raw: v.clone(),
+            })
+        })?;
+    let alt = pairs
+        .get("alt")
+        .ok_or_else(|| ParseError::MissingField("alt".into()))
+        .and_then(|v| {
+            parse_indicator_value(v).map_err(|_| ParseError::InvalidNumeric {
+                key: "alt".into(),
+                raw: v.clone(),
+            })
+        })?;
+
+    Ok((lat, lon, alt))
+}
+
+/// Parse a semicolon-separated multi-value list.
+///
+/// Some DCS exports pack multiple values into a single key using `;` as a
+/// delimiter, e.g. `engine_rpm=95.0;94.5` for twin engines.
+pub fn parse_multi_value(raw: &str) -> Result<Vec<f64>, ParseError> {
+    raw.split(';')
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| {
+            parse_indicator_value(s.trim()).map_err(|_| ParseError::InvalidNumeric {
+                key: String::new(),
+                raw: s.to_string(),
+            })
+        })
+        .collect()
+}
+
+/// Parse a DCS device argument string.
+///
+/// Device arguments in DCS have the format `device_id:command_id:value`,
+/// used for cockpit clickable elements.
+pub fn parse_device_arg(raw: &str) -> Result<(u32, u32, f64), ParseError> {
+    let parts: Vec<&str> = raw.split(':').collect();
+    if parts.len() != 3 {
+        return Err(ParseError::InvalidKeyValue(format!(
+            "expected device_id:command_id:value, got '{raw}'"
+        )));
+    }
+
+    let device_id: u32 = parts[0].trim().parse().map_err(|_| ParseError::InvalidNumeric {
+        key: "device_id".into(),
+        raw: parts[0].to_string(),
+    })?;
+    let command_id: u32 = parts[1].trim().parse().map_err(|_| ParseError::InvalidNumeric {
+        key: "command_id".into(),
+        raw: parts[1].to_string(),
+    })?;
+    let value = parse_indicator_value(parts[2].trim())?;
+
+    Ok((device_id, command_id, value))
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -446,5 +528,224 @@ mod tests {
         let data = "HEADER:timestamp=0.0,model_time=0.0,aircraft=Ka-50\nmach=0.3 -- subsonic";
         let pkt = parse_telemetry_batch(data).unwrap();
         assert!((pkt.flight_data.mach - 0.3).abs() < 1e-10);
+    }
+
+    // --- parse_position_data tests ---
+
+    #[test]
+    fn test_parse_position_data_basic() {
+        let (lat, lon, alt) = parse_position_data("{lat=42.123,lon=-71.456,alt=5000.0}").unwrap();
+        assert!((lat - 42.123).abs() < 1e-10);
+        assert!((lon - (-71.456)).abs() < 1e-10);
+        assert!((alt - 5000.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_position_data_no_braces() {
+        let (lat, lon, alt) = parse_position_data("lat=10.0,lon=20.0,alt=100.0").unwrap();
+        assert!((lat - 10.0).abs() < 1e-10);
+        assert!((lon - 20.0).abs() < 1e-10);
+        assert!((alt - 100.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_position_data_with_spaces() {
+        let (lat, lon, alt) =
+            parse_position_data("{ lat = 55.75, lon = 37.62, alt = 150.0 }").unwrap();
+        assert!((lat - 55.75).abs() < 1e-10);
+        assert!((lon - 37.62).abs() < 1e-10);
+        assert!((alt - 150.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_position_data_missing_field() {
+        assert!(parse_position_data("{lat=10.0,lon=20.0}").is_err());
+        assert!(parse_position_data("{lat=10.0,alt=100.0}").is_err());
+        assert!(parse_position_data("{lon=20.0,alt=100.0}").is_err());
+    }
+
+    #[test]
+    fn test_parse_position_data_negative_coords() {
+        let (lat, lon, alt) =
+            parse_position_data("{lat=-33.87,lon=151.21,alt=0.0}").unwrap();
+        assert!((lat - (-33.87)).abs() < 1e-10);
+        assert!((lon - 151.21).abs() < 1e-10);
+        assert!(alt.abs() < 1e-10);
+    }
+
+    // --- parse_multi_value tests ---
+
+    #[test]
+    fn test_parse_multi_value_basic() {
+        let vals = parse_multi_value("95.0;94.5").unwrap();
+        assert_eq!(vals.len(), 2);
+        assert!((vals[0] - 95.0).abs() < 1e-10);
+        assert!((vals[1] - 94.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_multi_value_single() {
+        let vals = parse_multi_value("100.0").unwrap();
+        assert_eq!(vals.len(), 1);
+        assert!((vals[0] - 100.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_multi_value_with_spaces() {
+        let vals = parse_multi_value(" 1.0 ; 2.0 ; 3.0 ").unwrap();
+        assert_eq!(vals.len(), 3);
+        assert!((vals[0] - 1.0).abs() < 1e-10);
+        assert!((vals[1] - 2.0).abs() < 1e-10);
+        assert!((vals[2] - 3.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_multi_value_trailing_semicolon() {
+        let vals = parse_multi_value("1.0;2.0;").unwrap();
+        assert_eq!(vals.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_multi_value_empty() {
+        let vals = parse_multi_value("").unwrap();
+        assert!(vals.is_empty());
+    }
+
+    #[test]
+    fn test_parse_multi_value_invalid_element() {
+        assert!(parse_multi_value("1.0;abc;3.0").is_err());
+    }
+
+    #[test]
+    fn test_parse_multi_value_negative() {
+        let vals = parse_multi_value("-1.0;0.0;1.0").unwrap();
+        assert_eq!(vals.len(), 3);
+        assert!((vals[0] - (-1.0)).abs() < 1e-10);
+    }
+
+    // --- parse_device_arg tests ---
+
+    #[test]
+    fn test_parse_device_arg_basic() {
+        let (dev, cmd, val) = parse_device_arg("0:3001:1.0").unwrap();
+        assert_eq!(dev, 0);
+        assert_eq!(cmd, 3001);
+        assert!((val - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_device_arg_negative_value() {
+        let (dev, cmd, val) = parse_device_arg("4:101:-0.5").unwrap();
+        assert_eq!(dev, 4);
+        assert_eq!(cmd, 101);
+        assert!((val - (-0.5)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_device_arg_with_spaces() {
+        let (dev, cmd, val) = parse_device_arg(" 1 : 200 : 0.75 ").unwrap();
+        assert_eq!(dev, 1);
+        assert_eq!(cmd, 200);
+        assert!((val - 0.75).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_device_arg_too_few_parts() {
+        assert!(parse_device_arg("0:3001").is_err());
+    }
+
+    #[test]
+    fn test_parse_device_arg_too_many_parts() {
+        assert!(parse_device_arg("0:3001:1.0:extra").is_err());
+    }
+
+    #[test]
+    fn test_parse_device_arg_invalid_device_id() {
+        assert!(parse_device_arg("abc:3001:1.0").is_err());
+    }
+
+    #[test]
+    fn test_parse_device_arg_zero_value() {
+        let (dev, cmd, val) = parse_device_arg("0:100:0.0").unwrap();
+        assert_eq!(dev, 0);
+        assert_eq!(cmd, 100);
+        assert!(val.abs() < 1e-10);
+    }
+
+    // --- Additional parse_indicator_value edge cases ---
+
+    #[test]
+    fn test_parse_indicator_lua_division_neg_inf() {
+        assert!(parse_indicator_value("-1/0").unwrap().is_infinite());
+        assert!(parse_indicator_value("-1/0").unwrap().is_sign_negative());
+    }
+
+    #[test]
+    fn test_parse_indicator_lua_division_nan() {
+        assert!(parse_indicator_value("0/0").unwrap().is_nan());
+    }
+
+    #[test]
+    fn test_parse_indicator_whitespace_only() {
+        assert!((parse_indicator_value("   ").unwrap()).abs() < f64::EPSILON);
+    }
+
+    // --- Additional parse_telemetry_batch edge cases ---
+
+    #[test]
+    fn test_parse_batch_multiple_engines() {
+        let data = [
+            "HEADER:timestamp=1.0,model_time=1.0,aircraft=F-15C",
+            "engine_rpm_left=90.0",
+            "engine_rpm_right=91.0",
+            "engine_rpm_center=85.0",
+        ]
+        .join("\n");
+        let pkt = parse_telemetry_batch(&data).unwrap();
+        assert_eq!(pkt.flight_data.engine_rpm_percent.len(), 3);
+    }
+
+    #[test]
+    fn test_parse_batch_custom_indicators() {
+        let data = [
+            "HEADER:timestamp=1.0,model_time=1.0,aircraft=A-10C",
+            "altitude_m=3000.0",
+            "custom_gauge_1=0.75",
+            "custom_gauge_2=0.50",
+        ]
+        .join("\n");
+        let pkt = parse_telemetry_batch(&data).unwrap();
+        assert!((pkt.indicators["custom_gauge_1"] - 0.75).abs() < 1e-10);
+        assert!((pkt.indicators["custom_gauge_2"] - 0.50).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_parse_batch_all_flight_data_fields() {
+        let data = [
+            "HEADER:timestamp=1.0,model_time=1.0,aircraft=FA-18C",
+            "altitude_m=10000.0",
+            "airspeed_ms=300.0",
+            "heading_deg=180.0",
+            "pitch_deg=-2.5",
+            "roll_deg=15.0",
+            "aoa_deg=8.0",
+            "g_load=2.5",
+            "mach=0.92",
+            "vertical_speed_ms=-5.0",
+            "fuel_total_kg=4500.0",
+        ]
+        .join("\n");
+        let pkt = parse_telemetry_batch(&data).unwrap();
+        let fd = &pkt.flight_data;
+        assert!((fd.altitude_m - 10000.0).abs() < f64::EPSILON);
+        assert!((fd.airspeed_ms - 300.0).abs() < f64::EPSILON);
+        assert!((fd.heading_deg - 180.0).abs() < f64::EPSILON);
+        assert!((fd.pitch_deg - (-2.5)).abs() < f64::EPSILON);
+        assert!((fd.roll_deg - 15.0).abs() < f64::EPSILON);
+        assert!((fd.aoa_deg - 8.0).abs() < f64::EPSILON);
+        assert!((fd.g_load - 2.5).abs() < f64::EPSILON);
+        assert!((fd.mach - 0.92).abs() < 1e-10);
+        assert!((fd.vertical_speed_ms - (-5.0)).abs() < f64::EPSILON);
+        assert!((fd.fuel_total_kg - 4500.0).abs() < f64::EPSILON);
     }
 }
