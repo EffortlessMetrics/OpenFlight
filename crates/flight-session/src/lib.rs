@@ -846,7 +846,6 @@ impl AircraftAutoSwitch {
         config: &AutoSwitchConfig,
     ) -> Result<(CompiledProfile, bool)> {
         // Check cache first
-        let cache_hit;
         {
             let cache = profile_cache.read().await;
             if let Some(cached) = cache.profiles.get(aircraft_id)
@@ -857,7 +856,7 @@ impl AircraftAutoSwitch {
                 return Ok((cached.compiled.clone(), true));
             }
         }
-        cache_hit = false;
+        let cache_hit = false;
 
         // Load profile hierarchy: Global → Sim → Aircraft
         let profiles = Self::load_profile_hierarchy(aircraft_id, sim, config).await?;
