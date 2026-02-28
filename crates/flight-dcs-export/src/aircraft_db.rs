@@ -367,7 +367,11 @@ mod tests {
     fn test_by_category_helicopter() {
         let helis = by_category(AircraftCategory::Helicopter);
         assert!(helis.len() >= 4);
-        assert!(helis.iter().all(|a| a.category == AircraftCategory::Helicopter));
+        assert!(
+            helis
+                .iter()
+                .all(|a| a.category == AircraftCategory::Helicopter)
+        );
     }
 
     #[test]

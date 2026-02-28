@@ -128,10 +128,12 @@ pub fn parse_indicator_value(raw: &str) -> Result<f64, ParseError> {
         return Ok(f64::NAN);
     }
 
-    trimmed.parse::<f64>().map_err(|_| ParseError::InvalidNumeric {
-        key: String::new(),
-        raw: raw.to_string(),
-    })
+    trimmed
+        .parse::<f64>()
+        .map_err(|_| ParseError::InvalidNumeric {
+            key: String::new(),
+            raw: raw.to_string(),
+        })
 }
 
 /// Parse a full UDP telemetry batch.
@@ -160,15 +162,11 @@ pub fn parse_telemetry_batch(data: &str) -> Result<DcsTelemetryPacket, ParseErro
     let timestamp = header_map
         .get("timestamp")
         .ok_or_else(|| ParseError::MissingField("timestamp".into()))
-        .and_then(|v| {
-            parse_indicator_value(v).map_err(|_| ParseError::InvalidHeader(v.clone()))
-        })?;
+        .and_then(|v| parse_indicator_value(v).map_err(|_| ParseError::InvalidHeader(v.clone())))?;
     let model_time = header_map
         .get("model_time")
         .ok_or_else(|| ParseError::MissingField("model_time".into()))
-        .and_then(|v| {
-            parse_indicator_value(v).map_err(|_| ParseError::InvalidHeader(v.clone()))
-        })?;
+        .and_then(|v| parse_indicator_value(v).map_err(|_| ParseError::InvalidHeader(v.clone())))?;
     let aircraft_name = header_map
         .get("aircraft")
         .ok_or_else(|| ParseError::MissingField("aircraft".into()))?
@@ -438,8 +436,7 @@ mod tests {
 
     #[test]
     fn test_parse_batch_skips_blank_lines() {
-        let data =
-            "HEADER:timestamp=0.0,model_time=0.0,aircraft=F-14B\n\naltitude_m=1000\n\n";
+        let data = "HEADER:timestamp=0.0,model_time=0.0,aircraft=F-14B\n\naltitude_m=1000\n\n";
         let pkt = parse_telemetry_batch(data).unwrap();
         assert!((pkt.flight_data.altitude_m - 1000.0).abs() < f64::EPSILON);
     }
