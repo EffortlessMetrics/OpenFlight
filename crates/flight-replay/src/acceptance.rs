@@ -697,7 +697,7 @@ mod tests {
     fn test_comparison_operators() {
         use ComparisonOperator::*;
 
-        let operators = vec![
+        let operators = [
             GreaterThan,
             GreaterThanOrEqual,
             LessThan,

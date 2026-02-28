@@ -2,7 +2,7 @@
 name = "flight-dcs-export-fuzz"
 version = "0.0.0"
 publish = false
-edition = "2021"
+edition = "2024"
 
 [workspace]
 
@@ -22,5 +22,29 @@ debug = 1
 [[bin]]
 name = "fuzz_dcs_message"
 path = "fuzz_targets/fuzz_dcs_message.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_export_line"
+path = "fuzz_targets/fuzz_export_line.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_telemetry_batch"
+path = "fuzz_targets/fuzz_telemetry_batch.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_indicator_value"
+path = "fuzz_targets/fuzz_indicator_value.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_dcs_line"
+path = "fuzz_targets/fuzz_dcs_line.rs"
 test = false
 doc = false

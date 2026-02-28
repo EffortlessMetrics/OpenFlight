@@ -33,7 +33,7 @@ mod tests {
         let _ = (
             example_function_with_owned_fd,
             example_function_with_borrowed_fd,
-            example_function_with_as_fd,
+            example_function_with_as_fd::<std::os::unix::io::OwnedFd>,
         );
     }
 

@@ -20,6 +20,7 @@
 pub mod adapter_fixtures;
 pub mod adapters;
 pub mod e2e_test;
+pub mod event_router;
 pub mod fixtures;
 pub mod integration_test;
 pub mod publisher;
@@ -38,6 +39,7 @@ pub use e2e_test::{
     FrameHistoryEntry, MockFfbEngine, MockTelemetryBus, SafetyViolationDetail, SafetyViolationType,
     SnapshotStateInfo,
 };
+pub use event_router::{EventFilter, EventRouter, RoutingEntry};
 pub use fixtures::{ScenarioType, SnapshotFixture, SnapshotValidator, ValidationTolerance};
 pub use integration_test::{
     AdapterIntegrationTest, AdapterType, IntegrationTestResult, MockAdapter, PhaseResult, TestError,

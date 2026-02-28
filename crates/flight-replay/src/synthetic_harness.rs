@@ -446,7 +446,7 @@ mod tests {
 
     #[test]
     fn test_all_patterns() {
-        let patterns = vec![
+        let patterns = [
             TelemetryPattern::SteadyFlight,
             TelemetryPattern::GentleBank,
             TelemetryPattern::PitchOscillation,

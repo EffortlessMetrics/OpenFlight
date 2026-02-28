@@ -350,7 +350,7 @@ mod tests {
             RateLimitResult::Limited { retry_after_ms } => {
                 // Should be ~500ms (1 token deficit / 2 tokens-per-sec)
                 assert!(
-                    retry_after_ms >= 400 && retry_after_ms <= 600,
+                    (400..=600).contains(&retry_after_ms),
                     "unexpected retry_after_ms: {retry_after_ms}"
                 );
             }

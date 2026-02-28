@@ -7,6 +7,7 @@
 //! state layout for optimal cache performance and zero-allocation execution.
 
 use crate::{AxisFrame, Node, NodeId};
+use std::cell::Cell;
 use std::sync::Arc;
 
 /// Function pointer type for compiled pipeline steps
@@ -222,6 +223,208 @@ fn align_to_64(size: usize) -> usize {
     (size + 63) & !63
 }
 
+// ---------------------------------------------------------------------------
+// Composable axis processing pipeline
+// ---------------------------------------------------------------------------
+
+/// Trait for composable axis processing stages.
+pub trait AxisStage: Send + Sync {
+    /// Returns the name of this stage.
+    fn name(&self) -> &str;
+    /// Processes an input value through this stage.
+    fn process(&self, input: f64, dt_secs: f64) -> f64;
+}
+
+/// Composable axis processing pipeline with per-stage bypass.
+pub struct AxisPipeline {
+    stages: Vec<Box<dyn AxisStage>>,
+    bypass: Vec<bool>,
+}
+
+impl AxisPipeline {
+    /// Creates a new empty pipeline.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            stages: Vec::new(),
+            bypass: Vec::new(),
+        }
+    }
+
+    /// Appends a stage to the pipeline.
+    pub fn add_stage(&mut self, stage: Box<dyn AxisStage>) {
+        self.stages.push(stage);
+        self.bypass.push(false);
+    }
+
+    /// Processes a value through all non-bypassed stages.
+    #[must_use]
+    pub fn process(&self, input: f64, dt_secs: f64) -> f64 {
+        let mut value = input;
+        for (stage, &bypassed) in self.stages.iter().zip(&self.bypass) {
+            if !bypassed {
+                value = stage.process(value, dt_secs);
+            }
+        }
+        value
+    }
+
+    /// Bypasses the stage at `idx`. Returns `true` if the index was valid.
+    pub fn bypass_stage(&mut self, idx: usize) -> bool {
+        if let Some(b) = self.bypass.get_mut(idx) {
+            *b = true;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Re-enables the stage at `idx`. Returns `true` if the index was valid.
+    pub fn enable_stage(&mut self, idx: usize) -> bool {
+        if let Some(b) = self.bypass.get_mut(idx) {
+            *b = false;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Returns the number of stages in the pipeline.
+    #[must_use]
+    pub fn stage_count(&self) -> usize {
+        self.stages.len()
+    }
+
+    /// Returns the names of all stages in order.
+    #[must_use]
+    pub fn stage_names(&self) -> Vec<&str> {
+        self.stages.iter().map(|s| s.name()).collect()
+    }
+}
+
+impl Default for AxisPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Built-in stages
+// ---------------------------------------------------------------------------
+
+/// Deadzone stage: eliminates input noise near center and rescales.
+pub struct DeadzoneStage {
+    /// Inner deadzone radius (values below this map to zero).
+    pub inner: f64,
+    /// Outer deadzone radius (values above this map to ±1).
+    pub outer: f64,
+}
+
+impl AxisStage for DeadzoneStage {
+    fn name(&self) -> &str {
+        "deadzone"
+    }
+
+    fn process(&self, input: f64, _dt_secs: f64) -> f64 {
+        let abs_in = input.abs();
+        if abs_in <= self.inner {
+            0.0
+        } else if abs_in >= self.outer {
+            input.signum()
+        } else {
+            let range = self.outer - self.inner;
+            if range <= 0.0 {
+                return 0.0;
+            }
+            input.signum() * (abs_in - self.inner) / range
+        }
+    }
+}
+
+/// Curve stage: applies exponential response shaping.
+///
+/// `expo = 0.0` is linear; positive values reduce sensitivity near center.
+pub struct CurveStage {
+    pub expo: f64,
+}
+
+impl AxisStage for CurveStage {
+    fn name(&self) -> &str {
+        "curve"
+    }
+
+    fn process(&self, input: f64, _dt_secs: f64) -> f64 {
+        input.signum() * input.abs().powf(1.0 + self.expo)
+    }
+}
+
+/// Sensitivity stage: scales input by a multiplier.
+pub struct SensitivityStage {
+    pub multiplier: f64,
+}
+
+impl AxisStage for SensitivityStage {
+    fn name(&self) -> &str {
+        "sensitivity"
+    }
+
+    fn process(&self, input: f64, _dt_secs: f64) -> f64 {
+        input * self.multiplier
+    }
+}
+
+/// Clamp stage: restricts output to a range.
+pub struct ClampStage {
+    pub min: f64,
+    pub max: f64,
+}
+
+impl AxisStage for ClampStage {
+    fn name(&self) -> &str {
+        "clamp"
+    }
+
+    fn process(&self, input: f64, _dt_secs: f64) -> f64 {
+        input.clamp(self.min, self.max)
+    }
+}
+
+/// Smoothing stage: exponential moving-average filter.
+///
+/// `alpha` controls responsiveness: 1.0 = no smoothing, 0.0 = fully damped.
+pub struct SmoothingStage {
+    pub alpha: f64,
+    pub prev: Cell<f64>,
+}
+
+// SAFETY: SmoothingStage is used exclusively from the single-threaded RT spine.
+// The Cell interior mutability is safe because the pipeline is never shared
+// across threads concurrently.
+unsafe impl Sync for SmoothingStage {}
+
+impl SmoothingStage {
+    /// Creates a new smoothing stage with the given alpha and initial value of 0.
+    #[must_use]
+    pub fn new(alpha: f64) -> Self {
+        Self {
+            alpha,
+            prev: Cell::new(0.0),
+        }
+    }
+}
+
+impl AxisStage for SmoothingStage {
+    fn name(&self) -> &str {
+        "smoothing"
+    }
+
+    fn process(&self, input: f64, _dt_secs: f64) -> f64 {
+        let output = self.alpha * input + (1.0 - self.alpha) * self.prev.get();
+        self.prev.set(output);
+        output
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -239,5 +442,157 @@ mod tests {
         let pipeline = Pipeline::new();
         let state = pipeline.create_state();
         assert!(state.validate());
+    }
+
+    // --- AxisPipeline tests ---
+
+    #[test]
+    fn test_empty_pipeline_passthrough() {
+        let pipeline = AxisPipeline::new();
+        assert!((pipeline.process(0.75, 0.004) - 0.75).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_deadzone_stage_center() {
+        let stage = DeadzoneStage {
+            inner: 0.05,
+            outer: 1.0,
+        };
+        assert!((stage.process(0.03, 0.0)).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_deadzone_stage_full_deflection() {
+        let stage = DeadzoneStage {
+            inner: 0.05,
+            outer: 1.0,
+        };
+        assert!((stage.process(1.0, 0.0) - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_deadzone_stage_rescale() {
+        let stage = DeadzoneStage {
+            inner: 0.1,
+            outer: 1.0,
+        };
+        let out = stage.process(0.55, 0.0);
+        assert!((out - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_deadzone_stage_negative() {
+        let stage = DeadzoneStage {
+            inner: 0.1,
+            outer: 1.0,
+        };
+        let out = stage.process(-0.55, 0.0);
+        assert!((out - (-0.5)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_curve_stage_linear() {
+        let stage = CurveStage { expo: 0.0 };
+        assert!((stage.process(0.5, 0.0) - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_curve_stage_expo() {
+        let stage = CurveStage { expo: 1.0 };
+        // 0.5^(1+1) = 0.5^2 = 0.25
+        assert!((stage.process(0.5, 0.0) - 0.25).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_sensitivity_stage() {
+        let stage = SensitivityStage { multiplier: 2.0 };
+        assert!((stage.process(0.5, 0.0) - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_clamp_stage() {
+        let stage = ClampStage {
+            min: -0.5,
+            max: 0.5,
+        };
+        assert!((stage.process(0.8, 0.0) - 0.5).abs() < 1e-10);
+        assert!((stage.process(-0.8, 0.0) - (-0.5)).abs() < 1e-10);
+        assert!((stage.process(0.3, 0.0) - 0.3).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_smoothing_stage() {
+        let stage = SmoothingStage::new(0.5);
+        let out1 = stage.process(1.0, 0.0);
+        assert!((out1 - 0.5).abs() < 1e-10);
+        let out2 = stage.process(1.0, 0.0);
+        assert!((out2 - 0.75).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_pipeline_multi_stage() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        let out = pipeline.process(0.8, 0.004);
+        assert!((out - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_bypass_stage() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        assert!(pipeline.bypass_stage(0));
+        let out = pipeline.process(0.5, 0.004);
+        assert!((out - 0.5).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_enable_stage_after_bypass() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
+        pipeline.bypass_stage(0);
+        pipeline.enable_stage(0);
+        let out = pipeline.process(0.5, 0.004);
+        assert!((out - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_stage_count() {
+        let mut pipeline = AxisPipeline::new();
+        assert_eq!(pipeline.stage_count(), 0);
+        pipeline.add_stage(Box::new(SensitivityStage { multiplier: 1.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
+        assert_eq!(pipeline.stage_count(), 2);
+    }
+
+    #[test]
+    fn test_stage_names() {
+        let mut pipeline = AxisPipeline::new();
+        pipeline.add_stage(Box::new(DeadzoneStage {
+            inner: 0.05,
+            outer: 1.0,
+        }));
+        pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
+        assert_eq!(pipeline.stage_names(), vec!["deadzone", "curve"]);
+    }
+
+    #[test]
+    fn test_bypass_out_of_bounds() {
+        let mut pipeline = AxisPipeline::new();
+        assert!(!pipeline.bypass_stage(0));
+        assert!(!pipeline.enable_stage(0));
+    }
+
+    #[test]
+    fn test_default_pipeline_is_empty() {
+        let pipeline = AxisPipeline::default();
+        assert_eq!(pipeline.stage_count(), 0);
     }
 }

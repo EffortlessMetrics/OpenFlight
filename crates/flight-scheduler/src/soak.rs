@@ -563,12 +563,12 @@ pub fn get_rss_bytes() -> u64 {
     // resident is in pages
     if let Ok(statm) = std::fs::read_to_string("/proc/self/statm") {
         let parts: Vec<&str> = statm.split_whitespace().collect();
-        if parts.len() >= 2 {
-            if let Ok(pages) = parts[1].parse::<u64>() {
-                // Get page size
-                let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as u64;
-                return pages * page_size;
-            }
+        if parts.len() >= 2
+            && let Ok(pages) = parts[1].parse::<u64>()
+        {
+            // Get page size
+            let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as u64;
+            return pages * page_size;
         }
     }
     0

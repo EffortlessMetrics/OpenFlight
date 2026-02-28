@@ -825,7 +825,7 @@ impl LinuxTimerLoop {
     /// Utility method for time calculations.
     #[inline]
     pub fn timespec_to_nanos(ts: &libc::timespec) -> i64 {
-        ts.tv_sec as i64 * Self::NANOS_PER_SEC + ts.tv_nsec as i64
+        ts.tv_sec * Self::NANOS_PER_SEC + ts.tv_nsec
     }
 
     /// Calculate the difference between two timespecs in nanoseconds

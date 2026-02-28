@@ -249,9 +249,9 @@ mod tests {
     #[test]
     fn test_gauge_set_get() {
         let g = Gauge::new("test", "help");
-        g.set(3.14);
+        g.set(3.125);
         let v = g.get();
-        assert!((v - 3.14).abs() < 0.001);
+        assert!((v - 3.125).abs() < 0.001);
     }
 
     #[test]

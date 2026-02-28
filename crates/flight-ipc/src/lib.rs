@@ -64,11 +64,14 @@ pub mod proto {
 }
 
 pub mod client;
+pub mod connection_pool;
 #[cfg(test)]
 mod fd_safety_tests;
+pub mod messages;
 pub mod negotiation;
 pub mod rate_limiter;
 pub mod server;
+pub mod subscriptions;
 pub mod transport;
 
 pub use proto::*;

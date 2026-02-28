@@ -166,7 +166,10 @@ pub use noise_floor::{NoiseFloorConfig, NoiseFloorDetector, NoiseFloorDetector64
 pub use normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 pub use peak_hold::PeakHold;
 pub use pid::{PidBank, PidConfig, PidController};
-pub use pipeline::{Pipeline, PipelineState};
+pub use pipeline::{
+    AxisPipeline, AxisStage, ClampStage, CurveStage, DeadzoneStage, Pipeline, PipelineState,
+    SensitivityStage, SmoothingStage,
+};
 pub use pipeline_bypass::{PipelineStage, StageBypass};
 pub use quantize::{AxisQuantize, QuantizeConfig};
 pub use rate_limit::{AxisRateLimiter, AxisRateLimiterBank};

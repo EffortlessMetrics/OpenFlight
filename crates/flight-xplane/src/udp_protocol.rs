@@ -64,7 +64,7 @@ pub fn parse_data_packet(bytes: &[u8]) -> Result<XPlaneDataPacket, ParseError> {
     }
 
     let payload = &bytes[HEADER_LEN..];
-    if payload.len() % DATA_GROUP_LEN != 0 {
+    if !payload.len().is_multiple_of(DATA_GROUP_LEN) {
         return Err(ParseError::TruncatedDataGroup {
             offset: HEADER_LEN + payload.len() - (payload.len() % DATA_GROUP_LEN),
         });
@@ -135,7 +135,7 @@ pub fn parse_rref_response(bytes: &[u8]) -> Result<Vec<(u32, f32)>, ParseError> 
     }
 
     let payload = &bytes[HEADER_LEN..];
-    if payload.len() % RREF_ENTRY_LEN != 0 {
+    if !payload.len().is_multiple_of(RREF_ENTRY_LEN) {
         return Err(ParseError::TruncatedRrefEntry {
             offset: HEADER_LEN + payload.len() - (payload.len() % RREF_ENTRY_LEN),
         });
