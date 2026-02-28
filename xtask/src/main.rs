@@ -11,14 +11,19 @@ use std::env;
 
 mod ac_status;
 mod check;
+mod clean_worktrees;
 mod compat;
 mod config;
+mod coverage;
 mod cross_ref;
+mod device_report;
 mod front_matter;
+mod fuzz_smoke;
 mod gherkin;
 mod hotas;
 mod normalize_docs;
 mod quality_gates;
+mod release;
 mod schema;
 mod validate;
 mod validate_infra;
@@ -67,6 +72,44 @@ enum Commands {
 
     /// Generate COMPATIBILITY.md and compatibility.json from compat/ manifests
     GenerateCompat,
+
+    /// Run code coverage report on core crates using cargo-llvm-cov
+    Coverage {
+        /// Generate an HTML report in target/coverage/
+        #[arg(long)]
+        html: bool,
+
+        /// Minimum coverage percentage (default: 60%)
+        #[arg(long)]
+        threshold: Option<f64>,
+    },
+
+    /// Prepare a new release (bump versions, update CHANGELOG, tag)
+    Release {
+        /// Version to release (e.g., 1.2.3)
+        version: String,
+    },
+
+    /// Generate device coverage report from compat/devices/ manifests
+    DeviceReport {
+        /// Output as JSON instead of a table
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Clean up stale/merged git worktrees
+    CleanWorktrees {
+        /// Force removal of stale worktrees without confirmation
+        #[arg(long)]
+        force: bool,
+    },
+
+    /// Run each fuzz target for a short duration as a smoke test
+    FuzzSmoke {
+        /// Duration in seconds per fuzz target (default: 5)
+        #[arg(long)]
+        duration: Option<u64>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -109,6 +152,11 @@ fn main() -> Result<()> {
         Commands::Hotas { command } => hotas::run(command),
         Commands::GenCompat => compat::run_gen_compat(),
         Commands::GenerateCompat => compat::run_gen_compat(),
+        Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
+        Commands::Release { version } => release::run_release(&version),
+        Commands::DeviceReport { json } => device_report::run_device_report(json),
+        Commands::CleanWorktrees { force } => clean_worktrees::run_clean_worktrees(force),
+        Commands::FuzzSmoke { duration } => fuzz_smoke::run_fuzz_smoke(duration),
     }
 }
 

@@ -27,6 +27,7 @@ flight-metrics = { path = "../flight-metrics" }
 flight-hid-support = { path = "../flight-hid-support" }
 tracing.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 hidapi.workspace = true
 

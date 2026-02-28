@@ -32,8 +32,11 @@ pub mod budget;
 pub mod executor;
 pub mod jitter;
 pub mod metrics;
+pub mod mmcss;
+pub mod platform;
 pub mod pll;
 pub mod ring;
+pub mod rtkit;
 pub mod soak;
 pub mod timer;
 
@@ -61,6 +64,14 @@ pub use windows::{
 // Re-export Unix-specific types when on Unix
 #[cfg(unix)]
 pub use unix::{LinuxRtMetrics, LinuxRtThread, RlimitStatus, RtError as UnixRtError};
+
+// Re-export platform-agnostic RT scheduling interface
+pub use mmcss::{MmcssBackend, MmcssError, MmcssHandle, MmcssPriority, MockMmcssBackend};
+pub use platform::{
+    Platform, PlatformRtError, RtHandle, RtPriority, detect_platform, is_rt_available,
+    request_rt_priority,
+};
+pub use rtkit::{MockRtkitBackend, RtkitBackend, RtkitError, RtkitHandle};
 
 #[cfg(test)]
 mod tests;

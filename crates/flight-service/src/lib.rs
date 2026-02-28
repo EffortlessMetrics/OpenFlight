@@ -26,6 +26,7 @@ pub mod crash_report;
 pub mod curve_conflict_service;
 pub mod degradation_manager;
 pub mod diagnostic_bundle;
+pub mod diagnostics;
 pub mod error_taxonomy;
 pub mod event_journal;
 pub mod first_run;
@@ -74,7 +75,11 @@ pub use capability_service::{
 };
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy, StableError};
-pub use health::{ComponentHealth, HealthEvent, HealthStatus, HealthStream};
+pub use health::{
+    AdapterHealthInput, ComponentHealth, DeviceHealthInput, HealthCheck, HealthCheckReport,
+    HealthChecker, HealthEvent, HealthStatus, HealthStream, MemoryHealthInput, OverallStatus,
+    SchedulerHealthInput,
+};
 pub use input_runtime::{
     SimulatedTFlightReportSource, TFlightInputRuntime, TFlightReportSource, TFlightRuntimeConfig,
     TFlightSnapshot,
