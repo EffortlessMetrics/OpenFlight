@@ -20,8 +20,8 @@ use flight_axis::{
     AxisFrame, PipelineBuilder,
     nodes::{CurveNode, DeadzoneNode, Node},
     stages::{
-        ClampStage, CurveStage, CurveType, DeadzoneShape, DeadzoneStage, RtAxisPipeline,
-        SaturationStage, SlewRateLimiter, SmoothingStage, Stage,
+        CurveStage, CurveType, DeadzoneShape, DeadzoneStage, RtAxisPipeline, SaturationStage,
+        SlewRateLimiter, SmoothingStage, Stage,
     },
 };
 use proptest::prelude::*;
