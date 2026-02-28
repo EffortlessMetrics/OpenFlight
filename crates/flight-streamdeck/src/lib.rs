@@ -18,17 +18,25 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
 
+pub mod actions;
 pub mod api;
 pub mod compatibility;
+pub mod device;
+pub mod layout;
 pub mod plugin;
 pub mod profiles;
+pub mod render;
 pub mod server;
 pub mod verify;
 
 pub use api::{ApiError, StreamDeckApi};
+pub use actions::{ActionCategory, ActionRegistry, ActionTemplate, builtin_templates};
 pub use compatibility::{CompatibilityMatrix, VersionCompatibility, VersionRange};
+pub use device::{Brightness, DeviceInfo, DeviceManager, LcdStripInfo, LcdStripLayout, StreamDeckModel};
+pub use layout::{NavTarget, Page, PageLayout, ProfileLayout};
 pub use plugin::{PluginConfig, PluginError, StreamDeckPlugin};
 pub use profiles::{AircraftType, ProfileManager, SampleProfiles};
+pub use render::{IconRenderer, IconTheme, KeyIcon};
 pub use server::{ServerConfig, ServerError, StreamDeckServer};
 pub use verify::{EventRoundTrip, VerifyResult, VerifyTest};
 
