@@ -151,10 +151,10 @@ impl RtkitBackend for LinuxRtkitBackend {
             Ok(result) if result.status.success() => {
                 let stdout = String::from_utf8_lossy(&result.stdout);
                 // Parse "int32 N" from the D-Bus reply
-                if let Some(val) = stdout.split("int32").nth(1) {
-                    if let Ok(n) = val.trim().parse::<i32>() {
-                        return Ok(n);
-                    }
+                if let Some(val) = stdout.split("int32").nth(1)
+                    && let Ok(n) = val.trim().parse::<i32>()
+                {
+                    return Ok(n);
                 }
                 Ok(99) // default fallback
             }

@@ -310,7 +310,7 @@ fn test_profile_list_no_daemon() {
         "profile list should succeed even without daemon"
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
-    assert!(!stdout.is_empty() || true, "profile list produced output");
+    assert!(!stdout.is_empty(), "profile list produced output");
 }
 
 #[test]

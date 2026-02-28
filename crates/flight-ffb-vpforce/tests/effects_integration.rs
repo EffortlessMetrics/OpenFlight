@@ -90,9 +90,10 @@ fn zero_force_stop_all_is_safe_to_publish() {
 /// Effect report fits within one USB FS packet, supporting 250 Hz RT spine updates.
 #[test]
 fn effect_report_length_fits_250hz_budget() {
+    let len = FFB_REPORT_LEN;
     assert!(
-        FFB_REPORT_LEN <= 64,
-        "FFB_REPORT_LEN ({FFB_REPORT_LEN}) must fit in one USB FS packet (64 bytes)"
+        len <= 64,
+        "FFB_REPORT_LEN ({len}) must fit in one USB FS packet (64 bytes)"
     );
 }
 
