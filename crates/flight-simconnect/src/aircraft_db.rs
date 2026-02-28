@@ -280,6 +280,173 @@ impl MsfsAircraftDb {
                 default_profile: "glider",
                 special_vars: vec!["TOTAL WEIGHT", "VARIOMETER RATE"],
             },
+            // ── Popular third-party add-ons ──────────────────────────
+            MsfsAircraftInfo {
+                icao_code: "B738",
+                display_name: "PMDG 737-800",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec![
+                    "ENG N1 RPM:1",
+                    "ENG N1 RPM:2",
+                    "TURB ENG CORRECTED N1:1",
+                    "TURB ENG CORRECTED N1:2",
+                ],
+            },
+            MsfsAircraftInfo {
+                icao_code: "B739",
+                display_name: "PMDG 737-900",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "B737",
+                display_name: "PMDG 737-700",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "B77W",
+                display_name: "PMDG 777-300ER",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-widebody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "B77L",
+                display_name: "PMDG 777-200LR",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-widebody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "A20N",
+                display_name: "FlyByWire A320neo",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec![
+                    "ENG N1 RPM:1",
+                    "ENG N1 RPM:2",
+                    "FLY BY WIRE ALPHA PROTECTION",
+                ],
+            },
+            MsfsAircraftInfo {
+                icao_code: "A319",
+                display_name: "Fenix A319",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "A321",
+                display_name: "Fenix A320/A321",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-narrowbody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "A3ST",
+                display_name: "iniBuilds A310-300",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-widebody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "A306",
+                display_name: "iniBuilds A300-600R",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-widebody",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "CRJ7",
+                display_name: "Aerosoft CRJ 700",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-regional",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "CRJ9",
+                display_name: "Aerosoft CRJ 900",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-regional",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "CRJX",
+                display_name: "Aerosoft CRJ 1000",
+                category: AircraftType::TwinJet,
+                default_profile: "airliner-regional",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "C25C",
+                display_name: "Working Title CJ4",
+                category: AircraftType::TwinJet,
+                default_profile: "jet-light",
+                special_vars: vec!["ENG N1 RPM:1", "ENG N1 RPM:2"],
+            },
+            // ── Additional MSFS default aircraft ─────────────────────
+            MsfsAircraftInfo {
+                icao_code: "C310",
+                display_name: "Cessna 310R",
+                category: AircraftType::TwinProp,
+                default_profile: "ga-twin-piston",
+                special_vars: vec![
+                    "GENERAL ENG MIXTURE LEVER POSITION:1",
+                    "GENERAL ENG MIXTURE LEVER POSITION:2",
+                ],
+            },
+            MsfsAircraftInfo {
+                icao_code: "C140",
+                display_name: "Cessna 140",
+                category: AircraftType::SingleProp,
+                default_profile: "ga-single-piston",
+                special_vars: vec!["GENERAL ENG MIXTURE LEVER POSITION:1"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "RV7",
+                display_name: "Van's RV-7",
+                category: AircraftType::SingleProp,
+                default_profile: "ga-single-piston",
+                special_vars: vec!["GENERAL ENG MIXTURE LEVER POSITION:1"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "P28A",
+                display_name: "Piper PA-28R Arrow",
+                category: AircraftType::SingleProp,
+                default_profile: "ga-single-piston",
+                special_vars: vec!["GENERAL ENG MIXTURE LEVER POSITION:1"],
+            },
+            MsfsAircraftInfo {
+                icao_code: "P38",
+                display_name: "P-38 Lightning",
+                category: AircraftType::TwinProp,
+                default_profile: "ga-twin-piston",
+                special_vars: vec![
+                    "GENERAL ENG MIXTURE LEVER POSITION:1",
+                    "GENERAL ENG MIXTURE LEVER POSITION:2",
+                ],
+            },
+            MsfsAircraftInfo {
+                icao_code: "DC3",
+                display_name: "Douglas DC-3",
+                category: AircraftType::TwinProp,
+                default_profile: "ga-twin-piston",
+                special_vars: vec![
+                    "GENERAL ENG MIXTURE LEVER POSITION:1",
+                    "GENERAL ENG MIXTURE LEVER POSITION:2",
+                ],
+            },
+            MsfsAircraftInfo {
+                icao_code: "SF50",
+                display_name: "Cirrus Vision Jet SF50",
+                category: AircraftType::SingleJet,
+                default_profile: "jet-light",
+                special_vars: vec!["ENG N1 RPM:1"],
+            },
         ];
 
         let mut aircraft = HashMap::with_capacity(entries.len());
@@ -340,9 +507,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn db_has_at_least_25_aircraft() {
+    fn db_has_at_least_40_aircraft() {
         let db = MsfsAircraftDb::new();
-        assert!(db.len() >= 25, "need ≥25 aircraft, got {}", db.len());
+        assert!(db.len() >= 40, "need ≥40 aircraft, got {}", db.len());
     }
 
     #[test]
@@ -438,5 +605,64 @@ mod tests {
                 "type {t:?} must have at least one aircraft"
             );
         }
+    }
+
+    #[test]
+    fn lookup_pmdg_737() {
+        let db = MsfsAircraftDb::new();
+        let b738 = db.get("B738").expect("B738 (PMDG 737-800) must be in the database");
+        assert_eq!(b738.category, AircraftType::TwinJet);
+        assert_eq!(b738.default_profile, "airliner-narrowbody");
+    }
+
+    #[test]
+    fn lookup_pmdg_777() {
+        let db = MsfsAircraftDb::new();
+        let b77w = db.get("B77W").expect("B77W (PMDG 777-300ER) must be in the database");
+        assert_eq!(b77w.category, AircraftType::TwinJet);
+        assert_eq!(b77w.default_profile, "airliner-widebody");
+    }
+
+    #[test]
+    fn lookup_fbw_a320neo() {
+        let db = MsfsAircraftDb::new();
+        let a20n = db.get("A20N").expect("A20N (FlyByWire A320neo) must be in the database");
+        assert_eq!(a20n.category, AircraftType::TwinJet);
+        assert!(a20n.special_vars.contains(&"FLY BY WIRE ALPHA PROTECTION"));
+    }
+
+    #[test]
+    fn lookup_aerosoft_crj() {
+        let db = MsfsAircraftDb::new();
+        assert!(db.contains("CRJ7"), "CRJ7 (Aerosoft CRJ 700) must exist");
+        assert!(db.contains("CRJ9"), "CRJ9 (Aerosoft CRJ 900) must exist");
+    }
+
+    #[test]
+    fn lookup_working_title_cj4() {
+        let db = MsfsAircraftDb::new();
+        let cj4 = db.get("C25C").expect("C25C (Working Title CJ4) must be in the database");
+        assert_eq!(cj4.category, AircraftType::TwinJet);
+        assert_eq!(cj4.default_profile, "jet-light");
+    }
+
+    #[test]
+    fn third_party_aircraft_have_special_vars() {
+        let db = MsfsAircraftDb::new();
+        let third_party_codes = ["B738", "B77W", "A20N", "CRJ7", "C25C", "A319"];
+        for code in third_party_codes {
+            let ac = db.get(code).unwrap_or_else(|| panic!("{code} must exist"));
+            assert!(
+                !ac.special_vars.is_empty(),
+                "{code} must have special vars"
+            );
+        }
+    }
+
+    #[test]
+    fn single_jet_type_has_entries() {
+        let db = MsfsAircraftDb::new();
+        let single_jets = db.by_type(AircraftType::SingleJet);
+        assert!(single_jets.len() >= 2, "need ≥2 single-jet aircraft");
     }
 }

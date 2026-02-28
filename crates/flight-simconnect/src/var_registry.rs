@@ -522,6 +522,378 @@ impl SimVarRegistry {
                 writable: true,
                 description: "Transponder squawk code",
             },
+            SimVar {
+                name: "COM ACTIVE FREQUENCY:2",
+                unit: "mhz",
+                category: SimVarCategory::Communication,
+                writable: true,
+                description: "COM2 active frequency",
+            },
+            SimVar {
+                name: "COM STANDBY FREQUENCY:2",
+                unit: "mhz",
+                category: SimVarCategory::Communication,
+                writable: true,
+                description: "COM2 standby frequency",
+            },
+            SimVar {
+                name: "NAV ACTIVE FREQUENCY:2",
+                unit: "mhz",
+                category: SimVarCategory::Communication,
+                writable: true,
+                description: "NAV2 active frequency",
+            },
+            SimVar {
+                name: "NAV STANDBY FREQUENCY:2",
+                unit: "mhz",
+                category: SimVarCategory::Communication,
+                writable: true,
+                description: "NAV2 standby frequency",
+            },
+            // ── Additional Navigation ────────────────────────────────
+            SimVar {
+                name: "GROUND ALTITUDE",
+                unit: "feet",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Ground elevation below aircraft",
+            },
+            SimVar {
+                name: "PLANE ALT ABOVE GROUND",
+                unit: "feet",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Radar altitude (AGL)",
+            },
+            SimVar {
+                name: "AIRSPEED MACH",
+                unit: "mach",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Current Mach number",
+            },
+            SimVar {
+                name: "ANGLE OF ATTACK INDICATOR",
+                unit: "degrees",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Angle of attack",
+            },
+            SimVar {
+                name: "INCIDENCE BETA",
+                unit: "degrees",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Sideslip angle",
+            },
+            SimVar {
+                name: "G FORCE",
+                unit: "gforce",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Current G-force",
+            },
+            SimVar {
+                name: "ACCELERATION BODY X",
+                unit: "feet per second squared",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Lateral acceleration (body frame)",
+            },
+            SimVar {
+                name: "ACCELERATION BODY Z",
+                unit: "feet per second squared",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Longitudinal acceleration (body frame)",
+            },
+            SimVar {
+                name: "MAGNETIC COMPASS",
+                unit: "degrees",
+                category: SimVarCategory::Navigation,
+                writable: false,
+                description: "Magnetic compass heading",
+            },
+            // ── Additional Engine ────────────────────────────────────
+            SimVar {
+                name: "ENG FUEL FLOW GPH:1",
+                unit: "gallons per hour",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 fuel flow",
+            },
+            SimVar {
+                name: "ENG FUEL FLOW GPH:2",
+                unit: "gallons per hour",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 2 fuel flow",
+            },
+            SimVar {
+                name: "ENG OIL TEMPERATURE:1",
+                unit: "rankine",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 oil temperature",
+            },
+            SimVar {
+                name: "ENG OIL PRESSURE:1",
+                unit: "psf",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 oil pressure",
+            },
+            SimVar {
+                name: "ENG EXHAUST GAS TEMPERATURE:1",
+                unit: "rankine",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 EGT",
+            },
+            SimVar {
+                name: "ENG TORQUE PERCENT:1",
+                unit: "percent",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 torque percentage",
+            },
+            SimVar {
+                name: "ENG ITT:1",
+                unit: "rankine",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 inter-turbine temperature",
+            },
+            SimVar {
+                name: "TURB ENG CORRECTED N1:1",
+                unit: "percent",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 1 corrected N1",
+            },
+            SimVar {
+                name: "TURB ENG CORRECTED N1:2",
+                unit: "percent",
+                category: SimVarCategory::Engine,
+                writable: false,
+                description: "Engine 2 corrected N1",
+            },
+            // ── Additional Autopilot ─────────────────────────────────
+            SimVar {
+                name: "AUTOPILOT HEADING LOCK",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Heading hold mode active",
+            },
+            SimVar {
+                name: "AUTOPILOT ALTITUDE LOCK",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Altitude hold mode active",
+            },
+            SimVar {
+                name: "AUTOPILOT NAV1 LOCK",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "NAV1 lock (LNAV) active",
+            },
+            SimVar {
+                name: "AUTOPILOT APPROACH HOLD",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Approach mode active",
+            },
+            SimVar {
+                name: "AUTOPILOT FLIGHT LEVEL CHANGE",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Flight level change mode active",
+            },
+            SimVar {
+                name: "AUTOPILOT MACH HOLD VAR",
+                unit: "number",
+                category: SimVarCategory::Autopilot,
+                writable: true,
+                description: "Autopilot target Mach number",
+            },
+            SimVar {
+                name: "AUTOPILOT FLIGHT DIRECTOR ACTIVE",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Flight director active",
+            },
+            SimVar {
+                name: "AUTOPILOT YAW DAMPER",
+                unit: "bool",
+                category: SimVarCategory::Autopilot,
+                writable: false,
+                description: "Yaw damper active",
+            },
+            // ── Additional Electrical / Lighting ─────────────────────
+            SimVar {
+                name: "LIGHT NAV",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: false,
+                description: "Navigation lights on/off",
+            },
+            SimVar {
+                name: "LIGHT BEACON",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: false,
+                description: "Beacon light on/off",
+            },
+            SimVar {
+                name: "LIGHT STROBE",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: false,
+                description: "Strobe lights on/off",
+            },
+            SimVar {
+                name: "LIGHT LANDING",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: false,
+                description: "Landing lights on/off",
+            },
+            SimVar {
+                name: "LIGHT TAXI",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: false,
+                description: "Taxi lights on/off",
+            },
+            SimVar {
+                name: "PITOT HEAT",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: true,
+                description: "Pitot heat on/off",
+            },
+            SimVar {
+                name: "GENERAL ENG ANTI ICE POSITION:1",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: true,
+                description: "Engine 1 anti-ice on/off",
+            },
+            SimVar {
+                name: "STRUCTURAL DEICE SWITCH",
+                unit: "bool",
+                category: SimVarCategory::Electrical,
+                writable: true,
+                description: "Structural deice on/off",
+            },
+            // ── Additional Fuel ──────────────────────────────────────
+            SimVar {
+                name: "FUEL TANK CENTER QUANTITY",
+                unit: "gallons",
+                category: SimVarCategory::Fuel,
+                writable: false,
+                description: "Center tank fuel quantity",
+            },
+            SimVar {
+                name: "ENG FUEL VALVE OPEN:1",
+                unit: "bool",
+                category: SimVarCategory::Fuel,
+                writable: true,
+                description: "Engine 1 fuel valve open/closed",
+            },
+            // ── Additional Landing / Ground ──────────────────────────
+            SimVar {
+                name: "BRAKE LEFT POSITION",
+                unit: "position",
+                category: SimVarCategory::Landing,
+                writable: true,
+                description: "Left brake pedal position 0..1",
+            },
+            SimVar {
+                name: "BRAKE RIGHT POSITION",
+                unit: "position",
+                category: SimVarCategory::Landing,
+                writable: true,
+                description: "Right brake pedal position 0..1",
+            },
+            SimVar {
+                name: "BRAKE PARKING POSITION",
+                unit: "bool",
+                category: SimVarCategory::Landing,
+                writable: true,
+                description: "Parking brake set",
+            },
+            SimVar {
+                name: "SURFACE TYPE",
+                unit: "enum",
+                category: SimVarCategory::Landing,
+                writable: false,
+                description: "Surface type under aircraft (0=concrete, etc.)",
+            },
+            // ── Additional Instruments ───────────────────────────────
+            SimVar {
+                name: "VARIOMETER RATE",
+                unit: "feet per minute",
+                category: SimVarCategory::Instruments,
+                writable: false,
+                description: "Variometer reading",
+            },
+            SimVar {
+                name: "KOHLSMAN SETTING MB",
+                unit: "millibars",
+                category: SimVarCategory::Instruments,
+                writable: true,
+                description: "Altimeter barometric setting",
+            },
+            SimVar {
+                name: "HSI CDI NEEDLE",
+                unit: "number",
+                category: SimVarCategory::Instruments,
+                writable: false,
+                description: "HSI course deviation indicator",
+            },
+            SimVar {
+                name: "HSI GSI NEEDLE",
+                unit: "number",
+                category: SimVarCategory::Instruments,
+                writable: false,
+                description: "HSI glideslope indicator",
+            },
+            // ── Additional Environment ───────────────────────────────
+            SimVar {
+                name: "AMBIENT PRESSURE",
+                unit: "inches of mercury",
+                category: SimVarCategory::Environment,
+                writable: false,
+                description: "Ambient atmospheric pressure",
+            },
+            SimVar {
+                name: "AMBIENT DENSITY",
+                unit: "slugs per cubic feet",
+                category: SimVarCategory::Environment,
+                writable: false,
+                description: "Ambient air density",
+            },
+            SimVar {
+                name: "TOTAL WEIGHT",
+                unit: "pounds",
+                category: SimVarCategory::Environment,
+                writable: false,
+                description: "Total aircraft weight",
+            },
+            SimVar {
+                name: "MAX GROSS WEIGHT",
+                unit: "pounds",
+                category: SimVarCategory::Environment,
+                writable: false,
+                description: "Maximum gross weight",
+            },
         ];
 
         let mut vars = HashMap::with_capacity(entries.len());
@@ -582,8 +954,8 @@ mod tests {
     fn registry_is_populated() {
         let reg = SimVarRegistry::new();
         assert!(
-            reg.len() >= 50,
-            "registry must contain ≥50 vars, got {}",
+            reg.len() >= 80,
+            "registry must contain ≥80 vars, got {}",
             reg.len()
         );
         assert!(!reg.is_empty());
@@ -628,7 +1000,7 @@ mod tests {
     fn by_category_engine() {
         let reg = SimVarRegistry::new();
         let engine_vars = reg.by_category(SimVarCategory::Engine);
-        assert!(engine_vars.len() >= 4, "need at least 4 engine vars");
+        assert!(engine_vars.len() >= 10, "need at least 10 engine vars");
     }
 
     #[test]

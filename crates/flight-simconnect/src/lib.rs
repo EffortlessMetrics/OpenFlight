@@ -32,6 +32,7 @@
 //! - SimConnect SDK (dynamic loading supported)
 
 pub mod adapter;
+pub mod adapter_state;
 pub mod aircraft;
 pub mod aircraft_db;
 pub mod camera;
@@ -66,6 +67,7 @@ pub use subscription::{
 pub use weather::{WeatherConfig, WeatherData, parse_weather_simvars};
 
 pub use aircraft_db::{AircraftType, MsfsAircraftDb, MsfsAircraftInfo};
+pub use adapter_state::{SimConnectAdapterState, SimConnectEvent, SimConnectStateMachine, SimConnectTransitionError};
 pub use event_mapping::{
     SimEventCategory, SimEventDef, SimEventMapper, catalog_by_category, catalog_lookup,
 };
