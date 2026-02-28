@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+//! Fuzz target for X-Plane plugin binary protocol decoder.
+//!
+//! Exercises `plugin_protocol::decode` against arbitrary bytes, covering
+//! the OFXP magic header, version, message type, and payload parsing.
+//!
+//! Run with: `cargo +nightly fuzz run fuzz_plugin_protocol`
+
+#![no_main]
+
+use libfuzzer_sys::fuzz_target;
+
+fuzz_target!(|data: &[u8]| {
+    // Must never panic on any byte sequence — errors are expected and ignored.
+    let _ = flight_xplane::plugin_protocol::decode(data);
+});

@@ -10,7 +10,9 @@ pub mod protocol;
 
 pub use evaluator::RulesEvaluator;
 pub use led::{LatencyStats, LedController, LedState, LedTarget};
-pub use protocol::{PanelEvent, PanelId, PanelProtocol};
+pub use protocol::{
+    PanelCodec, PanelConnection, PanelEvent, PanelId, PanelMessage, PanelProtocol, PanelResponse,
+};
 
 #[cfg(test)]
 mod tests {

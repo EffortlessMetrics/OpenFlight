@@ -268,6 +268,42 @@ impl PhaseLockLoop {
         self.tick_count = 0;
     }
 
+    /// Create a PLL with default PI gains for the given target frequency.
+    ///
+    /// Uses recommended gains for flight-sim RT scheduling:
+    /// - `kp = 0.1` (fast proportional response)
+    /// - `ki = 0.001` (slow integral — 0.1 %/s per ADR-005)
+    pub fn from_hz(target_hz: u32) -> Self {
+        let period_ns = 1_000_000_000.0 / target_hz as f64;
+        Self::new(0.1, 0.001, period_ns)
+    }
+
+    /// Update the PLL with a measured inter-tick period and return a
+    /// [`PllCorrection`].
+    ///
+    /// This is a convenience wrapper around [`tick`](Self::tick) for callers
+    /// that measure the actual wall-clock period between ticks rather than
+    /// computing the phase error themselves.
+    ///
+    /// # Zero-allocation guarantee
+    ///
+    /// No heap allocation occurs.
+    #[inline]
+    pub fn update(&mut self, actual_period_ns: u64) -> PllCorrection {
+        let phase_error = actual_period_ns as f64 - self.nominal_period_ns;
+        let corrected = self.tick(phase_error);
+        let sleep_adjust = corrected - self.nominal_period_ns;
+        PllCorrection {
+            sleep_adjust_ns: sleep_adjust as i64,
+            phase_error_ns: phase_error as i64,
+            frequency_ratio: if actual_period_ns > 0 {
+                self.nominal_period_ns / actual_period_ns as f64
+            } else {
+                1.0
+            },
+        }
+    }
+
     // -- internal helpers -----------------------------------------------
 
     #[inline]
@@ -319,6 +355,29 @@ pub struct PllTickResult {
     /// Net correction: `nominal − corrected` (positive means period was
     /// shortened to catch up).
     pub correction_ns: f64,
+}
+
+// ---------------------------------------------------------------------------
+// PllCorrection — period-based update result
+// ---------------------------------------------------------------------------
+
+/// Result of a period-based PLL update via [`PhaseLockLoop::update`].
+///
+/// Unlike [`PllTickResult`] (which works with raw phase error), this struct
+/// is returned when feeding measured inter-tick periods directly.
+///
+/// All fields are scalars — the struct is [`Copy`].
+#[derive(Debug, Clone, Copy)]
+pub struct PllCorrection {
+    /// Adjustment to apply to the next sleep duration (nanoseconds).
+    /// Positive = sleep longer, negative = sleep shorter.
+    pub sleep_adjust_ns: i64,
+    /// Phase error: measured period minus target period (nanoseconds).
+    /// Positive = tick arrived late, negative = tick arrived early.
+    pub phase_error_ns: i64,
+    /// Ratio of target frequency to actual frequency.
+    /// Values near 1.0 indicate good lock; >1.0 means running slow.
+    pub frequency_ratio: f64,
 }
 
 // ---------------------------------------------------------------------------
@@ -847,5 +906,147 @@ mod tests {
         assert_eq!(stats.min_ns(), 0);
         assert_eq!(stats.max_ns(), 0);
         assert!((stats.mean() - 0.0).abs() < f64::EPSILON);
+    }
+
+    // -- PllCorrection / from_hz / update tests -------------------------
+
+    #[test]
+    fn pll_from_hz_creates_correct_period() {
+        let pll = PhaseLockLoop::from_hz(250);
+        let expected = 1_000_000_000.0 / 250.0;
+        assert!(
+            (pll.nominal_period_ns() - expected).abs() < 1e-6,
+            "expected {expected}, got {}",
+            pll.nominal_period_ns()
+        );
+    }
+
+    #[test]
+    fn pll_from_hz_100() {
+        let pll = PhaseLockLoop::from_hz(100);
+        let expected = 10_000_000.0;
+        assert!((pll.nominal_period_ns() - expected).abs() < 1e-6);
+    }
+
+    #[test]
+    fn pll_update_returns_correction_opposing_late_arrival() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        let correction = pll.update(target + 1000); // 1 µs late
+        assert!(
+            correction.phase_error_ns > 0,
+            "should report positive phase error"
+        );
+        assert!(
+            correction.sleep_adjust_ns < 0,
+            "should shorten sleep for late tick"
+        );
+    }
+
+    #[test]
+    fn pll_update_returns_correction_opposing_early_arrival() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        let correction = pll.update(target - 1000); // 1 µs early
+        assert!(
+            correction.phase_error_ns < 0,
+            "should report negative phase error"
+        );
+        assert!(
+            correction.sleep_adjust_ns > 0,
+            "should lengthen sleep for early tick"
+        );
+    }
+
+    #[test]
+    fn pll_update_exact_period_gives_near_zero_correction() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        let correction = pll.update(target);
+        assert!(
+            correction.phase_error_ns.abs() <= 1,
+            "exact period should give zero error, got {}",
+            correction.phase_error_ns
+        );
+        assert!(
+            correction.sleep_adjust_ns.abs() < 100,
+            "correction should be tiny, got {}",
+            correction.sleep_adjust_ns
+        );
+        assert!(
+            (correction.frequency_ratio - 1.0).abs() < 0.001,
+            "frequency ratio should be ~1.0, got {}",
+            correction.frequency_ratio
+        );
+    }
+
+    #[test]
+    fn pll_update_convergence_from_offset() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        let mut simulated_period = target + 100_000; // start 100 µs slow
+
+        for _ in 0..500 {
+            let correction = pll.update(simulated_period);
+            simulated_period = (simulated_period as i64 + correction.sleep_adjust_ns).max(1) as u64;
+        }
+
+        let final_error = (simulated_period as i64 - target as i64).unsigned_abs();
+        assert!(
+            final_error < 10_000,
+            "should converge, residual: {final_error} ns"
+        );
+    }
+
+    #[test]
+    fn pll_update_handles_large_drift() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        // Period 10 % off — PLL should clamp correction
+        let correction = pll.update(target + target / 10);
+        let max_adjust = (target as f64 * 0.01) as i64;
+        assert!(
+            correction.sleep_adjust_ns.abs() <= max_adjust + 1,
+            "correction {} should be clamped to ±{}",
+            correction.sleep_adjust_ns,
+            max_adjust
+        );
+    }
+
+    #[test]
+    fn pll_update_frequency_ratio_near_one_for_small_errors() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        let correction = pll.update(target + 100); // tiny error
+        assert!(
+            (correction.frequency_ratio - 1.0).abs() < 0.01,
+            "frequency ratio should be near 1.0, got {}",
+            correction.frequency_ratio
+        );
+    }
+
+    #[test]
+    fn pll_correction_is_copy() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let c = pll.update(4_000_000);
+        let c2 = c; // Copy
+        let _ = c; // original still usable
+        assert_eq!(c2.phase_error_ns, c.phase_error_ns);
+    }
+
+    #[test]
+    fn pll_update_steady_state_accuracy() {
+        let mut pll = PhaseLockLoop::from_hz(250);
+        let target = 4_000_000u64;
+        // Feed exact period many times
+        for _ in 0..1000 {
+            pll.update(target);
+        }
+        let correction = pll.update(target);
+        assert!(
+            correction.sleep_adjust_ns.abs() < 10,
+            "steady-state correction should be near zero, got {}",
+            correction.sleep_adjust_ns
+        );
     }
 }

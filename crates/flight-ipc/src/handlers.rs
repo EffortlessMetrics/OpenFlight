@@ -23,10 +23,76 @@ use crate::{
     },
 };
 
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use tokio::sync::broadcast;
 use tonic::{Request, Response, Status};
 use tracing::{debug, info, warn};
+
+// ---------------------------------------------------------------------------
+// Simplified domain types for ServiceContext consumers
+// ---------------------------------------------------------------------------
+
+/// Lightweight device info independent of protobuf types.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DeviceInfo {
+    /// Unique device identifier.
+    pub id: String,
+    /// Human-readable device name.
+    pub name: String,
+    /// Device type string (e.g. `"joystick"`, `"throttle"`).
+    pub device_type: String,
+    /// Whether the device is currently connected.
+    pub connected: bool,
+}
+
+/// Lightweight profile info independent of protobuf types.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ProfileInfo {
+    /// Profile name.
+    pub name: String,
+    /// Whether this profile is currently active.
+    pub active: bool,
+    /// Aircraft binding, if any.
+    pub aircraft: Option<String>,
+}
+
+/// Aggregate health status for the service.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct HealthStatus {
+    /// Overall healthy flag.
+    pub healthy: bool,
+    /// Uptime in seconds.
+    pub uptime_secs: u64,
+    /// Per-component health.
+    pub components: Vec<ComponentHealth>,
+}
+
+/// Health status for a single component.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ComponentHealth {
+    /// Component name.
+    pub name: String,
+    /// Whether this component is healthy.
+    pub healthy: bool,
+    /// Optional detail when unhealthy.
+    pub detail: Option<String>,
+}
+
+/// Snapshot of runtime performance metrics.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MetricsSnapshot {
+    /// p99 jitter in milliseconds.
+    pub jitter_p99_ms: f64,
+    /// p99 HID write latency in microseconds.
+    pub hid_latency_p99_us: f64,
+    /// Number of missed RT ticks.
+    pub missed_ticks: u32,
+    /// CPU usage percentage.
+    pub cpu_usage_percent: f64,
+    /// Memory usage in bytes.
+    pub memory_usage_bytes: u64,
+}
 
 // ---------------------------------------------------------------------------
 // ServiceContext — abstraction for testability
@@ -165,6 +231,53 @@ pub trait ServiceContext: Send + Sync + 'static {
             redacted_data: "{}".to_string(),
             bundle_size_bytes: 2,
         })
+    }
+
+    // ---- Simplified convenience methods (domain-type based) ----
+
+    /// List connected devices as simplified [`DeviceInfo`] structs.
+    fn list_device_info(&self) -> Vec<DeviceInfo> {
+        vec![]
+    }
+
+    /// Look up a single device by ID.
+    fn get_device_info(&self, _id: &str) -> Option<DeviceInfo> {
+        None
+    }
+
+    /// List all known profiles.
+    fn list_profiles(&self) -> Vec<ProfileInfo> {
+        vec![]
+    }
+
+    /// Return the name of the currently active profile, if any.
+    fn get_active_profile(&self) -> Option<String> {
+        None
+    }
+
+    /// Activate a profile by name.
+    fn activate_profile(&self, _name: &str) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// Return aggregate system health.
+    fn system_health(&self) -> HealthStatus {
+        HealthStatus {
+            healthy: true,
+            uptime_secs: 0,
+            components: vec![],
+        }
+    }
+
+    /// Return a snapshot of runtime metrics.
+    fn get_metrics(&self) -> MetricsSnapshot {
+        MetricsSnapshot {
+            jitter_p99_ms: 0.0,
+            hid_latency_p99_us: 0.0,
+            missed_ticks: 0,
+            cpu_usage_percent: 0.0,
+            memory_usage_bytes: 0,
+        }
     }
 }
 
@@ -408,6 +521,16 @@ pub struct MockServiceContext {
     pub devices: Vec<proto::Device>,
     /// Version string to report.
     pub version: String,
+    /// Simplified device list for convenience methods.
+    pub device_info: Vec<DeviceInfo>,
+    /// Profile list for convenience methods.
+    pub profiles: Vec<ProfileInfo>,
+    /// Active profile name.
+    pub active_profile: Option<String>,
+    /// Custom health status.
+    pub health: Option<HealthStatus>,
+    /// Custom metrics snapshot.
+    pub metrics: Option<MetricsSnapshot>,
 }
 
 impl MockServiceContext {
@@ -416,7 +539,42 @@ impl MockServiceContext {
         Self {
             devices: vec![],
             version: crate::PROTOCOL_VERSION.to_string(),
+            device_info: vec![],
+            profiles: vec![],
+            active_profile: None,
+            health: None,
+            metrics: None,
         }
+    }
+
+    /// Builder: set simplified device info list.
+    pub fn with_device_info(mut self, devices: Vec<DeviceInfo>) -> Self {
+        self.device_info = devices;
+        self
+    }
+
+    /// Builder: set profiles.
+    pub fn with_profiles(mut self, profiles: Vec<ProfileInfo>) -> Self {
+        self.profiles = profiles;
+        self
+    }
+
+    /// Builder: set active profile name.
+    pub fn with_active_profile(mut self, name: impl Into<String>) -> Self {
+        self.active_profile = Some(name.into());
+        self
+    }
+
+    /// Builder: set health status.
+    pub fn with_health(mut self, health: HealthStatus) -> Self {
+        self.health = Some(health);
+        self
+    }
+
+    /// Builder: set metrics snapshot.
+    pub fn with_metrics(mut self, metrics: MetricsSnapshot) -> Self {
+        self.metrics = Some(metrics);
+        self
     }
 }
 
@@ -449,11 +607,72 @@ impl ServiceContext for MockServiceContext {
             capabilities: HashMap::new(),
         })
     }
+
+    fn list_device_info(&self) -> Vec<DeviceInfo> {
+        self.device_info.clone()
+    }
+
+    fn get_device_info(&self, id: &str) -> Option<DeviceInfo> {
+        self.device_info.iter().find(|d| d.id == id).cloned()
+    }
+
+    fn list_profiles(&self) -> Vec<ProfileInfo> {
+        self.profiles.clone()
+    }
+
+    fn get_active_profile(&self) -> Option<String> {
+        self.active_profile.clone()
+    }
+
+    fn activate_profile(&self, _name: &str) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn system_health(&self) -> HealthStatus {
+        self.health.clone().unwrap_or(HealthStatus {
+            healthy: true,
+            uptime_secs: 0,
+            components: vec![],
+        })
+    }
+
+    fn get_metrics(&self) -> MetricsSnapshot {
+        self.metrics.clone().unwrap_or(MetricsSnapshot {
+            jitter_p99_ms: 0.0,
+            hid_latency_p99_us: 0.0,
+            missed_ticks: 0,
+            cpu_usage_percent: 0.0,
+            memory_usage_bytes: 0,
+        })
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // -- helper builders --
+
+    fn mock_device(id: &str, name: &str) -> DeviceInfo {
+        DeviceInfo {
+            id: id.to_string(),
+            name: name.to_string(),
+            device_type: "joystick".to_string(),
+            connected: true,
+        }
+    }
+
+    fn mock_profile(name: &str, active: bool) -> ProfileInfo {
+        ProfileInfo {
+            name: name.to_string(),
+            active,
+            aircraft: None,
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Handler gRPC delegation tests (existing + expanded)
+    // -----------------------------------------------------------------------
 
     #[tokio::test]
     async fn handler_negotiate_features_success() {
@@ -535,5 +754,335 @@ mod tests {
 
         assert!(resp.success);
         assert!(resp.conflicts.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // Handler: resolve + one-click + capability + security + telemetry
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn handler_resolve_curve_conflict() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .resolve_curve_conflict(Request::new(ResolveCurveConflictRequest::default()))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_one_click_resolve() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .one_click_resolve(Request::new(OneClickResolveRequest::default()))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_set_capability_mode() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .set_capability_mode(Request::new(SetCapabilityModeRequest::default()))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_get_capability_mode() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .get_capability_mode(Request::new(GetCapabilityModeRequest::default()))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_get_security_status() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .get_security_status(Request::new(GetSecurityStatusRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_configure_telemetry() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .configure_telemetry(Request::new(ConfigureTelemetryRequest {
+                enabled: true,
+                data_types: vec!["Performance".to_string()],
+            }))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_get_support_bundle() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .get_support_bundle(Request::new(GetSupportBundleRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert!(!resp.redacted_data.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // MockServiceContext: simplified convenience method tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn mock_list_device_info_empty_default() {
+        let ctx = MockServiceContext::new();
+        assert!(ctx.list_device_info().is_empty());
+    }
+
+    #[test]
+    fn mock_list_device_info_with_devices() {
+        let ctx = MockServiceContext::new().with_device_info(vec![
+            mock_device("js-1", "Joystick Alpha"),
+            mock_device("th-1", "Throttle Beta"),
+        ]);
+        let devices = ctx.list_device_info();
+        assert_eq!(devices.len(), 2);
+        assert_eq!(devices[0].id, "js-1");
+        assert_eq!(devices[1].name, "Throttle Beta");
+    }
+
+    #[test]
+    fn mock_get_device_info_found() {
+        let ctx =
+            MockServiceContext::new().with_device_info(vec![mock_device("dev-42", "My Stick")]);
+        let d = ctx.get_device_info("dev-42");
+        assert!(d.is_some());
+        assert_eq!(d.unwrap().name, "My Stick");
+    }
+
+    #[test]
+    fn mock_get_device_info_not_found() {
+        let ctx = MockServiceContext::new();
+        assert!(ctx.get_device_info("no-such").is_none());
+    }
+
+    #[test]
+    fn mock_list_profiles() {
+        let ctx = MockServiceContext::new().with_profiles(vec![
+            mock_profile("default", true),
+            mock_profile("combat", false),
+        ]);
+        let profiles = ctx.list_profiles();
+        assert_eq!(profiles.len(), 2);
+        assert!(profiles[0].active);
+        assert!(!profiles[1].active);
+    }
+
+    #[test]
+    fn mock_get_active_profile() {
+        let ctx = MockServiceContext::new().with_active_profile("combat");
+        assert_eq!(ctx.get_active_profile(), Some("combat".to_string()));
+    }
+
+    #[test]
+    fn mock_get_active_profile_none() {
+        let ctx = MockServiceContext::new();
+        assert!(ctx.get_active_profile().is_none());
+    }
+
+    #[test]
+    fn mock_activate_profile_succeeds() {
+        let ctx = MockServiceContext::new();
+        assert!(ctx.activate_profile("any-profile").is_ok());
+    }
+
+    #[test]
+    fn mock_system_health_default() {
+        let ctx = MockServiceContext::new();
+        let health = ctx.system_health();
+        assert!(health.healthy);
+        assert!(health.components.is_empty());
+    }
+
+    #[test]
+    fn mock_system_health_custom() {
+        let ctx = MockServiceContext::new().with_health(HealthStatus {
+            healthy: false,
+            uptime_secs: 600,
+            components: vec![ComponentHealth {
+                name: "ffb-engine".to_string(),
+                healthy: false,
+                detail: Some("envelope exceeded".to_string()),
+            }],
+        });
+        let health = ctx.system_health();
+        assert!(!health.healthy);
+        assert_eq!(health.uptime_secs, 600);
+        assert_eq!(health.components.len(), 1);
+        assert_eq!(health.components[0].name, "ffb-engine");
+    }
+
+    #[test]
+    fn mock_get_metrics_default() {
+        let ctx = MockServiceContext::new();
+        let m = ctx.get_metrics();
+        assert_eq!(m.jitter_p99_ms, 0.0);
+        assert_eq!(m.missed_ticks, 0);
+    }
+
+    #[test]
+    fn mock_get_metrics_custom() {
+        let ctx = MockServiceContext::new().with_metrics(MetricsSnapshot {
+            jitter_p99_ms: 0.42,
+            hid_latency_p99_us: 280.0,
+            missed_ticks: 3,
+            cpu_usage_percent: 12.5,
+            memory_usage_bytes: 1024 * 1024,
+        });
+        let m = ctx.get_metrics();
+        assert!((m.jitter_p99_ms - 0.42).abs() < f64::EPSILON);
+        assert_eq!(m.missed_ticks, 3);
+        assert_eq!(m.memory_usage_bytes, 1024 * 1024);
+    }
+
+    // -----------------------------------------------------------------------
+    // Domain types: serialization round-trip
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn device_info_serde_roundtrip() {
+        let d = mock_device("d1", "Test");
+        let json = serde_json::to_string(&d).unwrap();
+        let restored: DeviceInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(d, restored);
+    }
+
+    #[test]
+    fn profile_info_serde_roundtrip() {
+        let p = ProfileInfo {
+            name: "combat".into(),
+            active: true,
+            aircraft: Some("F-16C".into()),
+        };
+        let json = serde_json::to_string(&p).unwrap();
+        let restored: ProfileInfo = serde_json::from_str(&json).unwrap();
+        assert_eq!(p, restored);
+    }
+
+    #[test]
+    fn health_status_serde_roundtrip() {
+        let h = HealthStatus {
+            healthy: true,
+            uptime_secs: 42,
+            components: vec![ComponentHealth {
+                name: "axis".into(),
+                healthy: true,
+                detail: None,
+            }],
+        };
+        let json = serde_json::to_string(&h).unwrap();
+        let restored: HealthStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(h, restored);
+    }
+
+    #[test]
+    fn metrics_snapshot_serde_roundtrip() {
+        let m = MetricsSnapshot {
+            jitter_p99_ms: 0.3,
+            hid_latency_p99_us: 250.0,
+            missed_ticks: 1,
+            cpu_usage_percent: 5.0,
+            memory_usage_bytes: 2048,
+        };
+        let json = serde_json::to_string(&m).unwrap();
+        let restored: MetricsSnapshot = serde_json::from_str(&json).unwrap();
+        assert_eq!(m, restored);
+    }
+
+    // -----------------------------------------------------------------------
+    // Handler: health_sender broadcast channel
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn handler_health_sender_delivers_events() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let tx = handler.health_sender();
+        let mut rx = tx.subscribe();
+
+        let event = HealthEvent {
+            timestamp: 1234,
+            r#type: proto::HealthEventType::Warning.into(),
+            message: "test warning".to_string(),
+            ..Default::default()
+        };
+        tx.send(event.clone()).unwrap();
+
+        let received = rx.recv().await.unwrap();
+        assert_eq!(received.message, "test warning");
+    }
+
+    // -----------------------------------------------------------------------
+    // MockServiceContext builder chaining
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn mock_builder_chaining() {
+        let ctx = MockServiceContext::new()
+            .with_device_info(vec![mock_device("d1", "Dev")])
+            .with_profiles(vec![mock_profile("p1", true)])
+            .with_active_profile("p1")
+            .with_health(HealthStatus {
+                healthy: true,
+                uptime_secs: 100,
+                components: vec![],
+            })
+            .with_metrics(MetricsSnapshot {
+                jitter_p99_ms: 0.1,
+                hid_latency_p99_us: 100.0,
+                missed_ticks: 0,
+                cpu_usage_percent: 2.0,
+                memory_usage_bytes: 512,
+            });
+
+        assert_eq!(ctx.list_device_info().len(), 1);
+        assert_eq!(ctx.list_profiles().len(), 1);
+        assert_eq!(ctx.get_active_profile(), Some("p1".to_string()));
+        assert!(ctx.system_health().healthy);
+        assert!((ctx.get_metrics().jitter_p99_ms - 0.1).abs() < f64::EPSILON);
     }
 }

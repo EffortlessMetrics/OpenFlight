@@ -6,6 +6,8 @@
 //! VID: 0x06A3  PID: 0x0A2E
 //! 320×240 pixel LCD display with rotary knob and 6 page-select buttons.
 
+use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 pub const FIP_VID: u16 = 0x06A3;
@@ -102,6 +104,203 @@ impl FipButtonState {
     #[inline]
     pub fn is_pressed(&self, button: FipButton) -> bool {
         (self.0 >> (button as u8)) & 1 == 1
+    }
+}
+
+// ─── Soft key labels ─────────────────────────────────────────────────────────
+
+/// Manages the six configurable soft-key labels shown alongside the FIP display.
+#[derive(Debug, Clone)]
+pub struct FipSoftKeys {
+    labels: [String; 6],
+}
+
+impl FipSoftKeys {
+    /// Create soft keys with all labels blank.
+    pub fn new() -> Self {
+        Self {
+            labels: std::array::from_fn(|_| String::new()),
+        }
+    }
+
+    /// Set the label for soft key `index` (0–5).
+    pub fn set_label(&mut self, index: usize, label: &str) {
+        if index < 6 {
+            self.labels[index] = label.to_string();
+        }
+    }
+
+    /// Get the label for soft key `index`, or `""` for out-of-bounds.
+    pub fn label(&self, index: usize) -> &str {
+        self.labels.get(index).map_or("", String::as_str)
+    }
+
+    /// Return all 6 labels as a slice.
+    pub fn labels(&self) -> &[String; 6] {
+        &self.labels
+    }
+}
+
+impl Default for FipSoftKeys {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ─── Scroll wheel tracker ────────────────────────────────────────────────────
+
+/// Accumulates scroll wheel ticks for the FIP rotary knob.
+#[derive(Debug, Clone, Default)]
+pub struct FipScrollWheel {
+    /// Accumulated ticks (positive = CW).
+    pub accumulated: i32,
+}
+
+impl FipScrollWheel {
+    /// Update from a button state byte.
+    pub fn update(&mut self, state: &FipButtonState) {
+        if state.is_pressed(FipButton::RotaryCw) {
+            self.accumulated += 1;
+        }
+        if state.is_pressed(FipButton::RotaryCcw) {
+            self.accumulated -= 1;
+        }
+    }
+
+    /// Drain and return accumulated ticks.
+    pub fn drain(&mut self) -> i32 {
+        let result = self.accumulated;
+        self.accumulated = 0;
+        result
+    }
+}
+
+// ─── Page manager ────────────────────────────────────────────────────────────
+
+/// Manages the current display page on the FIP.
+///
+/// The FIP supports up to 6 pages (one per page-select button).
+#[derive(Debug, Clone)]
+pub struct FipPageManager {
+    current_page: u8,
+    page_count: u8,
+}
+
+impl FipPageManager {
+    /// Create a page manager with `count` pages (clamped to 1–6).
+    pub fn new(count: u8) -> Self {
+        Self {
+            current_page: 0,
+            page_count: count.clamp(1, 6),
+        }
+    }
+
+    /// Select a page directly (clamped to valid range).
+    pub fn select(&mut self, page: u8) {
+        if page < self.page_count {
+            self.current_page = page;
+        }
+    }
+
+    /// Process a button press and update the current page if it's a page button.
+    /// Returns `true` if the page changed.
+    pub fn handle_button(&mut self, button: FipButton) -> bool {
+        let page = match button {
+            FipButton::Page1 => 0,
+            FipButton::Page2 => 1,
+            FipButton::Page3 => 2,
+            FipButton::Page4 => 3,
+            FipButton::Page5 => 4,
+            FipButton::Page6 => 5,
+            _ => return false,
+        };
+        if page < self.page_count && page != self.current_page {
+            self.current_page = page;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Current page index (0-based).
+    pub fn current(&self) -> u8 {
+        self.current_page
+    }
+
+    /// Total number of pages.
+    pub fn page_count(&self) -> u8 {
+        self.page_count
+    }
+}
+
+impl Default for FipPageManager {
+    fn default() -> Self {
+        Self::new(6)
+    }
+}
+
+// ─── PanelProtocol implementation ────────────────────────────────────────────
+
+/// FIP protocol driver.
+pub struct FipProtocol;
+
+impl PanelProtocol for FipProtocol {
+    fn name(&self) -> &str {
+        "Saitek Flight Instrument Panel"
+    }
+
+    fn vendor_id(&self) -> u16 {
+        FIP_VID
+    }
+
+    fn product_id(&self) -> u16 {
+        FIP_PID
+    }
+
+    fn led_names(&self) -> &[&'static str] {
+        // FIP has no discrete LEDs — the display is the output
+        &[]
+    }
+
+    fn output_report_size(&self) -> usize {
+        // Frame buffer output is variable; report the base size
+        FIP_WIDTH * FIP_HEIGHT * 2
+    }
+
+    fn parse_input(&self, data: &[u8]) -> Option<Vec<PanelEvent>> {
+        if data.is_empty() {
+            return None;
+        }
+        let state = FipButtonState(data[0]);
+        let mut events = Vec::new();
+
+        let buttons = [
+            (FipButton::Page1, "PAGE1"),
+            (FipButton::Page2, "PAGE2"),
+            (FipButton::Page3, "PAGE3"),
+            (FipButton::Page4, "PAGE4"),
+            (FipButton::Page5, "PAGE5"),
+            (FipButton::Page6, "PAGE6"),
+        ];
+        for (btn, name) in buttons {
+            if state.is_pressed(btn) {
+                events.push(PanelEvent::ButtonPress { name });
+            }
+        }
+        if state.is_pressed(FipButton::RotaryCw) {
+            events.push(PanelEvent::EncoderTick {
+                name: "SCROLL",
+                delta: 1,
+            });
+        }
+        if state.is_pressed(FipButton::RotaryCcw) {
+            events.push(PanelEvent::EncoderTick {
+                name: "SCROLL",
+                delta: -1,
+            });
+        }
+
+        Some(events)
     }
 }
 
@@ -266,5 +465,159 @@ mod tests {
         assert!(!state.is_pressed(FipButton::Page6));
         assert!(!state.is_pressed(FipButton::RotaryCw));
         assert!(!state.is_pressed(FipButton::RotaryCcw));
+    }
+
+    // ── FipSoftKeys ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_soft_keys_default_blank() {
+        let keys = FipSoftKeys::new();
+        for i in 0..6 {
+            assert_eq!(keys.label(i), "", "key {i} should be blank");
+        }
+    }
+
+    #[test]
+    fn test_soft_keys_set_and_get() {
+        let mut keys = FipSoftKeys::new();
+        keys.set_label(0, "NAV");
+        keys.set_label(5, "EXIT");
+        assert_eq!(keys.label(0), "NAV");
+        assert_eq!(keys.label(5), "EXIT");
+        assert_eq!(keys.label(1), "");
+    }
+
+    #[test]
+    fn test_soft_keys_out_of_bounds_ignored() {
+        let mut keys = FipSoftKeys::new();
+        keys.set_label(10, "NOPE"); // should not panic
+        assert_eq!(keys.label(10), "");
+    }
+
+    #[test]
+    fn test_soft_keys_labels_slice() {
+        let mut keys = FipSoftKeys::new();
+        keys.set_label(2, "MAP");
+        let labels = keys.labels();
+        assert_eq!(labels.len(), 6);
+        assert_eq!(labels[2], "MAP");
+    }
+
+    // ── FipScrollWheel ───────────────────────────────────────────────────────
+
+    #[test]
+    fn test_scroll_wheel_default_zero() {
+        let sw = FipScrollWheel::default();
+        assert_eq!(sw.accumulated, 0);
+    }
+
+    #[test]
+    fn test_scroll_wheel_accumulates_cw() {
+        let mut sw = FipScrollWheel::default();
+        let state = FipButtonState(1 << 6); // RotaryCw
+        sw.update(&state);
+        sw.update(&state);
+        assert_eq!(sw.accumulated, 2);
+    }
+
+    #[test]
+    fn test_scroll_wheel_accumulates_ccw() {
+        let mut sw = FipScrollWheel::default();
+        let state = FipButtonState(1 << 7); // RotaryCcw
+        sw.update(&state);
+        assert_eq!(sw.accumulated, -1);
+    }
+
+    #[test]
+    fn test_scroll_wheel_drain_resets() {
+        let mut sw = FipScrollWheel::default();
+        sw.accumulated = 5;
+        let val = sw.drain();
+        assert_eq!(val, 5);
+        assert_eq!(sw.accumulated, 0);
+    }
+
+    // ── FipPageManager ───────────────────────────────────────────────────────
+
+    #[test]
+    fn test_page_manager_default() {
+        let pm = FipPageManager::default();
+        assert_eq!(pm.current(), 0);
+        assert_eq!(pm.page_count(), 6);
+    }
+
+    #[test]
+    fn test_page_manager_select() {
+        let mut pm = FipPageManager::new(4);
+        pm.select(3);
+        assert_eq!(pm.current(), 3);
+        pm.select(10); // out of range, ignored
+        assert_eq!(pm.current(), 3);
+    }
+
+    #[test]
+    fn test_page_manager_handle_button() {
+        let mut pm = FipPageManager::new(6);
+        assert!(pm.handle_button(FipButton::Page3)); // switches to page 2
+        assert_eq!(pm.current(), 2);
+        assert!(!pm.handle_button(FipButton::Page3)); // same page, no change
+        assert!(pm.handle_button(FipButton::Page1)); // back to page 0
+        assert_eq!(pm.current(), 0);
+    }
+
+    #[test]
+    fn test_page_manager_rotary_not_a_page() {
+        let mut pm = FipPageManager::new(6);
+        assert!(!pm.handle_button(FipButton::RotaryCw));
+        assert_eq!(pm.current(), 0);
+    }
+
+    #[test]
+    fn test_page_manager_clamps_count() {
+        let pm = FipPageManager::new(0);
+        assert_eq!(pm.page_count(), 1);
+        let pm = FipPageManager::new(100);
+        assert_eq!(pm.page_count(), 6);
+    }
+
+    // ── FipProtocol ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_fip_protocol_metadata() {
+        let proto = FipProtocol;
+        assert_eq!(proto.name(), "Saitek Flight Instrument Panel");
+        assert_eq!(proto.vendor_id(), FIP_VID);
+        assert_eq!(proto.product_id(), FIP_PID);
+        assert!(proto.led_names().is_empty());
+    }
+
+    #[test]
+    fn test_fip_protocol_parse_page_button() {
+        let proto = FipProtocol;
+        let events = proto.parse_input(&[0b0000_0100]).unwrap(); // Page3
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "PAGE3" }))
+        );
+    }
+
+    #[test]
+    fn test_fip_protocol_parse_rotary() {
+        let proto = FipProtocol;
+        let events = proto.parse_input(&[1 << 6]).unwrap(); // RotaryCw
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "SCROLL",
+                delta: 1
+            }
+        )));
+    }
+
+    #[test]
+    fn test_fip_protocol_parse_empty_returns_none() {
+        let proto = FipProtocol;
+        assert!(proto.parse_input(&[]).is_none());
     }
 }

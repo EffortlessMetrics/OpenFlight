@@ -48,3 +48,21 @@ name = "fuzz_dcs_line"
 path = "fuzz_targets/fuzz_dcs_line.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_position_data"
+path = "fuzz_targets/fuzz_position_data.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_multi_value"
+path = "fuzz_targets/fuzz_multi_value.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_device_arg"
+path = "fuzz_targets/fuzz_device_arg.rs"
+test = false
+doc = false

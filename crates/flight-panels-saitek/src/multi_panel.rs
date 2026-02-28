@@ -33,6 +33,11 @@
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+/// USB Vendor ID (Saitek).
+pub const MULTI_PANEL_VID: u16 = 0x06A3;
+/// USB Product ID.
+pub const MULTI_PANEL_PID: u16 = 0x0D06;
+
 /// Minimum byte count for a Multi Panel HID input report (report-ID + 2 data bytes).
 pub const MULTI_PANEL_INPUT_MIN_BYTES: usize = 3;
 
@@ -336,6 +341,161 @@ impl MultiPanelState {
     /// Build the 12-byte HID output report from the current display + LED state.
     pub fn to_hid_report(&self) -> [u8; MULTI_PANEL_OUTPUT_BYTES] {
         self.display.to_hid_report(self.leds)
+    }
+}
+
+// ─── Mode state machine ──────────────────────────────────────────────────────
+
+/// Autopilot mode selector positions on the Multi Panel.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum MultiPanelMode {
+    Alt = 0,
+    Vs = 1,
+    Ias = 2,
+    Hdg = 3,
+    Crs = 4,
+}
+
+impl MultiPanelMode {
+    /// Decode from the mode selector bits in byte 1.
+    pub fn from_button_state(state: &MultiPanelButtonState) -> Option<Self> {
+        if state.sel_alt() {
+            Some(Self::Alt)
+        } else if state.sel_vs() {
+            Some(Self::Vs)
+        } else if state.sel_ias() {
+            Some(Self::Ias)
+        } else if state.sel_hdg() {
+            Some(Self::Hdg)
+        } else if state.sel_crs() {
+            Some(Self::Crs)
+        } else {
+            None
+        }
+    }
+
+    /// Human-readable label.
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Alt => "ALT",
+            Self::Vs => "VS",
+            Self::Ias => "IAS",
+            Self::Hdg => "HDG",
+            Self::Crs => "CRS",
+        }
+    }
+}
+
+/// Mode selector state machine that tracks transitions and emits events.
+#[derive(Debug, Clone)]
+pub struct ModeStateMachine {
+    current: Option<MultiPanelMode>,
+}
+
+impl ModeStateMachine {
+    /// Create a new state machine with no mode selected.
+    pub fn new() -> Self {
+        Self { current: None }
+    }
+
+    /// Process a button state and return the new mode if it changed.
+    pub fn update(&mut self, state: &MultiPanelButtonState) -> Option<MultiPanelMode> {
+        let new_mode = MultiPanelMode::from_button_state(state);
+        if new_mode != self.current {
+            self.current = new_mode;
+            new_mode
+        } else {
+            None
+        }
+    }
+
+    /// Current mode.
+    pub fn current(&self) -> Option<MultiPanelMode> {
+        self.current
+    }
+}
+
+impl Default for ModeStateMachine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ─── PanelProtocol implementation ────────────────────────────────────────────
+
+use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
+
+/// Multi Panel protocol driver.
+pub struct MultiPanelProtocol;
+
+/// Button names for AP function buttons (byte 2 bits 0–7).
+const AP_BUTTON_NAMES: [&str; 8] = ["AP", "HDG", "NAV", "IAS", "ALT", "VS", "APR", "REV"];
+
+impl PanelProtocol for MultiPanelProtocol {
+    fn name(&self) -> &str {
+        "Saitek Multi Panel"
+    }
+
+    fn vendor_id(&self) -> u16 {
+        MULTI_PANEL_VID
+    }
+
+    fn product_id(&self) -> u16 {
+        MULTI_PANEL_PID
+    }
+
+    fn led_names(&self) -> &[&'static str] {
+        &[
+            "ALT",
+            "VS",
+            "IAS",
+            "HDG",
+            "CRS",
+            "AUTOTHROTTLE",
+            "FLAPS",
+            "PITCHTRIM",
+        ]
+    }
+
+    fn output_report_size(&self) -> usize {
+        MULTI_PANEL_OUTPUT_BYTES
+    }
+
+    fn parse_input(&self, data: &[u8]) -> Option<Vec<PanelEvent>> {
+        let state = parse_multi_panel_input(data)?;
+        let mut events = Vec::new();
+
+        // Mode selector
+        if let Some(mode) = MultiPanelMode::from_button_state(&state) {
+            events.push(PanelEvent::SelectorChange {
+                name: "MODE",
+                position: mode as u8,
+            });
+        }
+
+        // Encoder
+        if state.enc_cw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "ENCODER",
+                delta: 1,
+            });
+        }
+        if state.enc_ccw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "ENCODER",
+                delta: -1,
+            });
+        }
+
+        // AP function buttons
+        for (i, &name) in AP_BUTTON_NAMES.iter().enumerate() {
+            if state.byte2 & (1 << i) != 0 {
+                events.push(PanelEvent::ButtonPress { name });
+            }
+        }
+
+        Some(events)
     }
 }
 
@@ -694,5 +854,157 @@ mod tests {
             assert_eq!(report[i], 0x7F, "byte {i} should be 0x7F ('8')");
         }
         assert_eq!(report[11], 0xFF, "byte 11 should be 0xFF (all LEDs)");
+    }
+
+    // ── MultiPanelMode ───────────────────────────────────────────────────────
+
+    #[test]
+    fn test_multi_panel_mode_from_button_state() {
+        let tests: &[(u8, MultiPanelMode)] = &[
+            (0b0000_0001, MultiPanelMode::Alt),
+            (0b0000_0010, MultiPanelMode::Vs),
+            (0b0000_0100, MultiPanelMode::Ias),
+            (0b0000_1000, MultiPanelMode::Hdg),
+            (0b0001_0000, MultiPanelMode::Crs),
+        ];
+        for &(byte1, expected_mode) in tests {
+            let state = MultiPanelButtonState { byte1, byte2: 0 };
+            assert_eq!(
+                MultiPanelMode::from_button_state(&state),
+                Some(expected_mode),
+                "byte1={byte1:#010b}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_multi_panel_mode_none_when_no_selector() {
+        let state = MultiPanelButtonState { byte1: 0, byte2: 0 };
+        assert_eq!(MultiPanelMode::from_button_state(&state), None);
+    }
+
+    #[test]
+    fn test_multi_panel_mode_labels() {
+        assert_eq!(MultiPanelMode::Alt.label(), "ALT");
+        assert_eq!(MultiPanelMode::Vs.label(), "VS");
+        assert_eq!(MultiPanelMode::Ias.label(), "IAS");
+        assert_eq!(MultiPanelMode::Hdg.label(), "HDG");
+        assert_eq!(MultiPanelMode::Crs.label(), "CRS");
+    }
+
+    // ── ModeStateMachine ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_mode_state_machine_initial_none() {
+        let sm = ModeStateMachine::new();
+        assert_eq!(sm.current(), None);
+    }
+
+    #[test]
+    fn test_mode_state_machine_first_update_returns_mode() {
+        let mut sm = ModeStateMachine::new();
+        let state = MultiPanelButtonState {
+            byte1: 0b0000_0001,
+            byte2: 0,
+        };
+        let mode = sm.update(&state);
+        assert_eq!(mode, Some(MultiPanelMode::Alt));
+        assert_eq!(sm.current(), Some(MultiPanelMode::Alt));
+    }
+
+    #[test]
+    fn test_mode_state_machine_same_mode_returns_none() {
+        let mut sm = ModeStateMachine::new();
+        let state = MultiPanelButtonState {
+            byte1: 0b0000_0010,
+            byte2: 0,
+        };
+        assert_eq!(sm.update(&state), Some(MultiPanelMode::Vs));
+        assert_eq!(sm.update(&state), None); // No change
+    }
+
+    #[test]
+    fn test_mode_state_machine_transition() {
+        let mut sm = ModeStateMachine::new();
+        let alt = MultiPanelButtonState {
+            byte1: 0b0000_0001,
+            byte2: 0,
+        };
+        let hdg = MultiPanelButtonState {
+            byte1: 0b0000_1000,
+            byte2: 0,
+        };
+        assert_eq!(sm.update(&alt), Some(MultiPanelMode::Alt));
+        assert_eq!(sm.update(&hdg), Some(MultiPanelMode::Hdg));
+        assert_eq!(sm.current(), Some(MultiPanelMode::Hdg));
+    }
+
+    // ── MultiPanelProtocol ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_multi_panel_protocol_metadata() {
+        let proto = MultiPanelProtocol;
+        assert_eq!(proto.name(), "Saitek Multi Panel");
+        assert_eq!(proto.vendor_id(), MULTI_PANEL_VID);
+        assert_eq!(proto.product_id(), MULTI_PANEL_PID);
+        assert_eq!(proto.led_names().len(), 8);
+        assert_eq!(proto.output_report_size(), MULTI_PANEL_OUTPUT_BYTES);
+    }
+
+    #[test]
+    fn test_multi_panel_protocol_parse_ap_buttons() {
+        let proto = MultiPanelProtocol;
+        // AP + NAV pressed
+        let data = [0x00u8, 0x00, 0b0000_0101];
+        let events = proto.parse_input(&data).unwrap();
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" }))
+        );
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "NAV" }))
+        );
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "HDG" }))
+        );
+    }
+
+    #[test]
+    fn test_multi_panel_protocol_parse_encoder() {
+        let proto = MultiPanelProtocol;
+        let data = [0x00u8, 0b0100_0000, 0x00]; // ENC_CW
+        let events = proto.parse_input(&data).unwrap();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "ENCODER",
+                delta: 1
+            }
+        )));
+    }
+
+    #[test]
+    fn test_multi_panel_protocol_parse_mode_selector() {
+        let proto = MultiPanelProtocol;
+        let data = [0x00u8, 0b0000_0100, 0x00]; // SEL_IAS
+        let events = proto.parse_input(&data).unwrap();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SelectorChange {
+                name: "MODE",
+                position: 2
+            }
+        )));
+    }
+
+    #[test]
+    fn test_multi_panel_protocol_parse_too_short() {
+        let proto = MultiPanelProtocol;
+        assert!(proto.parse_input(&[0x00]).is_none());
     }
 }

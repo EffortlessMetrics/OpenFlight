@@ -30,6 +30,7 @@
 //! HID captures. Validate with real hardware before production use.
 
 use crate::multi_panel::LcdDisplay;
+use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -189,6 +190,124 @@ impl RadioPanelState {
     /// Build the HID output report from the current display state.
     pub fn to_hid_report(&self) -> [u8; RADIO_PANEL_OUTPUT_BYTES] {
         self.display.to_hid_report()
+    }
+}
+
+// ─── Encoder delta calculation ───────────────────────────────────────────────
+
+/// Accumulates encoder ticks from raw HID reports.
+///
+/// Each HID report sets a single direction bit for one tick. This tracker
+/// converts those instantaneous bits into signed deltas and allows callers
+/// to drain accumulated ticks.
+#[derive(Debug, Clone, Default)]
+pub struct EncoderDelta {
+    /// Accumulated outer encoder ticks (positive = CW).
+    pub outer: i32,
+    /// Accumulated inner encoder ticks (positive = CW).
+    pub inner: i32,
+}
+
+impl EncoderDelta {
+    /// Update accumulators from a parsed button state.
+    pub fn update(&mut self, state: &RadioPanelButtonState) {
+        if state.outer_enc_cw() {
+            self.outer += 1;
+        }
+        if state.outer_enc_ccw() {
+            self.outer -= 1;
+        }
+        if state.inner_enc_cw() {
+            self.inner += 1;
+        }
+        if state.inner_enc_ccw() {
+            self.inner -= 1;
+        }
+    }
+
+    /// Drain and return the accumulated deltas, resetting to zero.
+    pub fn drain(&mut self) -> (i32, i32) {
+        let result = (self.outer, self.inner);
+        self.outer = 0;
+        self.inner = 0;
+        result
+    }
+
+    /// Reset accumulators to zero without returning values.
+    pub fn reset(&mut self) {
+        self.outer = 0;
+        self.inner = 0;
+    }
+}
+
+// ─── PanelProtocol implementation ────────────────────────────────────────────
+
+/// Radio Panel protocol driver.
+pub struct RadioPanelProtocol;
+
+impl PanelProtocol for RadioPanelProtocol {
+    fn name(&self) -> &str {
+        "Saitek Radio Panel"
+    }
+
+    fn vendor_id(&self) -> u16 {
+        RADIO_PANEL_VID
+    }
+
+    fn product_id(&self) -> u16 {
+        RADIO_PANEL_PID
+    }
+
+    fn led_names(&self) -> &[&'static str] {
+        // Radio panel has no discrete LEDs — the displays are the output
+        &[]
+    }
+
+    fn output_report_size(&self) -> usize {
+        RADIO_PANEL_OUTPUT_BYTES
+    }
+
+    fn parse_input(&self, data: &[u8]) -> Option<Vec<PanelEvent>> {
+        let state = parse_radio_panel_input(data)?;
+        let mut events = Vec::new();
+
+        if state.act_stby() {
+            events.push(PanelEvent::ButtonPress { name: "ACT_STBY" });
+        }
+
+        if state.outer_enc_cw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "OUTER",
+                delta: 1,
+            });
+        }
+        if state.outer_enc_ccw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "OUTER",
+                delta: -1,
+            });
+        }
+        if state.inner_enc_cw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "INNER",
+                delta: 1,
+            });
+        }
+        if state.inner_enc_ccw() {
+            events.push(PanelEvent::EncoderTick {
+                name: "INNER",
+                delta: -1,
+            });
+        }
+
+        if let Some(mode) = state.mode {
+            events.push(PanelEvent::SelectorChange {
+                name: "MODE",
+                position: mode as u8,
+            });
+        }
+
+        Some(events)
     }
 }
 
@@ -420,5 +539,149 @@ mod tests {
         // Standby: "13697"
         assert_eq!(report[6], encode_segment('1'));
         assert_eq!(report[7], encode_segment('3'));
+    }
+
+    // ── EncoderDelta ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_encoder_delta_default_zero() {
+        let delta = EncoderDelta::default();
+        assert_eq!(delta.outer, 0);
+        assert_eq!(delta.inner, 0);
+    }
+
+    #[test]
+    fn test_encoder_delta_accumulates_cw() {
+        let mut delta = EncoderDelta::default();
+        let state = RadioPanelButtonState {
+            mode: Some(RadioMode::Com1),
+            buttons: 0b0000_0010, // outer CW
+        };
+        delta.update(&state);
+        delta.update(&state);
+        assert_eq!(delta.outer, 2);
+        assert_eq!(delta.inner, 0);
+    }
+
+    #[test]
+    fn test_encoder_delta_accumulates_ccw() {
+        let mut delta = EncoderDelta::default();
+        let state = RadioPanelButtonState {
+            mode: Some(RadioMode::Com1),
+            buttons: 0b0001_0000, // inner CCW
+        };
+        delta.update(&state);
+        assert_eq!(delta.inner, -1);
+    }
+
+    #[test]
+    fn test_encoder_delta_mixed_directions() {
+        let mut delta = EncoderDelta::default();
+        // 3 CW outer ticks
+        let cw = RadioPanelButtonState {
+            mode: None,
+            buttons: 0b0000_0010,
+        };
+        delta.update(&cw);
+        delta.update(&cw);
+        delta.update(&cw);
+        // 1 CCW outer tick
+        let ccw = RadioPanelButtonState {
+            mode: None,
+            buttons: 0b0000_0100,
+        };
+        delta.update(&ccw);
+        assert_eq!(delta.outer, 2); // 3 - 1
+    }
+
+    #[test]
+    fn test_encoder_delta_drain_resets() {
+        let mut delta = EncoderDelta::default();
+        let state = RadioPanelButtonState {
+            mode: None,
+            buttons: 0b0000_1010, // outer CW + inner CW
+        };
+        delta.update(&state);
+        let (outer, inner) = delta.drain();
+        assert_eq!(outer, 1);
+        assert_eq!(inner, 1);
+        assert_eq!(delta.outer, 0);
+        assert_eq!(delta.inner, 0);
+    }
+
+    #[test]
+    fn test_encoder_delta_reset() {
+        let mut delta = EncoderDelta::default();
+        delta.outer = 5;
+        delta.inner = -3;
+        delta.reset();
+        assert_eq!(delta.outer, 0);
+        assert_eq!(delta.inner, 0);
+    }
+
+    // ── RadioPanelProtocol ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_radio_panel_protocol_metadata() {
+        let proto = RadioPanelProtocol;
+        assert_eq!(proto.name(), "Saitek Radio Panel");
+        assert_eq!(proto.vendor_id(), RADIO_PANEL_VID);
+        assert_eq!(proto.product_id(), RADIO_PANEL_PID);
+        assert!(proto.led_names().is_empty());
+        assert_eq!(proto.output_report_size(), RADIO_PANEL_OUTPUT_BYTES);
+    }
+
+    #[test]
+    fn test_radio_panel_protocol_parse_encoder_events() {
+        let proto = RadioPanelProtocol;
+        // Outer CW + Inner CCW
+        let data = [0x00u8, 0x00, 0b0001_0010];
+        let events = proto.parse_input(&data).unwrap();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "OUTER",
+                delta: 1
+            }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "INNER",
+                delta: -1
+            }
+        )));
+    }
+
+    #[test]
+    fn test_radio_panel_protocol_parse_mode() {
+        let proto = RadioPanelProtocol;
+        let data = [0x00u8, 0x04, 0x00]; // NAV2 = 3? No, 4 = ADF
+        let events = proto.parse_input(&data).unwrap();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SelectorChange {
+                name: "MODE",
+                position: 4
+            }
+        )));
+    }
+
+    #[test]
+    fn test_radio_panel_protocol_parse_act_stby() {
+        let proto = RadioPanelProtocol;
+        let data = [0x00u8, 0x00, 0b0000_0001];
+        let events = proto.parse_input(&data).unwrap();
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "ACT_STBY" }))
+        );
+    }
+
+    #[test]
+    fn test_radio_panel_protocol_parse_too_short() {
+        let proto = RadioPanelProtocol;
+        assert!(proto.parse_input(&[0x00]).is_none());
     }
 }

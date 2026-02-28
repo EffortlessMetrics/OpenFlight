@@ -36,3 +36,21 @@ name = "fuzz_udp"
 path = "fuzz_targets/fuzz_udp.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_data_packet"
+path = "fuzz_targets/fuzz_data_packet.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_rref_response"
+path = "fuzz_targets/fuzz_rref_response.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_plugin_protocol"
+path = "fuzz_targets/fuzz_plugin_protocol.rs"
+test = false
+doc = false

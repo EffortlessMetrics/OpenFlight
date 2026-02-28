@@ -262,6 +262,150 @@ impl TickBudget {
 }
 
 // ---------------------------------------------------------------------------
+// monotonic_ns — process-relative monotonic timestamp
+// ---------------------------------------------------------------------------
+
+/// Process-relative monotonic timestamp in nanoseconds.
+///
+/// Uses `std::time::Instant` internally with a lazily-initialised epoch.
+/// After the first call (which initialises the epoch), subsequent calls
+/// are a single atomic load + clock read — **no allocation**.
+#[inline]
+pub fn monotonic_ns() -> u64 {
+    use std::sync::OnceLock;
+    static EPOCH: OnceLock<Instant> = OnceLock::new();
+    let epoch = EPOCH.get_or_init(Instant::now);
+    epoch.elapsed().as_nanos() as u64
+}
+
+// ---------------------------------------------------------------------------
+// InlineTickBudget — fully inline, Copy, zero-allocation budget tracker
+// ---------------------------------------------------------------------------
+
+/// Maximum number of tasks tracked by [`InlineTickBudget`].
+pub const MAX_INLINE_TASKS: usize = 16;
+
+/// Sentinel for "no active task".
+const NO_INLINE_TASK: usize = MAX_INLINE_TASKS;
+
+/// Inline per-tick budget tracker that is [`Copy`] and fully stack-allocated.
+///
+/// Unlike [`TickBudget`] (which uses `Instant` for wall-clock measurement),
+/// this struct stores all timing data as raw `u64` nanosecond values,
+/// enabling `Copy`/`Clone` semantics required by some RT data paths.
+///
+/// Timing uses a process-relative monotonic clock accessed via
+/// [`monotonic_ns`].
+///
+/// # Zero-allocation guarantee
+///
+/// All fields are fixed-size scalars or inline arrays. No heap allocation
+/// occurs on any method call.
+#[derive(Debug, Clone, Copy)]
+pub struct InlineTickBudget {
+    total_ns: u64,
+    consumed_ns: u64,
+    task_times: [(u32, u64); MAX_INLINE_TASKS],
+    task_count: usize,
+    active_task_idx: usize,
+    active_start_ns: u64,
+}
+
+impl InlineTickBudget {
+    /// Create a new budget tracker with the given total budget in nanoseconds.
+    pub fn new(budget_ns: u64) -> Self {
+        Self {
+            total_ns: budget_ns,
+            consumed_ns: 0,
+            task_times: [(0, 0); MAX_INLINE_TASKS],
+            task_count: 0,
+            active_task_idx: NO_INLINE_TASK,
+            active_start_ns: 0,
+        }
+    }
+
+    /// Mark the start of a task identified by `task_id`.
+    ///
+    /// If [`MAX_INLINE_TASKS`] distinct tasks have already been registered,
+    /// the call is silently ignored.
+    #[inline]
+    pub fn begin_task(&mut self, task_id: u32) {
+        let idx = self.find_or_add(task_id);
+        if idx < MAX_INLINE_TASKS {
+            self.active_task_idx = idx;
+            self.active_start_ns = monotonic_ns();
+        }
+    }
+
+    /// Mark the end of the current task and accumulate elapsed time.
+    #[inline]
+    pub fn end_task(&mut self) {
+        if self.active_task_idx >= MAX_INLINE_TASKS {
+            return;
+        }
+        let elapsed = monotonic_ns().saturating_sub(self.active_start_ns);
+        self.task_times[self.active_task_idx].1 += elapsed;
+        self.consumed_ns += elapsed;
+        self.active_task_idx = NO_INLINE_TASK;
+    }
+
+    /// Remaining budget in nanoseconds (saturates at zero).
+    pub fn remaining_ns(&self) -> u64 {
+        self.total_ns.saturating_sub(self.consumed_ns)
+    }
+
+    /// `true` if consumed time exceeds the configured budget.
+    pub fn is_overrun(&self) -> bool {
+        self.consumed_ns > self.total_ns
+    }
+
+    /// Total consumed time in nanoseconds.
+    pub fn consumed_ns(&self) -> u64 {
+        self.consumed_ns
+    }
+
+    /// Number of distinct tasks tracked so far.
+    pub fn task_count(&self) -> usize {
+        self.task_count
+    }
+
+    /// Accumulated time for a specific task (nanoseconds). Returns 0 if unknown.
+    pub fn task_time_ns(&self, task_id: u32) -> u64 {
+        for i in 0..self.task_count {
+            if self.task_times[i].0 == task_id {
+                return self.task_times[i].1;
+            }
+        }
+        0
+    }
+
+    /// Reset consumed time and task data. Budget total is preserved.
+    pub fn reset(&mut self) {
+        self.consumed_ns = 0;
+        self.task_times = [(0, 0); MAX_INLINE_TASKS];
+        self.task_count = 0;
+        self.active_task_idx = NO_INLINE_TASK;
+        self.active_start_ns = 0;
+    }
+
+    #[inline]
+    fn find_or_add(&mut self, task_id: u32) -> usize {
+        for i in 0..self.task_count {
+            if self.task_times[i].0 == task_id {
+                return i;
+            }
+        }
+        if self.task_count >= MAX_INLINE_TASKS {
+            return MAX_INLINE_TASKS;
+        }
+        let idx = self.task_count;
+        self.task_times[idx].0 = task_id;
+        self.task_count += 1;
+        idx
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -445,5 +589,111 @@ mod tests {
         let mut b = TickBudget::new(100_000_000);
         b.end_tick();
         assert_eq!(b.tick_count(), 0);
+    }
+
+    // -- InlineTickBudget tests -----------------------------------------
+
+    #[test]
+    fn inline_budget_new_has_full_remaining() {
+        let b = InlineTickBudget::new(4_000_000);
+        assert_eq!(b.remaining_ns(), 4_000_000);
+        assert!(!b.is_overrun());
+        assert_eq!(b.consumed_ns(), 0);
+        assert_eq!(b.task_count(), 0);
+    }
+
+    #[test]
+    fn inline_budget_begin_end_task_tracks_time() {
+        let mut b = InlineTickBudget::new(100_000_000); // 100 ms budget
+        b.begin_task(1);
+        std::thread::sleep(Duration::from_micros(100));
+        b.end_task();
+        assert!(b.consumed_ns() > 0);
+        assert!(b.task_time_ns(1) > 0);
+        assert_eq!(b.task_count(), 1);
+    }
+
+    #[test]
+    fn inline_budget_remaining_decreases() {
+        let mut b = InlineTickBudget::new(100_000_000);
+        b.begin_task(1);
+        std::thread::sleep(Duration::from_micros(100));
+        b.end_task();
+        assert!(b.remaining_ns() < 100_000_000);
+    }
+
+    #[test]
+    fn inline_budget_is_overrun_true_when_exceeded() {
+        let mut b = InlineTickBudget::new(1); // 1 ns budget
+        b.begin_task(1);
+        std::thread::sleep(Duration::from_micros(100));
+        b.end_task();
+        assert!(b.is_overrun());
+    }
+
+    #[test]
+    fn inline_budget_multiple_tasks() {
+        let mut b = InlineTickBudget::new(100_000_000);
+        b.begin_task(1);
+        std::thread::sleep(Duration::from_micros(50));
+        b.end_task();
+        b.begin_task(2);
+        std::thread::sleep(Duration::from_micros(50));
+        b.end_task();
+        assert_eq!(b.task_count(), 2);
+        assert!(b.task_time_ns(1) > 0);
+        assert!(b.task_time_ns(2) > 0);
+    }
+
+    #[test]
+    fn inline_budget_same_task_accumulates() {
+        let mut b = InlineTickBudget::new(100_000_000);
+        b.begin_task(42);
+        std::thread::sleep(Duration::from_micros(50));
+        b.end_task();
+        let first = b.task_time_ns(42);
+
+        b.begin_task(42);
+        std::thread::sleep(Duration::from_micros(50));
+        b.end_task();
+        assert!(b.task_time_ns(42) > first);
+        assert_eq!(b.task_count(), 1); // same task, not a new one
+    }
+
+    #[test]
+    fn inline_budget_reset_clears_state() {
+        let mut b = InlineTickBudget::new(100_000_000);
+        b.begin_task(1);
+        std::thread::sleep(Duration::from_micros(50));
+        b.end_task();
+
+        b.reset();
+        assert_eq!(b.consumed_ns(), 0);
+        assert_eq!(b.task_count(), 0);
+        assert_eq!(b.remaining_ns(), 100_000_000);
+        assert!(!b.is_overrun());
+    }
+
+    #[test]
+    fn inline_budget_is_copy() {
+        let mut b = InlineTickBudget::new(4_000_000);
+        b.begin_task(1);
+        b.end_task();
+        let b2 = b; // Copy
+        let _ = b; // original still usable
+        assert_eq!(b2.task_count(), b.task_count());
+    }
+
+    #[test]
+    fn inline_budget_end_task_without_begin_is_noop() {
+        let mut b = InlineTickBudget::new(4_000_000);
+        b.end_task(); // should not panic
+        assert_eq!(b.consumed_ns(), 0);
+    }
+
+    #[test]
+    fn inline_budget_unknown_task_time_is_zero() {
+        let b = InlineTickBudget::new(4_000_000);
+        assert_eq!(b.task_time_ns(999), 0);
     }
 }

@@ -30,6 +30,7 @@ pub mod windows;
 
 pub mod budget;
 pub mod executor;
+pub mod jitter;
 pub mod metrics;
 pub mod pll;
 pub mod ring;
@@ -39,10 +40,11 @@ pub mod timer;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-pub use budget::TickBudget;
+pub use budget::{InlineTickBudget, TickBudget};
 pub use executor::{TaskStats, TickExecutionResult, TickExecutor};
+pub use jitter::JitterTracker;
 pub use metrics::{JitterMetrics, TimingStats};
-pub use pll::{JitterStats, PhaseLockLoop, Pll, PllTickResult};
+pub use pll::{JitterStats, PhaseLockLoop, Pll, PllCorrection, PllTickResult};
 pub use ring::{RingStats, SpscRing};
 pub use soak::{
     SoakDiagnostics, SoakFailureReason, SoakMetrics, SoakTest, SoakTestConfig, SoakTestResult,

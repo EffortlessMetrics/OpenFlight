@@ -44,6 +44,9 @@
 //! **Note:** Report layouts are derived from MobiFlight, SimVim, and community
 //! HID captures. Validate with real hardware before production use.
 
+use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
+use std::time::{Duration, Instant};
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 /// USB Vendor ID (Saitek).
@@ -256,6 +259,180 @@ impl SwitchPanelState {
     /// Build the HID output report from the current gear LED state.
     pub fn to_hid_report(&self) -> [u8; SWITCH_PANEL_OUTPUT_BYTES] {
         self.gear_leds.to_hid_report()
+    }
+}
+
+// ─── PanelProtocol implementation ────────────────────────────────────────────
+
+/// Switch Panel protocol driver.
+///
+/// Tracks the previous switch state to emit change events and supports
+/// configurable debounce to suppress mechanical switch bounce.
+pub struct SwitchPanelProtocol {
+    prev_state: SwitchPanelSwitchState,
+    debounce: SwitchDebounce,
+}
+
+/// Per-switch debounce tracker for mechanical switch bounce suppression.
+///
+/// Each switch has a last-change timestamp; transitions that arrive before
+/// `debounce_period` has elapsed since the last accepted change are rejected.
+pub struct SwitchDebounce {
+    /// Debounce period.
+    period: Duration,
+    /// Last accepted transition time per switch index (0–12).
+    last_change: [Option<Instant>; 13],
+}
+
+impl SwitchDebounce {
+    /// Create a new debounce tracker with the given period.
+    pub fn new(period: Duration) -> Self {
+        Self {
+            period,
+            last_change: [None; 13],
+        }
+    }
+
+    /// Returns `true` if the switch transition should be accepted (not bouncing).
+    pub fn accept(&mut self, switch_index: usize, now: Instant) -> bool {
+        if switch_index >= self.last_change.len() {
+            return false;
+        }
+        if let Some(last) = self.last_change[switch_index]
+            && now.duration_since(last) < self.period
+        {
+            return false;
+        }
+        self.last_change[switch_index] = Some(now);
+        true
+    }
+
+    /// Current debounce period.
+    pub fn period(&self) -> Duration {
+        self.period
+    }
+}
+
+/// Switch names in bit order (byte 1 bits 0–7, then byte 2 bit 0 = gear,
+/// byte 2 bits 1–4 = magneto encoded separately).
+const SWITCH_NAMES: [&str; 9] = [
+    "MASTER_BAT",
+    "MASTER_ALT",
+    "AVIONICS",
+    "FUEL_PUMP",
+    "DE_ICE",
+    "PITOT_HEAT",
+    "COWL_FLAPS",
+    "PANEL_LIGHT",
+    "GEAR",
+];
+
+impl SwitchPanelProtocol {
+    /// Create a new Switch Panel protocol driver with the given debounce period.
+    pub fn new(debounce_period: Duration) -> Self {
+        Self {
+            prev_state: SwitchPanelSwitchState::default(),
+            debounce: SwitchDebounce::new(debounce_period),
+        }
+    }
+
+    /// Compare current vs previous state and emit change events, applying debounce.
+    pub fn diff_with_debounce(
+        &mut self,
+        current: &SwitchPanelSwitchState,
+        now: Instant,
+    ) -> Vec<PanelEvent> {
+        let mut events = Vec::new();
+        let prev = &self.prev_state;
+
+        // Toggle switches (byte1 bits 0–7)
+        for (i, &name) in SWITCH_NAMES[..8].iter().enumerate() {
+            let prev_on = prev.byte1 & (1 << i) != 0;
+            let curr_on = current.byte1 & (1 << i) != 0;
+            if prev_on != curr_on && self.debounce.accept(i, now) {
+                events.push(PanelEvent::SwitchChange { name, on: curr_on });
+            }
+        }
+
+        // Gear lever (byte2 bit 0)
+        let prev_gear = prev.byte2 & 1 != 0;
+        let curr_gear = current.byte2 & 1 != 0;
+        if prev_gear != curr_gear && self.debounce.accept(8, now) {
+            events.push(PanelEvent::SwitchChange {
+                name: "GEAR",
+                on: curr_gear,
+            });
+        }
+
+        // Magneto selector
+        let prev_mag = MagnetoPosition::from_hid_bits(prev.byte2);
+        let curr_mag = MagnetoPosition::from_hid_bits(current.byte2);
+        if prev_mag != curr_mag
+            && let Some(pos) = curr_mag
+        {
+            events.push(PanelEvent::SelectorChange {
+                name: "MAGNETO",
+                position: pos as u8,
+            });
+        }
+
+        self.prev_state = current.clone();
+        events
+    }
+}
+
+impl PanelProtocol for SwitchPanelProtocol {
+    fn name(&self) -> &str {
+        "Saitek Switch Panel"
+    }
+
+    fn vendor_id(&self) -> u16 {
+        SWITCH_PANEL_VID
+    }
+
+    fn product_id(&self) -> u16 {
+        SWITCH_PANEL_PID
+    }
+
+    fn led_names(&self) -> &[&'static str] {
+        &[
+            "GEAR_LEFT_GREEN",
+            "GEAR_LEFT_RED",
+            "GEAR_NOSE_GREEN",
+            "GEAR_NOSE_RED",
+            "GEAR_RIGHT_GREEN",
+            "GEAR_RIGHT_RED",
+        ]
+    }
+
+    fn output_report_size(&self) -> usize {
+        SWITCH_PANEL_OUTPUT_BYTES
+    }
+
+    fn parse_input(&self, data: &[u8]) -> Option<Vec<PanelEvent>> {
+        let state = parse_switch_panel_input(data)?;
+        let mut events = Vec::new();
+
+        // Emit switch state as events
+        for (i, &name) in SWITCH_NAMES[..8].iter().enumerate() {
+            if state.byte1 & (1 << i) != 0 {
+                events.push(PanelEvent::SwitchChange { name, on: true });
+            }
+        }
+        if state.gear_down() {
+            events.push(PanelEvent::SwitchChange {
+                name: "GEAR",
+                on: true,
+            });
+        }
+        if let Some(pos) = state.magneto() {
+            events.push(PanelEvent::SelectorChange {
+                name: "MAGNETO",
+                position: pos as u8,
+            });
+        }
+
+        Some(events)
     }
 }
 
@@ -510,5 +687,165 @@ mod tests {
         assert_ne!(leds_down.raw() & gear_led_bits::LEFT_GREEN, 0);
         assert_ne!(leds_down.raw() & gear_led_bits::NOSE_GREEN, 0);
         assert_ne!(leds_down.raw() & gear_led_bits::RIGHT_GREEN, 0);
+    }
+
+    // ── SwitchPanelProtocol ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_switch_panel_protocol_metadata() {
+        let proto = SwitchPanelProtocol::new(Duration::from_millis(5));
+        assert_eq!(proto.name(), "Saitek Switch Panel");
+        assert_eq!(proto.vendor_id(), SWITCH_PANEL_VID);
+        assert_eq!(proto.product_id(), SWITCH_PANEL_PID);
+        assert_eq!(proto.led_names().len(), 6);
+        assert_eq!(proto.output_report_size(), SWITCH_PANEL_OUTPUT_BYTES);
+    }
+
+    #[test]
+    fn test_switch_panel_protocol_parse_input() {
+        let proto = SwitchPanelProtocol::new(Duration::from_millis(5));
+        // Master Battery + Gear Down + Magneto BOTH
+        let data = [0x00u8, 0b0000_0001, 0b0000_0111]; // gear bit + magneto BOTH
+        let events = proto.parse_input(&data).unwrap();
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SwitchChange {
+                name: "MASTER_BAT",
+                on: true
+            }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SwitchChange {
+                name: "GEAR",
+                on: true
+            }
+        )));
+    }
+
+    #[test]
+    fn test_switch_panel_protocol_parse_too_short() {
+        let proto = SwitchPanelProtocol::new(Duration::from_millis(5));
+        assert!(proto.parse_input(&[0x00]).is_none());
+    }
+
+    // ── Debounce ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_debounce_accepts_first_change() {
+        let mut debounce = SwitchDebounce::new(Duration::from_millis(50));
+        let now = Instant::now();
+        assert!(debounce.accept(0, now));
+    }
+
+    #[test]
+    fn test_debounce_rejects_rapid_change() {
+        let mut debounce = SwitchDebounce::new(Duration::from_millis(50));
+        let now = Instant::now();
+        assert!(debounce.accept(0, now));
+        // Immediate second change should be rejected
+        assert!(!debounce.accept(0, now + Duration::from_millis(10)));
+    }
+
+    #[test]
+    fn test_debounce_accepts_after_period() {
+        let mut debounce = SwitchDebounce::new(Duration::from_millis(50));
+        let now = Instant::now();
+        assert!(debounce.accept(0, now));
+        // After debounce period, should be accepted
+        assert!(debounce.accept(0, now + Duration::from_millis(60)));
+    }
+
+    #[test]
+    fn test_debounce_independent_per_switch() {
+        let mut debounce = SwitchDebounce::new(Duration::from_millis(50));
+        let now = Instant::now();
+        assert!(debounce.accept(0, now));
+        // Different switch should still accept
+        assert!(debounce.accept(1, now));
+        // Same switch should reject
+        assert!(!debounce.accept(0, now + Duration::from_millis(10)));
+    }
+
+    #[test]
+    fn test_debounce_out_of_bounds_rejected() {
+        let mut debounce = SwitchDebounce::new(Duration::from_millis(50));
+        assert!(!debounce.accept(99, Instant::now()));
+    }
+
+    // ── Diff with debounce ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_diff_detects_switch_changes() {
+        let mut proto = SwitchPanelProtocol::new(Duration::ZERO);
+        let now = Instant::now();
+
+        // All off initially
+        let state1 = SwitchPanelSwitchState {
+            byte1: 0b0000_0001, // Master Battery on
+            byte2: 0x00,
+        };
+        let events = proto.diff_with_debounce(&state1, now);
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SwitchChange {
+                name: "MASTER_BAT",
+                on: true
+            }
+        )));
+
+        // Turn off Master Battery
+        let state2 = SwitchPanelSwitchState {
+            byte1: 0x00,
+            byte2: 0x00,
+        };
+        let events2 = proto.diff_with_debounce(&state2, now + Duration::from_millis(10));
+        assert!(events2.iter().any(|e| matches!(
+            e,
+            PanelEvent::SwitchChange {
+                name: "MASTER_BAT",
+                on: false
+            }
+        )));
+    }
+
+    #[test]
+    fn test_diff_no_events_when_unchanged() {
+        let mut proto = SwitchPanelProtocol::new(Duration::ZERO);
+        let now = Instant::now();
+        let state = SwitchPanelSwitchState {
+            byte1: 0x00,
+            byte2: 0x00,
+        };
+        let _ = proto.diff_with_debounce(&state, now);
+        // Same state again → no events
+        let events = proto.diff_with_debounce(&state, now + Duration::from_millis(10));
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn test_diff_magneto_change_emits_selector_event() {
+        let mut proto = SwitchPanelProtocol::new(Duration::ZERO);
+        let now = Instant::now();
+        // Magneto OFF (default)
+        let state1 = SwitchPanelSwitchState {
+            byte1: 0,
+            byte2: 0b0000_0000,
+        };
+        let _ = proto.diff_with_debounce(&state1, now);
+
+        // Magneto BOTH = value 3 → bits 1-4 = 0b0110
+        let state2 = SwitchPanelSwitchState {
+            byte1: 0,
+            byte2: 0b0000_0110,
+        };
+        let events = proto.diff_with_debounce(&state2, now + Duration::from_millis(10));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SelectorChange {
+                name: "MAGNETO",
+                position: 3
+            }
+        )));
     }
 }
