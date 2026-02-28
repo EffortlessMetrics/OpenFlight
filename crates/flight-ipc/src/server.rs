@@ -273,11 +273,15 @@ impl<C: ServiceContext> IpcServer<C> {
 
         let svc = GrpcFlightServiceServer::new(self.handler);
         let max_conns = self.config.max_connections;
-        let timeout = self.config.request_timeout;
+        let transport_config = crate::transport::TransportConfig {
+            request_timeout: self.config.request_timeout,
+            ..crate::transport::TransportConfig::default()
+        };
 
         let join_handle = tokio::spawn(async move {
-            tonic::transport::Server::builder()
-                .timeout(timeout)
+            let builder = tonic::transport::Server::builder();
+            let builder = transport_config.configure_server(builder);
+            builder
                 .concurrency_limit_per_connection(max_conns)
                 .add_service(svc)
                 .serve_with_incoming_shutdown(incoming, async move {

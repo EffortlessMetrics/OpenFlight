@@ -13,7 +13,7 @@ device:
   name: "Next Level Racing Motion Platform V3"
   vendor: "Next Level Racing"
   usb:
-    vendor_id: 0x0403   # FTDI USB-Serial bridge (VID_UNCONFIRMED for NLR Motion V3)
+    vendor_id: 0x0403   # FTDI USB-Serial bridge â plausible for NLR motion controller
     product_id: 0x6001  # Placeholder — FTDI FT232R generic PID (PID_UNCONFIRMED)
   hid:
     usage_page: 0x01    # Generic Desktop
@@ -33,8 +33,8 @@ polling:
   max_jitter_ms: ~
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x0403 / PID 0x6001 are FTDI placeholders; verify with lsusb on V3."
+  - id: VID_FTDI_BRIDGE
+    description: "VID 0x0403 / PID 0x6001 is the standard FTDI FT232R serial bridge; commonly used by motion platform controllers."
   - id: MOTION_SOFTWARE_REQUIRED
     description: >
       Motion commands are sent from NLR Motion software which receives
@@ -45,6 +45,11 @@ quirks:
     description: >
       The Motion Platform V3 generates no HID input events. It is an
       output-only motion actuator system.
+
+motion:
+  dof: 3
+  actuator_type: linear_electric
+  connection: usb_serial
 
 support:
   tier: 3

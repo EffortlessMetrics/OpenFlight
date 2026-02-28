@@ -15,7 +15,7 @@ device:
   vendor: "Pimax"
   usb:
     vendor_id: 0x0D28   # Placeholder — Pimax custom VID (VID_UNCONFIRMED)
-    product_id: 0x0006  # Placeholder — PID_UNCONFIRMED for Crystal Light
+    product_id: 0x0006  # Estimated — PID_UNCONFIRMED for Crystal Light; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick (tracking controller enumeration)

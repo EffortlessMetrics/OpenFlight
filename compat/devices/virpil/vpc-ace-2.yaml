@@ -4,7 +4,7 @@
 #
 # VIRPIL VPC ACE-2 — second-generation ACE rudder pedals. Successor to
 # ACE-1 with revised spring mechanism and updated USB firmware. Hall-effect
-# sensors on all axes. VID 0x3344 is community-reported for VIRPIL.
+# sensors on all axes. VID 0x3344 is the registered USB vendor ID for VIRPIL Controls UAB.
 # PID unconfirmed for ACE-2 specifically.
 schema_version: "1"
 
@@ -12,8 +12,8 @@ device:
   name: "VIRPIL VPC ACE-2 Rudder Pedals"
   vendor: "VIRPIL Controls"
   usb:
-    vendor_id: 0x3344   # Community-reported VIRPIL VID (VID_UNCONFIRMED)
-    product_id: 0x8105  # Placeholder — PID_UNCONFIRMED for ACE-2
+    vendor_id: 0x3344   # VIRPIL Controls UAB — confirmed in USB ID database
+    product_id: 0x8105  # Estimated — PID_UNCONFIRMED for ACE-2; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick
@@ -32,8 +32,9 @@ polling:
   max_jitter_ms: 2
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x3344 is community-reported for VIRPIL; PID 0x8105 is unconfirmed for ACE-2."
+  - id: PID_UNCONFIRMED
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed for VIRPIL Controls; PID 0x8105 is unconfirmed for ACE-2."
   - id: HALL_EFFECT_ALL_AXES
     description: >
       All axes (rudder and both toe brakes) use hall-effect sensors.

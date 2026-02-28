@@ -13,7 +13,7 @@ device:
   vendor: "PXN"
   usb:
     vendor_id: 0x0079   # PXN registered VID (community-confirmed)
-    product_id: 0x0011  # Placeholder — PID_UNCONFIRMED for V11
+    product_id: 0x0011  # Estimated — PID_UNCONFIRMED for V11; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick

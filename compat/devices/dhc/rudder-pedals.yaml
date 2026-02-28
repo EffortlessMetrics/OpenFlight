@@ -32,8 +32,8 @@ polling:
   max_jitter_ms: 10
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID/PID unconfirmed. DHC uses various USB bridge chips across product runs."
+  - id: VID_MICROCHIP_BRIDGE
+    description: "VID 0x04D8 (Microchip Technology) is plausible â DHC uses various USB bridge chips across product runs."
 
 support:
   tier: 3

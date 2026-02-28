@@ -49,6 +49,11 @@ quirks:
       output-only haptic/motion platform. Tracked for sim-rig compatibility
       documentation.
 
+motion:
+  dof: 3
+  actuator_type: linear_electric
+  connection: [usb, ethernet]
+
 support:
   tier: 3
   test_coverage:

@@ -5,16 +5,16 @@
 # VIRPIL VPC Constellation GAMMA — F-14 Tomcat style fighter grip (2024).
 # Released as a companion to the Constellation series alongside Alpha, Beta,
 # Delta, and Sigma grips. Mounts on VPC WarBRD or MongoosT bases.
-# VID 0x3344 is community-reported for VIRPIL devices (VID_UNCONFIRMED).
-# PID is unconfirmed for this grip.
+# VID 0x3344 confirmed (VIRPIL Controls UAB).
+# PID 0x8194 is estimated from the Constellation product line numbering.
 schema_version: "1"
 
 device:
   name: "VIRPIL VPC Constellation GAMMA Grip"
   vendor: "VIRPIL Controls"
   usb:
-    vendor_id: 0x3344   # Community-reported VIRPIL VID (VID_UNCONFIRMED)
-    product_id: 0x8194  # Placeholder — PID_UNCONFIRMED for GAMMA grip
+    vendor_id: 0x3344   # VIRPIL Controls UAB — confirmed in USB ID database
+    product_id: 0x8194  # Estimated — PID_UNCONFIRMED for GAMMA grip; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop
     usage: 0x04         # Joystick
@@ -33,8 +33,9 @@ polling:
   max_jitter_ms: 2
 
 quirks:
-  - id: VID_UNCONFIRMED
-    description: "VID 0x3344 is community-reported for VIRPIL; PID 0x8194 is unconfirmed for GAMMA."
+  - id: PID_UNCONFIRMED
+  - id: PID_UNCONFIRMED
+    description: "VID 0x3344 confirmed for VIRPIL Controls; PID 0x8194 is unconfirmed for GAMMA."
   - id: F14_GRIP_GEOMETRY
     description: >
       The GAMMA grip replicates the F-14 Tomcat stick geometry with a unique

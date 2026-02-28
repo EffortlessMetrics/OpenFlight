@@ -34,11 +34,10 @@ polling:
   max_jitter_ms: ~
 
 quirks:
-  - id: VID_UNCONFIRMED
+  - id: NOT_USB_HID
     description: >
-      The Mini Pro amplifier may not enumerate as a USB HID device on all
-      revisions. VID/PID are unconfirmed; some units have no USB interface.
-      Verify with lsusb whether a USB device appears.
+      The Mini-Pro is an audio-driven tactile transducer, not a USB HID
+      device. Receives bass frequencies from a standard audio output.
   - id: AUDIO_DRIVEN_OUTPUT
     description: >
       Haptic output is driven by a line-level audio signal routed to the
@@ -49,6 +48,12 @@ quirks:
     description: >
       The Mini Pro generates no HID input events. Tracked for sim-rig
       accessory compatibility documentation only.
+
+transducer:
+  frequency_response_hz: [10, 250]
+  power_peak_watts: 100
+  impedance_ohms: 4
+  connection: audio_line_level
 
 support:
   tier: 3

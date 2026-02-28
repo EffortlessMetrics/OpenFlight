@@ -33,11 +33,11 @@ polling:
   max_jitter_ms: ~
 
 quirks:
-  - id: VID_UNCONFIRMED
+  - id: NOT_USB_HID
     description: >
-      The Gamer2 amplifier may not enumerate as a USB HID device on all
-      revisions. VID/PID are unknown; some units have no USB interface at all.
-      Verify with lsusb whether a USB device appears.
+      The Gamer2 is an audio-driven tactile transducer amplifier, not a USB
+      HID device. It receives bass frequencies (5-200 Hz) from a standard
+      audio output (3.5mm or RCA). No USB enumeration occurs.
   - id: AUDIO_DRIVEN_OUTPUT
     description: >
       Haptic output is driven by a line-level audio signal routed to the
@@ -48,6 +48,12 @@ quirks:
     description: >
       The Gamer2 generates no HID input events. It is tracked for sim-rig
       accessory compatibility documentation only.
+
+transducer:
+  frequency_response_hz: [5, 200]
+  power_peak_watts: 400
+  impedance_ohms: 4
+  connection: audio_line_level
 
 support:
   tier: 3
