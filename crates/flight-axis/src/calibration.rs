@@ -317,7 +317,7 @@ mod tests {
             let cal = AxisCalibration::new(raw_min, raw_max, raw_center);
             let out = cal.normalize(raw);
             prop_assert!(
-                out >= -1.0 && out <= 1.0,
+                (-1.0..=1.0).contains(&out),
                 "out={out} for raw={raw} cal={cal:?}"
             );
         }

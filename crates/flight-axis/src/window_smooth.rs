@@ -212,7 +212,7 @@ mod tests {
         for &input in &inputs {
             let out = s.process(input);
             assert!(
-                out >= -1.0 && out <= 1.0,
+                (-1.0..=1.0).contains(&out),
                 "out={out} outside [-1.0, 1.0] for input={input}"
             );
         }

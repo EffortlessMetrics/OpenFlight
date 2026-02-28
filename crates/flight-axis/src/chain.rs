@@ -370,7 +370,7 @@ mod tests {
         for raw in [0u16, 16384, 32767, 49151, 65535] {
             let (output, _) = chain.process_raw(raw);
             assert!(
-                output >= -1.0 && output <= 1.0,
+                (-1.0..=1.0).contains(&output),
                 "output {output} out of [-1.0, 1.0] for raw={raw}"
             );
         }
@@ -414,7 +414,7 @@ mod tests {
             let mut chain = AxisChain::new(config);
             let (output, _) = chain.process_f32(input);
             prop_assert!(
-                output >= -1.0 && output <= 1.0,
+                (-1.0..=1.0).contains(&output),
                 "output {output} out of [-1.0, 1.0] for input={input}"
             );
         }

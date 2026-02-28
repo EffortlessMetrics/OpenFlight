@@ -124,7 +124,7 @@ fn test_pipeline_output_always_bounded() {
         for trim in [-0.3f32, 0.0, 0.3] {
             let out = full_pipeline(raw, 0.8, 0.05, trim);
             assert!(
-                out >= -1.0 && out <= 1.0,
+                (-1.0..=1.0).contains(&out),
                 "raw={raw} trim={trim} → out={out} out of bounds [-1.0, 1.0]"
             );
         }

@@ -608,12 +608,11 @@ impl DcsAdapter {
 
         // Airspeed: m/s → knots
         let ias_knots = fd.airspeed_ms * MS_TO_KNOTS;
-        snapshot.kinematics.ias =
-            ValidatedSpeed::new_knots(ias_knots as f32).map_err(|_| {
-                DcsAdapterError::TelemetryParsing {
-                    field: "airspeed_ms".to_string(),
-                }
-            })?;
+        snapshot.kinematics.ias = ValidatedSpeed::new_knots(ias_knots as f32).map_err(|_| {
+            DcsAdapterError::TelemetryParsing {
+                field: "airspeed_ms".to_string(),
+            }
+        })?;
 
         // Heading, pitch, roll, AoA — already in degrees
         snapshot.kinematics.heading =
@@ -634,12 +633,11 @@ impl DcsAdapter {
                     field: "roll_deg".to_string(),
                 }
             })?;
-        snapshot.kinematics.aoa =
-            ValidatedAngle::new_degrees(fd.aoa_deg as f32).map_err(|_| {
-                DcsAdapterError::TelemetryParsing {
-                    field: "aoa_deg".to_string(),
-                }
-            })?;
+        snapshot.kinematics.aoa = ValidatedAngle::new_degrees(fd.aoa_deg as f32).map_err(|_| {
+            DcsAdapterError::TelemetryParsing {
+                field: "aoa_deg".to_string(),
+            }
+        })?;
 
         // Altitude (meters, pass-through)
         snapshot.environment.altitude = fd.altitude_m as f32;

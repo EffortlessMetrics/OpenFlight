@@ -15,8 +15,10 @@ use tokio::sync::{RwLock, broadcast};
 use tracing::{debug, info, warn};
 
 use flight_axis::{
-    AxisEngine, DetentRole, DetentZone as AxisDetentZone, PipelineBuilder, UpdateResult,
+    AxisEngine, DetentRole, DetentZone as AxisDetentZone, EngineConfig, PipelineBuilder,
+    UpdateResult,
 };
+use flight_bus::BusPublisher;
 use flight_core::{
     profile::{AxisConfig, Profile},
     watchdog::{WatchdogConfig, WatchdogSystem},
@@ -245,6 +247,8 @@ pub struct FlightService {
     safe_mode: Option<SafeModeManager>,
     /// Axis engine
     axis_engine: Option<Arc<AxisEngine>>,
+    /// Bus publisher for telemetry distribution
+    bus_publisher: Option<BusPublisher>,
     /// Auto-switch service
     auto_switch: Option<AircraftAutoSwitchService>,
     /// Curve conflict service
@@ -278,6 +282,7 @@ impl FlightService {
             error_taxonomy,
             safe_mode: None,
             axis_engine: None,
+            bus_publisher: None,
             auto_switch: None,
             curve_conflict: None,
             capability_service: None,
@@ -450,7 +455,14 @@ impl FlightService {
     async fn initialize_axis_engine(&mut self) -> Result<()> {
         info!("Initializing axis engine");
 
-        let engine = AxisEngine::new();
+        let engine_config = EngineConfig {
+            enable_rt_checks: self.config.axis_config.enable_rt_checks,
+            max_frame_time_us: self.config.axis_config.max_frame_time_us,
+            enable_counters: self.config.axis_config.enable_counters,
+            enable_conflict_detection: self.config.axis_config.enable_conflict_detection,
+            ..EngineConfig::default()
+        };
+        let engine = AxisEngine::with_config("primary".to_string(), engine_config);
         self.axis_engine = Some(Arc::new(engine));
         self.health
             .info("axis_engine", "Axis engine initialized")
@@ -462,7 +474,20 @@ impl FlightService {
     async fn initialize_auto_switch(&mut self) -> Result<()> {
         info!("Initializing auto-switch service");
 
+        let bus_rate_hz = self
+            .config
+            .auto_switch_config
+            .bus_subscription
+            .telemetry_rate;
+        let mut bus_publisher = BusPublisher::new(bus_rate_hz);
+
         let auto_switch = AircraftAutoSwitchService::new(self.config.auto_switch_config.clone());
+        auto_switch
+            .start(&mut bus_publisher)
+            .await
+            .map_err(|e| anyhow::anyhow!("Auto-switch start failed: {e}"))?;
+
+        self.bus_publisher = Some(bus_publisher);
         self.auto_switch = Some(auto_switch);
         self.health
             .info("auto_switch", "Auto-switch service initialized")
@@ -654,15 +679,7 @@ impl FlightService {
             .map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
 
         if let Some(engine) = &self.axis_engine {
-            // Choose the primary axis: prefer "pitch" (main control axis), fall back
-            // to the first available axis in the profile.
-            let primary = profile
-                .axes
-                .get("pitch")
-                .map(|c| ("pitch", c))
-                .or_else(|| profile.axes.iter().next().map(|(n, c)| (n.as_str(), c)));
-
-            if let Some((axis_name, axis_config)) = primary {
+            for (axis_name, axis_config) in &profile.axes {
                 match build_pipeline_for_axis(axis_name, axis_config) {
                     Ok(pipeline) => match engine.update_pipeline(pipeline) {
                         UpdateResult::Pending => {
@@ -804,8 +821,15 @@ impl FlightService {
             debug!("Curve conflict service dropped");
         }
 
-        if let Some(_auto_switch) = self.auto_switch.take() {
-            debug!("Auto-switch service dropped");
+        if let Some(auto_switch) = self.auto_switch.take() {
+            if let Err(e) = auto_switch.stop().await {
+                warn!("Auto-switch service stop error: {}", e);
+            }
+            debug!("Auto-switch service stopped");
+        }
+
+        if let Some(_bus_publisher) = self.bus_publisher.take() {
+            debug!("Bus publisher dropped");
         }
 
         // Shutdown axis engine last
@@ -951,6 +975,99 @@ mod tests {
         assert!(
             engine.active_version().is_some() || engine.swap_ack_count() == 0,
             "pipeline should be queued or active"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_axis_engine_uses_service_config() {
+        let mut config = FlightServiceConfig::default();
+        config.axis_config.enable_rt_checks = true;
+        config.axis_config.max_frame_time_us = 2_000;
+        config.axis_config.enable_counters = false;
+        config.axis_config.enable_conflict_detection = true;
+
+        let mut service = FlightService::new(config);
+        let result = service.initialize_axis_engine().await;
+        assert!(result.is_ok(), "axis engine init should succeed");
+        assert!(
+            service.axis_engine.is_some(),
+            "axis engine should be present after init"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_auto_switch_creates_bus_publisher() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let result = service.initialize_auto_switch().await;
+        assert!(result.is_ok(), "auto-switch init should succeed");
+        assert!(
+            service.bus_publisher.is_some(),
+            "bus publisher should be created during auto-switch init"
+        );
+        assert!(
+            service.auto_switch.is_some(),
+            "auto-switch service should be present"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_all_axes() {
+        use flight_core::profile::{AxisConfig, Profile};
+        use std::collections::HashMap;
+
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: Some(0.2),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        axes.insert(
+            "roll".to_string(),
+            AxisConfig {
+                deadzone: Some(0.05),
+                expo: Some(0.4),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        axes.insert(
+            "yaw".to_string(),
+            AxisConfig {
+                deadzone: Some(0.08),
+                expo: None,
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes,
+            pof_overrides: None,
+        };
+
+        let result = service.apply_profile(&profile).await;
+        assert!(
+            result.is_ok(),
+            "apply_profile with multiple axes should succeed: {:?}",
+            result.err()
         );
     }
 }

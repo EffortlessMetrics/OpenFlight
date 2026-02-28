@@ -78,7 +78,7 @@ impl AxisRecording {
     ) -> impl Iterator<Item = &AxisSample> {
         self.samples
             .iter()
-            .filter(move |s| s.timestamp_us >= start_us && s.timestamp_us <= end_us)
+            .filter(move |s| (start_us..=end_us).contains(&s.timestamp_us))
     }
 
     /// Iterator over all samples for a specific axis index.

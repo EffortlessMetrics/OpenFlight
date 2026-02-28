@@ -30,7 +30,7 @@ proptest! {
         let mut frame = AxisFrame::new(input, 1_000_000);
         curve.step(&mut frame);
         prop_assert!(
-            frame.out >= -1.0 && frame.out <= 1.0,
+            (-1.0..=1.0).contains(&frame.out),
             "curve output {} out of [-1, 1] for input={}, expo={}",
             frame.out, input, expo
         );
@@ -133,7 +133,7 @@ proptest! {
         let mut frame = AxisFrame::new(input, 1_000_000);
         deadzone.step(&mut frame);
         prop_assert!(
-            frame.out >= -1.0 && frame.out <= 1.0,
+            (-1.0..=1.0).contains(&frame.out),
             "deadzone output {} out of [-1, 1] for input={}, threshold={}",
             frame.out, input, threshold
         );
@@ -154,7 +154,7 @@ proptest! {
         let mut out = 0.0f32;
         mixer.process_inputs(&[val_a, val_b], &mut out);
         prop_assert!(
-            out >= -1.0 && out <= 1.0,
+            (-1.0..=1.0).contains(&out),
             "mixer clamped output {} out of [-1, 1]",
             out
         );

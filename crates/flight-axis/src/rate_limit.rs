@@ -291,7 +291,7 @@ mod tests {
             let mut limiter = AxisRateLimiter::new(max_rate);
             for _ in 0..50 {
                 let out = limiter.apply(target);
-                prop_assert!(out >= -1.0 && out <= 1.0, "out={out} not in [-1.0, 1.0]");
+                prop_assert!((-1.0..=1.0).contains(&out), "out={out} not in [-1.0, 1.0]");
             }
         }
 

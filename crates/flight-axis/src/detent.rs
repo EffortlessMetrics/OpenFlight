@@ -402,7 +402,7 @@ mod tests {
             let mut p = DetentProcessor::new(DetentConfig::airbus_throttle());
             let out = p.apply(input);
             prop_assert!(
-                out >= 0.0 && out <= 1.0,
+                (0.0..=1.0).contains(&out),
                 "output {} out of [0, 1] for input {}",
                 out, input
             );

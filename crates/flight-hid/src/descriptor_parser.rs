@@ -457,17 +457,11 @@ mod tests {
     /// Helper: build a tiny HID descriptor for a joystick with the given
     /// number of axes and buttons.
     fn simple_joystick_descriptor(axes: u8, buttons: u8) -> Vec<u8> {
-        let mut d = Vec::new();
-
-        // Usage Page (Generic Desktop)
-        d.push(0x05);
-        d.push(0x01);
-        // Usage (Joystick)
-        d.push(0x09);
-        d.push(0x04);
-        // Collection (Application)
-        d.push(0xA1);
-        d.push(0x01);
+        let mut d = vec![
+            0x05, 0x01, // Usage Page (Generic Desktop)
+            0x09, 0x04, // Usage (Joystick)
+            0xA1, 0x01, // Collection (Application)
+        ];
 
         // --- Axes ---
         if axes > 0 {

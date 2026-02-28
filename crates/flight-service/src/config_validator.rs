@@ -198,7 +198,7 @@ impl ConfigCheck for NumericRangeCheck {
         match config.pointer(&self.pointer) {
             Some(Value::Number(n)) => {
                 let v = n.as_f64().unwrap_or(f64::NAN);
-                if v >= self.min && v <= self.max {
+                if (self.min..=self.max).contains(&v) {
                     CheckResult::Pass
                 } else {
                     CheckResult::Error(format!(

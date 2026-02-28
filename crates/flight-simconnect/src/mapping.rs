@@ -1665,10 +1665,7 @@ pub fn create_mapping_for_aircraft(
         .map(|i| {
             let idx = i + 1; // SimConnect engines are 1-indexed
             let rpm_var = format!("GENERAL ENG RPM:{idx}");
-            let use_n1 = db_info
-                .special_vars
-                .iter()
-                .any(|v| v.starts_with("ENG N1"));
+            let use_n1 = db_info.special_vars.iter().any(|v| v.starts_with("ENG N1"));
 
             EngineMapping {
                 index: i,
@@ -1774,9 +1771,11 @@ mod tests {
 
         // Single-prop → one engine
         assert_eq!(config.default_mapping.engines.len(), 1);
-        assert!(config.default_mapping.engines[0]
-            .manifold_pressure
-            .is_some());
+        assert!(
+            config.default_mapping.engines[0]
+                .manifold_pressure
+                .is_some()
+        );
         assert!(config.default_mapping.engines[0].cht.is_some());
         assert!(config.default_mapping.helicopter.is_none());
         assert!(config.aircraft_mappings.contains_key("C172"));
@@ -1793,9 +1792,11 @@ mod tests {
         assert_eq!(config.default_mapping.engines.len(), 2);
         assert!(config.default_mapping.engines[0].rpm.contains("N1"));
         // Jets have no manifold pressure or CHT
-        assert!(config.default_mapping.engines[0]
-            .manifold_pressure
-            .is_none());
+        assert!(
+            config.default_mapping.engines[0]
+                .manifold_pressure
+                .is_none()
+        );
         assert!(config.default_mapping.engines[0].cht.is_none());
         assert!(config.default_mapping.helicopter.is_none());
     }
@@ -1874,9 +1875,14 @@ mod tests {
             });
             offset += 8;
         }
-        mapping
-            .data_definitions
-            .insert(def_id, DataDefinition { id: def_id, variables: vars, data_size: offset });
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
         mapping.request_mappings.insert(
             request_id,
             RequestMapping {
@@ -1896,19 +1902,19 @@ mod tests {
 
         // Construct a raw data buffer matching the kinematics definition layout.
         let mut buf = Vec::new();
-        write_f64(&mut buf, 120.0);  // IAS (knots)
-        write_f64(&mut buf, 130.0);  // TAS
-        write_f64(&mut buf, 115.0);  // ground speed
-        write_f64(&mut buf, 5.0);    // AoA (degrees)
-        write_f64(&mut buf, 1.0);    // sideslip
-        write_f64(&mut buf, -10.0);  // bank
-        write_f64(&mut buf, 3.0);    // pitch
-        write_f64(&mut buf, 90.0);   // heading
-        write_f64(&mut buf, 1.2);    // g-force
+        write_f64(&mut buf, 120.0); // IAS (knots)
+        write_f64(&mut buf, 130.0); // TAS
+        write_f64(&mut buf, 115.0); // ground speed
+        write_f64(&mut buf, 5.0); // AoA (degrees)
+        write_f64(&mut buf, 1.0); // sideslip
+        write_f64(&mut buf, -10.0); // bank
+        write_f64(&mut buf, 3.0); // pitch
+        write_f64(&mut buf, 90.0); // heading
+        write_f64(&mut buf, 1.2); // g-force
         write_f64(&mut buf, 3.2174); // g-lateral (ft/s², ~0.1G)
-        write_f64(&mut buf, 0.0);    // g-longitudinal
-        write_f64(&mut buf, 0.18);   // mach
-        write_f64(&mut buf, 500.0);  // VS (fpm)
+        write_f64(&mut buf, 0.0); // g-longitudinal
+        write_f64(&mut buf, 0.18); // mach
+        write_f64(&mut buf, 500.0); // VS (fpm)
 
         let mut snapshot = BusSnapshot::default();
         mapping
@@ -1931,9 +1937,11 @@ mod tests {
 
         let buf = vec![0u8; 4]; // Way too small
         let mut snapshot = BusSnapshot::default();
-        assert!(mapping
-            .convert_to_snapshot(request_id, &buf, &mut snapshot)
-            .is_err());
+        assert!(
+            mapping
+                .convert_to_snapshot(request_id, &buf, &mut snapshot)
+                .is_err()
+        );
     }
 
     #[test]
@@ -1967,9 +1975,14 @@ mod tests {
             });
             offset += 8;
         }
-        mapping
-            .data_definitions
-            .insert(def_id, DataDefinition { id: def_id, variables: vars, data_size: offset });
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
         mapping.request_mappings.insert(
             request_id,
             RequestMapping {
@@ -1984,11 +1997,11 @@ mod tests {
         let mut buf = Vec::new();
         write_f64(&mut buf, 5000.0); // altitude
         write_f64(&mut buf, 5200.0); // pressure alt
-        write_f64(&mut buf, 15.0);   // OAT
-        write_f64(&mut buf, 10.0);   // wind speed
-        write_f64(&mut buf, 270.0);  // wind dir
-        write_f64(&mut buf, 10.0);   // visibility
-        write_f64(&mut buf, 25.0);   // cloud coverage
+        write_f64(&mut buf, 15.0); // OAT
+        write_f64(&mut buf, 10.0); // wind speed
+        write_f64(&mut buf, 270.0); // wind dir
+        write_f64(&mut buf, 10.0); // visibility
+        write_f64(&mut buf, 25.0); // cloud coverage
 
         let mut snapshot = BusSnapshot::default();
         mapping
@@ -2030,9 +2043,14 @@ mod tests {
         });
         offset += 8;
 
-        mapping
-            .data_definitions
-            .insert(def_id, DataDefinition { id: def_id, variables: vars, data_size: offset });
+        mapping.data_definitions.insert(
+            def_id,
+            DataDefinition {
+                id: def_id,
+                variables: vars,
+                data_size: offset,
+            },
+        );
         mapping.request_mappings.insert(
             request_id,
             RequestMapping {
@@ -2045,8 +2063,8 @@ mod tests {
         );
 
         let mut buf = Vec::new();
-        write_i32(&mut buf, 1);     // running = true
-        write_f64(&mut buf, 75.0);  // RPM 75%
+        write_i32(&mut buf, 1); // running = true
+        write_f64(&mut buf, 75.0); // RPM 75%
 
         let mut snapshot = BusSnapshot::default();
         mapping

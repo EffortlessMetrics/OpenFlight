@@ -225,7 +225,7 @@ mod tests {
             // min < 0 and max > 0 so min < max is always satisfied
             let s = AxisScale::new(factor, min, max).unwrap();
             let out = s.apply(value);
-            prop_assert!(out >= min && out <= max, "out={out} not in [{min}, {max}]");
+            prop_assert!((min..=max).contains(&out), "out={out} not in [{min}, {max}]");
         }
     }
 }

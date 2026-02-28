@@ -421,7 +421,7 @@ mod tests {
             for _ in 0..10 {
                 let out = pid.update(setpoint, pv, DT);
                 prop_assert!(
-                    out >= -1.0 && out <= 1.0,
+                    (-1.0..=1.0).contains(&out),
                     "out={out} not in [-1.0, 1.0]"
                 );
             }

@@ -41,7 +41,7 @@ impl ScaleCondition {
         match self {
             ScaleCondition::InputRange { min, max, .. } => {
                 let abs = value.abs();
-                abs >= *min && abs <= *max
+                (*min..=*max).contains(&abs)
             }
             ScaleCondition::Always { .. } => true,
         }

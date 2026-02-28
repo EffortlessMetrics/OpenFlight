@@ -1154,9 +1154,7 @@ mod tests {
                 // Verify cross-referencing: a known aircraft's special vars exist in the registry
                 let c172 = adapter.aircraft_db().get("C172").unwrap();
                 assert!(
-                    adapter
-                        .var_registry()
-                        .contains(c172.special_vars[0]),
+                    adapter.var_registry().contains(c172.special_vars[0]),
                     "special var should be in registry"
                 );
             }

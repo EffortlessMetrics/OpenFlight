@@ -226,7 +226,156 @@ async fn test_safe_mode_state_transitions() {
 }
 
 // ---------------------------------------------------------------------------
-// Test 7: Watchdog / health report — core components registered, uptime present
+// Test 7: Full-mode startup wiring — subsystem init, bus snapshot, profile apply
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_integration_full_startup_bus_profile_shutdown() {
+    // 1. Start service in full mode (no hardware features).
+    let cfg = FlightServiceConfig::default();
+    assert!(!cfg.safe_mode, "test requires full mode");
+
+    let mut service = FlightService::new(cfg);
+
+    tokio::time::timeout(Duration::from_secs(10), service.start())
+        .await
+        .expect("start must complete within 10 s")
+        .expect("start must succeed");
+
+    assert_eq!(
+        service.get_state().await,
+        ServiceState::Running,
+        "full-mode start must reach Running"
+    );
+
+    // 2. Verify core health components are registered after full startup.
+    let health = service.get_health_status().await;
+    for component in &["service", "axis_engine", "auto_switch", "safety"] {
+        assert!(
+            health.components.contains_key(*component),
+            "'{component}' must be registered in health report after full startup"
+        );
+    }
+
+    // 3. Bus is operational: publish a snapshot and confirm the auto-switch
+    //    service (started separately) picks it up.
+    let mut bus = BusPublisher::new(60.0);
+    let auto_switch = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+
+    auto_switch
+        .start(&mut bus)
+        .await
+        .expect("auto-switch start must succeed");
+
+    let snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("A320"));
+    bus.publish(snapshot)
+        .expect("snapshot must publish successfully");
+
+    // Allow bus-monitor (30 Hz) at least two ticks to process.
+    tokio::time::sleep(Duration::from_millis(300)).await;
+
+    let metrics = auto_switch.get_metrics().await;
+    assert!(
+        metrics.aircraft_switch_count >= 1,
+        "bus must be active — expected ≥1 aircraft switch, got {}",
+        metrics.aircraft_switch_count
+    );
+
+    auto_switch
+        .stop()
+        .await
+        .expect("auto-switch stop must succeed");
+
+    // 4. Apply a profile through the service and verify the axis engine is wired.
+    use flight_core::profile::{AxisConfig, Profile};
+    use std::collections::HashMap;
+
+    let mut axes = HashMap::new();
+    axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.05),
+            expo: Some(0.2),
+            slew_rate: None,
+            detents: vec![],
+            curve: None,
+            filter: None,
+        },
+    );
+    let profile = Profile {
+        schema: "flight.profile/1".to_string(),
+        sim: None,
+        aircraft: None,
+        axes,
+        pof_overrides: None,
+    };
+
+    let apply_result = service.apply_profile(&profile).await;
+    assert!(
+        apply_result.is_ok(),
+        "apply_profile must succeed after full startup: {:?}",
+        apply_result.err()
+    );
+
+    // 5. Clean shutdown.
+    tokio::time::timeout(Duration::from_secs(10), service.shutdown())
+        .await
+        .expect("shutdown must complete within 10 s")
+        .expect("shutdown must succeed");
+
+    assert_eq!(
+        service.get_state().await,
+        ServiceState::Stopped,
+        "state after shutdown must be Stopped"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 8: StartupSequence phases advance correctly through full lifecycle
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_startup_sequence_full_phase_progression() {
+    use flight_service::startup_sequence::{StartupPhase, StartupSequence};
+
+    let mut seq = StartupSequence::new();
+    assert_eq!(seq.phase(), StartupPhase::Idle);
+    assert!(!seq.is_running());
+
+    // Walk through every phase in order.
+    seq.run_preflight();
+    assert_eq!(seq.phase(), StartupPhase::PreFlight);
+
+    seq.loading_config();
+    assert_eq!(seq.phase(), StartupPhase::LoadingConfig);
+
+    seq.enumerating_devices();
+    assert_eq!(seq.phase(), StartupPhase::EnumeratingDevices);
+
+    // Simulate a non-fatal warning during device enumeration.
+    seq.warn("No HID devices found — continuing without hardware");
+    assert_eq!(seq.warnings().len(), 1);
+
+    seq.starting_axis_engine();
+    assert_eq!(seq.phase(), StartupPhase::StartingAxisEngine);
+
+    seq.starting_adapters();
+    assert_eq!(seq.phase(), StartupPhase::StartingAdapters);
+
+    seq.running();
+    assert_eq!(seq.phase(), StartupPhase::Running);
+    assert!(seq.is_running());
+
+    // Warnings survive the transition to Running.
+    assert_eq!(
+        seq.warnings().len(),
+        1,
+        "warnings must be preserved after reaching Running"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Test 9: Watchdog / health report — core components registered, uptime present
 // ---------------------------------------------------------------------------
 
 #[tokio::test]
