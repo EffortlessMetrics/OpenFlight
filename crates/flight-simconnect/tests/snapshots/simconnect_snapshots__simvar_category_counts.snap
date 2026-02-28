@@ -1,0 +1,46 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: counts
+---
+[
+    (
+        "Autopilot",
+        13,
+    ),
+    (
+        "Communication",
+        9,
+    ),
+    (
+        "Electrical",
+        11,
+    ),
+    (
+        "Engine",
+        21,
+    ),
+    (
+        "Environment",
+        8,
+    ),
+    (
+        "FlightControls",
+        11,
+    ),
+    (
+        "Fuel",
+        6,
+    ),
+    (
+        "Instruments",
+        8,
+    ),
+    (
+        "Landing",
+        9,
+    ),
+    (
+        "Navigation",
+        22,
+    ),
+]

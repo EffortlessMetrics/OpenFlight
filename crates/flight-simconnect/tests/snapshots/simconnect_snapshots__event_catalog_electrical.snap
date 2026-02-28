@@ -1,0 +1,50 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: items
+---
+[
+    (
+        "PITOT_HEAT_TOGGLE",
+        true,
+    ),
+    (
+        "TOGGLE_AVIONICS_MASTER",
+        true,
+    ),
+    (
+        "TOGGLE_BEACON_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_LANDING_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_LOGO_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_MASTER_ALTERNATOR",
+        true,
+    ),
+    (
+        "TOGGLE_MASTER_BATTERY",
+        true,
+    ),
+    (
+        "TOGGLE_NAV_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_STROBE_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_TAXI_LIGHTS",
+        true,
+    ),
+    (
+        "TOGGLE_WING_LIGHTS",
+        true,
+    ),
+]

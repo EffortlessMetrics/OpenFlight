@@ -40,8 +40,8 @@ impl FsAccessPolicy {
     /// The path is canonicalized first; if canonicalization fails (the path
     /// does not exist) the raw normalised form is checked instead.
     pub fn validate(&self, requested: &Path) -> crate::Result<PathBuf> {
-        let canonical = std::fs::canonicalize(requested)
-            .unwrap_or_else(|_| normalize_path(requested));
+        let canonical =
+            std::fs::canonicalize(requested).unwrap_or_else(|_| normalize_path(requested));
 
         // Reject paths that contain traversal components even after
         // normalisation (defence-in-depth).
@@ -138,7 +138,12 @@ mod tests {
         let allowed = tmp.path().join("config");
         std::fs::create_dir_all(&allowed).unwrap();
 
-        let sneaky = allowed.join("subdir").join("..").join("..").join("etc").join("passwd");
+        let sneaky = allowed
+            .join("subdir")
+            .join("..")
+            .join("..")
+            .join("etc")
+            .join("passwd");
         let policy = FsAccessPolicy::new(&[allowed]);
         assert!(policy.validate(&sneaky).is_err());
     }

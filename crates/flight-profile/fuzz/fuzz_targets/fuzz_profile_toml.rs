@@ -25,10 +25,19 @@ fuzz_target!(|data: &[u8]| {
         let _ = profile.canonicalize();
         let _ = profile.effective_hash();
 
+        // TOML re-serialization roundtrip — must not panic
+        let _ = toml::to_string(&profile);
+
         // validate_with_capabilities must not panic for any mode
         for mode in [CapabilityMode::Full, CapabilityMode::Demo, CapabilityMode::Kid] {
             let ctx = CapabilityContext::for_mode(mode);
             let _ = profile.validate_with_capabilities(&ctx);
+        }
+
+        // merge_with on TOML-derived profiles must not panic
+        if let Ok(merged) = profile.merge_with(&profile) {
+            let _ = merged.effective_hash();
+            let _ = merged.canonicalize();
         }
     }
 });

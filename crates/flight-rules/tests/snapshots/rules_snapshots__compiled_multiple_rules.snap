@@ -1,0 +1,77 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: snap
+---
+{
+  "instructions": [
+    {
+      "LoadVar": 0
+    },
+    {
+      "LoadConst": 0.0
+    },
+    {
+      "Compare": "NotEqual"
+    },
+    {
+      "JumpFalse": 5
+    },
+    {
+      "Action": 0
+    },
+    {
+      "LoadVar": 0
+    },
+    {
+      "LoadConst": 0.0
+    },
+    {
+      "Compare": "NotEqual"
+    },
+    "Not",
+    {
+      "JumpFalse": 11
+    },
+    {
+      "Action": 1
+    },
+    {
+      "LoadVar": 1
+    },
+    {
+      "LoadConst": 70.0
+    },
+    {
+      "Compare": "Less"
+    },
+    {
+      "JumpFalse": 16
+    },
+    {
+      "Action": 2
+    }
+  ],
+  "variable_map": {
+    "gear_down": 0,
+    "speed": 1
+  },
+  "actions": [
+    {
+      "LedOn": {
+        "target": "GEAR"
+      }
+    },
+    {
+      "LedOff": {
+        "target": "GEAR"
+      }
+    },
+    {
+      "LedBlink": {
+        "target": "STALL",
+        "rate_hz": 3.0
+      }
+    }
+  ],
+  "stack_size": 8
+}

@@ -24,7 +24,7 @@ pub use verification::{
 };
 
 pub use fs_access::FsAccessPolicy;
-pub use update_signature::{sha256_hex, verify_digest, verify_file_digest, SignedPayload};
+pub use update_signature::{SignedPayload, sha256_hex, verify_digest, verify_file_digest};
 
 pub type Result<T> = std::result::Result<T, SecurityError>;
 
@@ -877,7 +877,10 @@ mod tests {
         mgr.validate_plugin(manifest).unwrap();
 
         // Declared capability — should succeed
-        assert!(mgr.check_escalation("limited", &PluginCapability::ReadBus).is_ok());
+        assert!(
+            mgr.check_escalation("limited", &PluginCapability::ReadBus)
+                .is_ok()
+        );
 
         // Undeclared capability — should be denied
         let err = mgr
@@ -970,7 +973,10 @@ mod tests {
             .iter()
             .filter(|e| e.outcome == audit_log::AuditOutcome::Denied)
             .collect();
-        assert!(!denied.is_empty(), "rejected plugin must produce audit entry");
+        assert!(
+            !denied.is_empty(),
+            "rejected plugin must produce audit entry"
+        );
     }
 
     // --- File-system access control tests ---
@@ -994,6 +1000,9 @@ mod tests {
         mgr.set_fs_policy(FsAccessPolicy::new(&[config_dir]));
 
         assert!(mgr.validate_fs_access(&file).is_ok());
-        assert!(mgr.validate_fs_access(tmp.path().join("other.txt").as_path()).is_err());
+        assert!(
+            mgr.validate_fs_access(tmp.path().join("other.txt").as_path())
+                .is_err()
+        );
     }
 }

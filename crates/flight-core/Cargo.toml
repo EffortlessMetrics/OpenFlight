@@ -36,3 +36,4 @@ flight-metrics = { path = "../flight-metrics" }
 proptest.workspace = true
 tempfile.workspace = true
 serde_yaml.workspace = true
+insta.workspace = true

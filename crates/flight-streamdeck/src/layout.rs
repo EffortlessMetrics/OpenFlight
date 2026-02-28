@@ -170,9 +170,7 @@ impl ProfileLayout {
         model: StreamDeckModel,
         templates: &HashMap<String, ActionTemplate>,
     ) -> Result<PageLayout, LayoutError> {
-        let (rows, cols) = model
-            .grid_layout()
-            .ok_or(LayoutError::NoGrid(model))?;
+        let (rows, cols) = model.grid_layout().ok_or(LayoutError::NoGrid(model))?;
 
         // Reserve last key on each page for navigation.
         let usable = (rows as usize) * (cols as usize) - 1;
@@ -188,10 +186,8 @@ impl ProfileLayout {
         }
 
         let mut layout = PageLayout::new(model)?;
-        let chunks: Vec<Vec<&ActionTemplate>> = ordered_actions
-            .chunks(usable)
-            .map(|c| c.to_vec())
-            .collect();
+        let chunks: Vec<Vec<&ActionTemplate>> =
+            ordered_actions.chunks(usable).map(|c| c.to_vec()).collect();
 
         for (page_idx, chunk) in chunks.iter().enumerate() {
             let mut page = Page::new(&format!("{aircraft:?} - Page {}", page_idx + 1));
@@ -359,8 +355,10 @@ mod tests {
 
     #[test]
     fn test_profile_layout_ga() {
-        let templates: HashMap<String, ActionTemplate> =
-            builtin_templates().into_iter().map(|t| (t.id.clone(), t)).collect();
+        let templates: HashMap<String, ActionTemplate> = builtin_templates()
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
 
         let layout =
             ProfileLayout::build(AircraftType::GA, StreamDeckModel::Original, &templates).unwrap();
@@ -376,8 +374,10 @@ mod tests {
 
     #[test]
     fn test_profile_layout_airbus_xl() {
-        let templates: HashMap<String, ActionTemplate> =
-            builtin_templates().into_iter().map(|t| (t.id.clone(), t)).collect();
+        let templates: HashMap<String, ActionTemplate> = builtin_templates()
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
 
         let layout =
             ProfileLayout::build(AircraftType::Airbus, StreamDeckModel::Xl, &templates).unwrap();
@@ -387,8 +387,10 @@ mod tests {
 
     #[test]
     fn test_profile_layout_helo_mini() {
-        let templates: HashMap<String, ActionTemplate> =
-            builtin_templates().into_iter().map(|t| (t.id.clone(), t)).collect();
+        let templates: HashMap<String, ActionTemplate> = builtin_templates()
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
 
         let layout =
             ProfileLayout::build(AircraftType::Helo, StreamDeckModel::Mini, &templates).unwrap();
@@ -408,6 +410,8 @@ mod tests {
     #[test]
     fn test_profile_layout_pedal_fails() {
         let templates: HashMap<String, ActionTemplate> = HashMap::new();
-        assert!(ProfileLayout::build(AircraftType::GA, StreamDeckModel::Pedal, &templates).is_err());
+        assert!(
+            ProfileLayout::build(AircraftType::GA, StreamDeckModel::Pedal, &templates).is_err()
+        );
     }
 }

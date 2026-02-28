@@ -261,8 +261,7 @@ impl FfbEffect {
                 if p.duration_ticks == 0 {
                     return p.end.clamp(-1.0, 1.0);
                 }
-                let progress =
-                    (input.tick as f32 / p.duration_ticks as f32).clamp(0.0, 1.0);
+                let progress = (input.tick as f32 / p.duration_ticks as f32).clamp(0.0, 1.0);
                 p.start + (p.end - p.start) * progress
             }
         };
@@ -454,7 +453,10 @@ mod tests {
             ..input_at_rest()
         };
         let f = effect.compute(&input);
-        assert!(f.abs() <= 0.3 + 1e-6, "should be capped at saturation, got {f}");
+        assert!(
+            f.abs() <= 0.3 + 1e-6,
+            "should be capped at saturation, got {f}"
+        );
     }
 
     #[test]
@@ -804,7 +806,10 @@ mod tests {
         };
         let f = effect.compute(&input);
         let expected = 0.8 + (-0.3 - 0.8) * 0.5; // 0.25
-        assert!((f - expected).abs() < 1e-6, "mid-ramp: expected {expected}, got {f}");
+        assert!(
+            (f - expected).abs() < 1e-6,
+            "mid-ramp: expected {expected}, got {f}"
+        );
     }
 
     // ── Composite effect ─────────────────────────────────────────────────
@@ -923,7 +928,10 @@ mod tests {
         // Spring: -1.0 * 0.4 = -0.4
         // Damper: -0.5 * 0.2 = -0.1
         // Total: -0.5
-        assert!((f - -0.5).abs() < 1e-6, "spring+damper: expected -0.5, got {f}");
+        assert!(
+            (f - -0.5).abs() < 1e-6,
+            "spring+damper: expected -0.5, got {f}"
+        );
     }
 
     #[test]

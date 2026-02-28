@@ -134,7 +134,7 @@ proptest! {
 // Circuit Breaker State Machine — never panics regardless of event ordering
 //
 
-use flight_core::circuit_breaker::{CircuitBreakerConfig, CircuitBreaker, CircuitState};
+use flight_core::circuit_breaker::{CircuitBreaker, CircuitBreakerConfig, CircuitState};
 use std::time::Duration;
 
 /// Encodes the three possible events that can be driven into a circuit breaker.

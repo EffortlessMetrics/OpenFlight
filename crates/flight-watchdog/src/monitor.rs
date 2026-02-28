@@ -224,8 +224,7 @@ impl SystemMonitor {
 
             info!(
                 recovered_after = prev_misses,
-                "RT heartbeat recovered after {} missed tick(s)",
-                prev_misses
+                "RT heartbeat recovered after {} missed tick(s)", prev_misses
             );
 
             self.emit_event(HealthEvent {
@@ -254,10 +253,14 @@ impl SystemMonitor {
                     consecutive = n,
                     "RT spine: {n} consecutive missed ticks — entering SafeMode"
                 );
-                self.transition_to(SystemMode::SafeMode, "rt_spine", &format!(
-                    "{n} consecutive missed ticks exceeded safe-mode threshold ({})",
-                    self.config.safe_mode_after_missed_ticks
-                ));
+                self.transition_to(
+                    SystemMode::SafeMode,
+                    "rt_spine",
+                    &format!(
+                        "{n} consecutive missed ticks exceeded safe-mode threshold ({})",
+                        self.config.safe_mode_after_missed_ticks
+                    ),
+                );
             }
         } else if n >= self.config.degrade_after_missed_ticks {
             if self.mode != SystemMode::Degraded && self.mode != SystemMode::SafeMode {
@@ -265,18 +268,26 @@ impl SystemMonitor {
                     consecutive = n,
                     "RT spine: {n} consecutive missed ticks — entering Degraded mode"
                 );
-                self.transition_to(SystemMode::Degraded, "rt_spine", &format!(
-                    "{n} consecutive missed ticks exceeded degraded threshold ({})",
-                    self.config.degrade_after_missed_ticks
-                ));
+                self.transition_to(
+                    SystemMode::Degraded,
+                    "rt_spine",
+                    &format!(
+                        "{n} consecutive missed ticks exceeded degraded threshold ({})",
+                        self.config.degrade_after_missed_ticks
+                    ),
+                );
             }
         } else if n >= self.config.warn_after_missed_ticks {
             if self.mode == SystemMode::Normal {
                 warn!(consecutive = n, "RT spine: missed tick #{n}");
-                self.transition_to(SystemMode::Warning, "rt_spine", &format!(
-                    "Missed tick #{n} (warn threshold: {})",
-                    self.config.warn_after_missed_ticks
-                ));
+                self.transition_to(
+                    SystemMode::Warning,
+                    "rt_spine",
+                    &format!(
+                        "Missed tick #{n} (warn threshold: {})",
+                        self.config.warn_after_missed_ticks
+                    ),
+                );
             }
             // Always emit the missed-tick event for observability.
             self.emit_event(HealthEvent {
@@ -293,8 +304,7 @@ impl SystemMonitor {
     /// interval and timeout multiplier.  Returns `true` if a tick was missed.
     pub fn check_heartbeat_timeout(&mut self) -> bool {
         let deadline = Duration::from_secs_f64(
-            self.config.expected_tick_interval.as_secs_f64()
-                * self.config.tick_timeout_multiplier,
+            self.config.expected_tick_interval.as_secs_f64() * self.config.tick_timeout_multiplier,
         );
 
         if let Some(last) = self.last_heartbeat
@@ -412,9 +422,7 @@ impl SystemMonitor {
                 source: "rt_memory".into(),
                 severity: Severity::Warning,
                 kind: HealthEventKind::MemoryBudgetExceeded,
-                message: format!(
-                    "RT memory {bytes} bytes exceeds budget of {budget} bytes"
-                ),
+                message: format!("RT memory {bytes} bytes exceeds budget of {budget} bytes"),
                 resulting_mode: self.mode,
             });
 
@@ -700,7 +708,10 @@ mod tests {
             .iter()
             .filter(|e| e.severity > Severity::Info)
             .collect();
-        assert!(non_info.is_empty(), "healthy heartbeats should not emit warnings");
+        assert!(
+            non_info.is_empty(),
+            "healthy heartbeats should not emit warnings"
+        );
     }
 
     // ── Missed tick detection ───────────────────────────────────────────
@@ -723,7 +734,10 @@ mod tests {
             .iter()
             .filter(|e| e.kind == HealthEventKind::HeartbeatMissed)
             .collect();
-        assert!(!missed_events.is_empty(), "should emit HeartbeatMissed event");
+        assert!(
+            !missed_events.is_empty(),
+            "should emit HeartbeatMissed event"
+        );
     }
 
     // ── Escalation chain: Warning → Degraded → SafeMode ────────────────

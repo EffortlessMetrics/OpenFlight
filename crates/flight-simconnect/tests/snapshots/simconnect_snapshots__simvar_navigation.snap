@@ -1,0 +1,116 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: vars
+---
+[
+    (
+        "ACCELERATION BODY X",
+        "feet per second squared",
+        false,
+    ),
+    (
+        "ACCELERATION BODY Z",
+        "feet per second squared",
+        false,
+    ),
+    (
+        "AIRSPEED INDICATED",
+        "knots",
+        false,
+    ),
+    (
+        "AIRSPEED MACH",
+        "mach",
+        false,
+    ),
+    (
+        "AIRSPEED TRUE",
+        "knots",
+        false,
+    ),
+    (
+        "ANGLE OF ATTACK INDICATOR",
+        "degrees",
+        false,
+    ),
+    (
+        "G FORCE",
+        "gforce",
+        false,
+    ),
+    (
+        "GPS GROUND SPEED",
+        "knots",
+        false,
+    ),
+    (
+        "GROUND ALTITUDE",
+        "feet",
+        false,
+    ),
+    (
+        "HEADING INDICATOR",
+        "degrees",
+        false,
+    ),
+    (
+        "INCIDENCE BETA",
+        "degrees",
+        false,
+    ),
+    (
+        "INDICATED ALTITUDE",
+        "feet",
+        false,
+    ),
+    (
+        "MAGNETIC COMPASS",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE ALT ABOVE GROUND",
+        "feet",
+        false,
+    ),
+    (
+        "PLANE ALTITUDE",
+        "feet",
+        false,
+    ),
+    (
+        "PLANE BANK DEGREES",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE HEADING DEGREES MAGNETIC",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE HEADING DEGREES TRUE",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE LATITUDE",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE LONGITUDE",
+        "degrees",
+        false,
+    ),
+    (
+        "PLANE PITCH DEGREES",
+        "degrees",
+        false,
+    ),
+    (
+        "VERTICAL SPEED",
+        "feet per minute",
+        false,
+    ),
+]

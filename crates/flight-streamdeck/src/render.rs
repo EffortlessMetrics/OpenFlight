@@ -167,31 +167,18 @@ impl IconRenderer {
     }
 
     /// Render a toggle-style icon pair (off / on).
-    pub fn toggle_icon(
-        &self,
-        label: &str,
-        theme: IconTheme,
-    ) -> Option<(KeyIcon, KeyIcon)> {
+    pub fn toggle_icon(&self, label: &str, theme: IconTheme) -> Option<(KeyIcon, KeyIcon)> {
         let base = KeyIcon::for_model(self.model, label, theme)?;
         Some((base.inactive_variant(), base.active_variant()))
     }
 
     /// Render a value-display icon (e.g. HDG 270).
-    pub fn value_icon(
-        &self,
-        label: &str,
-        value: &str,
-        theme: IconTheme,
-    ) -> Option<KeyIcon> {
+    pub fn value_icon(&self, label: &str, value: &str, theme: IconTheme) -> Option<KeyIcon> {
         KeyIcon::for_model(self.model, label, theme).map(|i| i.with_value(value))
     }
 
     /// Render a momentary-action icon (single state).
-    pub fn momentary_icon(
-        &self,
-        label: &str,
-        theme: IconTheme,
-    ) -> Option<KeyIcon> {
+    pub fn momentary_icon(&self, label: &str, theme: IconTheme) -> Option<KeyIcon> {
         KeyIcon::for_model(self.model, label, theme)
     }
 
@@ -251,8 +238,7 @@ mod tests {
 
     #[test]
     fn test_active_variant_swaps_color() {
-        let icon =
-            KeyIcon::for_model(StreamDeckModel::Xl, "ALT", IconTheme::Navigation).unwrap();
+        let icon = KeyIcon::for_model(StreamDeckModel::Xl, "ALT", IconTheme::Navigation).unwrap();
         let active = icon.active_variant();
         assert!(active.active);
         assert_eq!(active.style.text_color, active.style.accent_color);
@@ -260,8 +246,7 @@ mod tests {
 
     #[test]
     fn test_inactive_variant() {
-        let icon =
-            KeyIcon::for_model(StreamDeckModel::Xl, "ALT", IconTheme::Navigation).unwrap();
+        let icon = KeyIcon::for_model(StreamDeckModel::Xl, "ALT", IconTheme::Navigation).unwrap();
         let active = icon.active_variant();
         let inactive = active.inactive_variant();
         assert!(!inactive.active);
@@ -269,10 +254,9 @@ mod tests {
 
     #[test]
     fn test_with_value() {
-        let icon =
-            KeyIcon::for_model(StreamDeckModel::Plus, "SPD", IconTheme::Autopilot)
-                .unwrap()
-                .with_value("250");
+        let icon = KeyIcon::for_model(StreamDeckModel::Plus, "SPD", IconTheme::Autopilot)
+            .unwrap()
+            .with_value("250");
         assert_eq!(icon.value.as_deref(), Some("250"));
     }
 

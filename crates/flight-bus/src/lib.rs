@@ -27,6 +27,7 @@ pub mod integration_test;
 pub mod metrics;
 pub mod publisher;
 pub mod replay;
+pub mod routing;
 pub mod snapshot;
 pub mod telemetry_aggregator;
 pub mod types;
@@ -50,6 +51,10 @@ pub use integration_test::{
 pub use metrics::{BusMetrics, BusMetricsSnapshot};
 pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, SubscriptionConfig};
 pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
+pub use routing::{
+    BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
+    EventRouter as RoutingEventRouter, RouteId, RouteInfo, RouteMatches, RoutePattern, SourceType,
+};
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
     Navigation,

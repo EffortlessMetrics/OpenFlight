@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: output
+---
+[
+    "SVC-001: Service start failed",
+    "SVC-002: Instance lock held",
+    "SVC-003: Graceful shutdown timeout",
+    "SVC-004: Health check failed",
+]

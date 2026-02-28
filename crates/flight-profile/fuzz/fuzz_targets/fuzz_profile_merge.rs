@@ -16,7 +16,8 @@ fuzz_target!(|data: &[u8]| {
     };
 
     // Split input at the midpoint to obtain two independent JSON fragments.
-    let mid = input.len() / 2;
+    // Ensure the split point is on a char boundary to avoid panicking.
+    let mid = input.floor_char_boundary(input.len() / 2);
     let (left, right) = input.split_at(mid);
 
     let Ok(base) = serde_json::from_str::<Profile>(left) else {

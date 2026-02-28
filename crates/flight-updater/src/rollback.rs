@@ -4,7 +4,9 @@
 //! Rollback system for automatic recovery from failed updates
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
+use std::io;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
@@ -410,6 +412,461 @@ impl StartupCrashDetector {
     }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Trait-based update rollback system with state machine and crash recovery
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Filesystem abstraction for testable update operations.
+pub trait FileSystem: Clone {
+    fn read_file(&self, path: &Path) -> io::Result<Vec<u8>>;
+    fn write_file(&self, path: &Path, data: &[u8]) -> io::Result<()>;
+    fn append_file(&self, path: &Path, data: &[u8]) -> io::Result<()>;
+    fn remove_file(&self, path: &Path) -> io::Result<()>;
+    fn create_dir_all(&self, path: &Path) -> io::Result<()>;
+    fn remove_dir_all(&self, path: &Path) -> io::Result<()>;
+    fn exists(&self, path: &Path) -> bool;
+    fn list_dir(&self, path: &Path) -> io::Result<Vec<PathBuf>>;
+    fn is_dir(&self, path: &Path) -> bool;
+}
+
+/// Real filesystem implementation delegating to [`std::fs`].
+#[derive(Clone)]
+pub struct RealFileSystem;
+
+impl FileSystem for RealFileSystem {
+    fn read_file(&self, path: &Path) -> io::Result<Vec<u8>> {
+        std::fs::read(path)
+    }
+    fn write_file(&self, path: &Path, data: &[u8]) -> io::Result<()> {
+        std::fs::write(path, data)
+    }
+    fn append_file(&self, path: &Path, data: &[u8]) -> io::Result<()> {
+        use std::io::Write;
+        std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)?
+            .write_all(data)
+    }
+    fn remove_file(&self, path: &Path) -> io::Result<()> {
+        std::fs::remove_file(path)
+    }
+    fn create_dir_all(&self, path: &Path) -> io::Result<()> {
+        std::fs::create_dir_all(path)
+    }
+    fn remove_dir_all(&self, path: &Path) -> io::Result<()> {
+        std::fs::remove_dir_all(path)
+    }
+    fn exists(&self, path: &Path) -> bool {
+        path.exists()
+    }
+    fn list_dir(&self, path: &Path) -> io::Result<Vec<PathBuf>> {
+        let mut entries = Vec::new();
+        for entry in std::fs::read_dir(path)? {
+            entries.push(entry?.path());
+        }
+        Ok(entries)
+    }
+    fn is_dir(&self, path: &Path) -> bool {
+        path.is_dir()
+    }
+}
+
+/// Update lifecycle states.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum UpdateState {
+    Idle,
+    Downloading,
+    Verifying,
+    Installing,
+    RollingBack,
+    Complete,
+    Failed,
+}
+
+/// A single journal entry recording a state transition.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JournalEntry {
+    pub timestamp: u64,
+    pub state: UpdateState,
+    pub version: String,
+    pub detail: String,
+}
+
+/// A downloaded artifact with its expected SHA-256 hash.
+#[derive(Debug)]
+pub struct ArtifactFile {
+    pub path: PathBuf,
+    pub expected_sha256: String,
+}
+
+/// Configuration for [`UpdateRollbackManager`].
+#[derive(Debug)]
+pub struct UpdateRollbackConfig {
+    pub backup_dir: PathBuf,
+    pub install_dir: PathBuf,
+    pub journal_path: PathBuf,
+    pub max_backups: usize,
+}
+
+fn now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+/// Append-only log of update operations for crash recovery.
+///
+/// Records each state transition so that incomplete updates can be detected
+/// and automatically rolled back on the next startup.
+pub struct UpdateJournal<F: FileSystem> {
+    journal_path: PathBuf,
+    fs: F,
+}
+
+impl<F: FileSystem> UpdateJournal<F> {
+    pub fn new(journal_path: PathBuf, fs: F) -> Self {
+        Self { journal_path, fs }
+    }
+
+    /// Append a state transition entry to the journal.
+    pub fn record(&self, state: &UpdateState, version: &str, detail: &str) -> crate::Result<()> {
+        let entry = JournalEntry {
+            timestamp: now_secs(),
+            state: state.clone(),
+            version: version.to_string(),
+            detail: detail.to_string(),
+        };
+        let mut line = serde_json::to_string(&entry)?;
+        line.push('\n');
+        self.fs
+            .append_file(&self.journal_path, line.as_bytes())
+            .map_err(|e| crate::UpdateError::Rollback(format!("Journal write failed: {e}")))?;
+        Ok(())
+    }
+
+    /// Read all journal entries.
+    pub fn entries(&self) -> crate::Result<Vec<JournalEntry>> {
+        if !self.fs.exists(&self.journal_path) {
+            return Ok(Vec::new());
+        }
+        let data = self
+            .fs
+            .read_file(&self.journal_path)
+            .map_err(|e| crate::UpdateError::Rollback(format!("Journal read failed: {e}")))?;
+        let text = String::from_utf8_lossy(&data);
+        let mut entries = Vec::new();
+        for line in text.lines() {
+            if !line.trim().is_empty() {
+                entries.push(serde_json::from_str(line)?);
+            }
+        }
+        Ok(entries)
+    }
+
+    /// Check for an incomplete update (last state is not terminal).
+    pub fn check_incomplete(&self) -> crate::Result<Option<JournalEntry>> {
+        let entries = self.entries()?;
+        match entries.last() {
+            Some(last) => match last.state {
+                UpdateState::Complete | UpdateState::Failed | UpdateState::Idle => Ok(None),
+                _ => Ok(Some(last.clone())),
+            },
+            None => Ok(None),
+        }
+    }
+
+    /// Clear the journal.
+    pub fn clear(&self) -> crate::Result<()> {
+        if self.fs.exists(&self.journal_path) {
+            self.fs
+                .write_file(&self.journal_path, b"")
+                .map_err(|e| crate::UpdateError::Rollback(format!("Journal clear failed: {e}")))?;
+        }
+        Ok(())
+    }
+}
+
+/// Manages the full update lifecycle with backup, verification, and rollback.
+pub struct UpdateRollbackManager<F: FileSystem> {
+    backup_dir: PathBuf,
+    install_dir: PathBuf,
+    max_backups: usize,
+    state: UpdateState,
+    journal: UpdateJournal<F>,
+    fs: F,
+}
+
+impl<F: FileSystem> UpdateRollbackManager<F> {
+    pub fn new(config: UpdateRollbackConfig, fs: F) -> crate::Result<Self> {
+        let journal = UpdateJournal::new(config.journal_path, fs.clone());
+        Ok(Self {
+            backup_dir: config.backup_dir,
+            install_dir: config.install_dir,
+            max_backups: config.max_backups,
+            state: UpdateState::Idle,
+            journal,
+            fs,
+        })
+    }
+
+    pub fn state(&self) -> &UpdateState {
+        &self.state
+    }
+
+    pub fn journal(&self) -> &UpdateJournal<F> {
+        &self.journal
+    }
+
+    fn transition(
+        &mut self,
+        new_state: UpdateState,
+        version: &str,
+        detail: &str,
+    ) -> crate::Result<()> {
+        self.journal.record(&new_state, version, detail)?;
+        self.state = new_state;
+        Ok(())
+    }
+
+    /// Copy current installation to a timestamped backup directory.
+    pub fn backup_current_version(&self) -> crate::Result<PathBuf> {
+        if !self.fs.exists(&self.install_dir) {
+            return Err(crate::UpdateError::Rollback(
+                "Install directory does not exist, cannot backup".to_string(),
+            ));
+        }
+        self.fs
+            .create_dir_all(&self.backup_dir)
+            .map_err(|e| crate::UpdateError::Rollback(format!("Cannot create backup dir: {e}")))?;
+        let backup_path = self.backup_dir.join(format!("backup_{}", now_secs()));
+        self.copy_tree(&self.install_dir, &backup_path)?;
+        Ok(backup_path)
+    }
+
+    /// Restore a backup to the installation directory.
+    pub fn restore_backup(&self, backup_path: &Path) -> crate::Result<()> {
+        if !self.fs.exists(backup_path) {
+            return Err(crate::UpdateError::Rollback(format!(
+                "Backup path does not exist: {}",
+                backup_path.display()
+            )));
+        }
+        if self.fs.exists(&self.install_dir) {
+            self.fs.remove_dir_all(&self.install_dir).map_err(|e| {
+                crate::UpdateError::Rollback(format!("Cannot remove install dir: {e}"))
+            })?;
+        }
+        self.copy_tree(backup_path, &self.install_dir)
+    }
+
+    /// Check SHA-256 integrity of downloaded artifacts.
+    pub fn verify_update_integrity(&self, artifacts: &[ArtifactFile]) -> crate::Result<()> {
+        for artifact in artifacts {
+            let data = self.fs.read_file(&artifact.path).map_err(|e| {
+                crate::UpdateError::Rollback(format!(
+                    "Cannot read artifact {}: {e}",
+                    artifact.path.display()
+                ))
+            })?;
+            let hash = hex::encode(Sha256::digest(&data));
+            if hash != artifact.expected_sha256 {
+                return Err(crate::UpdateError::Rollback(format!(
+                    "SHA256 mismatch for {}: expected {}, got {}",
+                    artifact.path.display(),
+                    artifact.expected_sha256,
+                    hash
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Run the full update state machine: verify → backup → install → complete.
+    ///
+    /// On verification failure the state moves directly to [`UpdateState::Failed`].
+    /// On installation failure the manager performs a rollback before entering
+    /// [`UpdateState::Failed`].
+    pub fn apply_update(
+        &mut self,
+        artifacts: &[ArtifactFile],
+        new_version: &str,
+    ) -> crate::Result<()> {
+        if self.state != UpdateState::Idle {
+            return Err(crate::UpdateError::Rollback(format!(
+                "Cannot start update from state {:?}",
+                self.state
+            )));
+        }
+
+        // Verify
+        self.transition(
+            UpdateState::Verifying,
+            new_version,
+            "Verifying artifact integrity",
+        )?;
+        if let Err(e) = self.verify_update_integrity(artifacts) {
+            let _ = self.transition(UpdateState::Failed, new_version, &e.to_string());
+            return Err(e);
+        }
+
+        // Install (backup first)
+        self.transition(UpdateState::Installing, new_version, "Installing update")?;
+        let backup_path = match self.backup_current_version() {
+            Ok(p) => p,
+            Err(e) => {
+                let _ = self.transition(
+                    UpdateState::Failed,
+                    new_version,
+                    &format!("Backup failed: {e}"),
+                );
+                return Err(e);
+            }
+        };
+
+        if let Err(e) = self.install_artifacts(artifacts) {
+            let _ = self.transition(
+                UpdateState::RollingBack,
+                new_version,
+                &format!("Install failed: {e}"),
+            );
+            if let Err(re) = self.restore_backup(&backup_path) {
+                let _ = self.transition(
+                    UpdateState::Failed,
+                    new_version,
+                    &format!("Rollback also failed: {re}"),
+                );
+                return Err(crate::UpdateError::Rollback(format!(
+                    "Install failed ({e}) and rollback failed ({re})"
+                )));
+            }
+            let _ = self.transition(
+                UpdateState::Failed,
+                new_version,
+                "Rolled back after install failure",
+            );
+            return Err(e);
+        }
+
+        self.transition(UpdateState::Complete, new_version, "Update complete")?;
+        Ok(())
+    }
+
+    /// On startup, check the journal for incomplete updates and auto-rollback.
+    pub fn recover_on_startup(&mut self) -> crate::Result<bool> {
+        let incomplete = self.journal.check_incomplete()?;
+        if let Some(entry) = incomplete {
+            if self.fs.exists(&self.backup_dir) {
+                let mut backups = self.fs.list_dir(&self.backup_dir).map_err(|e| {
+                    crate::UpdateError::Rollback(format!("Cannot list backups: {e}"))
+                })?;
+                backups.sort();
+                if let Some(latest) = backups.last().filter(|p| self.fs.is_dir(p)) {
+                    self.transition(
+                        UpdateState::RollingBack,
+                        &entry.version,
+                        "Auto-rollback on startup",
+                    )?;
+                    self.restore_backup(latest)?;
+                    self.transition(UpdateState::Idle, &entry.version, "Recovery complete")?;
+                    self.journal.clear()?;
+                    return Ok(true);
+                }
+            }
+            let _ = self.transition(
+                UpdateState::Failed,
+                &entry.version,
+                "No backup found for recovery",
+            );
+            self.journal.clear()?;
+            self.state = UpdateState::Idle;
+            return Ok(false);
+        }
+        Ok(false)
+    }
+
+    /// Remove old backups, keeping at most `max_backups`.
+    pub fn cleanup_backup(&self) -> crate::Result<()> {
+        if !self.fs.exists(&self.backup_dir) {
+            return Ok(());
+        }
+        let mut entries = self
+            .fs
+            .list_dir(&self.backup_dir)
+            .map_err(|e| crate::UpdateError::Rollback(format!("Cannot list backup dir: {e}")))?;
+        entries.retain(|p| self.fs.is_dir(p));
+        entries.sort();
+        if entries.len() > self.max_backups {
+            let to_remove = entries.len() - self.max_backups;
+            for path in entries.iter().take(to_remove) {
+                self.fs.remove_dir_all(path).map_err(|e| {
+                    crate::UpdateError::Rollback(format!(
+                        "Cannot remove old backup {}: {e}",
+                        path.display()
+                    ))
+                })?;
+            }
+        }
+        Ok(())
+    }
+
+    fn install_artifacts(&self, artifacts: &[ArtifactFile]) -> crate::Result<()> {
+        self.fs
+            .create_dir_all(&self.install_dir)
+            .map_err(|e| crate::UpdateError::Rollback(format!("Cannot create install dir: {e}")))?;
+        for artifact in artifacts {
+            let file_name = artifact.path.file_name().ok_or_else(|| {
+                crate::UpdateError::Rollback(format!(
+                    "Artifact path has no filename: {}",
+                    artifact.path.display()
+                ))
+            })?;
+            let data = self
+                .fs
+                .read_file(&artifact.path)
+                .map_err(|e| crate::UpdateError::Rollback(format!("Cannot read artifact: {e}")))?;
+            self.fs
+                .write_file(&self.install_dir.join(file_name), &data)
+                .map_err(|e| {
+                    crate::UpdateError::Rollback(format!(
+                        "Cannot write artifact to install dir: {e}"
+                    ))
+                })?;
+        }
+        Ok(())
+    }
+
+    fn copy_tree(&self, src: &Path, dst: &Path) -> crate::Result<()> {
+        self.fs.create_dir_all(dst).map_err(|e| {
+            crate::UpdateError::Rollback(format!("Cannot create dir {}: {e}", dst.display()))
+        })?;
+        let entries = self.fs.list_dir(src).map_err(|e| {
+            crate::UpdateError::Rollback(format!("Cannot list dir {}: {e}", src.display()))
+        })?;
+        for entry in entries {
+            let name = entry
+                .file_name()
+                .ok_or_else(|| crate::UpdateError::Rollback("Path has no filename".to_string()))?;
+            let dest_entry = dst.join(name);
+            if self.fs.is_dir(&entry) {
+                self.copy_tree(&entry, &dest_entry)?;
+            } else {
+                let data = self.fs.read_file(&entry).map_err(|e| {
+                    crate::UpdateError::Rollback(format!("Cannot read {}: {e}", entry.display()))
+                })?;
+                self.fs.write_file(&dest_entry, &data).map_err(|e| {
+                    crate::UpdateError::Rollback(format!(
+                        "Cannot write {}: {e}",
+                        dest_entry.display()
+                    ))
+                })?;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -673,6 +1130,453 @@ mod tests {
         assert!(
             result,
             "timestamp 0 must produce a large elapsed duration that exceeds timeout"
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MockFs and UpdateRollbackManager tests
+    // ═══════════════════════════════════════════════════════════════════════
+
+    use std::cell::RefCell;
+    use std::collections::{HashMap, HashSet};
+    use std::rc::Rc;
+
+    #[derive(Clone)]
+    struct MockFs {
+        files: Rc<RefCell<HashMap<PathBuf, Vec<u8>>>>,
+        dirs: Rc<RefCell<HashSet<PathBuf>>>,
+        /// When `Some(n)`, the n-th `write_file` call (1-indexed) fails.
+        write_fail_on_call: Rc<RefCell<Option<usize>>>,
+        write_call_count: Rc<RefCell<usize>>,
+    }
+
+    impl MockFs {
+        fn new_mock() -> Self {
+            Self {
+                files: Rc::new(RefCell::new(HashMap::new())),
+                dirs: Rc::new(RefCell::new(HashSet::new())),
+                write_fail_on_call: Rc::new(RefCell::new(None)),
+                write_call_count: Rc::new(RefCell::new(0)),
+            }
+        }
+
+        fn add_file(&self, path: &str, data: &[u8]) {
+            let path = PathBuf::from(path);
+            if let Some(parent) = path.parent() {
+                self.ensure_parents(parent);
+            }
+            self.files.borrow_mut().insert(path, data.to_vec());
+        }
+
+        fn ensure_parents(&self, path: &Path) {
+            let mut current = PathBuf::new();
+            for component in path.components() {
+                current.push(component);
+                self.dirs.borrow_mut().insert(current.clone());
+            }
+        }
+
+        fn get_file(&self, path: &str) -> Option<Vec<u8>> {
+            self.files.borrow().get(&PathBuf::from(path)).cloned()
+        }
+
+        fn set_write_fail_on_call(&self, n: usize) {
+            *self.write_fail_on_call.borrow_mut() = Some(n);
+        }
+    }
+
+    impl FileSystem for MockFs {
+        fn read_file(&self, path: &Path) -> io::Result<Vec<u8>> {
+            self.files
+                .borrow()
+                .get(path)
+                .cloned()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, path.display().to_string()))
+        }
+
+        fn write_file(&self, path: &Path, data: &[u8]) -> io::Result<()> {
+            {
+                let mut count = self.write_call_count.borrow_mut();
+                *count += 1;
+                if let Some(fail_on) = *self.write_fail_on_call.borrow() {
+                    if *count == fail_on {
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "Simulated write failure",
+                        ));
+                    }
+                }
+            }
+            if let Some(parent) = path.parent() {
+                self.ensure_parents(parent);
+            }
+            self.files
+                .borrow_mut()
+                .insert(path.to_path_buf(), data.to_vec());
+            Ok(())
+        }
+
+        fn append_file(&self, path: &Path, data: &[u8]) -> io::Result<()> {
+            if let Some(parent) = path.parent() {
+                self.ensure_parents(parent);
+            }
+            self.files
+                .borrow_mut()
+                .entry(path.to_path_buf())
+                .or_default()
+                .extend_from_slice(data);
+            Ok(())
+        }
+
+        fn remove_file(&self, path: &Path) -> io::Result<()> {
+            self.files
+                .borrow_mut()
+                .remove(path)
+                .map(|_| ())
+                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "not found"))
+        }
+
+        fn create_dir_all(&self, path: &Path) -> io::Result<()> {
+            self.ensure_parents(path);
+            Ok(())
+        }
+
+        fn remove_dir_all(&self, path: &Path) -> io::Result<()> {
+            let prefix = path.to_path_buf();
+            self.files
+                .borrow_mut()
+                .retain(|k, _| !k.starts_with(&prefix));
+            self.dirs.borrow_mut().retain(|k| !k.starts_with(&prefix));
+            Ok(())
+        }
+
+        fn exists(&self, path: &Path) -> bool {
+            self.files.borrow().contains_key(path) || self.dirs.borrow().contains(path)
+        }
+
+        fn list_dir(&self, path: &Path) -> io::Result<Vec<PathBuf>> {
+            if !self.is_dir(path) {
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    path.display().to_string(),
+                ));
+            }
+            let mut entries = HashSet::new();
+            for key in self.files.borrow().keys() {
+                if let Ok(suffix) = key.strip_prefix(path) {
+                    if let Some(first) = suffix.components().next() {
+                        entries.insert(path.join(first));
+                    }
+                }
+            }
+            for key in self.dirs.borrow().iter() {
+                if let Ok(suffix) = key.strip_prefix(path) {
+                    if let Some(first) = suffix.components().next() {
+                        let entry = path.join(first);
+                        if entry != *path {
+                            entries.insert(entry);
+                        }
+                    }
+                }
+            }
+            let mut result: Vec<_> = entries.into_iter().collect();
+            result.sort();
+            Ok(result)
+        }
+
+        fn is_dir(&self, path: &Path) -> bool {
+            self.dirs.borrow().contains(path)
+        }
+    }
+
+    fn sha256_hex(data: &[u8]) -> String {
+        hex::encode(Sha256::digest(data))
+    }
+
+    fn make_config(base: &str) -> UpdateRollbackConfig {
+        UpdateRollbackConfig {
+            backup_dir: PathBuf::from(format!("{base}/backups")),
+            install_dir: PathBuf::from(format!("{base}/install")),
+            journal_path: PathBuf::from(format!("{base}/journal.log")),
+            max_backups: 3,
+        }
+    }
+
+    #[test]
+    fn test_update_state_happy_path() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t1");
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t1/install/bin/app.exe", b"old-binary");
+
+        let artifact_data = b"new-binary-v2";
+        let hash = sha256_hex(artifact_data);
+        fs.add_file("t1/downloads/app.exe", artifact_data);
+
+        let artifacts = vec![ArtifactFile {
+            path: PathBuf::from("t1/downloads/app.exe"),
+            expected_sha256: hash,
+        }];
+
+        assert_eq!(mgr.state(), &UpdateState::Idle);
+        mgr.apply_update(&artifacts, "2.0.0").unwrap();
+        assert_eq!(mgr.state(), &UpdateState::Complete);
+        assert_eq!(
+            fs.get_file("t1/install/app.exe").unwrap(),
+            artifact_data.to_vec()
+        );
+    }
+
+    #[test]
+    fn test_update_state_verification_failure() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t2");
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t2/install/bin/app.exe", b"old-binary");
+        fs.add_file("t2/downloads/app.exe", b"new-binary");
+
+        let artifacts = vec![ArtifactFile {
+            path: PathBuf::from("t2/downloads/app.exe"),
+            expected_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+        }];
+
+        let result = mgr.apply_update(&artifacts, "2.0.0");
+        assert!(result.is_err());
+        assert_eq!(mgr.state(), &UpdateState::Failed);
+        // Original files must be untouched
+        assert_eq!(
+            fs.get_file("t2/install/bin/app.exe").unwrap(),
+            b"old-binary"
+        );
+    }
+
+    #[test]
+    fn test_update_state_install_failure_triggers_rollback() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t3");
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        // Install dir with 2 files → backup creates 2 write_file calls
+        fs.add_file("t3/install/a.bin", b"file-a");
+        fs.add_file("t3/install/b.bin", b"file-b");
+
+        let data = b"new-artifact";
+        let hash = sha256_hex(data);
+        fs.add_file("t3/downloads/artifact.bin", data);
+
+        let artifacts = vec![ArtifactFile {
+            path: PathBuf::from("t3/downloads/artifact.bin"),
+            expected_sha256: hash,
+        }];
+
+        // Backup copies 2 files (write calls 1, 2). Install write is call 3.
+        fs.set_write_fail_on_call(3);
+
+        let result = mgr.apply_update(&artifacts, "2.0.0");
+        assert!(result.is_err());
+        assert_eq!(mgr.state(), &UpdateState::Failed);
+
+        // After rollback, original files should be restored
+        assert_eq!(fs.get_file("t3/install/a.bin").unwrap(), b"file-a");
+        assert_eq!(fs.get_file("t3/install/b.bin").unwrap(), b"file-b");
+    }
+
+    #[test]
+    fn test_journal_records_state_transitions() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t4");
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t4/install/app.exe", b"binary");
+
+        let data = b"update-data";
+        let hash = sha256_hex(data);
+        fs.add_file("t4/downloads/app.exe", data);
+
+        let artifacts = vec![ArtifactFile {
+            path: PathBuf::from("t4/downloads/app.exe"),
+            expected_sha256: hash,
+        }];
+
+        mgr.apply_update(&artifacts, "2.0.0").unwrap();
+
+        let entries = mgr.journal().entries().unwrap();
+        let states: Vec<_> = entries.iter().map(|e| e.state.clone()).collect();
+        assert_eq!(
+            states,
+            vec![
+                UpdateState::Verifying,
+                UpdateState::Installing,
+                UpdateState::Complete
+            ]
+        );
+        assert!(entries.iter().all(|e| e.version == "2.0.0"));
+    }
+
+    #[test]
+    fn test_journal_crash_recovery_restores_backup() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t5");
+
+        // Simulate a crashed update: journal shows Installing, backup exists
+        let journal_line = serde_json::to_string(&JournalEntry {
+            timestamp: 1000,
+            state: UpdateState::Installing,
+            version: "2.0.0".to_string(),
+            detail: "Installing update".to_string(),
+        })
+        .unwrap()
+            + "\n";
+        fs.add_file("t5/journal.log", journal_line.as_bytes());
+        fs.add_file("t5/backups/backup_0999/app.exe", b"v1-binary");
+        fs.add_file("t5/install/app.exe", b"corrupted");
+
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+        let recovered = mgr.recover_on_startup().unwrap();
+
+        assert!(recovered);
+        assert_eq!(mgr.state(), &UpdateState::Idle);
+        assert_eq!(fs.get_file("t5/install/app.exe").unwrap(), b"v1-binary");
+    }
+
+    #[test]
+    fn test_journal_crash_recovery_no_incomplete() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t6");
+
+        let journal_line = serde_json::to_string(&JournalEntry {
+            timestamp: 1000,
+            state: UpdateState::Complete,
+            version: "2.0.0".to_string(),
+            detail: "done".to_string(),
+        })
+        .unwrap()
+            + "\n";
+        fs.add_file("t6/journal.log", journal_line.as_bytes());
+
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+        let recovered = mgr.recover_on_startup().unwrap();
+        assert!(!recovered);
+    }
+
+    #[test]
+    fn test_cleanup_backup_retention() {
+        let fs = MockFs::new_mock();
+        let mut config = make_config("t7");
+        config.max_backups = 2;
+
+        for i in 1..=4 {
+            fs.add_file(
+                &format!("t7/backups/backup_{i:04}/data.bin"),
+                b"backup-data",
+            );
+        }
+
+        let mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+        mgr.cleanup_backup().unwrap();
+
+        let remaining = fs.list_dir(Path::new("t7/backups")).unwrap();
+        let remaining_dirs: Vec<_> = remaining.iter().filter(|p| fs.is_dir(p)).collect();
+        assert_eq!(remaining_dirs.len(), 2);
+        assert!(fs.exists(Path::new("t7/backups/backup_0003")));
+        assert!(fs.exists(Path::new("t7/backups/backup_0004")));
+        assert!(!fs.exists(Path::new("t7/backups/backup_0001")));
+        assert!(!fs.exists(Path::new("t7/backups/backup_0002")));
+    }
+
+    #[test]
+    fn test_verify_sha256_valid() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t8");
+        let mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        let data = b"hello world";
+        let hash = sha256_hex(data);
+        fs.add_file("t8/artifact.bin", data);
+
+        let result = mgr.verify_update_integrity(&[ArtifactFile {
+            path: PathBuf::from("t8/artifact.bin"),
+            expected_sha256: hash,
+        }]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_verify_sha256_invalid() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t9");
+        let mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t9/artifact.bin", b"some data");
+
+        let result = mgr.verify_update_integrity(&[ArtifactFile {
+            path: PathBuf::from("t9/artifact.bin"),
+            expected_sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+        }]);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("SHA256 mismatch"));
+    }
+
+    #[test]
+    fn test_backup_and_restore_round_trip() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t10");
+        let mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t10/install/bin/app.exe", b"my-binary");
+        fs.add_file("t10/install/config/app.toml", b"[config]");
+
+        let backup_path = mgr.backup_current_version().unwrap();
+        assert!(fs.exists(&backup_path));
+
+        // Destroy the install dir
+        fs.remove_dir_all(Path::new("t10/install")).unwrap();
+        assert!(!fs.exists(Path::new("t10/install/bin/app.exe")));
+
+        // Restore
+        mgr.restore_backup(&backup_path).unwrap();
+        assert_eq!(
+            fs.get_file("t10/install/bin/app.exe").unwrap(),
+            b"my-binary"
+        );
+        assert_eq!(
+            fs.get_file("t10/install/config/app.toml").unwrap(),
+            b"[config]"
+        );
+    }
+
+    #[test]
+    fn test_apply_update_rejects_non_idle_state() {
+        let fs = MockFs::new_mock();
+        let config = make_config("t11");
+        let mut mgr = UpdateRollbackManager::new(config, fs.clone()).unwrap();
+
+        fs.add_file("t11/install/app.exe", b"binary");
+
+        let data = b"update";
+        let hash = sha256_hex(data);
+        fs.add_file("t11/downloads/app.exe", data);
+
+        let artifacts = vec![ArtifactFile {
+            path: PathBuf::from("t11/downloads/app.exe"),
+            expected_sha256: hash,
+        }];
+
+        mgr.apply_update(&artifacts, "2.0.0").unwrap();
+        assert_eq!(mgr.state(), &UpdateState::Complete);
+
+        // Second update must fail (not Idle)
+        let result = mgr.apply_update(&artifacts, "3.0.0");
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Cannot start update")
         );
     }
 }

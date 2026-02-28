@@ -28,9 +28,7 @@ pub fn verify_digest(data: &[u8], expected_hex: &str) -> crate::Result<()> {
         Ok(())
     } else {
         Err(SecurityError::SignatureVerificationFailed {
-            reason: format!(
-                "SHA-256 mismatch: expected {expected_hex}, got {actual}"
-            ),
+            reason: format!("SHA-256 mismatch: expected {expected_hex}, got {actual}"),
         })
     }
 }

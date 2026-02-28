@@ -1,0 +1,13 @@
+---
+source: crates/flight-simconnect/tests/simconnect_snapshots.rs
+expression: info
+---
+MsfsAircraftInfo {
+    icao_code: "C172",
+    display_name: "Cessna 172 Skyhawk",
+    category: SingleProp,
+    default_profile: "ga-single-piston",
+    special_vars: [
+        "GENERAL ENG MIXTURE LEVER POSITION:1",
+    ],
+}

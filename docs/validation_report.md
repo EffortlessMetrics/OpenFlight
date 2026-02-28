@@ -14,18 +14,20 @@
 
 ## Summary
 
-- **Total Checks:** 13
-- **Passed:** 11
-- **Failed:** 2
+- **Total Checks:** 15
+- **Passed:** 15
+- **Failed:** 0
 
 ## Check Results
 
 | Check | Status | Details |
 |-------|--------|----------|
-| BDD Feature Status | ❌ Fail | Failed to write feature status report |
+| BDD Feature Status | ✅ Pass | AC total: 5052, tests: 5052 (100.0%), gherkin: 1841 (36.4%), microcrates fully covered: 65 / 86 (75.6%), complete: 597, needs_gherkin: 0, needs_tests: 0, draft: 4455, incomplete: 0 |
 | Schema Validation | ✅ Pass | - |
 | Cross-Reference Validation | ✅ Pass | - |
-| Code Quality (fmt, clippy, tests) | ❌ Fail | One or more checks failed. See output above for details. |
+| Formatting | ✅ Pass | - |
+| Clippy | ✅ Pass | - |
+| Unit Tests | ✅ Pass | - |
 | QG-SIM-MAPPING | ✅ Pass | - |
 | QG-UNIT-CONV | ✅ Pass | - |
 | QG-SANITY-GATE | ✅ Pass | - |

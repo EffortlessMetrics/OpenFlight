@@ -17402,7 +17402,8 @@ requirements:
       - id: AC-618.4
         description: "AC4: FSSB R3 compatibility manifest documents force-to-axis scaling"
         tests:
-          - feature:specs/features/req_618_fssb_r3_support.feature  - id: REQ-595
+          - feature:specs/features/req_618_fssb_r3_support.feature
+  - id: REQ-595
     name: Axis State Machine Events
     kind: product
     status: draft

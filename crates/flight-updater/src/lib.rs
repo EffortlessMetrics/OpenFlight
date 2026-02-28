@@ -31,7 +31,10 @@ pub use channels::{Channel, ChannelConfig};
 pub use delta::{DeltaApplier, DeltaPatch};
 pub use integration_docs::{IntegrationDocsManager, SimIntegrationDocs, ValidationReport};
 pub use packaging::{MsiPackageBuilder, PackageConfig, SystemdPackageBuilder};
-pub use rollback::{RollbackManager, VersionInfo};
+pub use rollback::{
+    ArtifactFile, FileSystem, JournalEntry, RealFileSystem, RollbackManager, UpdateJournal,
+    UpdateRollbackConfig, UpdateRollbackManager, UpdateState, VersionInfo,
+};
 pub use signature::{SignatureVerifier, UpdateSignature};
 pub use update_manifest::{
     ManifestUpdateManager, UpdateChannel, UpdateManifest, UpdateRecord, VersionEntry,

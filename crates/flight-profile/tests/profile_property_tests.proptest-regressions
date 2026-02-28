@@ -1,7 +1,0 @@
-# Seeds for failure cases proptest has generated in the past. It is
-# automatically read and these particular cases re-run before any
-# novel cases are generated.
-#
-# It is recommended to check this file in to source control so that
-# everyone who runs the test benefits from these saved cases.
-cc 231bb6d6448fe2dfbd28a666134d4dc83f098ec9b3bcf179c542468a71ab4c70 # shrinks to profile = Profile { schema: "flight.profile/1", sim: None, aircraft: None, axes: {"vwwkszwtgrvgsaw": AxisConfig { deadzone: None, expo: None, slew_rate: Some(68.69514), detents: [DetentZone { position: -0.16664419, width: 0.16694134, role: "qlkkgmkwyvxipmdjzoqmpxqxnvg" }], curve: Some([CurvePoint { input: 0.9325464, output: 0.06410714 }, CurvePoint { input: 0.35268748, output: 0.19647744 }, CurvePoint { input: 0.5990162, output: 0.5158775 }]), filter: None }, "fxppdpxgsdjcuubpescupufitsc": AxisConfig { deadzone: None, expo: None, slew_rate: None, detents: [DetentZone { position: -0.7291639, width: 0.45564127, role: "tcthvzyzpkvanyztsttgbhzkinmgjj" }, DetentZone { position: 0.82597065, width: 0.12664355, role: "stpz" }], curve: Some([CurvePoint { input: 0.31810966, output: 0.23003724 }, CurvePoint { input: 0.04083195, output: 0.6633979 }]), filter: None }}, pof_overrides: None }

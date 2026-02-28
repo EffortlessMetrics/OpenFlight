@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/tests/profile_snapshots.rs
+expression: err.to_string()
+---
+Validation error: Unsupported schema version: flight.profile/99

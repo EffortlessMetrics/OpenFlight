@@ -1,0 +1,25 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: s
+---
+{
+  "schema": "flight.ledmap/1",
+  "rules": [
+    {
+      "when": "speed < 100",
+      "do_action": "led.panel('WARN').on()",
+      "do": "led.panel('WARN').on()"
+    },
+    {
+      "when": "altitude > 10000",
+      "do_action": "led.panel('ALT').on()",
+      "do": "led.panel('ALT').on()"
+    }
+  ],
+  "defaults": {
+    "hysteresis": {
+      "altitude": 100.0,
+      "speed": 5.0
+    }
+  }
+}

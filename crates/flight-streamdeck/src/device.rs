@@ -217,17 +217,16 @@ impl DeviceManager {
     /// whatever has been registered via [`Self::register_device`].
     pub fn discover(&self) -> Vec<&DeviceInfo> {
         let devices: Vec<&DeviceInfo> = self.devices.values().filter(|d| d.connected).collect();
-        info!("Discovered {} connected StreamDeck device(s)", devices.len());
+        info!(
+            "Discovered {} connected StreamDeck device(s)",
+            devices.len()
+        );
         devices
     }
 
     /// Register a device (used by HID hot-plug callbacks).
     pub fn register_device(&mut self, info: DeviceInfo) {
-        info!(
-            "Registered {} ({})",
-            info.model.display_name(),
-            info.id
-        );
+        info!("Registered {} ({})", info.model.display_name(), info.id);
         let id = info.id.clone();
         self.brightness.insert(id.clone(), Brightness::default());
         self.devices.insert(id, info);
@@ -414,7 +413,10 @@ mod tests {
 
     #[test]
     fn test_product_ids_unique() {
-        let ids: Vec<u16> = StreamDeckModel::all().iter().map(|m| m.product_id()).collect();
+        let ids: Vec<u16> = StreamDeckModel::all()
+            .iter()
+            .map(|m| m.product_id())
+            .collect();
         let mut deduped = ids.clone();
         deduped.sort_unstable();
         deduped.dedup();
@@ -559,8 +561,7 @@ mod tests {
 
     #[test]
     fn test_four_dial_layout() {
-        let layout =
-            LcdStripLayout::four_dial_layout(["HDG", "ALT", "SPD", "VS"]).unwrap();
+        let layout = LcdStripLayout::four_dial_layout(["HDG", "ALT", "SPD", "VS"]).unwrap();
         assert_eq!(layout.segments.len(), 4);
         assert_eq!(layout.segments[0].label, "HDG");
         // Each segment should be 200 px wide (800 / 4).

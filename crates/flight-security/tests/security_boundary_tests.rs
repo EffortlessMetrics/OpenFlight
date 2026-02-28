@@ -136,12 +136,24 @@ fn test_plugin_capability_enforcement_end_to_end() {
     mgr.validate_plugin(manifest).unwrap();
 
     // Declared capabilities succeed
-    assert!(mgr.check_escalation("panel-driver", &PluginCapability::ReadBus).is_ok());
-    assert!(mgr.check_escalation("panel-driver", &PluginCapability::EmitPanel).is_ok());
+    assert!(
+        mgr.check_escalation("panel-driver", &PluginCapability::ReadBus)
+            .is_ok()
+    );
+    assert!(
+        mgr.check_escalation("panel-driver", &PluginCapability::EmitPanel)
+            .is_ok()
+    );
 
     // Undeclared capability is denied
-    assert!(mgr.check_escalation("panel-driver", &PluginCapability::WriteBlackbox).is_err());
-    assert!(mgr.check_escalation("panel-driver", &PluginCapability::ReadProfiles).is_err());
+    assert!(
+        mgr.check_escalation("panel-driver", &PluginCapability::WriteBlackbox)
+            .is_err()
+    );
+    assert!(
+        mgr.check_escalation("panel-driver", &PluginCapability::ReadProfiles)
+            .is_err()
+    );
 }
 
 // --- Path traversal prevention (integration) ---
@@ -220,15 +232,21 @@ fn test_audit_events_emitted_for_security_actions() {
     let _ = mgr.check_escalation("audit-integration", &PluginCapability::EmitPanel);
 
     let log = mgr.audit_log();
-    assert!(log.len() >= 2, "expected at least 2 audit entries, got {}", log.len());
+    assert!(
+        log.len() >= 2,
+        "expected at least 2 audit entries, got {}",
+        log.len()
+    );
 
     // Verify we have both success and denied entries
-    let has_success = log.entries().iter().any(|e| {
-        e.outcome == flight_security::audit_log::AuditOutcome::Success
-    });
-    let has_denied = log.entries().iter().any(|e| {
-        e.outcome == flight_security::audit_log::AuditOutcome::Denied
-    });
+    let has_success = log
+        .entries()
+        .iter()
+        .any(|e| e.outcome == flight_security::audit_log::AuditOutcome::Success);
+    let has_denied = log
+        .entries()
+        .iter()
+        .any(|e| e.outcome == flight_security::audit_log::AuditOutcome::Denied);
     assert!(has_success, "should have a success audit entry");
     assert!(has_denied, "should have a denied audit entry");
 }

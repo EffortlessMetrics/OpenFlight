@@ -1,0 +1,19 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: s
+---
+schema: flight.ledmap/1
+rules:
+  - when: gear_down
+    do_action: "led.panel('GEAR').on()"
+    do: "led.panel('GEAR').on()"
+  - when: "!gear_down"
+    do_action: "led.panel('GEAR').off()"
+    do: "led.panel('GEAR').off()"
+  - when: speed < 70
+    do_action: "led.panel('STALL').blink(rate_hz=3)"
+    do: "led.panel('STALL').blink(rate_hz=3)"
+  - when: gear_down and speed < 200
+    do_action: "led.panel('APPROACH').on()"
+    do: "led.panel('APPROACH').on()"
+defaults: ~

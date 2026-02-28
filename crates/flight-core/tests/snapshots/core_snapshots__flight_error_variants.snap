@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/core_snapshots.rs
+expression: errors
+---
+[
+    "Configuration error: missing api_key",
+    "Hardware error: device stall on USB3",
+    "Writer error: output channel closed",
+    "Rules validation error: invalid condition syntax",
+]

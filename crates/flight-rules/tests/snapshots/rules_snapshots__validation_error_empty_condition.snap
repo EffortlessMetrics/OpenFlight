@@ -1,0 +1,5 @@
+---
+source: crates/flight-rules/tests/rules_snapshots.rs
+expression: err.to_string()
+---
+Validation error: Rule 1: Rule condition cannot be empty

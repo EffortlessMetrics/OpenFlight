@@ -16,22 +16,22 @@
 
 | Metric | Value |
 |--------|-------|
-| Total AC | 3132 |
-| ACs with tests | 3132 |
-| ACs with Gherkin | 1469 |
-| ACs with both tests + Gherkin | 1469 |
+| Total AC | 5052 |
+| ACs with tests | 5052 |
+| ACs with Gherkin | 1841 |
+| ACs with both tests + Gherkin | 1841 |
 | Complete | 597 |
 | Needs Gherkin | 0 |
 | Needs Tests | 0 |
-| Draft | 2535 |
+| Draft | 4455 |
 | Incomplete | 0 |
 | Microcrates | 86 |
 | Microcrates with tests | 65 (75.6%) |
 | Microcrates with Gherkin | 65 (75.6%) |
 | Microcrates fully covered | 65 (75.6%) |
 | Test coverage | 100.0% |
-| Gherkin coverage | 46.9% |
-| Test + Gherkin coverage | 46.9% |
+| Gherkin coverage | 36.4% |
+| Test + Gherkin coverage | 36.4% |
 
 ## BDD Microcrate Matrix
 
@@ -633,6 +633,10 @@
 | REQ-89 | AC-89.1 | WHEN a HID report shorter than 24 bytes is parsed by parse_orion2_throttle_report THEN the result SHALL be Err(Orion2ThrottleParseError::TooShort) containing the expected byte count | specs/features/req_89_winwing_orion2_throttle.feature:8<br>specs/features/req_89_winwing_orion2_throttle.feature:15 | 2 | ✅ Complete |
 | REQ-89 | AC-89.2 | WHEN any raw u16 values are used for throttle_left, throttle_right, and friction THEN parse_orion2_throttle_report SHALL produce all throttle and friction axes within [0.0, 1.0] | specs/features/req_89_winwing_orion2_throttle.feature:21<br>specs/features/req_89_winwing_orion2_throttle.feature:29<br>specs/features/req_89_winwing_orion2_throttle.feature:37 | 3 | ✅ Complete |
 | REQ-89 | AC-89.3 | WHEN a valid Orion2 Throttle report is parsed THEN all axis values SHALL be finite | specs/features/req_89_winwing_orion2_throttle.feature:46 | 1 | ✅ Complete |
+| REQ-90 | AC-90.1 | AC1: WHEN a valid Saitek X52 HID report is parsed THEN all axis values SHALL be within normalized range | specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature:4 | 1 | ⚪ Draft |
+| REQ-90 | AC-90.2 | AC2: WHEN a report shorter than minimum length is parsed THEN the result SHALL be an error | specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature:10 | 1 | ⚪ Draft |
+| REQ-90 | AC-90.3 | AC3: WHEN any arbitrary bytes are parsed THEN axis values SHALL be finite and never NaN or Inf | specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature:16 | 1 | ⚪ Draft |
+| REQ-90 | AC-90.4 | AC4: WHEN button bits are extracted THEN they SHALL be within the valid bitmask range | specs/features/req_90_saitek_x52_hid_parsing_property_invariants.feature:22 | 1 | ⚪ Draft |
 | REQ-91 | AC-91.1 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN axes.x, axes.y, and axes.twist SHALL be within -1.0..=1.0 and axes.throttle SHALL be within 0.0..=1.0 | specs/features/req_91_extreme3dpro_proptest.feature:8 | 1 | ✅ Complete |
 | REQ-91 | AC-91.2 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN all axis values SHALL be finite (never NaN or Inf) | specs/features/req_91_extreme3dpro_proptest.feature:17 | 1 | ✅ Complete |
 | REQ-91 | AC-91.3 | WHEN any buffer of 7 to 12 arbitrary bytes is parsed by parse_extreme_3d_pro THEN buttons.buttons SHALL be within the 12-bit mask (≤ 0x0FFF) | specs/features/req_91_extreme3dpro_proptest.feature:26 | 1 | ✅ Complete |
@@ -3258,3 +3262,1919 @@
 | REQ-571 | AC-571.2 | AC2: Stuck tick is logged with timestamp and axis state | - | 1 | ⚪ Draft |
 | REQ-571 | AC-571.3 | AC3: Watchdog resets axis engine to last known good state | - | 1 | ⚪ Draft |
 | REQ-571 | AC-571.4 | AC4: Watchdog event is published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-572 | AC-572.1 | AC1: G1000 panel buttons map to sim events via profile rules | - | 1 | ⚪ Draft |
+| REQ-572 | AC-572.2 | AC2: Encoder rotation maps to increment/decrement events | - | 1 | ⚪ Draft |
+| REQ-572 | AC-572.3 | AC3: Long-press detection maps to alternate function | - | 1 | ⚪ Draft |
+| REQ-572 | AC-572.4 | AC4: G1000 panel is discoverable via HID enumeration | - | 1 | ⚪ Draft |
+| REQ-573 | AC-573.1 | AC1: Hysteresis prevents rapid on/off toggling at deadzone boundary | - | 1 | ⚪ Draft |
+| REQ-573 | AC-573.2 | AC2: Hysteresis width is configurable separately from deadzone | - | 1 | ⚪ Draft |
+| REQ-573 | AC-573.3 | AC3: Hysteresis is disabled when deadzone is zero | - | 1 | ⚪ Draft |
+| REQ-573 | AC-573.4 | AC4: Hysteresis state is tracked per axis instance | - | 1 | ⚪ Draft |
+| REQ-574 | AC-574.1 | AC1: Update check queries release manifest from configured URL | - | 1 | ⚪ Draft |
+| REQ-574 | AC-574.2 | AC2: Available update version is logged on startup | - | 1 | ⚪ Draft |
+| REQ-574 | AC-574.3 | AC3: Update check period is configurable | - | 1 | ⚪ Draft |
+| REQ-574 | AC-574.4 | AC4: Update check failures do not block service startup | - | 1 | ⚪ Draft |
+| REQ-575 | AC-575.1 | AC1: gRPC reflection API is enabled in service | - | 1 | ⚪ Draft |
+| REQ-575 | AC-575.2 | AC2: CLI clients can discover available RPC methods | - | 1 | ⚪ Draft |
+| REQ-575 | AC-575.3 | AC3: Reflection is disabled in release builds by default | - | 1 | ⚪ Draft |
+| REQ-575 | AC-575.4 | AC4: flightctl help shows commands derived from reflection | - | 1 | ⚪ Draft |
+| REQ-576 | AC-576.1 | AC1: GetAxisCurvePreview RPC returns output for 100 evenly-spaced inputs | - | 1 | ⚪ Draft |
+| REQ-576 | AC-576.2 | AC2: Preview data includes all applied stages | - | 1 | ⚪ Draft |
+| REQ-576 | AC-576.3 | AC3: Preview reflects current active profile | - | 1 | ⚪ Draft |
+| REQ-576 | AC-576.4 | AC4: Preview is generated in under 1ms | - | 1 | ⚪ Draft |
+| REQ-577 | AC-577.1 | AC1: New device matches against stored auto-bind rules | - | 1 | ⚪ Draft |
+| REQ-577 | AC-577.2 | AC2: Auto-bind applies axis and button config from matching rule | - | 1 | ⚪ Draft |
+| REQ-577 | AC-577.3 | AC3: Auto-bind can be disabled globally or per-device | - | 1 | ⚪ Draft |
+| REQ-577 | AC-577.4 | AC4: Auto-bind result is published as a bus event | - | 1 | ⚪ Draft |
+| REQ-578 | AC-578.1 | AC1: HOTAS Cougar is identified by VID 0x044F and PID 0x0400 | - | 1 | ⚪ Draft |
+| REQ-578 | AC-578.2 | AC2: Cougar 8-bit analog axes are correctly normalized | - | 1 | ⚪ Draft |
+| REQ-578 | AC-578.3 | AC3: Cougar HAT switch maps to 8 discrete positions | - | 1 | ⚪ Draft |
+| REQ-578 | AC-578.4 | AC4: Cougar compatibility manifest includes known firmware quirks | - | 1 | ⚪ Draft |
+| REQ-579 | AC-579.1 | AC1: BusSnapshot struct includes schema version field | - | 1 | ⚪ Draft |
+| REQ-579 | AC-579.2 | AC2: Schema version increments when snapshot fields are added | - | 1 | ⚪ Draft |
+| REQ-579 | AC-579.3 | AC3: Subscribers check schema version before reading fields | - | 1 | ⚪ Draft |
+| REQ-579 | AC-579.4 | AC4: Version mismatch triggers a warning log | - | 1 | ⚪ Draft |
+| REQ-580 | AC-580.1 | AC1: flightctl profile lock prevents profile hot-reload | - | 1 | ⚪ Draft |
+| REQ-580 | AC-580.2 | AC2: Lock state survives service restart | - | 1 | ⚪ Draft |
+| REQ-580 | AC-580.3 | AC3: Lock can be bypassed by elevated operations | - | 1 | ⚪ Draft |
+| REQ-580 | AC-580.4 | AC4: Lock state is visible in flightctl status | - | 1 | ⚪ Draft |
+| REQ-581 | AC-581.1 | AC1: Axis engine thread is pinnable to a specific CPU core | - | 1 | ⚪ Draft |
+| REQ-581 | AC-581.2 | AC2: Core affinity is configurable in service config | - | 1 | ⚪ Draft |
+| REQ-581 | AC-581.3 | AC3: Core affinity reduces scheduling jitter | - | 1 | ⚪ Draft |
+| REQ-581 | AC-581.4 | AC4: Core affinity is reported in service diagnostics | - | 1 | ⚪ Draft |
+| REQ-582 | AC-582.1 | AC1: Device priority list is configurable in profile | - | 1 | ⚪ Draft |
+| REQ-582 | AC-582.2 | AC2: Higher priority device input overrides lower priority on conflict | - | 1 | ⚪ Draft |
+| REQ-582 | AC-582.3 | AC3: Priority tiebreaking uses most-recently-moved device | - | 1 | ⚪ Draft |
+| REQ-582 | AC-582.4 | AC4: Priority state is visible in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-583 | AC-583.1 | AC1: Each tick duration is recorded in a rolling window | - | 1 | ⚪ Draft |
+| REQ-583 | AC-583.2 | AC2: p50, p95, p99 jitter statistics are computed on demand | - | 1 | ⚪ Draft |
+| REQ-583 | AC-583.3 | AC3: Jitter statistics are available via gRPC RPC | - | 1 | ⚪ Draft |
+| REQ-583 | AC-583.4 | AC4: Jitter exceeding threshold triggers a warning log | - | 1 | ⚪ Draft |
+| REQ-584 | AC-584.1 | AC1: Reconnect uses exponential backoff with configurable base delay | - | 1 | ⚪ Draft |
+| REQ-584 | AC-584.2 | AC2: Maximum backoff delay is configurable | - | 1 | ⚪ Draft |
+| REQ-584 | AC-584.3 | AC3: Successful reconnect resets backoff to base delay | - | 1 | ⚪ Draft |
+| REQ-584 | AC-584.4 | AC4: Backoff state is visible in device diagnostics | - | 1 | ⚪ Draft |
+| REQ-585 | AC-585.1 | AC1: Conflict resolution strategy is configurable per axis | - | 1 | ⚪ Draft |
+| REQ-585 | AC-585.2 | AC2: First-wins and last-wins strategies are supported | - | 1 | ⚪ Draft |
+| REQ-585 | AC-585.3 | AC3: Conflict is logged with both conflicting values | - | 1 | ⚪ Draft |
+| REQ-585 | AC-585.4 | AC4: Resolved profile is validated before activation | - | 1 | ⚪ Draft |
+| REQ-586 | AC-586.1 | AC1: Subscriber can declare interest in specific event types | - | 1 | ⚪ Draft |
+| REQ-586 | AC-586.2 | AC2: Filtered events are not delivered to uninterested subscribers | - | 1 | ⚪ Draft |
+| REQ-586 | AC-586.3 | AC3: Filter configuration applies at subscription time | - | 1 | ⚪ Draft |
+| REQ-586 | AC-586.4 | AC4: Filter changes take effect within one bus tick | - | 1 | ⚪ Draft |
+| REQ-587 | AC-587.1 | AC1: Sim disconnect is detected within 2 seconds | - | 1 | ⚪ Draft |
+| REQ-587 | AC-587.2 | AC2: Axis engine continues running after sim disconnect | - | 1 | ⚪ Draft |
+| REQ-587 | AC-587.3 | AC3: FFB effects are ramped to zero on sim disconnect | - | 1 | ⚪ Draft |
+| REQ-587 | AC-587.4 | AC4: Service auto-reconnects when sim becomes available | - | 1 | ⚪ Draft |
+| REQ-588 | AC-588.1 | AC1: IL-2 trim axis positions are included in telemetry frame | - | 1 | ⚪ Draft |
+| REQ-588 | AC-588.2 | AC2: Trim positions are normalized to range -1.0 to 1.0 | - | 1 | ⚪ Draft |
+| REQ-588 | AC-588.3 | AC3: Trim axis bus snapshot includes pitch, roll, and yaw trim | - | 1 | ⚪ Draft |
+| REQ-588 | AC-588.4 | AC4: Trim axis data triggers profile rules matching on trim position | - | 1 | ⚪ Draft |
+| REQ-589 | AC-589.1 | AC1: Lag compensation predicts future axis position using velocity | - | 1 | ⚪ Draft |
+| REQ-589 | AC-589.2 | AC2: Prediction horizon is configurable in milliseconds | - | 1 | ⚪ Draft |
+| REQ-589 | AC-589.3 | AC3: Lag compensation is disabled when axis is at rest | - | 1 | ⚪ Draft |
+| REQ-589 | AC-589.4 | AC4: Compensated output remains within valid range | - | 1 | ⚪ Draft |
+| REQ-590 | AC-590.1 | AC1: CAMERA_STATE SimConnect variable is readable | - | 1 | ⚪ Draft |
+| REQ-590 | AC-590.2 | AC2: Camera look axis can be mapped to physical input axes | - | 1 | ⚪ Draft |
+| REQ-590 | AC-590.3 | AC3: Camera mode change triggers a profile rule | - | 1 | ⚪ Draft |
+| REQ-590 | AC-590.4 | AC4: Camera control is enabled per-profile | - | 1 | ⚪ Draft |
+| REQ-591 | AC-591.1 | AC1: User-defined labels can be assigned to device VID/PID in profile | - | 1 | ⚪ Draft |
+| REQ-591 | AC-591.2 | AC2: Labels appear in CLI device list and diagnostics | - | 1 | ⚪ Draft |
+| REQ-591 | AC-591.3 | AC3: Labels survive device reconnection | - | 1 | ⚪ Draft |
+| REQ-591 | AC-591.4 | AC4: Labels are validated to be non-empty strings up to 64 chars | - | 1 | ⚪ Draft |
+| REQ-592 | AC-592.1 | AC1: Breaking API changes require major version bump | - | 1 | ⚪ Draft |
+| REQ-592 | AC-592.2 | AC2: Semver-exempt items are marked with unstable feature flag | - | 1 | ⚪ Draft |
+| REQ-592 | AC-592.3 | AC3: API surface is documented in crate-level rustdoc | - | 1 | ⚪ Draft |
+| REQ-592 | AC-592.4 | AC4: Semver compatibility is checked in CI via cargo-semver-checks | - | 1 | ⚪ Draft |
+| REQ-593 | AC-593.1 | AC1: ExtPlane plugin protocol is supported as an alternative to UDP | - | 1 | ⚪ Draft |
+| REQ-593 | AC-593.2 | AC2: Plugin protocol connection is established on port 51000 | - | 1 | ⚪ Draft |
+| REQ-593 | AC-593.3 | AC3: Plugin protocol supports DataRef subscription and unsubscription | - | 1 | ⚪ Draft |
+| REQ-593 | AC-593.4 | AC4: Plugin protocol uses TCP with line-oriented framing | - | 1 | ⚪ Draft |
+| REQ-594 | AC-594.1 | AC1: Config schema is documented as JSON Schema | - | 1 | ⚪ Draft |
+| REQ-594 | AC-594.2 | AC2: JSON Schema is bundled with installer | - | 1 | ⚪ Draft |
+| REQ-594 | AC-594.3 | AC3: Config file is validated against schema on load | - | 1 | ⚪ Draft |
+| REQ-594 | AC-594.4 | AC4: Schema version is embedded in config files | - | 1 | ⚪ Draft |
+| REQ-607 | AC-607.1 | AC1: Reduced-frequency mode runs axis engine at 60Hz instead of 250Hz | - | 1 | ⚪ Draft |
+| REQ-607 | AC-607.2 | AC2: Mode is activatable when no sim is connected | - | 1 | ⚪ Draft |
+| REQ-607 | AC-607.3 | AC3: Transition between modes is seamless with no discontinuity | - | 1 | ⚪ Draft |
+| REQ-607 | AC-607.4 | AC4: Current mode is shown in service diagnostics | - | 1 | ⚪ Draft |
+| REQ-608 | AC-608.1 | AC1: flightctl profile import URL downloads and validates profile | - | 1 | ⚪ Draft |
+| REQ-608 | AC-608.2 | AC2: Import verifies schema version compatibility | - | 1 | ⚪ Draft |
+| REQ-608 | AC-608.3 | AC3: Imported profiles are stored in user profile directory | - | 1 | ⚪ Draft |
+| REQ-608 | AC-608.4 | AC4: Import requires explicit user confirmation | - | 1 | ⚪ Draft |
+| REQ-609 | AC-609.1 | AC1: Quirk overrides can be applied without changing manifest files | - | 1 | ⚪ Draft |
+| REQ-609 | AC-609.2 | AC2: Override is applied per VID/PID and persisted in user config | - | 1 | ⚪ Draft |
+| REQ-609 | AC-609.3 | AC3: Override source is logged for diagnostics | - | 1 | ⚪ Draft |
+| REQ-609 | AC-609.4 | AC4: flightctl devices quirks shows active overrides | - | 1 | ⚪ Draft |
+| REQ-610 | AC-610.1 | AC1: G-force is mapped to Spring and Damper effects | - | 1 | ⚪ Draft |
+| REQ-610 | AC-610.2 | AC2: Turbulence maps to Periodic Sine effects | - | 1 | ⚪ Draft |
+| REQ-610 | AC-610.3 | AC3: Stall warning maps to Periodic Random effects | - | 1 | ⚪ Draft |
+| REQ-610 | AC-610.4 | AC4: Effect intensity scales with configurable gain setting | - | 1 | ⚪ Draft |
+| REQ-611 | AC-611.1 | AC1: WinWing devices are identified by VID 0x4098 | - | 1 | ⚪ Draft |
+| REQ-611 | AC-611.2 | AC2: WinWing LED state can be set via HID output report | - | 1 | ⚪ Draft |
+| REQ-611 | AC-611.3 | AC3: WinWing button binding config is documented | - | 1 | ⚪ Draft |
+| REQ-611 | AC-611.4 | AC4: WinWing compatibility manifests cover all major products | - | 1 | ⚪ Draft |
+| REQ-612 | AC-612.1 | AC1: Profile scripts can define custom axis transformation functions | - | 1 | ⚪ Draft |
+| REQ-612 | AC-612.2 | AC2: Script engine is sandboxed with no file or network access | - | 1 | ⚪ Draft |
+| REQ-612 | AC-612.3 | AC3: Script execution time is bounded to 100 microseconds | - | 1 | ⚪ Draft |
+| REQ-612 | AC-612.4 | AC4: Script errors are caught and logged without crashing service | - | 1 | ⚪ Draft |
+| REQ-613 | AC-613.1 | AC1: Telemetry can be exported via OpenTelemetry OTLP protocol | - | 1 | ⚪ Draft |
+| REQ-613 | AC-613.2 | AC2: Export endpoint is configurable in service config | - | 1 | ⚪ Draft |
+| REQ-613 | AC-613.3 | AC3: Export includes axis, device, and adapter metrics | - | 1 | ⚪ Draft |
+| REQ-613 | AC-613.4 | AC4: Export can be disabled to reduce overhead | - | 1 | ⚪ Draft |
+| REQ-614 | AC-614.1 | AC1: All Send and Sync bounds are documented in crate rustdoc | - | 1 | ⚪ Draft |
+| REQ-614 | AC-614.2 | AC2: Non-thread-safe types are explicitly marked with explanation | - | 1 | ⚪ Draft |
+| REQ-614 | AC-614.3 | AC3: Panic conditions are documented for all public functions | - | 1 | ⚪ Draft |
+| REQ-614 | AC-614.4 | AC4: Thread safety tests exist for concurrent access patterns | - | 1 | ⚪ Draft |
+| REQ-615 | AC-615.1 | AC1: flightctl axis calibrate shows live input visualization | - | 1 | ⚪ Draft |
+| REQ-615 | AC-615.2 | AC2: Visualization shows min, max, center, and current position | - | 1 | ⚪ Draft |
+| REQ-615 | AC-615.3 | AC3: Calibration prompts user through physical movement sequence | - | 1 | ⚪ Draft |
+| REQ-615 | AC-615.4 | AC4: Completed calibration is saved to calibration store | - | 1 | ⚪ Draft |
+| REQ-616 | AC-616.1 | AC1: P3D SimConnect adapter uses same interface as MSFS adapter | - | 1 | ⚪ Draft |
+| REQ-616 | AC-616.2 | AC2: P3D-specific SimConnect features are gated behind p3d feature flag | - | 1 | ⚪ Draft |
+| REQ-616 | AC-616.3 | AC3: P3D version detection distinguishes v4 and v5 | - | 1 | ⚪ Draft |
+| REQ-616 | AC-616.4 | AC4: P3D is listed in compatibility matrix | - | 1 | ⚪ Draft |
+| REQ-617 | AC-617.1 | AC1: Each user has isolated profile directory | - | 1 | ⚪ Draft |
+| REQ-617 | AC-617.2 | AC2: Shared hardware devices are accessible to all users | - | 1 | ⚪ Draft |
+| REQ-617 | AC-617.3 | AC3: Per-user service instance is supported on Linux via systemd user | - | 1 | ⚪ Draft |
+| REQ-617 | AC-617.4 | AC4: Concurrent multi-user access does not cause device contention | - | 1 | ⚪ Draft |
+| REQ-618 | AC-618.1 | AC1: FSSB R3 is identified by its USB descriptor | - | 1 | ⚪ Draft |
+| REQ-618 | AC-618.2 | AC2: Force sensor output is mapped to axis position | - | 1 | ⚪ Draft |
+| REQ-618 | AC-618.3 | AC3: Force sensitivity is configurable via FSSB config interface | - | 1 | ⚪ Draft |
+| REQ-618 | AC-618.4 | AC4: FSSB R3 compatibility manifest documents force-to-axis scaling | - | 1 | ⚪ Draft |
+| REQ-595 | AC-595.1 | AC1: State transitions are published as typed events on flight-bus | - | 1 | ⚪ Draft |
+| REQ-595 | AC-595.2 | AC2: Events include previous and new state and timestamp | - | 1 | ⚪ Draft |
+| REQ-595 | AC-595.3 | AC3: State transition events can trigger profile rules | - | 1 | ⚪ Draft |
+| REQ-595 | AC-595.4 | AC4: Event rate is bounded to prevent bus flooding | - | 1 | ⚪ Draft |
+| REQ-596 | AC-596.1 | AC1: Configurable request rate limit per connected client | - | 1 | ⚪ Draft |
+| REQ-596 | AC-596.2 | AC2: Rate limited clients receive gRPC RESOURCE_EXHAUSTED error | - | 1 | ⚪ Draft |
+| REQ-596 | AC-596.3 | AC3: Rate limit applies separately to different RPC methods | - | 1 | ⚪ Draft |
+| REQ-596 | AC-596.4 | AC4: Rate limit state is visible in service metrics | - | 1 | ⚪ Draft |
+| REQ-597 | AC-597.1 | AC1: Aircraft module name is extracted from DCS telemetry | - | 1 | ⚪ Draft |
+| REQ-597 | AC-597.2 | AC2: Aircraft detection event is published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-597 | AC-597.3 | AC3: Profile auto-select runs on aircraft module change | - | 1 | ⚪ Draft |
+| REQ-597 | AC-597.4 | AC4: Module name is available in adapter diagnostics | - | 1 | ⚪ Draft |
+| REQ-598 | AC-598.1 | AC1: Per-stage processing time is measured in nanoseconds | - | 1 | ⚪ Draft |
+| REQ-598 | AC-598.2 | AC2: Profile results are accessible via gRPC diagnostics RPC | - | 1 | ⚪ Draft |
+| REQ-598 | AC-598.3 | AC3: Profiler can be enabled and disabled at runtime | - | 1 | ⚪ Draft |
+| REQ-598 | AC-598.4 | AC4: Profiling overhead is less than 1 microsecond per stage | - | 1 | ⚪ Draft |
+| REQ-599 | AC-599.1 | AC1: Exported profiles include OpenFlight version and date | - | 1 | ⚪ Draft |
+| REQ-599 | AC-599.2 | AC2: Profile export format is stable across minor versions | - | 1 | ⚪ Draft |
+| REQ-599 | AC-599.3 | AC3: Import validates schema version before loading | - | 1 | ⚪ Draft |
+| REQ-599 | AC-599.4 | AC4: Version mismatch produces a helpful error message | - | 1 | ⚪ Draft |
+| REQ-600 | AC-600.1 | AC1: spec_ledger.yaml contains 600 or more requirements | - | 1 | ⚪ Draft |
+| REQ-600 | AC-600.2 | AC2: All requirements have unique IDs | - | 1 | ⚪ Draft |
+| REQ-600 | AC-600.3 | AC3: All requirements have at least one acceptance criterion | - | 1 | ⚪ Draft |
+| REQ-600 | AC-600.4 | AC4: All feature files exist for all ledger entries | - | 1 | ⚪ Draft |
+| REQ-601 | AC-601.1 | AC1: flightctl axis monitor shows current position and deadzone region | - | 1 | ⚪ Draft |
+| REQ-601 | AC-601.2 | AC2: Position is shown as ASCII bar chart | - | 1 | ⚪ Draft |
+| REQ-601 | AC-601.3 | AC3: Deadzone boundary markers are visible in the chart | - | 1 | ⚪ Draft |
+| REQ-601 | AC-601.4 | AC4: Update rate is configurable | - | 1 | ⚪ Draft |
+| REQ-602 | AC-602.1 | AC1: Warthog stick and throttle have complete axis and button mappings | - | 1 | ⚪ Draft |
+| REQ-602 | AC-602.2 | AC2: Warthog manifests cover all known firmware revisions | - | 1 | ⚪ Draft |
+| REQ-602 | AC-602.3 | AC3: Warthog integration tests run on every PR | - | 1 | ⚪ Draft |
+| REQ-602 | AC-602.4 | AC4: Warthog profile template is included in the template library | - | 1 | ⚪ Draft |
+| REQ-603 | AC-603.1 | AC1: GET /health returns 200 OK when service is running normally | - | 1 | ⚪ Draft |
+| REQ-603 | AC-603.2 | AC2: GET /health returns 503 when service is in degraded mode | - | 1 | ⚪ Draft |
+| REQ-603 | AC-603.3 | AC3: Health response body includes service version and status | - | 1 | ⚪ Draft |
+| REQ-603 | AC-603.4 | AC4: Health endpoint is on configurable port separate from metrics | - | 1 | ⚪ Draft |
+| REQ-604 | AC-604.1 | AC1: FilterChainPreview RPC returns frequency response data | - | 1 | ⚪ Draft |
+| REQ-604 | AC-604.2 | AC2: Preview shows gain at 10, 50, 100, 250 Hz | - | 1 | ⚪ Draft |
+| REQ-604 | AC-604.3 | AC3: Preview is valid for current filter configuration | - | 1 | ⚪ Draft |
+| REQ-604 | AC-604.4 | AC4: Preview generation does not require active input | - | 1 | ⚪ Draft |
+| REQ-605 | AC-605.1 | AC1: Joysticks, throttles, pedals, and yokes are classified at enumeration | - | 1 | ⚪ Draft |
+| REQ-605 | AC-605.2 | AC2: Class routing applies default axis assignments per class | - | 1 | ⚪ Draft |
+| REQ-605 | AC-605.3 | AC3: Class routing is overridable per device in profile | - | 1 | ⚪ Draft |
+| REQ-605 | AC-605.4 | AC4: Device class is shown in flightctl devices output | - | 1 | ⚪ Draft |
+| REQ-606 | AC-606.1 | AC1: flightctl --script outputs minimal formatted results | - | 1 | ⚪ Draft |
+| REQ-606 | AC-606.2 | AC2: Script mode suppresses progress indicators and color | - | 1 | ⚪ Draft |
+| REQ-606 | AC-606.3 | AC3: Script mode exits with non-zero code on errors | - | 1 | ⚪ Draft |
+| REQ-606 | AC-606.4 | AC4: Script mode is documented in CLI help | - | 1 | ⚪ Draft |
+| REQ-619 | AC-619.1 | AC1: Queue overflow drops oldest samples rather than newest | - | 1 | ⚪ Draft |
+| REQ-619 | AC-619.2 | AC2: Overflow events are counted in engine diagnostics | - | 1 | ⚪ Draft |
+| REQ-619 | AC-619.3 | AC3: Overflow does not cause panic or undefined behavior | - | 1 | ⚪ Draft |
+| REQ-619 | AC-619.4 | AC4: Queue capacity is configurable at engine initialization | - | 1 | ⚪ Draft |
+| REQ-620 | AC-620.1 | AC1: Falcon BMS DataExport telemetry is received on UDP port 1234 | - | 1 | ⚪ Draft |
+| REQ-620 | AC-620.2 | AC2: Flight dynamics variables are extracted and normalized | - | 1 | ⚪ Draft |
+| REQ-620 | AC-620.3 | AC3: Falcon BMS is listed in compatibility matrix | - | 1 | ⚪ Draft |
+| REQ-620 | AC-620.4 | AC4: BMS adapter handles reconnection when sim restarts | - | 1 | ⚪ Draft |
+| REQ-621 | AC-621.1 | AC1: Feedback detector identifies oscillating axis output | - | 1 | ⚪ Draft |
+| REQ-621 | AC-621.2 | AC2: Detected feedback loop triggers automatic dampening | - | 1 | ⚪ Draft |
+| REQ-621 | AC-621.3 | AC3: Feedback detection threshold is configurable | - | 1 | ⚪ Draft |
+| REQ-621 | AC-621.4 | AC4: Feedback loop events are logged and reported | - | 1 | ⚪ Draft |
+| REQ-622 | AC-622.1 | AC1: SIGTERM triggers graceful shutdown sequence | - | 1 | ⚪ Draft |
+| REQ-622 | AC-622.2 | AC2: Shutdown completes within configured timeout | - | 1 | ⚪ Draft |
+| REQ-622 | AC-622.3 | AC3: All adapters are disconnected before process exits | - | 1 | ⚪ Draft |
+| REQ-622 | AC-622.4 | AC4: Final state is flushed to disk before exit | - | 1 | ⚪ Draft |
+| REQ-623 | AC-623.1 | AC1: Axis aliases map human-readable names to physical axis IDs | - | 1 | ⚪ Draft |
+| REQ-623 | AC-623.2 | AC2: Aliases are usable in profile rules as axis references | - | 1 | ⚪ Draft |
+| REQ-623 | AC-623.3 | AC3: Duplicate alias names produce a validation error | - | 1 | ⚪ Draft |
+| REQ-623 | AC-623.4 | AC4: Aliases are shown in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-624 | AC-624.1 | AC1: Adapter queries DataRef Tool plugin for custom DataRef list | - | 1 | ⚪ Draft |
+| REQ-624 | AC-624.2 | AC2: Discovered DataRefs are available for subscription | - | 1 | ⚪ Draft |
+| REQ-624 | AC-624.3 | AC3: Discovery runs once on connection and on explicit refresh | - | 1 | ⚪ Draft |
+| REQ-624 | AC-624.4 | AC4: Custom DataRefs are documented in X-Plane adapter guide | - | 1 | ⚪ Draft |
+| REQ-625 | AC-625.1 | AC1: If no device input is received, last value is repeated at tick rate | - | 1 | ⚪ Draft |
+| REQ-625 | AC-625.2 | AC2: Repeated value includes a staleness flag | - | 1 | ⚪ Draft |
+| REQ-625 | AC-625.3 | AC3: Stale repeating triggers disconnection if no input for 5 seconds | - | 1 | ⚪ Draft |
+| REQ-625 | AC-625.4 | AC4: Minimum rate behavior is documented per device type | - | 1 | ⚪ Draft |
+| REQ-626 | AC-626.1 | AC1: Ground vehicle controls use separate axis mapping from aircraft | - | 1 | ⚪ Draft |
+| REQ-626 | AC-626.2 | AC2: Vehicle type is detected from War Thunder telemetry | - | 1 | ⚪ Draft |
+| REQ-626 | AC-626.3 | AC3: Profile auto-switch uses vehicle type for rule matching | - | 1 | ⚪ Draft |
+| REQ-626 | AC-626.4 | AC4: Ground vehicle mapping is configurable in profile | - | 1 | ⚪ Draft |
+| REQ-627 | AC-627.1 | AC1: StreamAxisOutputs RPC sends output values at configurable rate | - | 1 | ⚪ Draft |
+| REQ-627 | AC-627.2 | AC2: Stream includes axis ID, raw, pipeline, and output values | - | 1 | ⚪ Draft |
+| REQ-627 | AC-627.3 | AC3: Stream rate is bounded to 100Hz maximum | - | 1 | ⚪ Draft |
+| REQ-627 | AC-627.4 | AC4: Stream handles client disconnect without crashing | - | 1 | ⚪ Draft |
+| REQ-628 | AC-628.1 | AC1: Config files can declare extends: path to base config | - | 1 | ⚪ Draft |
+| REQ-628 | AC-628.2 | AC2: Inherited values can be overridden in child config | - | 1 | ⚪ Draft |
+| REQ-628 | AC-628.3 | AC3: Circular inheritance is detected and rejected | - | 1 | ⚪ Draft |
+| REQ-628 | AC-628.4 | AC4: Effective config after inheritance is loggable via CLI | - | 1 | ⚪ Draft |
+| REQ-629 | AC-629.1 | AC1: Detent zones define special behavior at specific positions | - | 1 | ⚪ Draft |
+| REQ-629 | AC-629.2 | AC2: Military power detent snaps axis to detent value when within threshold | - | 1 | ⚪ Draft |
+| REQ-629 | AC-629.3 | AC3: Detent click events are published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-629 | AC-629.4 | AC4: Detents are configurable per-axis in profile | - | 1 | ⚪ Draft |
+| REQ-630 | AC-630.1 | AC1: Serial number is read from HID string descriptor if available | - | 1 | ⚪ Draft |
+| REQ-630 | AC-630.2 | AC2: Serial number is used as stable device identity across USB ports | - | 1 | ⚪ Draft |
+| REQ-630 | AC-630.3 | AC3: Calibration store is keyed by serial number | - | 1 | ⚪ Draft |
+| REQ-630 | AC-630.4 | AC4: Serial number is shown in flightctl devices output | - | 1 | ⚪ Draft |
+| REQ-631 | AC-631.1 | AC1: Property tests verify deadband transition is monotonic | - | 1 | ⚪ Draft |
+| REQ-631 | AC-631.2 | AC2: Edge values at deadband boundary produce consistent output | - | 1 | ⚪ Draft |
+| REQ-631 | AC-631.3 | AC3: Tests cover both positive and negative dead band sides | - | 1 | ⚪ Draft |
+| REQ-631 | AC-631.4 | AC4: Dead band tests run on every PR | - | 1 | ⚪ Draft |
+| REQ-632 | AC-632.1 | AC1: flightctl profile diff shows axis-by-axis configuration summary | - | 1 | ⚪ Draft |
+| REQ-632 | AC-632.2 | AC2: Diff output is colorized when terminal supports it | - | 1 | ⚪ Draft |
+| REQ-632 | AC-632.3 | AC3: Diff supports comparison between two profile files | - | 1 | ⚪ Draft |
+| REQ-632 | AC-632.4 | AC4: Diff output is parseable in script mode | - | 1 | ⚪ Draft |
+| REQ-633 | AC-633.1 | AC1: Connection quality score ranges from 0 to 100 | - | 1 | ⚪ Draft |
+| REQ-633 | AC-633.2 | AC2: Score reflects packet loss, latency, and reconnect count | - | 1 | ⚪ Draft |
+| REQ-633 | AC-633.3 | AC3: Quality score is available via gRPC diagnostics RPC | - | 1 | ⚪ Draft |
+| REQ-633 | AC-633.4 | AC4: Score dropping below threshold triggers a warning event | - | 1 | ⚪ Draft |
+| REQ-634 | AC-634.1 | AC1: Watchdog thread detects if axis tick has not run in 50ms | - | 1 | ⚪ Draft |
+| REQ-634 | AC-634.2 | AC2: Freeze detection logs the current tick state | - | 1 | ⚪ Draft |
+| REQ-634 | AC-634.3 | AC3: Recovery restarts the axis thread with last known good state | - | 1 | ⚪ Draft |
+| REQ-634 | AC-634.4 | AC4: Freeze event count is tracked in metrics | - | 1 | ⚪ Draft |
+| REQ-635 | AC-635.1 | AC1: Hotplug test connects and disconnects device 100 times | - | 1 | ⚪ Draft |
+| REQ-635 | AC-635.2 | AC2: Service remains stable after all iterations | - | 1 | ⚪ Draft |
+| REQ-635 | AC-635.3 | AC3: Memory usage does not grow with repeated hotplug | - | 1 | ⚪ Draft |
+| REQ-635 | AC-635.4 | AC4: Hotplug test is in the CI integration test suite | - | 1 | ⚪ Draft |
+| REQ-636 | AC-636.1 | AC1: AeroFly plugin SDK protocol is documented in adapter guide | - | 1 | ⚪ Draft |
+| REQ-636 | AC-636.2 | AC2: Native plugin mode provides lower latency than UDP | - | 1 | ⚪ Draft |
+| REQ-636 | AC-636.3 | AC3: Native mode requires explicit configuration to enable | - | 1 | ⚪ Draft |
+| REQ-636 | AC-636.4 | AC4: Plugin mode availability is detected and logged | - | 1 | ⚪ Draft |
+| REQ-637 | AC-637.1 | AC1: Multiple active adapters run on separate threads | - | 1 | ⚪ Draft |
+| REQ-637 | AC-637.2 | AC2: Thread priority is configurable per adapter | - | 1 | ⚪ Draft |
+| REQ-637 | AC-637.3 | AC3: Adapter thread affinity can be pinned to specific CPUs | - | 1 | ⚪ Draft |
+| REQ-637 | AC-637.4 | AC4: Load distribution is visible in service diagnostics | - | 1 | ⚪ Draft |
+| REQ-638 | AC-638.1 | AC1: Profile fields can reference $ENV_VAR for runtime values | - | 1 | ⚪ Draft |
+| REQ-638 | AC-638.2 | AC2: Missing env vars produce a validation warning | - | 1 | ⚪ Draft |
+| REQ-638 | AC-638.3 | AC3: Substitution is applied before schema validation | - | 1 | ⚪ Draft |
+| REQ-638 | AC-638.4 | AC4: Substituted values are visible in effective config log | - | 1 | ⚪ Draft |
+| REQ-639 | AC-639.1 | AC1: Button debounce window is configurable in milliseconds | - | 1 | ⚪ Draft |
+| REQ-639 | AC-639.2 | AC2: Rapid toggles within debounce window are treated as single press | - | 1 | ⚪ Draft |
+| REQ-639 | AC-639.3 | AC3: Debounce applies independently per button | - | 1 | ⚪ Draft |
+| REQ-639 | AC-639.4 | AC4: Debounce state is not counted toward rate limiting | - | 1 | ⚪ Draft |
+| REQ-640 | AC-640.1 | AC1: flightctl --json outputs valid JSON for all commands | - | 1 | ⚪ Draft |
+| REQ-640 | AC-640.2 | AC2: JSON schema is documented for each command | - | 1 | ⚪ Draft |
+| REQ-640 | AC-640.3 | AC3: JSON output is stable across patch versions | - | 1 | ⚪ Draft |
+| REQ-640 | AC-640.4 | AC4: Exit codes are independent of output format | - | 1 | ⚪ Draft |
+| REQ-641 | AC-641.1 | AC1: Bend compensation applies a correction curve to axis output | - | 1 | ⚪ Draft |
+| REQ-641 | AC-641.2 | AC2: Correction curve is calibrated during setup wizard | - | 1 | ⚪ Draft |
+| REQ-641 | AC-641.3 | AC3: Compensation magnitude is configurable per axis | - | 1 | ⚪ Draft |
+| REQ-641 | AC-641.4 | AC4: Compensation is applied before other pipeline stages | - | 1 | ⚪ Draft |
+| REQ-642 | AC-642.1 | AC1: Subscriber health is checked every bus tick via heartbeat | - | 1 | ⚪ Draft |
+| REQ-642 | AC-642.2 | AC2: Subscribers that miss 3 consecutive heartbeats are removed | - | 1 | ⚪ Draft |
+| REQ-642 | AC-642.3 | AC3: Subscriber removal is logged with subscriber ID | - | 1 | ⚪ Draft |
+| REQ-642 | AC-642.4 | AC4: Health check overhead is under 1 microsecond per subscriber | - | 1 | ⚪ Draft |
+| REQ-643 | AC-643.1 | AC1: Spring effect gain is configurable per aircraft type in profile | - | 1 | ⚪ Draft |
+| REQ-643 | AC-643.2 | AC2: Maximum spring force is bounded by safety envelope | - | 1 | ⚪ Draft |
+| REQ-643 | AC-643.3 | AC3: Spring calibration wizard is available in CLI | - | 1 | ⚪ Draft |
+| REQ-643 | AC-643.4 | AC4: Calibrated values are stored in calibration store | - | 1 | ⚪ Draft |
+| REQ-644 | AC-644.1 | AC1: Log files rotate when size exceeds configurable maximum | - | 1 | ⚪ Draft |
+| REQ-644 | AC-644.2 | AC2: Configurable number of rotated log files are retained | - | 1 | ⚪ Draft |
+| REQ-644 | AC-644.3 | AC3: Log rotation does not interrupt service operation | - | 1 | ⚪ Draft |
+| REQ-644 | AC-644.4 | AC4: Log path and rotation config are in service config file | - | 1 | ⚪ Draft |
+| REQ-645 | AC-645.1 | AC1: ATC trigger fires when axis crosses configurable threshold | - | 1 | ⚪ Draft |
+| REQ-645 | AC-645.2 | AC2: Trigger maps to SimConnect ATC event | - | 1 | ⚪ Draft |
+| REQ-645 | AC-645.3 | AC3: Trigger includes configurable hysteresis | - | 1 | ⚪ Draft |
+| REQ-645 | AC-645.4 | AC4: Trigger state is included in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-646 | AC-646.1 | AC1: Device enumeration runs at startup and on hotplug | - | 1 | ⚪ Draft |
+| REQ-646 | AC-646.2 | AC2: Cache is stored in memory with configurable TTL | - | 1 | ⚪ Draft |
+| REQ-646 | AC-646.3 | AC3: Forced re-enumeration is available via CLI | - | 1 | ⚪ Draft |
+| REQ-646 | AC-646.4 | AC4: Cache state is visible in diagnostics | - | 1 | ⚪ Draft |
+| REQ-647 | AC-647.1 | AC1: All axes initialize to 0.0 on startup | - | 1 | ⚪ Draft |
+| REQ-647 | AC-647.2 | AC2: Power-on state is held until first device input is received | - | 1 | ⚪ Draft |
+| REQ-647 | AC-647.3 | AC3: Power-on state is configurable per axis in profile | - | 1 | ⚪ Draft |
+| REQ-647 | AC-647.4 | AC4: Time to first input is logged on startup | - | 1 | ⚪ Draft |
+| REQ-648 | AC-648.1 | AC1: Data period can be set to SIM_FRAME, SECOND, or custom count | - | 1 | ⚪ Draft |
+| REQ-648 | AC-648.2 | AC2: Per-variable period is configurable in profile | - | 1 | ⚪ Draft |
+| REQ-648 | AC-648.3 | AC3: Period changes take effect on next SimConnect reconnect | - | 1 | ⚪ Draft |
+| REQ-648 | AC-648.4 | AC4: Current periods are visible in SimConnect adapter diagnostics | - | 1 | ⚪ Draft |
+| REQ-649 | AC-649.1 | AC1: Pause state is detected from X-Plane dataref sim/time/paused | - | 1 | ⚪ Draft |
+| REQ-649 | AC-649.2 | AC2: Paused state is published on flight-bus | - | 1 | ⚪ Draft |
+| REQ-649 | AC-649.3 | AC3: FFB effects are ramped to idle when sim is paused | - | 1 | ⚪ Draft |
+| REQ-649 | AC-649.4 | AC4: Profile rules can react to pause state changes | - | 1 | ⚪ Draft |
+| REQ-650 | AC-650.1 | AC1: Event stream contains axis-id, value, and stage-values | - | 1 | ⚪ Draft |
+| REQ-650 | AC-650.2 | AC2: Stream is delivered via gRPC server-side streaming | - | 1 | ⚪ Draft |
+| REQ-650 | AC-650.3 | AC3: Stream backpressure drops oldest events if consumer is slow | - | 1 | ⚪ Draft |
+| REQ-650 | AC-650.4 | AC4: Event stream can be paused and resumed by client | - | 1 | ⚪ Draft |
+| REQ-651 | AC-651.1 | AC1: Passing HIL test promotes device to Tier 1 | - | 1 | ⚪ Draft |
+| REQ-651 | AC-651.2 | AC2: Automated trace test without HIL promotes to Tier 2 | - | 1 | ⚪ Draft |
+| REQ-651 | AC-651.3 | AC3: Tier promotion is recorded in compatibility manifest | - | 1 | ⚪ Draft |
+| REQ-651 | AC-651.4 | AC4: Tier changes are logged in CI artifacts | - | 1 | ⚪ Draft |
+| REQ-652 | AC-652.1 | AC1: Engine configuration can be reloaded without restart | - | 1 | ⚪ Draft |
+| REQ-652 | AC-652.2 | AC2: Reload is atomic — either full old or full new config applies | - | 1 | ⚪ Draft |
+| REQ-652 | AC-652.3 | AC3: Failed reload reverts to previous config | - | 1 | ⚪ Draft |
+| REQ-652 | AC-652.4 | AC4: Reload events are counted in engine diagnostics | - | 1 | ⚪ Draft |
+| REQ-653 | AC-653.1 | AC1: All SimVar values are converted to SI units before publishing | - | 1 | ⚪ Draft |
+| REQ-653 | AC-653.2 | AC2: Unit conversion is documented per variable in code comments | - | 1 | ⚪ Draft |
+| REQ-653 | AC-653.3 | AC3: Unit conversion is tested with boundary values | - | 1 | ⚪ Draft |
+| REQ-653 | AC-653.4 | AC4: Converted values match expected MSFS variable definitions | - | 1 | ⚪ Draft |
+| REQ-654 | AC-654.1 | AC1: Service reports its protocol version in handshake | - | 1 | ⚪ Draft |
+| REQ-654 | AC-654.2 | AC2: CLI rejects connection to incompatible service version | - | 1 | ⚪ Draft |
+| REQ-654 | AC-654.3 | AC3: Version negotiation error has a helpful message | - | 1 | ⚪ Draft |
+| REQ-654 | AC-654.4 | AC4: Protocol versions are documented in IPC guide | - | 1 | ⚪ Draft |
+| REQ-655 | AC-655.1 | AC1: Rules can enable or disable named pipeline stages at runtime | - | 1 | ⚪ Draft |
+| REQ-655 | AC-655.2 | AC2: Stage bypass takes effect within one axis tick | - | 1 | ⚪ Draft |
+| REQ-655 | AC-655.3 | AC3: Bypassed stage is indicated in axis diagnostics | - | 1 | ⚪ Draft |
+| REQ-655 | AC-655.4 | AC4: Rule-driven bypass is documented in profile schema | - | 1 | ⚪ Draft |
+| REQ-656 | AC-656.1 | AC1: Panic hook captures backtrace and last known state | - | 1 | ⚪ Draft |
+| REQ-656 | AC-656.2 | AC2: Crash report is written to configurable crash directory | - | 1 | ⚪ Draft |
+| REQ-656 | AC-656.3 | AC3: Crash report includes service version and config hash | - | 1 | ⚪ Draft |
+| REQ-656 | AC-656.4 | AC4: Next service startup detects prior crash and logs notice | - | 1 | ⚪ Draft |
+| REQ-657 | AC-657.1 | AC1: FFB profile defines effects in physical units not device units | - | 1 | ⚪ Draft |
+| REQ-657 | AC-657.2 | AC2: Device adapter translates physical units to device-specific values | - | 1 | ⚪ Draft |
+| REQ-657 | AC-657.3 | AC3: Same profile produces equivalent experience on different FFB devices | - | 1 | ⚪ Draft |
+| REQ-657 | AC-657.4 | AC4: Translation mapping is documented per device in manifest | - | 1 | ⚪ Draft |
+| REQ-658 | AC-658.1 | AC1: Upsampling fills intermediate samples using linear interpolation | - | 1 | ⚪ Draft |
+| REQ-658 | AC-658.2 | AC2: Downsampling uses decimation with anti-aliasing | - | 1 | ⚪ Draft |
+| REQ-658 | AC-658.3 | AC3: Interpolation is activated automatically for mismatched rates | - | 1 | ⚪ Draft |
+| REQ-658 | AC-658.4 | AC4: Resampler adds at most one tick of latency | - | 1 | ⚪ Draft |
+| REQ-659 | AC-659.1 | AC1: Export script sends version in first packet | - | 1 | ⚪ Draft |
+| REQ-659 | AC-659.2 | AC2: Service compares script version against minimum supported | - | 1 | ⚪ Draft |
+| REQ-659 | AC-659.3 | AC3: Version mismatch produces user-visible warning | - | 1 | ⚪ Draft |
+| REQ-659 | AC-659.4 | AC4: Updated export script is bundled with installer | - | 1 | ⚪ Draft |
+| REQ-660 | AC-660.1 | AC1: Service detects first-run via absence of profile directory | - | 1 | ⚪ Draft |
+| REQ-660 | AC-660.2 | AC2: Default profile is created from built-in template | - | 1 | ⚪ Draft |
+| REQ-660 | AC-660.3 | AC3: Profile creation is logged with explanation | - | 1 | ⚪ Draft |
+| REQ-660 | AC-660.4 | AC4: First-run detection is non-destructive on subsequent runs | - | 1 | ⚪ Draft |
+| REQ-661 | AC-661.1 | AC1: Output can be quantized to N evenly spaced steps | - | 1 | ⚪ Draft |
+| REQ-661 | AC-661.2 | AC2: Quantization is configurable per axis in profile | - | 1 | ⚪ Draft |
+| REQ-661 | AC-661.3 | AC3: Quantized output is clamped to valid range | - | 1 | ⚪ Draft |
+| REQ-661 | AC-661.4 | AC4: Quantization is applied as the last pipeline stage | - | 1 | ⚪ Draft |
+| REQ-662 | AC-662.1 | AC1: SimConnect variable values are loggable to CSV on demand | - | 1 | ⚪ Draft |
+| REQ-662 | AC-662.2 | AC2: Logging is started and stopped via CLI | - | 1 | ⚪ Draft |
+| REQ-662 | AC-662.3 | AC3: Log includes timestamp, variable name, and value | - | 1 | ⚪ Draft |
+| REQ-662 | AC-662.4 | AC4: Log rate is configurable up to sim frame rate | - | 1 | ⚪ Draft |
+| REQ-663 | AC-663.1 | AC1: Axis tick rate is exposed as a gauge metric | - | 1 | ⚪ Draft |
+| REQ-663 | AC-663.2 | AC2: Per-axis clamp count is exposed as counter | - | 1 | ⚪ Draft |
+| REQ-663 | AC-663.3 | AC3: Jitter p99 is exposed as gauge | - | 1 | ⚪ Draft |
+| REQ-663 | AC-663.4 | AC4: Metrics endpoint path is /metrics on configured port | - | 1 | ⚪ Draft |
+| REQ-664 | AC-664.1 | AC1: Calibration captures min and max of each axis during movement | - | 1 | ⚪ Draft |
+| REQ-664 | AC-664.2 | AC2: Calibration stores center position for axes that have one | - | 1 | ⚪ Draft |
+| REQ-664 | AC-664.3 | AC3: Center is calibrated by pressing dedicated button or command | - | 1 | ⚪ Draft |
+| REQ-664 | AC-664.4 | AC4: Calibration result replaces previous calibration for that device | - | 1 | ⚪ Draft |
+| REQ-665 | AC-665.1 | AC1: PMDG SDK data format is documented in integration guide | - | 1 | ⚪ Draft |
+| REQ-665 | AC-665.2 | AC2: PMDG-specific SimConnect events are bindable in profile | - | 1 | ⚪ Draft |
+| REQ-665 | AC-665.3 | AC3: PMDG adapter is gated behind pmdg feature flag | - | 1 | ⚪ Draft |
+| REQ-665 | AC-665.4 | AC4: PMDG device support is listed in compatibility matrix | - | 1 | ⚪ Draft |
+| REQ-666 | AC-666.1 | AC1: Jitter suppressor ignores changes smaller than configured threshold | - | 1 | ⚪ Draft |
+| REQ-666 | AC-666.2 | AC2: Threshold is configurable per axis in profile | - | 1 | ⚪ Draft |
+| REQ-666 | AC-666.3 | AC3: Suppression applies before deadzone stage | - | 1 | ⚪ Draft |
+| REQ-666 | AC-666.4 | AC4: Suppression does not accumulate error over time | - | 1 | ⚪ Draft |
+| REQ-667 | AC-667.1 | AC1: Noise floor is measured during calibration idle period | specs/features/req_667_axis_noise_floor_detection.feature:4 | 1 | ⚪ Draft |
+| REQ-667 | AC-667.2 | AC2: Noise floor threshold is stored per-axis in calibration data | specs/features/req_667_axis_noise_floor_detection.feature:10 | 1 | ⚪ Draft |
+| REQ-667 | AC-667.3 | AC3: Inputs below noise floor are suppressed to zero | specs/features/req_667_axis_noise_floor_detection.feature:16 | 1 | ⚪ Draft |
+| REQ-667 | AC-667.4 | AC4: Noise floor recalibration can be triggered manually | specs/features/req_667_axis_noise_floor_detection.feature:22 | 1 | ⚪ Draft |
+| REQ-668 | AC-668.1 | AC1: Signal conditioning applies a configurable low-pass filter | specs/features/req_668_axis_signal_conditioning.feature:4 | 1 | ⚪ Draft |
+| REQ-668 | AC-668.2 | AC2: Filter cutoff frequency is adjustable per axis | specs/features/req_668_axis_signal_conditioning.feature:10 | 1 | ⚪ Draft |
+| REQ-668 | AC-668.3 | AC3: Conditioning preserves signal phase within acceptable tolerance | specs/features/req_668_axis_signal_conditioning.feature:16 | 1 | ⚪ Draft |
+| REQ-668 | AC-668.4 | AC4: Conditioning stage operates within RT budget | specs/features/req_668_axis_signal_conditioning.feature:22 | 1 | ⚪ Draft |
+| REQ-669 | AC-669.1 | AC1: Hysteresis band prevents oscillation at decision boundaries | specs/features/req_669_axis_hysteresis_filter.feature:4 | 1 | ⚪ Draft |
+| REQ-669 | AC-669.2 | AC2: Band width is configurable per axis in profile | specs/features/req_669_axis_hysteresis_filter.feature:10 | 1 | ⚪ Draft |
+| REQ-669 | AC-669.3 | AC3: Filter does not add latency beyond one sample period | specs/features/req_669_axis_hysteresis_filter.feature:16 | 1 | ⚪ Draft |
+| REQ-669 | AC-669.4 | AC4: Hysteresis resets on axis recalibration | specs/features/req_669_axis_hysteresis_filter.feature:22 | 1 | ⚪ Draft |
+| REQ-670 | AC-670.1 | AC1: Calibration data is saved to persistent storage on completion | specs/features/req_670_axis_calibration_persistence.feature:4 | 1 | ⚪ Draft |
+| REQ-670 | AC-670.2 | AC2: Calibration is restored on service restart | specs/features/req_670_axis_calibration_persistence.feature:10 | 1 | ⚪ Draft |
+| REQ-670 | AC-670.3 | AC3: Corrupt calibration file falls back to defaults with warning | specs/features/req_670_axis_calibration_persistence.feature:16 | 1 | ⚪ Draft |
+| REQ-670 | AC-670.4 | AC4: Calibration file format is versioned for forward compatibility | specs/features/req_670_axis_calibration_persistence.feature:22 | 1 | ⚪ Draft |
+| REQ-671 | AC-671.1 | AC1: Center point is detected from idle position during calibration | specs/features/req_671_axis_center_point_auto_detect.feature:4 | 1 | ⚪ Draft |
+| REQ-671 | AC-671.2 | AC2: Auto-detect tolerates small deviations from mechanical center | specs/features/req_671_axis_center_point_auto_detect.feature:10 | 1 | ⚪ Draft |
+| REQ-671 | AC-671.3 | AC3: Center point can be manually overridden in profile | specs/features/req_671_axis_center_point_auto_detect.feature:16 | 1 | ⚪ Draft |
+| REQ-671 | AC-671.4 | AC4: Center offset is applied before deadzone processing | specs/features/req_671_axis_center_point_auto_detect.feature:22 | 1 | ⚪ Draft |
+| REQ-672 | AC-672.1 | AC1: Full deflection endpoints are captured during calibration sweep | specs/features/req_672_axis_endpoint_calibration.feature:4 | 1 | ⚪ Draft |
+| REQ-672 | AC-672.2 | AC2: Endpoint values define the axis normalization range | specs/features/req_672_axis_endpoint_calibration.feature:10 | 1 | ⚪ Draft |
+| REQ-672 | AC-672.3 | AC3: Asymmetric endpoints are supported for worn hardware | specs/features/req_672_axis_endpoint_calibration.feature:16 | 1 | ⚪ Draft |
+| REQ-672 | AC-672.4 | AC4: Endpoint calibration validates that range exceeds minimum threshold | specs/features/req_672_axis_endpoint_calibration.feature:22 | 1 | ⚪ Draft |
+| REQ-673 | AC-673.1 | AC1: Hardware non-linearity is measured during calibration | specs/features/req_673_axis_non_linearity_compensation.feature:4 | 1 | ⚪ Draft |
+| REQ-673 | AC-673.2 | AC2: Compensation lookup table is generated from calibration data | specs/features/req_673_axis_non_linearity_compensation.feature:10 | 1 | ⚪ Draft |
+| REQ-673 | AC-673.3 | AC3: Compensated output is linear within 1% of ideal | specs/features/req_673_axis_non_linearity_compensation.feature:16 | 1 | ⚪ Draft |
+| REQ-673 | AC-673.4 | AC4: Compensation is bypassed when custom response curves are active | specs/features/req_673_axis_non_linearity_compensation.feature:22 | 1 | ⚪ Draft |
+| REQ-674 | AC-674.1 | AC1: Drift correction monitors center position over time | specs/features/req_674_axis_temperature_drift_correction.feature:4 | 1 | ⚪ Draft |
+| REQ-674 | AC-674.2 | AC2: Gradual drift is compensated without user intervention | specs/features/req_674_axis_temperature_drift_correction.feature:10 | 1 | ⚪ Draft |
+| REQ-674 | AC-674.3 | AC3: Sudden large shifts trigger a recalibration advisory | specs/features/req_674_axis_temperature_drift_correction.feature:16 | 1 | ⚪ Draft |
+| REQ-674 | AC-674.4 | AC4: Drift correction rate is configurable in service settings | specs/features/req_674_axis_temperature_drift_correction.feature:22 | 1 | ⚪ Draft |
+| REQ-675 | AC-675.1 | AC1: Calibration captures values at multiple reference points | specs/features/req_675_axis_multi_point_calibration.feature:4 | 1 | ⚪ Draft |
+| REQ-675 | AC-675.2 | AC2: Interpolation between calibration points uses cubic spline | specs/features/req_675_axis_multi_point_calibration.feature:10 | 1 | ⚪ Draft |
+| REQ-675 | AC-675.3 | AC3: Minimum of 3 calibration points are required per axis | specs/features/req_675_axis_multi_point_calibration.feature:16 | 1 | ⚪ Draft |
+| REQ-675 | AC-675.4 | AC4: Calibration points can be added incrementally | specs/features/req_675_axis_multi_point_calibration.feature:22 | 1 | ⚪ Draft |
+| REQ-676 | AC-676.1 | AC1: Raw axis values can be logged to file for diagnostics | specs/features/req_676_axis_raw_value_logging.feature:4 | 1 | ⚪ Draft |
+| REQ-676 | AC-676.2 | AC2: Log format includes timestamp and device identifier | specs/features/req_676_axis_raw_value_logging.feature:10 | 1 | ⚪ Draft |
+| REQ-676 | AC-676.3 | AC3: Logging can be enabled per-axis without restarting service | specs/features/req_676_axis_raw_value_logging.feature:16 | 1 | ⚪ Draft |
+| REQ-676 | AC-676.4 | AC4: Log files are automatically rotated at configurable size | specs/features/req_676_axis_raw_value_logging.feature:22 | 1 | ⚪ Draft |
+| REQ-677 | AC-677.1 | AC1: Step-by-step wizard guides user through calibration process | specs/features/req_677_axis_calibration_wizard.feature:4 | 1 | ⚪ Draft |
+| REQ-677 | AC-677.2 | AC2: Wizard detects when axis is at center and full deflection | specs/features/req_677_axis_calibration_wizard.feature:10 | 1 | ⚪ Draft |
+| REQ-677 | AC-677.3 | AC3: Progress is shown visually during calibration | specs/features/req_677_axis_calibration_wizard.feature:16 | 1 | ⚪ Draft |
+| REQ-677 | AC-677.4 | AC4: Wizard can be cancelled without affecting existing calibration | specs/features/req_677_axis_calibration_wizard.feature:22 | 1 | ⚪ Draft |
+| REQ-678 | AC-678.1 | AC1: Calibration data can be exported to a portable file format | specs/features/req_678_axis_calibration_export.feature:4 | 1 | ⚪ Draft |
+| REQ-678 | AC-678.2 | AC2: Exported calibration can be imported on another installation | specs/features/req_678_axis_calibration_export.feature:10 | 1 | ⚪ Draft |
+| REQ-678 | AC-678.3 | AC3: Export includes device identifier for matching verification | specs/features/req_678_axis_calibration_export.feature:16 | 1 | ⚪ Draft |
+| REQ-678 | AC-678.4 | AC4: Import validates compatibility before applying calibration | specs/features/req_678_axis_calibration_export.feature:22 | 1 | ⚪ Draft |
+| REQ-679 | AC-679.1 | AC1: Per-axis input lag from HID to output is measured in microseconds | - | 1 | ⚪ Draft |
+| REQ-679 | AC-679.2 | AC2: Lag exceeding 5ms triggers a metric increment | - | 1 | ⚪ Draft |
+| REQ-679 | AC-679.3 | AC3: Lag histogram is accessible via metrics endpoint | - | 1 | ⚪ Draft |
+| REQ-679 | AC-679.4 | AC4: Lag budget is logged in diagnostic bundle | - | 1 | ⚪ Draft |
+| REQ-680 | AC-680.1 | AC1: flightctl profile import <url> downloads and validates the profile | - | 1 | ⚪ Draft |
+| REQ-680 | AC-680.2 | AC2: HTTP and HTTPS URLs are supported | - | 1 | ⚪ Draft |
+| REQ-680 | AC-680.3 | AC3: Profile checksum is verified after download | - | 1 | ⚪ Draft |
+| REQ-680 | AC-680.4 | AC4: Import fails gracefully with a clear error on invalid URL | - | 1 | ⚪ Draft |
+| REQ-681 | AC-681.1 | AC1: CLI command exports current axis chain config as JSON | - | 1 | ⚪ Draft |
+| REQ-681 | AC-681.2 | AC2: Snapshot includes filter parameters and pipeline order | - | 1 | ⚪ Draft |
+| REQ-681 | AC-681.3 | AC3: Snapshot can be imported to restore the configuration | - | 1 | ⚪ Draft |
+| REQ-681 | AC-681.4 | AC4: Snapshot export includes timestamp and device info | - | 1 | ⚪ Draft |
+| REQ-682 | AC-682.1 | AC1: Reconnect attempts start at 100ms and double up to 30s | - | 1 | ⚪ Draft |
+| REQ-682 | AC-682.2 | AC2: Backoff state is logged at each attempt | - | 1 | ⚪ Draft |
+| REQ-682 | AC-682.3 | AC3: Reconnect succeeds within two attempts on device restore | - | 1 | ⚪ Draft |
+| REQ-682 | AC-682.4 | AC4: Backoff is reset after successful reconnection | - | 1 | ⚪ Draft |
+| REQ-683 | AC-683.1 | AC1: Messages can be tagged with High, Normal, or Low priority | - | 1 | ⚪ Draft |
+| REQ-683 | AC-683.2 | AC2: High priority messages are processed before Normal | - | 1 | ⚪ Draft |
+| REQ-683 | AC-683.3 | AC3: Low priority messages are dropped on queue pressure | - | 1 | ⚪ Draft |
+| REQ-683 | AC-683.4 | AC4: Priority levels are configurable in service config | - | 1 | ⚪ Draft |
+| REQ-684 | AC-684.1 | AC1: flightctl device list shows VID/PID and device name | - | 1 | ⚪ Draft |
+| REQ-684 | AC-684.2 | AC2: Device capabilities (axes, buttons, FFB) are shown | - | 1 | ⚪ Draft |
+| REQ-684 | AC-684.3 | AC3: Output is available in JSON format with --json flag | - | 1 | ⚪ Draft |
+| REQ-684 | AC-684.4 | AC4: Disconnected devices are shown as unavailable | - | 1 | ⚪ Draft |
+| REQ-685 | AC-685.1 | AC1: HID sample timestamps are propagated through pipeline | specs/features/req_685_axis_sample_timestamp.feature:4 | 1 | ⚪ Draft |
+| REQ-685 | AC-685.2 | AC2: Timestamp resolution is at minimum 1ms | specs/features/req_685_axis_sample_timestamp.feature:10 | 1 | ⚪ Draft |
+| REQ-685 | AC-685.3 | AC3: Timestamps are included in bus snapshot | specs/features/req_685_axis_sample_timestamp.feature:16 | 1 | ⚪ Draft |
+| REQ-685 | AC-685.4 | AC4: Timestamp monotonicity is validated; non-monotonic timestamps are flagged | specs/features/req_685_axis_sample_timestamp.feature:22 | 1 | ⚪ Draft |
+| REQ-686 | AC-686.1 | AC1: Profile changes are logged with before and after values | specs/features/req_686_service_audit_log.feature:4 | 1 | ⚪ Draft |
+| REQ-686 | AC-686.2 | AC2: Audit log is written to a separate audit file | specs/features/req_686_service_audit_log.feature:10 | 1 | ⚪ Draft |
+| REQ-686 | AC-686.3 | AC3: Audit entries include user, timestamp, and change description | specs/features/req_686_service_audit_log.feature:16 | 1 | ⚪ Draft |
+| REQ-686 | AC-686.4 | AC4: Audit log is readable via CLI | specs/features/req_686_service_audit_log.feature:22 | 1 | ⚪ Draft |
+| REQ-687 | AC-687.1 | AC1: Total fuel quantity is published to bus snapshot | specs/features/req_687_msfs_fuel_system_data.feature:4 | 1 | ⚪ Draft |
+| REQ-687 | AC-687.2 | AC2: Fuel flow per engine is available if sim provides it | specs/features/req_687_msfs_fuel_system_data.feature:10 | 1 | ⚪ Draft |
+| REQ-687 | AC-687.3 | AC3: Fuel data polling can be toggled in profile | specs/features/req_687_msfs_fuel_system_data.feature:16 | 1 | ⚪ Draft |
+| REQ-687 | AC-687.4 | AC4: Fuel channel is documented in sim adapter reference | specs/features/req_687_msfs_fuel_system_data.feature:22 | 1 | ⚪ Draft |
+| REQ-688 | AC-688.1 | AC1: Soft limits constrain output to a sub-range of full travel | specs/features/req_688_axis_range_soft_limits.feature:4 | 1 | ⚪ Draft |
+| REQ-688 | AC-688.2 | AC2: Soft limits are defined in profile YAML as min_out and max_out | specs/features/req_688_axis_range_soft_limits.feature:10 | 1 | ⚪ Draft |
+| REQ-688 | AC-688.3 | AC3: Values outside soft limits are clamped not rejected | specs/features/req_688_axis_range_soft_limits.feature:16 | 1 | ⚪ Draft |
+| REQ-688 | AC-688.4 | AC4: Soft limit application is the second-to-last pipeline stage | specs/features/req_688_axis_range_soft_limits.feature:22 | 1 | ⚪ Draft |
+| REQ-689 | AC-689.1 | AC1: If updated service fails health check within 60s, rollback is triggered | specs/features/req_689_service_update_rollback.feature:4 | 1 | ⚪ Draft |
+| REQ-689 | AC-689.2 | AC2: Previous version binary is preserved in a rollback slot | specs/features/req_689_service_update_rollback.feature:10 | 1 | ⚪ Draft |
+| REQ-689 | AC-689.3 | AC3: Rollback event is logged and surfaced in CLI | specs/features/req_689_service_update_rollback.feature:16 | 1 | ⚪ Draft |
+| REQ-689 | AC-689.4 | AC4: Rollback policy is configurable in update config | specs/features/req_689_service_update_rollback.feature:22 | 1 | ⚪ Draft |
+| REQ-690 | AC-690.1 | AC1: Adaptive mode increases smoothing when input is stable | specs/features/req_690_axis_smoothing_adaptive.feature:4 | 1 | ⚪ Draft |
+| REQ-690 | AC-690.2 | AC2: Adaptive mode reduces smoothing on rapid movement | specs/features/req_690_axis_smoothing_adaptive.feature:10 | 1 | ⚪ Draft |
+| REQ-690 | AC-690.3 | AC3: Adaptation rate is configurable in profile | specs/features/req_690_axis_smoothing_adaptive.feature:16 | 1 | ⚪ Draft |
+| REQ-690 | AC-690.4 | AC4: Adaptive mode is compatible with all other pipeline stages | specs/features/req_690_axis_smoothing_adaptive.feature:22 | 1 | ⚪ Draft |
+| REQ-691 | AC-691.1 | AC1: Filter chain order is defined in profile configuration | specs/features/req_691_axis_filter_chain_ordering.feature:4 | 1 | ⚪ Draft |
+| REQ-691 | AC-691.2 | AC2: Reordering filters produces deterministic output changes | specs/features/req_691_axis_filter_chain_ordering.feature:10 | 1 | ⚪ Draft |
+| REQ-691 | AC-691.3 | AC3: Invalid filter chain configurations are rejected at load time | specs/features/req_691_axis_filter_chain_ordering.feature:16 | 1 | ⚪ Draft |
+| REQ-691 | AC-691.4 | AC4: Default filter chain order matches recommended signal path | specs/features/req_691_axis_filter_chain_ordering.feature:22 | 1 | ⚪ Draft |
+| REQ-692 | AC-692.1 | AC1: Individual filters can be bypassed without removing configuration | specs/features/req_692_axis_filter_bypass_mode.feature:4 | 1 | ⚪ Draft |
+| REQ-692 | AC-692.2 | AC2: Bypass state is togglable at runtime via CLI | specs/features/req_692_axis_filter_bypass_mode.feature:10 | 1 | ⚪ Draft |
+| REQ-692 | AC-692.3 | AC3: Bypassed filters consume zero processing budget | specs/features/req_692_axis_filter_bypass_mode.feature:16 | 1 | ⚪ Draft |
+| REQ-692 | AC-692.4 | AC4: Filter bypass state is persisted across service restarts | specs/features/req_692_axis_filter_bypass_mode.feature:22 | 1 | ⚪ Draft |
+| REQ-693 | AC-693.1 | AC1: Output update rate can be limited below the processing rate | specs/features/req_693_axis_output_rate_limiting.feature:4 | 1 | ⚪ Draft |
+| REQ-693 | AC-693.2 | AC2: Rate limiting reduces sim variable write frequency | specs/features/req_693_axis_output_rate_limiting.feature:10 | 1 | ⚪ Draft |
+| REQ-693 | AC-693.3 | AC3: Rate limit is configurable per axis in profile | specs/features/req_693_axis_output_rate_limiting.feature:16 | 1 | ⚪ Draft |
+| REQ-693 | AC-693.4 | AC4: Rate limiting does not affect internal processing fidelity | specs/features/req_693_axis_output_rate_limiting.feature:22 | 1 | ⚪ Draft |
+| REQ-694 | AC-694.1 | AC1: Output values are clamped to configured min/max range | specs/features/req_694_axis_value_clamping.feature:4 | 1 | ⚪ Draft |
+| REQ-694 | AC-694.2 | AC2: Clamp range is configurable per axis | specs/features/req_694_axis_value_clamping.feature:10 | 1 | ⚪ Draft |
+| REQ-694 | AC-694.3 | AC3: Values outside clamp range are reported as metric events | specs/features/req_694_axis_value_clamping.feature:16 | 1 | ⚪ Draft |
+| REQ-694 | AC-694.4 | AC4: Clamping operates as the final pipeline stage before output | specs/features/req_694_axis_value_clamping.feature:22 | 1 | ⚪ Draft |
+| REQ-695 | AC-695.1 | AC1: Axis direction can be inverted via profile setting | specs/features/req_695_axis_inversion_toggle.feature:4 | 1 | ⚪ Draft |
+| REQ-695 | AC-695.2 | AC2: Inversion is applied after all processing stages | specs/features/req_695_axis_inversion_toggle.feature:10 | 1 | ⚪ Draft |
+| REQ-695 | AC-695.3 | AC3: Inversion toggle is available per axis independently | specs/features/req_695_axis_inversion_toggle.feature:16 | 1 | ⚪ Draft |
+| REQ-695 | AC-695.4 | AC4: Toggling inversion takes effect immediately without restart | specs/features/req_695_axis_inversion_toggle.feature:22 | 1 | ⚪ Draft |
+| REQ-696 | AC-696.1 | AC1: Two axes can be swapped via profile configuration | specs/features/req_696_axis_swap_pair_configuration.feature:4 | 1 | ⚪ Draft |
+| REQ-696 | AC-696.2 | AC2: Swap applies to processed output, not raw input | specs/features/req_696_axis_swap_pair_configuration.feature:10 | 1 | ⚪ Draft |
+| REQ-696 | AC-696.3 | AC3: Swap configuration is validated to prevent circular references | specs/features/req_696_axis_swap_pair_configuration.feature:16 | 1 | ⚪ Draft |
+| REQ-696 | AC-696.4 | AC4: Axis swap is useful for adapting profiles to different hardware | specs/features/req_696_axis_swap_pair_configuration.feature:22 | 1 | ⚪ Draft |
+| REQ-697 | AC-697.1 | AC1: Trim offset can be applied to shift the axis center point | specs/features/req_697_axis_trim_adjustment.feature:4 | 1 | ⚪ Draft |
+| REQ-697 | AC-697.2 | AC2: Trim can be adjusted incrementally via bound buttons | specs/features/req_697_axis_trim_adjustment.feature:10 | 1 | ⚪ Draft |
+| REQ-697 | AC-697.3 | AC3: Trim position is displayed in the axis status view | specs/features/req_697_axis_trim_adjustment.feature:16 | 1 | ⚪ Draft |
+| REQ-697 | AC-697.4 | AC4: Trim resets to zero on profile change unless persisted | specs/features/req_697_axis_trim_adjustment.feature:22 | 1 | ⚪ Draft |
+| REQ-698 | AC-698.1 | AC1: Predefined sensitivity presets are available per axis type | specs/features/req_698_axis_sensitivity_presets.feature:4 | 1 | ⚪ Draft |
+| REQ-698 | AC-698.2 | AC2: Presets cover low, medium, high, and custom sensitivity | specs/features/req_698_axis_sensitivity_presets.feature:10 | 1 | ⚪ Draft |
+| REQ-698 | AC-698.3 | AC3: Selecting a preset configures curve and deadzone together | specs/features/req_698_axis_sensitivity_presets.feature:16 | 1 | ⚪ Draft |
+| REQ-698 | AC-698.4 | AC4: Custom preset can be saved from current axis settings | specs/features/req_698_axis_sensitivity_presets.feature:22 | 1 | ⚪ Draft |
+| REQ-699 | AC-699.1 | AC1: Multiple response curve types are supported including linear, exponential, logarithmic, and S-curve | specs/features/req_699_axis_response_curve_types.feature:4 | 1 | ⚪ Draft |
+| REQ-699 | AC-699.2 | AC2: Curve type is selectable per axis in profile | specs/features/req_699_axis_response_curve_types.feature:10 | 1 | ⚪ Draft |
+| REQ-699 | AC-699.3 | AC3: Curve parameters are adjustable within type constraints | specs/features/req_699_axis_response_curve_types.feature:16 | 1 | ⚪ Draft |
+| REQ-699 | AC-699.4 | AC4: Curve type change takes effect at next tick boundary | specs/features/req_699_axis_response_curve_types.feature:22 | 1 | ⚪ Draft |
+| REQ-700 | AC-700.1 | AC1: S-curve provides smooth acceleration near center and endpoints | specs/features/req_700_axis_s_curve_response.feature:4 | 1 | ⚪ Draft |
+| REQ-700 | AC-700.2 | AC2: S-curve inflection point is configurable | specs/features/req_700_axis_s_curve_response.feature:10 | 1 | ⚪ Draft |
+| REQ-700 | AC-700.3 | AC3: S-curve maintains monotonic output for monotonic input | specs/features/req_700_axis_s_curve_response.feature:16 | 1 | ⚪ Draft |
+| REQ-700 | AC-700.4 | AC4: S-curve parameters are validated for mathematical correctness | specs/features/req_700_axis_s_curve_response.feature:22 | 1 | ⚪ Draft |
+| REQ-701 | AC-701.1 | AC1: Exponential curve provides fine control near center | specs/features/req_701_axis_exponential_response.feature:4 | 1 | ⚪ Draft |
+| REQ-701 | AC-701.2 | AC2: Exponent value is configurable from 1.0 to 5.0 | specs/features/req_701_axis_exponential_response.feature:10 | 1 | ⚪ Draft |
+| REQ-701 | AC-701.3 | AC3: Exponential response preserves endpoint mapping | specs/features/req_701_axis_exponential_response.feature:16 | 1 | ⚪ Draft |
+| REQ-701 | AC-701.4 | AC4: Negative exponents are rejected with descriptive error | specs/features/req_701_axis_exponential_response.feature:22 | 1 | ⚪ Draft |
+| REQ-702 | AC-702.1 | AC1: Logarithmic curve provides fine control near full deflection | specs/features/req_702_axis_logarithmic_response.feature:4 | 1 | ⚪ Draft |
+| REQ-702 | AC-702.2 | AC2: Log base is configurable to adjust curve shape | specs/features/req_702_axis_logarithmic_response.feature:10 | 1 | ⚪ Draft |
+| REQ-702 | AC-702.3 | AC3: Logarithmic response is normalized to unit output range | specs/features/req_702_axis_logarithmic_response.feature:16 | 1 | ⚪ Draft |
+| REQ-702 | AC-702.4 | AC4: Extreme parameter values are clamped to safe range | specs/features/req_702_axis_logarithmic_response.feature:22 | 1 | ⚪ Draft |
+| REQ-703 | AC-703.1 | AC1: User can define custom curve via control point pairs | specs/features/req_703_axis_custom_curve_points.feature:4 | 1 | ⚪ Draft |
+| REQ-703 | AC-703.2 | AC2: Minimum of 2 points are required including origin and endpoint | specs/features/req_703_axis_custom_curve_points.feature:10 | 1 | ⚪ Draft |
+| REQ-703 | AC-703.3 | AC3: Maximum of 16 control points are supported per axis | specs/features/req_703_axis_custom_curve_points.feature:16 | 1 | ⚪ Draft |
+| REQ-703 | AC-703.4 | AC4: Points are validated for monotonic X values | specs/features/req_703_axis_custom_curve_points.feature:22 | 1 | ⚪ Draft |
+| REQ-704 | AC-704.1 | AC1: Interpolation between control points uses configurable method | specs/features/req_704_axis_curve_interpolation.feature:4 | 1 | ⚪ Draft |
+| REQ-704 | AC-704.2 | AC2: Supported methods include linear, cubic, and Catmull-Rom | specs/features/req_704_axis_curve_interpolation.feature:10 | 1 | ⚪ Draft |
+| REQ-704 | AC-704.3 | AC3: Interpolation produces smooth output without discontinuities | specs/features/req_704_axis_curve_interpolation.feature:16 | 1 | ⚪ Draft |
+| REQ-704 | AC-704.4 | AC4: Interpolation lookup table is precomputed for RT performance | specs/features/req_704_axis_curve_interpolation.feature:22 | 1 | ⚪ Draft |
+| REQ-705 | AC-705.1 | AC1: Curve smoothness is validated when profile is loaded | specs/features/req_705_axis_curve_smoothness_validation.feature:4 | 1 | ⚪ Draft |
+| REQ-705 | AC-705.2 | AC2: Discontinuities in curve slope generate warnings | specs/features/req_705_axis_curve_smoothness_validation.feature:10 | 1 | ⚪ Draft |
+| REQ-705 | AC-705.3 | AC3: Maximum slope change between adjacent segments is configurable | specs/features/req_705_axis_curve_smoothness_validation.feature:16 | 1 | ⚪ Draft |
+| REQ-705 | AC-705.4 | AC4: Validation results are included in profile lint output | specs/features/req_705_axis_curve_smoothness_validation.feature:22 | 1 | ⚪ Draft |
+| REQ-706 | AC-706.1 | AC1: Virtual detent positions can be defined along the axis range | specs/features/req_706_axis_detent_position_configuration.feature:4 | 1 | ⚪ Draft |
+| REQ-706 | AC-706.2 | AC2: Each detent has configurable position and width | specs/features/req_706_axis_detent_position_configuration.feature:10 | 1 | ⚪ Draft |
+| REQ-706 | AC-706.3 | AC3: Multiple detents are supported per axis | specs/features/req_706_axis_detent_position_configuration.feature:16 | 1 | ⚪ Draft |
+| REQ-706 | AC-706.4 | AC4: Detent configuration is validated for non-overlapping positions | specs/features/req_706_axis_detent_position_configuration.feature:22 | 1 | ⚪ Draft |
+| REQ-707 | AC-707.1 | AC1: FFB-capable devices produce tactile feedback at detent positions | specs/features/req_707_axis_detent_force_feedback.feature:4 | 1 | ⚪ Draft |
+| REQ-707 | AC-707.2 | AC2: Detent force magnitude is configurable per detent | specs/features/req_707_axis_detent_force_feedback.feature:10 | 1 | ⚪ Draft |
+| REQ-707 | AC-707.3 | AC3: Force feedback respects FFB safety envelope | specs/features/req_707_axis_detent_force_feedback.feature:16 | 1 | ⚪ Draft |
+| REQ-707 | AC-707.4 | AC4: Non-FFB devices use output snapping as detent simulation | specs/features/req_707_axis_detent_force_feedback.feature:22 | 1 | ⚪ Draft |
+| REQ-708 | AC-708.1 | AC1: Axis output snaps to detent position within capture range | specs/features/req_708_axis_virtual_detent_snap.feature:4 | 1 | ⚪ Draft |
+| REQ-708 | AC-708.2 | AC2: Snap releases when input moves beyond escape threshold | specs/features/req_708_axis_virtual_detent_snap.feature:10 | 1 | ⚪ Draft |
+| REQ-708 | AC-708.3 | AC3: Capture and escape thresholds are independently configurable | specs/features/req_708_axis_virtual_detent_snap.feature:16 | 1 | ⚪ Draft |
+| REQ-708 | AC-708.4 | AC4: Snap behavior is smooth with configurable transition curve | specs/features/req_708_axis_virtual_detent_snap.feature:22 | 1 | ⚪ Draft |
+| REQ-709 | AC-709.1 | AC1: Gate boundaries divide the axis range into discrete zones | specs/features/req_709_axis_gate_boundary_definition.feature:4 | 1 | ⚪ Draft |
+| REQ-709 | AC-709.2 | AC2: Gate transitions are reported as discrete events | specs/features/req_709_axis_gate_boundary_definition.feature:10 | 1 | ⚪ Draft |
+| REQ-709 | AC-709.3 | AC3: Gate boundary positions are configurable in profile | specs/features/req_709_axis_gate_boundary_definition.feature:16 | 1 | ⚪ Draft |
+| REQ-709 | AC-709.4 | AC4: Gate zones can trigger profile-defined actions | specs/features/req_709_axis_gate_boundary_definition.feature:22 | 1 | ⚪ Draft |
+| REQ-710 | AC-710.1 | AC1: Axis can operate in relative incremental mode instead of absolute | specs/features/req_710_axis_relative_mode.feature:4 | 1 | ⚪ Draft |
+| REQ-710 | AC-710.2 | AC2: Relative mode accumulates delta values from input changes | specs/features/req_710_axis_relative_mode.feature:10 | 1 | ⚪ Draft |
+| REQ-710 | AC-710.3 | AC3: Accumulated value is clamped to configured output range | specs/features/req_710_axis_relative_mode.feature:16 | 1 | ⚪ Draft |
+| REQ-710 | AC-710.4 | AC4: Relative mode sensitivity multiplier is configurable | specs/features/req_710_axis_relative_mode.feature:22 | 1 | ⚪ Draft |
+| REQ-711 | AC-711.1 | AC1: Acceleration curve scales sensitivity based on input velocity | specs/features/req_711_axis_acceleration_curve.feature:4 | 1 | ⚪ Draft |
+| REQ-711 | AC-711.2 | AC2: Faster movements produce proportionally larger output changes | specs/features/req_711_axis_acceleration_curve.feature:10 | 1 | ⚪ Draft |
+| REQ-711 | AC-711.3 | AC3: Acceleration factor is configurable from 1x to 10x | specs/features/req_711_axis_acceleration_curve.feature:16 | 1 | ⚪ Draft |
+| REQ-711 | AC-711.4 | AC4: Acceleration applies only in relative mode | specs/features/req_711_axis_acceleration_curve.feature:22 | 1 | ⚪ Draft |
+| REQ-712 | AC-712.1 | AC1: Input velocity is calculated from consecutive sample differences | specs/features/req_712_axis_velocity_sensitivity.feature:4 | 1 | ⚪ Draft |
+| REQ-712 | AC-712.2 | AC2: Velocity value is available as a metric for diagnostics | specs/features/req_712_axis_velocity_sensitivity.feature:10 | 1 | ⚪ Draft |
+| REQ-712 | AC-712.3 | AC3: High velocity events can trigger configurable actions | specs/features/req_712_axis_velocity_sensitivity.feature:16 | 1 | ⚪ Draft |
+| REQ-712 | AC-712.4 | AC4: Velocity calculation uses configurable sample window size | specs/features/req_712_axis_velocity_sensitivity.feature:22 | 1 | ⚪ Draft |
+| REQ-713 | AC-713.1 | AC1: Multiple devices can contribute to the same logical axis | specs/features/req_713_axis_multi_device_merge.feature:4 | 1 | ⚪ Draft |
+| REQ-713 | AC-713.2 | AC2: Merge strategy is configurable as priority, sum, or average | specs/features/req_713_axis_multi_device_merge.feature:10 | 1 | ⚪ Draft |
+| REQ-713 | AC-713.3 | AC3: Device contribution weights are configurable per device | specs/features/req_713_axis_multi_device_merge.feature:16 | 1 | ⚪ Draft |
+| REQ-713 | AC-713.4 | AC4: Merge conflicts are resolved deterministically by priority order | specs/features/req_713_axis_multi_device_merge.feature:22 | 1 | ⚪ Draft |
+| REQ-714 | AC-714.1 | AC1: When multiple inputs target the same axis priority determines winner | specs/features/req_714_axis_priority_arbitration.feature:4 | 1 | ⚪ Draft |
+| REQ-714 | AC-714.2 | AC2: Priority is assigned per device in the profile | specs/features/req_714_axis_priority_arbitration.feature:10 | 1 | ⚪ Draft |
+| REQ-714 | AC-714.3 | AC3: Higher priority input overrides lower priority completely | specs/features/req_714_axis_priority_arbitration.feature:16 | 1 | ⚪ Draft |
+| REQ-714 | AC-714.4 | AC4: Priority ties are resolved by most-recent-input policy | specs/features/req_714_axis_priority_arbitration.feature:22 | 1 | ⚪ Draft |
+| REQ-715 | AC-715.1 | AC1: Worker thread count is configurable via service config | - | 1 | ⚪ Draft |
+| REQ-715 | AC-715.2 | AC2: Axis processing distributes work across configured threads | - | 1 | ⚪ Draft |
+| REQ-715 | AC-715.3 | AC3: Thread pool defaults to number of physical cores minus one | - | 1 | ⚪ Draft |
+| REQ-715 | AC-715.4 | AC4: Thread count changes take effect on next service restart | - | 1 | ⚪ Draft |
+| REQ-716 | AC-716.1 | AC1: Service emits an event when a new device is connected | - | 1 | ⚪ Draft |
+| REQ-716 | AC-716.2 | AC2: Service emits an event when a device is disconnected | - | 1 | ⚪ Draft |
+| REQ-716 | AC-716.3 | AC3: Connection events include device VID, PID, and name | - | 1 | ⚪ Draft |
+| REQ-716 | AC-716.4 | AC4: Events are delivered to all subscribed IPC clients | - | 1 | ⚪ Draft |
+| REQ-717 | AC-717.1 | AC1: CLI shows merged profile output before applying | - | 1 | ⚪ Draft |
+| REQ-717 | AC-717.2 | AC2: Preview highlights overridden fields from each layer | - | 1 | ⚪ Draft |
+| REQ-717 | AC-717.3 | AC3: User can abort or confirm after reviewing preview | - | 1 | ⚪ Draft |
+| REQ-717 | AC-717.4 | AC4: Preview output is available in JSON format | - | 1 | ⚪ Draft |
+| REQ-718 | AC-718.1 | AC1: DCS adapter detects the currently loaded module type | - | 1 | ⚪ Draft |
+| REQ-718 | AC-718.2 | AC2: Module type is mapped to an aircraft identifier | - | 1 | ⚪ Draft |
+| REQ-718 | AC-718.3 | AC3: Detection triggers automatic profile selection | - | 1 | ⚪ Draft |
+| REQ-718 | AC-718.4 | AC4: Unknown modules are reported and use a fallback profile | - | 1 | ⚪ Draft |
+| REQ-719 | AC-719.1 | AC1: Axis curves support user-defined inflection points | - | 1 | ⚪ Draft |
+| REQ-719 | AC-719.2 | AC2: Inflection points are persisted in the profile | - | 1 | ⚪ Draft |
+| REQ-719 | AC-719.3 | AC3: Curves interpolate smoothly between inflection points | - | 1 | ⚪ Draft |
+| REQ-719 | AC-719.4 | AC4: At least 8 inflection points per curve are supported | - | 1 | ⚪ Draft |
+| REQ-720 | AC-720.1 | AC1: Per-component memory budgets are configurable | - | 1 | ⚪ Draft |
+| REQ-720 | AC-720.2 | AC2: Service enforces budgets and prevents over-allocation | - | 1 | ⚪ Draft |
+| REQ-720 | AC-720.3 | AC3: Budget violations are logged with component identity | - | 1 | ⚪ Draft |
+| REQ-720 | AC-720.4 | AC4: Current memory usage per component is queryable via IPC | - | 1 | ⚪ Draft |
+| REQ-721 | AC-721.1 | AC1: SimConnect adapter connects to MSFS via SimBridge | - | 1 | ⚪ Draft |
+| REQ-721 | AC-721.2 | AC2: SimBridge connection is auto-detected when available | - | 1 | ⚪ Draft |
+| REQ-721 | AC-721.3 | AC3: Fallback to direct SimConnect when SimBridge is unavailable | - | 1 | ⚪ Draft |
+| REQ-721 | AC-721.4 | AC4: SimBridge connection status is exposed via IPC | - | 1 | ⚪ Draft |
+| REQ-722 | AC-722.1 | AC1: Pipeline stages can be swapped without stopping the engine | - | 1 | ⚪ Draft |
+| REQ-722 | AC-722.2 | AC2: Swap is atomic at tick boundaries with no dropped frames | - | 1 | ⚪ Draft |
+| REQ-722 | AC-722.3 | AC3: New pipeline is validated before swap is committed | - | 1 | ⚪ Draft |
+| REQ-722 | AC-722.4 | AC4: Failed swap rolls back to previous pipeline configuration | - | 1 | ⚪ Draft |
+| REQ-723 | AC-723.1 | AC1: Device calibration data is exportable to a file | - | 1 | ⚪ Draft |
+| REQ-723 | AC-723.2 | AC2: Exported calibration can be imported on another system | - | 1 | ⚪ Draft |
+| REQ-723 | AC-723.3 | AC3: Import validates calibration data before applying | - | 1 | ⚪ Draft |
+| REQ-723 | AC-723.4 | AC4: Export and import are available via CLI commands | - | 1 | ⚪ Draft |
+| REQ-724 | AC-724.1 | AC1: FFB spring effect supports configurable center position | - | 1 | ⚪ Draft |
+| REQ-724 | AC-724.2 | AC2: Spring strength is adjustable in the profile | - | 1 | ⚪ Draft |
+| REQ-724 | AC-724.3 | AC3: Centering respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-724 | AC-724.4 | AC4: Spring centering works with all supported FFB devices | - | 1 | ⚪ Draft |
+| REQ-725 | AC-725.1 | AC1: CLI generates a ZIP bundle with logs, config, and state | - | 1 | ⚪ Draft |
+| REQ-725 | AC-725.2 | AC2: Bundle includes device enumeration and connection status | - | 1 | ⚪ Draft |
+| REQ-725 | AC-725.3 | AC3: Sensitive data is redacted from the bundle | - | 1 | ⚪ Draft |
+| REQ-725 | AC-725.4 | AC4: Bundle generation completes within 10 seconds | - | 1 | ⚪ Draft |
+| REQ-726 | AC-726.1 | AC1: X-Plane adapter can inject X-Plane commands via UDP | - | 1 | ⚪ Draft |
+| REQ-726 | AC-726.2 | AC2: Commands are mapped from profile button bindings | - | 1 | ⚪ Draft |
+| REQ-726 | AC-726.3 | AC3: Command injection rate is throttled to prevent flooding | - | 1 | ⚪ Draft |
+| REQ-726 | AC-726.4 | AC4: Unsupported commands are rejected with a descriptive error | - | 1 | ⚪ Draft |
+| REQ-727 | AC-727.1 | AC1: Each axis computes a signal quality score from 0 to 100 | - | 1 | ⚪ Draft |
+| REQ-727 | AC-727.2 | AC2: Score reflects noise level, jitter, and dead zones | - | 1 | ⚪ Draft |
+| REQ-727 | AC-727.3 | AC3: Score is queryable via IPC in real time | - | 1 | ⚪ Draft |
+| REQ-727 | AC-727.4 | AC4: Low quality score triggers a warning in the CLI | - | 1 | ⚪ Draft |
+| REQ-728 | AC-728.1 | AC1: Plugins run in isolated sandboxes with declared capabilities | - | 1 | ⚪ Draft |
+| REQ-728 | AC-728.2 | AC2: Plugin crash does not affect the host service | - | 1 | ⚪ Draft |
+| REQ-728 | AC-728.3 | AC3: Plugin resource usage is bounded by configured limits | - | 1 | ⚪ Draft |
+| REQ-728 | AC-728.4 | AC4: Plugin communication uses the defined IPC protocol | - | 1 | ⚪ Draft |
+| REQ-729 | AC-729.1 | AC1: Profiles support conditional activation rules | - | 1 | ⚪ Draft |
+| REQ-729 | AC-729.2 | AC2: Conditions can reference sim state variables | - | 1 | ⚪ Draft |
+| REQ-729 | AC-729.3 | AC3: Multiple conditions can be combined with AND/OR logic | - | 1 | ⚪ Draft |
+| REQ-729 | AC-729.4 | AC4: Condition evaluation does not impact RT spine latency | - | 1 | ⚪ Draft |
+| REQ-730 | AC-730.1 | AC1: DCS adapter exposes cockpit display indicator data | - | 1 | ⚪ Draft |
+| REQ-730 | AC-730.2 | AC2: Indicator data is mapped to panel LED outputs | - | 1 | ⚪ Draft |
+| REQ-730 | AC-730.3 | AC3: Display data updates at the DCS export rate | - | 1 | ⚪ Draft |
+| REQ-730 | AC-730.4 | AC4: Missing indicators default to off state | - | 1 | ⚪ Draft |
+| REQ-731 | AC-731.1 | AC1: Axis engine supports burst processing to catch up on delayed ticks | - | 1 | ⚪ Draft |
+| REQ-731 | AC-731.2 | AC2: Burst mode processes up to a configurable maximum of ticks | - | 1 | ⚪ Draft |
+| REQ-731 | AC-731.3 | AC3: Burst processing maintains deterministic output order | - | 1 | ⚪ Draft |
+| REQ-731 | AC-731.4 | AC4: Burst events are logged for diagnostics | - | 1 | ⚪ Draft |
+| REQ-732 | AC-732.1 | AC1: Service controls device LEDs based on sim state | - | 1 | ⚪ Draft |
+| REQ-732 | AC-732.2 | AC2: LED mappings are configurable in profiles | - | 1 | ⚪ Draft |
+| REQ-732 | AC-732.3 | AC3: LED state changes are rate-limited to prevent flicker | - | 1 | ⚪ Draft |
+| REQ-732 | AC-732.4 | AC4: Unsupported LED commands are silently ignored | - | 1 | ⚪ Draft |
+| REQ-733 | AC-733.1 | AC1: CLI commands support a --watch flag for repeated execution | - | 1 | ⚪ Draft |
+| REQ-733 | AC-733.2 | AC2: Watch interval is configurable with a default of 1 second | - | 1 | ⚪ Draft |
+| REQ-733 | AC-733.3 | AC3: Watch mode clears the terminal between updates | - | 1 | ⚪ Draft |
+| REQ-733 | AC-733.4 | AC4: Watch mode exits cleanly on Ctrl+C | - | 1 | ⚪ Draft |
+| REQ-734 | AC-734.1 | AC1: SimConnect adapter tracks landing gear up/down state | - | 1 | ⚪ Draft |
+| REQ-734 | AC-734.2 | AC2: Gear state is published on the event bus | - | 1 | ⚪ Draft |
+| REQ-734 | AC-734.3 | AC3: Gear in-transit state is reported separately | - | 1 | ⚪ Draft |
+| REQ-734 | AC-734.4 | AC4: Gear state drives panel LED indicators when mapped | - | 1 | ⚪ Draft |
+| REQ-735 | AC-735.1 | AC1: Axis curves support blending between two curve definitions | - | 1 | ⚪ Draft |
+| REQ-735 | AC-735.2 | AC2: Blend ratio is configurable from 0.0 to 1.0 | - | 1 | ⚪ Draft |
+| REQ-735 | AC-735.3 | AC3: Blending is computed without additional heap allocation | - | 1 | ⚪ Draft |
+| REQ-735 | AC-735.4 | AC4: Blend transitions are smooth with no discontinuities | - | 1 | ⚪ Draft |
+| REQ-736 | AC-736.1 | AC1: Service startup declares component dependencies | - | 1 | ⚪ Draft |
+| REQ-736 | AC-736.2 | AC2: Components start in dependency order | - | 1 | ⚪ Draft |
+| REQ-736 | AC-736.3 | AC3: Circular dependencies are detected and reported at startup | - | 1 | ⚪ Draft |
+| REQ-736 | AC-736.4 | AC4: Failed dependency prevents dependent components from starting | - | 1 | ⚪ Draft |
+| REQ-737 | AC-737.1 | AC1: Profiles can be synced to a configured cloud storage backend | - | 1 | ⚪ Draft |
+| REQ-737 | AC-737.2 | AC2: Sync handles conflicts with last-write-wins or manual merge | - | 1 | ⚪ Draft |
+| REQ-737 | AC-737.3 | AC3: Sync status is visible in the CLI | - | 1 | ⚪ Draft |
+| REQ-737 | AC-737.4 | AC4: Cloud sync can be disabled without data loss | - | 1 | ⚪ Draft |
+| REQ-738 | AC-738.1 | AC1: X-Plane adapter supports injecting system failures | - | 1 | ⚪ Draft |
+| REQ-738 | AC-738.2 | AC2: Failures are triggered from profile button bindings | - | 1 | ⚪ Draft |
+| REQ-738 | AC-738.3 | AC3: Active failures are tracked and can be cleared | - | 1 | ⚪ Draft |
+| REQ-738 | AC-738.4 | AC4: Failure injection requires explicit user confirmation | - | 1 | ⚪ Draft |
+| REQ-739 | AC-739.1 | AC1: Axis engine verifies deterministic output for identical inputs | - | 1 | ⚪ Draft |
+| REQ-739 | AC-739.2 | AC2: Non-determinism is detected and logged as a warning | - | 1 | ⚪ Draft |
+| REQ-739 | AC-739.3 | AC3: Determinism check runs periodically in diagnostic mode | - | 1 | ⚪ Draft |
+| REQ-739 | AC-739.4 | AC4: Check uses zero additional allocation on the RT path | - | 1 | ⚪ Draft |
+| REQ-740 | AC-740.1 | AC1: Service tracks battery level for wireless devices | - | 1 | ⚪ Draft |
+| REQ-740 | AC-740.2 | AC2: Battery level is queryable via IPC | - | 1 | ⚪ Draft |
+| REQ-740 | AC-740.3 | AC3: Low battery triggers a warning notification | - | 1 | ⚪ Draft |
+| REQ-740 | AC-740.4 | AC4: Wired devices report battery as not applicable | - | 1 | ⚪ Draft |
+| REQ-741 | AC-741.1 | AC1: CLI generates shell completion data from runtime state | - | 1 | ⚪ Draft |
+| REQ-741 | AC-741.2 | AC2: Completions include device names and profile names | - | 1 | ⚪ Draft |
+| REQ-741 | AC-741.3 | AC3: Completion scripts are generated for bash, zsh, and fish | - | 1 | ⚪ Draft |
+| REQ-741 | AC-741.4 | AC4: Completion data refreshes when service state changes | - | 1 | ⚪ Draft |
+| REQ-742 | AC-742.1 | AC1: DCS adapter exposes radio frequency data via export | - | 1 | ⚪ Draft |
+| REQ-742 | AC-742.2 | AC2: Frequency data is mapped to panel display outputs | - | 1 | ⚪ Draft |
+| REQ-742 | AC-742.3 | AC3: Multiple radio channels are supported simultaneously | - | 1 | ⚪ Draft |
+| REQ-742 | AC-742.4 | AC4: Frequency updates are delivered at the DCS export rate | - | 1 | ⚪ Draft |
+| REQ-743 | AC-743.1 | AC1: Axis output updates are rate-limitable per consumer | - | 1 | ⚪ Draft |
+| REQ-743 | AC-743.2 | AC2: Rate limit is configurable in the consumer profile | - | 1 | ⚪ Draft |
+| REQ-743 | AC-743.3 | AC3: Rate-limited outputs use latest value, not queued values | - | 1 | ⚪ Draft |
+| REQ-743 | AC-743.4 | AC4: Rate limiting does not affect the RT spine tick rate | - | 1 | ⚪ Draft |
+| REQ-744 | AC-744.1 | AC1: Service validates license key on startup | - | 1 | ⚪ Draft |
+| REQ-744 | AC-744.2 | AC2: Invalid license limits service to free-tier features | - | 1 | ⚪ Draft |
+| REQ-744 | AC-744.3 | AC3: License expiry is checked and warned 30 days in advance | - | 1 | ⚪ Draft |
+| REQ-744 | AC-744.4 | AC4: License status is queryable via CLI and IPC | - | 1 | ⚪ Draft |
+| REQ-745 | AC-745.1 | AC1: Profiles track version history with timestamps | - | 1 | ⚪ Draft |
+| REQ-745 | AC-745.2 | AC2: Previous profile versions can be restored | - | 1 | ⚪ Draft |
+| REQ-745 | AC-745.3 | AC3: Version diffs are viewable in the CLI | - | 1 | ⚪ Draft |
+| REQ-745 | AC-745.4 | AC4: Version history is bounded to a configurable maximum | - | 1 | ⚪ Draft |
+| REQ-746 | AC-746.1 | AC1: SimConnect adapter exposes ATC interaction data | - | 1 | ⚪ Draft |
+| REQ-746 | AC-746.2 | AC2: ATC menu options are mapped to panel button outputs | - | 1 | ⚪ Draft |
+| REQ-746 | AC-746.3 | AC3: ATC response selections can be triggered from hardware | - | 1 | ⚪ Draft |
+| REQ-746 | AC-746.4 | AC4: ATC state changes are published on the event bus | - | 1 | ⚪ Draft |
+| REQ-747 | AC-747.1 | AC1: Axis engine completes the current tick before stopping | - | 1 | ⚪ Draft |
+| REQ-747 | AC-747.2 | AC2: Pending output values are flushed to consumers | - | 1 | ⚪ Draft |
+| REQ-747 | AC-747.3 | AC3: Shutdown completes within 100ms of signal | - | 1 | ⚪ Draft |
+| REQ-747 | AC-747.4 | AC4: Shutdown reason is logged for diagnostics | - | 1 | ⚪ Draft |
+| REQ-748 | AC-748.1 | AC1: Service supports firmware updates for compatible devices | - | 1 | ⚪ Draft |
+| REQ-748 | AC-748.2 | AC2: Firmware update requires explicit user confirmation | - | 1 | ⚪ Draft |
+| REQ-748 | AC-748.3 | AC3: Update progress is reported via IPC and CLI | - | 1 | ⚪ Draft |
+| REQ-748 | AC-748.4 | AC4: Failed update rolls back to previous firmware version | - | 1 | ⚪ Draft |
+| REQ-749 | AC-749.1 | AC1: CLI supports connecting to a remote service instance | - | 1 | ⚪ Draft |
+| REQ-749 | AC-749.2 | AC2: Remote connection uses gRPC with TLS encryption | - | 1 | ⚪ Draft |
+| REQ-749 | AC-749.3 | AC3: Remote host is configurable via flag or environment variable | - | 1 | ⚪ Draft |
+| REQ-749 | AC-749.4 | AC4: Connection timeout is configurable with a sensible default | - | 1 | ⚪ Draft |
+| REQ-750 | AC-750.1 | AC1: Spec ledger contains at least 750 tracked requirements | - | 1 | ⚪ Draft |
+| REQ-750 | AC-750.2 | AC2: All requirements have at least one acceptance criterion | - | 1 | ⚪ Draft |
+| REQ-750 | AC-750.3 | AC3: All acceptance criteria reference a feature file | - | 1 | ⚪ Draft |
+| REQ-750 | AC-750.4 | AC4: Requirement coverage spans all major subsystems | - | 1 | ⚪ Draft |
+| REQ-751 | AC-751.1 | AC1: Axis engine discards input during configurable warm-up ticks after startup | - | 1 | ⚪ Draft |
+| REQ-751 | AC-751.2 | AC2: Warm-up tick count defaults to 50 ticks (200ms at 250Hz) | - | 1 | ⚪ Draft |
+| REQ-751 | AC-751.3 | AC3: Warm-up period is configurable via profile | - | 1 | ⚪ Draft |
+| REQ-751 | AC-751.4 | AC4: Axis output is held at neutral during warm-up | - | 1 | ⚪ Draft |
+| REQ-752 | AC-752.1 | AC1: Service maintains a database of known device quirks | - | 1 | ⚪ Draft |
+| REQ-752 | AC-752.2 | AC2: Quirk database is queryable by vendor and product ID | - | 1 | ⚪ Draft |
+| REQ-752 | AC-752.3 | AC3: Quirks are applied automatically when a matching device is connected | - | 1 | ⚪ Draft |
+| REQ-752 | AC-752.4 | AC4: Quirk database is extensible via configuration files | - | 1 | ⚪ Draft |
+| REQ-753 | AC-753.1 | AC1: CLI provides a validate subcommand for profile YAML files | - | 1 | ⚪ Draft |
+| REQ-753 | AC-753.2 | AC2: Validation reports schema errors with line numbers | - | 1 | ⚪ Draft |
+| REQ-753 | AC-753.3 | AC3: Validation does not apply or activate the profile | - | 1 | ⚪ Draft |
+| REQ-753 | AC-753.4 | AC4: Exit code is non-zero when validation fails | - | 1 | ⚪ Draft |
+| REQ-754 | AC-754.1 | AC1: SimConnect adapter reads SimObject latitude and longitude | - | 1 | ⚪ Draft |
+| REQ-754 | AC-754.2 | AC2: SimConnect adapter reads SimObject altitude and heading | - | 1 | ⚪ Draft |
+| REQ-754 | AC-754.3 | AC3: Position data is updated at least once per second | - | 1 | ⚪ Draft |
+| REQ-754 | AC-754.4 | AC4: Position data is published on the event bus | - | 1 | ⚪ Draft |
+| REQ-755 | AC-755.1 | AC1: CLI previews the effect of smoothing settings on sample data | - | 1 | ⚪ Draft |
+| REQ-755 | AC-755.2 | AC2: Preview displays before and after comparison | - | 1 | ⚪ Draft |
+| REQ-755 | AC-755.3 | AC3: Preview supports all smoothing algorithm types | - | 1 | ⚪ Draft |
+| REQ-755 | AC-755.4 | AC4: Preview output is exportable to file | - | 1 | ⚪ Draft |
+| REQ-756 | AC-756.1 | AC1: Service tracks health status for each registered component | - | 1 | ⚪ Draft |
+| REQ-756 | AC-756.2 | AC2: Health status includes healthy, degraded, and failed states | - | 1 | ⚪ Draft |
+| REQ-756 | AC-756.3 | AC3: Component health is queryable via gRPC API | - | 1 | ⚪ Draft |
+| REQ-756 | AC-756.4 | AC4: Health transitions emit events on the bus | - | 1 | ⚪ Draft |
+| REQ-757 | AC-757.1 | AC1: DCS adapter detects weapon release events from export data | - | 1 | ⚪ Draft |
+| REQ-757 | AC-757.2 | AC2: Weapon type is identified in the release event | - | 1 | ⚪ Draft |
+| REQ-757 | AC-757.3 | AC3: Release events are published on the event bus | - | 1 | ⚪ Draft |
+| REQ-757 | AC-757.4 | AC4: Multiple rapid releases are individually tracked | - | 1 | ⚪ Draft |
+| REQ-758 | AC-758.1 | AC1: Bus subscribers can register interest in specific event types | - | 1 | ⚪ Draft |
+| REQ-758 | AC-758.2 | AC2: Filtered subscribers only receive matching events | - | 1 | ⚪ Draft |
+| REQ-758 | AC-758.3 | AC3: Filters can be updated without resubscribing | - | 1 | ⚪ Draft |
+| REQ-758 | AC-758.4 | AC4: Filter evaluation does not allocate on the RT path | - | 1 | ⚪ Draft |
+| REQ-759 | AC-759.1 | AC1: Profile YAML supports dollar-brace variable references | - | 1 | ⚪ Draft |
+| REQ-759 | AC-759.2 | AC2: Variables resolve from environment at profile load time | - | 1 | ⚪ Draft |
+| REQ-759 | AC-759.3 | AC3: Unresolved variables cause a validation error | - | 1 | ⚪ Draft |
+| REQ-759 | AC-759.4 | AC4: Variable substitution works in all string-valued fields | - | 1 | ⚪ Draft |
+| REQ-760 | AC-760.1 | AC1: Service monitors time spent in each axis engine tick | - | 1 | ⚪ Draft |
+| REQ-760 | AC-760.2 | AC2: Budget overruns are logged as warnings | - | 1 | ⚪ Draft |
+| REQ-760 | AC-760.3 | AC3: Tick budget threshold is configurable | - | 1 | ⚪ Draft |
+| REQ-760 | AC-760.4 | AC4: Tick budget metrics are exposed via telemetry | - | 1 | ⚪ Draft |
+| REQ-761 | AC-761.1 | AC1: Service distinguishes multiple identical devices by serial number or path | - | 1 | ⚪ Draft |
+| REQ-761 | AC-761.2 | AC2: Each instance can have independent axis mappings | - | 1 | ⚪ Draft |
+| REQ-761 | AC-761.3 | AC3: Device instance assignment persists across reconnects | - | 1 | ⚪ Draft |
+| REQ-761 | AC-761.4 | AC4: Profile can reference devices by instance identifier | - | 1 | ⚪ Draft |
+| REQ-762 | AC-762.1 | AC1: CLI provides a restart subcommand for the service | - | 1 | ⚪ Draft |
+| REQ-762 | AC-762.2 | AC2: Restart waits for graceful shutdown before restarting | - | 1 | ⚪ Draft |
+| REQ-762 | AC-762.3 | AC3: Restart preserves device assignments | - | 1 | ⚪ Draft |
+| REQ-762 | AC-762.4 | AC4: Restart timeout is configurable | - | 1 | ⚪ Draft |
+| REQ-763 | AC-763.1 | AC1: X-Plane plugin adds an OpenFlight menu to the plugins menu | - | 1 | ⚪ Draft |
+| REQ-763 | AC-763.2 | AC2: Menu includes options to enable and disable the connection | - | 1 | ⚪ Draft |
+| REQ-763 | AC-763.3 | AC3: Menu displays current connection status | - | 1 | ⚪ Draft |
+| REQ-763 | AC-763.4 | AC4: Menu state persists across X-Plane sessions | - | 1 | ⚪ Draft |
+| REQ-764 | AC-764.1 | AC1: Axis engine processes trim wheel incremental input correctly | - | 1 | ⚪ Draft |
+| REQ-764 | AC-764.2 | AC2: Trim position accumulates from incremental deltas | - | 1 | ⚪ Draft |
+| REQ-764 | AC-764.3 | AC3: Trim range is bounded by configurable limits | - | 1 | ⚪ Draft |
+| REQ-764 | AC-764.4 | AC4: Trim position resets on profile change or explicit reset | - | 1 | ⚪ Draft |
+| REQ-765 | AC-765.1 | AC1: Service sets OS process priority to above-normal on startup | - | 1 | ⚪ Draft |
+| REQ-765 | AC-765.2 | AC2: Priority level is configurable in service settings | - | 1 | ⚪ Draft |
+| REQ-765 | AC-765.3 | AC3: Windows uses MMCSS for thread priority elevation | - | 1 | ⚪ Draft |
+| REQ-765 | AC-765.4 | AC4: Failure to set priority is logged but does not prevent startup | - | 1 | ⚪ Draft |
+| REQ-766 | AC-766.1 | AC1: FFB engine generates wind buffet effects from telemetry airspeed | - | 1 | ⚪ Draft |
+| REQ-766 | AC-766.2 | AC2: Buffet intensity scales with indicated airspeed | - | 1 | ⚪ Draft |
+| REQ-766 | AC-766.3 | AC3: Wind direction influences force vector orientation | - | 1 | ⚪ Draft |
+| REQ-766 | AC-766.4 | AC4: Effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-767 | AC-767.1 | AC1: CLI exports axis trace data from blackbox to CSV format | - | 1 | ⚪ Draft |
+| REQ-767 | AC-767.2 | AC2: Export includes timestamp, raw input, and processed output columns | - | 1 | ⚪ Draft |
+| REQ-767 | AC-767.3 | AC3: Time range is filterable with start and end parameters | - | 1 | ⚪ Draft |
+| REQ-767 | AC-767.4 | AC4: Export supports selecting specific axes by name | - | 1 | ⚪ Draft |
+| REQ-768 | AC-768.1 | AC1: SimConnect adapter tracks autopilot master engagement state | - | 1 | ⚪ Draft |
+| REQ-768 | AC-768.2 | AC2: Adapter detects autopilot mode changes (heading, altitude, nav) | - | 1 | ⚪ Draft |
+| REQ-768 | AC-768.3 | AC3: Autopilot state changes are published on the event bus | - | 1 | ⚪ Draft |
+| REQ-768 | AC-768.4 | AC4: FFB effects adjust when autopilot is engaged | - | 1 | ⚪ Draft |
+| REQ-769 | AC-769.1 | AC1: Bus supports computing a diff between two state snapshots | - | 1 | ⚪ Draft |
+| REQ-769 | AC-769.2 | AC2: Diff identifies added, removed, and changed entries | - | 1 | ⚪ Draft |
+| REQ-769 | AC-769.3 | AC3: Diff computation does not allocate on the RT path | - | 1 | ⚪ Draft |
+| REQ-769 | AC-769.4 | AC4: Diff result is serializable for diagnostic export | - | 1 | ⚪ Draft |
+| REQ-770 | AC-770.1 | AC1: Profile merge resolves conflicts using most-specific-wins rule | - | 1 | ⚪ Draft |
+| REQ-770 | AC-770.2 | AC2: Conflicting keys are logged with their source profiles | - | 1 | ⚪ Draft |
+| REQ-770 | AC-770.3 | AC3: Merge result is deterministic for the same input set | - | 1 | ⚪ Draft |
+| REQ-770 | AC-770.4 | AC4: Explicit override markers bypass conflict resolution | - | 1 | ⚪ Draft |
+| REQ-771 | AC-771.1 | AC1: Service measures actual device polling rate over a sample window | - | 1 | ⚪ Draft |
+| REQ-771 | AC-771.2 | AC2: Detected rate is compared against expected rate from device descriptor | - | 1 | ⚪ Draft |
+| REQ-771 | AC-771.3 | AC3: Significant deviation triggers a warning | - | 1 | ⚪ Draft |
+| REQ-771 | AC-771.4 | AC4: Polling rate is exposed in device status | - | 1 | ⚪ Draft |
+| REQ-772 | AC-772.1 | AC1: CLI supports a REPL mode with the interactive subcommand | - | 1 | ⚪ Draft |
+| REQ-772 | AC-772.2 | AC2: REPL provides tab completion for commands and arguments | - | 1 | ⚪ Draft |
+| REQ-772 | AC-772.3 | AC3: Command history is preserved across REPL sessions | - | 1 | ⚪ Draft |
+| REQ-772 | AC-772.4 | AC4: REPL displays live status updates between commands | - | 1 | ⚪ Draft |
+| REQ-773 | AC-773.1 | AC1: DCS adapter exposes per-component damage percentage | - | 1 | ⚪ Draft |
+| REQ-773 | AC-773.2 | AC2: Damage state updates when the aircraft takes hits | - | 1 | ⚪ Draft |
+| REQ-773 | AC-773.3 | AC3: Damage state is published on the event bus | - | 1 | ⚪ Draft |
+| REQ-773 | AC-773.4 | AC4: Total damage summary is available as a single value | - | 1 | ⚪ Draft |
+| REQ-774 | AC-774.1 | AC1: Axis engine configuration is snapshottable at any tick boundary | - | 1 | ⚪ Draft |
+| REQ-774 | AC-774.2 | AC2: Snapshot captures all axis mappings and processing parameters | - | 1 | ⚪ Draft |
+| REQ-774 | AC-774.3 | AC3: Snapshot is exportable for diagnostic purposes | - | 1 | ⚪ Draft |
+| REQ-774 | AC-774.4 | AC4: Snapshot operation does not block the RT path | - | 1 | ⚪ Draft |
+| REQ-775 | AC-775.1 | AC1: Service supports configurable telemetry sampling rates per metric | - | 1 | ⚪ Draft |
+| REQ-775 | AC-775.2 | AC2: Sampling rate can be changed at runtime without restart | - | 1 | ⚪ Draft |
+| REQ-775 | AC-775.3 | AC3: High-frequency metrics default to 1-in-N sampling | - | 1 | ⚪ Draft |
+| REQ-775 | AC-775.4 | AC4: Sampling configuration is persisted across restarts | - | 1 | ⚪ Draft |
+| REQ-776 | AC-776.1 | AC1: FFB engine shifts the centering force to match trim position | - | 1 | ⚪ Draft |
+| REQ-776 | AC-776.2 | AC2: Trim shift is smooth over a configurable transition period | - | 1 | ⚪ Draft |
+| REQ-776 | AC-776.3 | AC3: Trim effect combines correctly with other active effects | - | 1 | ⚪ Draft |
+| REQ-776 | AC-776.4 | AC4: Trim effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-777 | AC-777.1 | AC1: Spec ledger contains at least 777 tracked requirements | - | 1 | ⚪ Draft |
+| REQ-777 | AC-777.2 | AC2: All requirements have at least one acceptance criterion | - | 1 | ⚪ Draft |
+| REQ-777 | AC-777.3 | AC3: All acceptance criteria reference a feature file | - | 1 | ⚪ Draft |
+| REQ-777 | AC-777.4 | AC4: Requirement coverage spans all major subsystems | - | 1 | ⚪ Draft |
+| REQ-778 | AC-778.1 | AC1: Service correctly enumerates interfaces of USB composite devices | - | 1 | ⚪ Draft |
+| REQ-778 | AC-778.2 | AC2: Each interface is treated as a separate logical device | - | 1 | ⚪ Draft |
+| REQ-778 | AC-778.3 | AC3: Composite device relationship is tracked for status display | - | 1 | ⚪ Draft |
+| REQ-778 | AC-778.4 | AC4: Disconnecting a composite device removes all its interfaces | - | 1 | ⚪ Draft |
+| REQ-779 | AC-779.1 | AC1: CLI provides a benchmark subcommand for axis engine performance | - | 1 | ⚪ Draft |
+| REQ-779 | AC-779.2 | AC2: Benchmark reports mean, p50, p99, and max tick latency | - | 1 | ⚪ Draft |
+| REQ-779 | AC-779.3 | AC3: Benchmark duration is configurable | - | 1 | ⚪ Draft |
+| REQ-779 | AC-779.4 | AC4: Benchmark results are exportable to JSON | - | 1 | ⚪ Draft |
+| REQ-780 | AC-780.1 | AC1: SimConnect adapter exposes AI traffic aircraft positions | - | 1 | ⚪ Draft |
+| REQ-780 | AC-780.2 | AC2: Traffic data includes callsign, type, and distance | - | 1 | ⚪ Draft |
+| REQ-780 | AC-780.3 | AC3: Only traffic within a configurable radius is reported | - | 1 | ⚪ Draft |
+| REQ-780 | AC-780.4 | AC4: Traffic data is published on the event bus | - | 1 | ⚪ Draft |
+| REQ-781 | AC-781.1 | AC1: Each axis pipeline stage reports its processing time | - | 1 | ⚪ Draft |
+| REQ-781 | AC-781.2 | AC2: Stage metrics are collected without allocating on the RT path | - | 1 | ⚪ Draft |
+| REQ-781 | AC-781.3 | AC3: Metrics are aggregated over configurable windows | - | 1 | ⚪ Draft |
+| REQ-781 | AC-781.4 | AC4: Stage metrics are queryable via gRPC API | - | 1 | ⚪ Draft |
+| REQ-782 | AC-782.1 | AC1: Service log level is changeable at runtime via CLI command | - | 1 | ⚪ Draft |
+| REQ-782 | AC-782.2 | AC2: Log level changes take effect immediately without restart | - | 1 | ⚪ Draft |
+| REQ-782 | AC-782.3 | AC3: Per-module log levels are supported | - | 1 | ⚪ Draft |
+| REQ-782 | AC-782.4 | AC4: Current log level is queryable via CLI | - | 1 | ⚪ Draft |
+| REQ-783 | AC-783.1 | AC1: X-Plane adapter tracks system failure states via datarefs | - | 1 | ⚪ Draft |
+| REQ-783 | AC-783.2 | AC2: Failure states include engine, electrical, and hydraulic systems | - | 1 | ⚪ Draft |
+| REQ-783 | AC-783.3 | AC3: Failure state changes are published on the event bus | - | 1 | ⚪ Draft |
+| REQ-783 | AC-783.4 | AC4: Active failures are included in the status report | - | 1 | ⚪ Draft |
+| REQ-784 | AC-784.1 | AC1: Bus reports the count of dropped events due to backpressure | - | 1 | ⚪ Draft |
+| REQ-784 | AC-784.2 | AC2: Drop counts are tracked per subscriber | - | 1 | ⚪ Draft |
+| REQ-784 | AC-784.3 | AC3: Sustained backpressure triggers a degraded health status | - | 1 | ⚪ Draft |
+| REQ-784 | AC-784.4 | AC4: Backpressure metrics are exposed via telemetry | - | 1 | ⚪ Draft |
+| REQ-785 | AC-785.1 | AC1: Imported profiles are schema-validated before activation | - | 1 | ⚪ Draft |
+| REQ-785 | AC-785.2 | AC2: Validation rejects profiles with unknown fields | - | 1 | ⚪ Draft |
+| REQ-785 | AC-785.3 | AC3: Validation errors include field path and expected type | - | 1 | ⚪ Draft |
+| REQ-785 | AC-785.4 | AC4: Valid profiles are imported without modification | - | 1 | ⚪ Draft |
+| REQ-786 | AC-786.1 | AC1: Device axis inversion is configurable per-axis in profile | - | 1 | ⚪ Draft |
+| REQ-786 | AC-786.2 | AC2: Inversion is applied before curve processing | - | 1 | ⚪ Draft |
+| REQ-786 | AC-786.3 | AC3: Inverted axes are indicated in device status | - | 1 | ⚪ Draft |
+| REQ-786 | AC-786.4 | AC4: Inversion changes take effect without device reconnect | - | 1 | ⚪ Draft |
+| REQ-787 | AC-787.1 | AC1: CLI shows a rich status dashboard with the --dashboard flag | - | 1 | ⚪ Draft |
+| REQ-787 | AC-787.2 | AC2: Dashboard displays device, axis, and service health in real time | - | 1 | ⚪ Draft |
+| REQ-787 | AC-787.3 | AC3: Dashboard auto-refreshes at a configurable interval | - | 1 | ⚪ Draft |
+| REQ-787 | AC-787.4 | AC4: Dashboard gracefully degrades in non-TTY environments | - | 1 | ⚪ Draft |
+| REQ-788 | AC-788.1 | AC1: FFB engine generates stall buffet from angle of attack telemetry | - | 1 | ⚪ Draft |
+| REQ-788 | AC-788.2 | AC2: Buffet intensity increases as AoA approaches critical angle | - | 1 | ⚪ Draft |
+| REQ-788 | AC-788.3 | AC3: Buffet frequency matches aerodynamic characteristics | - | 1 | ⚪ Draft |
+| REQ-788 | AC-788.4 | AC4: Effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-789 | AC-789.1 | AC1: Service supports zero-downtime upgrades via staged restart | - | 1 | ⚪ Draft |
+| REQ-789 | AC-789.2 | AC2: New version is validated before old version shuts down | - | 1 | ⚪ Draft |
+| REQ-789 | AC-789.3 | AC3: Device state is transferred to the new service instance | - | 1 | ⚪ Draft |
+| REQ-789 | AC-789.4 | AC4: Upgrade rollback is automatic if the new version fails health check | - | 1 | ⚪ Draft |
+| REQ-790 | AC-790.1 | AC1: DCS adapter exposes FLIR and targeting pod status when available | - | 1 | ⚪ Draft |
+| REQ-790 | AC-790.2 | AC2: FLIR data includes lock state and target coordinates | - | 1 | ⚪ Draft |
+| REQ-790 | AC-790.3 | AC3: Data is published on the event bus | - | 1 | ⚪ Draft |
+| REQ-790 | AC-790.4 | AC4: Unavailable FLIR data returns a well-defined absent status | - | 1 | ⚪ Draft |
+| REQ-791 | AC-791.1 | AC1: Axis history buffer contents are exportable for analysis | - | 1 | ⚪ Draft |
+| REQ-791 | AC-791.2 | AC2: Export includes raw input, processed output, and timestamps | - | 1 | ⚪ Draft |
+| REQ-791 | AC-791.3 | AC3: Export format supports CSV and JSON | - | 1 | ⚪ Draft |
+| REQ-791 | AC-791.4 | AC4: Export does not block the RT processing path | - | 1 | ⚪ Draft |
+| REQ-792 | AC-792.1 | AC1: Bus processes high-priority events before normal-priority events | - | 1 | ⚪ Draft |
+| REQ-792 | AC-792.2 | AC2: Priority levels include high, normal, and low | - | 1 | ⚪ Draft |
+| REQ-792 | AC-792.3 | AC3: Same-priority events maintain FIFO order | - | 1 | ⚪ Draft |
+| REQ-792 | AC-792.4 | AC4: Priority queue does not allocate on the RT path | - | 1 | ⚪ Draft |
+| REQ-793 | AC-793.1 | AC1: Profiles match aircraft by glob pattern not just exact name | - | 1 | ⚪ Draft |
+| REQ-793 | AC-793.2 | AC2: Pattern matching supports wildcards and character classes | - | 1 | ⚪ Draft |
+| REQ-793 | AC-793.3 | AC3: Most specific matching pattern takes precedence | - | 1 | ⚪ Draft |
+| REQ-793 | AC-793.4 | AC4: Match results are logged for troubleshooting | - | 1 | ⚪ Draft |
+| REQ-794 | AC-794.1 | AC1: Service auto-calibrates devices by sampling range on first connection | - | 1 | ⚪ Draft |
+| REQ-794 | AC-794.2 | AC2: Calibration data is stored and reused on subsequent connections | - | 1 | ⚪ Draft |
+| REQ-794 | AC-794.3 | AC3: Manual calibration override is available via CLI | - | 1 | ⚪ Draft |
+| REQ-794 | AC-794.4 | AC4: Calibration status is reported in device info | - | 1 | ⚪ Draft |
+| REQ-795 | AC-795.1 | AC1: CLI displays device firmware version in device info output | - | 1 | ⚪ Draft |
+| REQ-795 | AC-795.2 | AC2: Firmware version is read from the HID device descriptor | - | 1 | ⚪ Draft |
+| REQ-795 | AC-795.3 | AC3: Unknown firmware version displays a placeholder | - | 1 | ⚪ Draft |
+| REQ-795 | AC-795.4 | AC4: Firmware info is included in diagnostic export | - | 1 | ⚪ Draft |
+| REQ-796 | AC-796.1 | AC1: SimConnect adapter exposes main bus voltage and battery state | - | 1 | ⚪ Draft |
+| REQ-796 | AC-796.2 | AC2: Electrical data includes generator and alternator status | - | 1 | ⚪ Draft |
+| REQ-796 | AC-796.3 | AC3: Electrical state changes are published on the event bus | - | 1 | ⚪ Draft |
+| REQ-796 | AC-796.4 | AC4: Electrical data is updated at least once per second | - | 1 | ⚪ Draft |
+| REQ-797 | AC-797.1 | AC1: Axis engine code passes a documented thread safety audit | - | 1 | ⚪ Draft |
+| REQ-797 | AC-797.2 | AC2: All shared mutable state uses atomic or lock-free primitives | - | 1 | ⚪ Draft |
+| REQ-797 | AC-797.3 | AC3: No data races are possible according to the Rust type system | - | 1 | ⚪ Draft |
+| REQ-797 | AC-797.4 | AC4: Audit findings are documented and tracked | - | 1 | ⚪ Draft |
+| REQ-798 | AC-798.1 | AC1: Service enforces configurable memory usage limits | - | 1 | ⚪ Draft |
+| REQ-798 | AC-798.2 | AC2: Service enforces configurable CPU usage limits | - | 1 | ⚪ Draft |
+| REQ-798 | AC-798.3 | AC3: Approaching resource limits triggers a warning | - | 1 | ⚪ Draft |
+| REQ-798 | AC-798.4 | AC4: Exceeding hard limits triggers graceful degradation | - | 1 | ⚪ Draft |
+| REQ-799 | AC-799.1 | AC1: FFB engine generates runway surface rumble during ground roll | - | 1 | ⚪ Draft |
+| REQ-799 | AC-799.2 | AC2: Rumble intensity scales with ground speed | - | 1 | ⚪ Draft |
+| REQ-799 | AC-799.3 | AC3: Surface type affects rumble characteristics | - | 1 | ⚪ Draft |
+| REQ-799 | AC-799.4 | AC4: Effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-800 | AC-800.1 | AC1: Spec ledger contains at least 800 tracked requirements | - | 1 | ⚪ Draft |
+| REQ-800 | AC-800.2 | AC2: All requirements have at least one acceptance criterion | - | 1 | ⚪ Draft |
+| REQ-800 | AC-800.3 | AC3: All acceptance criteria reference a feature file | - | 1 | ⚪ Draft |
+| REQ-800 | AC-800.4 | AC4: Requirement coverage spans all major subsystems | - | 1 | ⚪ Draft |
+| REQ-801 | AC-801.1 | AC1: Individual pipeline stages can be enabled or disabled per-axis via configuration | - | 1 | ⚪ Draft |
+| REQ-801 | AC-801.2 | AC2: Bypassed stages pass input through unmodified to the next stage | - | 1 | ⚪ Draft |
+| REQ-801 | AC-801.3 | AC3: Pipeline bypass changes take effect within one processing tick | - | 1 | ⚪ Draft |
+| REQ-801 | AC-801.4 | AC4: Bypass state is persisted across service restarts | - | 1 | ⚪ Draft |
+| REQ-802 | AC-802.1 | AC1: Service detects device disconnection and marks it offline without crashing | - | 1 | ⚪ Draft |
+| REQ-802 | AC-802.2 | AC2: Service detects device reconnection and re-initializes it automatically | - | 1 | ⚪ Draft |
+| REQ-802 | AC-802.3 | AC3: Active axis mappings for reconnected devices resume without user intervention | - | 1 | ⚪ Draft |
+| REQ-802 | AC-802.4 | AC4: Hot-swap events are logged with device identity and timestamp | - | 1 | ⚪ Draft |
+| REQ-803 | AC-803.1 | AC1: CLI accepts a local file path to import a profile | - | 1 | ⚪ Draft |
+| REQ-803 | AC-803.2 | AC2: CLI accepts a URL to download and import a profile | - | 1 | ⚪ Draft |
+| REQ-803 | AC-803.3 | AC3: Imported profiles are validated against the current schema before saving | - | 1 | ⚪ Draft |
+| REQ-803 | AC-803.4 | AC4: Import conflicts with existing profiles prompt for overwrite confirmation | - | 1 | ⚪ Draft |
+| REQ-804 | AC-804.1 | AC1: SimConnect adapter reads fuel tank quantities for all aircraft tanks | - | 1 | ⚪ Draft |
+| REQ-804 | AC-804.2 | AC2: Fuel flow rate per engine is exposed as a real-time variable | - | 1 | ⚪ Draft |
+| REQ-804 | AC-804.3 | AC3: Fuel system state changes are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-804 | AC-804.4 | AC4: Fuel data refresh rate matches the configured SimConnect polling interval | - | 1 | ⚪ Draft |
+| REQ-805 | AC-805.1 | AC1: FFB generates increasing force cushion as aircraft descends below ground effect altitude | - | 1 | ⚪ Draft |
+| REQ-805 | AC-805.2 | AC2: Ground effect intensity scales with wing configuration and airspeed | - | 1 | ⚪ Draft |
+| REQ-805 | AC-805.3 | AC3: Effect transitions smoothly between ground effect and free air | - | 1 | ⚪ Draft |
+| REQ-805 | AC-805.4 | AC4: Ground effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-806 | AC-806.1 | AC1: Bus exposes message throughput rate via structured API endpoint | - | 1 | ⚪ Draft |
+| REQ-806 | AC-806.2 | AC2: Bus exposes subscriber count and health status per channel | - | 1 | ⚪ Draft |
+| REQ-806 | AC-806.3 | AC3: Metrics API returns data in JSON format with timestamps | - | 1 | ⚪ Draft |
+| REQ-806 | AC-806.4 | AC4: API response latency does not exceed 50ms under normal load | - | 1 | ⚪ Draft |
+| REQ-807 | AC-807.1 | AC1: Profile loader detects schema version from profile metadata | - | 1 | ⚪ Draft |
+| REQ-807 | AC-807.2 | AC2: Profiles with older schema versions are migrated to current version automatically | - | 1 | ⚪ Draft |
+| REQ-807 | AC-807.3 | AC3: Migration preserves all user-configured values without data loss | - | 1 | ⚪ Draft |
+| REQ-807 | AC-807.4 | AC4: Migration failures produce a detailed error report identifying incompatible fields | - | 1 | ⚪ Draft |
+| REQ-808 | AC-808.1 | AC1: DCS adapter reads active radio frequency from each radio unit | - | 1 | ⚪ Draft |
+| REQ-808 | AC-808.2 | AC2: Frequency changes are published to the event bus within one update cycle | - | 1 | ⚪ Draft |
+| REQ-808 | AC-808.3 | AC3: Adapter supports both VHF and UHF frequency bands | - | 1 | ⚪ Draft |
+| REQ-808 | AC-808.4 | AC4: Radio data includes modulation type (AM/FM) alongside frequency | - | 1 | ⚪ Draft |
+| REQ-809 | AC-809.1 | AC1: Axis processing supports scale factors conditioned on simulator state variables | - | 1 | ⚪ Draft |
+| REQ-809 | AC-809.2 | AC2: Multiple conditions can be combined with logical AND/OR operators | - | 1 | ⚪ Draft |
+| REQ-809 | AC-809.3 | AC3: Scale factor transitions are smoothed to avoid abrupt output changes | - | 1 | ⚪ Draft |
+| REQ-809 | AC-809.4 | AC4: Conditional scaling configuration is validated at profile load time | - | 1 | ⚪ Draft |
+| REQ-810 | AC-810.1 | AC1: Service discovers and loads plugin modules from a configured directory | - | 1 | ⚪ Draft |
+| REQ-810 | AC-810.2 | AC2: Plugins declare required capabilities via a manifest file | - | 1 | ⚪ Draft |
+| REQ-810 | AC-810.3 | AC3: Plugin lifecycle events (load/unload/error) are logged | - | 1 | ⚪ Draft |
+| REQ-810 | AC-810.4 | AC4: Faulty plugins are isolated and cannot crash the main service | - | 1 | ⚪ Draft |
+| REQ-811 | AC-811.1 | AC1: CLI runs a diagnostic test sequence on a specified device | - | 1 | ⚪ Draft |
+| REQ-811 | AC-811.2 | AC2: Test sequence exercises all axes, buttons, and LEDs on the device | - | 1 | ⚪ Draft |
+| REQ-811 | AC-811.3 | AC3: Test results are displayed in a structured pass/fail report | - | 1 | ⚪ Draft |
+| REQ-811 | AC-811.4 | AC4: Device test mode times out after a configurable duration | - | 1 | ⚪ Draft |
+| REQ-812 | AC-812.1 | AC1: X-Plane adapter reads active FMS route waypoints and sequences | - | 1 | ⚪ Draft |
+| REQ-812 | AC-812.2 | AC2: GPS course deviation and distance-to-next are exposed as variables | - | 1 | ⚪ Draft |
+| REQ-812 | AC-812.3 | AC3: FMS data updates are published to the event bus on change | - | 1 | ⚪ Draft |
+| REQ-812 | AC-812.4 | AC4: Adapter handles FMS route changes mid-flight without errors | - | 1 | ⚪ Draft |
+| REQ-813 | AC-813.1 | AC1: FFB generates a distinct vibration pattern when airspeed exceeds Vne | - | 1 | ⚪ Draft |
+| REQ-813 | AC-813.2 | AC2: Vibration intensity increases as airspeed further exceeds the limit | - | 1 | ⚪ Draft |
+| REQ-813 | AC-813.3 | AC3: Overspeed vibration ceases immediately when airspeed returns below Vne | - | 1 | ⚪ Draft |
+| REQ-813 | AC-813.4 | AC4: Overspeed threshold is configurable per aircraft profile | - | 1 | ⚪ Draft |
+| REQ-814 | AC-814.1 | AC1: Bus maintains a rolling buffer of recent events for debugging | - | 1 | ⚪ Draft |
+| REQ-814 | AC-814.2 | AC2: Event history buffer size is configurable via service settings | - | 1 | ⚪ Draft |
+| REQ-814 | AC-814.3 | AC3: Historical events are queryable by event type and time range | - | 1 | ⚪ Draft |
+| REQ-814 | AC-814.4 | AC4: Buffer eviction follows FIFO order when capacity is reached | - | 1 | ⚪ Draft |
+| REQ-815 | AC-815.1 | AC1: Profiles activate automatically based on simulator state conditions | - | 1 | ⚪ Draft |
+| REQ-815 | AC-815.2 | AC2: Conditions support matching on aircraft type, phase of flight, and sim variables | - | 1 | ⚪ Draft |
+| REQ-815 | AC-815.3 | AC3: Multiple profiles can have activation conditions with priority ordering | - | 1 | ⚪ Draft |
+| REQ-815 | AC-815.4 | AC4: Condition evaluation does not impact RT spine processing latency | - | 1 | ⚪ Draft |
+| REQ-816 | AC-816.1 | AC1: Service sets device LED state based on mapped simulator conditions | - | 1 | ⚪ Draft |
+| REQ-816 | AC-816.2 | AC2: LED mappings are defined in the device profile configuration | - | 1 | ⚪ Draft |
+| REQ-816 | AC-816.3 | AC3: LED state changes are applied within one processing cycle | - | 1 | ⚪ Draft |
+| REQ-816 | AC-816.4 | AC4: Unsupported LED commands are silently ignored with a debug log | - | 1 | ⚪ Draft |
+| REQ-817 | AC-817.1 | AC1: CLI loads a recorded axis trace file and replays it through the pipeline | - | 1 | ⚪ Draft |
+| REQ-817 | AC-817.2 | AC2: Replay speed is adjustable with a multiplier parameter | - | 1 | ⚪ Draft |
+| REQ-817 | AC-817.3 | AC3: Replay output is written to a file or streamed to stdout | - | 1 | ⚪ Draft |
+| REQ-817 | AC-817.4 | AC4: Replay preserves original timing relationships between samples | - | 1 | ⚪ Draft |
+| REQ-818 | AC-818.1 | AC1: SimConnect adapter exposes VOR station identifier and bearing | - | 1 | ⚪ Draft |
+| REQ-818 | AC-818.2 | AC2: ILS localizer and glideslope deviation are readable as variables | - | 1 | ⚪ Draft |
+| REQ-818 | AC-818.3 | AC3: NDB relative bearing is available when ADF receiver is tuned | - | 1 | ⚪ Draft |
+| REQ-818 | AC-818.4 | AC4: NavAid data refresh rate matches the SimConnect polling interval | - | 1 | ⚪ Draft |
+| REQ-819 | AC-819.1 | AC1: Axis engine supports runtime switching between normal, precision, and fast modes | - | 1 | ⚪ Draft |
+| REQ-819 | AC-819.2 | AC2: Mode switch transitions apply smoothing to avoid output discontinuities | - | 1 | ⚪ Draft |
+| REQ-819 | AC-819.3 | AC3: Current mode is exposed as a readable state variable | - | 1 | ⚪ Draft |
+| REQ-819 | AC-819.4 | AC4: Mode configuration parameters are defined per-axis in the profile | - | 1 | ⚪ Draft |
+| REQ-820 | AC-820.1 | AC1: Service enforces a configurable memory budget for total allocation | - | 1 | ⚪ Draft |
+| REQ-820 | AC-820.2 | AC2: When budget is approached, non-critical subsystems shed load gracefully | - | 1 | ⚪ Draft |
+| REQ-820 | AC-820.3 | AC3: Memory usage is reported periodically via the metrics API | - | 1 | ⚪ Draft |
+| REQ-820 | AC-820.4 | AC4: Budget violations trigger a warning event on the bus | - | 1 | ⚪ Draft |
+| REQ-821 | AC-821.1 | AC1: FFB turbulence intensity scales proportionally with indicated airspeed | - | 1 | ⚪ Draft |
+| REQ-821 | AC-821.2 | AC2: Scaling curve is configurable via profile parameters | - | 1 | ⚪ Draft |
+| REQ-821 | AC-821.3 | AC3: Turbulence effect blends smoothly with other active FFB effects | - | 1 | ⚪ Draft |
+| REQ-821 | AC-821.4 | AC4: Scaling respects FFB safety envelope maximum force limits | - | 1 | ⚪ Draft |
+| REQ-822 | AC-822.1 | AC1: Bus messages support attaching user-defined string tags | - | 1 | ⚪ Draft |
+| REQ-822 | AC-822.2 | AC2: Subscribers can filter incoming messages by tag patterns | - | 1 | ⚪ Draft |
+| REQ-822 | AC-822.3 | AC3: Tags are indexed for efficient filtering without linear scan | - | 1 | ⚪ Draft |
+| REQ-822 | AC-822.4 | AC4: Maximum tag count per message is enforced to prevent abuse | - | 1 | ⚪ Draft |
+| REQ-823 | AC-823.1 | AC1: Profile system supports defining base templates that other profiles inherit from | - | 1 | ⚪ Draft |
+| REQ-823 | AC-823.2 | AC2: Child profiles override only the fields they explicitly specify | - | 1 | ⚪ Draft |
+| REQ-823 | AC-823.3 | AC3: Template inheritance depth is limited to prevent circular references | - | 1 | ⚪ Draft |
+| REQ-823 | AC-823.4 | AC4: Template resolution is performed at profile load time, not runtime | - | 1 | ⚪ Draft |
+| REQ-824 | AC-824.1 | AC1: DCS adapter exposes current mission phase (briefing, flying, debriefing) | - | 1 | ⚪ Draft |
+| REQ-824 | AC-824.2 | AC2: Mission state transitions are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-824 | AC-824.3 | AC3: Adapter detects mission restart and resets state accordingly | - | 1 | ⚪ Draft |
+| REQ-824 | AC-824.4 | AC4: Mission time elapsed is available as a readable variable | - | 1 | ⚪ Draft |
+| REQ-825 | AC-825.1 | AC1: Service detects the actual bit resolution of each device axis | - | 1 | ⚪ Draft |
+| REQ-825 | AC-825.2 | AC2: Detected resolution is used to optimize input scaling calculations | - | 1 | ⚪ Draft |
+| REQ-825 | AC-825.3 | AC3: Resolution detection completes during device initialization | - | 1 | ⚪ Draft |
+| REQ-825 | AC-825.4 | AC4: Detected resolution is reported in device info output | - | 1 | ⚪ Draft |
+| REQ-826 | AC-826.1 | AC1: CLI generates default configuration files for a new installation | - | 1 | ⚪ Draft |
+| REQ-826 | AC-826.2 | AC2: Generated config includes documented comments for each setting | - | 1 | ⚪ Draft |
+| REQ-826 | AC-826.3 | AC3: Existing config files are not overwritten without explicit confirmation | - | 1 | ⚪ Draft |
+| REQ-826 | AC-826.4 | AC4: Config generation supports targeting a specific output directory | - | 1 | ⚪ Draft |
+| REQ-827 | AC-827.1 | AC1: X-Plane adapter supports injecting custom weather data via dataref writes | - | 1 | ⚪ Draft |
+| REQ-827 | AC-827.2 | AC2: Injected weather includes wind direction, speed, and turbulence level | - | 1 | ⚪ Draft |
+| REQ-827 | AC-827.3 | AC3: Weather injection can be enabled or disabled at runtime | - | 1 | ⚪ Draft |
+| REQ-827 | AC-827.4 | AC4: Injection does not interfere with X-Plane native weather when disabled | - | 1 | ⚪ Draft |
+| REQ-828 | AC-828.1 | AC1: FFB simulates engine vibration with amplitude proportional to RPM | - | 1 | ⚪ Draft |
+| REQ-828 | AC-828.2 | AC2: Vibration frequency matches a configurable harmonic of engine RPM | - | 1 | ⚪ Draft |
+| REQ-828 | AC-828.3 | AC3: Multi-engine aircraft sum vibrations from all running engines | - | 1 | ⚪ Draft |
+| REQ-828 | AC-828.4 | AC4: Engine shutdown smoothly ramps vibration to zero | - | 1 | ⚪ Draft |
+| REQ-829 | AC-829.1 | AC1: Bus subscribers send periodic heartbeat signals to indicate liveness | - | 1 | ⚪ Draft |
+| REQ-829 | AC-829.2 | AC2: Dead subscribers are detected when heartbeat interval is exceeded | - | 1 | ⚪ Draft |
+| REQ-829 | AC-829.3 | AC3: Dead subscriber detection triggers a warning event on the bus | - | 1 | ⚪ Draft |
+| REQ-829 | AC-829.4 | AC4: Heartbeat interval is configurable per subscriber | - | 1 | ⚪ Draft |
+| REQ-830 | AC-830.1 | AC1: Profiles export to a portable JSON interchange format | - | 1 | ⚪ Draft |
+| REQ-830 | AC-830.2 | AC2: Exported format includes schema version and metadata | - | 1 | ⚪ Draft |
+| REQ-830 | AC-830.3 | AC3: Export omits internal runtime state and computed fields | - | 1 | ⚪ Draft |
+| REQ-830 | AC-830.4 | AC4: Exported profiles can be re-imported on any compatible OpenFlight version | - | 1 | ⚪ Draft |
+| REQ-831 | AC-831.1 | AC1: SimConnect adapter exposes RPM, manifold pressure, and EGT per engine | - | 1 | ⚪ Draft |
+| REQ-831 | AC-831.2 | AC2: Engine parameter changes are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-831 | AC-831.3 | AC3: Adapter supports turboprop and piston engine parameter sets | - | 1 | ⚪ Draft |
+| REQ-831 | AC-831.4 | AC4: Parameter refresh rate matches the configured polling interval | - | 1 | ⚪ Draft |
+| REQ-832 | AC-832.1 | AC1: Axis hysteresis width is configurable per-axis in the profile | - | 1 | ⚪ Draft |
+| REQ-832 | AC-832.2 | AC2: Hysteresis prevents jitter without adding noticeable input lag | - | 1 | ⚪ Draft |
+| REQ-832 | AC-832.3 | AC3: Width value is validated against axis resolution bounds at load time | - | 1 | ⚪ Draft |
+| REQ-832 | AC-832.4 | AC4: Zero hysteresis width disables the filter for that axis | - | 1 | ⚪ Draft |
+| REQ-833 | AC-833.1 | AC1: Service integrates with OS-level watchdog mechanisms (MMCSS/systemd) | - | 1 | ⚪ Draft |
+| REQ-833 | AC-833.2 | AC2: Watchdog is notified on each successful processing cycle | - | 1 | ⚪ Draft |
+| REQ-833 | AC-833.3 | AC3: Missed watchdog notifications trigger automatic service restart | - | 1 | ⚪ Draft |
+| REQ-833 | AC-833.4 | AC4: Watchdog timeout is configurable in service settings | - | 1 | ⚪ Draft |
+| REQ-834 | AC-834.1 | AC1: CLI guides users through an interactive axis calibration wizard | - | 1 | ⚪ Draft |
+| REQ-834 | AC-834.2 | AC2: Calibration captures minimum, center, and maximum for each axis | - | 1 | ⚪ Draft |
+| REQ-834 | AC-834.3 | AC3: Calibration results are saved to the device profile automatically | - | 1 | ⚪ Draft |
+| REQ-834 | AC-834.4 | AC4: Wizard validates that captured range meets minimum resolution threshold | - | 1 | ⚪ Draft |
+| REQ-835 | AC-835.1 | AC1: DCS adapter exposes the state of clickable cockpit controls | - | 1 | ⚪ Draft |
+| REQ-835 | AC-835.2 | AC2: Control state changes are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-835 | AC-835.3 | AC3: Adapter maps DCS argument numbers to human-readable control names | - | 1 | ⚪ Draft |
+| REQ-835 | AC-835.4 | AC4: Unsupported controls are skipped with a debug-level log entry | - | 1 | ⚪ Draft |
+| REQ-836 | AC-836.1 | AC1: FFB buffet effect frequency is configurable in the aircraft profile | - | 1 | ⚪ Draft |
+| REQ-836 | AC-836.2 | AC2: Frequency range is validated against device capability limits | - | 1 | ⚪ Draft |
+| REQ-836 | AC-836.3 | AC3: Frequency transitions smoothly when changed during active effect | - | 1 | ⚪ Draft |
+| REQ-836 | AC-836.4 | AC4: Default frequency is used when profile does not specify a value | - | 1 | ⚪ Draft |
+| REQ-837 | AC-837.1 | AC1: Bus supports priority channels that are processed before normal channels | - | 1 | ⚪ Draft |
+| REQ-837 | AC-837.2 | AC2: Priority messages preempt queued normal messages under backpressure | - | 1 | ⚪ Draft |
+| REQ-837 | AC-837.3 | AC3: Channel priority level is assigned at channel creation time | - | 1 | ⚪ Draft |
+| REQ-837 | AC-837.4 | AC4: Priority channel count is bounded to prevent starvation of normal traffic | - | 1 | ⚪ Draft |
+| REQ-838 | AC-838.1 | AC1: Profiles auto-switch based on detected phase of flight (taxi, takeoff, cruise, approach, landing) | - | 1 | ⚪ Draft |
+| REQ-838 | AC-838.2 | AC2: Phase detection uses altitude, airspeed, and gear/flap state | - | 1 | ⚪ Draft |
+| REQ-838 | AC-838.3 | AC3: Phase transitions include a configurable hysteresis to avoid rapid switching | - | 1 | ⚪ Draft |
+| REQ-838 | AC-838.4 | AC4: Manual phase override disables automatic detection until re-enabled | - | 1 | ⚪ Draft |
+| REQ-839 | AC-839.1 | AC1: Service checks for available firmware updates for connected devices | - | 1 | ⚪ Draft |
+| REQ-839 | AC-839.2 | AC2: Update availability is reported via the CLI device info command | - | 1 | ⚪ Draft |
+| REQ-839 | AC-839.3 | AC3: Firmware check respects a configurable check interval | - | 1 | ⚪ Draft |
+| REQ-839 | AC-839.4 | AC4: Firmware check failures are logged without affecting device operation | - | 1 | ⚪ Draft |
+| REQ-840 | AC-840.1 | AC1: CLI diagnoses network connectivity to configured sim adapters | - | 1 | ⚪ Draft |
+| REQ-840 | AC-840.2 | AC2: Diagnostics report latency and packet loss for each adapter endpoint | - | 1 | ⚪ Draft |
+| REQ-840 | AC-840.3 | AC3: Results are displayed in a structured summary table | - | 1 | ⚪ Draft |
+| REQ-840 | AC-840.4 | AC4: Diagnostic command completes within a configurable timeout | - | 1 | ⚪ Draft |
+| REQ-841 | AC-841.1 | AC1: X-Plane adapter detects whether a multiplayer session is active | - | 1 | ⚪ Draft |
+| REQ-841 | AC-841.2 | AC2: Number of connected multiplayer aircraft is exposed as a variable | - | 1 | ⚪ Draft |
+| REQ-841 | AC-841.3 | AC3: Multiplayer state changes are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-841 | AC-841.4 | AC4: Adapter handles multiplayer disconnect gracefully without errors | - | 1 | ⚪ Draft |
+| REQ-842 | AC-842.1 | AC1: FFB simulates nose wheel shimmy vibration during ground roll | - | 1 | ⚪ Draft |
+| REQ-842 | AC-842.2 | AC2: Shimmy intensity increases with ground speed above a configurable threshold | - | 1 | ⚪ Draft |
+| REQ-842 | AC-842.3 | AC3: Shimmy effect is suppressed when nosewheel steering is centered | - | 1 | ⚪ Draft |
+| REQ-842 | AC-842.4 | AC4: Effect respects FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-843 | AC-843.1 | AC1: Bus supports loading and replaying a recorded message sequence from file | - | 1 | ⚪ Draft |
+| REQ-843 | AC-843.2 | AC2: Replay preserves original message timing and ordering | - | 1 | ⚪ Draft |
+| REQ-843 | AC-843.3 | AC3: Replay speed is adjustable via a multiplier parameter | - | 1 | ⚪ Draft |
+| REQ-843 | AC-843.4 | AC4: Replay completion is signaled via a bus event | - | 1 | ⚪ Draft |
+| REQ-844 | AC-844.1 | AC1: Profile validator generates a detailed compliance report | - | 1 | ⚪ Draft |
+| REQ-844 | AC-844.2 | AC2: Report lists all validation errors with field paths and descriptions | - | 1 | ⚪ Draft |
+| REQ-844 | AC-844.3 | AC3: Report includes warnings for deprecated or suboptimal settings | - | 1 | ⚪ Draft |
+| REQ-844 | AC-844.4 | AC4: Report output supports JSON and human-readable formats | - | 1 | ⚪ Draft |
+| REQ-845 | AC-845.1 | AC1: SimConnect adapter exposes terrain elevation at aircraft position | - | 1 | ⚪ Draft |
+| REQ-845 | AC-845.2 | AC2: Terrain type classification is available as a readable variable | - | 1 | ⚪ Draft |
+| REQ-845 | AC-845.3 | AC3: Terrain data updates at the configured SimConnect polling rate | - | 1 | ⚪ Draft |
+| REQ-845 | AC-845.4 | AC4: Unavailable terrain data returns a sentinel value without error | - | 1 | ⚪ Draft |
+| REQ-846 | AC-846.1 | AC1: Axis engine supports an emergency stop command that zeros all outputs immediately | - | 1 | ⚪ Draft |
+| REQ-846 | AC-846.2 | AC2: Emergency stop is triggered via a configurable key binding or bus command | - | 1 | ⚪ Draft |
+| REQ-846 | AC-846.3 | AC3: Recovery from emergency stop requires an explicit reset command | - | 1 | ⚪ Draft |
+| REQ-846 | AC-846.4 | AC4: Emergency stop events are logged with timestamp and trigger source | - | 1 | ⚪ Draft |
+| REQ-847 | AC-847.1 | AC1: Service generates a compressed diagnostic bundle for support analysis | - | 1 | ⚪ Draft |
+| REQ-847 | AC-847.2 | AC2: Bundle includes logs, configuration, device info, and system metrics | - | 1 | ⚪ Draft |
+| REQ-847 | AC-847.3 | AC3: Sensitive data is redacted before inclusion in the bundle | - | 1 | ⚪ Draft |
+| REQ-847 | AC-847.4 | AC4: Bundle generation completes within 30 seconds under normal conditions | - | 1 | ⚪ Draft |
+| REQ-848 | AC-848.1 | AC1: CLI switches between update channels (stable, beta, canary) | - | 1 | ⚪ Draft |
+| REQ-848 | AC-848.2 | AC2: Channel switch persists to the service configuration file | - | 1 | ⚪ Draft |
+| REQ-848 | AC-848.3 | AC3: Switching channels triggers an immediate update check | - | 1 | ⚪ Draft |
+| REQ-848 | AC-848.4 | AC4: Current channel is displayed in the CLI version output | - | 1 | ⚪ Draft |
+| REQ-849 | AC-849.1 | AC1: DCS adapter exposes radar power state and operating mode | - | 1 | ⚪ Draft |
+| REQ-849 | AC-849.2 | AC2: Radar target count is available when radar is active | - | 1 | ⚪ Draft |
+| REQ-849 | AC-849.3 | AC3: Radar state changes are published to the event bus | - | 1 | ⚪ Draft |
+| REQ-849 | AC-849.4 | AC4: Adapter gracefully handles aircraft without radar systems | - | 1 | ⚪ Draft |
+| REQ-850 | AC-850.1 | AC1: FFB simulates crosswind forces during approach and landing phases | - | 1 | ⚪ Draft |
+| REQ-850 | AC-850.2 | AC2: Force direction and magnitude correspond to reported wind vector | - | 1 | ⚪ Draft |
+| REQ-850 | AC-850.3 | AC3: Effect activates below a configurable altitude threshold | - | 1 | ⚪ Draft |
+| REQ-850 | AC-850.4 | AC4: Crosswind forces respect FFB safety envelope limits | - | 1 | ⚪ Draft |
+| REQ-851 | AC-851.1 | AC1: Profile change history is tracked with timestamps and author metadata | - | 1 | ⚪ Draft |
+| REQ-851 | AC-851.2 | AC2: Previous profile versions can be restored from the version log | - | 1 | ⚪ Draft |
+| REQ-851 | AC-851.3 | AC3: Version diffs show which axes and bindings changed between revisions | - | 1 | ⚪ Draft |
+| REQ-851 | AC-851.4 | AC4: Version history is persisted across service restarts | - | 1 | ⚪ Draft |
+| REQ-852 | AC-852.1 | AC1: Profiles can be exported as signed portable packages | - | 1 | ⚪ Draft |
+| REQ-852 | AC-852.2 | AC2: Imported profiles are validated against a cryptographic signature | - | 1 | ⚪ Draft |
+| REQ-852 | AC-852.3 | AC3: Sharing protocol includes device compatibility metadata | - | 1 | ⚪ Draft |
+| REQ-852 | AC-852.4 | AC4: Import rejects packages with mismatched or missing signatures | - | 1 | ⚪ Draft |
+| REQ-853 | AC-853.1 | AC1: Profiles are automatically backed up at a configurable interval | - | 1 | ⚪ Draft |
+| REQ-853 | AC-853.2 | AC2: Backup rotation retains the most recent N backups per profile | - | 1 | ⚪ Draft |
+| REQ-853 | AC-853.3 | AC3: Auto-backup triggers before any destructive profile operation | - | 1 | ⚪ Draft |
+| REQ-853 | AC-853.4 | AC4: Backup files can be restored through the CLI or service API | - | 1 | ⚪ Draft |
+| REQ-854 | AC-854.1 | AC1: Conflicting axis assignments across profiles are detected at load time | - | 1 | ⚪ Draft |
+| REQ-854 | AC-854.2 | AC2: Conflict report identifies the specific axes and profiles involved | - | 1 | ⚪ Draft |
+| REQ-854 | AC-854.3 | AC3: Service emits a warning event when conflicts are detected | - | 1 | ⚪ Draft |
+| REQ-854 | AC-854.4 | AC4: User can resolve conflicts interactively or via a priority rule | - | 1 | ⚪ Draft |
+| REQ-855 | AC-855.1 | AC1: Profiles can be switched via a configurable hotkey combination | - | 1 | ⚪ Draft |
+| REQ-855 | AC-855.2 | AC2: Quick-switch completes within 100ms without dropping input frames | - | 1 | ⚪ Draft |
+| REQ-855 | AC-855.3 | AC3: An on-screen indicator confirms the active profile after switch | - | 1 | ⚪ Draft |
+| REQ-855 | AC-855.4 | AC4: Quick-switch cycles through a user-defined profile ring | - | 1 | ⚪ Draft |
+| REQ-856 | AC-856.1 | AC1: Validation produces a structured report with errors and warnings | - | 1 | ⚪ Draft |
+| REQ-856 | AC-856.2 | AC2: Report includes actionable suggestions for each validation issue | - | 1 | ⚪ Draft |
+| REQ-856 | AC-856.3 | AC3: Validation checks axis ranges, curve continuity, and binding conflicts | - | 1 | ⚪ Draft |
+| REQ-856 | AC-856.4 | AC4: Report is available in JSON and human-readable text formats | - | 1 | ⚪ Draft |
+| REQ-857 | AC-857.1 | AC1: Two profiles can be compared side-by-side showing all differences | - | 1 | ⚪ Draft |
+| REQ-857 | AC-857.2 | AC2: Comparison highlights added, removed, and modified bindings | - | 1 | ⚪ Draft |
+| REQ-857 | AC-857.3 | AC3: Axis curve differences are reported with numerical deltas | - | 1 | ⚪ Draft |
+| REQ-857 | AC-857.4 | AC4: Comparison output is available via CLI and service API | - | 1 | ⚪ Draft |
+| REQ-858 | AC-858.1 | AC1: Profile macros can be defined using a safe expression language | - | 1 | ⚪ Draft |
+| REQ-858 | AC-858.2 | AC2: Scripts can reference axis values and sim variables as inputs | - | 1 | ⚪ Draft |
+| REQ-858 | AC-858.3 | AC3: Script execution is sandboxed with a configurable time budget | - | 1 | ⚪ Draft |
+| REQ-858 | AC-858.4 | AC4: Syntax errors in scripts produce clear diagnostic messages | - | 1 | ⚪ Draft |
+| REQ-859 | AC-859.1 | AC1: Profiles support multi-level inheritance with override visibility | - | 1 | ⚪ Draft |
+| REQ-859 | AC-859.2 | AC2: Inheritance chain displays which level each setting originates from | - | 1 | ⚪ Draft |
+| REQ-859 | AC-859.3 | AC3: Circular inheritance references are detected and rejected | - | 1 | ⚪ Draft |
+| REQ-859 | AC-859.4 | AC4: Override at any level can be inspected and reverted independently | - | 1 | ⚪ Draft |
+| REQ-860 | AC-860.1 | AC1: Profile complexity cost is measured and reported as a score | - | 1 | ⚪ Draft |
+| REQ-860 | AC-860.2 | AC2: Performance impact analysis runs without affecting RT spine latency | - | 1 | ⚪ Draft |
+| REQ-860 | AC-860.3 | AC3: Profiles exceeding a complexity threshold trigger a warning | - | 1 | ⚪ Draft |
+| REQ-860 | AC-860.4 | AC4: Impact report breaks down cost by axis, curve, and mixer components | - | 1 | ⚪ Draft |
+| REQ-861 | AC-861.1 | AC1: Polling interval is auto-tuned based on device response characteristics | - | 1 | ⚪ Draft |
+| REQ-861 | AC-861.2 | AC2: Optimization adjusts independently for each connected device | - | 1 | ⚪ Draft |
+| REQ-861 | AC-861.3 | AC3: Tuning respects a minimum polling floor to prevent excessive CPU usage | - | 1 | ⚪ Draft |
+| REQ-861 | AC-861.4 | AC4: Polling rate changes are logged and visible in diagnostics | - | 1 | ⚪ Draft |
+| REQ-862 | AC-862.1 | AC1: Per-device smoothing presets are available for common device types | - | 1 | ⚪ Draft |
+| REQ-862 | AC-862.2 | AC2: Custom smoothing parameters can be configured per axis | - | 1 | ⚪ Draft |
+| REQ-862 | AC-862.3 | AC3: Smoothing algorithm selection includes moving average and Kalman filter | - | 1 | ⚪ Draft |
+| REQ-862 | AC-862.4 | AC4: Smoothing configuration changes take effect within one processing cycle | - | 1 | ⚪ Draft |
+| REQ-863 | AC-863.1 | AC1: Debounce timing is configurable per button on each device | - | 1 | ⚪ Draft |
+| REQ-863 | AC-863.2 | AC2: Default debounce values are set based on device hardware profile | - | 1 | ⚪ Draft |
+| REQ-863 | AC-863.3 | AC3: Debounce tuning UI shows real-time bounce detection counts | - | 1 | ⚪ Draft |
+| REQ-863 | AC-863.4 | AC4: Extremely short debounce values trigger a reliability warning | - | 1 | ⚪ Draft |
+| REQ-864 | AC-864.1 | AC1: Periodic self-test checks device connectivity and response time | - | 1 | ⚪ Draft |
+| REQ-864 | AC-864.2 | AC2: Health status is reported as healthy, degraded, or disconnected | - | 1 | ⚪ Draft |
+| REQ-864 | AC-864.3 | AC3: Degraded health triggers an alert event on the event bus | - | 1 | ⚪ Draft |
+| REQ-864 | AC-864.4 | AC4: Health history is retained for trend analysis over time | - | 1 | ⚪ Draft |
+| REQ-865 | AC-865.1 | AC1: Device usage patterns are tracked including active time per axis | - | 1 | ⚪ Draft |
+| REQ-865 | AC-865.2 | AC2: Analytics data is stored locally with configurable retention | - | 1 | ⚪ Draft |
+| REQ-865 | AC-865.3 | AC3: Usage reports can be generated per device and per session | - | 1 | ⚪ Draft |
+| REQ-865 | AC-865.4 | AC4: Analytics collection can be disabled entirely by the user | - | 1 | ⚪ Draft |
+| REQ-866 | AC-866.1 | AC1: Programmable LED sequences can be defined with timing and color | - | 1 | ⚪ Draft |
+| REQ-866 | AC-866.2 | AC2: LED patterns can be triggered by sim events or state changes | - | 1 | ⚪ Draft |
+| REQ-866 | AC-866.3 | AC3: Pattern engine supports blending multiple concurrent patterns | - | 1 | ⚪ Draft |
+| REQ-866 | AC-866.4 | AC4: Invalid pattern definitions are rejected with descriptive errors | - | 1 | ⚪ Draft |
+| REQ-867 | AC-867.1 | AC1: Different profiles can be assigned to individual connected devices | - | 1 | ⚪ Draft |
+| REQ-867 | AC-867.2 | AC2: Per-device profile assignment persists across service restarts | - | 1 | ⚪ Draft |
+| REQ-867 | AC-867.3 | AC3: Removing a device falls back to the global active profile | - | 1 | ⚪ Draft |
+| REQ-867 | AC-867.4 | AC4: Profile-device bindings are displayed in the device status view | - | 1 | ⚪ Draft |
+| REQ-868 | AC-868.1 | AC1: Raw device input streams can be recorded to a timestamped file | - | 1 | ⚪ Draft |
+| REQ-868 | AC-868.2 | AC2: Recording captures all axes, buttons, and hat positions | - | 1 | ⚪ Draft |
+| REQ-868 | AC-868.3 | AC3: Playback of recorded input is supported for diagnostics | - | 1 | ⚪ Draft |
+| REQ-868 | AC-868.4 | AC4: Recording automatically stops when file size limit is reached | - | 1 | ⚪ Draft |
+| REQ-869 | AC-869.1 | AC1: Device firmware version is checked against a known compatibility list | - | 1 | ⚪ Draft |
+| REQ-869 | AC-869.2 | AC2: Incompatible firmware triggers a warning with upgrade guidance | - | 1 | ⚪ Draft |
+| REQ-869 | AC-869.3 | AC3: Compatibility database is updatable without a service release | - | 1 | ⚪ Draft |
+| REQ-869 | AC-869.4 | AC4: Firmware version is displayed in device information output | - | 1 | ⚪ Draft |
+| REQ-870 | AC-870.1 | AC1: Virtual devices can be paired with physical device inputs | - | 1 | ⚪ Draft |
+| REQ-870 | AC-870.2 | AC2: Pairing maps physical axis outputs to virtual device channels | - | 1 | ⚪ Draft |
+| REQ-870 | AC-870.3 | AC3: Paired devices appear as a single logical device in profiles | - | 1 | ⚪ Draft |
+| REQ-870 | AC-870.4 | AC4: Unpairing restores both devices to independent operation | - | 1 | ⚪ Draft |
+| REQ-871 | AC-871.1 | AC1: Plugins are scanned and loaded from configured directories at startup | - | 1 | ⚪ Draft |
+| REQ-871 | AC-871.2 | AC2: Plugin manifests are validated before loading proceeds | - | 1 | ⚪ Draft |
+| REQ-871 | AC-871.3 | AC3: Incompatible or unsigned plugins are skipped with a warning | - | 1 | ⚪ Draft |
+| REQ-871 | AC-871.4 | AC4: Discovered plugins are listed in the service status report | - | 1 | ⚪ Draft |
+| REQ-872 | AC-872.1 | AC1: IPC endpoints enforce configurable request rate limits | - | 1 | ⚪ Draft |
+| REQ-872 | AC-872.2 | AC2: Rate-limited requests receive a descriptive rejection response | - | 1 | ⚪ Draft |
+| REQ-872 | AC-872.3 | AC3: Rate limit counters reset on a sliding window basis | - | 1 | ⚪ Draft |
+| REQ-872 | AC-872.4 | AC4: Critical control endpoints are exempt from rate limiting | - | 1 | ⚪ Draft |
+| REQ-873 | AC-873.1 | AC1: Configuration changes are applied without restarting the service | - | 1 | ⚪ Draft |
+| REQ-873 | AC-873.2 | AC2: Hot-reload validates new configuration before applying it | - | 1 | ⚪ Draft |
+| REQ-873 | AC-873.3 | AC3: Failed hot-reload rolls back to the previous valid configuration | - | 1 | ⚪ Draft |
+| REQ-873 | AC-873.4 | AC4: A reload event is published on the event bus after success | - | 1 | ⚪ Draft |
+| REQ-874 | AC-874.1 | AC1: Diagnostic mode enables enhanced logging for all subsystems | - | 1 | ⚪ Draft |
+| REQ-874 | AC-874.2 | AC2: Mode can be activated and deactivated at runtime via CLI | - | 1 | ⚪ Draft |
+| REQ-874 | AC-874.3 | AC3: Diagnostic output includes timing traces for RT spine ticks | - | 1 | ⚪ Draft |
+| REQ-874 | AC-874.4 | AC4: Diagnostic mode automatically disables after a configurable timeout | - | 1 | ⚪ Draft |
+| REQ-875 | AC-875.1 | AC1: Automatic configuration backup runs on a configurable schedule | - | 1 | ⚪ Draft |
+| REQ-875 | AC-875.2 | AC2: Backup includes profiles, device settings, and service configuration | - | 1 | ⚪ Draft |
+| REQ-875 | AC-875.3 | AC3: Old backups are pruned based on retention policy | - | 1 | ⚪ Draft |
+| REQ-875 | AC-875.4 | AC4: Backup status and history are queryable via the service API | - | 1 | ⚪ Draft |
+| REQ-876 | AC-876.1 | AC1: Built-in performance sampling captures CPU and latency metrics | - | 1 | ⚪ Draft |
+| REQ-876 | AC-876.2 | AC2: Profiling can be started and stopped via CLI command | - | 1 | ⚪ Draft |
+| REQ-876 | AC-876.3 | AC3: Profile data is exported in a standard format for analysis tools | - | 1 | ⚪ Draft |
+| REQ-876 | AC-876.4 | AC4: Profiling overhead does not exceed 2 percent of baseline CPU usage | - | 1 | ⚪ Draft |
+| REQ-877 | AC-877.1 | AC1: All service events are persisted to a rotated journal file | - | 1 | ⚪ Draft |
+| REQ-877 | AC-877.2 | AC2: Journal entries include timestamp, severity, source, and payload | - | 1 | ⚪ Draft |
+| REQ-877 | AC-877.3 | AC3: Journal rotation triggers based on file size or time interval | - | 1 | ⚪ Draft |
+| REQ-877 | AC-877.4 | AC4: Journal can be queried by time range, severity, or source filter | - | 1 | ⚪ Draft |
+| REQ-878 | AC-878.1 | AC1: Network connectivity to each sim adapter endpoint is tested on demand | - | 1 | ⚪ Draft |
+| REQ-878 | AC-878.2 | AC2: Diagnostic reports latency and packet loss per adapter connection | - | 1 | ⚪ Draft |
+| REQ-878 | AC-878.3 | AC3: Unreachable adapters are flagged in the service health status | - | 1 | ⚪ Draft |
+| REQ-878 | AC-878.4 | AC4: Network diagnostic results are cached to avoid repeated probes | - | 1 | ⚪ Draft |
+| REQ-879 | AC-879.1 | AC1: License validity is verified at startup for premium feature access | - | 1 | ⚪ Draft |
+| REQ-879 | AC-879.2 | AC2: Expired or invalid licenses degrade gracefully to free-tier features | - | 1 | ⚪ Draft |
+| REQ-879 | AC-879.3 | AC3: License status is visible in service info and CLI output | - | 1 | ⚪ Draft |
+| REQ-879 | AC-879.4 | AC4: License verification works offline using a cached validation token | - | 1 | ⚪ Draft |
+| REQ-880 | AC-880.1 | AC1: Updates can be scheduled for a user-specified time window | - | 1 | ⚪ Draft |
+| REQ-880 | AC-880.2 | AC2: Scheduled updates are skipped if a flight session is active | - | 1 | ⚪ Draft |
+| REQ-880 | AC-880.3 | AC3: Update schedule is persisted and survives service restarts | - | 1 | ⚪ Draft |
+| REQ-880 | AC-880.4 | AC4: Users receive a notification before a scheduled update begins | - | 1 | ⚪ Draft |
+| REQ-881 | AC-881.1 | AC1: Settings can be applied to multiple devices in a single command | - | 1 | ⚪ Draft |
+| REQ-881 | AC-881.2 | AC2: Batch operations report per-device success or failure status | - | 1 | ⚪ Draft |
+| REQ-881 | AC-881.3 | AC3: A dry-run flag previews changes without applying them | - | 1 | ⚪ Draft |
+| REQ-881 | AC-881.4 | AC4: Batch input accepts device lists from a file or glob pattern | - | 1 | ⚪ Draft |
+| REQ-882 | AC-882.1 | AC1: Non-interactive scripting mode suppresses prompts and progress bars | - | 1 | ⚪ Draft |
+| REQ-882 | AC-882.2 | AC2: Exit codes follow standard conventions for success and error types | - | 1 | ⚪ Draft |
+| REQ-882 | AC-882.3 | AC3: Scripting mode output is stable and machine-parseable | - | 1 | ⚪ Draft |
+| REQ-882 | AC-882.4 | AC4: Environment variable selects scripting mode without a CLI flag | - | 1 | ⚪ Draft |
+| REQ-883 | AC-883.1 | AC1: CLI can connect to a remote service instance by address and port | - | 1 | ⚪ Draft |
+| REQ-883 | AC-883.2 | AC2: Remote connections require authentication via token or certificate | - | 1 | ⚪ Draft |
+| REQ-883 | AC-883.3 | AC3: Connection timeout and retry are configurable per remote target | - | 1 | ⚪ Draft |
+| REQ-883 | AC-883.4 | AC4: Remote connection status is shown in the CLI prompt or status bar | - | 1 | ⚪ Draft |
+| REQ-884 | AC-884.1 | AC1: Completions are context-aware based on the current command prefix | - | 1 | ⚪ Draft |
+| REQ-884 | AC-884.2 | AC2: Device names and profile names are suggested from live service data | - | 1 | ⚪ Draft |
+| REQ-884 | AC-884.3 | AC3: Completion scripts are generated for bash, zsh, fish, and PowerShell | - | 1 | ⚪ Draft |
+| REQ-884 | AC-884.4 | AC4: Completions update dynamically when devices connect or disconnect | - | 1 | ⚪ Draft |
+| REQ-885 | AC-885.1 | AC1: Output format is selectable as table, JSON, or CSV via a flag | - | 1 | ⚪ Draft |
+| REQ-885 | AC-885.2 | AC2: Default format is human-readable table for interactive terminals | - | 1 | ⚪ Draft |
+| REQ-885 | AC-885.3 | AC3: JSON output conforms to a documented schema for each command | - | 1 | ⚪ Draft |
+| REQ-885 | AC-885.4 | AC4: CSV output includes a header row with column names | - | 1 | ⚪ Draft |
+| REQ-886 | AC-886.1 | AC1: Guided wizard walks user through device setup step by step | - | 1 | ⚪ Draft |
+| REQ-886 | AC-886.2 | AC2: Wizard detects connected devices and suggests default configurations | - | 1 | ⚪ Draft |
+| REQ-886 | AC-886.3 | AC3: Each step validates input before proceeding to the next | - | 1 | ⚪ Draft |
+| REQ-886 | AC-886.4 | AC4: Wizard can be cancelled at any step without partial side effects | - | 1 | ⚪ Draft |
+| REQ-887 | AC-887.1 | AC1: Performance analysis report is generated with a single CLI command | - | 1 | ⚪ Draft |
+| REQ-887 | AC-887.2 | AC2: Report includes RT spine latency, jitter, and throughput metrics | - | 1 | ⚪ Draft |
+| REQ-887 | AC-887.3 | AC3: Report compares current metrics against historical baselines | - | 1 | ⚪ Draft |
+| REQ-887 | AC-887.4 | AC4: Output supports both summary and detailed breakdown views | - | 1 | ⚪ Draft |
+| REQ-888 | AC-888.1 | AC1: Plugins can be installed, removed, and updated via CLI commands | - | 1 | ⚪ Draft |
+| REQ-888 | AC-888.2 | AC2: Plugin install verifies signature and compatibility before applying | - | 1 | ⚪ Draft |
+| REQ-888 | AC-888.3 | AC3: Installed plugins are listed with version and status information | - | 1 | ⚪ Draft |
+| REQ-888 | AC-888.4 | AC4: Plugin update checks for newer versions from configured sources | - | 1 | ⚪ Draft |
+| REQ-889 | AC-889.1 | AC1: Interactive wizard guides creation of a new profile from scratch | - | 1 | ⚪ Draft |
+| REQ-889 | AC-889.2 | AC2: Wizard suggests axis mappings based on detected devices | - | 1 | ⚪ Draft |
+| REQ-889 | AC-889.3 | AC3: Created profile is validated before being saved to disk | - | 1 | ⚪ Draft |
+| REQ-889 | AC-889.4 | AC4: Wizard supports pre-built templates for common aircraft types | - | 1 | ⚪ Draft |
+| REQ-890 | AC-890.1 | AC1: Real-time log streaming displays service logs in the terminal | - | 1 | ⚪ Draft |
+| REQ-890 | AC-890.2 | AC2: Log output can be filtered by severity, source, or keyword | - | 1 | ⚪ Draft |
+| REQ-890 | AC-890.3 | AC3: Viewer supports pausing and resuming the log stream | - | 1 | ⚪ Draft |
+| REQ-890 | AC-890.4 | AC4: Log viewer gracefully reconnects if the service connection drops | - | 1 | ⚪ Draft |
+| REQ-891 | AC-891.1 | AC1: Full regression test suite runs with a single command invocation | - | 1 | ⚪ Draft |
+| REQ-891 | AC-891.2 | AC2: Suite covers unit, integration, and BDD feature tests | - | 1 | ⚪ Draft |
+| REQ-891 | AC-891.3 | AC3: Test results are reported in JUnit XML format for CI integration | - | 1 | ⚪ Draft |
+| REQ-891 | AC-891.4 | AC4: Flaky test detection flags tests with inconsistent pass rates | - | 1 | ⚪ Draft |
+| REQ-892 | AC-892.1 | AC1: Standardized benchmarks measure axis processing throughput | - | 1 | ⚪ Draft |
+| REQ-892 | AC-892.2 | AC2: Benchmark results are compared against checked-in baseline values | - | 1 | ⚪ Draft |
+| REQ-892 | AC-892.3 | AC3: Regressions beyond a configurable threshold fail the benchmark run | - | 1 | ⚪ Draft |
+| REQ-892 | AC-892.4 | AC4: Benchmark suite runs in isolation to minimize measurement noise | - | 1 | ⚪ Draft |
+| REQ-893 | AC-893.1 | AC1: Automated tests verify device compatibility across OS versions | - | 1 | ⚪ Draft |
+| REQ-893 | AC-893.2 | AC2: Test matrix covers all supported simulator and device combinations | - | 1 | ⚪ Draft |
+| REQ-893 | AC-893.3 | AC3: Matrix results are published as a compatibility report | - | 1 | ⚪ Draft |
+| REQ-893 | AC-893.4 | AC4: New device or simulator additions automatically extend the matrix | - | 1 | ⚪ Draft |
+| REQ-894 | AC-894.1 | AC1: Automated security scanning runs as part of the CI pipeline | - | 1 | ⚪ Draft |
+| REQ-894 | AC-894.2 | AC2: Dependency vulnerabilities are checked with cargo-audit and cargo-deny | - | 1 | ⚪ Draft |
+| REQ-894 | AC-894.3 | AC3: Audit failures block the merge pipeline with a clear report | - | 1 | ⚪ Draft |
+| REQ-894 | AC-894.4 | AC4: False positives can be suppressed with a reviewed allow-list | - | 1 | ⚪ Draft |
+| REQ-895 | AC-895.1 | AC1: API documentation completeness is tracked as a coverage metric | - | 1 | ⚪ Draft |
+| REQ-895 | AC-895.2 | AC2: Public items missing doc comments are flagged in CI | - | 1 | ⚪ Draft |
+| REQ-895 | AC-895.3 | AC3: Documentation coverage trend is reported over time | - | 1 | ⚪ Draft |
+| REQ-895 | AC-895.4 | AC4: Coverage threshold is enforced as a quality gate for releases | - | 1 | ⚪ Draft |
+| REQ-896 | AC-896.1 | AC1: Cyclomatic complexity is tracked and reported per module | - | 1 | ⚪ Draft |
+| REQ-896 | AC-896.2 | AC2: Complexity trends are compared against previous release baselines | - | 1 | ⚪ Draft |
+| REQ-896 | AC-896.3 | AC3: Modules exceeding the complexity threshold are flagged for review | - | 1 | ⚪ Draft |
+| REQ-896 | AC-896.4 | AC4: Metrics are collected automatically during CI builds | - | 1 | ⚪ Draft |
+| REQ-897 | AC-897.1 | AC1: Standardized harness provides mock devices and sim adapters | - | 1 | ⚪ Draft |
+| REQ-897 | AC-897.2 | AC2: Harness supports deterministic replay of recorded device inputs | - | 1 | ⚪ Draft |
+| REQ-897 | AC-897.3 | AC3: Test fixtures are reusable across multiple integration test suites | - | 1 | ⚪ Draft |
+| REQ-897 | AC-897.4 | AC4: Harness setup and teardown are automatic with no manual steps | - | 1 | ⚪ Draft |
+| REQ-898 | AC-898.1 | AC1: Stress tests exercise the service under sustained high device counts | - | 1 | ⚪ Draft |
+| REQ-898 | AC-898.2 | AC2: Load profiles are configurable for duration, concurrency, and rate | - | 1 | ⚪ Draft |
+| REQ-898 | AC-898.3 | AC3: Framework reports latency percentiles and error rates under load | - | 1 | ⚪ Draft |
+| REQ-898 | AC-898.4 | AC4: Load test results are compared against defined SLA thresholds | - | 1 | ⚪ Draft |
+| REQ-899 | AC-899.1 | AC1: Fault injection simulates device disconnection during operation | - | 1 | ⚪ Draft |
+| REQ-899 | AC-899.2 | AC2: Chaos tests verify graceful degradation under adapter failures | - | 1 | ⚪ Draft |
+| REQ-899 | AC-899.3 | AC3: Random delay injection tests RT spine jitter resilience | - | 1 | ⚪ Draft |
+| REQ-899 | AC-899.4 | AC4: Chaos test results document recovery time for each failure mode | - | 1 | ⚪ Draft |
+| REQ-900 | AC-900.1 | AC1: All 900 requirements are tracked in the specification ledger | - | 1 | ⚪ Draft |
+| REQ-900 | AC-900.2 | AC2: Coverage report confirms feature files exist for every requirement | - | 1 | ⚪ Draft |
+| REQ-900 | AC-900.3 | AC3: Milestone review validates traceability from requirements to tests | - | 1 | ⚪ Draft |
+| REQ-900 | AC-900.4 | AC4: Specification ledger passes schema validation without errors | - | 1 | ⚪ Draft |
+| REQ-901 | AC-901.1 | AC1: MSI installer performs per-user installation without requiring admin privileges | - | 1 | ⚪ Draft |
+| REQ-901 | AC-901.2 | AC2: Installer offers optional sim integration checkboxes for MSFS, X-Plane, and DCS | - | 1 | ⚪ Draft |
+| REQ-901 | AC-901.3 | AC3: Installation creates Start Menu shortcut and registers uninstall entry | - | 1 | ⚪ Draft |
+| REQ-901 | AC-901.4 | AC4: Installer validates disk space and prerequisites before proceeding | - | 1 | ⚪ Draft |
+| REQ-902 | AC-902.1 | AC1: Uninstaller removes all binaries and registry entries cleanly | - | 1 | ⚪ Draft |
+| REQ-902 | AC-902.2 | AC2: User configuration files in AppData are preserved after uninstall | - | 1 | ⚪ Draft |
+| REQ-902 | AC-902.3 | AC3: Sim-specific plugins installed during setup are removed on uninstall | - | 1 | ⚪ Draft |
+| REQ-902 | AC-902.4 | AC4: Uninstaller provides option to remove all data including user config | - | 1 | ⚪ Draft |
+| REQ-903 | AC-903.1 | AC1: Deb package installs binaries to standard FHS paths | - | 1 | ⚪ Draft |
+| REQ-903 | AC-903.2 | AC2: Package includes udev rules for supported HID devices | - | 1 | ⚪ Draft |
+| REQ-903 | AC-903.3 | AC3: Package includes systemd user unit file for auto-start | - | 1 | ⚪ Draft |
+| REQ-903 | AC-903.4 | AC4: Package declares correct dependencies for libudev and libusb | - | 1 | ⚪ Draft |
+| REQ-904 | AC-904.1 | AC1: Postinst script adds user to input group for HID access | - | 1 | ⚪ Draft |
+| REQ-904 | AC-904.2 | AC2: Postinst triggers udev rule reload without requiring reboot | - | 1 | ⚪ Draft |
+| REQ-904 | AC-904.3 | AC3: Postinst enables systemd user unit when auto-start is configured | - | 1 | ⚪ Draft |
+| REQ-904 | AC-904.4 | AC4: Postinst validates installation integrity and reports errors | - | 1 | ⚪ Draft |
+| REQ-905 | AC-905.1 | AC1: Service starts automatically on user login when auto-start is enabled | - | 1 | ⚪ Draft |
+| REQ-905 | AC-905.2 | AC2: Auto-start can be toggled via CLI command without manual config editing | - | 1 | ⚪ Draft |
+| REQ-905 | AC-905.3 | AC3: Windows auto-start uses Task Scheduler with user-level privileges | - | 1 | ⚪ Draft |
+| REQ-905 | AC-905.4 | AC4: Linux auto-start uses systemd user unit with correct dependencies | - | 1 | ⚪ Draft |
+| REQ-906 | AC-906.1 | AC1: Installer auto-detects installed simulators and their plugin directories | - | 1 | ⚪ Draft |
+| REQ-906 | AC-906.2 | AC2: MSFS community folder receives WASM plugin during installation | - | 1 | ⚪ Draft |
+| REQ-906 | AC-906.3 | AC3: X-Plane plugins directory receives native plugin during installation | - | 1 | ⚪ Draft |
+| REQ-906 | AC-906.4 | AC4: DCS scripts directory receives export script during installation | - | 1 | ⚪ Draft |
+| REQ-907 | AC-907.1 | AC1: Application runs without installation when portable marker file exists | - | 1 | ⚪ Draft |
+| REQ-907 | AC-907.2 | AC2: Portable mode stores all config alongside the executable directory | - | 1 | ⚪ Draft |
+| REQ-907 | AC-907.3 | AC3: Portable mode works from USB drive without leaving traces on host | - | 1 | ⚪ Draft |
+| REQ-907 | AC-907.4 | AC4: Portable mode disables auto-start and update features by default | - | 1 | ⚪ Draft |
+| REQ-908 | AC-908.1 | AC1: Installer supports silent mode via command-line flag for unattended operation | - | 1 | ⚪ Draft |
+| REQ-908 | AC-908.2 | AC2: Silent install accepts configuration parameters for sim integration selection | - | 1 | ⚪ Draft |
+| REQ-908 | AC-908.3 | AC3: Silent install returns non-zero exit code on failure with error in log | - | 1 | ⚪ Draft |
+| REQ-908 | AC-908.4 | AC4: Silent install produces machine-readable log for enterprise deployment tools | - | 1 | ⚪ Draft |
+| REQ-909 | AC-909.1 | AC1: Post-install self-test verifies all binaries are present and executable | - | 1 | ⚪ Draft |
+| REQ-909 | AC-909.2 | AC2: Self-test validates HID device access permissions are correctly configured | - | 1 | ⚪ Draft |
+| REQ-909 | AC-909.3 | AC3: Self-test checks that sim plugin files are installed in correct locations | - | 1 | ⚪ Draft |
+| REQ-909 | AC-909.4 | AC4: Self-test reports results in structured format for automated validation | - | 1 | ⚪ Draft |
+| REQ-910 | AC-910.1 | AC1: Stable and beta versions install to separate directories without conflict | - | 1 | ⚪ Draft |
+| REQ-910 | AC-910.2 | AC2: Each version uses isolated configuration and data directories | - | 1 | ⚪ Draft |
+| REQ-910 | AC-910.3 | AC3: IPC ports are version-namespaced to prevent cross-version interference | - | 1 | ⚪ Draft |
+| REQ-910 | AC-910.4 | AC4: Only one version may be actively running at any given time | - | 1 | ⚪ Draft |
+| REQ-911 | AC-911.1 | AC1: User can switch between stable, beta, and canary update channels | - | 1 | ⚪ Draft |
+| REQ-911 | AC-911.2 | AC2: Channel selection persists across service restarts | - | 1 | ⚪ Draft |
+| REQ-911 | AC-911.3 | AC3: Switching channels triggers an immediate update check | - | 1 | ⚪ Draft |
+| REQ-911 | AC-911.4 | AC4: CLI command displays current channel and available channels | - | 1 | ⚪ Draft |
+| REQ-912 | AC-912.1 | AC1: Update system generates binary diffs between consecutive versions | - | 1 | ⚪ Draft |
+| REQ-912 | AC-912.2 | AC2: Delta patches reduce download size by at least 50 percent versus full packages | - | 1 | ⚪ Draft |
+| REQ-912 | AC-912.3 | AC3: Delta application verifies source version hash before patching | - | 1 | ⚪ Draft |
+| REQ-912 | AC-912.4 | AC4: Full package fallback occurs when delta patch fails verification | - | 1 | ⚪ Draft |
+| REQ-913 | AC-913.1 | AC1: Failed update automatically reverts to the previous working version | - | 1 | ⚪ Draft |
+| REQ-913 | AC-913.2 | AC2: Rollback preserves user configuration without modification | - | 1 | ⚪ Draft |
+| REQ-913 | AC-913.3 | AC3: Manual rollback command is available via CLI for user-initiated revert | - | 1 | ⚪ Draft |
+| REQ-913 | AC-913.4 | AC4: Rollback event is logged with reason and prior version details | - | 1 | ⚪ Draft |
+| REQ-914 | AC-914.1 | AC1: All update payloads are signed with Ed25519 signatures | - | 1 | ⚪ Draft |
+| REQ-914 | AC-914.2 | AC2: Signature verification occurs before any update files are extracted | - | 1 | ⚪ Draft |
+| REQ-914 | AC-914.3 | AC3: Update manifest includes SHA-256 hashes for every contained file | - | 1 | ⚪ Draft |
+| REQ-914 | AC-914.4 | AC4: Tampered or unsigned payloads are rejected with descriptive error | - | 1 | ⚪ Draft |
+| REQ-915 | AC-915.1 | AC1: Updates download in background without interrupting active flight session | - | 1 | ⚪ Draft |
+| REQ-915 | AC-915.2 | AC2: Download uses bandwidth throttling to avoid impacting sim network traffic | - | 1 | ⚪ Draft |
+| REQ-915 | AC-915.3 | AC3: Partial downloads resume from last checkpoint after network interruption | - | 1 | ⚪ Draft |
+| REQ-915 | AC-915.4 | AC4: Download progress is reported via IPC for UI consumption | - | 1 | ⚪ Draft |
+| REQ-916 | AC-916.1 | AC1: Updates can be deferred to next service restart via user preference | - | 1 | ⚪ Draft |
+| REQ-916 | AC-916.2 | AC2: Scheduled updates apply automatically when service starts with pending update | - | 1 | ⚪ Draft |
+| REQ-916 | AC-916.3 | AC3: Update schedule is configurable with time-of-day preference | - | 1 | ⚪ Draft |
+| REQ-916 | AC-916.4 | AC4: Deferred update notification persists until update is applied or dismissed | - | 1 | ⚪ Draft |
+| REQ-917 | AC-917.1 | AC1: User is notified when a new update is available on their channel | - | 1 | ⚪ Draft |
+| REQ-917 | AC-917.2 | AC2: Notification includes version number and brief summary of changes | - | 1 | ⚪ Draft |
+| REQ-917 | AC-917.3 | AC3: Notification is delivered via system tray and IPC event | - | 1 | ⚪ Draft |
+| REQ-917 | AC-917.4 | AC4: Notification frequency is rate-limited to prevent spam on rapid releases | - | 1 | ⚪ Draft |
+| REQ-918 | AC-918.1 | AC1: CLI displays changelog for pending update before installation | - | 1 | ⚪ Draft |
+| REQ-918 | AC-918.2 | AC2: Release notes include categorized entries for features, fixes, and breaking changes | - | 1 | ⚪ Draft |
+| REQ-918 | AC-918.3 | AC3: Release notes are fetched from update server and cached locally | - | 1 | ⚪ Draft |
+| REQ-918 | AC-918.4 | AC4: UI renders markdown-formatted release notes with proper styling | - | 1 | ⚪ Draft |
+| REQ-919 | AC-919.1 | AC1: Minimum version enforcement prevents running versions below policy threshold | - | 1 | ⚪ Draft |
+| REQ-919 | AC-919.2 | AC2: Forced update displays clear message explaining why update is required | - | 1 | ⚪ Draft |
+| REQ-919 | AC-919.3 | AC3: Service enters degraded mode with limited functionality until update completes | - | 1 | ⚪ Draft |
+| REQ-919 | AC-919.4 | AC4: Forced update policy is signed and verified to prevent spoofing | - | 1 | ⚪ Draft |
+| REQ-920 | AC-920.1 | AC1: Update success and failure events are recorded with version metadata | - | 1 | ⚪ Draft |
+| REQ-920 | AC-920.2 | AC2: Telemetry tracks download duration, size, and bandwidth utilization | - | 1 | ⚪ Draft |
+| REQ-920 | AC-920.3 | AC3: Rollback events are tracked with failure reason classification | - | 1 | ⚪ Draft |
+| REQ-920 | AC-920.4 | AC4: Update telemetry respects user opt-in preference for data collection | - | 1 | ⚪ Draft |
+| REQ-921 | AC-921.1 | AC1: Configuration files include HMAC integrity tags validated on load | - | 1 | ⚪ Draft |
+| REQ-921 | AC-921.2 | AC2: Tampered configuration is detected and reported before applying changes | - | 1 | ⚪ Draft |
+| REQ-921 | AC-921.3 | AC3: Integrity check failure falls back to default configuration with warning | - | 1 | ⚪ Draft |
+| REQ-921 | AC-921.4 | AC4: Integrity validation covers all YAML and TOML configuration files | - | 1 | ⚪ Draft |
+| REQ-922 | AC-922.1 | AC1: gRPC connections require mutual TLS authentication between client and service | - | 1 | ⚪ Draft |
+| REQ-922 | AC-922.2 | AC2: Authentication tokens are rotated on each service restart | - | 1 | ⚪ Draft |
+| REQ-922 | AC-922.3 | AC3: Unauthenticated IPC connections are rejected with appropriate error code | - | 1 | ⚪ Draft |
+| REQ-922 | AC-922.4 | AC4: Authentication credentials are stored in platform-specific secure storage | - | 1 | ⚪ Draft |
+| REQ-923 | AC-923.1 | AC1: WASM plugins execute in capability-limited sandbox with declared permissions | - | 1 | ⚪ Draft |
+| REQ-923 | AC-923.2 | AC2: Sandbox prevents file system access beyond plugin-specific data directory | - | 1 | ⚪ Draft |
+| REQ-923 | AC-923.3 | AC3: Plugin memory usage is bounded by configurable per-plugin limits | - | 1 | ⚪ Draft |
+| REQ-923 | AC-923.4 | AC4: Sandbox violations are logged and terminate the offending plugin | - | 1 | ⚪ Draft |
+| REQ-924 | AC-924.1 | AC1: Security-relevant events are logged to tamper-evident audit log | - | 1 | ⚪ Draft |
+| REQ-924 | AC-924.2 | AC2: Audit entries include timestamp, actor, action, and outcome fields | - | 1 | ⚪ Draft |
+| REQ-924 | AC-924.3 | AC3: Audit log rotation preserves completed log files with integrity hashes | - | 1 | ⚪ Draft |
+| REQ-924 | AC-924.4 | AC4: Configuration changes, auth events, and plugin loads are audit-logged | - | 1 | ⚪ Draft |
+| REQ-925 | AC-925.1 | AC1: Default configuration ships with IPC authentication enabled | - | 1 | ⚪ Draft |
+| REQ-925 | AC-925.2 | AC2: Default configuration disables remote access and binds to localhost only | - | 1 | ⚪ Draft |
+| REQ-925 | AC-925.3 | AC3: Default plugin permissions follow least-privilege principle | - | 1 | ⚪ Draft |
+| REQ-925 | AC-925.4 | AC4: Default logging level excludes sensitive data from log output | - | 1 | ⚪ Draft |
+| REQ-926 | AC-926.1 | AC1: All external inputs are validated against schema before processing | - | 1 | ⚪ Draft |
+| REQ-926 | AC-926.2 | AC2: Profile file parsing rejects malformed or oversized input with error | - | 1 | ⚪ Draft |
+| REQ-926 | AC-926.3 | AC3: IPC message fields are bounds-checked before deserialization | - | 1 | ⚪ Draft |
+| REQ-926 | AC-926.4 | AC4: Device descriptor parsing sanitizes strings to prevent injection | - | 1 | ⚪ Draft |
+| REQ-927 | AC-927.1 | AC1: No unsafe code blocks exist outside FFI boundary modules | - | 1 | ⚪ Draft |
+| REQ-927 | AC-927.2 | AC2: FFI boundary modules document safety invariants for each unsafe block | - | 1 | ⚪ Draft |
+| REQ-927 | AC-927.3 | AC3: CI enforces unsafe audit via cargo-geiger or equivalent tooling | - | 1 | ⚪ Draft |
+| REQ-927 | AC-927.4 | AC4: All unsafe blocks are covered by miri tests where applicable | - | 1 | ⚪ Draft |
+| REQ-928 | AC-928.1 | AC1: Service components run with minimal required OS permissions | - | 1 | ⚪ Draft |
+| REQ-928 | AC-928.2 | AC2: HID access uses dedicated capability without full root or admin | - | 1 | ⚪ Draft |
+| REQ-928 | AC-928.3 | AC3: Update application runs in separate privilege context from main service | - | 1 | ⚪ Draft |
+| REQ-928 | AC-928.4 | AC4: Plugin processes are sandboxed with reduced privilege set | - | 1 | ⚪ Draft |
+| REQ-929 | AC-929.1 | AC1: Update server TLS certificates are pinned in the application binary | - | 1 | ⚪ Draft |
+| REQ-929 | AC-929.2 | AC2: Certificate rotation is supported via signed pin update mechanism | - | 1 | ⚪ Draft |
+| REQ-929 | AC-929.3 | AC3: Pinning failure aborts connection and logs security event | - | 1 | ⚪ Draft |
+| REQ-929 | AC-929.4 | AC4: Backup pins allow recovery when primary certificate is rotated | - | 1 | ⚪ Draft |
+| REQ-930 | AC-930.1 | AC1: Crash reports exclude authentication tokens and credentials | - | 1 | ⚪ Draft |
+| REQ-930 | AC-930.2 | AC2: Memory dumps are scrubbed of user-identifiable profile data | - | 1 | ⚪ Draft |
+| REQ-930 | AC-930.3 | AC3: Crash dump upload requires explicit user consent per incident | - | 1 | ⚪ Draft |
+| REQ-930 | AC-930.4 | AC4: Crash report format is documented for user inspection before submission | - | 1 | ⚪ Draft |
+| REQ-931 | AC-931.1 | AC1: All UI elements have accessible labels compatible with screen readers | - | 1 | ⚪ Draft |
+| REQ-931 | AC-931.2 | AC2: Focus order follows logical navigation flow through settings panels | - | 1 | ⚪ Draft |
+| REQ-931 | AC-931.3 | AC3: Dynamic content changes announce updates to assistive technology | - | 1 | ⚪ Draft |
+| REQ-931 | AC-931.4 | AC4: Screen reader compatibility is tested with NVDA and Windows Narrator | - | 1 | ⚪ Draft |
+| REQ-932 | AC-932.1 | AC1: UI provides high contrast theme meeting WCAG 2.1 AA contrast ratios | - | 1 | ⚪ Draft |
+| REQ-932 | AC-932.2 | AC2: High contrast mode is selectable from settings without restart | - | 1 | ⚪ Draft |
+| REQ-932 | AC-932.3 | AC3: UI automatically detects OS high contrast setting and adapts | - | 1 | ⚪ Draft |
+| REQ-932 | AC-932.4 | AC4: All interactive elements remain visible and distinguishable in high contrast | - | 1 | ⚪ Draft |
+| REQ-933 | AC-933.1 | AC1: All UI functionality is accessible via keyboard without mouse | - | 1 | ⚪ Draft |
+| REQ-933 | AC-933.2 | AC2: Tab order follows logical flow and is consistent across panels | - | 1 | ⚪ Draft |
+| REQ-933 | AC-933.3 | AC3: Keyboard shortcuts are documented and discoverable in-app | - | 1 | ⚪ Draft |
+| REQ-933 | AC-933.4 | AC4: Focus indicators are clearly visible on all interactive elements | - | 1 | ⚪ Draft |
+| REQ-934 | AC-934.1 | AC1: Error messages describe the problem in non-technical language | - | 1 | ⚪ Draft |
+| REQ-934 | AC-934.2 | AC2: Each error message includes a suggested action for resolution | - | 1 | ⚪ Draft |
+| REQ-934 | AC-934.3 | AC3: Error codes are included for support reference and searchability | - | 1 | ⚪ Draft |
+| REQ-934 | AC-934.4 | AC4: Critical errors are visually distinct from warnings and info messages | - | 1 | ⚪ Draft |
+| REQ-935 | AC-935.1 | AC1: First launch presents guided setup wizard for initial configuration | - | 1 | ⚪ Draft |
+| REQ-935 | AC-935.2 | AC2: Wizard auto-detects connected devices and installed simulators | - | 1 | ⚪ Draft |
+| REQ-935 | AC-935.3 | AC3: Wizard creates initial profile based on detected hardware | - | 1 | ⚪ Draft |
+| REQ-935 | AC-935.4 | AC4: Wizard can be skipped and re-launched from settings at any time | - | 1 | ⚪ Draft |
+| REQ-936 | AC-936.1 | AC1: Each settings panel includes contextual help accessible via help icon | - | 1 | ⚪ Draft |
+| REQ-936 | AC-936.2 | AC2: Help content explains the setting purpose and recommended values | - | 1 | ⚪ Draft |
+| REQ-936 | AC-936.3 | AC3: Help text is searchable from a global help search function | - | 1 | ⚪ Draft |
+| REQ-936 | AC-936.4 | AC4: Help content links to relevant online documentation when available | - | 1 | ⚪ Draft |
+| REQ-937 | AC-937.1 | AC1: Configuration changes support undo operation via Ctrl+Z | - | 1 | ⚪ Draft |
+| REQ-937 | AC-937.2 | AC2: Redo operation restores undone changes via Ctrl+Y | - | 1 | ⚪ Draft |
+| REQ-937 | AC-937.3 | AC3: Undo history persists within the current editing session | - | 1 | ⚪ Draft |
+| REQ-937 | AC-937.4 | AC4: Undo stack depth is bounded to prevent excessive memory usage | - | 1 | ⚪ Draft |
+| REQ-938 | AC-938.1 | AC1: Long operations display progress bar with estimated time remaining | - | 1 | ⚪ Draft |
+| REQ-938 | AC-938.2 | AC2: Indeterminate operations show activity spinner to indicate work in progress | - | 1 | ⚪ Draft |
+| REQ-938 | AC-938.3 | AC3: Progress state is reported via IPC for headless monitoring | - | 1 | ⚪ Draft |
+| REQ-938 | AC-938.4 | AC4: Cancel button is available for interruptible long-running operations | - | 1 | ⚪ Draft |
+| REQ-939 | AC-939.1 | AC1: User can configure notification verbosity from silent to verbose | - | 1 | ⚪ Draft |
+| REQ-939 | AC-939.2 | AC2: Per-category notification settings allow selective muting | - | 1 | ⚪ Draft |
+| REQ-939 | AC-939.3 | AC3: Notification preferences persist across service restarts | - | 1 | ⚪ Draft |
+| REQ-939 | AC-939.4 | AC4: Do-not-disturb mode suppresses all non-critical notifications | - | 1 | ⚪ Draft |
+| REQ-940 | AC-940.1 | AC1: UI strings are externalized in resource files for translation | - | 1 | ⚪ Draft |
+| REQ-940 | AC-940.2 | AC2: Language selection is configurable in settings with immediate effect | - | 1 | ⚪ Draft |
+| REQ-940 | AC-940.3 | AC3: Fallback to English occurs for untranslated strings | - | 1 | ⚪ Draft |
+| REQ-940 | AC-940.4 | AC4: Date, time, and number formatting respects locale conventions | - | 1 | ⚪ Draft |
+| REQ-941 | AC-941.1 | AC1: Log output is formatted as structured JSON with consistent field schema | - | 1 | ⚪ Draft |
+| REQ-941 | AC-941.2 | AC2: Each log entry includes timestamp, level, component, and message fields | - | 1 | ⚪ Draft |
+| REQ-941 | AC-941.3 | AC3: Structured logs include trace and span IDs for correlation | - | 1 | ⚪ Draft |
+| REQ-941 | AC-941.4 | AC4: Log format is configurable between JSON and human-readable output | - | 1 | ⚪ Draft |
+| REQ-942 | AC-942.1 | AC1: Log files rotate automatically when size exceeds configured threshold | - | 1 | ⚪ Draft |
+| REQ-942 | AC-942.2 | AC2: Rotated log files are compressed and retained for configurable duration | - | 1 | ⚪ Draft |
+| REQ-942 | AC-942.3 | AC3: Log rotation occurs without dropping any log entries during switchover | - | 1 | ⚪ Draft |
+| REQ-942 | AC-942.4 | AC4: Maximum total log storage is bounded by configurable disk quota | - | 1 | ⚪ Draft |
+| REQ-943 | AC-943.1 | AC1: Prometheus-compatible metrics endpoint exposes system metrics | - | 1 | ⚪ Draft |
+| REQ-943 | AC-943.2 | AC2: Metrics include axis processing latency, jitter, and throughput counters | - | 1 | ⚪ Draft |
+| REQ-943 | AC-943.3 | AC3: Device connection status and error counts are exposed as metrics | - | 1 | ⚪ Draft |
+| REQ-943 | AC-943.4 | AC4: Metrics endpoint supports HTTP scraping on configurable port | - | 1 | ⚪ Draft |
+| REQ-944 | AC-944.1 | AC1: HTTP health check endpoint returns service status for monitoring | - | 1 | ⚪ Draft |
+| REQ-944 | AC-944.2 | AC2: Health response includes component-level status for each subsystem | - | 1 | ⚪ Draft |
+| REQ-944 | AC-944.3 | AC3: Health check distinguishes between healthy, degraded, and unhealthy states | - | 1 | ⚪ Draft |
+| REQ-944 | AC-944.4 | AC4: Health endpoint responds within 100ms under normal operating conditions | - | 1 | ⚪ Draft |
+| REQ-945 | AC-945.1 | AC1: Trace context propagates across IPC boundaries between components | - | 1 | ⚪ Draft |
+| REQ-945 | AC-945.2 | AC2: Traces capture axis processing pipeline stages with timing data | - | 1 | ⚪ Draft |
+| REQ-945 | AC-945.3 | AC3: Trace export supports OpenTelemetry protocol for external collectors | - | 1 | ⚪ Draft |
+| REQ-945 | AC-945.4 | AC4: Trace sampling rate is configurable to control overhead | - | 1 | ⚪ Draft |
+| REQ-946 | AC-946.1 | AC1: Windows performance counters are registered for perfmon integration | - | 1 | ⚪ Draft |
+| REQ-946 | AC-946.2 | AC2: Linux perf integration exposes custom counters for system monitoring | - | 1 | ⚪ Draft |
+| REQ-946 | AC-946.3 | AC3: Counters track tick rate, processing time, and queue depths | - | 1 | ⚪ Draft |
+| REQ-946 | AC-946.4 | AC4: Performance counter registration is automatic during service startup | - | 1 | ⚪ Draft |
+| REQ-947 | AC-947.1 | AC1: Service tracks its own CPU usage and reports via metrics endpoint | - | 1 | ⚪ Draft |
+| REQ-947 | AC-947.2 | AC2: Memory usage is monitored with alerts on approaching configured limits | - | 1 | ⚪ Draft |
+| REQ-947 | AC-947.3 | AC3: Disk usage for logs and data is tracked and reported | - | 1 | ⚪ Draft |
+| REQ-947 | AC-947.4 | AC4: Resource metrics are sampled at configurable intervals | - | 1 | ⚪ Draft |
+| REQ-948 | AC-948.1 | AC1: Configurable alert thresholds trigger on metric value exceedance | - | 1 | ⚪ Draft |
+| REQ-948 | AC-948.2 | AC2: Alerts support severity levels from info through critical | - | 1 | ⚪ Draft |
+| REQ-948 | AC-948.3 | AC3: Alert state changes are emitted as structured events on the bus | - | 1 | ⚪ Draft |
+| REQ-948 | AC-948.4 | AC4: Alert cooldown prevents repeated firing for sustained threshold breach | - | 1 | ⚪ Draft |
+| REQ-949 | AC-949.1 | AC1: CLI provides diagnostic commands for system health inspection | - | 1 | ⚪ Draft |
+| REQ-949 | AC-949.2 | AC2: Diagnostics include device enumeration, connection status, and axis state | - | 1 | ⚪ Draft |
+| REQ-949 | AC-949.3 | AC3: Diagnostic output is structured for both human and machine consumption | - | 1 | ⚪ Draft |
+| REQ-949 | AC-949.4 | AC4: Diagnostic bundle export collects logs, config, and state into single archive | - | 1 | ⚪ Draft |
+| REQ-950 | AC-950.1 | AC1: Anonymous usage telemetry is disabled by default requiring explicit opt-in | - | 1 | ⚪ Draft |
+| REQ-950 | AC-950.2 | AC2: Opt-in preference is configurable via CLI and UI settings | - | 1 | ⚪ Draft |
+| REQ-950 | AC-950.3 | AC3: Telemetry data is anonymized with no device or user identifiers | - | 1 | ⚪ Draft |
+| REQ-950 | AC-950.4 | AC4: User can view exactly what telemetry data would be sent before opting in | - | 1 | ⚪ Draft |
+| REQ-951 | AC-951.1 | AC1: Predefined FFB effects are available for common flight scenarios like turbulence and ground roll | - | 1 | ⚪ Draft |
+| REQ-951 | AC-951.2 | AC2: Effects are parameterized allowing intensity and frequency customization | - | 1 | ⚪ Draft |
+| REQ-951 | AC-951.3 | AC3: Effect library supports chaining multiple effects for composite feedback | - | 1 | ⚪ Draft |
+| REQ-951 | AC-951.4 | AC4: Custom user-defined effects can be added to the library | - | 1 | ⚪ Draft |
+| REQ-952 | AC-952.1 | AC1: Synchronized output is delivered across multiple connected devices simultaneously | - | 1 | ⚪ Draft |
+| REQ-952 | AC-952.2 | AC2: Device coordination maintains sub-millisecond timing alignment | - | 1 | ⚪ Draft |
+| REQ-952 | AC-952.3 | AC3: Failure of one device does not disrupt coordination of remaining devices | - | 1 | ⚪ Draft |
+| REQ-952 | AC-952.4 | AC4: Coordination groups are configurable per profile | - | 1 | ⚪ Draft |
+| REQ-953 | AC-953.1 | AC1: Firmware update files can be flashed to supported devices through OpenFlight | - | 1 | ⚪ Draft |
+| REQ-953 | AC-953.2 | AC2: Firmware update process validates file integrity before flashing | - | 1 | ⚪ Draft |
+| REQ-953 | AC-953.3 | AC3: Update progress is reported with percentage and estimated time remaining | - | 1 | ⚪ Draft |
+| REQ-953 | AC-953.4 | AC4: Failed firmware update triggers automatic rollback to previous version | - | 1 | ⚪ Draft |
+| REQ-954 | AC-954.1 | AC1: Users can create custom device definitions for unsupported hardware | - | 1 | ⚪ Draft |
+| REQ-954 | AC-954.2 | AC2: Custom profiles define axis mappings and button assignments | - | 1 | ⚪ Draft |
+| REQ-954 | AC-954.3 | AC3: Custom device profiles are validated against the device profile schema | - | 1 | ⚪ Draft |
+| REQ-954 | AC-954.4 | AC4: Custom profiles can be shared and imported from community repositories | - | 1 | ⚪ Draft |
+| REQ-955 | AC-955.1 | AC1: Device capabilities are automatically detected from HID descriptors | - | 1 | ⚪ Draft |
+| REQ-955 | AC-955.2 | AC2: Parsed descriptors identify axis count, button count, and hat switches | - | 1 | ⚪ Draft |
+| REQ-955 | AC-955.3 | AC3: Descriptor parsing handles vendor-specific usage pages gracefully | - | 1 | ⚪ Draft |
+| REQ-955 | AC-955.4 | AC4: Parsed capabilities are cached to avoid repeated descriptor reads | - | 1 | ⚪ Draft |
+| REQ-956 | AC-956.1 | AC1: Real-time input display shows current axis positions for all connected devices | - | 1 | ⚪ Draft |
+| REQ-956 | AC-956.2 | AC2: Visualization updates at display refresh rate without impacting RT processing | - | 1 | ⚪ Draft |
+| REQ-956 | AC-956.3 | AC3: Button press states are displayed with visual indicators | - | 1 | ⚪ Draft |
+| REQ-956 | AC-956.4 | AC4: Input visualization supports multiple simultaneous device views | - | 1 | ⚪ Draft |
+| REQ-957 | AC-957.1 | AC1: Visual curve editor data provides input-output mapping preview | - | 1 | ⚪ Draft |
+| REQ-957 | AC-957.2 | AC2: Curve visualization reflects current profile settings in real time | - | 1 | ⚪ Draft |
+| REQ-957 | AC-957.3 | AC3: Multiple curve types are rendered including linear, exponential, and custom | - | 1 | ⚪ Draft |
+| REQ-957 | AC-957.4 | AC4: Curve preview shows current input position on the curve graph | - | 1 | ⚪ Draft |
+| REQ-958 | AC-958.1 | AC1: Button assignments are saved per game and per device combination | - | 1 | ⚪ Draft |
+| REQ-958 | AC-958.2 | AC2: Persisted mappings survive service restarts and device reconnection | - | 1 | ⚪ Draft |
+| REQ-958 | AC-958.3 | AC3: Button mapping conflicts are detected and reported to the user | - | 1 | ⚪ Draft |
+| REQ-958 | AC-958.4 | AC4: Bulk import and export of button mappings is supported | - | 1 | ⚪ Draft |
+| REQ-959 | AC-959.1 | AC1: Hat switch behaviors are configurable between 4-way and 8-way modes | - | 1 | ⚪ Draft |
+| REQ-959 | AC-959.2 | AC2: Hat positions can be mapped to arbitrary button or axis outputs | - | 1 | ⚪ Draft |
+| REQ-959 | AC-959.3 | AC3: Hat switch dead zone is configurable for diagonal rejection | - | 1 | ⚪ Draft |
+| REQ-959 | AC-959.4 | AC4: Multiple hat switches on a single device are independently configurable | - | 1 | ⚪ Draft |
+| REQ-960 | AC-960.1 | AC1: Effective axis resolution is maximized through noise floor detection | - | 1 | ⚪ Draft |
+| REQ-960 | AC-960.2 | AC2: Precision optimization adapts to the hardware resolution of each axis | - | 1 | ⚪ Draft |
+| REQ-960 | AC-960.3 | AC3: Sub-bit interpolation improves effective resolution beyond hardware limits | - | 1 | ⚪ Draft |
+| REQ-960 | AC-960.4 | AC4: Precision statistics are reported per axis for diagnostic review | - | 1 | ⚪ Draft |
+| REQ-961 | AC-961.1 | AC1: Efficient SimVar polling subscribes only to variables required by active profile | - | 1 | ⚪ Draft |
+| REQ-961 | AC-961.2 | AC2: Variable subscription updates when profile or aircraft changes | - | 1 | ⚪ Draft |
+| REQ-961 | AC-961.3 | AC3: Subscription batching reduces SimConnect round trips for performance | - | 1 | ⚪ Draft |
+| REQ-961 | AC-961.4 | AC4: Unsubscribed variables are automatically cleaned up on profile switch | - | 1 | ⚪ Draft |
+| REQ-962 | AC-962.1 | AC1: Local dataref cache stores values with configurable time-to-live | - | 1 | ⚪ Draft |
+| REQ-962 | AC-962.2 | AC2: Cache invalidation occurs on dataref write or TTL expiry | - | 1 | ⚪ Draft |
+| REQ-962 | AC-962.3 | AC3: Cache hit rate is tracked and reported via metrics endpoint | - | 1 | ⚪ Draft |
+| REQ-962 | AC-962.4 | AC4: Cache size is bounded to prevent unbounded memory growth | - | 1 | ⚪ Draft |
+| REQ-963 | AC-963.1 | AC1: Cockpit arguments are mapped to device outputs for panel synchronization | - | 1 | ⚪ Draft |
+| REQ-963 | AC-963.2 | AC2: Argument bindings support per-aircraft module configurations | - | 1 | ⚪ Draft |
+| REQ-963 | AC-963.3 | AC3: Binding updates are delivered within one processing tick of argument change | - | 1 | ⚪ Draft |
+| REQ-963 | AC-963.4 | AC4: Invalid cockpit argument references are reported as configuration warnings | - | 1 | ⚪ Draft |
+| REQ-964 | AC-964.1 | AC1: Multiple simulator adapters can be active simultaneously without conflict | - | 1 | ⚪ Draft |
+| REQ-964 | AC-964.2 | AC2: Device routing rules determine which sim receives input from each device | - | 1 | ⚪ Draft |
+| REQ-964 | AC-964.3 | AC3: Sim priority ordering resolves conflicts when multiple sims claim same device | - | 1 | ⚪ Draft |
+| REQ-964 | AC-964.4 | AC4: Adding or removing a sim adapter does not disrupt other active connections | - | 1 | ⚪ Draft |
+| REQ-965 | AC-965.1 | AC1: Commands can be sent to simulators through the event injection API | - | 1 | ⚪ Draft |
+| REQ-965 | AC-965.2 | AC2: Event injection supports all three simulator platforms with unified interface | - | 1 | ⚪ Draft |
+| REQ-965 | AC-965.3 | AC3: Injected events are queued and delivered in order with confirmation | - | 1 | ⚪ Draft |
+| REQ-965 | AC-965.4 | AC4: Rate limiting prevents event flooding that could destabilize the simulator | - | 1 | ⚪ Draft |
+| REQ-966 | AC-966.1 | AC1: Wind speed and direction are extracted from simulator for FFB wind effects | - | 1 | ⚪ Draft |
+| REQ-966 | AC-966.2 | AC2: Turbulence intensity data drives force feedback vibration parameters | - | 1 | ⚪ Draft |
+| REQ-966 | AC-966.3 | AC3: Weather data updates at minimum 4Hz for responsive force feedback | - | 1 | ⚪ Draft |
+| REQ-966 | AC-966.4 | AC4: Missing weather data gracefully falls back to neutral force feedback state | - | 1 | ⚪ Draft |
+| REQ-967 | AC-967.1 | AC1: Head tracker input is forwarded to simulator camera control system | - | 1 | ⚪ Draft |
+| REQ-967 | AC-967.2 | AC2: Camera integration supports TrackIR, OpenTrack, and OpenXR protocols | - | 1 | ⚪ Draft |
+| REQ-967 | AC-967.3 | AC3: Camera smoothing parameters are configurable per simulator | - | 1 | ⚪ Draft |
+| REQ-967 | AC-967.4 | AC4: Camera control does not interfere with normal axis processing pipeline | - | 1 | ⚪ Draft |
+| REQ-968 | AC-968.1 | AC1: Radio frequency management synchronizes physical panel with sim radios | - | 1 | ⚪ Draft |
+| REQ-968 | AC-968.2 | AC2: Active and standby frequencies are displayed on panel LCD or LEDs | - | 1 | ⚪ Draft |
+| REQ-968 | AC-968.3 | AC3: Frequency swap operation on panel triggers corresponding sim event | - | 1 | ⚪ Draft |
+| REQ-968 | AC-968.4 | AC4: Radio panel integration supports COM, NAV, and ADF frequency bands | - | 1 | ⚪ Draft |
+| REQ-969 | AC-969.1 | AC1: Autopilot state is read from simulator for panel LED indication | - | 1 | ⚪ Draft |
+| REQ-969 | AC-969.2 | AC2: AP mode changes update panel indicators within 100ms of sim state change | - | 1 | ⚪ Draft |
+| REQ-969 | AC-969.3 | AC3: Panel buttons can engage and disengage autopilot modes in the simulator | - | 1 | ⚪ Draft |
+| REQ-969 | AC-969.4 | AC4: Autopilot altitude, heading, and speed settings are displayed on panels | - | 1 | ⚪ Draft |
+| REQ-970 | AC-970.1 | AC1: Navigation data from simulator is available for instrument panel display | - | 1 | ⚪ Draft |
+| REQ-970 | AC-970.2 | AC2: Data feed includes heading, altitude, airspeed, and vertical speed | - | 1 | ⚪ Draft |
+| REQ-970 | AC-970.3 | AC3: Navigation data update rate is configurable per instrument requirement | - | 1 | ⚪ Draft |
+| REQ-970 | AC-970.4 | AC4: Data feed handles simulator pause and time acceleration gracefully | - | 1 | ⚪ Draft |
+| REQ-971 | AC-971.1 | AC1: System continues operating with reduced functionality when non-critical errors occur | - | 1 | ⚪ Draft |
+| REQ-971 | AC-971.2 | AC2: Degraded components are identified and reported via health status API | - | 1 | ⚪ Draft |
+| REQ-971 | AC-971.3 | AC3: Recovery is attempted automatically when degraded component becomes available | - | 1 | ⚪ Draft |
+| REQ-971 | AC-971.4 | AC4: Critical path components are isolated from non-critical failure propagation | - | 1 | ⚪ Draft |
+| REQ-972 | AC-972.1 | AC1: Memory growth is monitored over time with configurable sampling intervals | - | 1 | ⚪ Draft |
+| REQ-972 | AC-972.2 | AC2: Alerts are raised when memory usage exceeds expected growth thresholds | - | 1 | ⚪ Draft |
+| REQ-972 | AC-972.3 | AC3: Memory usage per component is tracked for leak source identification | - | 1 | ⚪ Draft |
+| REQ-972 | AC-972.4 | AC4: Memory statistics are available via diagnostic commands and metrics API | - | 1 | ⚪ Draft |
+| REQ-973 | AC-973.1 | AC1: Thread progress is monitored to detect potential deadlock conditions | - | 1 | ⚪ Draft |
+| REQ-973 | AC-973.2 | AC2: Deadlock detection reports involved threads and held resources | - | 1 | ⚪ Draft |
+| REQ-973 | AC-973.3 | AC3: Watchdog timer triggers recovery action when thread becomes unresponsive | - | 1 | ⚪ Draft |
+| REQ-973 | AC-973.4 | AC4: Deadlock events are logged with full stack trace for post-mortem analysis | - | 1 | ⚪ Draft |
+| REQ-974 | AC-974.1 | AC1: All system resources are properly released during graceful shutdown | - | 1 | ⚪ Draft |
+| REQ-974 | AC-974.2 | AC2: Device handles are closed and force feedback effects are cleared on exit | - | 1 | ⚪ Draft |
+| REQ-974 | AC-974.3 | AC3: Temporary files and IPC channels are cleaned up during shutdown | - | 1 | ⚪ Draft |
+| REQ-974 | AC-974.4 | AC4: Cleanup timeout ensures shutdown completes within configurable time limit | - | 1 | ⚪ Draft |
+| REQ-975 | AC-975.1 | AC1: Service auto-restarts after unexpected termination with state restoration | - | 1 | ⚪ Draft |
+| REQ-975 | AC-975.2 | AC2: Previous session state is recovered from persistent checkpoint data | - | 1 | ⚪ Draft |
+| REQ-975 | AC-975.3 | AC3: Crash count tracking prevents restart loops with exponential backoff | - | 1 | ⚪ Draft |
+| REQ-975 | AC-975.4 | AC4: Crash dump is captured and stored for diagnostic analysis | - | 1 | ⚪ Draft |
+| REQ-976 | AC-976.1 | AC1: Configuration writes use transactional semantics with atomic file replacement | - | 1 | ⚪ Draft |
+| REQ-976 | AC-976.2 | AC2: Write operations create backup before modifying existing configuration | - | 1 | ⚪ Draft |
+| REQ-976 | AC-976.3 | AC3: Corrupted configuration files are detected and replaced with last known good | - | 1 | ⚪ Draft |
+| REQ-976 | AC-976.4 | AC4: File integrity checksums are validated on every configuration load | - | 1 | ⚪ Draft |
+| REQ-977 | AC-977.1 | AC1: All external operations have configurable timeout limits | - | 1 | ⚪ Draft |
+| REQ-977 | AC-977.2 | AC2: Timeout expiry triggers appropriate error handling and resource cleanup | - | 1 | ⚪ Draft |
+| REQ-977 | AC-977.3 | AC3: Timeout values are tunable per operation type via configuration | - | 1 | ⚪ Draft |
+| REQ-977 | AC-977.4 | AC4: Timeout events are logged with operation context for debugging | - | 1 | ⚪ Draft |
+| REQ-978 | AC-978.1 | AC1: Circuit breakers prevent cascading failures between system components | - | 1 | ⚪ Draft |
+| REQ-978 | AC-978.2 | AC2: Circuit state transitions through closed, open, and half-open states | - | 1 | ⚪ Draft |
+| REQ-978 | AC-978.3 | AC3: Failure threshold and recovery timeout are configurable per circuit | - | 1 | ⚪ Draft |
+| REQ-978 | AC-978.4 | AC4: Circuit breaker state changes are emitted as events on the system bus | - | 1 | ⚪ Draft |
+| REQ-979 | AC-979.1 | AC1: Transient failures trigger automatic retry with exponential backoff | - | 1 | ⚪ Draft |
+| REQ-979 | AC-979.2 | AC2: Maximum retry count and backoff ceiling are configurable per operation | - | 1 | ⚪ Draft |
+| REQ-979 | AC-979.3 | AC3: Retry attempts are logged with attempt number and delay duration | - | 1 | ⚪ Draft |
+| REQ-979 | AC-979.4 | AC4: Jitter is added to backoff delay to prevent thundering herd effects | - | 1 | ⚪ Draft |
+| REQ-980 | AC-980.1 | AC1: Web-based health overview displays system status in real time | - | 1 | ⚪ Draft |
+| REQ-980 | AC-980.2 | AC2: Dashboard shows component health, device status, and sim connections | - | 1 | ⚪ Draft |
+| REQ-980 | AC-980.3 | AC3: Historical health data is charted with configurable time window | - | 1 | ⚪ Draft |
+| REQ-980 | AC-980.4 | AC4: Dashboard is accessible on configurable local port without authentication | - | 1 | ⚪ Draft |
+| REQ-981 | AC-981.1 | AC1: Comprehensive plugin development guide covers all three plugin tiers | - | 1 | ⚪ Draft |
+| REQ-981 | AC-981.2 | AC2: Documentation includes API reference with type signatures and examples | - | 1 | ⚪ Draft |
+| REQ-981 | AC-981.3 | AC3: Getting started tutorial enables first plugin creation within 30 minutes | - | 1 | ⚪ Draft |
+| REQ-981 | AC-981.4 | AC4: Documentation is versioned and published alongside each SDK release | - | 1 | ⚪ Draft |
+| REQ-982 | AC-982.1 | AC1: Reference implementations exist for WASM, native fast-path, and service tiers | - | 1 | ⚪ Draft |
+| REQ-982 | AC-982.2 | AC2: Each example plugin includes build instructions and test harness | - | 1 | ⚪ Draft |
+| REQ-982 | AC-982.3 | AC3: Example plugins demonstrate common patterns like axis modification and event handling | - | 1 | ⚪ Draft |
+| REQ-982 | AC-982.4 | AC4: Examples are validated in CI to ensure they compile against current SDK | - | 1 | ⚪ Draft |
+| REQ-983 | AC-983.1 | AC1: Verbose logging mode provides detailed trace output for all system operations | - | 1 | ⚪ Draft |
+| REQ-983 | AC-983.2 | AC2: Hot-reload enables profile and plugin changes without service restart | - | 1 | ⚪ Draft |
+| REQ-983 | AC-983.3 | AC3: Development mode disables RT priority to allow debugging without elevated privileges | - | 1 | ⚪ Draft |
+| REQ-983 | AC-983.4 | AC4: Mock simulator connections are available for testing without running sims | - | 1 | ⚪ Draft |
+| REQ-984 | AC-984.1 | AC1: Virtual devices simulate HID input for testing without physical hardware | - | 1 | ⚪ Draft |
+| REQ-984 | AC-984.2 | AC2: Mock devices support configurable axis count, button count, and FFB capabilities | - | 1 | ⚪ Draft |
+| REQ-984 | AC-984.3 | AC3: Scripted input sequences can be replayed through mock devices | - | 1 | ⚪ Draft |
+| REQ-984 | AC-984.4 | AC4: Mock device behavior is deterministic for reproducible test results | - | 1 | ⚪ Draft |
+| REQ-985 | AC-985.1 | AC1: Captured blackbox traces can be replayed for offline debugging | - | 1 | ⚪ Draft |
+| REQ-985 | AC-985.2 | AC2: Replay supports variable speed playback including pause and step modes | - | 1 | ⚪ Draft |
+| REQ-985 | AC-985.3 | AC3: Replayed traces produce identical output given identical configuration | - | 1 | ⚪ Draft |
+| REQ-985 | AC-985.4 | AC4: Trace replay tool outputs diagnostic annotations at configurable detail levels | - | 1 | ⚪ Draft |
+| REQ-986 | AC-986.1 | AC1: Static analysis detects common configuration errors in profile files | - | 1 | ⚪ Draft |
+| REQ-986 | AC-986.2 | AC2: Linter checks include unused axis mappings, invalid references, and type mismatches | - | 1 | ⚪ Draft |
+| REQ-986 | AC-986.3 | AC3: Lint warnings include suggested fixes with actionable guidance | - | 1 | ⚪ Draft |
+| REQ-986 | AC-986.4 | AC4: Profile linter integrates with CI pipeline for automated validation | - | 1 | ⚪ Draft |
+| REQ-987 | AC-987.1 | AC1: Interactive API exploration tool allows testing gRPC endpoints | - | 1 | ⚪ Draft |
+| REQ-987 | AC-987.2 | AC2: Playground provides request templates for all available API methods | - | 1 | ⚪ Draft |
+| REQ-987 | AC-987.3 | AC3: Response data is formatted and syntax-highlighted for readability | - | 1 | ⚪ Draft |
+| REQ-987 | AC-987.4 | AC4: Playground maintains request history for iterative testing sessions | - | 1 | ⚪ Draft |
+| REQ-988 | AC-988.1 | AC1: Standardized performance benchmarks cover axis processing and FFB synthesis | - | 1 | ⚪ Draft |
+| REQ-988 | AC-988.2 | AC2: Benchmark results are comparable across runs with statistical analysis | - | 1 | ⚪ Draft |
+| REQ-988 | AC-988.3 | AC3: Regression detection alerts when performance degrades beyond threshold | - | 1 | ⚪ Draft |
+| REQ-988 | AC-988.4 | AC4: Benchmark harness supports custom scenarios defined in configuration files | - | 1 | ⚪ Draft |
+| REQ-989 | AC-989.1 | AC1: Test harness enables end-to-end sim integration testing with mock adapters | - | 1 | ⚪ Draft |
+| REQ-989 | AC-989.2 | AC2: Framework supports parallel test execution with isolated device contexts | - | 1 | ⚪ Draft |
+| REQ-989 | AC-989.3 | AC3: Test fixtures provide preconfigured device and profile combinations | - | 1 | ⚪ Draft |
+| REQ-989 | AC-989.4 | AC4: Integration test results include timing data and resource usage metrics | - | 1 | ⚪ Draft |
+| REQ-990 | AC-990.1 | AC1: Comprehensive error code reference documents all system error conditions | - | 1 | ⚪ Draft |
+| REQ-990 | AC-990.2 | AC2: Each error code includes description, cause, and recommended resolution | - | 1 | ⚪ Draft |
+| REQ-990 | AC-990.3 | AC3: Error catalog is generated from source code annotations automatically | - | 1 | ⚪ Draft |
+| REQ-990 | AC-990.4 | AC4: Error codes follow hierarchical naming convention by subsystem | - | 1 | ⚪ Draft |
+| REQ-991 | AC-991.1 | AC1: Automated changelog is generated from conventional commit messages | - | 1 | ⚪ Draft |
+| REQ-991 | AC-991.2 | AC2: Changelog entries are categorized by type including features, fixes, and breaking changes | - | 1 | ⚪ Draft |
+| REQ-991 | AC-991.3 | AC3: Generated changelog includes links to relevant pull requests and issues | - | 1 | ⚪ Draft |
+| REQ-991 | AC-991.4 | AC4: Changelog generation is integrated into the release pipeline | - | 1 | ⚪ Draft |
+| REQ-992 | AC-992.1 | AC1: Automated release pipeline builds, tests, and publishes release artifacts | - | 1 | ⚪ Draft |
+| REQ-992 | AC-992.2 | AC2: Release pipeline enforces all quality gates before artifact publication | - | 1 | ⚪ Draft |
+| REQ-992 | AC-992.3 | AC3: Semantic versioning is automatically determined from commit history | - | 1 | ⚪ Draft |
+| REQ-992 | AC-992.4 | AC4: Release artifacts are published to configured distribution channels | - | 1 | ⚪ Draft |
+| REQ-993 | AC-993.1 | AC1: All distributed binaries are code-signed with verified certificates | - | 1 | ⚪ Draft |
+| REQ-993 | AC-993.2 | AC2: Signature verification is performed during installation and update | - | 1 | ⚪ Draft |
+| REQ-993 | AC-993.3 | AC3: Signing key rotation is supported without breaking existing installations | - | 1 | ⚪ Draft |
+| REQ-993 | AC-993.4 | AC4: Unsigned or tampered binaries are rejected with clear error messaging | - | 1 | ⚪ Draft |
+| REQ-994 | AC-994.1 | AC1: SPDX license tracking covers all direct and transitive dependencies | - | 1 | ⚪ Draft |
+| REQ-994 | AC-994.2 | AC2: License compatibility is validated against project license requirements | - | 1 | ⚪ Draft |
+| REQ-994 | AC-994.3 | AC3: License report is generated and included in distribution artifacts | - | 1 | ⚪ Draft |
+| REQ-994 | AC-994.4 | AC4: New dependency additions trigger automatic license review in CI | - | 1 | ⚪ Draft |
+| REQ-995 | AC-995.1 | AC1: Automated vulnerability scanning checks all dependencies on every build | - | 1 | ⚪ Draft |
+| REQ-995 | AC-995.2 | AC2: Known vulnerabilities are flagged with severity level and remediation guidance | - | 1 | ⚪ Draft |
+| REQ-995 | AC-995.3 | AC3: Audit results block release when critical or high severity issues are found | - | 1 | ⚪ Draft |
+| REQ-995 | AC-995.4 | AC4: Dependency audit history is retained for compliance reporting | - | 1 | ⚪ Draft |
+| REQ-996 | AC-996.1 | AC1: Compatibility matrix is auto-generated from device and simulator manifests | - | 1 | ⚪ Draft |
+| REQ-996 | AC-996.2 | AC2: Matrix includes supported OS versions, simulator versions, and device models | - | 1 | ⚪ Draft |
+| REQ-996 | AC-996.3 | AC3: Generated matrix is published as part of release documentation | - | 1 | ⚪ Draft |
+| REQ-996 | AC-996.4 | AC4: Matrix validation runs against actual test results in CI pipeline | - | 1 | ⚪ Draft |
+| REQ-997 | AC-997.1 | AC1: Generated documentation site includes API reference and user guides | - | 1 | ⚪ Draft |
+| REQ-997 | AC-997.2 | AC2: Documentation is built from source and published on every release | - | 1 | ⚪ Draft |
+| REQ-997 | AC-997.3 | AC3: Site search enables finding content across all documentation sections | - | 1 | ⚪ Draft |
+| REQ-997 | AC-997.4 | AC4: Documentation site supports versioned content for multiple releases | - | 1 | ⚪ Draft |
+| REQ-998 | AC-998.1 | AC1: Issue templates guide reporters through structured bug and feature submissions | - | 1 | ⚪ Draft |
+| REQ-998 | AC-998.2 | AC2: Pull request template includes checklist for quality gate compliance | - | 1 | ⚪ Draft |
+| REQ-998 | AC-998.3 | AC3: Discussion templates support categorized community conversations | - | 1 | ⚪ Draft |
+| REQ-998 | AC-998.4 | AC4: Templates are validated for completeness and updated with project evolution | - | 1 | ⚪ Draft |
+| REQ-999 | AC-999.1 | AC1: Comprehensive contributor onboarding guide covers setup, build, and test workflows | - | 1 | ⚪ Draft |
+| REQ-999 | AC-999.2 | AC2: Guide documents coding conventions, commit message format, and PR process | - | 1 | ⚪ Draft |
+| REQ-999 | AC-999.3 | AC3: Architecture overview section orients new contributors to codebase structure | - | 1 | ⚪ Draft |
+| REQ-999 | AC-999.4 | AC4: Contribution guide is linked from repository README and issue templates | - | 1 | ⚪ Draft |
+| REQ-1000 | AC-1000.1 | AC1: All 1000 requirements are tracked in the specification ledger | - | 1 | ⚪ Draft |
+| REQ-1000 | AC-1000.2 | AC2: Coverage report confirms feature files exist for every requirement | - | 1 | ⚪ Draft |
+| REQ-1000 | AC-1000.3 | AC3: Milestone review validates traceability from requirements to tests | - | 1 | ⚪ Draft |
+| REQ-1000 | AC-1000.4 | AC4: Specification ledger passes schema validation without errors | - | 1 | ⚪ Draft |
+| REQ-1001 | AC-1001.1 | AC1: WHEN user starts macro recording THEN all input events SHALL be captured with timestamps | specs/features/req_1001_macro_recording.feature:4 | 1 | ⚪ Draft |
+| REQ-1001 | AC-1001.2 | AC2: Recorded macro can be saved with a user-defined name | specs/features/req_1001_macro_recording.feature:10 | 1 | ⚪ Draft |
+| REQ-1001 | AC-1001.3 | AC3: Macro playback reproduces input sequence with original timing | specs/features/req_1001_macro_recording.feature:16 | 1 | ⚪ Draft |
+| REQ-1001 | AC-1001.4 | AC4: Macro recording can be stopped and discarded without side effects | specs/features/req_1001_macro_recording.feature:22 | 1 | ⚪ Draft |
+| REQ-1002 | AC-1002.1 | AC1: Triggers can be defined with conditions based on sim state variables | specs/features/req_1002_conditional_triggers.feature:4 | 1 | ⚪ Draft |
+| REQ-1002 | AC-1002.2 | AC2: WHEN condition evaluates to true THEN the configured action SHALL execute | specs/features/req_1002_conditional_triggers.feature:10 | 1 | ⚪ Draft |
+| REQ-1002 | AC-1002.3 | AC3: Multiple conditions can be combined with AND/OR logic | specs/features/req_1002_conditional_triggers.feature:16 | 1 | ⚪ Draft |
+| REQ-1002 | AC-1002.4 | AC4: Invalid condition expressions are rejected at profile load time | specs/features/req_1002_conditional_triggers.feature:22 | 1 | ⚪ Draft |
+| REQ-1003 | AC-1003.1 | AC1: Actions can be scheduled to execute after a configurable delay | specs/features/req_1003_timer_based_actions.feature:4 | 1 | ⚪ Draft |
+| REQ-1003 | AC-1003.2 | AC2: Repeating timer actions execute at configurable intervals | specs/features/req_1003_timer_based_actions.feature:10 | 1 | ⚪ Draft |
+| REQ-1003 | AC-1003.3 | AC3: Timer actions can be cancelled before execution | specs/features/req_1003_timer_based_actions.feature:16 | 1 | ⚪ Draft |
+| REQ-1003 | AC-1003.4 | AC4: Timer precision is within 10ms of configured interval | specs/features/req_1003_timer_based_actions.feature:22 | 1 | ⚪ Draft |
+| REQ-1004 | AC-1004.1 | AC1: Multiple input actions can be chained into a named sequence | specs/features/req_1004_input_chaining.feature:4 | 1 | ⚪ Draft |
+| REQ-1004 | AC-1004.2 | AC2: Chain steps execute in order with configurable delays between steps | specs/features/req_1004_input_chaining.feature:10 | 1 | ⚪ Draft |
+| REQ-1004 | AC-1004.3 | AC3: Chain execution can be interrupted by a cancel action | specs/features/req_1004_input_chaining.feature:16 | 1 | ⚪ Draft |
+| REQ-1004 | AC-1004.4 | AC4: Chain progress is reported via the event bus | specs/features/req_1004_input_chaining.feature:22 | 1 | ⚪ Draft |
+| REQ-1005 | AC-1005.1 | AC1: Profile auto-switching rules can reference sim state conditions | specs/features/req_1005_state_based_profiles.feature:4 | 1 | ⚪ Draft |
+| REQ-1005 | AC-1005.2 | AC2: WHEN flight phase changes THEN the matching profile SHALL activate | specs/features/req_1005_state_based_profiles.feature:10 | 1 | ⚪ Draft |
+| REQ-1005 | AC-1005.3 | AC3: State conditions support comparison operators for numeric sim variables | specs/features/req_1005_state_based_profiles.feature:16 | 1 | ⚪ Draft |
+| REQ-1005 | AC-1005.4 | AC4: Profile switch hysteresis prevents rapid toggling between profiles | specs/features/req_1005_state_based_profiles.feature:22 | 1 | ⚪ Draft |
+| REQ-1006 | AC-1006.1 | AC1: Voice commands can be mapped to input actions in profile | specs/features/req_1006_voice_command_integration.feature:4 | 1 | ⚪ Draft |
+| REQ-1006 | AC-1006.2 | AC2: Voice recognition engine is configurable between platform options | specs/features/req_1006_voice_command_integration.feature:10 | 1 | ⚪ Draft |
+| REQ-1006 | AC-1006.3 | AC3: WHEN a recognized voice command is detected THEN the mapped action SHALL execute | specs/features/req_1006_voice_command_integration.feature:16 | 1 | ⚪ Draft |
+| REQ-1006 | AC-1006.4 | AC4: Voice command confidence threshold is configurable to reduce false triggers | specs/features/req_1006_voice_command_integration.feature:22 | 1 | ⚪ Draft |
+| REQ-1007 | AC-1007.1 | AC1: Movement patterns on multi-axis devices can be recognized as gestures | specs/features/req_1007_gesture_recognition.feature:4 | 1 | ⚪ Draft |
+| REQ-1007 | AC-1007.2 | AC2: Gesture templates are defined in profile with tolerance parameters | specs/features/req_1007_gesture_recognition.feature:10 | 1 | ⚪ Draft |
+| REQ-1007 | AC-1007.3 | AC3: WHEN a gesture is recognized THEN the configured action SHALL trigger | specs/features/req_1007_gesture_recognition.feature:16 | 1 | ⚪ Draft |
+| REQ-1007 | AC-1007.4 | AC4: Gesture recognition operates within RT processing budget | specs/features/req_1007_gesture_recognition.feature:22 | 1 | ⚪ Draft |
+| REQ-1008 | AC-1008.1 | AC1: System suggests axis and button mappings based on detected aircraft type | specs/features/req_1008_ai_assisted_mapping.feature:4 | 1 | ⚪ Draft |
+| REQ-1008 | AC-1008.2 | AC2: Suggestions are based on community usage patterns and aircraft characteristics | specs/features/req_1008_ai_assisted_mapping.feature:10 | 1 | ⚪ Draft |
+| REQ-1008 | AC-1008.3 | AC3: User can accept, modify, or reject suggested mappings | specs/features/req_1008_ai_assisted_mapping.feature:16 | 1 | ⚪ Draft |
+| REQ-1008 | AC-1008.4 | AC4: Suggestion engine works offline using bundled mapping templates | specs/features/req_1008_ai_assisted_mapping.feature:22 | 1 | ⚪ Draft |
+| REQ-1009 | AC-1009.1 | AC1: Mapping templates are available for common aircraft and device combinations | specs/features/req_1009_template_library.feature:4 | 1 | ⚪ Draft |
+| REQ-1009 | AC-1009.2 | AC2: Templates can be exported as shareable files | specs/features/req_1009_template_library.feature:10 | 1 | ⚪ Draft |
+| REQ-1009 | AC-1009.3 | AC3: Imported templates are validated against schema before application | specs/features/req_1009_template_library.feature:16 | 1 | ⚪ Draft |
+| REQ-1009 | AC-1009.4 | AC4: Template library is searchable by aircraft type and device model | specs/features/req_1009_template_library.feature:22 | 1 | ⚪ Draft |
+| REQ-1010 | AC-1010.1 | AC1: Multiple user profiles can exist on the same installation | specs/features/req_1010_multi_user_profiles.feature:4 | 1 | ⚪ Draft |
+| REQ-1010 | AC-1010.2 | AC2: WHEN user switches THEN all mappings and settings SHALL change to that user profile | specs/features/req_1010_multi_user_profiles.feature:10 | 1 | ⚪ Draft |
+| REQ-1010 | AC-1010.3 | AC3: User profile selection is available via CLI and UI | specs/features/req_1010_multi_user_profiles.feature:16 | 1 | ⚪ Draft |
+| REQ-1010 | AC-1010.4 | AC4: Per-user settings are isolated in separate configuration directories | specs/features/req_1010_multi_user_profiles.feature:22 | 1 | ⚪ Draft |
+| REQ-1011 | AC-1011.1 | AC1: Input devices can be shared with remote instances over network | specs/features/req_1011_remote_device_sharing.feature:4 | 1 | ⚪ Draft |
+| REQ-1011 | AC-1011.2 | AC2: Shared device data is transmitted with minimal latency overhead | specs/features/req_1011_remote_device_sharing.feature:10 | 1 | ⚪ Draft |
+| REQ-1011 | AC-1011.3 | AC3: Network device sharing requires explicit authorization from both endpoints | specs/features/req_1011_remote_device_sharing.feature:16 | 1 | ⚪ Draft |
+| REQ-1011 | AC-1011.4 | AC4: Connection loss gracefully degrades to local-only operation | specs/features/req_1011_remote_device_sharing.feature:22 | 1 | ⚪ Draft |
+| REQ-1012 | AC-1012.1 | AC1: Control settings can be synchronized across crew station instances | specs/features/req_1012_multiplayer_sync.feature:4 | 1 | ⚪ Draft |
+| REQ-1012 | AC-1012.2 | AC2: Sync protocol handles network latency with interpolation | specs/features/req_1012_multiplayer_sync.feature:10 | 1 | ⚪ Draft |
+| REQ-1012 | AC-1012.3 | AC3: Each crew station maintains independent safety interlocks | specs/features/req_1012_multiplayer_sync.feature:16 | 1 | ⚪ Draft |
+| REQ-1012 | AC-1012.4 | AC4: Sync conflicts are resolved by station priority assignment | specs/features/req_1012_multiplayer_sync.feature:22 | 1 | ⚪ Draft |
+| REQ-1013 | AC-1013.1 | AC1: Instructor station can override student input controls remotely | specs/features/req_1013_instructor_station.feature:4 | 1 | ⚪ Draft |
+| REQ-1013 | AC-1013.2 | AC2: Override is indicated to the student via visual and haptic feedback | specs/features/req_1013_instructor_station.feature:10 | 1 | ⚪ Draft |
+| REQ-1013 | AC-1013.3 | AC3: Instructor can freeze specific axes while allowing others | specs/features/req_1013_instructor_station.feature:16 | 1 | ⚪ Draft |
+| REQ-1013 | AC-1013.4 | AC4: All instructor actions are logged for training review | specs/features/req_1013_instructor_station.feature:22 | 1 | ⚪ Draft |
+| REQ-1014 | AC-1014.1 | AC1: Flight input recordings can be exported as shareable replay files | specs/features/req_1014_replay_sharing.feature:4 | 1 | ⚪ Draft |
+| REQ-1014 | AC-1014.2 | AC2: Replay files include all axis and button data with timestamps | specs/features/req_1014_replay_sharing.feature:10 | 1 | ⚪ Draft |
+| REQ-1014 | AC-1014.3 | AC3: Shared replays can be loaded for playback on any compatible installation | specs/features/req_1014_replay_sharing.feature:16 | 1 | ⚪ Draft |
+| REQ-1014 | AC-1014.4 | AC4: Replay file format is versioned for forward compatibility | specs/features/req_1014_replay_sharing.feature:22 | 1 | ⚪ Draft |
+| REQ-1015 | AC-1015.1 | AC1: Profiles can be synced to cloud storage for cross-machine access | specs/features/req_1015_cloud_profile_sync.feature:4 | 1 | ⚪ Draft |
+| REQ-1015 | AC-1015.2 | AC2: Cloud sync handles conflict resolution with last-write-wins or manual merge | specs/features/req_1015_cloud_profile_sync.feature:10 | 1 | ⚪ Draft |
+| REQ-1015 | AC-1015.3 | AC3: Sync status is visible in CLI and UI | specs/features/req_1015_cloud_profile_sync.feature:16 | 1 | ⚪ Draft |
+| REQ-1015 | AC-1015.4 | AC4: Cloud sync operates with end-to-end encryption for profile data | specs/features/req_1015_cloud_profile_sync.feature:22 | 1 | ⚪ Draft |
+| REQ-1016 | AC-1016.1 | AC1: Users can browse community-shared profiles from within the application | specs/features/req_1016_community_profiles.feature:4 | 1 | ⚪ Draft |
+| REQ-1016 | AC-1016.2 | AC2: Community profiles are searchable by aircraft, device, and simulator | specs/features/req_1016_community_profiles.feature:10 | 1 | ⚪ Draft |
+| REQ-1016 | AC-1016.3 | AC3: Downloaded community profiles are validated before import | specs/features/req_1016_community_profiles.feature:16 | 1 | ⚪ Draft |
+| REQ-1016 | AC-1016.4 | AC4: Users can rate and review community profiles | specs/features/req_1016_community_profiles.feature:22 | 1 | ⚪ Draft |
+| REQ-1017 | AC-1017.1 | AC1: Telemetry data can be streamed to external tools via configurable protocol | specs/features/req_1017_telemetry_streaming.feature:4 | 1 | ⚪ Draft |
+| REQ-1017 | AC-1017.2 | AC2: Streaming supports UDP and TCP transport options | specs/features/req_1017_telemetry_streaming.feature:10 | 1 | ⚪ Draft |
+| REQ-1017 | AC-1017.3 | AC3: Stream format is documented and versioned for third-party consumption | specs/features/req_1017_telemetry_streaming.feature:16 | 1 | ⚪ Draft |
+| REQ-1017 | AC-1017.4 | AC4: Streaming can be enabled per data category to limit bandwidth | specs/features/req_1017_telemetry_streaming.feature:22 | 1 | ⚪ Draft |
+| REQ-1018 | AC-1018.1 | AC1: HTTP REST API provides access to configuration and status endpoints | specs/features/req_1018_rest_api.feature:4 | 1 | ⚪ Draft |
+| REQ-1018 | AC-1018.2 | AC2: API supports CRUD operations for profiles and device settings | specs/features/req_1018_rest_api.feature:10 | 1 | ⚪ Draft |
+| REQ-1018 | AC-1018.3 | AC3: API authentication uses token-based authorization | specs/features/req_1018_rest_api.feature:16 | 1 | ⚪ Draft |
+| REQ-1018 | AC-1018.4 | AC4: API documentation is auto-generated from endpoint definitions | specs/features/req_1018_rest_api.feature:22 | 1 | ⚪ Draft |
+| REQ-1019 | AC-1019.1 | AC1: Real-time events are available via WebSocket connection | specs/features/req_1019_websocket_events.feature:4 | 1 | ⚪ Draft |
+| REQ-1019 | AC-1019.2 | AC2: Events include device state changes, axis updates, and profile switches | specs/features/req_1019_websocket_events.feature:10 | 1 | ⚪ Draft |
+| REQ-1019 | AC-1019.3 | AC3: WebSocket clients can subscribe to specific event categories | specs/features/req_1019_websocket_events.feature:16 | 1 | ⚪ Draft |
+| REQ-1019 | AC-1019.4 | AC4: Connection handles reconnection with event replay for missed messages | specs/features/req_1019_websocket_events.feature:22 | 1 | ⚪ Draft |
+| REQ-1020 | AC-1020.1 | AC1: Device and axis events can be published to MQTT broker | specs/features/req_1020_mqtt_integration.feature:4 | 1 | ⚪ Draft |
+| REQ-1020 | AC-1020.2 | AC2: MQTT topic structure follows a documented hierarchy | specs/features/req_1020_mqtt_integration.feature:10 | 1 | ⚪ Draft |
+| REQ-1020 | AC-1020.3 | AC3: MQTT commands can trigger profile switches and device actions | specs/features/req_1020_mqtt_integration.feature:16 | 1 | ⚪ Draft |
+| REQ-1020 | AC-1020.4 | AC4: Broker connection supports TLS and credential-based authentication | specs/features/req_1020_mqtt_integration.feature:22 | 1 | ⚪ Draft |
+| REQ-1021 | AC-1021.1 | AC1: Multiple FFB effects can be chained into a composite effect | specs/features/req_1021_ffb_effect_chaining.feature:4 | 1 | ⚪ Draft |
+| REQ-1021 | AC-1021.2 | AC2: Chain order determines effect composition priority | specs/features/req_1021_ffb_effect_chaining.feature:10 | 1 | ⚪ Draft |
+| REQ-1021 | AC-1021.3 | AC3: Chained effects respect the overall FFB safety envelope | specs/features/req_1021_ffb_effect_chaining.feature:16 | 1 | ⚪ Draft |
+| REQ-1021 | AC-1021.4 | AC4: Effect chain can be modified at runtime without interrupting playback | specs/features/req_1021_ffb_effect_chaining.feature:22 | 1 | ⚪ Draft |
+| REQ-1022 | AC-1022.1 | AC1: FFB effects support tunable frequency characteristics | specs/features/req_1022_ffb_frequency_response.feature:4 | 1 | ⚪ Draft |
+| REQ-1022 | AC-1022.2 | AC2: Low-pass and band-pass filtering is available per effect | specs/features/req_1022_ffb_frequency_response.feature:10 | 1 | ⚪ Draft |
+| REQ-1022 | AC-1022.3 | AC3: Frequency response parameters are configurable in profile | specs/features/req_1022_ffb_frequency_response.feature:16 | 1 | ⚪ Draft |
+| REQ-1022 | AC-1022.4 | AC4: Frequency tuning operates within RT processing budget | specs/features/req_1022_ffb_frequency_response.feature:22 | 1 | ⚪ Draft |
+| REQ-1023 | AC-1023.1 | AC1: FFB effect magnitude can vary based on current stick position | specs/features/req_1023_ffb_position_dependent_effects.feature:4 | 1 | ⚪ Draft |
+| REQ-1023 | AC-1023.2 | AC2: Position-dependent mapping is defined via configurable curve | specs/features/req_1023_ffb_position_dependent_effects.feature:10 | 1 | ⚪ Draft |
+| REQ-1023 | AC-1023.3 | AC3: Effect transitions are smooth across position boundaries | specs/features/req_1023_ffb_position_dependent_effects.feature:16 | 1 | ⚪ Draft |
+| REQ-1023 | AC-1023.4 | AC4: Position dependency is evaluated per tick without allocation | specs/features/req_1023_ffb_position_dependent_effects.feature:22 | 1 | ⚪ Draft |
+| REQ-1024 | AC-1024.1 | AC1: FFB effect magnitude scales with simulated airspeed | specs/features/req_1024_ffb_airspeed_scaling.feature:4 | 1 | ⚪ Draft |
+| REQ-1024 | AC-1024.2 | AC2: Scaling curve is configurable per aircraft profile | specs/features/req_1024_ffb_airspeed_scaling.feature:10 | 1 | ⚪ Draft |
+| REQ-1024 | AC-1024.3 | AC3: WHEN airspeed data is unavailable THEN effects use safe default scaling | specs/features/req_1024_ffb_airspeed_scaling.feature:16 | 1 | ⚪ Draft |
+| REQ-1024 | AC-1024.4 | AC4: Scaling factor is clamped to prevent excessive force output | specs/features/req_1024_ffb_airspeed_scaling.feature:22 | 1 | ⚪ Draft |
+| REQ-1025 | AC-1025.1 | AC1: Stall buffet effect activates based on angle-of-attack threshold | specs/features/req_1025_ffb_stall_buffet.feature:4 | 1 | ⚪ Draft |
+| REQ-1025 | AC-1025.2 | AC2: Buffet intensity increases progressively as stall deepens | specs/features/req_1025_ffb_stall_buffet.feature:10 | 1 | ⚪ Draft |
+| REQ-1025 | AC-1025.3 | AC3: Buffet frequency and amplitude are configurable per aircraft | specs/features/req_1025_ffb_stall_buffet.feature:16 | 1 | ⚪ Draft |
+| REQ-1025 | AC-1025.4 | AC4: Stall buffet respects FFB safety interlock system | specs/features/req_1025_ffb_stall_buffet.feature:22 | 1 | ⚪ Draft |
+| REQ-1026 | AC-1026.1 | AC1: Landing gear deployment produces configurable vibration effect | specs/features/req_1026_ffb_gear_buffet.feature:4 | 1 | ⚪ Draft |
+| REQ-1026 | AC-1026.2 | AC2: Buffet duration matches gear transit time from sim data | specs/features/req_1026_ffb_gear_buffet.feature:10 | 1 | ⚪ Draft |
+| REQ-1026 | AC-1026.3 | AC3: Gear buffet intensity is configurable per aircraft profile | specs/features/req_1026_ffb_gear_buffet.feature:16 | 1 | ⚪ Draft |
+| REQ-1026 | AC-1026.4 | AC4: Effect is suppressed when gear is fully deployed or retracted | specs/features/req_1026_ffb_gear_buffet.feature:22 | 1 | ⚪ Draft |
+| REQ-1027 | AC-1027.1 | AC1: Flap deployment produces aerodynamic buffet feedback | specs/features/req_1027_ffb_flap_buffet.feature:4 | 1 | ⚪ Draft |
+| REQ-1027 | AC-1027.2 | AC2: Buffet characteristics vary by flap position setting | specs/features/req_1027_ffb_flap_buffet.feature:10 | 1 | ⚪ Draft |
+| REQ-1027 | AC-1027.3 | AC3: Flap buffet interacts correctly with airspeed scaling | specs/features/req_1027_ffb_flap_buffet.feature:16 | 1 | ⚪ Draft |
+| REQ-1027 | AC-1027.4 | AC4: Effect parameters are configurable per aircraft and flap detent | specs/features/req_1027_ffb_flap_buffet.feature:22 | 1 | ⚪ Draft |
+| REQ-1028 | AC-1028.1 | AC1: Realistic control force simulation based on flight conditions | specs/features/req_1028_ffb_control_loading.feature:4 | 1 | ⚪ Draft |
+| REQ-1028 | AC-1028.2 | AC2: Control loading force increases with airspeed per aircraft model | specs/features/req_1028_ffb_control_loading.feature:10 | 1 | ⚪ Draft |
+| REQ-1028 | AC-1028.3 | AC3: Trim position affects the neutral force balance point | specs/features/req_1028_ffb_control_loading.feature:16 | 1 | ⚪ Draft |
+| REQ-1028 | AC-1028.4 | AC4: Control loading respects maximum force limits from safety envelope | specs/features/req_1028_ffb_control_loading.feature:22 | 1 | ⚪ Draft |
+| REQ-1029 | AC-1029.1 | AC1: Center detent breakout force is simulated for FFB devices | specs/features/req_1029_ffb_breakout_force.feature:4 | 1 | ⚪ Draft |
+| REQ-1029 | AC-1029.2 | AC2: Breakout force magnitude is configurable per axis | specs/features/req_1029_ffb_breakout_force.feature:10 | 1 | ⚪ Draft |
+| REQ-1029 | AC-1029.3 | AC3: Force profile transitions smoothly past the breakout region | specs/features/req_1029_ffb_breakout_force.feature:16 | 1 | ⚪ Draft |
+| REQ-1029 | AC-1029.4 | AC4: Breakout force integrates with trim offset position | specs/features/req_1029_ffb_breakout_force.feature:22 | 1 | ⚪ Draft |
+| REQ-1030 | AC-1030.1 | AC1: Velocity-dependent damping resists rapid stick movements | specs/features/req_1030_ffb_damping.feature:4 | 1 | ⚪ Draft |
+| REQ-1030 | AC-1030.2 | AC2: Damping coefficient is configurable per axis in profile | specs/features/req_1030_ffb_damping.feature:10 | 1 | ⚪ Draft |
+| REQ-1030 | AC-1030.3 | AC3: Damping force scales linearly with movement velocity | specs/features/req_1030_ffb_damping.feature:16 | 1 | ⚪ Draft |
+| REQ-1030 | AC-1030.4 | AC4: Damping operates within FFB safety force limits | specs/features/req_1030_ffb_damping.feature:22 | 1 | ⚪ Draft |
+| REQ-1031 | AC-1031.1 | AC1: Toast notifications are shown for device connect/disconnect events | specs/features/req_1031_windows_notification_integration.feature:4 | 1 | ⚪ Draft |
+| REQ-1031 | AC-1031.2 | AC2: Notification categories are individually configurable | specs/features/req_1031_windows_notification_integration.feature:10 | 1 | ⚪ Draft |
+| REQ-1031 | AC-1031.3 | AC3: Notifications include actionable buttons for common responses | specs/features/req_1031_windows_notification_integration.feature:16 | 1 | ⚪ Draft |
+| REQ-1031 | AC-1031.4 | AC4: Notification permission is requested on first use | specs/features/req_1031_windows_notification_integration.feature:22 | 1 | ⚪ Draft |
+| REQ-1032 | AC-1032.1 | AC1: Service status is shown via system tray icon | specs/features/req_1032_system_tray_icon.feature:4 | 1 | ⚪ Draft |
+| REQ-1032 | AC-1032.2 | AC2: Tray icon context menu provides quick access to common actions | specs/features/req_1032_system_tray_icon.feature:10 | 1 | ⚪ Draft |
+| REQ-1032 | AC-1032.3 | AC3: Icon appearance changes to reflect service health status | specs/features/req_1032_system_tray_icon.feature:16 | 1 | ⚪ Draft |
+| REQ-1032 | AC-1032.4 | AC4: Tray icon tooltip shows active profile and connected device count | specs/features/req_1032_system_tray_icon.feature:22 | 1 | ⚪ Draft |
+| REQ-1033 | AC-1033.1 | AC1: Auto-start on Windows login is configurable via CLI or UI | specs/features/req_1033_windows_startup_registry.feature:4 | 1 | ⚪ Draft |
+| REQ-1033 | AC-1033.2 | AC2: Startup entry is added to current user registry run key | specs/features/req_1033_windows_startup_registry.feature:10 | 1 | ⚪ Draft |
+| REQ-1033 | AC-1033.3 | AC3: Disabling auto-start removes the registry entry cleanly | specs/features/req_1033_windows_startup_registry.feature:16 | 1 | ⚪ Draft |
+| REQ-1033 | AC-1033.4 | AC4: Startup configuration is verified during service health check | specs/features/req_1033_windows_startup_registry.feature:22 | 1 | ⚪ Draft |
+| REQ-1034 | AC-1034.1 | AC1: Long-running operations show progress in Windows taskbar | specs/features/req_1034_taskbar_progress.feature:4 | 1 | ⚪ Draft |
+| REQ-1034 | AC-1034.2 | AC2: Progress indicator uses appropriate state: normal, paused, or error | specs/features/req_1034_taskbar_progress.feature:10 | 1 | ⚪ Draft |
+| REQ-1034 | AC-1034.3 | AC3: Progress is shown for firmware updates, calibration, and profile import | specs/features/req_1034_taskbar_progress.feature:16 | 1 | ⚪ Draft |
+| REQ-1034 | AC-1034.4 | AC4: Taskbar progress clears automatically on operation completion | specs/features/req_1034_taskbar_progress.feature:22 | 1 | ⚪ Draft |
+| REQ-1035 | AC-1035.1 | AC1: OpenFlight profile files (.ofp) are associated with the application | specs/features/req_1035_file_association.feature:4 | 1 | ⚪ Draft |
+| REQ-1035 | AC-1035.2 | AC2: Double-clicking a .ofp file opens it in the profile editor | specs/features/req_1035_file_association.feature:10 | 1 | ⚪ Draft |
+| REQ-1035 | AC-1035.3 | AC3: File association is registered during installation | specs/features/req_1035_file_association.feature:16 | 1 | ⚪ Draft |
+| REQ-1035 | AC-1035.4 | AC4: File association can be repaired via CLI command | specs/features/req_1035_file_association.feature:22 | 1 | ⚪ Draft |
+| REQ-1036 | AC-1036.1 | AC1: URL scheme openflight:// is registered for command dispatch | specs/features/req_1036_deep_linking.feature:4 | 1 | ⚪ Draft |
+| REQ-1036 | AC-1036.2 | AC2: Deep links can trigger profile loads, device actions, and navigation | specs/features/req_1036_deep_linking.feature:10 | 1 | ⚪ Draft |
+| REQ-1036 | AC-1036.3 | AC3: Deep link parameters are validated before execution | specs/features/req_1036_deep_linking.feature:16 | 1 | ⚪ Draft |
+| REQ-1036 | AC-1036.4 | AC4: Malformed deep links are rejected with descriptive error logging | specs/features/req_1036_deep_linking.feature:22 | 1 | ⚪ Draft |
+| REQ-1037 | AC-1037.1 | AC1: Game Bar widget displays active control status during gameplay | specs/features/req_1037_windows_game_bar.feature:4 | 1 | ⚪ Draft |
+| REQ-1037 | AC-1037.2 | AC2: Widget shows connected devices and active profile name | specs/features/req_1037_windows_game_bar.feature:10 | 1 | ⚪ Draft |
+| REQ-1037 | AC-1037.3 | AC3: Quick actions in the widget allow profile switching | specs/features/req_1037_windows_game_bar.feature:16 | 1 | ⚪ Draft |
+| REQ-1037 | AC-1037.4 | AC4: Widget updates in real-time without impacting game performance | specs/features/req_1037_windows_game_bar.feature:22 | 1 | ⚪ Draft |
+| REQ-1038 | AC-1038.1 | AC1: Application provides a .desktop file for menu integration | specs/features/req_1038_linux_desktop_integration.feature:4 | 1 | ⚪ Draft |
+| REQ-1038 | AC-1038.2 | AC2: Desktop file includes appropriate icon and category metadata | specs/features/req_1038_linux_desktop_integration.feature:10 | 1 | ⚪ Draft |
+| REQ-1038 | AC-1038.3 | AC3: Application icon is installed in standard icon directories | specs/features/req_1038_linux_desktop_integration.feature:16 | 1 | ⚪ Draft |
+| REQ-1038 | AC-1038.4 | AC4: Desktop integration follows freedesktop.org specifications | specs/features/req_1038_linux_desktop_integration.feature:22 | 1 | ⚪ Draft |
+| REQ-1039 | AC-1039.1 | AC1: Notifications are sent via DBus notification interface on Linux | specs/features/req_1039_linux_dbus_notifications.feature:4 | 1 | ⚪ Draft |
+| REQ-1039 | AC-1039.2 | AC2: Notification urgency level matches event severity | specs/features/req_1039_linux_dbus_notifications.feature:10 | 1 | ⚪ Draft |
+| REQ-1039 | AC-1039.3 | AC3: Notification actions are supported for interactive responses | specs/features/req_1039_linux_dbus_notifications.feature:16 | 1 | ⚪ Draft |
+| REQ-1039 | AC-1039.4 | AC4: DBus notification support is detected and enabled automatically | specs/features/req_1039_linux_dbus_notifications.feature:22 | 1 | ⚪ Draft |
+| REQ-1040 | AC-1040.1 | AC1: Udev rules are provided for automatic device permission configuration | specs/features/req_1040_linux_udev_rules.feature:4 | 1 | ⚪ Draft |
+| REQ-1040 | AC-1040.2 | AC2: Rules grant appropriate access to HID and USB devices | specs/features/req_1040_linux_udev_rules.feature:10 | 1 | ⚪ Draft |
+| REQ-1040 | AC-1040.3 | AC3: Rule installation is automated during package installation | specs/features/req_1040_linux_udev_rules.feature:16 | 1 | ⚪ Draft |
+| REQ-1040 | AC-1040.4 | AC4: Rules can be regenerated via CLI for newly supported devices | specs/features/req_1040_linux_udev_rules.feature:22 | 1 | ⚪ Draft |
+| REQ-1041 | AC-1041.1 | AC1: One-click setup configures common aircraft and device combinations | specs/features/req_1041_quick_setup_profiles.feature:4 | 1 | ⚪ Draft |
+| REQ-1041 | AC-1041.2 | AC2: Quick setup detects connected devices and suggests matching profiles | specs/features/req_1041_quick_setup_profiles.feature:10 | 1 | ⚪ Draft |
+| REQ-1041 | AC-1041.3 | AC3: Setup wizard completes in fewer than 5 user interactions | specs/features/req_1041_quick_setup_profiles.feature:16 | 1 | ⚪ Draft |
+| REQ-1041 | AC-1041.4 | AC4: Quick setup results can be customized after initial configuration | specs/features/req_1041_quick_setup_profiles.feature:22 | 1 | ⚪ Draft |
+| REQ-1042 | AC-1042.1 | AC1: Users can assign custom display names to connected devices | specs/features/req_1042_device_nickname.feature:4 | 1 | ⚪ Draft |
+| REQ-1042 | AC-1042.2 | AC2: Nicknames persist across device reconnections using hardware ID | specs/features/req_1042_device_nickname.feature:10 | 1 | ⚪ Draft |
+| REQ-1042 | AC-1042.3 | AC3: Nicknames are shown in all UI and CLI device listings | specs/features/req_1042_device_nickname.feature:16 | 1 | ⚪ Draft |
+| REQ-1042 | AC-1042.4 | AC4: Default nickname falls back to manufacturer and product name | specs/features/req_1042_device_nickname.feature:22 | 1 | ⚪ Draft |
+| REQ-1043 | AC-1043.1 | AC1: Users can attach text notes to any profile | specs/features/req_1043_profile_notes.feature:4 | 1 | ⚪ Draft |
+| REQ-1043 | AC-1043.2 | AC2: Notes are stored within the profile file format | specs/features/req_1043_profile_notes.feature:10 | 1 | ⚪ Draft |
+| REQ-1043 | AC-1043.3 | AC3: Notes are displayed in profile listing and detail views | specs/features/req_1043_profile_notes.feature:16 | 1 | ⚪ Draft |
+| REQ-1043 | AC-1043.4 | AC4: Notes are preserved during profile export and import | specs/features/req_1043_profile_notes.feature:22 | 1 | ⚪ Draft |
+| REQ-1044 | AC-1044.1 | AC1: Built-in axis test displays real-time axis positions for all connected devices | specs/features/req_1044_axis_test_screen.feature:4 | 1 | ⚪ Draft |
+| REQ-1044 | AC-1044.2 | AC2: Test screen shows raw and processed axis values side by side | specs/features/req_1044_axis_test_screen.feature:10 | 1 | ⚪ Draft |
+| REQ-1044 | AC-1044.3 | AC3: Axis test supports visual indicators for deadzone and response curve | specs/features/req_1044_axis_test_screen.feature:16 | 1 | ⚪ Draft |
+| REQ-1044 | AC-1044.4 | AC4: Test screen is accessible via CLI and UI | specs/features/req_1044_axis_test_screen.feature:22 | 1 | ⚪ Draft |
+| REQ-1045 | AC-1045.1 | AC1: Built-in button test highlights active buttons in real-time | specs/features/req_1045_button_test_screen.feature:4 | 1 | ⚪ Draft |
+| REQ-1045 | AC-1045.2 | AC2: Test screen shows button state history with timestamps | specs/features/req_1045_button_test_screen.feature:10 | 1 | ⚪ Draft |
+| REQ-1045 | AC-1045.3 | AC3: Button test displays both physical and mapped button identifiers | specs/features/req_1045_button_test_screen.feature:16 | 1 | ⚪ Draft |
+| REQ-1045 | AC-1045.4 | AC4: Test screen is accessible via CLI and UI | specs/features/req_1045_button_test_screen.feature:22 | 1 | ⚪ Draft |
+| REQ-1046 | AC-1046.1 | AC1: Live curve visualization shows input-to-output mapping graphically | specs/features/req_1046_response_curve_preview.feature:4 | 1 | ⚪ Draft |
+| REQ-1046 | AC-1046.2 | AC2: Preview updates in real-time as curve parameters are adjusted | specs/features/req_1046_response_curve_preview.feature:10 | 1 | ⚪ Draft |
+| REQ-1046 | AC-1046.3 | AC3: Current input position is highlighted on the curve display | specs/features/req_1046_response_curve_preview.feature:16 | 1 | ⚪ Draft |
+| REQ-1046 | AC-1046.4 | AC4: Preview supports all curve types including custom point curves | specs/features/req_1046_response_curve_preview.feature:22 | 1 | ⚪ Draft |
+| REQ-1047 | AC-1047.1 | AC1: Visual deadzone display shows active and inactive regions | specs/features/req_1047_deadzone_preview.feature:4 | 1 | ⚪ Draft |
+| REQ-1047 | AC-1047.2 | AC2: Preview updates in real-time as deadzone parameters change | specs/features/req_1047_deadzone_preview.feature:10 | 1 | ⚪ Draft |
+| REQ-1047 | AC-1047.3 | AC3: Current input position relative to deadzone is clearly indicated | specs/features/req_1047_deadzone_preview.feature:16 | 1 | ⚪ Draft |
+| REQ-1047 | AC-1047.4 | AC4: Preview supports both inner and outer deadzone visualization | specs/features/req_1047_deadzone_preview.feature:22 | 1 | ⚪ Draft |
+| REQ-1048 | AC-1048.1 | AC1: Transparent in-game overlay shows current input states | specs/features/req_1048_input_overlay.feature:4 | 1 | ⚪ Draft |
+| REQ-1048 | AC-1048.2 | AC2: Overlay position and opacity are configurable | specs/features/req_1048_input_overlay.feature:10 | 1 | ⚪ Draft |
+| REQ-1048 | AC-1048.3 | AC3: Overlay can be toggled via configurable hotkey | specs/features/req_1048_input_overlay.feature:16 | 1 | ⚪ Draft |
+| REQ-1048 | AC-1048.4 | AC4: Overlay rendering does not impact sim frame rate measurably | specs/features/req_1048_input_overlay.feature:22 | 1 | ⚪ Draft |
+| REQ-1049 | AC-1049.1 | AC1: In-game overlay displays processing latency and jitter metrics | specs/features/req_1049_performance_overlay.feature:4 | 1 | ⚪ Draft |
+| REQ-1049 | AC-1049.2 | AC2: Overlay shows per-axis update rates and queue depths | specs/features/req_1049_performance_overlay.feature:10 | 1 | ⚪ Draft |
+| REQ-1049 | AC-1049.3 | AC3: Performance warnings are highlighted when thresholds are exceeded | specs/features/req_1049_performance_overlay.feature:16 | 1 | ⚪ Draft |
+| REQ-1049 | AC-1049.4 | AC4: Overlay can be toggled independently of input overlay | specs/features/req_1049_performance_overlay.feature:22 | 1 | ⚪ Draft |
+| REQ-1050 | AC-1050.1 | AC1: Full configuration export creates a single archive file | specs/features/req_1050_configuration_backup_and_restore.feature:4 | 1 | ⚪ Draft |
+| REQ-1050 | AC-1050.2 | AC2: Archive includes profiles, calibration data, and application settings | specs/features/req_1050_configuration_backup_and_restore.feature:10 | 1 | ⚪ Draft |
+| REQ-1050 | AC-1050.3 | AC3: Restore imports archive and validates contents before applying | specs/features/req_1050_configuration_backup_and_restore.feature:16 | 1 | ⚪ Draft |
+| REQ-1050 | AC-1050.4 | AC4: Backup and restore operations are available via CLI and UI | specs/features/req_1050_configuration_backup_and_restore.feature:22 | 1 | ⚪ Draft |

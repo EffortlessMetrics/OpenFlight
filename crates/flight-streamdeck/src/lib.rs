@@ -29,10 +29,12 @@ pub mod render;
 pub mod server;
 pub mod verify;
 
-pub use api::{ApiError, StreamDeckApi};
 pub use actions::{ActionCategory, ActionRegistry, ActionTemplate, builtin_templates};
+pub use api::{ApiError, StreamDeckApi};
 pub use compatibility::{CompatibilityMatrix, VersionCompatibility, VersionRange};
-pub use device::{Brightness, DeviceInfo, DeviceManager, LcdStripInfo, LcdStripLayout, StreamDeckModel};
+pub use device::{
+    Brightness, DeviceInfo, DeviceManager, LcdStripInfo, LcdStripLayout, StreamDeckModel,
+};
 pub use layout::{NavTarget, Page, PageLayout, ProfileLayout};
 pub use plugin::{PluginConfig, PluginError, StreamDeckPlugin};
 pub use profiles::{AircraftType, ProfileManager, SampleProfiles};

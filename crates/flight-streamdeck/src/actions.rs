@@ -78,7 +78,14 @@ pub struct ActionTemplate {
 
 impl ActionTemplate {
     /// Convenience builder.
-    fn toggle(id: &str, name: &str, label: &str, cat: ActionCategory, cmd: &str, var: &str) -> Self {
+    fn toggle(
+        id: &str,
+        name: &str,
+        label: &str,
+        cat: ActionCategory,
+        cmd: &str,
+        var: &str,
+    ) -> Self {
         Self {
             id: format!("com.flighthub.{id}"),
             name: name.to_string(),

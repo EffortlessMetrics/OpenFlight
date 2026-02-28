@@ -1,0 +1,30 @@
+---
+source: crates/flight-profile/tests/profile_snapshots.rs
+expression: v3
+---
+{
+  "aircraft": {
+    "icao": "C172"
+  },
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "exponential": 0.2,
+      "response_curve_type": "default",
+      "sensitivity": 1.0
+    },
+    "roll": {
+      "deadzone": 0.05,
+      "exponential": 0.3,
+      "response_curve_type": "default",
+      "sensitivity": 1.0
+    },
+    "throttle": {
+      "deadzone": 0.01,
+      "response_curve_type": "default",
+      "sensitivity": 1.0
+    }
+  },
+  "schema_version": "v3",
+  "sim": "msfs"
+}

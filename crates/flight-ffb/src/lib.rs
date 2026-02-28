@@ -36,12 +36,12 @@ pub mod blackbox;
 pub mod crosswind;
 pub mod device_health;
 pub mod dinput_backend;
-pub mod effects;
 #[cfg(windows)]
 pub mod dinput_com;
 pub mod dinput_device;
 #[cfg(windows)]
 pub mod dinput_window;
+pub mod effects;
 pub mod engine_vibration;
 pub mod fault;
 pub mod ffb_pipeline;
