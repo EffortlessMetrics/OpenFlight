@@ -1200,9 +1200,7 @@ mod tests {
                 *count += 1;
                 if let Some(fail_on) = *self.write_fail_on_call.borrow() {
                     if *count == fail_on {
-                        return Err(io::Error::other(
-                            "Simulated write failure",
-                        ));
+                        return Err(io::Error::other("Simulated write failure"));
                     }
                 }
             }
