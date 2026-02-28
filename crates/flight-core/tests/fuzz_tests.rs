@@ -129,3 +129,110 @@ proptest! {
         let _ = conversions::feet_to_meters(val);
     }
 }
+
+//
+// Circuit Breaker State Machine — never panics regardless of event ordering
+//
+
+use flight_core::circuit_breaker::{CircuitBreakerConfig, CircuitBreaker, CircuitState};
+use std::time::Duration;
+
+/// Encodes the three possible events that can be driven into a circuit breaker.
+#[derive(Debug, Clone, Copy)]
+enum CbEvent {
+    CallAllowed,
+    RecordSuccess,
+    RecordFailure,
+}
+
+prop_compose! {
+    fn arb_cb_event()(idx in 0u8..3) -> CbEvent {
+        match idx {
+            0 => CbEvent::CallAllowed,
+            1 => CbEvent::RecordSuccess,
+            _ => CbEvent::RecordFailure,
+        }
+    }
+}
+
+proptest! {
+    /// CircuitBreaker never panics for arbitrary event sequences.
+    #[test]
+    fn test_circuit_breaker_never_panics(
+        events in prop::collection::vec(arb_cb_event(), 0..50),
+        failure_threshold in 1u32..10,
+        success_threshold in 1u32..10,
+    ) {
+        let config = CircuitBreakerConfig {
+            failure_threshold,
+            success_threshold,
+            timeout: Duration::from_millis(1),
+        };
+        let mut cb = CircuitBreaker::new(config);
+        for event in &events {
+            match event {
+                CbEvent::CallAllowed => { let _ = cb.call_allowed(); }
+                CbEvent::RecordSuccess => cb.record_success(),
+                CbEvent::RecordFailure => cb.record_failure(),
+            }
+        }
+        // State must always be one of the three valid states
+        let state = cb.state();
+        prop_assert!(
+            state == CircuitState::Closed
+                || state == CircuitState::Open
+                || state == CircuitState::HalfOpen,
+            "unexpected state: {:?}", state
+        );
+    }
+
+    /// CircuitBreaker: rejection rate is always between 0.0 and 1.0.
+    #[test]
+    fn test_circuit_breaker_rejection_rate_bounded(
+        events in prop::collection::vec(arb_cb_event(), 1..30),
+    ) {
+        let config = CircuitBreakerConfig {
+            failure_threshold: 2,
+            success_threshold: 1,
+            timeout: Duration::from_millis(1),
+        };
+        let mut cb = CircuitBreaker::new(config);
+        for event in &events {
+            match event {
+                CbEvent::CallAllowed => { let _ = cb.call_allowed(); }
+                CbEvent::RecordSuccess => cb.record_success(),
+                CbEvent::RecordFailure => cb.record_failure(),
+            }
+        }
+        let rate = cb.rejection_rate();
+        prop_assert!(
+            (0.0..=1.0).contains(&rate),
+            "rejection rate {} out of [0, 1]", rate
+        );
+    }
+
+    /// CircuitBreaker: total_calls >= total_rejections always.
+    #[test]
+    fn test_circuit_breaker_calls_ge_rejections(
+        events in prop::collection::vec(arb_cb_event(), 0..40),
+    ) {
+        let config = CircuitBreakerConfig {
+            failure_threshold: 3,
+            success_threshold: 2,
+            timeout: Duration::from_millis(1),
+        };
+        let mut cb = CircuitBreaker::new(config);
+        for event in &events {
+            match event {
+                CbEvent::CallAllowed => { let _ = cb.call_allowed(); }
+                CbEvent::RecordSuccess => cb.record_success(),
+                CbEvent::RecordFailure => cb.record_failure(),
+            }
+        }
+        prop_assert!(
+            cb.total_calls() >= cb.total_rejections(),
+            "total_calls({}) < total_rejections({})",
+            cb.total_calls(), cb.total_rejections()
+        );
+    }
+}

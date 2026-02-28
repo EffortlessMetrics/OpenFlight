@@ -8,6 +8,7 @@
 //! Provides synthetic fault injection for testing and validation.
 
 pub mod health_check;
+pub mod monitor;
 pub mod recovery;
 
 use std::collections::{HashMap, VecDeque};

@@ -78,4 +78,39 @@ proptest! {
         let deserialized: Profile = serde_json::from_str(&serialized).unwrap();
         prop_assert_eq!(profile, deserialized);
     }
+
+    /// serialize → deserialize → serialize produces structurally identical JSON.
+    #[test]
+    fn test_double_roundtrip_stable(profile in arb_profile()) {
+        let json1 = serde_json::to_string(&profile).unwrap();
+        let restored: Profile = serde_json::from_str(&json1).unwrap();
+        let json2 = serde_json::to_string(&restored).unwrap();
+        // Compare via Value to ignore HashMap key ordering differences
+        let val1: serde_json::Value = serde_json::from_str(&json1).unwrap();
+        let val2: serde_json::Value = serde_json::from_str(&json2).unwrap();
+        prop_assert_eq!(val1, val2, "double round-trip produced different JSON structure");
+    }
+
+    /// merge_with always preserves the schema version from the base profile.
+    #[test]
+    fn test_merge_preserves_schema(base in arb_profile(), overlay in arb_profile()) {
+        let merged = base.merge_with(&overlay).unwrap();
+        prop_assert!(
+            merged.schema == base.schema,
+            "merge_with changed schema from '{}' to '{}'",
+            base.schema, merged.schema
+        );
+    }
+
+    /// effective_hash is identical for structurally equal profiles regardless
+    /// of HashMap iteration order (verified by computing twice after a round-trip).
+    #[test]
+    fn test_effective_hash_stable_across_roundtrip(profile in arb_profile()) {
+        let json = serde_json::to_string(&profile).unwrap();
+        let restored: Profile = serde_json::from_str(&json).unwrap();
+        prop_assert_eq!(
+            profile.effective_hash(), restored.effective_hash(),
+            "effective_hash differs after JSON round-trip"
+        );
+    }
 }
