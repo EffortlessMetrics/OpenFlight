@@ -1,0 +1,40 @@
+{
+  "windows": {
+    "binaries": [
+      "bin\\flightd.exe",
+      "bin\\flightctl.exe"
+    ],
+    "config": [
+      "config\\config.toml",
+      "config\\default.profile.toml"
+    ],
+    "directories": [
+      "bin",
+      "config",
+      "logs"
+    ]
+  },
+  "linux": {
+    "binaries": [
+      "/usr/bin/flightd",
+      "/usr/bin/flightctl"
+    ],
+    "config": [
+      "/etc/flight-hub/config.toml",
+      "/etc/flight-hub/default.profile.toml"
+    ],
+    "systemd": [
+      "/usr/lib/systemd/user/flightd.service"
+    ],
+    "udev": [
+      "/etc/udev/rules.d/99-flight-hub.rules"
+    ],
+    "directories": [
+      "/usr/bin",
+      "/etc/flight-hub",
+      "/usr/lib/systemd/user",
+      "/usr/share/doc/flight-hub",
+      "/usr/share/flight-hub"
+    ]
+  }
+}

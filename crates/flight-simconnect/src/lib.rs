@@ -66,8 +66,10 @@ pub use subscription::{
 };
 pub use weather::{WeatherConfig, WeatherData, parse_weather_simvars};
 
+pub use adapter_state::{
+    SimConnectAdapterState, SimConnectEvent, SimConnectStateMachine, SimConnectTransitionError,
+};
 pub use aircraft_db::{AircraftType, MsfsAircraftDb, MsfsAircraftInfo};
-pub use adapter_state::{SimConnectAdapterState, SimConnectEvent, SimConnectStateMachine, SimConnectTransitionError};
 pub use event_mapping::{
     SimEventCategory, SimEventDef, SimEventMapper, catalog_by_category, catalog_lookup,
 };

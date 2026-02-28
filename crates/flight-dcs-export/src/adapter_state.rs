@@ -63,7 +63,10 @@ pub enum DcsAdapterEvent {
 #[derive(Error, Debug, Clone, PartialEq, Eq)]
 pub enum DcsTransitionError {
     #[error("invalid transition from {from} on event {event}")]
-    InvalidTransition { from: DcsAdapterState, event: String },
+    InvalidTransition {
+        from: DcsAdapterState,
+        event: String,
+    },
     #[error("retry limit reached ({max_retries} retries exhausted)")]
     RetriesExhausted { max_retries: u32 },
 }
@@ -568,9 +571,15 @@ mod tests {
     fn is_healthy_false_when_stale_or_error() {
         let mut machine = sm();
         machine.transition(DcsAdapterEvent::SocketBound).unwrap();
-        machine.transition(DcsAdapterEvent::HandshakeCompleted).unwrap();
-        machine.transition(DcsAdapterEvent::TelemetryReceived).unwrap();
-        machine.transition(DcsAdapterEvent::TelemetryTimeout).unwrap();
+        machine
+            .transition(DcsAdapterEvent::HandshakeCompleted)
+            .unwrap();
+        machine
+            .transition(DcsAdapterEvent::TelemetryReceived)
+            .unwrap();
+        machine
+            .transition(DcsAdapterEvent::TelemetryTimeout)
+            .unwrap();
         assert!(!machine.is_healthy()); // Stale
 
         let mut sm2 = DcsAdapterStateMachine::new(2000, 3);

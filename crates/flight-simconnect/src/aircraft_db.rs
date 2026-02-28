@@ -610,7 +610,9 @@ mod tests {
     #[test]
     fn lookup_pmdg_737() {
         let db = MsfsAircraftDb::new();
-        let b738 = db.get("B738").expect("B738 (PMDG 737-800) must be in the database");
+        let b738 = db
+            .get("B738")
+            .expect("B738 (PMDG 737-800) must be in the database");
         assert_eq!(b738.category, AircraftType::TwinJet);
         assert_eq!(b738.default_profile, "airliner-narrowbody");
     }
@@ -618,7 +620,9 @@ mod tests {
     #[test]
     fn lookup_pmdg_777() {
         let db = MsfsAircraftDb::new();
-        let b77w = db.get("B77W").expect("B77W (PMDG 777-300ER) must be in the database");
+        let b77w = db
+            .get("B77W")
+            .expect("B77W (PMDG 777-300ER) must be in the database");
         assert_eq!(b77w.category, AircraftType::TwinJet);
         assert_eq!(b77w.default_profile, "airliner-widebody");
     }
@@ -626,7 +630,9 @@ mod tests {
     #[test]
     fn lookup_fbw_a320neo() {
         let db = MsfsAircraftDb::new();
-        let a20n = db.get("A20N").expect("A20N (FlyByWire A320neo) must be in the database");
+        let a20n = db
+            .get("A20N")
+            .expect("A20N (FlyByWire A320neo) must be in the database");
         assert_eq!(a20n.category, AircraftType::TwinJet);
         assert!(a20n.special_vars.contains(&"FLY BY WIRE ALPHA PROTECTION"));
     }
@@ -641,7 +647,9 @@ mod tests {
     #[test]
     fn lookup_working_title_cj4() {
         let db = MsfsAircraftDb::new();
-        let cj4 = db.get("C25C").expect("C25C (Working Title CJ4) must be in the database");
+        let cj4 = db
+            .get("C25C")
+            .expect("C25C (Working Title CJ4) must be in the database");
         assert_eq!(cj4.category, AircraftType::TwinJet);
         assert_eq!(cj4.default_profile, "jet-light");
     }
@@ -652,10 +660,7 @@ mod tests {
         let third_party_codes = ["B738", "B77W", "A20N", "CRJ7", "C25C", "A319"];
         for code in third_party_codes {
             let ac = db.get(code).unwrap_or_else(|| panic!("{code} must exist"));
-            assert!(
-                !ac.special_vars.is_empty(),
-                "{code} must have special vars"
-            );
+            assert!(!ac.special_vars.is_empty(), "{code} must have special vars");
         }
     }
 

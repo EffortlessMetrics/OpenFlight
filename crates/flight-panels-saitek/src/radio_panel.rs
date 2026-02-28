@@ -412,12 +412,8 @@ mod tests {
     #[test]
     fn test_radio_panel_state_with_frequencies() {
         let mut state = RadioPanelState::default();
-        state.display.active = LcdDisplay::encode_str(
-            &display::format_com_freq(118_000),
-        );
-        state.display.standby = LcdDisplay::encode_str(
-            &display::format_com_freq(136_975),
-        );
+        state.display.active = LcdDisplay::encode_str(&display::format_com_freq(118_000));
+        state.display.standby = LcdDisplay::encode_str(&display::format_com_freq(136_975));
         let report = state.to_hid_report();
         // Active: "11800"
         assert_eq!(report[1], encode_segment('1'));

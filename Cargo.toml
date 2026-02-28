@@ -141,6 +141,7 @@ flight-adapter-common = { path = "crates/flight-adapter-common" }
 flight-bdd-metrics = { path = "crates/flight-bdd-metrics" }
 flight-device-common = { path = "crates/flight-device-common" }
 flight-metrics = { path = "crates/flight-metrics" }
+flight-axis = { path = "crates/flight-axis" }
 flight-test-helpers = { path = "crates/flight-test-helpers" }
 flight-workspace-meta = { path = "crates/flight-workspace-meta" }
 flight-ac7-protocol = { path = "crates/flight-ac7-protocol" }

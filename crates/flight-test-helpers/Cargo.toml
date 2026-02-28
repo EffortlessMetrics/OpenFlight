@@ -18,3 +18,6 @@ flight-bus = { path = "../flight-bus" }
 flight-device-common = { workspace = true }
 tempfile = { workspace = true }
 tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+flight-axis = { workspace = true }

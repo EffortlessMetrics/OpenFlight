@@ -183,14 +183,12 @@ impl SwitchPanelGearLeds {
     pub const ALL_OFF: Self = Self(0x00);
 
     /// All gear LEDs green (gear down and locked).
-    pub const ALL_GREEN: Self = Self(
-        gear_led_bits::LEFT_GREEN | gear_led_bits::NOSE_GREEN | gear_led_bits::RIGHT_GREEN,
-    );
+    pub const ALL_GREEN: Self =
+        Self(gear_led_bits::LEFT_GREEN | gear_led_bits::NOSE_GREEN | gear_led_bits::RIGHT_GREEN);
 
     /// All gear LEDs red (gear in transit).
-    pub const ALL_RED: Self = Self(
-        gear_led_bits::LEFT_RED | gear_led_bits::NOSE_RED | gear_led_bits::RIGHT_RED,
-    );
+    pub const ALL_RED: Self =
+        Self(gear_led_bits::LEFT_RED | gear_led_bits::NOSE_RED | gear_led_bits::RIGHT_RED);
 
     /// Set the left gear LED colour.
     pub fn set_left(self, color: GearLedColor) -> Self {
@@ -271,11 +269,26 @@ mod tests {
 
     #[test]
     fn test_magneto_all_positions() {
-        assert_eq!(MagnetoPosition::from_hid_bits(0b0000_0000), Some(MagnetoPosition::Off));
-        assert_eq!(MagnetoPosition::from_hid_bits(0b0000_0010), Some(MagnetoPosition::Right));
-        assert_eq!(MagnetoPosition::from_hid_bits(0b0000_0100), Some(MagnetoPosition::Left));
-        assert_eq!(MagnetoPosition::from_hid_bits(0b0000_0110), Some(MagnetoPosition::Both));
-        assert_eq!(MagnetoPosition::from_hid_bits(0b0000_1000), Some(MagnetoPosition::Start));
+        assert_eq!(
+            MagnetoPosition::from_hid_bits(0b0000_0000),
+            Some(MagnetoPosition::Off)
+        );
+        assert_eq!(
+            MagnetoPosition::from_hid_bits(0b0000_0010),
+            Some(MagnetoPosition::Right)
+        );
+        assert_eq!(
+            MagnetoPosition::from_hid_bits(0b0000_0100),
+            Some(MagnetoPosition::Left)
+        );
+        assert_eq!(
+            MagnetoPosition::from_hid_bits(0b0000_0110),
+            Some(MagnetoPosition::Both)
+        );
+        assert_eq!(
+            MagnetoPosition::from_hid_bits(0b0000_1000),
+            Some(MagnetoPosition::Start)
+        );
     }
 
     #[test]

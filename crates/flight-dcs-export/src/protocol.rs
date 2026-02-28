@@ -334,14 +334,20 @@ pub fn parse_device_arg(raw: &str) -> Result<(u32, u32, f64), ParseError> {
         )));
     }
 
-    let device_id: u32 = parts[0].trim().parse().map_err(|_| ParseError::InvalidNumeric {
-        key: "device_id".into(),
-        raw: parts[0].to_string(),
-    })?;
-    let command_id: u32 = parts[1].trim().parse().map_err(|_| ParseError::InvalidNumeric {
-        key: "command_id".into(),
-        raw: parts[1].to_string(),
-    })?;
+    let device_id: u32 = parts[0]
+        .trim()
+        .parse()
+        .map_err(|_| ParseError::InvalidNumeric {
+            key: "device_id".into(),
+            raw: parts[0].to_string(),
+        })?;
+    let command_id: u32 = parts[1]
+        .trim()
+        .parse()
+        .map_err(|_| ParseError::InvalidNumeric {
+            key: "command_id".into(),
+            raw: parts[1].to_string(),
+        })?;
     let value = parse_indicator_value(parts[2].trim())?;
 
     Ok((device_id, command_id, value))
@@ -566,8 +572,7 @@ mod tests {
 
     #[test]
     fn test_parse_position_data_negative_coords() {
-        let (lat, lon, alt) =
-            parse_position_data("{lat=-33.87,lon=151.21,alt=0.0}").unwrap();
+        let (lat, lon, alt) = parse_position_data("{lat=-33.87,lon=151.21,alt=0.0}").unwrap();
         assert!((lat - (-33.87)).abs() < 1e-10);
         assert!((lon - 151.21).abs() < 1e-10);
         assert!(alt.abs() < 1e-10);

@@ -426,7 +426,11 @@ mod tests {
 
     #[test]
     fn test_db_has_at_least_30_entries() {
-        assert!(all_aircraft().len() >= 30, "DB has {} entries", all_aircraft().len());
+        assert!(
+            all_aircraft().len() >= 30,
+            "DB has {} entries",
+            all_aircraft().len()
+        );
     }
 
     #[test]

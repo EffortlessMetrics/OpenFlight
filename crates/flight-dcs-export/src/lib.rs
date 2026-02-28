@@ -33,7 +33,9 @@ pub mod socket_bridge;
 pub mod tcp;
 
 pub use adapter::{DcsAdapter, DcsAdapterConfig, DcsAdapterError};
-pub use adapter_state::{DcsAdapterEvent, DcsAdapterState, DcsAdapterStateMachine, DcsTransitionError};
+pub use adapter_state::{
+    DcsAdapterEvent, DcsAdapterState, DcsAdapterStateMachine, DcsTransitionError,
+};
 pub use aircraft_db::{AircraftCategory, AxesProfile, DcsAircraftInfo};
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
 pub use control_injection::{DcsControlCommand, DcsControlInjector};

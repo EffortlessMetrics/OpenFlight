@@ -145,10 +145,7 @@ mod tests {
     #[test]
     fn test_button_press_event() {
         let event = PanelEvent::ButtonPress { name: "AP" };
-        assert_eq!(
-            event,
-            PanelEvent::ButtonPress { name: "AP" }
-        );
+        assert_eq!(event, PanelEvent::ButtonPress { name: "AP" });
     }
 
     #[test]
