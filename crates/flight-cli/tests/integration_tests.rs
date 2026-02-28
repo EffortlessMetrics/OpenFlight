@@ -556,3 +556,389 @@ fn test_cli_help_includes_adapters() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("adapters"));
 }
+
+// ── Version subcommand tests ──────────────────────────────────────────────
+
+#[test]
+fn test_version_subcommand() {
+    let output = run_cli_command(&["version"]);
+
+    assert!(output.status.success(), "version subcommand should succeed");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("cli_version") || stdout.contains("0.1.0"),
+        "version output should contain version info: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_version_subcommand_json() {
+    let output = run_cli_command(&["--json", "version"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON in stdout: {}", stdout));
+
+    let json: serde_json::Value = serde_json::from_str(json_line)
+        .unwrap_or_else(|e| panic!("Invalid JSON: {} — {}", e, json_line));
+
+    assert_eq!(json["success"], true);
+    assert!(json["data"]["cli_version"].is_string());
+    assert!(json["data"]["build_profile"].is_string());
+    assert!(json["data"]["build_target"].is_string());
+    assert!(json["data"]["build_os"].is_string());
+    assert!(json["data"]["rust_version"].is_string());
+    // Service should be unreachable in test environment
+    assert_eq!(json["data"]["service_status"], "unreachable");
+}
+
+#[test]
+fn test_version_subcommand_verbose() {
+    let output = run_cli_command(&["--verbose", "--json", "version"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON in stdout: {}", stdout));
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+    assert_eq!(json["success"], true);
+    assert!(json["data"]["package_name"].is_string());
+}
+
+// ── Safe-mode subcommand tests ────────────────────────────────────────────
+
+#[test]
+fn test_safe_mode_no_daemon() {
+    let output = run_cli_command(&["safe-mode"]);
+
+    // Should fail gracefully when daemon is not running
+    assert!(!output.status.success());
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "safe-mode should not panic"
+    );
+}
+
+#[test]
+fn test_safe_mode_json_error() {
+    let output = run_cli_command(&["--json", "safe-mode"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON in stderr: {}", stderr));
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+    assert_eq!(json["success"], false);
+    assert!(json["error"].is_string());
+}
+
+#[test]
+fn test_safe_mode_help() {
+    let output = run_cli_command(&["safe-mode", "--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("safe mode") || stdout.contains("Safe mode") || stdout.contains("FFB"),
+        "safe-mode help should describe the command: {}",
+        stdout
+    );
+}
+
+// ── Diagnostics subcommand tests ──────────────────────────────────────────
+
+#[test]
+fn test_diagnostics_no_daemon() {
+    let output = run_cli_command(&["diagnostics"]);
+
+    // Shorthand for diag health, requires daemon
+    assert!(!output.status.success());
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "diagnostics should not panic"
+    );
+}
+
+#[test]
+fn test_diagnostics_json_error() {
+    let output = run_cli_command(&["--json", "diagnostics"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr
+        .lines()
+        .find(|l| l.trim().starts_with('{'))
+        .unwrap_or_else(|| panic!("No JSON in stderr: {}", stderr));
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+    assert_eq!(json["success"], false);
+    assert!(json["error_code"].is_string());
+}
+
+#[test]
+fn test_diagnostics_help() {
+    let output = run_cli_command(&["diagnostics", "--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("diagnostic") || stdout.contains("diag"));
+}
+
+// ── CLI help includes new commands ────────────────────────────────────────
+
+#[test]
+fn test_cli_help_includes_version() {
+    let output = run_cli_command(&["--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("version"),
+        "help should list version command: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_cli_help_includes_safe_mode() {
+    let output = run_cli_command(&["--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("safe-mode"),
+        "help should list safe-mode command: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_cli_help_includes_diagnostics() {
+    let output = run_cli_command(&["--help"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("diagnostics"),
+        "help should list diagnostics command: {}",
+        stdout
+    );
+}
+
+// ── Error handling for bad inputs ─────────────────────────────────────────
+
+#[test]
+fn test_invalid_output_format() {
+    let output = run_cli_command(&["--output", "xml", "status"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("invalid value") || stderr.contains("error"),
+        "should report invalid output format: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_missing_required_arg_devices_info() {
+    let output = run_cli_command(&["devices", "info"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("required") || stderr.contains("error"),
+        "should report missing required argument: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_missing_required_arg_profile_activate() {
+    let output = run_cli_command(&["profile", "activate"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("required") || stderr.contains("error"),
+        "should report missing required argument: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_missing_required_arg_profile_apply() {
+    let output = run_cli_command(&["profile", "apply"]);
+
+    assert!(!output.status.success());
+}
+
+#[test]
+fn test_invalid_timeout_value() {
+    let output = run_cli_command(&["--timeout", "not-a-number", "status"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("invalid value") || stderr.contains("error"),
+        "should report invalid timeout: {}",
+        stderr
+    );
+}
+
+#[test]
+fn test_extra_args_rejected() {
+    let output = run_cli_command(&["status", "--nonexistent-flag"]);
+
+    assert!(!output.status.success());
+}
+
+// ── JSON output stability tests ───────────────────────────────────────────
+
+#[test]
+fn test_status_json_has_stable_fields() {
+    let output = run_cli_command(&["--json", "status"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout.lines().find(|l| l.trim().starts_with('{')).unwrap();
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+
+    // Verify stable JSON contract fields
+    assert!(json.get("success").is_some(), "must have 'success' field");
+    assert!(json.get("data").is_some(), "must have 'data' field");
+
+    let data = &json["data"];
+    assert!(
+        data.get("service_status").is_some(),
+        "data must have 'service_status'"
+    );
+    assert!(
+        data.get("cli_version").is_some(),
+        "data must have 'cli_version'"
+    );
+}
+
+#[test]
+fn test_json_error_has_stable_fields() {
+    let output = run_cli_command(&["--json", "info"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr.lines().find(|l| l.trim().starts_with('{')).unwrap();
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+
+    // Verify stable error JSON contract
+    assert_eq!(json["success"], false);
+    assert!(
+        json.get("error").is_some(),
+        "error response must have 'error' field"
+    );
+    assert!(
+        json.get("error_code").is_some(),
+        "error response must have 'error_code' field"
+    );
+}
+
+#[test]
+fn test_profile_list_json_has_stable_fields() {
+    let output = run_cli_command(&["--json", "profile", "list"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout.lines().find(|l| l.trim().starts_with('{')).unwrap();
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+    assert_eq!(json["success"], true);
+    assert!(json["data"].is_array(), "profile list data should be array");
+    assert!(
+        json.get("total_count").is_some(),
+        "profile list must have total_count"
+    );
+}
+
+#[test]
+fn test_version_json_has_stable_fields() {
+    let output = run_cli_command(&["--json", "version"]);
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+
+    let json_line = stdout.lines().find(|l| l.trim().starts_with('{')).unwrap();
+
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+    assert_eq!(json["success"], true);
+
+    let data = &json["data"];
+    assert!(data["cli_version"].is_string());
+    assert!(data["build_profile"].is_string());
+    assert!(data["build_target"].is_string());
+    assert!(data["build_os"].is_string());
+    assert!(data["rust_version"].is_string());
+    // service_status may be null or string
+    assert!(data.get("service_status").is_some());
+}
+
+// ── Mock service connectivity test ────────────────────────────────────────
+
+#[test]
+fn test_connection_error_has_correct_exit_code() {
+    // When the service is unreachable, commands that require it should exit non-zero
+    let output = run_cli_command(&["info"]);
+    assert!(!output.status.success());
+    // Exit code 1 = generic error (service unreachable wraps as UNKNOWN_ERROR)
+    let code = output.status.code().unwrap();
+    assert!(
+        code >= 1 && code <= 7,
+        "exit code should be in the mapped error range: {}",
+        code
+    );
+}
+
+#[test]
+fn test_connection_error_json_has_error_code() {
+    let output = run_cli_command(&["--json", "devices", "list"]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+
+    let json_line = stderr.lines().find(|l| l.trim().starts_with('{')).unwrap();
+    let json: serde_json::Value = serde_json::from_str(json_line).unwrap();
+
+    let error_code = json["error_code"].as_str().unwrap();
+    // Should be one of the defined error codes
+    let valid_codes = [
+        "CONNECTION_FAILED",
+        "VERSION_MISMATCH",
+        "UNSUPPORTED_FEATURE",
+        "TRANSPORT_ERROR",
+        "SERIALIZATION_ERROR",
+        "GRPC_ERROR",
+        "UNKNOWN_ERROR",
+    ];
+    assert!(
+        valid_codes.contains(&error_code),
+        "error_code '{}' should be a known code",
+        error_code
+    );
+}

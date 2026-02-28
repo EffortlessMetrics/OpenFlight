@@ -146,6 +146,12 @@ enum Commands {
     Status,
     /// Show service information
     Info,
+    /// Show version information with build metadata
+    Version,
+    /// Enter safe mode (zero FFB, passthrough axes)
+    SafeMode,
+    /// Run diagnostic checks (shorthand for diag health)
+    Diagnostics,
     /// Show product posture summary
     #[command(name = "--show-posture", hide = true)]
     ShowPosture,
@@ -253,6 +259,21 @@ async fn execute_command(
             commands::status::execute(cli.output, cli.verbose, client_manager).await
         }
         Commands::Info => commands::info::execute(cli.output, cli.verbose, client_manager).await,
+        Commands::Version => {
+            commands::version::execute(cli.output, cli.verbose, client_manager).await
+        }
+        Commands::SafeMode => {
+            commands::safe_mode::execute(cli.output, cli.verbose, client_manager).await
+        }
+        Commands::Diagnostics => {
+            commands::diag::execute(
+                &commands::DiagAction::Health,
+                cli.output,
+                cli.verbose,
+                client_manager,
+            )
+            .await
+        }
         Commands::ShowPosture => {
             commands::posture::execute(cli.output, cli.verbose, client_manager).await
         }
@@ -356,6 +377,24 @@ mod tests {
     fn parse_no_subcommand_returns_error() {
         let result = Cli::try_parse_from(["flightctl"]);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_version_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "version"]).unwrap();
+        assert!(matches!(cli.command, Commands::Version));
+    }
+
+    #[test]
+    fn parse_safe_mode_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "safe-mode"]).unwrap();
+        assert!(matches!(cli.command, Commands::SafeMode));
+    }
+
+    #[test]
+    fn parse_diagnostics_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "diagnostics"]).unwrap();
+        assert!(matches!(cli.command, Commands::Diagnostics));
     }
 
     #[test]

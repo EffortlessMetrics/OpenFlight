@@ -14,10 +14,12 @@ pub mod overlay;
 pub mod panels;
 pub mod posture;
 pub mod profile;
+pub mod safe_mode;
 pub mod sim;
 pub mod status;
 pub mod torque;
 pub mod update;
+pub mod version;
 pub mod xplane;
 
 use clap::{Args, Subcommand};
