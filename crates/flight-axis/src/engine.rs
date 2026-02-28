@@ -371,10 +371,11 @@ impl AxisEngine {
             // Clamp output magnitude to capability limits
             let max_output = context.limits.max_axis_output;
             if frame.out.abs() > max_output {
+                let original_abs = frame.out.abs();
                 frame.out = frame.out.signum() * max_output;
 
                 // Record the clamp event in counters (used by capability_service reporting)
-                self.counters.increment_capability_clamps();
+                self.counters.increment_capability_clamps(original_abs);
 
                 // Log clamping event for audit trail if enabled
                 if context.audit_enabled {

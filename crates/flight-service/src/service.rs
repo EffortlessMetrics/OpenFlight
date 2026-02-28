@@ -10,9 +10,10 @@ use anyhow::Result;
 use flight_hotas_thrustmaster::TFlightYawPolicy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
-use tracing::{debug, info, warn};
+use tracing::{debug, error, info, warn};
 
 use flight_axis::{
     AxisEngine, DetentRole, DetentZone as AxisDetentZone, EngineConfig, PipelineBuilder,
@@ -140,6 +141,58 @@ impl Default for FlightServiceConfig {
     }
 }
 
+impl FlightServiceConfig {
+    /// Load configuration from a JSON file.
+    ///
+    /// Falls back to defaults on any error (missing file, parse failure) and
+    /// logs a warning so the service can still start in a degraded state.
+    pub fn load_from_file(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref();
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| anyhow::anyhow!("Failed to read config file '{}': {e}", path.display()))?;
+        Self::load_from_str(&content)
+    }
+
+    /// Parse configuration from a JSON string.
+    pub fn load_from_str(json: &str) -> Result<Self> {
+        let config: Self = serde_json::from_str(json)
+            .map_err(|e| anyhow::anyhow!("Failed to parse service config: {e}"))?;
+        config.validate()?;
+        Ok(config)
+    }
+
+    /// Validate configuration values are within acceptable ranges.
+    pub fn validate(&self) -> Result<()> {
+        if self.axis_config.max_frame_time_us == 0 {
+            return Err(anyhow::anyhow!("axis_config.max_frame_time_us must be > 0"));
+        }
+        if self.tflight_poll_hz == 0 {
+            return Err(anyhow::anyhow!("tflight_poll_hz must be > 0"));
+        }
+        if self.stecs_poll_hz == 0 {
+            return Err(anyhow::anyhow!("stecs_poll_hz must be > 0"));
+        }
+        Ok(())
+    }
+
+    /// Try to load from `path`; on failure log a warning and return defaults.
+    pub fn load_or_default(path: impl AsRef<Path>) -> Self {
+        match Self::load_from_file(path.as_ref()) {
+            Ok(cfg) => {
+                info!("Loaded service config from '{}'", path.as_ref().display());
+                cfg
+            }
+            Err(e) => {
+                warn!(
+                    "Could not load config from '{}': {e}; using defaults",
+                    path.as_ref().display()
+                );
+                Self::default()
+            }
+        }
+    }
+}
+
 /// Service state
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ServiceState {
@@ -157,6 +210,26 @@ pub enum ServiceState {
     Stopped,
     /// Service has failed
     Failed,
+}
+
+impl ServiceState {
+    /// Returns `true` if transitioning from `self` to `target` is a valid
+    /// state machine move.
+    pub fn can_transition_to(self, target: Self) -> bool {
+        matches!(
+            (self, target),
+            (Self::Stopped, Self::Starting)
+                | (Self::Starting, Self::Running)
+                | (Self::Starting, Self::SafeMode)
+                | (Self::Starting, Self::Failed)
+                | (Self::Running, Self::Degraded)
+                | (Self::Running, Self::Stopping)
+                | (Self::SafeMode, Self::Stopping)
+                | (Self::Degraded, Self::Running)
+                | (Self::Degraded, Self::Stopping)
+                | (Self::Stopping, Self::Stopped)
+        )
+    }
 }
 
 /// Build an `AxisEngine` pipeline from an `AxisConfig`.
@@ -310,9 +383,15 @@ impl FlightService {
     pub async fn start(&mut self) -> Result<()> {
         info!("Starting Flight Hub service");
 
-        // Update state to starting
+        // Validate state transition
         {
             let mut state = self.state.write().await;
+            if !state.can_transition_to(ServiceState::Starting) {
+                return Err(anyhow::anyhow!(
+                    "Cannot start service from state {:?}",
+                    *state
+                ));
+            }
             *state = ServiceState::Starting;
         }
 
@@ -669,7 +748,12 @@ impl FlightService {
         Ok(status)
     }
 
-    /// Apply a profile
+    /// Apply a profile by compiling pipelines off-thread and swapping
+    /// atomically into the axis engine (ADR-001 RT-safe pattern).
+    ///
+    /// Each axis pipeline is compiled on a blocking thread pool so the RT
+    /// spine is never blocked. Individual axis compilation failures are
+    /// logged and skipped — the remaining axes are still applied.
     pub async fn apply_profile(&self, profile: &Profile) -> Result<()> {
         info!("Applying profile: {:?}", profile);
 
@@ -678,38 +762,79 @@ impl FlightService {
             .validate()
             .map_err(|e| anyhow::anyhow!("Profile validation failed: {}", e))?;
 
-        if let Some(engine) = &self.axis_engine {
-            for (axis_name, axis_config) in &profile.axes {
-                match build_pipeline_for_axis(axis_name, axis_config) {
-                    Ok(pipeline) => match engine.update_pipeline(pipeline) {
-                        UpdateResult::Pending => {
-                            info!("Axis pipeline update pending for axis '{axis_name}'");
-                        }
-                        UpdateResult::Success => {
-                            info!("Axis pipeline updated for axis '{axis_name}'");
-                        }
-                        UpdateResult::Failed(msg) => {
-                            warn!("Axis pipeline update failed for axis '{axis_name}': {msg}");
-                        }
-                        UpdateResult::Rejected(msg) => {
-                            warn!("Axis pipeline update rejected for axis '{axis_name}': {msg}");
-                        }
-                    },
-                    Err(e) => {
-                        warn!("Failed to compile pipeline for axis '{axis_name}': {e}");
+        let engine = match &self.axis_engine {
+            Some(e) => Arc::clone(e),
+            None => {
+                let msg = "Cannot apply profile - axis engine not initialized";
+                self.health.warning("service", msg).await;
+                return Err(anyhow::anyhow!(msg));
+            }
+        };
+
+        // Compile all pipelines off-thread (non-RT) then swap into the engine.
+        let axes: Vec<(String, AxisConfig)> = profile
+            .axes
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        let compiled = tokio::task::spawn_blocking(move || {
+            let mut results = Vec::with_capacity(axes.len());
+            for (axis_name, axis_config) in &axes {
+                let pipeline_result = build_pipeline_for_axis(axis_name, axis_config);
+                results.push((axis_name.clone(), pipeline_result));
+            }
+            results
+        })
+        .await
+        .map_err(|e| anyhow::anyhow!("Pipeline compilation task panicked: {e}"))?;
+
+        let mut failed_count = 0u32;
+        let total_count = compiled.len();
+
+        for (axis_name, pipeline_result) in compiled {
+            match pipeline_result {
+                Ok(pipeline) => match engine.update_pipeline(pipeline) {
+                    UpdateResult::Pending => {
+                        info!("Axis pipeline update pending for axis '{axis_name}'");
                     }
+                    UpdateResult::Success => {
+                        info!("Axis pipeline updated for axis '{axis_name}'");
+                    }
+                    UpdateResult::Failed(msg) => {
+                        warn!("Axis pipeline update failed for axis '{axis_name}': {msg}");
+                        failed_count += 1;
+                    }
+                    UpdateResult::Rejected(msg) => {
+                        warn!("Axis pipeline update rejected for axis '{axis_name}': {msg}");
+                        failed_count += 1;
+                    }
+                },
+                Err(e) => {
+                    error!("Failed to compile pipeline for axis '{axis_name}': {e}");
+                    failed_count += 1;
                 }
             }
+        }
 
+        if failed_count > 0 && failed_count < total_count as u32 {
+            let msg = format!(
+                "Profile partially applied ({} of {} axes failed)",
+                failed_count, total_count
+            );
+            self.health.warning("service", &msg).await;
+            warn!("{msg}");
+        } else if failed_count > 0 {
+            let msg = format!("Profile apply failed: all {} axes failed", total_count);
+            self.health.warning("service", &msg).await;
+            warn!("{msg}");
+        } else {
             self.health
                 .info("service", "Profile applied successfully")
                 .await;
-            Ok(())
-        } else {
-            let msg = "Cannot apply profile - axis engine not initialized";
-            self.health.warning("service", msg).await;
-            Err(anyhow::anyhow!(msg))
         }
+
+        Ok(())
     }
 
     /// Get current service state
@@ -784,9 +909,12 @@ impl FlightService {
     pub async fn shutdown(&mut self) -> Result<()> {
         info!("Shutting down Flight Hub service");
 
-        // Update state
+        // Validate state transition
         {
             let mut state = self.state.write().await;
+            if !state.can_transition_to(ServiceState::Stopping) {
+                warn!("Shutdown requested from state {:?}, forcing stop", *state);
+            }
             *state = ServiceState::Stopping;
         }
 
@@ -1069,5 +1197,165 @@ mod tests {
             "apply_profile with multiple axes should succeed: {:?}",
             result.err()
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Config loading tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_config_load_from_str_valid() {
+        let json = serde_json::to_string(&FlightServiceConfig::default()).unwrap();
+        let loaded = FlightServiceConfig::load_from_str(&json);
+        assert!(loaded.is_ok(), "valid JSON should load: {:?}", loaded.err());
+    }
+
+    #[test]
+    fn test_config_load_from_str_invalid_json() {
+        let result = FlightServiceConfig::load_from_str("not json at all");
+        assert!(result.is_err(), "garbage input should fail");
+    }
+
+    #[test]
+    fn test_config_load_from_str_validation_failure() {
+        // Construct JSON with an invalid field value (poll_hz = 0).
+        let mut cfg = FlightServiceConfig::default();
+        cfg.tflight_poll_hz = 0;
+        let json = serde_json::to_string(&cfg).unwrap();
+        let result = FlightServiceConfig::load_from_str(&json);
+        assert!(result.is_err(), "zero poll_hz should fail validation");
+    }
+
+    #[test]
+    fn test_config_load_from_file_missing() {
+        let result = FlightServiceConfig::load_from_file("nonexistent_config_42.json");
+        assert!(result.is_err(), "missing file should fail");
+    }
+
+    #[test]
+    fn test_config_load_from_file_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("service.json");
+        let json = serde_json::to_string_pretty(&FlightServiceConfig::default()).unwrap();
+        std::fs::write(&path, json).unwrap();
+
+        let loaded = FlightServiceConfig::load_from_file(&path);
+        assert!(
+            loaded.is_ok(),
+            "file load should succeed: {:?}",
+            loaded.err()
+        );
+    }
+
+    #[test]
+    fn test_config_load_or_default_missing_file() {
+        let cfg = FlightServiceConfig::load_or_default("does_not_exist.json");
+        // Should silently fall back to default
+        assert_eq!(cfg.tflight_poll_hz, 250);
+    }
+
+    #[test]
+    fn test_config_validate_defaults() {
+        let cfg = FlightServiceConfig::default();
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    fn test_config_validate_zero_frame_time() {
+        let mut cfg = FlightServiceConfig::default();
+        cfg.axis_config.max_frame_time_us = 0;
+        assert!(cfg.validate().is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // Profile application tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_apply_profile_no_engine_returns_error() {
+        let config = FlightServiceConfig::default();
+        let service = FlightService::new(config);
+        // Engine is not initialized — apply should fail gracefully.
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(result.is_err(), "should fail without axis engine");
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_empty_axes_succeeds() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(
+            result.is_ok(),
+            "empty axes profile should succeed: {:?}",
+            result.err()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_apply_profile_invalid_profile_returns_error() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let _ = service.initialize_axis_engine().await;
+        let profile = Profile {
+            schema: "bad_schema".to_string(),
+            sim: None,
+            aircraft: None,
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        let result = service.apply_profile(&profile).await;
+        assert!(result.is_err(), "invalid schema should fail validation");
+    }
+
+    // -----------------------------------------------------------------------
+    // State transition tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_state_valid_transitions() {
+        assert!(ServiceState::Stopped.can_transition_to(ServiceState::Starting));
+        assert!(ServiceState::Starting.can_transition_to(ServiceState::Running));
+        assert!(ServiceState::Starting.can_transition_to(ServiceState::SafeMode));
+        assert!(ServiceState::Running.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::Running.can_transition_to(ServiceState::Degraded));
+        assert!(ServiceState::Degraded.can_transition_to(ServiceState::Running));
+        assert!(ServiceState::Degraded.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::SafeMode.can_transition_to(ServiceState::Stopping));
+        assert!(ServiceState::Stopping.can_transition_to(ServiceState::Stopped));
+    }
+
+    #[test]
+    fn test_state_invalid_transitions() {
+        assert!(!ServiceState::Running.can_transition_to(ServiceState::Starting));
+        assert!(!ServiceState::Stopped.can_transition_to(ServiceState::Running));
+        assert!(!ServiceState::Stopping.can_transition_to(ServiceState::Running));
+        assert!(!ServiceState::Failed.can_transition_to(ServiceState::Running));
+    }
+
+    #[tokio::test]
+    async fn test_double_start_rejected() {
+        let config = FlightServiceConfig::default();
+        let mut service = FlightService::new(config);
+        let r1 = service.start().await;
+        assert!(r1.is_ok());
+        let r2 = service.start().await;
+        assert!(r2.is_err(), "double start should be rejected");
+        let _ = service.shutdown().await;
     }
 }

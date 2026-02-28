@@ -1,0 +1,18 @@
+---
+source: crates/flight-rules/src/lib.rs
+expression: stable
+---
+instructions:
+  - LoadVar: 0
+  - LoadConst: 0
+  - Compare: NotEqual
+  - JumpFalse: 5
+  - Action: 0
+variable_map:
+  taxi_light: 0
+hysteresis_map: {}
+actions:
+  - LedBrightness:
+      target: TAXI
+      brightness: 0.8
+stack_size: 8

@@ -606,8 +606,9 @@ impl SafeModeManager {
         use std::collections::HashMap;
         let mut axes = HashMap::new();
 
-        // Pitch & roll: mild expo for precision near centre
-        for name in &["pitch", "roll"] {
+        // Pitch, roll, yaw: 3% deadzone + mild expo for precision near centre.
+        // Uniform across all flight axes so behaviour is predictable.
+        for name in &["pitch", "roll", "yaw"] {
             axes.insert(
                 name.to_string(),
                 AxisConfig {
@@ -620,18 +621,6 @@ impl SafeModeManager {
                 },
             );
         }
-        // Yaw (rudder): wider deadzone and less expo — pedals are less precise
-        axes.insert(
-            "yaw".to_string(),
-            AxisConfig {
-                deadzone: Some(0.05),
-                expo: Some(0.1),
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            },
-        );
         // Throttle: tiny deadzone, linear response (no expo)
         axes.insert(
             "throttle".to_string(),
@@ -801,10 +790,10 @@ mod tests {
         assert_eq!(roll.deadzone, Some(0.03));
         assert_eq!(roll.expo, Some(0.2));
 
-        // Yaw (rudder) — wider deadzone, less expo
+        // Yaw (rudder) — same 3% deadzone + 0.2 expo as pitch/roll
         let yaw = &profile.axes["yaw"];
-        assert_eq!(yaw.deadzone, Some(0.05));
-        assert_eq!(yaw.expo, Some(0.1));
+        assert_eq!(yaw.deadzone, Some(0.03));
+        assert_eq!(yaw.expo, Some(0.2));
 
         // Throttle — linear (no expo)
         let throttle = &profile.axes["throttle"];
@@ -861,5 +850,71 @@ mod tests {
         assert_eq!(diag.failed_components, vec!["RT Privileges"]);
         assert!(diag.reason.contains("RT Privileges"));
         assert!(!diag.recommended_actions.is_empty());
+    }
+
+    #[test]
+    fn test_safe_profile_no_inversion_full_range() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            // No custom curve means no inversion — output follows input monotonically
+            assert!(
+                axis.curve.is_none(),
+                "axis '{name}' must not have a custom curve"
+            );
+            // No detents that could trap the axis
+            assert!(
+                axis.detents.is_empty(),
+                "axis '{name}' must have no detents"
+            );
+            // No slew-rate limiter that could clamp full-range sweeps
+            assert!(
+                axis.slew_rate.is_none(),
+                "axis '{name}' must have no slew limit"
+            );
+        }
+    }
+
+    #[test]
+    fn test_safe_profile_pipelines_compile() {
+        use crate::service::build_pipeline_for_axis;
+
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_diagnostic_explains_multiple_failures() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![
+            ValidationResult {
+                component: "Power Configuration".to_string(),
+                success: false,
+                message: "battery".to_string(),
+                execution_time_ms: 1,
+            },
+            ValidationResult {
+                component: "Basic Profile".to_string(),
+                success: false,
+                message: "bad JSON".to_string(),
+                execution_time_ms: 1,
+            },
+        ];
+        let diag = manager.build_diagnostic(&results);
+        assert_eq!(diag.failed_components.len(), 2);
+        assert!(diag.reason.contains("Power Configuration"));
+        assert!(diag.reason.contains("Basic Profile"));
+        assert!(diag.recommended_actions.len() >= 2);
+        assert_eq!(diag.validation_snapshot.len(), 2);
     }
 }

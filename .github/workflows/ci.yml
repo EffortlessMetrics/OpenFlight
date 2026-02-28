@@ -1062,10 +1062,28 @@ jobs:
           cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
+      - name: Smoke fuzz flight-dcs-export telemetry batch parser (5s)
+        run: |
+          cd crates/flight-dcs-export
+          cargo +nightly fuzz run fuzz_telemetry_batch -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
       - name: Smoke fuzz flight-rules DSL parser (5s)
         run: |
           cd crates/flight-rules
           cargo +nightly fuzz run fuzz_rules_parser -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-rules condition parser (5s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_condition -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-rules action parser (5s)
+        run: |
+          cd crates/flight-rules
+          cargo +nightly fuzz run fuzz_action -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
       - name: Smoke fuzz flight-profile JSON parser (5s)
@@ -1078,6 +1096,12 @@ jobs:
         run: |
           cd crates/flight-profile
           cargo +nightly fuzz run fuzz_profile_merge -- -max_total_time=5 -timeout=5
+        continue-on-error: false
+
+      - name: Smoke fuzz flight-profile TOML parser (5s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_toml -- -max_total_time=5 -timeout=5
         continue-on-error: false
 
       - name: Smoke fuzz flight-axis config parsing (5s)
@@ -1166,6 +1190,12 @@ jobs:
         run: |
           cd crates/flight-dcs-export
           cargo +nightly fuzz run fuzz_dcs_message -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-dcs-export telemetry batch parser (60s)
+        run: |
+          cd crates/flight-dcs-export
+          cargo +nightly fuzz run fuzz_telemetry_batch -- -max_total_time=60 -timeout=10
         continue-on-error: true
 
       - name: Fuzz flight-xplane plugin message parser (60s)
@@ -1532,6 +1562,12 @@ jobs:
         run: |
           cd crates/flight-profile
           cargo +nightly fuzz run fuzz_profile_yaml -- -max_total_time=60 -timeout=10
+        continue-on-error: true
+
+      - name: Fuzz flight-profile TOML parser (60s)
+        run: |
+          cd crates/flight-profile
+          cargo +nightly fuzz run fuzz_profile_toml -- -max_total_time=60 -timeout=10
         continue-on-error: true
 
       - name: Fuzz flight-rules condition evaluator (60s)
