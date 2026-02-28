@@ -33,8 +33,10 @@
 
 pub mod adapter;
 pub mod aircraft;
+pub mod aircraft_db;
 pub mod camera;
 pub mod engine_params;
+pub mod event_mapping;
 pub mod events;
 pub mod fixtures;
 pub mod injection;
@@ -43,6 +45,7 @@ pub mod sanity_gate;
 pub mod session;
 pub mod subscription;
 pub mod transport;
+pub mod var_registry;
 pub mod weather;
 
 // Re-export main types
@@ -61,3 +64,9 @@ pub use subscription::{
     CORE_SUBSCRIPTION_VARS, DataSubscription, DataSubscriptionConfig, SubscriptionVariable,
 };
 pub use weather::{WeatherConfig, WeatherData, parse_weather_simvars};
+
+pub use aircraft_db::{AircraftType, MsfsAircraftDb, MsfsAircraftInfo};
+pub use event_mapping::{
+    SimEventCategory, SimEventDef, SimEventMapper, catalog_by_category, catalog_lookup,
+};
+pub use var_registry::{SimVar, SimVarCategory, SimVarRegistry};
