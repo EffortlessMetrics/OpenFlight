@@ -61,12 +61,18 @@ use thiserror::Error;
 pub mod proto {
     #![allow(missing_docs)] // generated code
     tonic::include_proto!("flight.v1");
+
+    pub use flight_service_client::FlightServiceClient as GrpcFlightServiceClient;
+    pub use flight_service_server::{
+        FlightService as GrpcFlightService, FlightServiceServer as GrpcFlightServiceServer,
+    };
 }
 
 pub mod client;
 pub mod connection_pool;
 #[cfg(test)]
 mod fd_safety_tests;
+pub mod handlers;
 pub mod messages;
 pub mod negotiation;
 pub mod rate_limiter;
@@ -173,6 +179,8 @@ pub struct ServerConfig {
     pub bind_address: String,
     /// Maximum simultaneous client connections
     pub max_connections: usize,
+    /// Per-request timeout
+    pub request_timeout: std::time::Duration,
 }
 
 impl Default for ServerConfig {
@@ -182,6 +190,7 @@ impl Default for ServerConfig {
             enabled_features: SUPPORTED_FEATURES.iter().map(|s| s.to_string()).collect(),
             bind_address: default_bind_address(),
             max_connections: 100,
+            request_timeout: std::time::Duration::from_secs(5),
         }
     }
 }

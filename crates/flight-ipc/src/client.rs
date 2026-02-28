@@ -2,234 +2,238 @@
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 //! IPC client implementation
+//!
+//! Wraps the tonic-generated [`FlightServiceClient`] with ergonomic helpers,
+//! automatic reconnection with exponential back-off, and per-call timeouts.
 
 use crate::{
-    ClientConfig, IpcError, NegotiationResult,
-    negotiation::{Version, validate_required_features},
+    ClientConfig, IpcError,
     proto::{
         ApplyProfileRequest, ApplyProfileResponse, DetectCurveConflictsRequest,
-        DetectCurveConflictsResponse, ListDevicesRequest, ListDevicesResponse,
-        NegotiateFeaturesRequest, OneClickResolveRequest, OneClickResolveResponse,
-        ResolveCurveConflictRequest, ResolveCurveConflictResponse, SetCapabilityModeRequest,
-        SetCapabilityModeResponse,
+        DetectCurveConflictsResponse, GetServiceInfoRequest, GetServiceInfoResponse,
+        ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest, OneClickResolveRequest,
+        OneClickResolveResponse, ResolveCurveConflictRequest, ResolveCurveConflictResponse,
+        SetCapabilityModeRequest, SetCapabilityModeResponse,
+        flight_service_client::FlightServiceClient as GrpcClient,
     },
 };
-use anyhow::Result;
 use std::time::Duration;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
-/// Flight Hub IPC client
-pub struct FlightClient {
-    _channel: tonic::transport::Channel,
+/// Maximum number of reconnection attempts before giving up.
+const MAX_RECONNECT_ATTEMPTS: u32 = 5;
+
+/// Base delay between reconnection attempts (doubled each attempt).
+const RECONNECT_BASE_DELAY: Duration = Duration::from_millis(100);
+
+/// Flight Hub IPC client with automatic reconnection.
+pub struct IpcClient {
+    inner: GrpcClient<tonic::transport::Channel>,
+    endpoint: tonic::transport::Endpoint,
     config: ClientConfig,
-    negotiation_result: Option<NegotiationResult>,
 }
 
-impl FlightClient {
-    /// Create a new client with default configuration
-    pub async fn connect() -> Result<Self, IpcError> {
-        Self::connect_with_config(ClientConfig::default()).await
+impl IpcClient {
+    /// Connect to the gRPC server at `addr` (e.g. `"http://127.0.0.1:50051"`).
+    pub async fn connect(addr: &str) -> Result<Self, IpcError> {
+        Self::connect_with_config(addr, ClientConfig::default()).await
     }
 
-    /// Create a new client with custom configuration
-    pub async fn connect_with_config(config: ClientConfig) -> Result<Self, IpcError> {
-        let channel = Self::create_channel(&config).await?;
-
-        let mut flight_client = Self {
-            _channel: channel,
-            config,
-            negotiation_result: None,
-        };
-
-        // Perform feature negotiation
-        flight_client.negotiate_features().await?;
-
-        Ok(flight_client)
-    }
-
-    /// Create transport channel based on configuration
-    async fn create_channel(config: &ClientConfig) -> Result<tonic::transport::Channel, IpcError> {
-        let _address = crate::default_bind_address();
-
-        // For now, use a simple TCP connection for development
-        // In production, this would use the actual transport layer
-        let endpoint = tonic::transport::Endpoint::from_static("http://127.0.0.1:50051")
-            .timeout(Duration::from_millis(config.connection_timeout_ms));
+    /// Connect with custom configuration.
+    pub async fn connect_with_config(addr: &str, config: ClientConfig) -> Result<Self, IpcError> {
+        let endpoint = tonic::transport::Endpoint::from_shared(addr.to_string())
+            .map_err(|e| IpcError::ConnectionFailed {
+                reason: format!("Invalid endpoint: {e}"),
+            })?
+            .timeout(Duration::from_millis(config.connection_timeout_ms))
+            .connect_timeout(Duration::from_millis(config.connection_timeout_ms));
 
         let channel = endpoint
             .connect()
             .await
             .map_err(|e| IpcError::ConnectionFailed {
-                reason: format!("Failed to connect: {}", e),
+                reason: format!("Failed to connect to {addr}: {e}"),
             })?;
 
-        Ok(channel)
+        let inner = GrpcClient::new(channel);
+        info!("Connected to Flight IPC server at {addr}");
+
+        Ok(Self {
+            inner,
+            endpoint,
+            config,
+        })
     }
 
-    /// Negotiate features with the server
-    async fn negotiate_features(&mut self) -> Result<(), IpcError> {
-        let _request = NegotiateFeaturesRequest {
+    /// Re-establish the connection using exponential back-off.
+    async fn reconnect(&mut self) -> Result<(), IpcError> {
+        let mut delay = RECONNECT_BASE_DELAY;
+
+        for attempt in 1..=MAX_RECONNECT_ATTEMPTS {
+            debug!("Reconnection attempt {attempt}/{MAX_RECONNECT_ATTEMPTS}");
+            tokio::time::sleep(delay).await;
+
+            match self.endpoint.connect().await {
+                Ok(channel) => {
+                    self.inner = GrpcClient::new(channel);
+                    info!("Reconnected on attempt {attempt}");
+                    return Ok(());
+                }
+                Err(e) => {
+                    warn!("Reconnect attempt {attempt} failed: {e}");
+                    delay = delay.saturating_mul(2);
+                }
+            }
+        }
+
+        Err(IpcError::ConnectionFailed {
+            reason: format!("Failed to reconnect after {MAX_RECONNECT_ATTEMPTS} attempts"),
+        })
+    }
+
+    // ------------------------------------------------------------------
+    // Device service
+    // ------------------------------------------------------------------
+
+    /// List connected devices.
+    pub async fn list_devices(&mut self) -> Result<ListDevicesResponse, IpcError> {
+        let resp = self.inner.list_devices(ListDevicesRequest::default()).await;
+
+        match resp {
+            Ok(r) => Ok(r.into_inner()),
+            Err(status) if Self::is_connection_error(&status) => {
+                self.reconnect().await?;
+                Ok(self
+                    .inner
+                    .list_devices(ListDevicesRequest::default())
+                    .await?
+                    .into_inner())
+            }
+            Err(e) => Err(IpcError::Grpc(e)),
+        }
+    }
+
+    /// Get a single device by ID (filters the full device list).
+    pub async fn get_device(&mut self, id: &str) -> Result<Option<crate::proto::Device>, IpcError> {
+        let resp = self.list_devices().await?;
+        Ok(resp.devices.into_iter().find(|d| d.id == id))
+    }
+
+    // ------------------------------------------------------------------
+    // Profile service
+    // ------------------------------------------------------------------
+
+    /// Apply a profile.
+    pub async fn apply_profile(
+        &mut self,
+        request: ApplyProfileRequest,
+    ) -> Result<ApplyProfileResponse, IpcError> {
+        Ok(self.inner.apply_profile(request).await?.into_inner())
+    }
+
+    // ------------------------------------------------------------------
+    // Diagnostics / system service
+    // ------------------------------------------------------------------
+
+    /// Get service info (version, uptime, status).
+    pub async fn get_service_info(&mut self) -> Result<GetServiceInfoResponse, IpcError> {
+        Ok(self
+            .inner
+            .get_service_info(GetServiceInfoRequest {})
+            .await?
+            .into_inner())
+    }
+
+    // ------------------------------------------------------------------
+    // Conflict resolution
+    // ------------------------------------------------------------------
+
+    /// Detect curve conflicts.
+    pub async fn detect_curve_conflicts(
+        &mut self,
+        request: DetectCurveConflictsRequest,
+    ) -> Result<DetectCurveConflictsResponse, IpcError> {
+        Ok(self
+            .inner
+            .detect_curve_conflicts(request)
+            .await?
+            .into_inner())
+    }
+
+    /// Resolve a single curve conflict.
+    pub async fn resolve_curve_conflict(
+        &mut self,
+        request: ResolveCurveConflictRequest,
+    ) -> Result<ResolveCurveConflictResponse, IpcError> {
+        Ok(self
+            .inner
+            .resolve_curve_conflict(request)
+            .await?
+            .into_inner())
+    }
+
+    /// One-click resolve.
+    pub async fn one_click_resolve(
+        &mut self,
+        request: OneClickResolveRequest,
+    ) -> Result<OneClickResolveResponse, IpcError> {
+        Ok(self.inner.one_click_resolve(request).await?.into_inner())
+    }
+
+    /// Set capability mode.
+    pub async fn set_capability_mode(
+        &mut self,
+        request: SetCapabilityModeRequest,
+    ) -> Result<SetCapabilityModeResponse, IpcError> {
+        Ok(self.inner.set_capability_mode(request).await?.into_inner())
+    }
+
+    /// Negotiate features with the server.
+    pub async fn negotiate_features(
+        &mut self,
+    ) -> Result<crate::proto::NegotiateFeaturesResponse, IpcError> {
+        let request = NegotiateFeaturesRequest {
             client_version: self.config.client_version.clone(),
             supported_features: self.config.supported_features.clone(),
             preferred_transport: self.config.preferred_transport.into(),
         };
-
-        debug!("Negotiating features with server");
-
-        // Placeholder for gRPC call - in real implementation this would use generated client
-        let response = crate::proto::NegotiateFeaturesResponse {
-            success: true,
-            server_version: "1.0.0".to_string(),
-            enabled_features: self.config.supported_features.clone(),
-            negotiated_transport: self.config.preferred_transport.into(),
-            error_message: String::new(),
-        };
-
-        if !response.success {
-            return Err(IpcError::ConnectionFailed {
-                reason: response.error_message,
-            });
-        }
-
-        // Validate version compatibility
-        let server_version = Version::parse(&response.server_version)?;
-        let client_version = Version::parse(&self.config.client_version)?;
-
-        if !server_version.is_compatible_with(&client_version) {
-            return Err(IpcError::VersionMismatch {
-                client: self.config.client_version.clone(),
-                server: response.server_version,
-            });
-        }
-
-        self.negotiation_result = Some(NegotiationResult {
-            server_version: response.server_version.clone(),
-            enabled_features: response.enabled_features.clone(),
-            transport_type: response.negotiated_transport(),
-        });
-
-        info!(
-            "Feature negotiation successful. Enabled features: {:?}",
-            self.negotiation_result.as_ref().unwrap().enabled_features
-        );
-
-        Ok(())
+        Ok(self.inner.negotiate_features(request).await?.into_inner())
     }
 
-    /// Get the negotiation result
-    pub fn negotiation_result(&self) -> Option<&NegotiationResult> {
-        self.negotiation_result.as_ref()
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    fn is_connection_error(status: &tonic::Status) -> bool {
+        matches!(
+            status.code(),
+            tonic::Code::Unavailable | tonic::Code::Unknown
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy FlightClient wrapper — kept for backward compatibility
+// ---------------------------------------------------------------------------
+
+/// Legacy client. Prefer [`IpcClient`] for new code.
+pub struct FlightClient {
+    inner: IpcClient,
+}
+
+impl FlightClient {
+    /// Connect using defaults.
+    pub async fn connect() -> Result<Self, IpcError> {
+        let inner = IpcClient::connect("http://127.0.0.1:50051").await?;
+        Ok(Self { inner })
     }
 
-    /// Subscribe to health events (placeholder implementation)
-    pub async fn subscribe_health(&mut self) -> Result<(), IpcError> {
-        self.require_feature("health-monitoring")?;
-
-        // Placeholder - in real implementation this would make gRPC call
-        info!("Health subscription requested");
-
-        Ok(())
-    }
-
-    /// Get service information (placeholder implementation)
-    pub async fn get_service_info(
-        &mut self,
-    ) -> Result<crate::proto::GetServiceInfoResponse, IpcError> {
-        // Placeholder - in real implementation this would make gRPC call
-        let response = crate::proto::GetServiceInfoResponse {
-            version: "1.0.0".to_string(),
-            uptime_seconds: 0,
-            status: crate::proto::ServiceStatus::Running.into(),
-            capabilities: std::collections::HashMap::new(),
-        };
-
-        Ok(response)
-    }
-
-    /// List connected devices (placeholder implementation)
+    /// List devices.
     pub async fn list_devices(
         &mut self,
         _request: ListDevicesRequest,
     ) -> Result<ListDevicesResponse, IpcError> {
-        Ok(ListDevicesResponse {
-            devices: vec![],
-            total_count: 0,
-        })
-    }
-
-    /// Resolve conflicts (placeholder implementation)
-    pub async fn one_click_resolve(
-        &mut self,
-        _request: OneClickResolveRequest,
-    ) -> Result<OneClickResolveResponse, IpcError> {
-        Ok(OneClickResolveResponse {
-            success: false,
-            error_message: "Not implemented".to_string(),
-            result: None,
-        })
-    }
-
-    /// Set capability mode (placeholder implementation)
-    pub async fn set_capability_mode(
-        &mut self,
-        _request: SetCapabilityModeRequest,
-    ) -> Result<SetCapabilityModeResponse, IpcError> {
-        Ok(SetCapabilityModeResponse {
-            success: false,
-            error_message: "Not implemented".to_string(),
-            affected_axes: vec![],
-            applied_limits: None,
-        })
-    }
-
-    /// Detect curve conflicts (placeholder implementation)
-    pub async fn detect_curve_conflicts(
-        &mut self,
-        _request: DetectCurveConflictsRequest,
-    ) -> Result<DetectCurveConflictsResponse, IpcError> {
-        Ok(DetectCurveConflictsResponse {
-            success: false,
-            error_message: "Not implemented".to_string(),
-            conflicts: vec![],
-        })
-    }
-
-    /// Resolve curve conflict (placeholder implementation)
-    pub async fn resolve_curve_conflict(
-        &mut self,
-        _request: ResolveCurveConflictRequest,
-    ) -> Result<ResolveCurveConflictResponse, IpcError> {
-        Ok(ResolveCurveConflictResponse {
-            success: false,
-            error_message: "Not implemented".to_string(),
-            result: None,
-        })
-    }
-
-    /// Apply profile (placeholder implementation)
-    pub async fn apply_profile(
-        &mut self,
-        _request: ApplyProfileRequest,
-    ) -> Result<ApplyProfileResponse, IpcError> {
-        Ok(ApplyProfileResponse {
-            success: false,
-            error_message: "Not implemented".to_string(),
-            validation_errors: vec![],
-            effective_profile_hash: String::new(),
-            compile_time_ms: 0,
-        })
-    }
-
-    /// Validate that a required feature is enabled
-    fn require_feature(&self, feature: &str) -> Result<(), IpcError> {
-        if let Some(negotiation) = &self.negotiation_result {
-            validate_required_features(&negotiation.enabled_features, &[feature.to_string()])?;
-        } else {
-            return Err(IpcError::ConnectionFailed {
-                reason: "Feature negotiation not completed".to_string(),
-            });
-        }
-        Ok(())
+        self.inner.list_devices().await
     }
 }
 
@@ -237,13 +241,13 @@ impl FlightClient {
 mod tests {
     use super::*;
 
-    // Note: These tests would require a running server
-    // In practice, you'd use mock servers or integration test setup
-
     #[tokio::test]
-    #[ignore] // Requires running server
-    async fn test_client_connection() {
-        let client = FlightClient::connect().await;
-        assert!(client.is_ok());
+    async fn test_connect_refused() {
+        // Connecting to a port where nothing is listening should fail.
+        let result = IpcClient::connect("http://127.0.0.1:19999").await;
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("Failed to connect") || msg.contains("Connection"));
     }
 }

@@ -129,7 +129,7 @@ pub use calibration::{AxisCalibration, CalibrationBank};
 pub use calibration_wizard::{
     CalibrationError, CalibrationResult, CalibrationSample, CalibrationStep, CalibrationWizard,
 };
-pub use chain::{AxisChain, AxisChainConfig, ChainStageValues};
+pub use chain::{AxisChain, AxisChainConfig, ChainStageValues, MAX_CHAIN_STAGES, RtAxisChain};
 pub use combine::{combine_average, combine_differential, split_bipolar};
 pub use compiler::{CompileError, PipelineBuilder, PipelineCompiler};
 pub use conditional_scale::{ConditionalScale, MAX_CONDITIONS, ScaleCondition};
@@ -181,8 +181,9 @@ pub use scale::{AxisScale, ScaleBank, ScaleError};
 pub use smoothing::{EmaFilter, EmaFilterBank};
 pub use stages::{
     ClampStage as RtClampStage, CurveType, DeadzoneShape, DeadzoneStage as RtDeadzoneStage,
-    InvertStage as RtInvertStage, MAX_CURVE_POINTS, MAX_SMA_WINDOW, MAX_STAGES, NoiseGate,
-    PipelineDiagnostics, RescaleStage, RtAxisPipeline, RtPipelineBuilder, SlewRateLimiter,
+    DetentPosition, DetentStage as RtDetentStage, InvertStage as RtInvertStage, MAX_CURVE_POINTS,
+    MAX_DETENTS, MAX_SMA_WINDOW, MAX_STAGES, NoiseGate, PipelineDiagnostics, RescaleStage,
+    RtAxisPipeline, RtPipelineBuilder, SaturationStage, SlewRateLimiter,
     SmoothingStage as RtSmoothingStage, SmoothingType, Stage, StageDiagnostic, StageSlot,
 };
 pub use throttle_zone::{

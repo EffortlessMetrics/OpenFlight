@@ -1,0 +1,23 @@
+[package]
+homepage.workspace = true
+name = "flight-plugin"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "WASM plugin sandboxing and registry for the OpenFlight plugin system (ADR-003)."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "plugin", "wasm", "sandbox"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

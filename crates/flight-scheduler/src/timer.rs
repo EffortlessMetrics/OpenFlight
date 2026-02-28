@@ -236,6 +236,145 @@ impl HighResTimer for FallbackTimer {
 }
 
 // ---------------------------------------------------------------------------
+// SystemTimer — simple Instant-based timer
+// ---------------------------------------------------------------------------
+
+/// High-resolution timer using [`std::time::Instant`].
+///
+/// Provides `now_ns()` / `sleep_ns()` convenience in addition to
+/// implementing [`HighResTimer`]. Uses a monotonic epoch captured at
+/// construction time; `now_ns()` returns nanoseconds elapsed since then.
+pub struct SystemTimer {
+    epoch: Instant,
+    busy_spin_ns: u64,
+    stats: TimerStats,
+}
+
+impl SystemTimer {
+    /// Create with the given busy-spin tail (nanoseconds).
+    pub fn new(busy_spin_ns: u64) -> Self {
+        Self {
+            epoch: Instant::now(),
+            busy_spin_ns,
+            stats: TimerStats::new(),
+        }
+    }
+
+    /// Nanoseconds elapsed since this timer was created.
+    #[inline]
+    pub fn now_ns(&self) -> u64 {
+        self.epoch.elapsed().as_nanos() as u64
+    }
+
+    /// Sleep for `duration_ns` nanoseconds using the best available
+    /// mechanism (kernel sleep + busy-wait tail).
+    pub fn sleep_ns(&mut self, duration_ns: u64) {
+        let deadline = Instant::now() + Duration::from_nanos(duration_ns);
+        self.sleep_until(deadline);
+    }
+}
+
+impl HighResTimer for SystemTimer {
+    fn sleep_until(&mut self, deadline: Instant) {
+        let now = Instant::now();
+        if now >= deadline {
+            let jitter_ns = (now - deadline).as_nanos() as i64;
+            self.stats.record_tick(jitter_ns, jitter_ns > 500_000);
+            return;
+        }
+
+        let remaining = deadline - now;
+        let busy_dur = Duration::from_nanos(self.busy_spin_ns);
+        if remaining > busy_dur {
+            std::thread::sleep(remaining - busy_dur);
+        }
+
+        while Instant::now() < deadline {
+            std::hint::spin_loop();
+        }
+
+        let actual = Instant::now();
+        let jitter_ns = (actual - deadline).as_nanos() as i64;
+        self.stats.record_tick(jitter_ns, false);
+    }
+
+    fn stats(&self) -> &TimerStats {
+        &self.stats
+    }
+
+    fn reset_stats(&mut self) {
+        self.stats.reset();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MockTimer — deterministic timer for testing
+// ---------------------------------------------------------------------------
+
+/// Deterministic mock timer for testing.
+///
+/// Time only advances when explicitly called via [`advance_ns`](Self::advance_ns)
+/// or [`sleep_ns`](Self::sleep_ns). This gives fully reproducible tests of
+/// the scheduler pipeline without wall-clock dependencies.
+///
+/// Does **not** implement [`HighResTimer`] since that trait is bound to
+/// real [`Instant`] deadlines. Use [`SystemTimer`] or [`FallbackTimer`] for
+/// real-time execution.
+pub struct MockTimer {
+    current_ns: u64,
+    stats: TimerStats,
+}
+
+impl MockTimer {
+    /// Create a mock timer starting at time zero.
+    pub fn new() -> Self {
+        Self {
+            current_ns: 0,
+            stats: TimerStats::new(),
+        }
+    }
+
+    /// Current virtual time in nanoseconds.
+    #[inline]
+    pub fn now_ns(&self) -> u64 {
+        self.current_ns
+    }
+
+    /// Advance virtual time by `ns` nanoseconds.
+    #[inline]
+    pub fn advance_ns(&mut self, ns: u64) {
+        self.current_ns += ns;
+    }
+
+    /// Set virtual time to an absolute value.
+    pub fn set_ns(&mut self, ns: u64) {
+        self.current_ns = ns;
+    }
+
+    /// Advance virtual time by `duration_ns` and record a zero-jitter tick.
+    pub fn sleep_ns(&mut self, duration_ns: u64) {
+        self.current_ns += duration_ns;
+        self.stats.record_tick(0, false);
+    }
+
+    /// Get accumulated statistics.
+    pub fn stats(&self) -> &TimerStats {
+        &self.stats
+    }
+
+    /// Reset statistics (clock is NOT reset).
+    pub fn reset_stats(&mut self) {
+        self.stats.reset();
+    }
+}
+
+impl Default for MockTimer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Windows high-resolution timer
 // ---------------------------------------------------------------------------
 
@@ -542,5 +681,95 @@ mod tests {
             );
             prev = now;
         }
+    }
+
+    // -- SystemTimer tests --------------------------------------------------
+
+    #[test]
+    fn system_timer_now_ns_advances() {
+        let timer = SystemTimer::new(20_000);
+        let t1 = timer.now_ns();
+        std::thread::sleep(Duration::from_millis(1));
+        let t2 = timer.now_ns();
+        assert!(t2 > t1, "now_ns should advance with real time");
+    }
+
+    #[test]
+    fn system_timer_sleep_ns_records_stats() {
+        let mut timer = SystemTimer::new(20_000);
+        timer.sleep_ns(1_000_000); // 1ms
+        assert_eq!(timer.stats().tick_count(), 1);
+    }
+
+    #[test]
+    fn system_timer_implements_high_res_timer() {
+        let mut timer = SystemTimer::new(20_000);
+        let deadline = Instant::now() + Duration::from_millis(2);
+        timer.sleep_until(deadline);
+        assert_eq!(timer.stats().tick_count(), 1);
+    }
+
+    // -- MockTimer tests ----------------------------------------------------
+
+    #[test]
+    fn mock_timer_starts_at_zero() {
+        let timer = MockTimer::new();
+        assert_eq!(timer.now_ns(), 0);
+    }
+
+    #[test]
+    fn mock_timer_advance() {
+        let mut timer = MockTimer::new();
+        timer.advance_ns(1_000_000);
+        assert_eq!(timer.now_ns(), 1_000_000);
+        timer.advance_ns(500_000);
+        assert_eq!(timer.now_ns(), 1_500_000);
+    }
+
+    #[test]
+    fn mock_timer_set_ns() {
+        let mut timer = MockTimer::new();
+        timer.set_ns(42_000_000);
+        assert_eq!(timer.now_ns(), 42_000_000);
+    }
+
+    #[test]
+    fn mock_timer_sleep_ns_advances_clock() {
+        let mut timer = MockTimer::new();
+        timer.sleep_ns(4_000_000);
+        assert_eq!(timer.now_ns(), 4_000_000);
+        timer.sleep_ns(4_000_000);
+        assert_eq!(timer.now_ns(), 8_000_000);
+    }
+
+    #[test]
+    fn mock_timer_sleep_ns_records_stats() {
+        let mut timer = MockTimer::new();
+        timer.sleep_ns(4_000_000);
+        timer.sleep_ns(4_000_000);
+        assert_eq!(timer.stats().tick_count(), 2);
+    }
+
+    #[test]
+    fn mock_timer_deterministic_sequence() {
+        let mut t1 = MockTimer::new();
+        let mut t2 = MockTimer::new();
+        for _ in 0..100 {
+            t1.sleep_ns(4_000_000);
+            t2.sleep_ns(4_000_000);
+        }
+        assert_eq!(t1.now_ns(), t2.now_ns());
+        assert_eq!(t1.stats().tick_count(), t2.stats().tick_count());
+    }
+
+    #[test]
+    fn mock_timer_reset_stats() {
+        let mut timer = MockTimer::new();
+        timer.sleep_ns(1_000_000);
+        assert!(timer.stats().tick_count() > 0);
+        timer.reset_stats();
+        assert_eq!(timer.stats().tick_count(), 0);
+        // Clock should NOT reset
+        assert_eq!(timer.now_ns(), 1_000_000);
     }
 }

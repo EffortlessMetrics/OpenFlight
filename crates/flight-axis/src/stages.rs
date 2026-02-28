@@ -546,6 +546,181 @@ impl Stage for NoiseGate {
 }
 
 // ---------------------------------------------------------------------------
+// DetentStage
+// ---------------------------------------------------------------------------
+
+/// Maximum number of inline detent positions.
+pub const MAX_DETENTS: usize = 8;
+
+/// A single magnetic detent position (zero-allocation, inline).
+#[derive(Debug, Clone, Copy)]
+pub struct DetentPosition {
+    /// The detent snap position in the axis range.
+    pub position: f64,
+    /// Half-width of the detent capture zone.
+    pub width: f64,
+    /// Strength of the snap (0.0 = no snap/passthrough, 1.0 = full snap to position).
+    pub strength: f64,
+}
+
+impl DetentPosition {
+    /// Creates a new detent position.
+    #[must_use]
+    pub fn new(position: f64, width: f64, strength: f64) -> Self {
+        Self {
+            position,
+            width: width.abs(),
+            strength: strength.clamp(0.0, 1.0),
+        }
+    }
+}
+
+/// Detent stage: snaps input to magnetic detent positions.
+///
+/// Up to [`MAX_DETENTS`] positions stored inline. When the input is within
+/// `width` of a detent, it is interpolated toward the detent position based
+/// on `strength`. Zero-allocation; all state is on the stack (ADR-004).
+#[derive(Debug, Clone, Copy)]
+pub struct DetentStage {
+    detents: [DetentPosition; MAX_DETENTS],
+    count: usize,
+}
+
+impl DetentStage {
+    /// Creates an empty detent stage (passthrough).
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            detents: [DetentPosition {
+                position: 0.0,
+                width: 0.0,
+                strength: 0.0,
+            }; MAX_DETENTS],
+            count: 0,
+        }
+    }
+
+    /// Creates a detent stage from a slice of positions.
+    ///
+    /// Returns `None` if more than [`MAX_DETENTS`] are provided.
+    #[must_use]
+    pub fn from_positions(positions: &[DetentPosition]) -> Option<Self> {
+        if positions.len() > MAX_DETENTS {
+            return None;
+        }
+        let mut stage = Self::new();
+        for (i, p) in positions.iter().enumerate() {
+            stage.detents[i] = *p;
+        }
+        stage.count = positions.len();
+        Some(stage)
+    }
+
+    /// Adds a detent position. Returns `false` if full.
+    pub fn add(&mut self, position: f64, width: f64, strength: f64) -> bool {
+        if self.count >= MAX_DETENTS {
+            return false;
+        }
+        self.detents[self.count] = DetentPosition::new(position, width, strength);
+        self.count += 1;
+        true
+    }
+
+    /// Returns the number of configured detents.
+    #[must_use]
+    pub fn count(&self) -> usize {
+        self.count
+    }
+}
+
+impl Default for DetentStage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Stage for DetentStage {
+    fn process(&mut self, input: f64) -> f64 {
+        if !input.is_finite() {
+            return 0.0;
+        }
+        // Find the closest detent that captures this input
+        for i in 0..self.count {
+            let det = &self.detents[i];
+            let distance = (input - det.position).abs();
+            if distance <= det.width {
+                // Interpolate: strength=1.0 → snap fully, strength=0.0 → passthrough
+                return input + (det.position - input) * det.strength;
+            }
+        }
+        input
+    }
+
+    fn name(&self) -> &'static str {
+        "detent"
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SaturationStage
+// ---------------------------------------------------------------------------
+
+/// Saturation stage: clamps output to configurable min/max range.
+///
+/// Designed as an axis-type-aware output limiter with named constructors
+/// for common axis types (bipolar joystick vs. unipolar throttle).
+#[derive(Debug, Clone, Copy)]
+pub struct SaturationStage {
+    min: f64,
+    max: f64,
+}
+
+impl SaturationStage {
+    /// Creates a new saturation stage with the given range.
+    #[must_use]
+    pub fn new(min: f64, max: f64) -> Self {
+        Self { min, max }
+    }
+
+    /// Bipolar axis range: −1.0 to 1.0 (joystick, rudder).
+    #[must_use]
+    pub fn bipolar() -> Self {
+        Self::new(-1.0, 1.0)
+    }
+
+    /// Unipolar axis range: 0.0 to 1.0 (throttle, mixture, prop).
+    #[must_use]
+    pub fn unipolar() -> Self {
+        Self::new(0.0, 1.0)
+    }
+
+    /// Returns the configured minimum.
+    #[must_use]
+    pub fn min(&self) -> f64 {
+        self.min
+    }
+
+    /// Returns the configured maximum.
+    #[must_use]
+    pub fn max(&self) -> f64 {
+        self.max
+    }
+}
+
+impl Stage for SaturationStage {
+    fn process(&mut self, input: f64) -> f64 {
+        if input.is_nan() {
+            return 0.0;
+        }
+        input.clamp(self.min, self.max)
+    }
+
+    fn name(&self) -> &'static str {
+        "saturation"
+    }
+}
+
+// ---------------------------------------------------------------------------
 // StageSlot — enum dispatch for zero-allocation pipelines
 // ---------------------------------------------------------------------------
 
@@ -573,6 +748,10 @@ pub enum StageSlot {
     Rescale(RescaleStage),
     /// Noise gate.
     NoiseGate(NoiseGate),
+    /// Magnetic detent snapping.
+    Detent(DetentStage),
+    /// Saturation (axis-type-aware clamping).
+    Saturation(SaturationStage),
 }
 
 impl StageSlot {
@@ -589,7 +768,15 @@ impl StageSlot {
             StageSlot::Invert(s) => s.process(input),
             StageSlot::Rescale(s) => s.process(input),
             StageSlot::NoiseGate(s) => s.process(input),
+            StageSlot::Detent(s) => s.process(input),
+            StageSlot::Saturation(s) => s.process(input),
         }
+    }
+
+    /// Returns `true` if this is an empty slot.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        matches!(self, StageSlot::Empty)
     }
 
     /// Returns the name of the stage in this slot.
@@ -605,13 +792,9 @@ impl StageSlot {
             StageSlot::Invert(s) => s.name(),
             StageSlot::Rescale(s) => s.name(),
             StageSlot::NoiseGate(s) => s.name(),
+            StageSlot::Detent(s) => s.name(),
+            StageSlot::Saturation(s) => s.name(),
         }
-    }
-
-    /// Returns `true` if this is an empty slot.
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        matches!(self, StageSlot::Empty)
     }
 }
 
@@ -852,6 +1035,36 @@ impl RtPipelineBuilder {
     #[must_use]
     pub fn noise_gate(self, threshold: f64) -> Self {
         self.stage(StageSlot::NoiseGate(NoiseGate::new(threshold)))
+    }
+
+    /// Appends a detent stage from a slice of detent positions.
+    ///
+    /// Ignores the call if more than [`MAX_DETENTS`] positions are provided.
+    #[must_use]
+    pub fn detent(self, positions: &[DetentPosition]) -> Self {
+        if let Some(stage) = DetentStage::from_positions(positions) {
+            self.stage(StageSlot::Detent(stage))
+        } else {
+            self
+        }
+    }
+
+    /// Appends a saturation stage with the given min/max range.
+    #[must_use]
+    pub fn saturation(self, min: f64, max: f64) -> Self {
+        self.stage(StageSlot::Saturation(SaturationStage::new(min, max)))
+    }
+
+    /// Appends a bipolar saturation stage (−1.0 to 1.0).
+    #[must_use]
+    pub fn saturation_bipolar(self) -> Self {
+        self.stage(StageSlot::Saturation(SaturationStage::bipolar()))
+    }
+
+    /// Appends a unipolar saturation stage (0.0 to 1.0).
+    #[must_use]
+    pub fn saturation_unipolar(self) -> Self {
+        self.stage(StageSlot::Saturation(SaturationStage::unipolar()))
     }
 
     /// Consumes the builder and returns the finished pipeline.
@@ -1540,5 +1753,218 @@ mod tests {
             StageSlot::NoiseGate(NoiseGate::new(0.01)).name(),
             "noise_gate"
         );
+        assert_eq!(StageSlot::Detent(DetentStage::new()).name(), "detent");
+        assert_eq!(
+            StageSlot::Saturation(SaturationStage::bipolar()).name(),
+            "saturation"
+        );
+    }
+
+    // === DetentStage tests ===============================================
+
+    #[test]
+    fn detent_empty_passthrough() {
+        let mut d = DetentStage::new();
+        assert!(approx(d.process(0.5), 0.5));
+        assert!(approx(d.process(-0.3), -0.3));
+    }
+
+    #[test]
+    fn detent_snaps_within_width() {
+        let mut d = DetentStage::new();
+        d.add(0.0, 0.05, 1.0); // snap to 0.0 within ±0.05, full strength
+        assert!(approx(d.process(0.03), 0.0)); // within width → snap to 0.0
+        assert!(approx(d.process(-0.04), 0.0)); // within width → snap to 0.0
+        assert!(approx(d.process(0.0), 0.0)); // exact center
+    }
+
+    #[test]
+    fn detent_passthrough_outside_width() {
+        let mut d = DetentStage::new();
+        d.add(0.0, 0.05, 1.0);
+        assert!(approx(d.process(0.1), 0.1)); // outside width → unchanged
+        assert!(approx(d.process(-0.5), -0.5));
+        assert!(approx(d.process(1.0), 1.0));
+    }
+
+    #[test]
+    fn detent_partial_strength() {
+        let mut d = DetentStage::new();
+        d.add(0.5, 0.1, 0.5); // half-strength snap
+        // Input 0.45, distance=0.05 < width=0.1: lerp = 0.45 + (0.5 - 0.45) * 0.5 = 0.475
+        let out = d.process(0.45);
+        assert!(approx(out, 0.475));
+    }
+
+    #[test]
+    fn detent_zero_strength_passthrough() {
+        let mut d = DetentStage::new();
+        d.add(0.5, 0.1, 0.0); // zero strength
+        assert!(approx(d.process(0.45), 0.45)); // within width but no snap
+    }
+
+    #[test]
+    fn detent_multiple_positions() {
+        let mut d = DetentStage::new();
+        d.add(0.0, 0.03, 1.0); // idle
+        d.add(0.5, 0.03, 1.0); // climb
+        d.add(1.0, 0.03, 1.0); // TOGA
+        assert!(approx(d.process(0.01), 0.0)); // near idle → snap
+        assert!(approx(d.process(0.49), 0.5)); // near climb → snap
+        assert!(approx(d.process(0.99), 1.0)); // near TOGA → snap
+        assert!(approx(d.process(0.3), 0.3)); // free range → passthrough
+    }
+
+    #[test]
+    fn detent_from_positions_slice() {
+        let positions = [
+            DetentPosition::new(0.0, 0.05, 1.0),
+            DetentPosition::new(1.0, 0.05, 1.0),
+        ];
+        let mut d = DetentStage::from_positions(&positions).unwrap();
+        assert_eq!(d.count(), 2);
+        assert!(approx(d.process(0.02), 0.0));
+        assert!(approx(d.process(0.98), 1.0));
+    }
+
+    #[test]
+    fn detent_from_positions_too_many() {
+        let positions = [DetentPosition::new(0.0, 0.05, 1.0); MAX_DETENTS + 1];
+        assert!(DetentStage::from_positions(&positions).is_none());
+    }
+
+    #[test]
+    fn detent_add_returns_false_when_full() {
+        let mut d = DetentStage::new();
+        for i in 0..MAX_DETENTS {
+            assert!(d.add(i as f64 * 0.1, 0.01, 1.0));
+        }
+        assert!(!d.add(0.9, 0.01, 1.0)); // 9th detent rejected
+    }
+
+    #[test]
+    fn detent_nan_returns_zero() {
+        let mut d = DetentStage::new();
+        d.add(0.0, 0.05, 1.0);
+        assert_eq!(d.process(f64::NAN), 0.0);
+    }
+
+    #[test]
+    fn detent_inf_returns_zero() {
+        let mut d = DetentStage::new();
+        d.add(0.0, 0.05, 1.0);
+        assert_eq!(d.process(f64::INFINITY), 0.0);
+    }
+
+    // === SaturationStage tests ==========================================
+
+    #[test]
+    fn saturation_bipolar_clamps() {
+        let mut s = SaturationStage::bipolar();
+        assert!(approx(s.process(0.5), 0.5)); // within range
+        assert!(approx(s.process(1.5), 1.0)); // above max
+        assert!(approx(s.process(-1.5), -1.0)); // below min
+        assert!(approx(s.process(1.0), 1.0)); // at boundary
+        assert!(approx(s.process(-1.0), -1.0)); // at boundary
+    }
+
+    #[test]
+    fn saturation_unipolar_clamps() {
+        let mut s = SaturationStage::unipolar();
+        assert!(approx(s.process(0.5), 0.5));
+        assert!(approx(s.process(1.5), 1.0));
+        assert!(approx(s.process(-0.5), 0.0));
+        assert!(approx(s.process(0.0), 0.0));
+        assert!(approx(s.process(1.0), 1.0));
+    }
+
+    #[test]
+    fn saturation_custom_range() {
+        let mut s = SaturationStage::new(-0.5, 0.5);
+        assert!(approx(s.process(0.3), 0.3));
+        assert!(approx(s.process(0.8), 0.5));
+        assert!(approx(s.process(-0.8), -0.5));
+    }
+
+    #[test]
+    fn saturation_accessors() {
+        let s = SaturationStage::new(-0.5, 0.75);
+        assert!(approx(s.min(), -0.5));
+        assert!(approx(s.max(), 0.75));
+    }
+
+    #[test]
+    fn saturation_nan_returns_zero() {
+        let mut s = SaturationStage::bipolar();
+        assert_eq!(s.process(f64::NAN), 0.0);
+    }
+
+    #[test]
+    fn saturation_inf_clamped() {
+        let mut s = SaturationStage::bipolar();
+        assert!(approx(s.process(f64::INFINITY), 1.0));
+        assert!(approx(s.process(f64::NEG_INFINITY), -1.0));
+    }
+
+    // === Pipeline with new stages ========================================
+
+    #[test]
+    fn pipeline_with_detent_stage() {
+        let detents = [
+            DetentPosition::new(0.0, 0.05, 1.0),
+            DetentPosition::new(1.0, 0.05, 1.0),
+        ];
+        let mut p = RtAxisPipeline::builder()
+            .detent(&detents)
+            .saturation_unipolar()
+            .build();
+        assert_eq!(p.stage_count(), 2);
+        assert!(approx(p.process(0.02), 0.0)); // detent snap
+        assert!(approx(p.process(0.5), 0.5)); // passthrough
+    }
+
+    #[test]
+    fn pipeline_detent_then_saturation() {
+        let detents = [DetentPosition::new(0.0, 0.1, 1.0)];
+        let mut p = RtAxisPipeline::builder()
+            .detent(&detents)
+            .saturation(-1.0, 1.0)
+            .build();
+        assert!(approx(p.process(0.05), 0.0)); // detent snap then saturation pass
+        assert!(approx(p.process(1.5), 1.0)); // detent pass, saturation clamp
+    }
+
+    #[test]
+    fn full_throttle_pipeline_with_detents() {
+        let detents = [
+            DetentPosition::new(0.0, 0.03, 1.0), // idle
+            DetentPosition::new(0.5, 0.03, 1.0), // climb
+            DetentPosition::new(1.0, 0.03, 1.0), // TOGA
+        ];
+        let mut p = RtAxisPipeline::builder()
+            .deadzone(0.0, 0.02, DeadzoneShape::Linear)
+            .detent(&detents)
+            .slew_rate(0.05)
+            .saturation_unipolar()
+            .build();
+
+        // Multiple frames - output should always be in [0.0, 1.0]
+        for input in [0.0, 0.01, 0.3, 0.49, 0.5, 0.75, 0.99, 1.0] {
+            let out = p.process(input);
+            assert!(
+                (0.0..=1.0).contains(&out),
+                "output {out} out of [0.0, 1.0] for input={input}"
+            );
+        }
+    }
+
+    // === Updated zero-allocation verification ============================
+
+    #[test]
+    fn verify_new_types_are_copy() {
+        fn assert_copy<T: Copy>() {}
+        assert_copy::<DetentPosition>();
+        assert_copy::<DetentStage>();
+        assert_copy::<SaturationStage>();
     }
 }

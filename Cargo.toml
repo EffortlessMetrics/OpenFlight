@@ -87,7 +87,9 @@ members = [
     "crates/flight-panels-goflight",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",
+    "crates/flight-plugin",
     "examples",
+    "installer",
     "xtask",
     "specs",
 ]
@@ -131,7 +133,9 @@ prost = "0.14.3"
 # Uses tonic::transport::Server and tonic::transport::Channel for IPC communication
 # Features: transport (includes client/server), codegen (for proto compilation)
 tonic = { version = "0.14.3", features = ["transport", "codegen"] }
+tonic-prost = "0.14.3"
 tonic-build = "0.14.3"
+tonic-prost-build = "0.14.3"
 prost-build = "0.14.3"
 prost-types = "0.14.3"
 protobuf-codegen = "4.33.5-release"

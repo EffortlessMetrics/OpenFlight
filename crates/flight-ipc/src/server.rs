@@ -2,95 +2,36 @@
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 //! IPC server implementation
+//!
+//! Provides [`IpcServer`] for starting and gracefully shutting down the gRPC
+//! server, plus the [`DeviceManager`] / [`ProfileManager`] traits consumed
+//! by the handler layer.
 
 use crate::{
     ServerConfig,
-    negotiation::negotiate_features,
+    handlers::{DefaultServiceContext, FlightServiceHandler, MockServiceContext, ServiceContext},
     proto::{
         ApplyProfileRequest, ApplyProfileResponse, Device, DeviceCapabilities, DeviceStatus,
-        DeviceType, GetServiceInfoRequest, GetServiceInfoResponse, HealthEvent,
-        HealthSubscribeRequest, ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest,
-        NegotiateFeaturesResponse, ServiceStatus,
+        DeviceType, ListDevicesRequest, ListDevicesResponse,
+        flight_service_server::FlightServiceServer as GrpcFlightServiceServer,
     },
 };
 
-/// FlightService trait - manually defined since we're using prost-build only
-#[tonic::async_trait]
-pub trait FlightService: Send + Sync + 'static {
-    /// Stream type returned by [`health_subscribe`](FlightService::health_subscribe)
-    type HealthSubscribeStream: futures_core::Stream<Item = Result<HealthEvent, tonic::Status>>
-        + Send
-        + 'static;
-
-    /// Negotiate protocol version and enabled feature flags with the client
-    async fn negotiate_features(
-        &self,
-        request: tonic::Request<NegotiateFeaturesRequest>,
-    ) -> Result<tonic::Response<NegotiateFeaturesResponse>, tonic::Status>;
-
-    /// Return the list of attached HID / virtual devices
-    async fn list_devices(
-        &self,
-        request: tonic::Request<ListDevicesRequest>,
-    ) -> Result<tonic::Response<ListDevicesResponse>, tonic::Status>;
-
-    /// Subscribe to a stream of health events
-    async fn health_subscribe(
-        &self,
-        request: tonic::Request<HealthSubscribeRequest>,
-    ) -> Result<tonic::Response<Self::HealthSubscribeStream>, tonic::Status>;
-
-    /// Apply a named profile and return success/failure details
-    async fn apply_profile(
-        &self,
-        request: tonic::Request<ApplyProfileRequest>,
-    ) -> Result<tonic::Response<ApplyProfileResponse>, tonic::Status>;
-
-    /// Return daemon version, uptime, and enabled features
-    async fn get_service_info(
-        &self,
-        request: tonic::Request<GetServiceInfoRequest>,
-    ) -> Result<tonic::Response<GetServiceInfoResponse>, tonic::Status>;
-}
-
-/// FlightServiceServer wrapper for tonic server
-pub struct FlightServiceServer<T> {
-    #[allow(dead_code)] // Reserved for future tonic integration
-    inner: T,
-}
-
-impl<T> FlightServiceServer<T>
-where
-    T: FlightService,
-{
-    /// Wrap a [`FlightService`] implementation in a server handle
-    pub fn new(service: T) -> Self {
-        Self { inner: service }
-    }
-}
 use anyhow::Result;
-use flight_core::SecurityManager;
 use flight_core::watchdog::WatchdogSystem;
 use flight_hid::{HidAdapter, device_support};
 use std::{
     collections::HashMap,
+    net::SocketAddr,
     sync::{Arc, Mutex},
-    time::SystemTime,
 };
-use tokio::sync::broadcast;
-use tonic::{Request, Response, Status};
-use tracing::{debug, info, warn};
+use tokio::sync::watch;
+use tonic::Status;
+use tracing::info;
 
-/// Flight Hub service implementation
-pub struct FlightServiceImpl {
-    config: ServerConfig,
-    health_sender: broadcast::Sender<HealthEvent>,
-    service_start_time: SystemTime,
-    security_manager: Arc<tokio::sync::RwLock<SecurityManager>>,
-    // In a real implementation, these would be injected dependencies
-    device_manager: Arc<dyn DeviceManager>,
-    profile_manager: Arc<dyn ProfileManager>,
-}
+// ---------------------------------------------------------------------------
+// Domain manager traits (kept from original, used by DefaultServiceContext)
+// ---------------------------------------------------------------------------
 
 /// Device manager trait (to be implemented by actual device management)
 pub trait DeviceManager: Send + Sync {
@@ -104,7 +45,11 @@ pub trait ProfileManager: Send + Sync {
     fn apply_profile(&self, request: &ApplyProfileRequest) -> Result<ApplyProfileResponse, Status>;
 }
 
-/// Mock implementations for testing
+// ---------------------------------------------------------------------------
+// Mock implementations
+// ---------------------------------------------------------------------------
+
+/// Mock device manager for testing — always returns empty
 #[derive(Debug)]
 pub struct MockDeviceManager;
 
@@ -116,6 +61,29 @@ impl DeviceManager for MockDeviceManager {
         })
     }
 }
+
+/// Mock profile manager for testing — always succeeds
+#[derive(Debug)]
+pub struct MockProfileManager;
+
+impl ProfileManager for MockProfileManager {
+    fn apply_profile(
+        &self,
+        _request: &ApplyProfileRequest,
+    ) -> Result<ApplyProfileResponse, Status> {
+        Ok(ApplyProfileResponse {
+            success: true,
+            error_message: String::new(),
+            validation_errors: vec![],
+            effective_profile_hash: "mock-hash".to_string(),
+            compile_time_ms: 10,
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// HidDeviceManager — real HID-backed device enumeration
+// ---------------------------------------------------------------------------
 
 /// HID-backed device manager for basic device enumeration.
 pub struct HidDeviceManager {
@@ -208,6 +176,164 @@ impl DeviceManager for HidDeviceManager {
         })
     }
 }
+
+// ---------------------------------------------------------------------------
+// ServerHandle — returned by IpcServer::start
+// ---------------------------------------------------------------------------
+
+/// Handle to a running gRPC server. Call [`shutdown`](ServerHandle::shutdown)
+/// for graceful termination.
+pub struct ServerHandle {
+    shutdown_tx: watch::Sender<bool>,
+    join_handle: tokio::task::JoinHandle<Result<(), tonic::transport::Error>>,
+    addr: SocketAddr,
+}
+
+impl ServerHandle {
+    /// The local address the server is listening on.
+    pub fn addr(&self) -> SocketAddr {
+        self.addr
+    }
+
+    /// Signal the server to shut down and wait for it to finish.
+    pub async fn shutdown(self) -> Result<()> {
+        let _ = self.shutdown_tx.send(true);
+        self.join_handle
+            .await
+            .map_err(|e| anyhow::anyhow!("Server task panicked: {e}"))?
+            .map_err(|e| anyhow::anyhow!("Server error: {e}"))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// IpcServer — the high-level gRPC server wrapper
+// ---------------------------------------------------------------------------
+
+/// High-level gRPC server for the Flight Hub IPC layer.
+///
+/// ```rust,no_run
+/// use flight_ipc::server::IpcServer;
+/// use flight_ipc::ServerConfig;
+///
+/// #[tokio::main]
+/// async fn main() -> anyhow::Result<()> {
+///     let server = IpcServer::new(ServerConfig::default());
+///     let handle = server.start("127.0.0.1:0".parse()?).await?;
+///     // … later …
+///     handle.shutdown().await?;
+///     Ok(())
+/// }
+/// ```
+pub struct IpcServer<C: ServiceContext = DefaultServiceContext> {
+    handler: FlightServiceHandler<C>,
+    config: ServerConfig,
+}
+
+impl IpcServer<DefaultServiceContext> {
+    /// Create a server backed by default production subsystems.
+    pub fn new(config: ServerConfig) -> Self {
+        let device_mgr: Arc<dyn DeviceManager> = Arc::new(HidDeviceManager::new());
+        let profile_mgr: Arc<dyn ProfileManager> = Arc::new(MockProfileManager);
+        let ctx = Arc::new(DefaultServiceContext::new(
+            config.clone(),
+            device_mgr,
+            profile_mgr,
+        ));
+        let handler = FlightServiceHandler::new(ctx, config.clone());
+        Self { handler, config }
+    }
+}
+
+impl IpcServer<MockServiceContext> {
+    /// Create a server backed by [`MockServiceContext`] — useful for tests.
+    pub fn new_mock(config: ServerConfig) -> Self {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, config.clone());
+        Self { handler, config }
+    }
+}
+
+impl<C: ServiceContext> IpcServer<C> {
+    /// Create a server with a custom [`ServiceContext`].
+    pub fn with_context(ctx: Arc<C>, config: ServerConfig) -> Self {
+        let handler = FlightServiceHandler::new(ctx, config.clone());
+        Self { handler, config }
+    }
+
+    /// Start serving on `addr`. Returns a [`ServerHandle`] for graceful
+    /// shutdown.
+    pub async fn start(self, addr: SocketAddr) -> Result<ServerHandle> {
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+
+        let listener = tokio::net::TcpListener::bind(addr).await?;
+        let local_addr = listener.local_addr()?;
+        let incoming = tokio_stream::wrappers::TcpListenerStream::new(listener);
+
+        info!("Flight IPC server listening on {}", local_addr);
+
+        let svc = GrpcFlightServiceServer::new(self.handler);
+        let max_conns = self.config.max_connections;
+        let timeout = self.config.request_timeout;
+
+        let join_handle = tokio::spawn(async move {
+            tonic::transport::Server::builder()
+                .timeout(timeout)
+                .concurrency_limit_per_connection(max_conns)
+                .add_service(svc)
+                .serve_with_incoming_shutdown(incoming, async move {
+                    let _ = shutdown_rx.changed().await;
+                })
+                .await
+        });
+
+        Ok(ServerHandle {
+            shutdown_tx,
+            join_handle,
+            addr: local_addr,
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Legacy FlightServer — thin wrapper kept for backward compatibility
+// ---------------------------------------------------------------------------
+
+/// Legacy server wrapper. Prefer [`IpcServer`] for new code.
+pub struct FlightServer {
+    config: ServerConfig,
+}
+
+impl FlightServer {
+    /// Create a new server with default configuration
+    pub fn new() -> Self {
+        Self::with_config(ServerConfig::default())
+    }
+
+    /// Create a new server with custom configuration
+    pub fn with_config(config: ServerConfig) -> Self {
+        Self { config }
+    }
+
+    /// Start the server (delegates to [`IpcServer`])
+    pub async fn serve(self) -> Result<(), Box<dyn std::error::Error>> {
+        let addr: SocketAddr = "127.0.0.1:50051".parse()?;
+        let ipc = IpcServer::new(self.config);
+        let handle = ipc.start(addr).await?;
+        // Block until the server exits
+        handle.shutdown().await?;
+        Ok(())
+    }
+}
+
+impl Default for FlightServer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Device classification helpers (internal, kept from original)
+// ---------------------------------------------------------------------------
 
 fn stecs_metadata_overlay(
     metadata: &device_support::VkbStecsInterfaceMetadata,
@@ -433,270 +559,24 @@ fn build_device_metadata(device_info: &flight_hid::HidDeviceInfo) -> HashMap<Str
     metadata
 }
 
-/// Mock profile manager for testing — always succeeds
-#[derive(Debug)]
-pub struct MockProfileManager;
-
-impl ProfileManager for MockProfileManager {
-    fn apply_profile(
-        &self,
-        _request: &ApplyProfileRequest,
-    ) -> Result<ApplyProfileResponse, Status> {
-        Ok(ApplyProfileResponse {
-            success: true,
-            error_message: String::new(),
-            validation_errors: vec![],
-            effective_profile_hash: "mock-hash".to_string(),
-            compile_time_ms: 10,
-        })
-    }
-}
-
-impl FlightServiceImpl {
-    /// Create a new service implementation
-    pub fn new(config: ServerConfig) -> Self {
-        let (health_sender, _) = broadcast::channel(1000);
-
-        Self {
-            config,
-            health_sender,
-            service_start_time: SystemTime::now(),
-            security_manager: Arc::new(tokio::sync::RwLock::new(SecurityManager::new())),
-            device_manager: Arc::new(HidDeviceManager::new()),
-            profile_manager: Arc::new(MockProfileManager),
-        }
-    }
-
-    /// Create with custom managers (for dependency injection)
-    pub fn with_managers(
-        config: ServerConfig,
-        device_manager: Arc<dyn DeviceManager>,
-        profile_manager: Arc<dyn ProfileManager>,
-    ) -> Self {
-        let (health_sender, _) = broadcast::channel(1000);
-
-        Self {
-            config,
-            health_sender,
-            service_start_time: SystemTime::now(),
-            security_manager: Arc::new(tokio::sync::RwLock::new(SecurityManager::new())),
-            device_manager,
-            profile_manager,
-        }
-    }
-
-    /// Create with custom security manager
-    pub fn with_security_manager(
-        config: ServerConfig,
-        security_manager: SecurityManager,
-        device_manager: Arc<dyn DeviceManager>,
-        profile_manager: Arc<dyn ProfileManager>,
-    ) -> Self {
-        let (health_sender, _) = broadcast::channel(1000);
-
-        Self {
-            config,
-            health_sender,
-            service_start_time: SystemTime::now(),
-            security_manager: Arc::new(tokio::sync::RwLock::new(security_manager)),
-            device_manager,
-            profile_manager,
-        }
-    }
-
-    /// Get a health event sender for publishing events
-    pub fn health_sender(&self) -> broadcast::Sender<HealthEvent> {
-        self.health_sender.clone()
-    }
-}
-
-#[tonic::async_trait]
-impl FlightService for FlightServiceImpl {
-    async fn negotiate_features(
-        &self,
-        request: tonic::Request<NegotiateFeaturesRequest>,
-    ) -> Result<tonic::Response<NegotiateFeaturesResponse>, tonic::Status> {
-        let request = request.into_inner();
-
-        debug!(
-            "Feature negotiation request from client version: {}",
-            request.client_version
-        );
-
-        let response = negotiate_features(&request, &self.config.enabled_features)
-            .map_err(|e| Status::invalid_argument(format!("Negotiation failed: {}", e)))?;
-
-        if response.success {
-            info!(
-                "Feature negotiation successful with client {}. Enabled features: {:?}",
-                request.client_version, response.enabled_features
-            );
-        } else {
-            warn!(
-                "Feature negotiation failed with client {}: {}",
-                request.client_version, response.error_message
-            );
-        }
-
-        Ok(tonic::Response::new(response))
-    }
-
-    async fn list_devices(
-        &self,
-        request: Request<ListDevicesRequest>,
-    ) -> Result<Response<ListDevicesResponse>, Status> {
-        let request = request.into_inner();
-
-        debug!("List devices request: {:?}", request);
-
-        let response = self.device_manager.list_devices(&request)?;
-
-        Ok(Response::new(response))
-    }
-
-    type HealthSubscribeStream = std::pin::Pin<
-        Box<dyn futures_core::Stream<Item = Result<HealthEvent, tonic::Status>> + Send>,
-    >;
-
-    async fn health_subscribe(
-        &self,
-        request: tonic::Request<HealthSubscribeRequest>,
-    ) -> Result<tonic::Response<Self::HealthSubscribeStream>, tonic::Status> {
-        let request = request.into_inner();
-
-        debug!("Health subscribe request: {:?}", request);
-
-        let (tx, rx) = tokio::sync::mpsc::channel(100);
-        let mut receiver = self.health_sender.subscribe();
-
-        // Spawn a task to forward broadcast messages to the stream
-        tokio::spawn(async move {
-            while let Ok(event) = receiver.recv().await {
-                if tx.send(Ok(event)).await.is_err() {
-                    break; // Client disconnected
-                }
-            }
-        });
-
-        let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
-        let boxed_stream: Self::HealthSubscribeStream = Box::pin(stream);
-
-        Ok(tonic::Response::new(boxed_stream))
-    }
-
-    async fn apply_profile(
-        &self,
-        request: Request<ApplyProfileRequest>,
-    ) -> Result<Response<ApplyProfileResponse>, Status> {
-        let request = request.into_inner();
-
-        debug!("Apply profile request");
-
-        let response = self.profile_manager.apply_profile(&request)?;
-
-        Ok(Response::new(response))
-    }
-
-    async fn get_service_info(
-        &self,
-        _request: Request<GetServiceInfoRequest>,
-    ) -> Result<Response<GetServiceInfoResponse>, Status> {
-        let uptime = self
-            .service_start_time
-            .elapsed()
-            .unwrap_or_default()
-            .as_secs() as i64;
-
-        let mut capabilities = HashMap::new();
-        for feature in &self.config.enabled_features {
-            capabilities.insert(feature.clone(), "enabled".to_string());
-        }
-
-        // Add security status to capabilities
-        let security_manager = self.security_manager.read().await;
-        let telemetry_config = security_manager.get_telemetry_config();
-        capabilities.insert(
-            "telemetry_enabled".to_string(),
-            telemetry_config.enabled.to_string(),
-        );
-        capabilities.insert("security_enforced".to_string(), "true".to_string());
-
-        let response = GetServiceInfoResponse {
-            version: self.config.server_version.clone(),
-            uptime_seconds: uptime,
-            status: ServiceStatus::Running.into(),
-            capabilities,
-        };
-
-        Ok(Response::new(response))
-    }
-}
-
-/// Flight Hub IPC server
-pub struct FlightServer {
-    service: FlightServiceImpl,
-    #[allow(dead_code)] // Stored for future use in serve() implementation
-    config: ServerConfig,
-}
-
-impl FlightServer {
-    /// Create a new server with default configuration
-    pub fn new() -> Self {
-        Self::with_config(ServerConfig::default())
-    }
-
-    /// Create a new server with custom configuration
-    pub fn with_config(config: ServerConfig) -> Self {
-        let service = FlightServiceImpl::new(config.clone());
-
-        Self { service, config }
-    }
-
-    /// Create with custom service implementation
-    pub fn with_service(service: FlightServiceImpl, config: ServerConfig) -> Self {
-        Self { service, config }
-    }
-
-    /// Start the server
-    pub async fn serve(self) -> Result<(), Box<dyn std::error::Error>> {
-        let addr: std::net::SocketAddr = "127.0.0.1:50051".parse()?; // For development
-
-        info!("Starting Flight Hub IPC server on {}", addr);
-
-        // For now, we'll use a simple HTTP server since we don't have full gRPC generation
-        // In a complete implementation, this would use the generated FlightServiceServer
-        info!("Flight Hub IPC server would start on {}", addr);
-
-        // Placeholder - in real implementation this would be:
-        // Server::builder()
-        //     .add_service(FlightServiceServer::new(self.service))
-        //     .serve(addr)
-        //     .await?;
-
-        Ok(())
-    }
-
-    /// Get a reference to the service for testing
-    pub fn service(&self) -> &FlightServiceImpl {
-        &self.service
-    }
-}
-
-impl Default for FlightServer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::proto::TransportType;
+    use crate::handlers::{FlightServiceHandler, MockServiceContext};
+    use crate::proto::flight_service_server::FlightService as GrpcFlightService;
+    use crate::proto::{
+        GetServiceInfoRequest, NegotiateFeaturesRequest, ServiceStatus, TransportType,
+    };
+    use tonic::Request;
 
     #[tokio::test]
     async fn test_feature_negotiation() {
-        let server = FlightServer::new();
-        let service = server.service();
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
 
         let request = Request::new(NegotiateFeaturesRequest {
             client_version: "1.0.0".to_string(),
@@ -704,7 +584,7 @@ mod tests {
             preferred_transport: TransportType::NamedPipes.into(),
         });
 
-        let response = service.negotiate_features(request).await.unwrap();
+        let response = handler.negotiate_features(request).await.unwrap();
         let response = response.into_inner();
 
         assert!(response.success);
@@ -717,16 +597,26 @@ mod tests {
 
     #[tokio::test]
     async fn test_service_info() {
-        let server = FlightServer::new();
-        let service = server.service();
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
 
         let request = Request::new(GetServiceInfoRequest {});
 
-        let response = service.get_service_info(request).await.unwrap();
+        let response = handler.get_service_info(request).await.unwrap();
         let response = response.into_inner();
 
         assert_eq!(response.version, crate::PROTOCOL_VERSION);
         assert_eq!(response.status(), ServiceStatus::Running);
+    }
+
+    #[tokio::test]
+    async fn test_ipc_server_start_and_shutdown() {
+        let config = ServerConfig::default();
+        let server = IpcServer::new_mock(config);
+        let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
+        let handle = server.start(addr).await.unwrap();
+        assert_ne!(handle.addr().port(), 0);
+        handle.shutdown().await.unwrap();
     }
 
     #[test]

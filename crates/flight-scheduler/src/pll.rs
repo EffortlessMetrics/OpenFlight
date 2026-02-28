@@ -202,6 +202,21 @@ impl PhaseLockLoop {
         self.corrected_period_ns
     }
 
+    /// Tick the PLL and return a [`PllTickResult`] with full diagnostics.
+    ///
+    /// Convenience wrapper around [`tick`](Self::tick) that bundles the
+    /// corrected period, input phase error, and net correction into a single
+    /// struct.
+    #[inline]
+    pub fn tick_with_result(&mut self, phase_error_ns: f64) -> PllTickResult {
+        let corrected = self.tick(phase_error_ns);
+        PllTickResult {
+            corrected_period_ns: corrected,
+            phase_error_ns,
+            correction_ns: self.nominal_period_ns - corrected,
+        }
+    }
+
     /// Current phase error in nanoseconds (from the most recent [`tick`](Self::tick)).
     pub fn phase_error(&self) -> f64 {
         self.current_error_ns
@@ -284,6 +299,135 @@ impl PhaseLockLoop {
                 self.lock_counter = 0;
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PllTickResult
+// ---------------------------------------------------------------------------
+
+/// Result of a single PLL tick, carrying the corrected period and
+/// diagnostics.
+///
+/// Returned by [`PhaseLockLoop::tick_with_result`].
+#[derive(Debug, Clone, Copy)]
+pub struct PllTickResult {
+    /// Corrected period for scheduling the next tick (nanoseconds).
+    pub corrected_period_ns: f64,
+    /// Phase error that was fed into this tick (nanoseconds; positive = late).
+    pub phase_error_ns: f64,
+    /// Net correction: `nominal − corrected` (positive means period was
+    /// shortened to catch up).
+    pub correction_ns: f64,
+}
+
+// ---------------------------------------------------------------------------
+// JitterStats — zero-allocation running statistics (ADR-004)
+// ---------------------------------------------------------------------------
+
+/// Zero-allocation running jitter statistics.
+///
+/// Accumulates min, max, sum, sum-of-squares, and count using only
+/// stack-allocated scalars. All methods are **O(1)** and suitable for the
+/// RT hot path per ADR-004.
+///
+/// [`p99_estimate`](Self::p99_estimate) uses the normal-approximation
+/// formula `mean + 2.326 × σ`. For exact histogram-based percentiles see
+/// [`crate::timer::TimerStats`].
+#[derive(Debug, Clone, Copy)]
+pub struct JitterStats {
+    min_ns: i64,
+    max_ns: i64,
+    sum_ns: i64,
+    sum_squares_ns: u128,
+    count: u64,
+}
+
+impl JitterStats {
+    /// Create empty statistics.
+    pub const fn new() -> Self {
+        Self {
+            min_ns: i64::MAX,
+            max_ns: i64::MIN,
+            sum_ns: 0,
+            sum_squares_ns: 0,
+            count: 0,
+        }
+    }
+
+    /// Record a single jitter sample (**hot path — zero allocation**).
+    #[inline]
+    pub fn record(&mut self, jitter_ns: i64) {
+        self.count += 1;
+        self.sum_ns += jitter_ns;
+        let abs = jitter_ns.unsigned_abs() as u128;
+        self.sum_squares_ns = self.sum_squares_ns.wrapping_add(abs * abs);
+        if jitter_ns < self.min_ns {
+            self.min_ns = jitter_ns;
+        }
+        if jitter_ns > self.max_ns {
+            self.max_ns = jitter_ns;
+        }
+    }
+
+    /// Mean jitter in nanoseconds (signed).
+    pub fn mean(&self) -> f64 {
+        if self.count == 0 {
+            return 0.0;
+        }
+        self.sum_ns as f64 / self.count as f64
+    }
+
+    /// Population standard deviation in nanoseconds.
+    pub fn stddev(&self) -> f64 {
+        if self.count < 2 {
+            return 0.0;
+        }
+        let mean = self.mean();
+        let mean_of_squares = self.sum_squares_ns as f64 / self.count as f64;
+        let variance = mean_of_squares - mean * mean;
+        // Guard against negative variance from floating-point rounding.
+        if variance < 0.0 {
+            return 0.0;
+        }
+        variance.sqrt()
+    }
+
+    /// Approximate p99 using the normal-distribution formula
+    /// `mean + 2.326 × σ`.
+    pub fn p99_estimate(&self) -> f64 {
+        self.mean() + 2.326 * self.stddev()
+    }
+
+    /// Minimum jitter observed (nanoseconds). Returns 0 if empty.
+    pub fn min_ns(&self) -> i64 {
+        if self.count == 0 { 0 } else { self.min_ns }
+    }
+
+    /// Maximum jitter observed (nanoseconds). Returns 0 if empty.
+    pub fn max_ns(&self) -> i64 {
+        if self.count == 0 { 0 } else { self.max_ns }
+    }
+
+    /// Number of samples recorded.
+    pub fn count(&self) -> u64 {
+        self.count
+    }
+
+    /// Running sum of jitter values (nanoseconds, signed).
+    pub fn sum_ns(&self) -> i64 {
+        self.sum_ns
+    }
+
+    /// Reset all statistics to initial state.
+    pub fn reset(&mut self) {
+        *self = Self::new();
+    }
+}
+
+impl Default for JitterStats {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -556,5 +700,152 @@ mod tests {
             pll.tick(0.0);
             assert_eq!(pll.tick_count(), i);
         }
+    }
+
+    // -- PllTickResult tests --------------------------------------------
+
+    #[test]
+    fn pll_tick_with_result_returns_diagnostics() {
+        let nominal = 4_000_000.0;
+        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal);
+        let result = pll.tick_with_result(1_000.0);
+        assert!(result.corrected_period_ns < nominal);
+        assert!((result.phase_error_ns - 1_000.0).abs() < f64::EPSILON);
+        assert!(
+            result.correction_ns > 0.0,
+            "positive error should produce positive correction"
+        );
+    }
+
+    #[test]
+    fn pll_tick_with_result_negative_error() {
+        let nominal = 4_000_000.0;
+        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal);
+        let result = pll.tick_with_result(-1_000.0);
+        assert!(result.corrected_period_ns > nominal);
+        assert!(
+            result.correction_ns < 0.0,
+            "negative error should produce negative correction"
+        );
+    }
+
+    #[test]
+    fn pll_tick_with_result_zero_error() {
+        let nominal = 4_000_000.0;
+        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal);
+        let result = pll.tick_with_result(0.0);
+        assert!((result.corrected_period_ns - nominal).abs() < 1e-6);
+        assert!(result.correction_ns.abs() < 1e-6);
+    }
+
+    #[test]
+    fn pll_tick_with_result_convergence() {
+        let nominal = 4_000_000.0;
+        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal);
+        let mut error = 100_000.0; // 100µs initial error
+
+        for _ in 0..500 {
+            let result = pll.tick_with_result(error);
+            error -= result.correction_ns;
+        }
+
+        assert!(
+            error.abs() < 10_000.0,
+            "PLL should converge via tick_with_result: residual {error} ns"
+        );
+    }
+
+    // -- JitterStats tests ----------------------------------------------
+
+    #[test]
+    fn jitter_stats_empty_returns_zeros() {
+        let stats = JitterStats::new();
+        assert_eq!(stats.count(), 0);
+        assert_eq!(stats.min_ns(), 0);
+        assert_eq!(stats.max_ns(), 0);
+        assert!((stats.mean() - 0.0).abs() < f64::EPSILON);
+        assert!((stats.stddev() - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn jitter_stats_single_value() {
+        let mut stats = JitterStats::new();
+        stats.record(5_000);
+        assert_eq!(stats.count(), 1);
+        assert_eq!(stats.min_ns(), 5_000);
+        assert_eq!(stats.max_ns(), 5_000);
+        assert!((stats.mean() - 5_000.0).abs() < f64::EPSILON);
+        assert!((stats.stddev() - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn jitter_stats_known_sequence() {
+        let mut stats = JitterStats::new();
+        stats.record(100);
+        stats.record(200);
+        stats.record(300);
+        assert_eq!(stats.count(), 3);
+        assert_eq!(stats.min_ns(), 100);
+        assert_eq!(stats.max_ns(), 300);
+        assert!((stats.mean() - 200.0).abs() < 1e-6);
+        assert_eq!(stats.sum_ns(), 600);
+    }
+
+    #[test]
+    fn jitter_stats_negative_values() {
+        let mut stats = JitterStats::new();
+        stats.record(-300);
+        stats.record(500);
+        stats.record(-100);
+        assert_eq!(stats.min_ns(), -300);
+        assert_eq!(stats.max_ns(), 500);
+        let mean = stats.mean();
+        // mean = (-300 + 500 + -100) / 3 = 100/3 ≈ 33.33
+        assert!((mean - 100.0 / 3.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn jitter_stats_stddev_known_data() {
+        let mut stats = JitterStats::new();
+        // Values: 2, 4, 4, 4, 5, 5, 7, 9
+        // Mean = 40/8 = 5.0
+        // Variance = sum((x-5)²)/8 = (9+1+1+1+0+0+4+16)/8 = 32/8 = 4.0
+        // stddev = 2.0
+        for &v in &[2i64, 4, 4, 4, 5, 5, 7, 9] {
+            stats.record(v);
+        }
+        assert!((stats.mean() - 5.0).abs() < 1e-6);
+        assert!(
+            (stats.stddev() - 2.0).abs() < 1e-6,
+            "stddev should be 2.0, got {}",
+            stats.stddev()
+        );
+    }
+
+    #[test]
+    fn jitter_stats_p99_estimate() {
+        let mut stats = JitterStats::new();
+        // Generate 1000 samples centered at 0 with known range
+        for i in 0..1000i64 {
+            stats.record(i - 500); // range [-500, 499]
+        }
+        let p99 = stats.p99_estimate();
+        // p99 should be greater than mean and within reasonable bounds
+        assert!(p99 > stats.mean());
+        assert!(p99 < 1000.0, "p99 should be bounded, got {p99}");
+    }
+
+    #[test]
+    fn jitter_stats_reset_clears_all() {
+        let mut stats = JitterStats::new();
+        for i in 0..100 {
+            stats.record(i * 1000);
+        }
+        assert!(stats.count() > 0);
+        stats.reset();
+        assert_eq!(stats.count(), 0);
+        assert_eq!(stats.min_ns(), 0);
+        assert_eq!(stats.max_ns(), 0);
+        assert!((stats.mean() - 0.0).abs() < f64::EPSILON);
     }
 }
