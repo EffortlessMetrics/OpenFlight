@@ -5,7 +5,7 @@
 //!
 //! # Device identifier
 //!
-//! VID 0x068E (CH Products), PID 0x00F2 (estimated).
+//! VID 0x068E (CH Products), PID 0x00F1 (from Linux kernel hid-ids.h).
 //!
 //! # Report format (minimum 9 bytes)
 //!
@@ -23,8 +23,8 @@
 
 use crate::ChError;
 
-/// PID for the CH Products Pro Throttle (estimated).
-pub const PRO_THROTTLE_PID: u16 = 0x00F2;
+/// PID for the CH Products Pro Throttle (confirmed from Linux kernel hid-ids.h).
+pub const PRO_THROTTLE_PID: u16 = 0x00F1;
 
 /// Minimum byte count for a Pro Throttle HID report.
 pub const PRO_THROTTLE_MIN_REPORT_BYTES: usize = 9;

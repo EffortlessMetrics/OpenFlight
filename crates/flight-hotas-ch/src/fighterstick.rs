@@ -5,7 +5,7 @@
 //!
 //! # Device identifier
 //!
-//! VID 0x068E (CH Products), PID 0x00F0 (estimated).
+//! VID 0x068E (CH Products), PID 0x00F3 (from Linux kernel hid-ids.h).
 //!
 //! # Report format (minimum 9 bytes)
 //!
@@ -26,8 +26,8 @@ use crate::ChError;
 /// VID for all CH Products devices.
 pub const CH_VID: u16 = 0x068E;
 
-/// PID for the CH Products Fighterstick (estimated).
-pub const FIGHTERSTICK_PID: u16 = 0x00F0;
+/// PID for the CH Products Fighterstick (confirmed from Linux kernel hid-ids.h).
+pub const FIGHTERSTICK_PID: u16 = 0x00F3;
 
 /// Minimum byte count for a Fighterstick HID report.
 pub const FIGHTERSTICK_MIN_REPORT_BYTES: usize = 9;

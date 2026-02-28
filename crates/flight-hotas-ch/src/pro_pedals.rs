@@ -5,7 +5,7 @@
 //!
 //! # Device identifier
 //!
-//! VID 0x068E (CH Products), PID 0x00F3 (estimated).
+//! VID 0x068E (CH Products), PID 0x00F2 (from Linux kernel hid-ids.h).
 //!
 //! # Report format (minimum 7 bytes)
 //!
@@ -18,8 +18,8 @@
 
 use crate::ChError;
 
-/// PID for the CH Products Pro Pedals (estimated).
-pub const PRO_PEDALS_PID: u16 = 0x00F3;
+/// PID for the CH Products Pro Pedals (confirmed from Linux kernel hid-ids.h).
+pub const PRO_PEDALS_PID: u16 = 0x00F2;
 
 /// Minimum byte count for a Pro Pedals HID report.
 pub const PRO_PEDALS_MIN_REPORT_BYTES: usize = 7;

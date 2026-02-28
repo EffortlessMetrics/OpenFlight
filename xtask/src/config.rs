@@ -5,12 +5,21 @@
 //! This module defines the single source of truth for which crates are included
 //! in fast checks. It does not need to include every workspace member.
 
-/// Core crates that are checked during fast validation (`cargo xtask check`).
+/// Core crates that must pass strict clippy (`cargo clippy -p <crate> -- -D warnings`).
 ///
-/// These crates represent the critical path for the Flight Hub project and are
-/// validated on every local check to ensure rapid feedback. The list is intentionally
-/// limited to keep check times under 30 seconds.
+/// These 8 crates represent the critical path for the Flight Hub project and are
+/// validated on every local check to ensure rapid feedback. This list must stay
+/// in sync with the CI strict-clippy step in `.github/workflows/ci.yml`.
 ///
 /// This is the single source of truth for which crates are included in fast checks.
 /// It does not need to include every workspace member.
-pub const CORE_CRATES: &[&str] = &["flight-core", "flight-virtual", "flight-hid", "flight-ipc"];
+pub const CORE_CRATES: &[&str] = &[
+    "flight-core",
+    "flight-axis",
+    "flight-bus",
+    "flight-hid",
+    "flight-ipc",
+    "flight-service",
+    "flight-simconnect",
+    "flight-panels",
+];

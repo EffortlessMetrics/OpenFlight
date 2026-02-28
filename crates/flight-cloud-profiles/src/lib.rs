@@ -39,6 +39,9 @@ pub mod cache;
 pub mod client;
 pub mod models;
 pub mod sanitize;
+pub mod storage;
+pub mod sync;
+pub mod versioning;
 
 pub use cache::ProfileCache;
 pub use client::{ClientConfig, CloudProfileClient};
@@ -48,6 +51,12 @@ pub use models::{
     VoteResult,
 };
 pub use sanitize::sanitize_for_upload;
+pub use storage::{CloudBackend, FileSystemBackend, MockCloudBackend, ProfileMetadata};
+pub use sync::{
+    ConflictResolution, ConflictStrategy, ProfileAction, ProfileSyncState, SyncConflict,
+    SyncEngine, SyncPlan,
+};
+pub use versioning::{ProfileVersion, VersionDiff, VersionHistory, compute_version_hash};
 
 /// Default community profile repository API base URL.
 pub const DEFAULT_API_BASE_URL: &str = "https://profiles.flighthub.io/api/v1";
