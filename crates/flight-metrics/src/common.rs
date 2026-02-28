@@ -56,6 +56,30 @@ pub const RT_MISSED_DEADLINES_TOTAL: &str = "rt.missed_deadlines_total";
 /// Tick interval jitter in microseconds (histogram)
 pub const RT_JITTER_US: &str = "rt.jitter_us";
 
+// ── Axis processing (`axis.*`) ────────────────────────────────────────────
+
+/// Axis processing latency per tick in microseconds (histogram)
+pub const AXIS_PROCESSING_LATENCY_US: &str = "axis.processing_latency_us";
+
+// ── Bus events (`bus.*`) ──────────────────────────────────────────────────
+
+/// Bus events dispatched per second (gauge)
+pub const BUS_EVENTS_PER_SECOND: &str = "bus.events_per_second";
+/// Total bus events dispatched (counter)
+pub const BUS_EVENTS_TOTAL: &str = "bus.events_total";
+
+// ── Device inventory (`devices.*`) ────────────────────────────────────────
+
+/// Number of currently connected devices (gauge)
+pub const DEVICES_CONNECTED_COUNT: &str = "devices.connected_count";
+
+// ── Watchdog (`watchdog.*`) ───────────────────────────────────────────────
+
+/// Dead-man's switch triggers (counter)
+pub const WATCHDOG_DMS_TRIGGERS_TOTAL: &str = "watchdog.dms_triggers_total";
+/// Hardware watchdog timeouts (counter)
+pub const WATCHDOG_HW_TIMEOUTS_TOTAL: &str = "watchdog.hw_timeouts_total";
+
 /// Metric names for device operations grouped by layer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DeviceMetricNames {

@@ -12,6 +12,9 @@ pub mod registry;
 pub mod types;
 
 pub use collector::MetricsCollector;
-pub use dashboard::{DashboardSnapshot, FfbMetrics, MetricsDashboard, RtMetrics, SimMetrics};
+pub use dashboard::{
+    AxisMetrics, BusMetrics, DashboardSnapshot, DeviceMetrics, FfbMetrics, MetricsDashboard,
+    RtMetrics, SimMetrics, WatchdogMetrics,
+};
 pub use registry::MetricsRegistry;
 pub use types::{HistogramSummary, Metric};
