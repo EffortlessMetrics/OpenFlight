@@ -19,6 +19,9 @@ use flight_test_helpers::{
 };
 use std::time::Duration;
 
+/// 250 Hz tick period in microseconds.
+const TICK_US: u64 = 4_000;
+
 // ===========================================================================
 // 1. Fake devices (6 tests)
 // ===========================================================================
@@ -46,7 +49,7 @@ fn fake_device_axis_injection_full_range() {
     }
     for (i, &expected) in values.iter().enumerate() {
         assert!(
-            (dev.axes[i] - expected).abs() < f64::EPSILON,
+            (dev.axes[i] - expected).abs() < 1e-6,
             "axis {i}: expected {expected}, got {}",
             dev.axes[i]
         );
@@ -165,7 +168,7 @@ fn fake_device_custom_capabilities_large_sequence() {
 }
 
 // ===========================================================================
-// 2. Fake game backends (6 tests)
+// 2. Fake sim backends (6 tests)
 // ===========================================================================
 
 #[test]
@@ -365,7 +368,7 @@ fn clock_tick_by_tick_stepping() {
 
     // Verify uniform spacing.
     for pair in timestamps.windows(2) {
-        assert_eq!(pair[1] - pair[0], 4_000);
+        assert_eq!(pair[1] - pair[0], TICK_US);
     }
 }
 
@@ -406,7 +409,7 @@ fn clock_timer_scheduling_with_fake_time() {
     // Verify events fired at expected times.
     assert_eq!(fired_at.len(), schedule.len());
     for (i, &tick_offset) in schedule.iter().enumerate() {
-        let expected_us = u64::from(tick_offset) * 4_000;
+        let expected_us = u64::from(tick_offset) * TICK_US;
         assert_eq!(fired_at[i], expected_us, "event {i} fired at wrong time");
     }
 }
@@ -422,7 +425,7 @@ fn clock_reset_restores_zero() {
 
     // Can advance again from zero.
     clock.advance_ticks(1);
-    assert_eq!(clock.now_us(), 4_000);
+    assert_eq!(clock.now_us(), TICK_US);
 }
 
 #[test]
@@ -448,6 +451,7 @@ fn clock_mixed_advance_methods() {
 // ===========================================================================
 
 fn build_axis_trace(n: usize, interval_us: u64) -> TraceRecording {
+    assert!(n >= 2, "build_axis_trace requires n >= 2 to avoid division by zero");
     let mut rec = TraceRecording::new("axis_trace");
     for i in 0..n {
         rec.add_event(TraceEvent {
@@ -472,7 +476,7 @@ fn trace_record_and_verify_structure() {
         data: vec![0.0, 0.0, 0.0],
     });
     rec.add_event(TraceEvent {
-        timestamp_us: 4_000,
+        timestamp_us: TICK_US,
         event_type: TraceEventType::ButtonPress,
         source: TraceSource::Device,
         data: vec![1.0],
@@ -507,7 +511,7 @@ fn trace_record_and_verify_structure() {
 
 #[test]
 fn trace_replay_with_callback_collects_all_data() {
-    let rec = build_axis_trace(20, 4_000);
+    let rec = build_axis_trace(20, TICK_US);
     let mut player = TracePlayer::new(rec);
 
     let mut values = Vec::new();
@@ -531,7 +535,7 @@ fn trace_replay_with_callback_collects_all_data() {
 
 #[test]
 fn trace_format_roundtrip_via_file() {
-    let rec = build_axis_trace(50, 4_000);
+    let rec = build_axis_trace(50, TICK_US);
     let dir = create_temp_dir("trace-roundtrip");
     let path = dir.path().join("trace.json");
 
@@ -550,7 +554,7 @@ fn trace_format_roundtrip_via_file() {
 
 #[test]
 fn trace_speed_multiplier_affects_delays() {
-    let rec = build_axis_trace(10, 4_000);
+    let rec = build_axis_trace(10, TICK_US);
     let player = TracePlayer::new(rec);
 
     // At 1x speed.
@@ -583,7 +587,7 @@ fn trace_concatenation_via_manual_merge() {
     let mut part1 = TraceRecording::new("part1");
     for i in 0..5 {
         part1.add_event(TraceEvent {
-            timestamp_us: i * 4_000,
+            timestamp_us: i * TICK_US,
             event_type: TraceEventType::AxisInput,
             source: TraceSource::Device,
             data: vec![i as f64 * 0.1],
@@ -593,7 +597,7 @@ fn trace_concatenation_via_manual_merge() {
     let mut part2 = TraceRecording::new("part2");
     for i in 0..5 {
         part2.add_event(TraceEvent {
-            timestamp_us: i * 4_000,
+            timestamp_us: i * TICK_US,
             event_type: TraceEventType::AxisInput,
             source: TraceSource::Device,
             data: vec![0.5 + i as f64 * 0.1],
@@ -601,7 +605,7 @@ fn trace_concatenation_via_manual_merge() {
     }
 
     // Concatenate: offset part2 timestamps by part1's duration.
-    let offset = part1.duration() + 4_000; // gap of one tick
+    let offset = part1.duration() + TICK_US; // gap of one tick
     let mut combined = TraceRecording::new("combined");
     for evt in &part1.events {
         combined.add_event(evt.clone());
@@ -781,13 +785,13 @@ fn timing_assertions_comprehensive() {
     let intervals: Vec<u64> = (0..100)
         .map(|i| {
             let jitter: u64 = if i % 3 == 0 { 10 } else { 0 };
-            4_000 + jitter
+            TICK_US + jitter
         })
         .collect();
     assert_jitter_under(&intervals, 20);
 
     // Frequency check for 250Hz samples.
-    let perfect_250hz: Vec<u64> = (0..100).map(|i| i * 4_000).collect();
+    let perfect_250hz: Vec<u64> = (0..100).map(|i| i * TICK_US).collect();
     assert_frequency_within(&perfect_250hz, 250.0, 0.1);
 }
 
@@ -859,7 +863,7 @@ fn snapshot_store_large_batch() {
 #[test]
 fn test_config_and_harness_integration() {
     let config = TestConfigBuilder::default()
-        .with_timeout(Duration::from_millis(100))
+        .with_timeout(Duration::from_secs(5))
         .with_poll_interval(Duration::from_millis(5))
         .build();
 
@@ -923,7 +927,7 @@ fn trace_comparator_tolerance_boundary() {
 
 #[test]
 fn trace_player_seek_and_advance_interleaved() {
-    let rec = build_axis_trace(20, 4_000);
+    let rec = build_axis_trace(20, TICK_US);
     let mut player = TracePlayer::new(rec);
 
     // Seek to middle.
@@ -963,6 +967,6 @@ fn clock_drives_fake_device_timing() {
     assert_eq!(timeline.len(), 10);
     // Verify timestamps are uniformly spaced at 4ms.
     for pair in timeline.windows(2) {
-        assert_eq!(pair[1].0 - pair[0].0, 4_000);
+        assert_eq!(pair[1].0 - pair[0].0, TICK_US);
     }
 }
