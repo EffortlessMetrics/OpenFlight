@@ -101,10 +101,7 @@ impl ViolationTracker {
         let cutoff = now - self.window;
         self.buf
             .iter()
-            .filter(|slot| {
-                slot.as_ref()
-                    .is_some_and(|v| v.timestamp >= cutoff)
-            })
+            .filter(|slot| slot.as_ref().is_some_and(|v| v.timestamp >= cutoff))
             .count()
     }
 
@@ -175,7 +172,10 @@ impl ForceRateLimiter {
     ///
     /// `max_rate` must be positive and finite.
     pub fn new(max_rate: f32) -> Self {
-        assert!(max_rate > 0.0 && max_rate.is_finite(), "max_rate must be positive and finite");
+        assert!(
+            max_rate > 0.0 && max_rate.is_finite(),
+            "max_rate must be positive and finite"
+        );
         Self {
             max_rate,
             axes: [RateLimiterAxisState {
@@ -192,6 +192,14 @@ impl ForceRateLimiter {
         let idx = axis_id as usize;
         if idx >= MAX_AXES {
             return desired;
+        }
+
+        // Defensive: reject bad timing inputs — hold last known good value
+        if !dt_s.is_finite() || dt_s <= 0.0 {
+            return self.axes[idx].last_force;
+        }
+        if !desired.is_finite() {
+            return self.axes[idx].last_force;
         }
 
         let state = &mut self.axes[idx];
@@ -257,8 +265,6 @@ pub struct WatchdogTimer {
     state: WatchdogState,
     /// Timestamp when ramp-down started (only valid in `RampingDown`).
     ramp_start: Instant,
-    /// Force level when ramp-down was initiated.
-    force_at_ramp_start: f32,
 }
 
 impl WatchdogTimer {
@@ -271,7 +277,6 @@ impl WatchdogTimer {
             last_command: now,
             state: WatchdogState::Active,
             ramp_start: now,
-            force_at_ramp_start: 0.0,
         }
     }
 
@@ -286,7 +291,7 @@ impl WatchdogTimer {
     /// Call this every tick. When the watchdog is active the multiplier is 1.0.
     /// During ramp-down it decreases linearly to 0.0. After the ramp it stays
     /// at 0.0 until [`feed`](Self::feed) is called.
-    pub fn evaluate(&mut self, current_force: f32) -> f32 {
+    pub fn evaluate(&mut self, _current_force: f32) -> f32 {
         let now = Instant::now();
 
         match self.state {
@@ -295,7 +300,6 @@ impl WatchdogTimer {
                     // Deadline missed — begin ramp-down.
                     self.state = WatchdogState::RampingDown;
                     self.ramp_start = now;
-                    self.force_at_ramp_start = current_force;
                     // First tick of ramp — still at 1.0 (ramp has just started).
                     1.0
                 } else {
@@ -308,8 +312,13 @@ impl WatchdogTimer {
                     self.state = WatchdogState::Stopped;
                     0.0
                 } else {
-                    let progress =
-                        elapsed.as_secs_f32() / self.ramp_duration.as_secs_f32();
+                    let ramp_secs = self.ramp_duration.as_secs_f32();
+                    // Defensive: zero ramp duration → instant cutoff
+                    if ramp_secs <= 0.0 {
+                        self.state = WatchdogState::Stopped;
+                        return 0.0;
+                    }
+                    let progress = elapsed.as_secs_f32() / ramp_secs;
                     1.0 - progress
                 }
             }
@@ -360,10 +369,7 @@ impl SafetyReport {
         // Rate limiter is considered "active" if any axis has been initialised
         // (meaning it could be clamping). For a more precise check the caller
         // should compare desired vs actual output, but this gives a quick flag.
-        let rate_limiting_active = rate_limiter
-            .axes
-            .iter()
-            .any(|s| s.initialised);
+        let rate_limiting_active = rate_limiter.axes.iter().any(|s| s.initialised);
 
         Self {
             violation_count: tracker.total_count(),
@@ -385,7 +391,12 @@ mod tests {
 
     // ── helpers ──────────────────────────────────────────────────────────
 
-    fn make_violation(axis_id: u8, requested: f32, limit: f32, vtype: ViolationType) -> EnvelopeViolation {
+    fn make_violation(
+        axis_id: u8,
+        requested: f32,
+        limit: f32,
+        vtype: ViolationType,
+    ) -> EnvelopeViolation {
         EnvelopeViolation {
             axis_id,
             requested_force: requested,
@@ -395,7 +406,13 @@ mod tests {
         }
     }
 
-    fn make_violation_at(axis_id: u8, requested: f32, limit: f32, vtype: ViolationType, ts: Instant) -> EnvelopeViolation {
+    fn make_violation_at(
+        axis_id: u8,
+        requested: f32,
+        limit: f32,
+        vtype: ViolationType,
+        ts: Instant,
+    ) -> EnvelopeViolation {
         EnvelopeViolation {
             axis_id,
             requested_force: requested,
@@ -462,7 +479,13 @@ mod tests {
 
         // Record a violation in the past
         let old_ts = Instant::now() - Duration::from_millis(100);
-        tracker.record(make_violation_at(0, 12.0, 10.0, ViolationType::Magnitude, old_ts));
+        tracker.record(make_violation_at(
+            0,
+            12.0,
+            10.0,
+            ViolationType::Magnitude,
+            old_ts,
+        ));
 
         // Record a fresh one
         tracker.record(make_violation(0, 11.0, 10.0, ViolationType::Magnitude));
@@ -479,7 +502,12 @@ mod tests {
         let mut tracker = ViolationTracker::new(Duration::from_secs(60));
         // Fill more than MAX_VIOLATIONS
         for i in 0..(MAX_VIOLATIONS + 10) {
-            tracker.record(make_violation(0, 12.0 + i as f32, 10.0, ViolationType::Magnitude));
+            tracker.record(make_violation(
+                0,
+                12.0 + i as f32,
+                10.0,
+                ViolationType::Magnitude,
+            ));
         }
         assert_eq!(tracker.total_count(), (MAX_VIOLATIONS + 10) as u64);
         // Buffer should still function; recent_count is capped at MAX_VIOLATIONS
@@ -534,10 +562,7 @@ mod tests {
         let output = limiter.limit(0, 10.0, dt);
 
         // max_delta = 50 * 0.004 = 0.2
-        assert!(
-            (output - 0.2).abs() < 0.001,
-            "expected 0.2, got {output}"
-        );
+        assert!((output - 0.2).abs() < 0.001, "expected 0.2, got {output}");
     }
 
     #[test]
@@ -549,10 +574,7 @@ mod tests {
         let output = limiter.limit(0, 0.5, dt);
 
         // max_delta = 1000 * 0.004 = 4.0 — so 0.5 delta is fine
-        assert!(
-            (output - 0.5).abs() < 0.001,
-            "expected 0.5, got {output}"
-        );
+        assert!((output - 0.5).abs() < 0.001, "expected 0.5, got {output}");
     }
 
     #[test]
@@ -567,9 +589,15 @@ mod tests {
         let out1 = limiter.limit(1, 10.0, dt); // limited from 5
 
         // Axis 0: max delta = 0.2, output = 0.2
-        assert!((out0 - 0.2).abs() < 0.001, "axis 0: expected 0.2, got {out0}");
+        assert!(
+            (out0 - 0.2).abs() < 0.001,
+            "axis 0: expected 0.2, got {out0}"
+        );
         // Axis 1: max delta = 0.2, output = 5.2
-        assert!((out1 - 5.2).abs() < 0.001, "axis 1: expected 5.2, got {out1}");
+        assert!(
+            (out1 - 5.2).abs() < 0.001,
+            "axis 1: expected 5.2, got {out1}"
+        );
     }
 
     #[test]
@@ -590,10 +618,7 @@ mod tests {
 
     #[test]
     fn watchdog_active_when_fed() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(100),
-            Duration::from_millis(50),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(100), Duration::from_millis(50));
         wd.feed();
         let mult = wd.evaluate(1.0);
         assert!((mult - 1.0).abs() < 0.001);
@@ -602,10 +627,7 @@ mod tests {
 
     #[test]
     fn watchdog_triggers_on_timeout() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(10),
-            Duration::from_millis(50),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(10), Duration::from_millis(50));
         // Let the deadline pass
         std::thread::sleep(Duration::from_millis(20));
         let mult = wd.evaluate(1.0);
@@ -615,10 +637,7 @@ mod tests {
 
     #[test]
     fn watchdog_resets_on_feed() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(10),
-            Duration::from_millis(50),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(10), Duration::from_millis(50));
         std::thread::sleep(Duration::from_millis(20));
         let _ = wd.evaluate(1.0);
         assert!(wd.is_tripped());
@@ -643,16 +662,16 @@ mod tests {
         // Wait for ramp to finish
         std::thread::sleep(Duration::from_millis(30));
         let mult = wd.evaluate(1.0);
-        assert!((mult - 0.0).abs() < 0.001, "expected 0.0 after ramp, got {mult}");
+        assert!(
+            (mult - 0.0).abs() < 0.001,
+            "expected 0.0 after ramp, got {mult}"
+        );
         assert_eq!(wd.state(), WatchdogState::Stopped);
     }
 
     #[test]
     fn watchdog_stays_stopped_until_feed() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(1),
-            Duration::from_millis(1),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(1));
         std::thread::sleep(Duration::from_millis(10));
         let _ = wd.evaluate(1.0); // trigger
         std::thread::sleep(Duration::from_millis(10));
@@ -699,10 +718,7 @@ mod tests {
     fn safety_report_with_tripped_watchdog() {
         let tracker = ViolationTracker::new(Duration::from_secs(10));
         let limiter = ForceRateLimiter::new(50.0);
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(1),
-            Duration::from_millis(1),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(1));
 
         std::thread::sleep(Duration::from_millis(10));
         let _ = wd.evaluate(1.0);
@@ -714,5 +730,72 @@ mod tests {
 
         assert_eq!(report.violation_count, 0);
         assert_eq!(report.watchdog_state, WatchdogState::Stopped);
+    }
+
+    // =====================================================================
+    //  Edge-case safety tests (NaN / Inf / bad inputs)
+    // =====================================================================
+
+    #[test]
+    fn test_rate_limiter_nan_dt() {
+        let mut limiter = ForceRateLimiter::new(50.0);
+        let _ = limiter.limit(0, 5.0, 0.004); // initialise
+        let output = limiter.limit(0, 10.0, f32::NAN);
+        assert!(
+            (output - 5.0).abs() < 0.001,
+            "NaN dt_s should hold last output (5.0), got {output}"
+        );
+    }
+
+    #[test]
+    fn test_rate_limiter_negative_dt() {
+        let mut limiter = ForceRateLimiter::new(50.0);
+        let _ = limiter.limit(0, 5.0, 0.004);
+        let output = limiter.limit(0, 10.0, -0.004);
+        assert!(
+            (output - 5.0).abs() < 0.001,
+            "negative dt_s should hold last output (5.0), got {output}"
+        );
+    }
+
+    #[test]
+    fn test_rate_limiter_infinite_dt() {
+        let mut limiter = ForceRateLimiter::new(50.0);
+        let _ = limiter.limit(0, 5.0, 0.004);
+        let output = limiter.limit(0, 10.0, f32::INFINITY);
+        assert!(
+            (output - 5.0).abs() < 0.001,
+            "infinite dt_s should hold last output (5.0), got {output}"
+        );
+    }
+
+    #[test]
+    fn test_rate_limiter_nan_desired() {
+        let mut limiter = ForceRateLimiter::new(50.0);
+        let _ = limiter.limit(0, 5.0, 0.004);
+        let output = limiter.limit(0, f32::NAN, 0.004);
+        assert!(
+            (output - 5.0).abs() < 0.001,
+            "NaN desired should hold last output (5.0), got {output}"
+        );
+    }
+
+    #[test]
+    fn test_watchdog_zero_ramp() {
+        let mut wd = WatchdogTimer::new(
+            Duration::from_millis(1),
+            Duration::ZERO, // zero ramp → instant cutoff
+        );
+        std::thread::sleep(Duration::from_millis(5));
+        let mult = wd.evaluate(1.0);
+        // Should transition to ramping then immediately stop
+        assert!(wd.is_tripped(), "watchdog should trip");
+        // Next evaluate should return 0.0 (instant cutoff)
+        let mult = wd.evaluate(1.0);
+        assert!(
+            mult.abs() < 0.001,
+            "zero ramp duration should give 0.0, got {mult}"
+        );
+        assert_eq!(wd.state(), WatchdogState::Stopped);
     }
 }
