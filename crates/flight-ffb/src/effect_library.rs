@@ -36,7 +36,7 @@ pub trait SynthEffect {
     /// * `dt_s` — timestep in seconds
     ///
     /// Returns force in −1.0…+1.0 (clamped).
-    fn compute(&self, position: f64, velocity: f64, dt_s: f64) -> f64;
+    fn compute(&mut self, position: f64, velocity: f64, dt_s: f64) -> f64;
 }
 
 // ─── Waveform shape ──────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ impl ConstantForce {
 
 impl SynthEffect for ConstantForce {
     #[inline]
-    fn compute(&self, position: f64, velocity: f64, _dt_s: f64) -> f64 {
+    fn compute(&mut self, position: f64, velocity: f64, _dt_s: f64) -> f64 {
         let _ = (position, velocity);
         if !self.magnitude.is_finite() {
             return 0.0;
@@ -107,7 +107,14 @@ impl SpringForce {
 
 impl SynthEffect for SpringForce {
     #[inline]
-    fn compute(&self, position: f64, _velocity: f64, _dt_s: f64) -> f64 {
+    fn compute(&mut self, position: f64, _velocity: f64, _dt_s: f64) -> f64 {
+        if !self.center.is_finite()
+            || !self.gain.is_finite()
+            || !self.deadband.is_finite()
+            || !self.saturation.is_finite()
+        {
+            return 0.0;
+        }
         let pos = sanitize(position);
         let displacement = pos - self.center;
         let abs_disp = displacement.abs();
@@ -142,7 +149,10 @@ impl DamperForce {
 
 impl SynthEffect for DamperForce {
     #[inline]
-    fn compute(&self, _position: f64, velocity: f64, _dt_s: f64) -> f64 {
+    fn compute(&mut self, _position: f64, velocity: f64, _dt_s: f64) -> f64 {
+        if !self.gain.is_finite() || !self.saturation.is_finite() {
+            return 0.0;
+        }
         let vel = sanitize(velocity);
         let force = -self.gain * vel;
         force.clamp(-self.saturation, self.saturation)
@@ -171,7 +181,10 @@ impl FrictionForce {
 
 impl SynthEffect for FrictionForce {
     #[inline]
-    fn compute(&self, _position: f64, velocity: f64, _dt_s: f64) -> f64 {
+    fn compute(&mut self, _position: f64, velocity: f64, _dt_s: f64) -> f64 {
+        if !self.coefficient.is_finite() || !self.saturation.is_finite() {
+            return 0.0;
+        }
         let vel = sanitize(velocity);
         if vel.abs() < 1e-9 {
             return 0.0;
@@ -226,14 +239,19 @@ impl PeriodicForce {
 
 impl SynthEffect for PeriodicForce {
     #[inline]
-    fn compute(&self, _position: f64, _velocity: f64, dt_s: f64) -> f64 {
+    fn compute(&mut self, _position: f64, _velocity: f64, dt_s: f64) -> f64 {
+        if !self.frequency.is_finite()
+            || !self.amplitude.is_finite()
+            || !self.phase.is_finite()
+            || !self.offset.is_finite()
+        {
+            return 0.0;
+        }
         let dt = sanitize(dt_s).max(0.0);
-        // Use accumulated_phase + dt contribution for this sample.
-        // NOTE: because SynthEffect::compute takes &self (not &mut self),
-        // the caller is responsible for advancing phase via PeriodicForce-specific
-        // methods when statefulness is needed. For stateless evaluation we compute
-        // phase from the accumulated value alone.
         let t = self.accumulated_phase + 2.0 * PI * self.frequency * dt + self.phase;
+
+        // Advance the phase accumulator so periodic effects evolve each tick.
+        self.advance(dt);
 
         let wave = match self.waveform {
             SynthWaveform::Sine => t.sin(),
@@ -263,9 +281,9 @@ impl SynthEffect for PeriodicForce {
     }
 }
 
-/// Advance the internal phase accumulator for stateful periodic evaluation.
+/// Advance the internal phase accumulator (manual override).
 ///
-/// Call this once per tick *after* `compute` to step the waveform forward.
+/// Normally `compute` auto-advances. Use this only for manual phase control.
 impl PeriodicForce {
     #[inline]
     pub fn advance(&mut self, dt_s: f64) {
@@ -290,37 +308,37 @@ mod tests {
 
     #[test]
     fn constant_positive() {
-        let e = ConstantForce::new(0.5);
+        let mut e = ConstantForce::new(0.5);
         assert!((e.compute(0.0, 0.0, 0.004) - 0.5).abs() < EPS);
     }
 
     #[test]
     fn constant_negative() {
-        let e = ConstantForce::new(-0.7);
+        let mut e = ConstantForce::new(-0.7);
         assert!((e.compute(0.0, 0.0, 0.004) - -0.7).abs() < EPS);
     }
 
     #[test]
     fn constant_clamps_high() {
-        let e = ConstantForce::new(2.0);
+        let mut e = ConstantForce::new(2.0);
         assert!((e.compute(0.0, 0.0, 0.004) - 1.0).abs() < EPS);
     }
 
     #[test]
     fn constant_clamps_low() {
-        let e = ConstantForce::new(-5.0);
+        let mut e = ConstantForce::new(-5.0);
         assert!((e.compute(0.0, 0.0, 0.004) - -1.0).abs() < EPS);
     }
 
     #[test]
     fn constant_nan_input() {
-        let e = ConstantForce::new(0.3);
+        let mut e = ConstantForce::new(0.3);
         assert!((e.compute(f64::NAN, f64::NAN, f64::NAN) - 0.3).abs() < EPS);
     }
 
     #[test]
     fn constant_inf_input() {
-        let e = ConstantForce::new(0.3);
+        let mut e = ConstantForce::new(0.3);
         assert!((e.compute(f64::INFINITY, f64::NEG_INFINITY, 0.0) - 0.3).abs() < EPS);
     }
 
@@ -328,13 +346,13 @@ mod tests {
 
     #[test]
     fn spring_at_center_zero() {
-        let e = SpringForce::new(0.0, 0.8, 0.0, 1.0);
+        let mut e = SpringForce::new(0.0, 0.8, 0.0, 1.0);
         assert!(e.compute(0.0, 0.0, 0.004).abs() < EPS);
     }
 
     #[test]
     fn spring_displaced_right() {
-        let e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
+        let mut e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
         let f = e.compute(0.5, 0.0, 0.004);
         assert!(f < 0.0, "should push left");
         assert!((f - -0.5).abs() < EPS);
@@ -342,7 +360,7 @@ mod tests {
 
     #[test]
     fn spring_displaced_left() {
-        let e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
+        let mut e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
         let f = e.compute(-0.5, 0.0, 0.004);
         assert!(f > 0.0, "should push right");
         assert!((f - 0.5).abs() < EPS);
@@ -350,28 +368,28 @@ mod tests {
 
     #[test]
     fn spring_deadband() {
-        let e = SpringForce::new(0.0, 1.0, 0.1, 1.0);
+        let mut e = SpringForce::new(0.0, 1.0, 0.1, 1.0);
         assert!(e.compute(0.05, 0.0, 0.004).abs() < EPS);
         assert!(e.compute(0.3, 0.0, 0.004) < 0.0);
     }
 
     #[test]
     fn spring_saturation() {
-        let e = SpringForce::new(0.0, 1.0, 0.0, 0.3);
+        let mut e = SpringForce::new(0.0, 1.0, 0.0, 0.3);
         let f = e.compute(1.0, 0.0, 0.004);
         assert!((f - -0.3).abs() < EPS);
     }
 
     #[test]
     fn spring_custom_center() {
-        let e = SpringForce::new(0.5, 1.0, 0.0, 1.0);
+        let mut e = SpringForce::new(0.5, 1.0, 0.0, 1.0);
         assert!(e.compute(0.5, 0.0, 0.004).abs() < EPS);
         assert!(e.compute(0.8, 0.0, 0.004) < 0.0);
     }
 
     #[test]
     fn spring_nan_position() {
-        let e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
+        let mut e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
         assert!(e.compute(f64::NAN, 0.0, 0.004).abs() < EPS);
     }
 
@@ -379,13 +397,13 @@ mod tests {
 
     #[test]
     fn damper_zero_velocity() {
-        let e = DamperForce::new(0.8, 1.0);
+        let mut e = DamperForce::new(0.8, 1.0);
         assert!(e.compute(0.0, 0.0, 0.004).abs() < EPS);
     }
 
     #[test]
     fn damper_positive_velocity() {
-        let e = DamperForce::new(1.0, 1.0);
+        let mut e = DamperForce::new(1.0, 1.0);
         let f = e.compute(0.0, 0.5, 0.004);
         assert!(f < 0.0, "should oppose motion");
         assert!((f - -0.5).abs() < EPS);
@@ -393,7 +411,7 @@ mod tests {
 
     #[test]
     fn damper_negative_velocity() {
-        let e = DamperForce::new(1.0, 1.0);
+        let mut e = DamperForce::new(1.0, 1.0);
         let f = e.compute(0.0, -0.5, 0.004);
         assert!(f > 0.0, "should oppose motion");
         assert!((f - 0.5).abs() < EPS);
@@ -401,14 +419,14 @@ mod tests {
 
     #[test]
     fn damper_saturation() {
-        let e = DamperForce::new(1.0, 0.4);
+        let mut e = DamperForce::new(1.0, 0.4);
         let f = e.compute(0.0, 1.0, 0.004);
         assert!((f - -0.4).abs() < EPS);
     }
 
     #[test]
     fn damper_nan_velocity() {
-        let e = DamperForce::new(1.0, 1.0);
+        let mut e = DamperForce::new(1.0, 1.0);
         assert!(e.compute(0.0, f64::NAN, 0.004).abs() < EPS);
     }
 
@@ -416,34 +434,34 @@ mod tests {
 
     #[test]
     fn friction_stationary() {
-        let e = FrictionForce::new(0.5, 1.0);
+        let mut e = FrictionForce::new(0.5, 1.0);
         assert!(e.compute(0.0, 0.0, 0.004).abs() < EPS);
     }
 
     #[test]
     fn friction_moving_positive() {
-        let e = FrictionForce::new(0.5, 1.0);
+        let mut e = FrictionForce::new(0.5, 1.0);
         let f = e.compute(0.0, 1.0, 0.004);
         assert!((f - -0.5).abs() < EPS);
     }
 
     #[test]
     fn friction_moving_negative() {
-        let e = FrictionForce::new(0.5, 1.0);
+        let mut e = FrictionForce::new(0.5, 1.0);
         let f = e.compute(0.0, -1.0, 0.004);
         assert!((f - 0.5).abs() < EPS);
     }
 
     #[test]
     fn friction_saturation() {
-        let e = FrictionForce::new(0.8, 0.3);
+        let mut e = FrictionForce::new(0.8, 0.3);
         let f = e.compute(0.0, 1.0, 0.004);
         assert!((f - -0.3).abs() < EPS);
     }
 
     #[test]
     fn friction_nan_velocity() {
-        let e = FrictionForce::new(0.5, 1.0);
+        let mut e = FrictionForce::new(0.5, 1.0);
         assert!(e.compute(0.0, f64::NAN, 0.004).abs() < EPS);
     }
 
@@ -451,14 +469,14 @@ mod tests {
 
     #[test]
     fn periodic_sine_zero_phase() {
-        let e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
         // At dt=0 with zero accumulated phase, sin(0)=0
         assert!(e.compute(0.0, 0.0, 0.0).abs() < EPS);
     }
 
     #[test]
     fn periodic_sine_quarter_cycle() {
-        let e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
         // dt = 0.25 → phase = π/2, sin(π/2)=1.0
         let f = e.compute(0.0, 0.0, 0.25);
         assert!((f - 1.0).abs() < 1e-6);
@@ -466,7 +484,7 @@ mod tests {
 
     #[test]
     fn periodic_square_positive() {
-        let e = PeriodicForce::new(SynthWaveform::Square, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Square, 1.0, 1.0, 0.0, 0.0);
         // dt = 0.1 → phase = 0.2π, sin(0.2π)>0 → +1
         let f = e.compute(0.0, 0.0, 0.1);
         assert!((f - 1.0).abs() < EPS);
@@ -474,7 +492,7 @@ mod tests {
 
     #[test]
     fn periodic_square_negative() {
-        let e = PeriodicForce::new(SynthWaveform::Square, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Square, 1.0, 1.0, 0.0, 0.0);
         // dt = 0.75 → phase = 1.5π, sin(1.5π)<0 → -1
         let f = e.compute(0.0, 0.0, 0.75);
         assert!((f - -1.0).abs() < EPS);
@@ -482,7 +500,7 @@ mod tests {
 
     #[test]
     fn periodic_with_offset() {
-        let e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 0.5, 0.0, 0.3);
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 0.5, 0.0, 0.3);
         let f = e.compute(0.0, 0.0, 0.0);
         // sin(0)*0.5 + 0.3 = 0.3
         assert!((f - 0.3).abs() < 1e-6);
@@ -491,7 +509,7 @@ mod tests {
     #[test]
     fn periodic_clamps_output() {
         // amplitude + offset > 1.0
-        let e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.5);
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.5);
         // At quarter cycle: 1.0 * 1.0 + 0.5 = 1.5 → clamped to 1.0
         let f = e.compute(0.0, 0.0, 0.25);
         assert!((f - 1.0).abs() < EPS);
@@ -499,7 +517,7 @@ mod tests {
 
     #[test]
     fn periodic_nan_dt() {
-        let e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
         // NaN dt → sanitised to 0.0, sin(0)=0
         let f = e.compute(0.0, 0.0, f64::NAN);
         assert!(f.is_finite());
@@ -517,7 +535,7 @@ mod tests {
 
     #[test]
     fn periodic_triangle_midpoints() {
-        let e = PeriodicForce::new(SynthWaveform::Triangle, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Triangle, 1.0, 1.0, 0.0, 0.0);
         // At dt=0.25 → phase = π/2, frac = 0.25 → 4*0.25 - 1 = 0.0
         let f = e.compute(0.0, 0.0, 0.25);
         assert!(f.abs() < 0.01);
@@ -525,9 +543,51 @@ mod tests {
 
     #[test]
     fn periodic_sawtooth_midpoint() {
-        let e = PeriodicForce::new(SynthWaveform::Sawtooth, 1.0, 1.0, 0.0, 0.0);
+        let mut e = PeriodicForce::new(SynthWaveform::Sawtooth, 1.0, 1.0, 0.0, 0.0);
         // At dt=0.5 → phase = π, frac = 0.5, 2*0.5 - 1 = 0.0
         let f = e.compute(0.0, 0.0, 0.5);
         assert!(f.abs() < 0.01);
+    }
+
+    // ── Non-finite parameter safety ──────────────────────────────────────
+
+    #[test]
+    fn spring_nonfinite_params_return_zero() {
+        let mut e = SpringForce::new(0.0, 1.0, 0.0, 1.0);
+        e.center = f64::NAN;
+        assert!(e.compute(0.5, 0.0, 0.004).abs() < EPS);
+
+        let mut e2 = SpringForce::new(0.0, 1.0, 0.0, 1.0);
+        e2.gain = f64::INFINITY;
+        assert!(e2.compute(0.5, 0.0, 0.004).abs() < EPS);
+    }
+
+    #[test]
+    fn damper_nonfinite_params_return_zero() {
+        let mut e = DamperForce::new(1.0, 1.0);
+        e.gain = f64::NAN;
+        assert!(e.compute(0.0, 0.5, 0.004).abs() < EPS);
+
+        let mut e2 = DamperForce::new(1.0, 1.0);
+        e2.saturation = f64::NEG_INFINITY;
+        assert!(e2.compute(0.0, 0.5, 0.004).abs() < EPS);
+    }
+
+    #[test]
+    fn friction_nonfinite_params_return_zero() {
+        let mut e = FrictionForce::new(0.5, 1.0);
+        e.coefficient = f64::NAN;
+        assert!(e.compute(0.0, 1.0, 0.004).abs() < EPS);
+    }
+
+    #[test]
+    fn periodic_nonfinite_params_return_zero() {
+        let mut e = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
+        e.frequency = f64::NAN;
+        assert!(e.compute(0.0, 0.0, 0.25).abs() < EPS);
+
+        let mut e2 = PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0);
+        e2.amplitude = f64::INFINITY;
+        assert!(e2.compute(0.0, 0.0, 0.25).abs() < EPS);
     }
 }

@@ -53,7 +53,7 @@ enum MixerEntry {
 
 impl MixerEntry {
     #[inline]
-    fn compute(&self, position: f64, velocity: f64, dt_s: f64) -> f64 {
+    fn compute(&mut self, position: f64, velocity: f64, dt_s: f64) -> f64 {
         match self {
             MixerEntry::Empty => 0.0,
             MixerEntry::Constant(e) => e.compute(position, velocity, dt_s),
@@ -170,7 +170,7 @@ impl EffectMixer {
     /// until the budget (1.0) is reached; lower-priority effects are scaled
     /// down when the total would exceed the budget.
     #[inline]
-    pub fn compute_combined(&self, position: f64, velocity: f64, dt_s: f64) -> f64 {
+    pub fn compute_combined(&mut self, position: f64, velocity: f64, dt_s: f64) -> f64 {
         let pos = if position.is_finite() { position } else { 0.0 };
         let vel = if velocity.is_finite() { velocity } else { 0.0 };
         let dt = if dt_s.is_finite() && dt_s >= 0.0 {
@@ -203,8 +203,12 @@ impl EffectMixer {
         let mut budget_remaining = 1.0_f64;
 
         for &idx in &indices[..count] {
-            let slot = &self.slots[idx];
-            let raw = slot.entry.compute(pos, vel, dt) * slot.gain.clamp(0.0, 1.0);
+            let gain = self.slots[idx].gain;
+            if !gain.is_finite() {
+                continue;
+            }
+            let slot = &mut self.slots[idx];
+            let raw = slot.entry.compute(pos, vel, dt) * gain.clamp(0.0, 1.0);
             let abs_raw = raw.abs();
 
             if budget_remaining <= 0.0 {
@@ -222,6 +226,9 @@ impl EffectMixer {
             }
         }
 
+        if !total.is_finite() {
+            return 0.0;
+        }
         total.clamp(-1.0, 1.0)
     }
 
@@ -254,7 +261,7 @@ mod tests {
 
     #[test]
     fn empty_mixer_returns_zero() {
-        let m = EffectMixer::new();
+        let mut m = EffectMixer::new();
         assert!(m.compute_combined(0.0, 0.0, 0.004).abs() < EPS);
     }
 
@@ -405,5 +412,47 @@ mod tests {
         m.add_constant(ConstantForce::new(-0.5), 100, 1.0);
         let f = m.compute_combined(0.0, 0.0, 0.004);
         assert!(f.abs() < EPS);
+    }
+
+    #[test]
+    fn nan_gain_skipped() {
+        let mut m = EffectMixer::new();
+        m.add_constant(ConstantForce::new(0.5), 100, f64::NAN);
+        let f = m.compute_combined(0.0, 0.0, 0.004);
+        assert!(f.is_finite());
+        assert!(f.abs() < EPS, "NaN gain effect should be skipped");
+    }
+
+    #[test]
+    fn inf_gain_skipped() {
+        let mut m = EffectMixer::new();
+        // Inf gain is clamped to 1.0 by insert(), so manually poison a slot
+        // to test the NaN-gain skip logic in compute_combined.
+        let id = m.add_constant(ConstantForce::new(0.5), 100, 1.0).unwrap();
+        m.add_constant(ConstantForce::new(0.3), 100, 1.0);
+        m.slots.iter_mut().find(|s| s.id == id).unwrap().gain = f64::NAN;
+        let f = m.compute_combined(0.0, 0.0, 0.004);
+        assert!(f.is_finite());
+        assert!(
+            (f - 0.3).abs() < EPS,
+            "only finite-gain effect should contribute"
+        );
+    }
+
+    #[test]
+    fn periodic_advances_in_mixer() {
+        let mut m = EffectMixer::new();
+        m.add_periodic(
+            PeriodicForce::new(SynthWaveform::Sine, 1.0, 1.0, 0.0, 0.0),
+            100,
+            1.0,
+        );
+        let f1 = m.compute_combined(0.0, 0.0, 0.004);
+        let f2 = m.compute_combined(0.0, 0.0, 0.004);
+        // Phase should advance between calls, producing different values.
+        assert!(
+            (f1 - f2).abs() > 1e-12,
+            "periodic effect should evolve between ticks"
+        );
     }
 }
