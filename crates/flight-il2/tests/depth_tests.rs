@@ -141,10 +141,11 @@ fn parse_infinity_values_preserved_in_frame() {
 #[test]
 fn parse_subnormal_f32_preserved() {
     let subnormal: f32 = 1.0e-40;
-    assert!(subnormal.is_subnormal() || subnormal == 0.0 || subnormal.is_normal());
+    assert!(subnormal.is_subnormal());
     let data = build_frame(subnormal, 0.0, 0.0, 0.0, 0.0, subnormal, 0);
     let frame = parse_telemetry_frame(&data).unwrap();
-    assert!((frame.pitch - subnormal).abs() <= f32::EPSILON);
+    assert_eq!(frame.pitch.to_bits(), subnormal.to_bits());
+    assert_eq!(frame.throttle.to_bits(), subnormal.to_bits());
 }
 
 #[test]
@@ -459,10 +460,9 @@ fn state_machine_full_lifecycle() {
 }
 
 #[test]
-fn state_machine_error_count_saturates() {
+fn sequence_counter_increments_correctly() {
     let mut adapter = Il2Adapter::new();
-    // Directly test that saturating_add is used by checking it doesn't panic
-    // with many errors
+    // Verify the error counter increments once per bad datagram
     for _ in 0..1000 {
         let _ = adapter.process_datagram(&[0u8; 4]);
     }
