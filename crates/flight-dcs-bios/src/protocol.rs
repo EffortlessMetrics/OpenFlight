@@ -68,8 +68,11 @@ pub struct DcsBiosAddress {
 
 impl DcsBiosAddress {
     /// Create a new address descriptor, computing `max_value` from mask/shift.
+    ///
+    /// `shift` must be in the range `0..=15` (bit position within a 16-bit word).
     #[must_use]
     pub fn new(address: u16, mask: u16, shift: u8) -> Self {
+        debug_assert!(shift < 16, "shift must be 0..=15");
         let max_value = mask >> shift;
         Self {
             address,
@@ -80,8 +83,11 @@ impl DcsBiosAddress {
     }
 
     /// Decode a value from a 16-bit word at this address.
+    ///
+    /// `shift` must be in the range `0..=15` (bit position within a 16-bit word).
     #[must_use]
     pub fn decode(&self, word: u16) -> u16 {
+        debug_assert!(self.shift < 16, "shift must be 0..=15");
         (word & self.mask) >> self.shift
     }
 }
@@ -377,11 +383,9 @@ mod proptests {
                 frame.extend_from_slice(&(data_len as u16).to_le_bytes());
                 frame.extend_from_slice(&payload);
 
-                if data_len > 0 || true {
-                    // Zero-length updates produce a valid update with empty data
-                    let result = parse_frame(&frame);
-                    prop_assert!(result.is_ok(), "Failed for addr=0x{:04X}, len={}", addr, data_len);
-                }
+                // Zero-length updates produce a valid update with empty data
+                let result = parse_frame(&frame);
+                prop_assert!(result.is_ok(), "Failed for addr=0x{:04X}, len={}", addr, data_len);
             }
         }
 

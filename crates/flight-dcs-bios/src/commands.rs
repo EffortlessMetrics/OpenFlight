@@ -10,6 +10,12 @@
 
 use std::fmt;
 
+/// Returns `true` if the string contains `\n` or `\r`, which would corrupt
+/// the DCS-BIOS text protocol wire format.
+fn contains_line_break(s: &str) -> bool {
+    s.contains('\n') || s.contains('\r')
+}
+
 /// A DCS-BIOS import command.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DcsBiosCommand {
@@ -30,6 +36,10 @@ impl DcsBiosCommand {
     /// ```
     #[must_use]
     pub fn set_state(control: &str, value: u16) -> Self {
+        debug_assert!(
+            !contains_line_break(control),
+            "control name must not contain newlines"
+        );
         Self {
             control: control.to_owned(),
             argument: value.to_string(),
@@ -38,28 +48,32 @@ impl DcsBiosCommand {
 
     /// Create a "fixed step" command to increment/decrement a control.
     ///
-    /// Positive delta → `INC`, negative → `DEC`.
+    /// Positive delta → `INC`, negative → `DEC`. Returns `None` for zero delta.
     ///
     /// # Example
     /// ```
     /// use flight_dcs_bios::DcsBiosCommand;
-    /// let cmd = DcsBiosCommand::fixed_step("HDG_SET", 1);
+    /// let cmd = DcsBiosCommand::fixed_step("HDG_SET", 1).unwrap();
     /// assert_eq!(cmd.to_string(), "HDG_SET INC\n");
+    /// assert!(DcsBiosCommand::fixed_step("HDG_SET", 0).is_none());
     /// ```
     #[must_use]
-    pub fn fixed_step(control: &str, delta: i32) -> Self {
+    pub fn fixed_step(control: &str, delta: i32) -> Option<Self> {
+        debug_assert!(
+            !contains_line_break(control),
+            "control name must not contain newlines"
+        );
         let argument = if delta > 0 {
             "INC".to_owned()
         } else if delta < 0 {
             "DEC".to_owned()
         } else {
-            // Zero delta: no-op, send INC
-            "INC".to_owned()
+            return None;
         };
-        Self {
+        Some(Self {
             control: control.to_owned(),
             argument,
-        }
+        })
     }
 
     /// Create an "action" command (press a button).
@@ -72,6 +86,10 @@ impl DcsBiosCommand {
     /// ```
     #[must_use]
     pub fn action(control: &str) -> Self {
+        debug_assert!(
+            !contains_line_break(control),
+            "control name must not contain newlines"
+        );
         Self {
             control: control.to_owned(),
             argument: "1".to_owned(),
@@ -79,12 +97,18 @@ impl DcsBiosCommand {
     }
 
     /// Create a command with a custom string argument.
+    ///
+    /// Returns `None` if `control` or `argument` contains `\n` or `\r`,
+    /// which would corrupt the wire format.
     #[must_use]
-    pub fn custom(control: &str, argument: &str) -> Self {
-        Self {
+    pub fn custom(control: &str, argument: &str) -> Option<Self> {
+        if contains_line_break(control) || contains_line_break(argument) {
+            return None;
+        }
+        Some(Self {
             control: control.to_owned(),
             argument: argument.to_owned(),
-        }
+        })
     }
 
     /// Serialize this command to its wire format bytes.
@@ -123,9 +147,11 @@ impl DcsBiosCommandBatch {
         self.push(DcsBiosCommand::set_state(control, value));
     }
 
-    /// Add a fixed-step command to the batch.
+    /// Add a fixed-step command to the batch. Does nothing for zero delta.
     pub fn fixed_step(&mut self, control: &str, delta: i32) {
-        self.push(DcsBiosCommand::fixed_step(control, delta));
+        if let Some(cmd) = DcsBiosCommand::fixed_step(control, delta) {
+            self.push(cmd);
+        }
     }
 
     /// Add an action command to the batch.
@@ -202,20 +228,19 @@ mod tests {
 
     #[test]
     fn fixed_step_increment() {
-        let cmd = DcsBiosCommand::fixed_step("HDG_SET", 1);
+        let cmd = DcsBiosCommand::fixed_step("HDG_SET", 1).unwrap();
         assert_eq!(cmd.to_string(), "HDG_SET INC\n");
     }
 
     #[test]
     fn fixed_step_decrement() {
-        let cmd = DcsBiosCommand::fixed_step("HDG_SET", -1);
+        let cmd = DcsBiosCommand::fixed_step("HDG_SET", -1).unwrap();
         assert_eq!(cmd.to_string(), "HDG_SET DEC\n");
     }
 
     #[test]
-    fn fixed_step_zero_defaults_to_inc() {
-        let cmd = DcsBiosCommand::fixed_step("HDG_SET", 0);
-        assert_eq!(cmd.to_string(), "HDG_SET INC\n");
+    fn fixed_step_zero_returns_none() {
+        assert!(DcsBiosCommand::fixed_step("HDG_SET", 0).is_none());
     }
 
     #[test]
@@ -226,8 +251,20 @@ mod tests {
 
     #[test]
     fn custom_command() {
-        let cmd = DcsBiosCommand::custom("RADIO_FREQ", "251000");
+        let cmd = DcsBiosCommand::custom("RADIO_FREQ", "251000").unwrap();
         assert_eq!(cmd.to_string(), "RADIO_FREQ 251000\n");
+    }
+
+    #[test]
+    fn custom_rejects_newlines_in_control() {
+        assert!(DcsBiosCommand::custom("BAD\nCTRL", "value").is_none());
+        assert!(DcsBiosCommand::custom("BAD\rCTRL", "value").is_none());
+    }
+
+    #[test]
+    fn custom_rejects_newlines_in_argument() {
+        assert!(DcsBiosCommand::custom("CTRL", "bad\nvalue").is_none());
+        assert!(DcsBiosCommand::custom("CTRL", "bad\rvalue").is_none());
     }
 
     #[test]

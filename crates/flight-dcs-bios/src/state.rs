@@ -160,15 +160,37 @@ impl DcsBiosState {
     pub fn changed_controls<'a>(&self, module: &'a DcsBiosModule) -> Vec<&'a str> {
         let mut result = Vec::new();
         for (id, control) in &module.controls {
+            let mut found = false;
             for output in &control.outputs {
-                let addr = match output {
-                    OutputType::Integer(a) => a.address,
-                    OutputType::String { address, .. } => *address,
-                };
-                if self.changed_addresses.contains(&addr) {
-                    result.push(id.as_str());
+                match output {
+                    OutputType::Integer(a) => {
+                        if self.changed_addresses.contains(&a.address) {
+                            found = true;
+                        }
+                    }
+                    OutputType::String {
+                        address,
+                        max_length,
+                    } => {
+                        // Check the full word-aligned range [address, address + max_length)
+                        let start = *address;
+                        let end = start.saturating_add(*max_length);
+                        let mut addr = start & !1; // word-align start
+                        while addr < end {
+                            if self.changed_addresses.contains(&addr) {
+                                found = true;
+                                break;
+                            }
+                            addr = addr.saturating_add(2);
+                        }
+                    }
+                }
+                if found {
                     break;
                 }
+            }
+            if found {
+                result.push(id.as_str());
             }
         }
         result

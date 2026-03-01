@@ -17,9 +17,9 @@ keywords = ["flight-sim", "openflight", "dcs", "dcs-bios", "cockpit"]
 
 [dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
+serde_json = { workspace = true }
