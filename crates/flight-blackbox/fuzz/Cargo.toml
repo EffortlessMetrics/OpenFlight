@@ -1,0 +1,22 @@
+[package]
+name = "flight-blackbox-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+flight-blackbox = { path = ".." }
+postcard = { version = "1.1", features = ["alloc", "use-std"] }
+serde_json = "1"
+
+[[bin]]
+name = "fuzz_blackbox_codec"
+path = "fuzz_targets/fuzz_blackbox_codec.rs"
+test = false
+doc = false
