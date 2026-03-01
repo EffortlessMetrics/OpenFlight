@@ -63,14 +63,17 @@ impl EventDomain {
 
 /// Compact bitflag filter over [`EventDomain`] variants.
 ///
-/// An empty filter (mask `0`) is treated as a wildcard that matches **all**
-/// domains, following the principle of least surprise for default-constructed
-/// filters.
+/// A wildcard filter (`explicit == false`) matches **all** domains, following
+/// the principle of least surprise for default-constructed filters.  An
+/// explicit filter with `mask == 0` matches **nothing**.
 ///
 /// All operations are `Copy` and allocation-free.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TopicFilter {
     mask: u8,
+    /// `true` = explicit filter (only selected domains match),
+    /// `false` = wildcard (matches all domains).
+    explicit: bool,
 }
 
 impl TopicFilter {
@@ -78,16 +81,20 @@ impl TopicFilter {
     #[inline]
     #[must_use]
     pub const fn all() -> Self {
-        Self { mask: 0 }
+        Self {
+            mask: 0,
+            explicit: false,
+        }
     }
 
     /// Create a filter that matches nothing.
     #[inline]
     #[must_use]
     pub const fn none() -> Self {
-        // Bit 7 is not used by any domain (domains use bits 0–5), so this
-        // mask is non-zero (avoiding the wildcard) yet has no domain bits set.
-        Self { mask: 0x80 }
+        Self {
+            mask: 0,
+            explicit: true,
+        }
     }
 
     /// Create a filter for a single domain.
@@ -96,6 +103,7 @@ impl TopicFilter {
     pub const fn single(domain: EventDomain) -> Self {
         Self {
             mask: domain.mask(),
+            explicit: true,
         }
     }
 
@@ -106,21 +114,23 @@ impl TopicFilter {
         for d in domains {
             mask |= d.mask();
         }
-        Self { mask }
+        Self {
+            mask,
+            explicit: true,
+        }
     }
 
     /// Add a domain to this filter.
     #[inline]
     pub fn add(&mut self, domain: EventDomain) {
-        if self.mask == 0 {
-            // Transitioning from wildcard to explicit; start fresh.
-            self.mask = domain.mask();
-        } else {
-            self.mask |= domain.mask();
-        }
+        self.explicit = true;
+        self.mask |= domain.mask();
     }
 
     /// Remove a domain from this filter.
+    ///
+    /// Preserves the `explicit` flag — clearing the last bit produces a
+    /// match-nothing filter, **not** a wildcard.
     #[inline]
     pub fn remove(&mut self, domain: EventDomain) {
         self.mask &= !domain.mask();
@@ -128,11 +138,15 @@ impl TopicFilter {
 
     /// Check whether `domain` passes this filter.
     ///
-    /// A wildcard filter (`mask == 0`) matches everything.
+    /// A wildcard filter matches everything; an explicit filter with no bits
+    /// set matches nothing.
     #[inline]
     #[must_use]
     pub const fn matches(self, domain: EventDomain) -> bool {
-        self.mask == 0 || (self.mask & domain.mask()) != 0
+        if !self.explicit {
+            return true;
+        }
+        (self.mask & domain.mask()) != 0
     }
 
     /// Return the raw bitmask (mostly useful for debugging / serialization).
@@ -146,7 +160,7 @@ impl TopicFilter {
     #[inline]
     #[must_use]
     pub const fn is_wildcard(self) -> bool {
-        self.mask == 0
+        !self.explicit
     }
 }
 
@@ -356,7 +370,12 @@ pub struct FilteredSubscriber {
 impl FilteredSubscriber {
     /// Create a new filtered subscriber.
     #[must_use]
-    pub const fn new(destination: u32, filter: TopicFilter, policy: BackpressurePolicy, capacity: u32) -> Self {
+    pub const fn new(
+        destination: u32,
+        filter: TopicFilter,
+        policy: BackpressurePolicy,
+        capacity: u32,
+    ) -> Self {
         Self {
             destination,
             filter,
@@ -492,11 +511,7 @@ impl FilteredSubscriberSet {
     /// the event and the number of drops.
     ///
     /// Updates `stats` with per-domain and per-subscriber counters.
-    pub fn dispatch(
-        &mut self,
-        domain: EventDomain,
-        stats: &BusStatistics,
-    ) -> DispatchSummary {
+    pub fn dispatch(&mut self, domain: EventDomain, stats: &BusStatistics) -> DispatchSummary {
         let mut accepted = 0u32;
         let mut dropped = 0u32;
 
@@ -651,7 +666,10 @@ mod tests {
 
     #[test]
     fn default_backpressure_is_drop_newest() {
-        assert_eq!(BackpressurePolicy::default(), BackpressurePolicy::DropNewest);
+        assert_eq!(
+            BackpressurePolicy::default(),
+            BackpressurePolicy::DropNewest
+        );
     }
 
     // -- FilteredSubscriber -------------------------------------------------
@@ -664,7 +682,10 @@ mod tests {
             BackpressurePolicy::DropNewest,
             8,
         );
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
+        );
         assert_eq!(sub.pending, 1);
     }
 
@@ -676,63 +697,70 @@ mod tests {
             BackpressurePolicy::DropNewest,
             8,
         );
-        assert_eq!(sub.try_enqueue(EventDomain::FfbCommand), EnqueueResult::Filtered);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::FfbCommand),
+            EnqueueResult::Filtered
+        );
         assert_eq!(sub.pending, 0);
     }
 
     #[test]
     fn backpressure_drop_newest_works() {
-        let mut sub = FilteredSubscriber::new(
-            1,
-            TopicFilter::all(),
-            BackpressurePolicy::DropNewest,
-            2,
+        let mut sub =
+            FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::DropNewest, 2);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
         );
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
+        );
         // Buffer full
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::DroppedNewest);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::DroppedNewest
+        );
         assert_eq!(sub.pending, 2);
     }
 
     #[test]
     fn backpressure_drop_oldest_works() {
-        let mut sub = FilteredSubscriber::new(
-            1,
-            TopicFilter::all(),
-            BackpressurePolicy::DropOldest,
-            2,
+        let mut sub =
+            FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::DropOldest, 2);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
         );
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
+        );
         // Buffer full — oldest is dropped
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::AcceptedDroppedOldest);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::AcceptedDroppedOldest
+        );
         assert_eq!(sub.pending, 2); // stayed at capacity
     }
 
     #[test]
     fn backpressure_block_keeps_accepting() {
-        let mut sub = FilteredSubscriber::new(
-            1,
-            TopicFilter::all(),
-            BackpressurePolicy::Block,
-            2,
-        );
+        let mut sub = FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::Block, 2);
         sub.try_enqueue(EventDomain::Telemetry);
         sub.try_enqueue(EventDomain::Telemetry);
         // Buffer "full" but Block allows overflow
-        assert_eq!(sub.try_enqueue(EventDomain::Telemetry), EnqueueResult::Accepted);
+        assert_eq!(
+            sub.try_enqueue(EventDomain::Telemetry),
+            EnqueueResult::Accepted
+        );
         assert_eq!(sub.pending, 3);
     }
 
     #[test]
     fn subscriber_ack_decrements_pending() {
-        let mut sub = FilteredSubscriber::new(
-            1,
-            TopicFilter::all(),
-            BackpressurePolicy::DropNewest,
-            8,
-        );
+        let mut sub =
+            FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::DropNewest, 8);
         sub.try_enqueue(EventDomain::Telemetry);
         sub.try_enqueue(EventDomain::Telemetry);
         assert_eq!(sub.pending, 2);
@@ -790,8 +818,14 @@ mod tests {
         let snap = stats.snapshot();
         assert_eq!(snap.published, 2);
         assert_eq!(snap.dropped, 1);
-        assert_eq!(snap.per_domain_published[EventDomain::DeviceState as usize], 2);
-        assert_eq!(snap.per_domain_dropped[EventDomain::ProfileChange as usize], 1);
+        assert_eq!(
+            snap.per_domain_published[EventDomain::DeviceState as usize],
+            2
+        );
+        assert_eq!(
+            snap.per_domain_dropped[EventDomain::ProfileChange as usize],
+            1
+        );
         assert_eq!(snap.subscriber_lag[3], 42);
     }
 
@@ -930,5 +964,21 @@ mod tests {
         set.get_mut(slot).unwrap().ack();
         stats.set_subscriber_lag(slot, u64::from(set.get(slot).unwrap().pending));
         assert_eq!(stats.subscriber_lag(slot), 1);
+    }
+
+    // -- Regression: remove-last-domain must not become wildcard -------------
+
+    #[test]
+    fn remove_last_domain_does_not_become_wildcard() {
+        let mut filter = TopicFilter::single(EventDomain::Telemetry);
+        assert!(filter.matches(EventDomain::Telemetry));
+
+        filter.remove(EventDomain::Telemetry);
+
+        // After removing the last domain the filter must match nothing, NOT
+        // everything (i.e. it must not silently become a wildcard).
+        assert!(!filter.matches(EventDomain::Telemetry));
+        assert!(!filter.matches(EventDomain::AxisData));
+        assert!(!filter.is_wildcard());
     }
 }
