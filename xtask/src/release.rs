@@ -96,19 +96,18 @@ fn parse_bump_type(s: &str) -> Result<BumpType> {
             }
             Ok(BumpType::Pre(label.to_string()))
         }
-        other => anyhow::bail!(
-            "Unknown bump type: '{other}'. Use major, minor, patch, or pre:<label>"
-        ),
+        other => {
+            anyhow::bail!("Unknown bump type: '{other}'. Use major, minor, patch, or pre:<label>")
+        }
     }
 }
 
 /// Read the workspace package version from the root Cargo.toml.
 fn read_current_version() -> Result<String> {
-    let content =
-        fs::read_to_string("Cargo.toml").context("Failed to read root Cargo.toml")?;
+    let content = fs::read_to_string("Cargo.toml").context("Failed to read root Cargo.toml")?;
 
-    let version_re = Regex::new(r#"^version\s*=\s*"([^"]*)""#)
-        .context("Failed to compile version regex")?;
+    let version_re =
+        Regex::new(r#"^version\s*=\s*"([^"]*)""#).context("Failed to compile version regex")?;
 
     let mut in_package = false;
     for line in content.lines() {
@@ -118,9 +117,7 @@ fn read_current_version() -> Result<String> {
         } else if trimmed.starts_with('[') {
             in_package = false;
         }
-        if in_package
-            && let Some(caps) = version_re.captures(trimmed)
-        {
+        if in_package && let Some(caps) = version_re.captures(trimmed) {
             return Ok(caps[1].to_string());
         }
     }
@@ -143,7 +140,7 @@ pub fn run_prepare_release(version: &str) -> Result<()> {
     let entries = if let Some(ref tag) = since {
         changelog::read_git_log(tag)?
     } else {
-        changelog::read_git_log("HEAD~50")?
+        changelog::read_git_log_all()?
     };
 
     let ref_name = since.as_deref().unwrap_or("initial commit");

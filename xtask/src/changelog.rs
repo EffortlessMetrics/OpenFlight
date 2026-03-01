@@ -118,9 +118,7 @@ pub fn parse_commit(line: &str) -> Option<ChangelogEntry> {
 }
 
 /// Group changelog entries by their Keep-a-Changelog section.
-pub fn group_by_type(
-    entries: &[ChangelogEntry],
-) -> BTreeMap<&str, Vec<&ChangelogEntry>> {
+pub fn group_by_type(entries: &[ChangelogEntry]) -> BTreeMap<&str, Vec<&ChangelogEntry>> {
     let mut groups: BTreeMap<&str, Vec<&ChangelogEntry>> = BTreeMap::new();
 
     for entry in entries {
@@ -211,7 +209,7 @@ pub fn read_git_log(since: &str) -> Result<Vec<ChangelogEntry>> {
 }
 
 /// Read all git log entries (when no tag exists).
-fn read_git_log_all() -> Result<Vec<ChangelogEntry>> {
+pub fn read_git_log_all() -> Result<Vec<ChangelogEntry>> {
     let output = Command::new("git")
         .args(["log", "--oneline", "--no-decorate", "--format=%h %s"])
         .output()
