@@ -5,11 +5,11 @@ expression: state
 ---
 AlphaInputState {
     axes: AlphaAxes {
-        roll: 0.9995117,
+        roll: -1.0,
         pitch: 0.0,
     },
     buttons: AlphaButtons {
-        mask: 0,
-        hat: 0,
+        mask: 50331649,
+        hat: 1,
     },
 }
