@@ -18,7 +18,7 @@ device:
   type: virtual_bundle
   usb:
     vendor_id: 0x294B     # Honeycomb Aeronautical (confirmed for Bravo/Alpha)
-    product_id: ~         # Bundle — no independent PID; see alpha-xl + charlie manifests
+    product_id: 0         # Bundle — no independent PID; see alpha-xl + charlie manifests
   hid:
     usage_page: ~
     usage: ~

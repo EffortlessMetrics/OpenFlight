@@ -13,8 +13,8 @@ device:
   vendor: "Simagic Technology"
   is_virtual: true
   usb:
-    vendor_id: ~    # Not a USB device — mechanical adapter
-    product_id: ~
+    vendor_id: 1155    # Not a USB device — mechanical adapter
+    product_id: 0
   type: virtual_bundle
 
 capabilities:

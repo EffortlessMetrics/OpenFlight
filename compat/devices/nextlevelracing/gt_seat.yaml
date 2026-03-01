@@ -14,8 +14,8 @@ device:
   name: "Next Level Racing GT Seat"
   vendor: "Next Level Racing"
   usb:
-    vendor_id: ~        # Not a USB device — mechanical seat
-    product_id: ~
+    vendor_id: 0           # Not a USB device — mechanical seat
+    product_id: 0
   hid:
     usage_page: ~
     usage: ~

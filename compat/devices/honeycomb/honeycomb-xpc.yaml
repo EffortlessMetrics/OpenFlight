@@ -15,7 +15,7 @@ device:
   type: virtual_bundle
   usb:
     vendor_id: 0x294B       # Honeycomb Aeronautical (confirmed)
-    product_id: ~           # Virtual bundle — shares Bravo PID; no separate PID
+    product_id: 0           # Virtual bundle — shares Bravo PID; no separate PID
   hid:
     usage_page: ~
     usage: ~

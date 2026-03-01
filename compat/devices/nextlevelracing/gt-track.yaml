@@ -12,8 +12,8 @@ device:
   name: "Next Level Racing GT Track Cockpit"
   vendor: "Next Level Racing"
   usb:
-    vendor_id: ~        # Not a USB device — mechanical cockpit frame
-    product_id: ~
+    vendor_id: 0           # Not a USB device — mechanical cockpit frame
+    product_id: 0
   hid:
     usage_page: ~
     usage: ~
