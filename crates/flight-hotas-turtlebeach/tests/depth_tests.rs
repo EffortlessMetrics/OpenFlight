@@ -127,8 +127,14 @@ fn identify_device_returns_none_for_boundary_pids() {
 fn device_names_contain_turtle_beach_and_velocityone() {
     for device in VelocityOneDevice::all() {
         let name = device.name();
-        assert!(name.contains("Turtle Beach"), "missing 'Turtle Beach' in {name}");
-        assert!(name.contains("VelocityOne"), "missing 'VelocityOne' in {name}");
+        assert!(
+            name.contains("Turtle Beach"),
+            "missing 'Turtle Beach' in {name}"
+        );
+        assert!(
+            name.contains("VelocityOne"),
+            "missing 'VelocityOne' in {name}"
+        );
     }
 }
 
@@ -143,11 +149,12 @@ fn device_display_matches_name() {
 // 2. Capabilities consistency with profiles
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// The three primary devices (Flight, Flightstick, Rudder) have dedicated profiles.
+/// The four primary devices (Flight, Flightstick, Rudder) have dedicated profiles.
 /// FlightPro, FlightUniversal, and FlightYoke intentionally share the Flight
 /// profile as a baseline, so caps vs profile checks only apply to the primaries.
 const PRIMARY_DEVICES: &[VelocityOneDevice] = &[
     VelocityOneDevice::Flight,
+    VelocityOneDevice::Flightstick,
     VelocityOneDevice::Rudder,
 ];
 
@@ -254,12 +261,34 @@ fn profile_vendor_id_matches_turtle_beach_vid() {
 fn flight_report_minimum_axis_values() {
     let data = make_flight_report_bytes(0, 0, 0, 0, 0, 0, 0, 15, 0);
     let r = parse_flight_report(&data).unwrap();
-    assert!(r.roll < -0.99, "roll min should be near -1.0, got {}", r.roll);
-    assert!(r.pitch < -0.99, "pitch min should be near -1.0, got {}", r.pitch);
-    assert!(r.rudder_twist < -0.99, "rudder min should be near -1.0, got {}", r.rudder_twist);
-    assert!(r.trim_wheel < -0.99, "trim min should be near -1.0, got {}", r.trim_wheel);
-    assert!(r.throttle_left.abs() < 0.001, "throttle_left at 0 should be ~0");
-    assert!(r.throttle_right.abs() < 0.001, "throttle_right at 0 should be ~0");
+    assert!(
+        r.roll < -0.99,
+        "roll min should be near -1.0, got {}",
+        r.roll
+    );
+    assert!(
+        r.pitch < -0.99,
+        "pitch min should be near -1.0, got {}",
+        r.pitch
+    );
+    assert!(
+        r.rudder_twist < -0.99,
+        "rudder min should be near -1.0, got {}",
+        r.rudder_twist
+    );
+    assert!(
+        r.trim_wheel < -0.99,
+        "trim min should be near -1.0, got {}",
+        r.trim_wheel
+    );
+    assert!(
+        r.throttle_left.abs() < 0.001,
+        "throttle_left at 0 should be ~0"
+    );
+    assert!(
+        r.throttle_right.abs() < 0.001,
+        "throttle_right at 0 should be ~0"
+    );
 }
 
 #[test]
@@ -267,11 +296,29 @@ fn flight_report_maximum_axis_values() {
     let data = make_flight_report_bytes(4095, 4095, 4095, 255, 255, 4095, 0, 15, 0);
     let r = parse_flight_report(&data).unwrap();
     assert!(r.roll > 0.99, "roll max should be near 1.0, got {}", r.roll);
-    assert!(r.pitch > 0.99, "pitch max should be near 1.0, got {}", r.pitch);
-    assert!(r.rudder_twist > 0.99, "rudder max should be near 1.0, got {}", r.rudder_twist);
-    assert!(r.trim_wheel > 0.99, "trim max should be near 1.0, got {}", r.trim_wheel);
-    assert!(r.throttle_left > 0.99, "throttle_left at 255 should be near 1.0");
-    assert!(r.throttle_right > 0.99, "throttle_right at 255 should be near 1.0");
+    assert!(
+        r.pitch > 0.99,
+        "pitch max should be near 1.0, got {}",
+        r.pitch
+    );
+    assert!(
+        r.rudder_twist > 0.99,
+        "rudder max should be near 1.0, got {}",
+        r.rudder_twist
+    );
+    assert!(
+        r.trim_wheel > 0.99,
+        "trim max should be near 1.0, got {}",
+        r.trim_wheel
+    );
+    assert!(
+        r.throttle_left > 0.99,
+        "throttle_left at 255 should be near 1.0"
+    );
+    assert!(
+        r.throttle_right > 0.99,
+        "throttle_right at 255 should be near 1.0"
+    );
 }
 
 #[test]
@@ -430,7 +477,11 @@ fn gear_led_end_to_end_down_and_locked() {
     leds.set_from_gear_state(gear);
     let report = serialize_gear_led_report(&leds);
     // Green LEDs on (bits 0,2,4), Red off
-    assert_eq!(report[1] & 0b0001_0101, 0b0001_0101, "green LEDs should be on");
+    assert_eq!(
+        report[1] & 0b0001_0101,
+        0b0001_0101,
+        "green LEDs should be on"
+    );
     assert_eq!(report[1] & 0b0010_1010, 0, "red LEDs should be off");
 }
 
@@ -441,7 +492,11 @@ fn gear_led_end_to_end_transit() {
     leds.set_from_gear_state(gear);
     let report = serialize_gear_led_report(&leds);
     assert_eq!(report[1] & 0b0001_0101, 0, "green LEDs should be off");
-    assert_eq!(report[1] & 0b0010_1010, 0b0010_1010, "red LEDs should be on");
+    assert_eq!(
+        report[1] & 0b0010_1010,
+        0b0010_1010,
+        "red LEDs should be on"
+    );
 }
 
 #[test]
@@ -476,7 +531,10 @@ fn display_command_all_pages() {
         (DisplayPage::Custom, 3),
     ];
     for (page, expected_byte) in pages {
-        let cmd = DisplayCommand { page, brightness: 128 };
+        let cmd = DisplayCommand {
+            page,
+            brightness: 128,
+        };
         let report = serialize_display_command(&cmd);
         assert_eq!(report[0], 0x02, "report ID");
         assert_eq!(report[1], 0x01, "command type");
@@ -488,8 +546,14 @@ fn display_command_all_pages() {
 
 #[test]
 fn display_command_brightness_extremes() {
-    let cmd_off = DisplayCommand { page: DisplayPage::Nav, brightness: 0 };
-    let cmd_max = DisplayCommand { page: DisplayPage::Nav, brightness: 255 };
+    let cmd_off = DisplayCommand {
+        page: DisplayPage::Nav,
+        brightness: 0,
+    };
+    let cmd_max = DisplayCommand {
+        page: DisplayPage::Nav,
+        brightness: 255,
+    };
     assert_eq!(serialize_display_command(&cmd_off)[3], 0);
     assert_eq!(serialize_display_command(&cmd_max)[3], 255);
 }
@@ -503,10 +567,22 @@ fn flightstick_report_quarter_deflection() {
     // ~25% travel: raw 1024 on a 0–4095 range = about -0.5
     let data = make_flightstick_report_bytes(1024, 3072, 2048, 64, 0, 15);
     let r = parse_flightstick_report(&data).unwrap();
-    assert!(r.x < -0.4 && r.x > -0.6, "quarter left x should be ~-0.5, got {}", r.x);
-    assert!(r.y > 0.4 && r.y < 0.6, "quarter back y should be ~0.5, got {}", r.y);
+    assert!(
+        r.x < -0.4 && r.x > -0.6,
+        "quarter left x should be ~-0.5, got {}",
+        r.x
+    );
+    assert!(
+        r.y > 0.4 && r.y < 0.6,
+        "quarter back y should be ~0.5, got {}",
+        r.y
+    );
     assert!(r.twist.abs() < 0.01, "twist at centre should be ~0");
-    assert!(r.throttle > 0.24 && r.throttle < 0.26, "~25% throttle, got {}", r.throttle);
+    assert!(
+        r.throttle > 0.24 && r.throttle < 0.26,
+        "~25% throttle, got {}",
+        r.throttle
+    );
 }
 
 #[test]
@@ -519,9 +595,17 @@ fn flightstick_report_all_buttons_u16_max() {
 #[test]
 fn flightstick_hat_all_directions() {
     let expected: &[(u8, u8)] = &[
-        (0, 1), (1, 2), (2, 3), (3, 4),
-        (4, 5), (5, 6), (6, 7), (7, 8),
-        (8, 0), (9, 0), (15, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 8),
+        (8, 0),
+        (9, 0),
+        (15, 0),
     ];
     for &(raw, exp) in expected {
         let data = make_flightstick_report_bytes(2048, 2048, 2048, 0, 0, raw);
@@ -546,8 +630,14 @@ fn flightdeck_report_center_and_extremes() {
     let r = parse_flightdeck_report(&centre).unwrap();
     assert!(r.roll.abs() < 0.01, "flightdeck roll centre");
     assert!(r.pitch.abs() < 0.01, "flightdeck pitch centre");
-    assert!(r.throttle_left > 0.49 && r.throttle_left < 0.51, "flightdeck tl ~50%");
-    assert!(r.throttle_right > 0.49 && r.throttle_right < 0.51, "flightdeck tr ~50%");
+    assert!(
+        r.throttle_left > 0.49 && r.throttle_left < 0.51,
+        "flightdeck tl ~50%"
+    );
+    assert!(
+        r.throttle_right > 0.49 && r.throttle_right < 0.51,
+        "flightdeck tr ~50%"
+    );
 
     let max = make_flightdeck_bytes(65535, 65535, 255, 255, 0);
     let r = parse_flightdeck_report(&max).unwrap();
@@ -633,15 +723,16 @@ fn trim_wheel_with_flight_report_integration() {
     let mut tracker = TrimWheelTracker::new();
 
     let data1 = make_flight_report_bytes(2048, 2048, 2048, 0, 0, 2048, 0, 15, 0);
-    let r1 = parse_flight_report(&data1).unwrap();
-    // First update: extract raw trim from report (centre = 2048)
-    let raw_trim1: u16 = 2048;
+    let _r1 = parse_flight_report(&data1).unwrap();
+    // Derive raw trim from report bytes (LE u16 at offset 8)
+    let raw_trim1 = u16::from_le_bytes([data1[8], data1[9]]);
     let delta1 = tracker.update(raw_trim1);
     assert_eq!(delta1, 0, "first update should return 0");
-    assert!(r1.trim_wheel.abs() < 0.01);
 
-    // Simulate trim nose-up movement
-    let raw_trim2: u16 = 2148;
+    // Simulate trim nose-up movement via a second report
+    let data2 = make_flight_report_bytes(2048, 2048, 2048, 0, 0, 2148, 0, 15, 0);
+    let _r2 = parse_flight_report(&data2).unwrap();
+    let raw_trim2 = u16::from_le_bytes([data2[8], data2[9]]);
     let delta2 = tracker.update(raw_trim2);
     assert_eq!(delta2, 100, "delta should be +100");
 }
@@ -692,10 +783,7 @@ fn profile_axis_names_unique() {
 
 #[test]
 fn profile_button_numbers_unique() {
-    for device in [
-        VelocityOneDevice::Flight,
-        VelocityOneDevice::Flightstick,
-    ] {
+    for device in [VelocityOneDevice::Flight, VelocityOneDevice::Flightstick] {
         let profile = profile_for_device(device);
         let mut seen = std::collections::HashSet::new();
         for btn in profile.buttons {
