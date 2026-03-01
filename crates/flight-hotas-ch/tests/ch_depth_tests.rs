@@ -5,12 +5,10 @@
 //!
 //! Covers device identification, axis parsing, button matrix, profile
 //! generation, and CH-specific quirks across Fighterstick, Combatstick,
-//! Pro Throttle, Pro Pedals, and Throttle Quadrant.
+//! Pro Throttle, Pro Pedals, Eclipse Yoke, Flight Yoke.
 
-use flight_hotas_ch::devices::{ChDevice, DeviceEntry, DEVICE_TABLE, all_devices, identify_device};
-use flight_hotas_ch::profiles::{
-    AxisNormalization, DeviceProfile, device_profile, profiled_devices,
-};
+use flight_hotas_ch::devices::{ChDevice, DEVICE_TABLE, identify_device};
+use flight_hotas_ch::profiles::{AxisNormalization, device_profile, profiled_devices};
 use flight_hotas_ch::protocol::{
     FourWayHat, PovDirection, extract_buttons, normalize_bipolar, normalize_unipolar,
     read_axis_u16, validate_report_id,
@@ -21,14 +19,13 @@ use flight_hotas_ch::{
     is_ch_device,
 };
 use flight_hotas_ch::{
-    COMBATSTICK_MIN_REPORT_BYTES, CombatstickState, FIGHTERSTICK_MIN_REPORT_BYTES,
-    FighterstickState, PRO_PEDALS_MIN_REPORT_BYTES, PRO_THROTTLE_MIN_REPORT_BYTES,
-    ProPedalsState, ProThrottleState, normalize_axis, normalize_pedal, normalize_throttle,
+    COMBATSTICK_MIN_REPORT_BYTES, FIGHTERSTICK_MIN_REPORT_BYTES, PRO_PEDALS_MIN_REPORT_BYTES,
+    PRO_THROTTLE_MIN_REPORT_BYTES, normalize_axis, normalize_pedal, normalize_throttle,
     parse_combatstick, parse_fighterstick, parse_pro_pedals, parse_pro_throttle,
 };
 use flight_hotas_ch::{
-    ECLIPSE_YOKE_MIN_REPORT_BYTES, EclipseYokeState, FLIGHT_YOKE_MIN_REPORT_BYTES,
-    FlightYokeState, parse_eclipse_yoke, parse_flight_yoke,
+    ECLIPSE_YOKE_MIN_REPORT_BYTES, FLIGHT_YOKE_MIN_REPORT_BYTES, parse_eclipse_yoke,
+    parse_flight_yoke,
 };
 
 // ─── Report builders ─────────────────────────────────────────────────────────
@@ -344,7 +341,7 @@ fn btn_combatstick_button_zero_and_hat_zero() {
 }
 
 #[test]
-fn btn_pro_throttle_14bit_button_range() {
+fn btn_pro_throttle_12bit_button_range() {
     // Pro Throttle has buttons in bits [7:0] and [13:8]
     let r = build_pro_throttle(0, 0, 0, 0xFF, 0x0F);
     let s = parse_pro_throttle(&r).unwrap();
@@ -408,7 +405,7 @@ fn btn_hat_pov_direction_to_degrees_coverage() {
 }
 
 #[test]
-fn btn_eclipse_yoke_32_buttons_across_4_bytes() {
+fn btn_eclipse_yoke_28_buttons_across_4_bytes() {
     // Eclipse Yoke: buttons span bytes 7,8,9 and low nibble of byte 10
     let r = build_eclipse_yoke(0, 0, 0, [0xFF, 0xFF, 0xFF], 0x0F);
     let s = parse_eclipse_yoke(&r).unwrap();
