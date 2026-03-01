@@ -32,6 +32,9 @@ mod allocation_test;
 #[cfg(test)]
 mod integration_test;
 
+#[cfg(test)]
+mod protocol_depth_test;
+
 pub use flight_panels_core::RulesEvaluator;
 pub use flight_panels_core::led::{LedController, LedTarget};
 pub use flight_panels_cougar::{
