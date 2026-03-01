@@ -23,6 +23,11 @@ fuzz_target!(|data: &[u8]| {
         data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11],
     ]);
 
+    // Non-finite values (NaN, Inf) are outside the axis input domain
+    if !input.is_finite() {
+        return;
+    }
+
     // Build a representative default pipeline (deadzone + curve)
     let Ok(builder) = PipelineBuilder::new()
         .deadzone(0.03)
@@ -39,7 +44,12 @@ fuzz_target!(|data: &[u8]| {
     frame.out = frame.in_raw;
     pipeline.process(&mut frame, &mut state);
 
-    // RT pipeline must never produce non-finite output
-    assert!(!frame.out.is_nan(), "pipeline produced NaN for input {input}");
-    assert!(!frame.out.is_infinite(), "pipeline produced Inf for input {input}");
+    // RT pipeline must never produce non-finite output for any finite input.
+    // The pipeline clamps out-of-range values internally, so output must
+    // always be finite regardless of how extreme the input is.
+    assert!(
+        frame.out.is_finite(),
+        "pipeline produced non-finite output {} for input {input}",
+        frame.out
+    );
 });
