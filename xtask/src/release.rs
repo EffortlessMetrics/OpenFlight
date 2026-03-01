@@ -18,6 +18,224 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+use crate::changelog;
+
+/// Semver bump type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BumpType {
+    Major,
+    Minor,
+    Patch,
+    Pre(String),
+}
+
+/// Bump a semver version string according to `bump_type`.
+///
+/// Returns the new version string (without a leading `v`).
+pub fn bump_version(current: &str, bump_type: BumpType) -> Result<String> {
+    let current = current.strip_prefix('v').unwrap_or(current);
+
+    // Strip any existing pre-release suffix for the base parse
+    let base = current.split('-').next().unwrap_or(current);
+    let parts: Vec<&str> = base.split('.').collect();
+    if parts.len() != 3 {
+        anyhow::bail!("Invalid semver base: '{current}'. Expected MAJOR.MINOR.PATCH[-pre]");
+    }
+
+    let major: u64 = parts[0]
+        .parse()
+        .with_context(|| format!("Invalid major version: '{}'", parts[0]))?;
+    let minor: u64 = parts[1]
+        .parse()
+        .with_context(|| format!("Invalid minor version: '{}'", parts[1]))?;
+    let patch: u64 = parts[2]
+        .parse()
+        .with_context(|| format!("Invalid patch version: '{}'", parts[2]))?;
+
+    let new_version = match bump_type {
+        BumpType::Major => format!("{}.0.0", major + 1),
+        BumpType::Minor => format!("{major}.{}.0", minor + 1),
+        BumpType::Patch => format!("{major}.{minor}.{}", patch + 1),
+        BumpType::Pre(pre) => format!("{major}.{minor}.{patch}-{pre}"),
+    };
+
+    Ok(new_version)
+}
+
+/// Resolve the target version from either an explicit string or a `--bump` flag.
+///
+/// When `--bump` is given, reads the current version from the root `Cargo.toml`
+/// and applies the requested bump.
+pub fn resolve_version(explicit: Option<String>, bump: Option<String>) -> Result<String> {
+    match (explicit, bump) {
+        (Some(v), None) => Ok(v),
+        (None, Some(b)) => {
+            let bump_type = parse_bump_type(&b)?;
+            let current = read_current_version()?;
+            bump_version(&current, bump_type)
+        }
+        (Some(_), Some(_)) => {
+            anyhow::bail!("Specify either a version or --bump, not both");
+        }
+        (None, None) => {
+            anyhow::bail!("Provide a version argument or --bump <major|minor|patch|pre:LABEL>");
+        }
+    }
+}
+
+/// Parse a bump type string (e.g. "major", "minor", "patch", "pre:rc.1").
+fn parse_bump_type(s: &str) -> Result<BumpType> {
+    match s {
+        "major" => Ok(BumpType::Major),
+        "minor" => Ok(BumpType::Minor),
+        "patch" => Ok(BumpType::Patch),
+        other if other.starts_with("pre:") => {
+            let label = &other[4..];
+            if label.is_empty() {
+                anyhow::bail!("Pre-release label cannot be empty (use pre:<label>)");
+            }
+            Ok(BumpType::Pre(label.to_string()))
+        }
+        other => anyhow::bail!(
+            "Unknown bump type: '{other}'. Use major, minor, patch, or pre:<label>"
+        ),
+    }
+}
+
+/// Read the workspace package version from the root Cargo.toml.
+fn read_current_version() -> Result<String> {
+    let content =
+        fs::read_to_string("Cargo.toml").context("Failed to read root Cargo.toml")?;
+
+    let version_re = Regex::new(r#"^version\s*=\s*"([^"]*)""#)
+        .context("Failed to compile version regex")?;
+
+    let mut in_package = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed == "[package]" || trimmed == "[workspace.package]" {
+            in_package = true;
+        } else if trimmed.starts_with('[') {
+            in_package = false;
+        }
+        if in_package
+            && let Some(caps) = version_re.captures(trimmed)
+        {
+            return Ok(caps[1].to_string());
+        }
+    }
+
+    anyhow::bail!("Could not find version in root Cargo.toml [package] or [workspace.package]")
+}
+
+/// Run `cargo xtask prepare-release <version>`.
+///
+/// This is a streamlined release flow that generates the changelog from
+/// conventional commits, bumps versions, and creates a git tag.
+pub fn run_prepare_release(version: &str) -> Result<()> {
+    validate_version(version)?;
+
+    println!("🚀 Preparing release v{version}\n");
+
+    // Step 1: Generate changelog from conventional commits
+    println!("📋 Step 1/4: Generating changelog from conventional commits...");
+    let since = get_latest_tag();
+    let entries = if let Some(ref tag) = since {
+        changelog::read_git_log(tag)?
+    } else {
+        changelog::read_git_log("HEAD~50")?
+    };
+
+    let ref_name = since.as_deref().unwrap_or("initial commit");
+    println!(
+        "  Found {} conventional commit(s) since {ref_name}",
+        entries.len()
+    );
+
+    let today = Local::now().format("%Y-%m-%d");
+    let title = format!("## [{version}] - {today}");
+    let changelog_text = changelog::generate_changelog(&entries, &title);
+    insert_versioned_changelog(&changelog_text)?;
+    println!("  ✅ CHANGELOG.md updated\n");
+
+    // Step 2: Bump versions
+    println!("📝 Step 2/4: Bumping versions...");
+    bump_versions(version)?;
+    println!("  ✅ Versions updated\n");
+
+    // Step 3: Create git tag
+    println!("🏷️  Step 3/4: Creating git tag...");
+    let tag = format!("v{version}");
+    let tag_status = Command::new("git")
+        .args(["tag", "-a", &tag, "-m", &format!("Release {tag}")])
+        .status()
+        .context("Failed to create git tag")?;
+
+    if !tag_status.success() {
+        eprintln!("  ⚠ Git tag creation failed (tag may already exist)");
+    } else {
+        println!("  ✅ Created tag {tag}\n");
+    }
+
+    // Step 4: Summary
+    println!("📋 Step 4/4: Release summary\n");
+    println!("  ✅ Changelog generated from {ref_name}");
+    println!("  ✅ Version bumped to {version}");
+    println!("  ✅ Git tag {tag} created\n");
+    println!("  Next steps:");
+    println!("    □ Review CHANGELOG.md entry");
+    println!("    □ Commit: git commit -am \"chore: release {tag}\"");
+    println!("    □ Push: git push && git push origin {tag}");
+
+    Ok(())
+}
+
+/// Insert a versioned changelog section into CHANGELOG.md.
+fn insert_versioned_changelog(section: &str) -> Result<()> {
+    let path = Path::new("CHANGELOG.md");
+    let content = fs::read_to_string(path).context("Failed to read CHANGELOG.md")?;
+
+    let new_content = if let Some(start) = content.find("## [Unreleased]") {
+        let after_header = start + "## [Unreleased]".len();
+        let next_section = content[after_header..]
+            .find("\n## [")
+            .map_or(content.len(), |i| after_header + i + 1);
+
+        format!(
+            "{}## [Unreleased]\n\n{}\n{}",
+            &content[..start],
+            section.trim_end(),
+            &content[next_section..]
+        )
+    } else {
+        let insert_pos = content.find("\n## ").map_or(content.len(), |i| i + 1);
+        format!(
+            "{}{}\n\n{}",
+            &content[..insert_pos],
+            section.trim_end(),
+            &content[insert_pos..]
+        )
+    };
+
+    fs::write(path, new_content).context("Failed to write CHANGELOG.md")?;
+    Ok(())
+}
+
+/// Get the most recent git tag, or `None` if no tags exist.
+fn get_latest_tag() -> Option<String> {
+    let output = Command::new("git")
+        .args(["describe", "--tags", "--abbrev=0"])
+        .output()
+        .ok()?;
+
+    if output.status.success() {
+        let tag = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if tag.is_empty() { None } else { Some(tag) }
+    } else {
+        None
+    }
+}
+
 /// Run release preparation.
 pub fn run_release(version: &str) -> Result<()> {
     // Validate version format
@@ -226,4 +444,79 @@ fn update_changelog(version: &str) -> Result<()> {
     fs::write(changelog_path, new_content).context("Failed to write CHANGELOG.md")?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── bump_version ────────────────────────────────────────────
+
+    #[test]
+    fn bump_major() {
+        assert_eq!(bump_version("1.2.3", BumpType::Major).unwrap(), "2.0.0");
+    }
+
+    #[test]
+    fn bump_minor() {
+        assert_eq!(bump_version("1.2.3", BumpType::Minor).unwrap(), "1.3.0");
+    }
+
+    #[test]
+    fn bump_patch() {
+        assert_eq!(bump_version("1.2.3", BumpType::Patch).unwrap(), "1.2.4");
+    }
+
+    #[test]
+    fn bump_pre_release() {
+        assert_eq!(
+            bump_version("1.2.3", BumpType::Pre("rc.1".into())).unwrap(),
+            "1.2.3-rc.1"
+        );
+    }
+
+    #[test]
+    fn bump_strips_v_prefix() {
+        assert_eq!(bump_version("v1.2.3", BumpType::Patch).unwrap(), "1.2.4");
+    }
+
+    #[test]
+    fn bump_from_pre_release() {
+        assert_eq!(
+            bump_version("1.2.3-beta.1", BumpType::Patch).unwrap(),
+            "1.2.4"
+        );
+    }
+
+    #[test]
+    fn bump_major_from_zero() {
+        assert_eq!(bump_version("0.1.0", BumpType::Major).unwrap(), "1.0.0");
+    }
+
+    #[test]
+    fn bump_invalid_version() {
+        assert!(bump_version("not-a-version", BumpType::Patch).is_err());
+    }
+
+    #[test]
+    fn bump_incomplete_version() {
+        assert!(bump_version("1.2", BumpType::Patch).is_err());
+    }
+
+    // ── validate_version ────────────────────────────────────────
+
+    #[test]
+    fn validate_good_version() {
+        assert!(validate_version("1.2.3").is_ok());
+        assert!(validate_version("0.0.1").is_ok());
+        assert!(validate_version("1.2.3-rc.1").is_ok());
+        assert!(validate_version("1.2.3-beta").is_ok());
+    }
+
+    #[test]
+    fn validate_bad_version() {
+        assert!(validate_version("v1.2.3").is_err());
+        assert!(validate_version("1.2").is_err());
+        assert!(validate_version("abc").is_err());
+    }
 }
