@@ -62,7 +62,10 @@ pub fn run_package_windows(skip_build: bool) -> Result<()> {
         .context("Failed to run WiX build script")?;
 
     if !status.success() {
-        anyhow::bail!("Windows MSI packaging failed (exit code {:?})", status.code());
+        anyhow::bail!(
+            "Windows MSI packaging failed (exit code {:?})",
+            status.code()
+        );
     }
 
     println!("\n✅ Windows MSI package created successfully");
@@ -71,11 +74,7 @@ pub fn run_package_windows(skip_build: bool) -> Result<()> {
 
 fn which_powershell() -> Option<String> {
     for name in &["pwsh", "powershell"] {
-        if Command::new(name)
-            .arg("-Version")
-            .output()
-            .is_ok()
-        {
+        if Command::new(name).arg("-Version").output().is_ok() {
             return Some((*name).to_string());
         }
     }
@@ -91,10 +90,7 @@ fn wix_available() -> bool {
         }
     }
     // Check PATH
-    Command::new("candle")
-        .arg("-?")
-        .output()
-        .is_ok()
+    Command::new("candle").arg("-?").output().is_ok()
 }
 
 fn print_windows_dry_run(skip_build: bool) {
@@ -138,9 +134,7 @@ pub fn run_package_linux(skip_build: bool) -> Result<()> {
     }
 
     println!("Running: bash installer/debian/build.sh\n");
-    let status = cmd
-        .status()
-        .context("Failed to run Debian build script")?;
+    let status = cmd.status().context("Failed to run Debian build script")?;
 
     if !status.success() {
         anyhow::bail!("Linux deb packaging failed (exit code {:?})", status.code());
@@ -151,10 +145,7 @@ pub fn run_package_linux(skip_build: bool) -> Result<()> {
 }
 
 fn dpkg_deb_available() -> bool {
-    Command::new("dpkg-deb")
-        .arg("--version")
-        .output()
-        .is_ok()
+    Command::new("dpkg-deb").arg("--version").output().is_ok()
 }
 
 fn print_linux_dry_run(skip_build: bool) {
