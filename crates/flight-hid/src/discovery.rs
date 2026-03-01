@@ -187,6 +187,11 @@ impl<S: DeviceScanner> DeviceDiscovery<S> {
     pub fn connected_ids(&self) -> &HashSet<StableDeviceId> {
         &self.connected
     }
+
+    /// Mutable access to the underlying scanner, e.g. for mock device changes.
+    pub fn scanner_mut(&mut self) -> &mut S {
+        &mut self.scanner
+    }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────
