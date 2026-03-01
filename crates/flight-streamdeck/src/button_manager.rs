@@ -166,7 +166,12 @@ impl ButtonManager {
                 .states
                 .entry(button_id)
                 .or_insert_with(ButtonState::new);
-            let held = state.phase == PressPhase::Held;
+            // Check phase OR actual elapsed time so holds are detected even
+            // when tick() hasn't run between press and release.
+            let held = state.phase == PressPhase::Held
+                || state
+                    .press_start
+                    .is_some_and(|t| Instant::now().duration_since(t) >= self.hold_threshold);
             state.phase = PressPhase::Released;
             state.press_start = None;
             held
@@ -243,7 +248,15 @@ impl ButtonManager {
     }
 
     /// Whether a button is in the "active/on" toggle state.
+    ///
+    /// For [`ButtonAction::ToggleState`] buttons the global toggle map is
+    /// consulted so that *all* buttons sharing a toggle name stay in sync.
     pub fn is_active(&self, button_id: u8) -> bool {
+        if let Some(config) = self.configs.get(&button_id) {
+            if let ButtonAction::ToggleState(ref name) = config.action {
+                return self.toggled.get(name).copied().unwrap_or(false);
+            }
+        }
         self.states.get(&button_id).is_some_and(|s| s.toggle_on)
     }
 
@@ -550,5 +563,57 @@ mod tests {
     fn test_button_count() {
         let mgr = ButtonManager::new(32);
         assert_eq!(mgr.button_count(), 32);
+    }
+
+    // ── Bug-fix regression: hold detected without tick ─────────────
+
+    #[test]
+    fn test_hold_detected_without_tick() {
+        let mut mgr = ButtonManager::new(6);
+        mgr.set_config(0, simple_config("BTN0"));
+        // Threshold of 0 ms means any press is a hold.
+        mgr.set_hold_threshold(Duration::from_millis(0));
+
+        mgr.handle_press(0);
+        // Release *without* calling tick() — hold must still be detected.
+        mgr.handle_release(0);
+        let events = mgr.drain_events();
+        // Should NOT have ActionDispatched because it was a hold.
+        assert!(
+            !events
+                .iter()
+                .any(|e| matches!(e, ButtonEvent::ActionDispatched { .. })),
+            "hold release without tick should not dispatch tap action"
+        );
+    }
+
+    // ── Bug-fix regression: toggle display syncs across buttons ────
+
+    #[test]
+    fn test_toggle_state_syncs_across_buttons() {
+        let mut mgr = ButtonManager::new(6);
+        let toggle_cfg = |label: &str| ButtonConfig {
+            label: label.to_string(),
+            icon_path: None,
+            action: ButtonAction::ToggleState("gear_down".to_string()),
+        };
+        mgr.set_config(0, toggle_cfg("GR0"));
+        mgr.set_config(1, toggle_cfg("GR1"));
+
+        // Toggle via button 0.
+        mgr.handle_press(0);
+        mgr.handle_release(0);
+
+        // Both buttons should report active.
+        assert!(mgr.is_active(0), "toggling button should be active");
+        assert!(
+            mgr.is_active(1),
+            "sibling toggle button should also be active"
+        );
+
+        let ds0 = mgr.get_display_state(0);
+        let ds1 = mgr.get_display_state(1);
+        assert!(ds0.active);
+        assert!(ds1.active);
     }
 }

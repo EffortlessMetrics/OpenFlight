@@ -98,24 +98,32 @@ impl PageManager {
     }
 
     /// Navigate to the next page (wraps around).
+    ///
+    /// No-op while an overlay is active — base navigation is frozen.
     pub fn next_page(&mut self) -> Result<&ButtonPage, PageError> {
         if self.page_order.is_empty() {
             return Err(PageError::NoPages);
         }
-        self.current_index = (self.current_index + 1) % self.page_order.len();
+        if self.stack.is_empty() {
+            self.current_index = (self.current_index + 1) % self.page_order.len();
+        }
         self.current_page()
     }
 
     /// Navigate to the previous page (wraps around).
+    ///
+    /// No-op while an overlay is active — base navigation is frozen.
     pub fn prev_page(&mut self) -> Result<&ButtonPage, PageError> {
         if self.page_order.is_empty() {
             return Err(PageError::NoPages);
         }
-        self.current_index = if self.current_index == 0 {
-            self.page_order.len() - 1
-        } else {
-            self.current_index - 1
-        };
+        if self.stack.is_empty() {
+            self.current_index = if self.current_index == 0 {
+                self.page_order.len() - 1
+            } else {
+                self.current_index - 1
+            };
+        }
         self.current_page()
     }
 
@@ -401,5 +409,39 @@ mod tests {
         mgr.add_page(sample_page("P", 5));
         assert_eq!(mgr.page_count(), 1);
         assert_eq!(mgr.current_page().unwrap().buttons.len(), 5);
+    }
+
+    // ── Bug-fix regression: overlay blocks base navigation ─────────
+
+    #[test]
+    fn test_next_prev_noop_with_overlay() {
+        let mut mgr = PageManager::new();
+        mgr.add_page(sample_page("A", 1));
+        mgr.add_page(sample_page("B", 1));
+        mgr.add_page(sample_page("Overlay", 2));
+
+        // Base is at "A" (index 0).
+        assert_eq!(mgr.current_index(), 0);
+
+        // Push overlay — now visible page is "Overlay".
+        mgr.push_page("Overlay").unwrap();
+
+        // next/prev must NOT change the base index.
+        mgr.next_page().unwrap();
+        assert_eq!(mgr.current_index(), 0, "base index should not advance");
+        assert_eq!(
+            mgr.current_page().unwrap().name,
+            "Overlay",
+            "overlay should still be visible"
+        );
+
+        mgr.prev_page().unwrap();
+        assert_eq!(mgr.current_index(), 0, "base index should not retreat");
+
+        // After popping the overlay, navigation works normally again.
+        mgr.pop_page().unwrap();
+        mgr.next_page().unwrap();
+        assert_eq!(mgr.current_index(), 1);
+        assert_eq!(mgr.current_page().unwrap().name, "B");
     }
 }
