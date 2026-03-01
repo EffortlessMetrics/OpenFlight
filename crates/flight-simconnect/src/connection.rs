@@ -187,6 +187,10 @@ impl ReconnectPolicy {
         backoff_max_ms: u64,
         backoff_multiplier: f64,
     ) -> Self {
+        debug_assert!(
+            backoff_multiplier > 0.0 && backoff_multiplier.is_finite(),
+            "backoff_multiplier must be finite and positive, got {backoff_multiplier}"
+        );
         let multiplier = if backoff_multiplier.is_finite() && backoff_multiplier > 0.0 {
             backoff_multiplier
         } else {
@@ -223,7 +227,7 @@ impl ReconnectPolicy {
 
     /// Compute the back-off delay for the current failure count.
     pub fn current_delay(&self) -> Duration {
-        let exponent = self.consecutive_failures.min(31) as i32;
+        let exponent = self.consecutive_failures.min(20) as i32;
         let multiplier = self.backoff_multiplier.powi(exponent);
         let delay_ms = (self.backoff_base_ms as f64 * multiplier) as u64;
         let capped = delay_ms.min(self.backoff_max_ms);
@@ -309,7 +313,7 @@ impl ConnectionHealth {
         heartbeat_ok && error_rate_ok
     }
 
-    /// Current error rate (errors / total traffic). Returns 0.0 when no traffic.
+    /// Current error rate (errors / (packets + errors)). Returns 0.0 when no traffic.
     pub fn error_rate(&self) -> f64 {
         let total = self.packet_count + self.error_count;
         if total == 0 {
