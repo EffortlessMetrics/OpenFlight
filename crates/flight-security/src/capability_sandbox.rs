@@ -40,6 +40,13 @@ impl Capability {
         (Self::FILE_IO, "FileIO"),
     ];
 
+    /// Bitmask of all known capability bits.
+    const KNOWN_BITS: u32 = Self::READ_TELEMETRY.0
+        | Self::WRITE_CONTROLS.0
+        | Self::ACCESS_HID.0
+        | Self::NETWORK_IO.0
+        | Self::FILE_IO.0;
+
     /// Human-readable label.
     pub fn label(self) -> &'static str {
         Self::ALL
@@ -73,9 +80,19 @@ impl CapabilitySet {
         Self(cap.0)
     }
 
-    /// Create a set from a raw bitmask.
+    /// Create a set from a raw bitmask, stripping any unknown bits.
     pub fn from_bits(bits: u32) -> Self {
-        Self(bits)
+        Self(bits & Capability::KNOWN_BITS)
+    }
+
+    /// Create a set from a raw bitmask, rejecting unknown bits.
+    pub fn from_bits_strict(bits: u32) -> Result<Self, UnknownCapabilityBits> {
+        let unknown = bits & !Capability::KNOWN_BITS;
+        if unknown != 0 {
+            Err(UnknownCapabilityBits(unknown))
+        } else {
+            Ok(Self(bits))
+        }
     }
 
     /// Return the raw bitmask.
@@ -121,6 +138,18 @@ impl CapabilitySet {
             .map(|(c, _)| *c)
     }
 }
+
+/// Error returned by [`CapabilitySet::from_bits_strict`] when unknown bits are present.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct UnknownCapabilityBits(pub u32);
+
+impl fmt::Display for UnknownCapabilityBits {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "unknown capability bits: {:#010x}", self.0)
+    }
+}
+
+impl std::error::Error for UnknownCapabilityBits {}
 
 impl std::ops::BitOr for CapabilitySet {
     type Output = Self;
@@ -416,5 +445,32 @@ mod tests {
     fn test_sandbox_policy_label() {
         let policy = SandboxPolicy::new("my-plugin", CapabilitySet::NONE);
         assert_eq!(policy.label, "my-plugin");
+    }
+
+    // --- Unknown capability bits ---
+
+    #[test]
+    fn test_from_bits_strips_unknown_bits() {
+        let unknown_bit = 1 << 16;
+        let set = CapabilitySet::from_bits(Capability::READ_TELEMETRY.0 | unknown_bit);
+        assert!(set.contains(Capability::READ_TELEMETRY));
+        assert_eq!(set.bits(), Capability::READ_TELEMETRY.0);
+    }
+
+    #[test]
+    fn test_from_bits_strict_rejects_unknown_bits() {
+        let unknown_bit = 1 << 16;
+        let result = CapabilitySet::from_bits_strict(Capability::READ_TELEMETRY.0 | unknown_bit);
+        let err = result.unwrap_err();
+        assert_eq!(err.0, unknown_bit);
+    }
+
+    #[test]
+    fn test_from_bits_strict_accepts_known_bits() {
+        let bits = Capability::READ_TELEMETRY.0 | Capability::FILE_IO.0;
+        let set = CapabilitySet::from_bits_strict(bits).unwrap();
+        assert!(set.contains(Capability::READ_TELEMETRY));
+        assert!(set.contains(Capability::FILE_IO));
+        assert_eq!(set.bits(), bits);
     }
 }
