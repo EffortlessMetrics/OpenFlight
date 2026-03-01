@@ -103,14 +103,14 @@ fn device_custom_types() {
 fn device_axis_clamps_positive() {
     let dev = default_device();
     dev.set_axis(0, 5.0);
-    assert!((dev.get_state().axes[0] - 1.0).abs() < f32::EPSILON);
+    assert!((dev.get_state().axes[0] - 1.0).abs() < 1e-5);
 }
 
 #[test]
 fn device_axis_clamps_negative() {
     let dev = default_device();
     dev.set_axis(0, -5.0);
-    assert!((dev.get_state().axes[0] - (-1.0)).abs() < f32::EPSILON);
+    assert!((dev.get_state().axes[0] - (-1.0)).abs() < 1e-5);
 }
 
 #[test]
@@ -118,7 +118,7 @@ fn device_axis_exact_boundaries() {
     let dev = default_device();
     for v in [-1.0_f32, 0.0, 1.0] {
         dev.set_axis(0, v);
-        assert!((dev.get_state().axes[0] - v).abs() < f32::EPSILON, "v={v}");
+        assert!((dev.get_state().axes[0] - v).abs() < 1e-5, "v={v}");
     }
 }
 
@@ -129,7 +129,7 @@ fn device_axis_out_of_range_index_ignored() {
     dev.set_axis(8, 0.5);
     // All axes should still be at defaults (0.0)
     for &v in &dev.get_state().axes {
-        assert!(v.abs() < f32::EPSILON);
+        assert!(v.abs() < 1e-5);
     }
 }
 
@@ -140,9 +140,9 @@ fn device_multiple_axes_independent() {
     dev.set_axis(1, 0.2);
     dev.set_axis(2, 0.3);
     let s = dev.get_state();
-    assert!((s.axes[0] - 0.1).abs() < f32::EPSILON);
-    assert!((s.axes[1] - 0.2).abs() < f32::EPSILON);
-    assert!((s.axes[2] - 0.3).abs() < f32::EPSILON);
+    assert!((s.axes[0] - 0.1).abs() < 1e-5);
+    assert!((s.axes[1] - 0.2).abs() < 1e-5);
+    assert!((s.axes[2] - 0.3).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -429,10 +429,7 @@ fn backend_error_display_all_variants() {
             "device 2 already acquired",
         ),
         (VirtualBackendError::InvalidAxis(3), "invalid axis id 3"),
-        (
-            VirtualBackendError::InvalidButton(4),
-            "invalid button id 4",
-        ),
+        (VirtualBackendError::InvalidButton(4), "invalid button id 4"),
         (VirtualBackendError::InvalidHat(5), "invalid hat id 5"),
         (
             VirtualBackendError::DriverNotAvailable,
@@ -487,7 +484,7 @@ fn mock_release_resets_all_state() {
     m.release().unwrap();
     m.acquire().unwrap();
 
-    assert!((m.get_axis(0).unwrap()).abs() < f32::EPSILON);
+    assert!((m.get_axis(0).unwrap()).abs() < 1e-5);
     assert!(!m.get_button(1).unwrap());
     assert_eq!(m.get_hat(0).unwrap(), HatDirection::Centered);
 }
@@ -500,10 +497,10 @@ fn mock_release_resets_all_state() {
 fn mock_axis_clamps_to_unit_range() {
     let mut m = acquired_mock();
     m.set_axis(0, 99.0).unwrap();
-    assert!((m.get_axis(0).unwrap() - 1.0).abs() < f32::EPSILON);
+    assert!((m.get_axis(0).unwrap() - 1.0).abs() < 1e-5);
 
     m.set_axis(0, -99.0).unwrap();
-    assert!((m.get_axis(0).unwrap() - (-1.0)).abs() < f32::EPSILON);
+    assert!((m.get_axis(0).unwrap() - (-1.0)).abs() < 1e-5);
 }
 
 #[test]
@@ -631,10 +628,7 @@ fn vjoy_axis_round_trip_precision() {
     for val in [-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
         dev.set_axis(0, val).unwrap();
         let got = dev.get_axis(0).unwrap();
-        assert!(
-            (got - val).abs() < 0.01,
-            "expected ~{val}, got {got}"
-        );
+        assert!((got - val).abs() < 0.01, "expected ~{val}, got {got}");
     }
 }
 
@@ -711,10 +705,7 @@ fn uinput_axis_round_trip_precision() {
     for val in [-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
         dev.set_axis(0, val).unwrap();
         let got = dev.get_axis(0).unwrap();
-        assert!(
-            (got - val).abs() < 0.01,
-            "expected ~{val}, got {got}"
-        );
+        assert!((got - val).abs() < 0.01, "expected ~{val}, got {got}");
     }
 }
 
@@ -742,7 +733,7 @@ fn uinput_release_resets_state() {
 fn transform_identity_passthrough() {
     let t = AxisTransform::default();
     for v in [-1.0_f32, -0.5, 0.0, 0.5, 1.0] {
-        assert!((t.apply(v) - v).abs() < f32::EPSILON, "v={v}");
+        assert!((t.apply(v) - v).abs() < 1e-5, "v={v}");
     }
 }
 
@@ -752,8 +743,8 @@ fn transform_deadzone_zeroes_inner() {
         deadzone: 0.15,
         ..Default::default()
     };
-    assert!(t.apply(0.10).abs() < f32::EPSILON);
-    assert!(t.apply(-0.10).abs() < f32::EPSILON);
+    assert!(t.apply(0.10).abs() < 1e-5);
+    assert!(t.apply(-0.10).abs() < 1e-5);
 }
 
 #[test]
@@ -773,8 +764,8 @@ fn transform_invert_flips_sign() {
         invert: true,
         ..Default::default()
     };
-    assert!((t.apply(0.6) - (-0.6)).abs() < f32::EPSILON);
-    assert!((t.apply(-0.6) - 0.6).abs() < f32::EPSILON);
+    assert!((t.apply(0.6) - (-0.6)).abs() < 1e-5);
+    assert!((t.apply(-0.6) - 0.6).abs() < 1e-5);
 }
 
 #[test]
@@ -783,7 +774,7 @@ fn transform_scale_halves_range() {
         scale: 0.5,
         ..Default::default()
     };
-    assert!((t.apply(1.0) - 0.5).abs() < f32::EPSILON);
+    assert!((t.apply(1.0) - 0.5).abs() < 1e-5);
 }
 
 #[test]
@@ -792,7 +783,7 @@ fn transform_offset_shifts_center() {
         offset: 0.3,
         ..Default::default()
     };
-    assert!((t.apply(0.0) - 0.3).abs() < f32::EPSILON);
+    assert!((t.apply(0.0) - 0.3).abs() < 1e-5);
 }
 
 #[test]
@@ -801,8 +792,8 @@ fn transform_result_clamps() {
         scale: 3.0,
         ..Default::default()
     };
-    assert!((t.apply(1.0) - 1.0).abs() < f32::EPSILON);
-    assert!((t.apply(-1.0) - (-1.0)).abs() < f32::EPSILON);
+    assert!((t.apply(1.0) - 1.0).abs() < 1e-5);
+    assert!((t.apply(-1.0) - (-1.0)).abs() < 1e-5);
 }
 
 #[test]
@@ -814,7 +805,7 @@ fn transform_combined_invert_deadzone_scale() {
         offset: 0.0,
     };
     // Input 0.05 → inverted = -0.05 → inside deadzone → 0 → *0.5 = 0
-    assert!(t.apply(0.05).abs() < f32::EPSILON);
+    assert!(t.apply(0.05).abs() < 1e-5);
     // Input 1.0 → inverted = -1.0 → outside dz → rescaled to -1.0 → *0.5 = -0.5
     assert!((t.apply(1.0) - (-0.5)).abs() < 0.02);
 }
@@ -832,7 +823,7 @@ fn mapper_axis_simple_passthrough() {
         transform: AxisTransform::default(),
     });
     m.update_axes(&[0.42]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 0.42).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.42).abs() < 1e-5);
 }
 
 #[test]
@@ -844,7 +835,7 @@ fn mapper_axis_remap_src_to_different_dst() {
         transform: AxisTransform::default(),
     });
     m.update_axes(&[0.0, 0.0, 0.77]).unwrap();
-    assert!((m.backend().get_axis(5).unwrap() - 0.77).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(5).unwrap() - 0.77).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -868,7 +859,7 @@ fn mapper_merge_first_non_zero_picks_first_active() {
 
     m.update_axes(&[0.3, 0.9]).unwrap();
     // First non-zero is 0.3
-    assert!((m.backend().get_axis(0).unwrap() - 0.3).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.3).abs() < 1e-5);
 }
 
 #[test]
@@ -888,7 +879,7 @@ fn mapper_merge_sum_clamps_overflow() {
 
     m.update_axes(&[0.7, 0.8]).unwrap();
     // Sum = 1.5 → clamped to 1.0
-    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < 1e-5);
 }
 
 #[test]
@@ -907,7 +898,7 @@ fn mapper_merge_max_abs_picks_largest_magnitude() {
     });
 
     m.update_axes(&[0.2, -0.9]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - (-0.9)).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - (-0.9)).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -932,8 +923,8 @@ fn mapper_split_one_physical_to_two_virtual() {
     });
 
     m.update_axes(&[0.5]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 0.5).abs() < f32::EPSILON);
-    assert!((m.backend().get_axis(1).unwrap() - (-0.5)).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.5).abs() < 1e-5);
+    assert!((m.backend().get_axis(1).unwrap() - (-0.5)).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1056,7 +1047,7 @@ fn mapper_no_mappings_is_noop() {
     m.update_hats(&[HatDirection::East]).unwrap();
 
     // Nothing should have changed
-    assert!(m.backend().get_axis(0).unwrap().abs() < f32::EPSILON);
+    assert!(m.backend().get_axis(0).unwrap().abs() < 1e-5);
     assert!(!m.backend().get_button(0).unwrap());
     assert_eq!(m.backend().get_hat(0).unwrap(), HatDirection::Centered);
 }
@@ -1071,7 +1062,7 @@ fn mapper_missing_physical_source_defaults_to_zero() {
     });
     // Only 2 physical axes — src 10 is missing → 0.0
     m.update_axes(&[0.5, 0.6]).unwrap();
-    assert!(m.backend().get_axis(0).unwrap().abs() < f32::EPSILON);
+    assert!(m.backend().get_axis(0).unwrap().abs() < 1e-5);
 }
 
 #[test]
