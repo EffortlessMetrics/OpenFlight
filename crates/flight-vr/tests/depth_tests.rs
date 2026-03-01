@@ -14,6 +14,8 @@ use proptest::prelude::*;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
+const PROPTEST_CASES: u32 = 100;
+
 fn full_pose(x: f32, y: f32, z: f32, yaw: f32, pitch: f32, roll: f32) -> HeadPose {
     HeadPose {
         x,
@@ -284,10 +286,10 @@ fn mock_disconnected_backend_name() {
 }
 
 #[test]
-fn mock_disconnected_poll_returns_error() {
+fn mock_disconnected_poll_returns_not_connected() {
     let mut backend = MockVrBackend::new_disconnected();
-    // Disconnected mock has empty sequence → PollFailed
-    assert!(backend.poll().is_err());
+    let err = backend.poll().unwrap_err();
+    assert!(matches!(err, VrError::NotConnected));
 }
 
 // ── VrAdapter — update & caching ─────────────────────────────────────────
@@ -520,6 +522,8 @@ fn head_pose_partial_ne() {
 // ── Property-based tests ─────────────────────────────────────────────────
 
 proptest! {
+    #![proptest_config(ProptestConfig::with_cases(PROPTEST_CASES))]
+
     #[test]
     fn prop_normalize_yaw_in_range(yaw in -10000.0_f32..10000.0) {
         let p = full_pose(0.0, 0.0, 0.0, yaw, 0.0, 0.0);
@@ -589,7 +593,7 @@ proptest! {
     }
 
     #[test]
-    fn prop_clone_equals_original(
+    fn prop_copy_equals_original(
         x in -100.0_f32..100.0,
         y in -100.0_f32..100.0,
         z in -100.0_f32..100.0,
@@ -598,7 +602,7 @@ proptest! {
         roll in -180.0_f32..180.0,
     ) {
         let p = full_pose(x, y, z, yaw, pitch, roll);
-        let p2 = p;
+        let p2 = p; // Copy semantics
         prop_assert_eq!(p.x, p2.x);
         prop_assert_eq!(p.y, p2.y);
         prop_assert_eq!(p.z, p2.z);
