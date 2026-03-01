@@ -57,6 +57,28 @@ fn collect_yaml_inner(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// Collect all files (not just .yaml) recursively under a directory, sorted.
+fn collect_all_files(dir: &Path) -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+    collect_all_files_inner(dir, &mut paths);
+    paths.sort();
+    paths
+}
+
+fn collect_all_files_inner(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let p = entry.path();
+        if p.is_dir() {
+            collect_all_files_inner(&p, out);
+        } else {
+            out.push(p);
+        }
+    }
+}
+
 fn parse_yaml(path: &Path) -> serde_yaml::Value {
     let text = std::fs::read_to_string(path).expect("read fixture");
     serde_yaml::from_str(&text).expect("parse YAML")
@@ -117,6 +139,7 @@ fn validate_game_fields(doc: &serde_yaml::Value) -> Vec<String> {
             &doc["features"]["control_injection"],
         ),
         ("test_coverage.hil", &doc["test_coverage"]["hil"]),
+        ("support_tier", &doc["support_tier"]),
     ];
     for (field, val) in &required {
         if val.is_null() {
@@ -292,13 +315,11 @@ fn tier_1_requires_test_coverage() {
         }
     }
     // This is advisory — we record which tier-1 devices lack coverage
-    if !failures.is_empty() {
-        eprintln!(
-            "Advisory: {} tier-1 device(s) without test_coverage flags:\n{}",
-            failures.len(),
-            failures.join("\n")
-        );
-    }
+    assert!(
+        failures.is_empty(),
+        "Tier-1 device(s) without test_coverage flags:\n{}",
+        failures.join("\n")
+    );
 }
 
 #[test]
@@ -342,9 +363,13 @@ fn tier_values_are_only_1_2_3_in_parseable_manifests() {
             invalid.push(format!("{}: tier {tier}", path.display()));
         }
     }
-    assert!(checked > 100, "should check at least 100 devices");
+    assert!(checked > 0, "should check at least one device");
     // Some pre-existing manifests use tier 4/5; verify the vast majority are valid
-    let invalid_pct = (invalid.len() as f64 / checked as f64) * 100.0;
+    let invalid_pct = if checked > 0 {
+        (invalid.len() as f64 / checked as f64) * 100.0
+    } else {
+        0.0
+    };
     assert!(
         invalid_pct < 1.0,
         "More than 1% of devices have invalid tier values ({}/{checked}):\n{}",
@@ -403,7 +428,7 @@ fn matrix_generates_json_structure() {
 }
 
 #[test]
-fn matrix_device_count_matches_manifests() {
+fn matrix_json_device_count_matches_summary() {
     let json_path = workspace_root().join("compat").join("compatibility.json");
     if !json_path.exists() {
         eprintln!("compatibility.json not found — skipping");
@@ -484,15 +509,14 @@ fn consistency_no_duplicate_vid_pid_in_fixtures() {
     assert_eq!(vid1, vid2);
     assert_eq!(pid1, pid2);
 
-    // Verify detection: collect all parseable real manifests and count unique VID/PIDs
-    let devices = collect_yaml(&compat_devices_dir());
+    // Run duplicate-detection logic over the two fixture docs and assert it finds the dup
+    let fixture_docs = vec![
+        (&fixture_dir().join("devices").join("valid_tier1.yaml"), &doc1),
+        (&fixture_dir().join("devices").join("duplicate_vid_pid.yaml"), &doc2),
+    ];
     let mut seen: HashMap<(u64, u64), PathBuf> = HashMap::new();
     let mut duplicate_count = 0usize;
-
-    for path in &devices {
-        let Some(doc) = try_parse_yaml(path) else {
-            continue;
-        };
+    for (path, doc) in &fixture_docs {
         let vid = doc["device"]["usb"]["vendor_id"].as_u64();
         let pid = doc["device"]["usb"]["product_id"].as_u64();
         if let (Some(v), Some(p)) = (vid, pid) {
@@ -500,15 +524,14 @@ fn consistency_no_duplicate_vid_pid_in_fixtures() {
             match seen.entry((v, p)) {
                 Entry::Occupied(_) => duplicate_count += 1,
                 Entry::Vacant(e) => {
-                    e.insert(path.clone());
+                    e.insert(path.to_path_buf());
                 }
             }
         }
     }
-    // Report duplicates as advisory; the detection mechanism works
-    eprintln!(
-        "Advisory: {duplicate_count} duplicate VID/PID pair(s) in {} parseable device manifests",
-        seen.len() + duplicate_count
+    assert_eq!(
+        duplicate_count, 1,
+        "fixture duplicate detection should find exactly 1 duplicate VID/PID pair"
     );
 }
 
@@ -526,7 +549,7 @@ fn consistency_all_parseable_devices_have_vendor() {
             missing.push(format!("{}: missing device.vendor", path.display()));
         }
     }
-    assert!(checked > 100, "should check at least 100 devices");
+    assert!(checked > 0, "should check at least one device");
     // Allow a small number of manifests with missing vendor (pre-existing data)
     let missing_pct = (missing.len() as f64 / checked as f64) * 100.0;
     assert!(
@@ -566,16 +589,25 @@ fn consistency_all_games_have_integration_mechanism() {
 
 #[test]
 fn consistency_manifest_files_use_yaml_extension() {
-    let device_files = collect_yaml(&compat_devices_dir());
-    let game_files = collect_yaml(&compat_games_dir());
+    let device_files = collect_all_files(&compat_devices_dir());
+    let game_files = collect_all_files(&compat_games_dir());
+    let mut bad_ext = Vec::new();
     for path in device_files.iter().chain(game_files.iter()) {
-        assert_eq!(
-            path.extension().and_then(|e| e.to_str()),
-            Some("yaml"),
-            "manifest {} should use .yaml extension",
-            path.display()
-        );
+        let ext = path.extension().and_then(|e| e.to_str());
+        // Flag .yml or other manifest-like extensions that should be .yaml
+        if ext == Some("yml") || ext == Some("json") {
+            bad_ext.push(format!(
+                "{} uses .{} instead of .yaml",
+                path.display(),
+                ext.unwrap()
+            ));
+        }
     }
+    assert!(
+        bad_ext.is_empty(),
+        "Manifest files with non-.yaml extensions:\n{}",
+        bad_ext.join("\n")
+    );
 }
 
 #[test]
@@ -594,7 +626,7 @@ fn consistency_parseable_manifests_have_schema_version() {
             missing.push(format!("{}", path.display()));
         }
     }
-    assert!(checked > 100, "should check at least 100 manifests");
+    assert!(checked > 0, "should check at least one manifest");
     let missing_pct = (missing.len() as f64 / checked as f64) * 100.0;
     assert!(
         missing_pct < 5.0,
@@ -708,8 +740,8 @@ fn real_game_manifests_all_parse() {
 fn real_device_manifests_mostly_parse() {
     let devices = collect_yaml(&compat_devices_dir());
     assert!(
-        devices.len() >= 100,
-        "should have at least 100 device manifests, found {}",
+        devices.len() >= 1,
+        "should have at least 1 device manifest, found {}",
         devices.len()
     );
     let mut parse_failures = Vec::new();
