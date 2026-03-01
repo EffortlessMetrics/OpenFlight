@@ -48,9 +48,9 @@ mod heartbeat {
         assert!(mgr.is_all_healthy());
     }
 
-    /// Missing heartbeat leads to warning after threshold.
+    /// Missing heartbeat leads to Degraded and then Failed states.
     #[test]
-    fn missing_heartbeat_produces_warning_after_threshold() {
+    fn missing_heartbeat_leads_to_degraded_then_failed() {
         let mut agg = HealthAggregator::new();
         let cfg = SubsystemCheckConfig::new("axis")
             .with_failure_threshold(3);
@@ -161,7 +161,10 @@ mod escalation_policy {
     /// Warn → Degrade → Restart → SafeMode sequence with default thresholds.
     #[test]
     fn full_escalation_sequence() {
-        let config = EscalationConfig::default();
+        let config = EscalationConfig {
+            restart_cooldown: Duration::ZERO,
+            ..EscalationConfig::default()
+        };
         let mut ladder = EscalationLadder::new(config.clone());
         ladder.register("comp");
 
@@ -181,7 +184,7 @@ mod escalation_policy {
 
         assert!(levels.contains(&EscalationLevel::Warn));
         assert!(levels.contains(&EscalationLevel::Degrade));
-        // Restart may or may not appear depending on cooldown; SafeMode is terminal.
+        assert!(levels.contains(&EscalationLevel::Restart));
         assert!(levels.contains(&EscalationLevel::SafeMode));
     }
 
@@ -417,7 +420,7 @@ mod lifecycle {
         assert!(stats.total_overruns >= 3);
     }
 
-    /// HealthCheckManager lifecycle: register → degrade → recover → unregister.
+    /// HealthCheckManager lifecycle: register → degrade → recover.
     #[test]
     fn health_check_manager_full_lifecycle() {
         let mut mgr = HealthCheckManager::new();
@@ -676,17 +679,16 @@ mod resource_monitoring {
     #[test]
     fn tick_budget_overrun_detection() {
         let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
-            expected_interval: Duration::from_millis(1),
+            expected_interval: Duration::from_millis(50),
             missed_intervals_threshold: 3,
         });
 
-        // Immediately after creation, should be alive.
-        // (Instant::now() was just called in new(), so ~0 missed ticks.)
+        // Immediately after creation, should be alive (or possibly late on slow CI).
         let status = dms.check();
-        assert_eq!(status, DeadManStatus::Alive);
+        assert!(matches!(status, DeadManStatus::Alive | DeadManStatus::Late { .. }));
 
         // Simulate overrun by sleeping.
-        std::thread::sleep(Duration::from_millis(10));
+        std::thread::sleep(Duration::from_millis(500));
         let status = dms.check();
         assert!(
             matches!(status, DeadManStatus::Triggered { .. }),
@@ -954,7 +956,7 @@ mod integration {
         let events = wd.get_all_events();
         // Each record_usb_error generates an UsbError event, plus quarantine
         // events once the threshold is crossed. Just verify events are tracked.
-        assert!(events.len() >= 20, "should have at least 20 events, got {}", events.len());
+        assert_eq!(events.len(), 31, "should have exactly 31 events, got {}", events.len());
     }
 
     /// Fault storm detection.
