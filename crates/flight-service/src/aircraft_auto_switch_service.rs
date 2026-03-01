@@ -141,6 +141,10 @@ pub struct AircraftAutoSwitchService {
     adapter_errors: Arc<AtomicU64>,
     /// Minimum detection confidence observed (stored as `f64::to_bits`).
     min_confidence_bits: Arc<AtomicU64>,
+    /// Aggregate auto-switch metrics (lock-free counters).
+    switch_metrics: Arc<AutoSwitchMetrics>,
+    /// Adapter lifecycle hooks invoked during detection start/stop.
+    detection_hooks: Arc<RwLock<Vec<Box<dyn AdapterDetectionHooks>>>>,
 }
 
 /// Simulator adapters
@@ -288,6 +292,161 @@ pub struct AdapterMetrics {
     pub disconnections: u64,
 }
 
+// ============================================================================
+// AutoSwitchMetrics — lock-free aggregate counters
+// ============================================================================
+
+/// Lock-free aggregate metrics for the auto-switch subsystem.
+///
+/// All counters use [`AtomicU64`] with relaxed ordering so they can be
+/// updated from any task without acquiring an async lock.
+pub struct AutoSwitchMetrics {
+    /// Total number of profile switches performed.
+    switches_total: AtomicU64,
+    /// Total detection attempts (successful + failed).
+    detection_attempts: AtomicU64,
+    /// Total detection failures.
+    detection_failures: AtomicU64,
+    /// Exponential-moving-average detection time stored as whole
+    /// microseconds (µs). Callers that want milliseconds can divide by 1000.
+    avg_detection_us: AtomicU64,
+}
+
+impl AutoSwitchMetrics {
+    /// Create a new, zeroed metrics instance.
+    pub fn new() -> Self {
+        Self {
+            switches_total: AtomicU64::new(0),
+            detection_attempts: AtomicU64::new(0),
+            detection_failures: AtomicU64::new(0),
+            avg_detection_us: AtomicU64::new(0),
+        }
+    }
+
+    /// Record a successful switch event with the given detection duration.
+    ///
+    /// Updates `switches_total`, `detection_attempts`, and the running EMA of
+    /// detection time.
+    pub fn record_switch(&self, detection_duration: Duration) {
+        self.switches_total.fetch_add(1, Ordering::Relaxed);
+        self.detection_attempts.fetch_add(1, Ordering::Relaxed);
+
+        // EMA with α = 0.1, operating in integer microseconds.
+        let sample_us = detection_duration.as_micros() as u64;
+        let _ = self.avg_detection_us.fetch_update(
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+            |old| {
+                if old == 0 {
+                    Some(sample_us)
+                } else {
+                    // Integer EMA: new = old + (sample - old) / 10
+                    // Use i128 to avoid overflow when values exceed i64::MAX.
+                    let diff = sample_us as i128 - old as i128;
+                    let adjustment = diff / 10;
+                    Some((old as i128 + adjustment).clamp(0, u64::MAX as i128) as u64)
+                }
+            },
+        );
+    }
+
+    /// Record a failed detection attempt.
+    pub fn record_failure(&self) {
+        self.detection_attempts.fetch_add(1, Ordering::Relaxed);
+        self.detection_failures.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Return a snapshot of all counters as a `HashMap<String, u64>`.
+    ///
+    /// Keys: `"switches_total"`, `"detection_attempts"`,
+    /// `"detection_failures"`, `"avg_detection_ms"`.
+    pub fn snapshot(&self) -> HashMap<String, u64> {
+        let mut map = HashMap::with_capacity(4);
+        map.insert(
+            "switches_total".into(),
+            self.switches_total.load(Ordering::Relaxed),
+        );
+        map.insert(
+            "detection_attempts".into(),
+            self.detection_attempts.load(Ordering::Relaxed),
+        );
+        map.insert(
+            "detection_failures".into(),
+            self.detection_failures.load(Ordering::Relaxed),
+        );
+        map.insert(
+            "avg_detection_ms".into(),
+            self.avg_detection_us.load(Ordering::Relaxed) / 1000,
+        );
+        map
+    }
+
+    /// Read individual counters.
+    pub fn switches_total(&self) -> u64 {
+        self.switches_total.load(Ordering::Relaxed)
+    }
+
+    pub fn detection_attempts(&self) -> u64 {
+        self.detection_attempts.load(Ordering::Relaxed)
+    }
+
+    pub fn detection_failures(&self) -> u64 {
+        self.detection_failures.load(Ordering::Relaxed)
+    }
+
+    /// Average detection time in microseconds.
+    pub fn avg_detection_us(&self) -> u64 {
+        self.avg_detection_us.load(Ordering::Relaxed)
+    }
+}
+
+impl Default for AutoSwitchMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl std::fmt::Debug for AutoSwitchMetrics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AutoSwitchMetrics")
+            .field("switches_total", &self.switches_total())
+            .field("detection_attempts", &self.detection_attempts())
+            .field("detection_failures", &self.detection_failures())
+            .field("avg_detection_us", &self.avg_detection_us())
+            .finish()
+    }
+}
+
+// ============================================================================
+// AdapterDetectionHooks — trait for adapter lifecycle callbacks
+// ============================================================================
+
+/// Trait for adapter detection lifecycle hooks.
+///
+/// Implementors receive callbacks when the auto-switch service starts or stops
+/// detection for a particular simulator. This allows adapters to perform
+/// setup/teardown (e.g. opening a SimConnect handle, binding a UDP socket)
+/// exactly when needed.
+pub trait AdapterDetectionHooks: Send + Sync {
+    /// Called when process detection triggers adapter initialisation.
+    ///
+    /// The adapter should perform any expensive setup here (connections,
+    /// allocations, background tasks).  Returns `Ok(())` on success.
+    fn on_detection_start(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
+        Ok(())
+    }
+
+    /// Called when the process is lost and the adapter should tear down.
+    fn on_detection_stop(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
+        Ok(())
+    }
+
+    /// Return the current adapter state (informational).
+    fn adapter_state(&self) -> AdapterState {
+        AdapterState::Stopped
+    }
+}
+
 impl Default for AircraftAutoSwitchServiceConfig {
     fn default() -> Self {
         Self {
@@ -348,6 +507,8 @@ impl AircraftAutoSwitchService {
             detection_latency_us: Arc::new(AtomicU64::new(0)),
             adapter_errors: Arc::new(AtomicU64::new(0)),
             min_confidence_bits: Arc::new(AtomicU64::new(1.0_f64.to_bits())),
+            switch_metrics: Arc::new(AutoSwitchMetrics::new()),
+            detection_hooks: Arc::new(RwLock::new(Vec::new())),
         }
     }
 
@@ -389,6 +550,8 @@ impl AircraftAutoSwitchService {
         let detection_latency_us = Arc::clone(&self.detection_latency_us);
         let adapter_errors = Arc::clone(&self.adapter_errors);
         let min_confidence_bits = Arc::clone(&self.min_confidence_bits);
+        let switch_metrics = Arc::clone(&self.switch_metrics);
+        let detection_hooks = Arc::clone(&self.detection_hooks);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -428,12 +591,20 @@ impl AircraftAutoSwitchService {
                             entry.state = AdapterState::Error;
                             entry.detection_errors += 1;
                             adapter_errors.fetch_add(1, Ordering::Relaxed);
+                            switch_metrics.record_failure();
                         } else {
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.state = AdapterState::Running;
                             entry.started_at = Some(Instant::now());
                             entry.connections += 1;
+                            // Invoke detection hooks on successful start
+                            let mut hooks = detection_hooks.write().await;
+                            for hook in hooks.iter_mut() {
+                                if let Err(e) = hook.on_detection_start(sim) {
+                                    warn!("Detection hook on_detection_start failed: {}", e);
+                                }
+                            }
                         }
                     }
                     ServiceEvent::ProcessLost(sim) => {
@@ -449,6 +620,15 @@ impl AircraftAutoSwitchService {
                             }
                             entry.state = AdapterState::Stopped;
                             entry.disconnections += 1;
+                        }
+                        // Invoke detection hooks on stop
+                        {
+                            let mut hooks = detection_hooks.write().await;
+                            for hook in hooks.iter_mut() {
+                                if let Err(e) = hook.on_detection_stop(sim) {
+                                    warn!("Detection hook on_detection_stop failed: {}", e);
+                                }
+                            }
                         }
                         // Clear aircraft tracking for this sim so next snapshot triggers detection
                         last_aircraft_per_sim.remove(&sim);
@@ -470,9 +650,11 @@ impl AircraftAutoSwitchService {
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.detection_errors += 1;
+                            switch_metrics.record_failure();
                         } else {
                             // Track successful detection + time
                             let elapsed = detection_start.elapsed();
+                            switch_metrics.record_switch(elapsed);
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.aircraft_detections += 1;
@@ -615,6 +797,16 @@ impl AircraftAutoSwitchService {
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
             min_confidence: f64::from_bits(self.min_confidence_bits.load(Ordering::Relaxed)),
         }
+    }
+
+    /// Return a snapshot of the aggregate auto-switch metrics.
+    pub fn get_switch_metrics(&self) -> HashMap<String, u64> {
+        self.switch_metrics.snapshot()
+    }
+
+    /// Register a detection lifecycle hook.
+    pub async fn add_detection_hook(&self, hook: Box<dyn AdapterDetectionHooks>) {
+        self.detection_hooks.write().await.push(hook);
     }
 
     /// Get current aircraft
@@ -1779,5 +1971,231 @@ mod tests {
         // get_metrics also reports it
         let m = service.get_metrics().await;
         assert!((m.min_confidence - 0.7).abs() < f64::EPSILON);
+    }
+
+    // ======================================================================
+    // AutoSwitchMetrics tests
+    // ======================================================================
+
+    #[test]
+    fn test_auto_switch_metrics_new_is_zeroed() {
+        let m = AutoSwitchMetrics::new();
+        assert_eq!(m.switches_total(), 0);
+        assert_eq!(m.detection_attempts(), 0);
+        assert_eq!(m.detection_failures(), 0);
+        assert_eq!(m.avg_detection_us(), 0);
+    }
+
+    #[test]
+    fn test_auto_switch_metrics_default() {
+        let m = AutoSwitchMetrics::default();
+        let snap = m.snapshot();
+        assert_eq!(snap["switches_total"], 0);
+        assert_eq!(snap["detection_attempts"], 0);
+        assert_eq!(snap["detection_failures"], 0);
+        assert_eq!(snap["avg_detection_ms"], 0);
+    }
+
+    #[test]
+    fn test_record_switch_increments_counters() {
+        let m = AutoSwitchMetrics::new();
+        m.record_switch(Duration::from_millis(5));
+        assert_eq!(m.switches_total(), 1);
+        assert_eq!(m.detection_attempts(), 1);
+        assert_eq!(m.detection_failures(), 0);
+    }
+
+    #[test]
+    fn test_record_switch_multiple() {
+        let m = AutoSwitchMetrics::new();
+        for _ in 0..10 {
+            m.record_switch(Duration::from_millis(2));
+        }
+        assert_eq!(m.switches_total(), 10);
+        assert_eq!(m.detection_attempts(), 10);
+    }
+
+    #[test]
+    fn test_record_failure_increments() {
+        let m = AutoSwitchMetrics::new();
+        m.record_failure();
+        m.record_failure();
+        assert_eq!(m.detection_failures(), 2);
+        assert_eq!(m.detection_attempts(), 2);
+        assert_eq!(m.switches_total(), 0);
+    }
+
+    #[test]
+    fn test_record_switch_first_sets_avg() {
+        let m = AutoSwitchMetrics::new();
+        m.record_switch(Duration::from_micros(5000));
+        // First sample should set the average directly
+        assert_eq!(m.avg_detection_us(), 5000);
+    }
+
+    #[test]
+    fn test_record_switch_ema_converges() {
+        let m = AutoSwitchMetrics::new();
+        // Seed with 10_000 µs
+        m.record_switch(Duration::from_micros(10_000));
+        assert_eq!(m.avg_detection_us(), 10_000);
+
+        // Push 20 samples of 2000 µs — EMA should move towards 2000
+        for _ in 0..20 {
+            m.record_switch(Duration::from_micros(2000));
+        }
+        let avg = m.avg_detection_us();
+        assert!(avg < 10_000, "EMA should decrease from 10000, got {avg}");
+        assert!(avg > 2000, "EMA should still be above sample, got {avg}");
+    }
+
+    #[test]
+    fn test_snapshot_returns_all_keys() {
+        let m = AutoSwitchMetrics::new();
+        m.record_switch(Duration::from_millis(3));
+        m.record_failure();
+
+        let snap = m.snapshot();
+        assert_eq!(snap.len(), 4);
+        assert!(snap.contains_key("switches_total"));
+        assert!(snap.contains_key("detection_attempts"));
+        assert!(snap.contains_key("detection_failures"));
+        assert!(snap.contains_key("avg_detection_ms"));
+        assert_eq!(snap["switches_total"], 1);
+        assert_eq!(snap["detection_attempts"], 2); // 1 switch + 1 failure
+        assert_eq!(snap["detection_failures"], 1);
+    }
+
+    #[test]
+    fn test_snapshot_avg_detection_ms_conversion() {
+        let m = AutoSwitchMetrics::new();
+        // 5000 µs = 5 ms
+        m.record_switch(Duration::from_micros(5000));
+        let snap = m.snapshot();
+        assert_eq!(snap["avg_detection_ms"], 5);
+    }
+
+    #[test]
+    fn test_auto_switch_metrics_debug_format() {
+        let m = AutoSwitchMetrics::new();
+        m.record_switch(Duration::from_millis(1));
+        let dbg = format!("{:?}", m);
+        assert!(dbg.contains("AutoSwitchMetrics"));
+        assert!(dbg.contains("switches_total"));
+    }
+
+    #[test]
+    fn test_mixed_success_and_failure_accounting() {
+        let m = AutoSwitchMetrics::new();
+        m.record_switch(Duration::from_millis(1));
+        m.record_switch(Duration::from_millis(2));
+        m.record_failure();
+        m.record_switch(Duration::from_millis(3));
+        m.record_failure();
+
+        assert_eq!(m.switches_total(), 3);
+        assert_eq!(m.detection_failures(), 2);
+        assert_eq!(m.detection_attempts(), 5);
+    }
+
+    // ======================================================================
+    // AdapterDetectionHooks tests
+    // ======================================================================
+
+    /// A test-only implementation of AdapterDetectionHooks that records calls.
+    struct TestHooks {
+        state: AdapterState,
+        started_sims: Vec<BusSimId>,
+        stopped_sims: Vec<BusSimId>,
+    }
+
+    impl TestHooks {
+        fn new() -> Self {
+            Self {
+                state: AdapterState::Stopped,
+                started_sims: Vec::new(),
+                stopped_sims: Vec::new(),
+            }
+        }
+    }
+
+    impl AdapterDetectionHooks for TestHooks {
+        fn on_detection_start(&mut self, sim: BusSimId) -> std::result::Result<(), String> {
+            self.state = AdapterState::Running;
+            self.started_sims.push(sim);
+            Ok(())
+        }
+
+        fn on_detection_stop(&mut self, sim: BusSimId) -> std::result::Result<(), String> {
+            self.state = AdapterState::Stopped;
+            self.stopped_sims.push(sim);
+            Ok(())
+        }
+
+        fn adapter_state(&self) -> AdapterState {
+            self.state
+        }
+    }
+
+    #[test]
+    fn test_hooks_default_impl_succeeds() {
+        // Default trait impls should return Ok and Stopped
+        struct DefaultHooks;
+        impl AdapterDetectionHooks for DefaultHooks {}
+
+        let mut h = DefaultHooks;
+        assert!(h.on_detection_start(BusSimId::Msfs).is_ok());
+        assert!(h.on_detection_stop(BusSimId::Msfs).is_ok());
+        assert_eq!(h.adapter_state(), AdapterState::Stopped);
+    }
+
+    #[test]
+    fn test_hooks_start_stop_lifecycle() {
+        let mut hooks = TestHooks::new();
+        assert_eq!(hooks.adapter_state(), AdapterState::Stopped);
+
+        hooks.on_detection_start(BusSimId::XPlane).unwrap();
+        assert_eq!(hooks.adapter_state(), AdapterState::Running);
+        assert_eq!(hooks.started_sims, vec![BusSimId::XPlane]);
+
+        hooks.on_detection_stop(BusSimId::XPlane).unwrap();
+        assert_eq!(hooks.adapter_state(), AdapterState::Stopped);
+        assert_eq!(hooks.stopped_sims, vec![BusSimId::XPlane]);
+    }
+
+    #[test]
+    fn test_hooks_multiple_sims() {
+        let mut hooks = TestHooks::new();
+        hooks.on_detection_start(BusSimId::Msfs).unwrap();
+        hooks.on_detection_start(BusSimId::Dcs).unwrap();
+        assert_eq!(hooks.started_sims.len(), 2);
+        assert_eq!(hooks.started_sims[0], BusSimId::Msfs);
+        assert_eq!(hooks.started_sims[1], BusSimId::Dcs);
+    }
+
+    /// Error-returning hooks implementation for testing failure paths.
+    struct FailingHooks;
+
+    impl AdapterDetectionHooks for FailingHooks {
+        fn on_detection_start(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
+            Err("simulated start failure".into())
+        }
+
+        fn on_detection_stop(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
+            Err("simulated stop failure".into())
+        }
+
+        fn adapter_state(&self) -> AdapterState {
+            AdapterState::Error
+        }
+    }
+
+    #[test]
+    fn test_hooks_failure_returns_error() {
+        let mut h = FailingHooks;
+        let result = h.on_detection_start(BusSimId::XPlane);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "simulated start failure");
+        assert_eq!(h.adapter_state(), AdapterState::Error);
     }
 }
