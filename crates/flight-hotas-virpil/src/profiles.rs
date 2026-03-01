@@ -371,43 +371,9 @@ pub static WARBRD_D_PROFILE: DeviceProfile = DeviceProfile {
 /// Axis descriptors for the VPC MongoosT-50CM3 stick.
 ///
 /// Identical axis layout to WarBRD (shared VPC firmware).
-pub static MONGOOST_AXES: &[AxisDescriptor] = &[
-    AxisDescriptor {
-        index: 0,
-        role: AxisRole::StickX,
-        label: "X (roll)",
-        centred: true,
-    },
-    AxisDescriptor {
-        index: 1,
-        role: AxisRole::StickY,
-        label: "Y (pitch)",
-        centred: true,
-    },
-    AxisDescriptor {
-        index: 2,
-        role: AxisRole::Twist,
-        label: "Z (twist)",
-        centred: true,
-    },
-    AxisDescriptor {
-        index: 3,
-        role: AxisRole::SecondaryRotary,
-        label: "SZ (secondary rotary)",
-        centred: false,
-    },
-    AxisDescriptor {
-        index: 4,
-        role: AxisRole::SlewLever,
-        label: "SL (slew lever)",
-        centred: false,
-    },
-];
+pub static MONGOOST_AXES: &[AxisDescriptor] = WARBRD_AXES;
 
-static MONGOOST_HATS: &[HatDescriptor] = &[HatDescriptor {
-    label: "Main hat",
-    hat_type: HatType::EightWay,
-}];
+static MONGOOST_HATS: &[HatDescriptor] = WARBRD_HATS;
 
 /// Default profile for the VPC MongoosT-50CM3 stick (PID 0x4130).
 pub static MONGOOST_PROFILE: DeviceProfile = DeviceProfile {

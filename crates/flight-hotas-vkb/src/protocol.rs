@@ -154,18 +154,30 @@ pub const VKB_T_RUDDER_LAYOUT: VkbJoystickReportLayout = VkbJoystickReportLayout
     min_payload_bytes: 6,
 };
 
+/// Report layout for VKB STECS Modern Throttle (Mini / Max).
+///
+/// 4 axes (8 bytes) + 2 button words (8 bytes) = 16 bytes payload.
+/// The report includes a 1-byte report ID prefix (17 bytes total minimum).
+pub const VKB_STECS_MODERN_LAYOUT: VkbJoystickReportLayout = VkbJoystickReportLayout {
+    axis_count: 4,
+    button_word_count: 2,
+    has_hat_byte: false,
+    min_payload_bytes: 16,
+};
+
 /// Return the expected report layout for a given device family.
 pub fn report_layout_for_family(family: VkbDeviceFamily) -> VkbJoystickReportLayout {
     match family {
         VkbDeviceFamily::SemThq => VKB_SEM_THQ_LAYOUT,
         VkbDeviceFamily::TRudder => VKB_T_RUDDER_LAYOUT,
+        VkbDeviceFamily::StecsModernThrottle => VKB_STECS_MODERN_LAYOUT,
         _ => VKB_JOYSTICK_STANDARD_LAYOUT,
     }
 }
 
 // ─── VKB Device Info Table ────────────────────────────────────────────────────
 
-/// Complete VID/PID entry for a VKB device.
+/// PID entry for a VKB device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct VkbDeviceInfo {
     /// USB Product ID.
@@ -280,19 +292,19 @@ pub const VKB_DEVICE_TABLE: &[VkbDeviceInfo] = &[
         pid: VKB_STECS_MODERN_THROTTLE_MINI_PID,
         family: VkbDeviceFamily::StecsModernThrottle,
         name: "VKB STECS Modern Throttle Mini",
-        axis_count: 6,
+        axis_count: 4,
         max_buttons: 64,
         hat_count: 0,
-        min_report_bytes: 20,
+        min_report_bytes: 17,
     },
     VkbDeviceInfo {
         pid: VKB_STECS_MODERN_THROTTLE_MAX_PID,
         family: VkbDeviceFamily::StecsModernThrottle,
         name: "VKB STECS Modern Throttle Max",
-        axis_count: 6,
+        axis_count: 4,
         max_buttons: 64,
         hat_count: 0,
-        min_report_bytes: 20,
+        min_report_bytes: 17,
     },
 ];
 
@@ -762,7 +774,7 @@ fn decode_hat_nibble(nibble: u8) -> Option<u8> {
     if nibble <= 7 { Some(nibble) } else { None }
 }
 
-fn le_u16(bytes: &[u8], offset: usize) -> u16 {
+pub(crate) fn le_u16(bytes: &[u8], offset: usize) -> u16 {
     let low = bytes.get(offset).copied().unwrap_or(0);
     let high = bytes.get(offset + 1).copied().unwrap_or(0);
     u16::from_le_bytes([low, high])
@@ -777,14 +789,14 @@ fn le_u32(bytes: &[u8], offset: usize) -> u32 {
 }
 
 /// Normalise a raw u16 axis value to `0.0..=1.0` (unidirectional).
-fn normalize_u16(raw: u16) -> f32 {
+pub(crate) fn normalize_u16(raw: u16) -> f32 {
     (raw as f32 / u16::MAX as f32).clamp(0.0, 1.0)
 }
 
 /// Normalise a raw u16 axis value to `−1.0..=1.0` (bidirectional).
 ///
 /// 0x0000 → −1.0, 0x8000 → ~0.0, 0xFFFF → ~1.0
-fn normalize_signed(raw: u16) -> f32 {
+pub(crate) fn normalize_signed(raw: u16) -> f32 {
     ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 

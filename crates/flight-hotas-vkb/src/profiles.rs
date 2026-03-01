@@ -1044,18 +1044,18 @@ static T_RUDDER_BUTTONS: [ButtonMapping; 0] = [];
 static T_RUDDER_HATS: [HatMapping; 0] = [];
 
 static T_RUDDER_NOTES: [&str; 2] = [
-    "Factory default for VKB T-Rudder Mk.IV pedals.",
+    "Factory default for VKB T-Rudder Mk.IV/V pedals.",
     "Three axes: two toe brakes (unidirectional) and one rudder (bidirectional).",
 ];
 
-/// Factory-default profile for VKB T-Rudder Mk.IV pedals.
+/// Factory-default profile for VKB T-Rudder Mk.IV/V pedals.
 ///
 /// The T-Rudder has 3 axes and no buttons or hats.
 /// Note: The Mk.V PID is not yet confirmed; this profile uses the Mk.IV layout
 /// which is expected to be identical.
 pub fn t_rudder_profile() -> VkbDeviceProfile {
     VkbDeviceProfile {
-        device_name: "VKB T-Rudder Mk.IV",
+        device_name: "VKB T-Rudder Mk.IV/V",
         vid: VKB_VENDOR_ID,
         pids: &[VKB_T_RUDDER_MK5_PID],
         axes: &T_RUDDER_AXES,

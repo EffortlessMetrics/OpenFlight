@@ -87,12 +87,13 @@ impl AxisCalibration {
         }
         let clamped = raw.clamp(self.raw_min, self.raw_max);
         let norm = (clamped - self.raw_min) as f32 / range as f32;
+        let deadzone = self.deadzone.clamp(0.0, 0.999);
 
-        if norm < self.deadzone {
+        if norm < deadzone {
             0.0
         } else {
             // Rescale above deadzone to fill [0.0, 1.0]
-            ((norm - self.deadzone) / (1.0 - self.deadzone)).clamp(0.0, 1.0)
+            ((norm - deadzone) / (1.0 - deadzone)).clamp(0.0, 1.0)
         }
     }
 
@@ -115,12 +116,13 @@ impl AxisCalibration {
             }
         };
 
-        if norm.abs() < self.deadzone {
+        let deadzone = self.deadzone.clamp(0.0, 0.999);
+        if norm.abs() < deadzone {
             0.0
         } else {
             // Rescale outside deadzone to fill [−1.0, 1.0]
             let sign = norm.signum();
-            let magnitude = (norm.abs() - self.deadzone) / (1.0 - self.deadzone);
+            let magnitude = (norm.abs() - deadzone) / (1.0 - deadzone);
             (sign * magnitude).clamp(-1.0, 1.0)
         }
     }

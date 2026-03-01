@@ -30,6 +30,8 @@
 //! - **Rudder** is bidirectional: 0x0000 = full left, 0x8000 ≈ centre, 0xFFFF = full right.
 //! - Hall-effect sensors on all three axes (no mechanical wear).
 
+use crate::protocol::{le_u16, normalize_signed, normalize_u16};
+
 /// Minimum report payload size in bytes (excluding optional report ID).
 ///
 /// 3 axes × 2 bytes = 6 bytes.
@@ -118,22 +120,6 @@ impl Default for TRudderInputHandler {
     fn default() -> Self {
         Self::new()
     }
-}
-
-// ─── Shared helpers (same as protocol.rs) ─────────────────────────────────────
-
-fn le_u16(bytes: &[u8], offset: usize) -> u16 {
-    let low = bytes.get(offset).copied().unwrap_or(0);
-    let high = bytes.get(offset + 1).copied().unwrap_or(0);
-    u16::from_le_bytes([low, high])
-}
-
-fn normalize_u16(raw: u16) -> f32 {
-    (raw as f32 / u16::MAX as f32).clamp(0.0, 1.0)
-}
-
-fn normalize_signed(raw: u16) -> f32 {
-    ((raw as f32 / 32767.5) - 1.0).clamp(-1.0, 1.0)
 }
 
 #[cfg(test)]
