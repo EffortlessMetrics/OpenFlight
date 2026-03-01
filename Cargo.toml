@@ -87,6 +87,7 @@ members = [
     "crates/flight-panels-goflight",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",
+    "crates/flight-pedals",
     "crates/flight-plugin",
     "examples",
     "installer",
