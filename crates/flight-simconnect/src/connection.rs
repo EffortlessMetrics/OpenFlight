@@ -178,17 +178,25 @@ pub struct ReconnectPolicy {
 
 impl ReconnectPolicy {
     /// Create a new policy.
+    ///
+    /// `backoff_multiplier` must be a finite, positive number; invalid values
+    /// (≤ 0, NaN, or infinite) are clamped to 1.0.
     pub fn new(
         max_retries: u32,
         backoff_base_ms: u64,
         backoff_max_ms: u64,
         backoff_multiplier: f64,
     ) -> Self {
+        let multiplier = if backoff_multiplier.is_finite() && backoff_multiplier > 0.0 {
+            backoff_multiplier
+        } else {
+            1.0
+        };
         Self {
             max_retries,
             backoff_base_ms,
             backoff_max_ms,
-            backoff_multiplier,
+            backoff_multiplier: multiplier,
             consecutive_failures: 0,
         }
     }
@@ -215,7 +223,8 @@ impl ReconnectPolicy {
 
     /// Compute the back-off delay for the current failure count.
     pub fn current_delay(&self) -> Duration {
-        let multiplier = self.backoff_multiplier.powi(self.consecutive_failures as i32);
+        let exponent = self.consecutive_failures.min(31) as i32;
+        let multiplier = self.backoff_multiplier.powi(exponent);
         let delay_ms = (self.backoff_base_ms as f64 * multiplier) as u64;
         let capped = delay_ms.min(self.backoff_max_ms);
         Duration::from_millis(capped)
@@ -244,7 +253,7 @@ pub struct ConnectionHealth {
     latency_count: usize,
     packet_count: u64,
     error_count: u64,
-    /// Maximum error rate (errors / packets) before the connection is unhealthy.
+    /// Maximum error rate (errors / (packets + errors)) before the connection is unhealthy.
     error_rate_threshold: f64,
 }
 
@@ -1032,7 +1041,7 @@ mod tests {
         // Buffer size is capped at LATENCY_BUFFER_SIZE
         let avg = health.average_latency().unwrap();
         // Last 64 samples are 36..100, avg = (36+99)/2 = 67.5ms
-        assert!(avg > Duration::from_millis(30));
+        assert!(avg >= Duration::from_millis(65) && avg <= Duration::from_millis(70));
     }
 
     #[test]
