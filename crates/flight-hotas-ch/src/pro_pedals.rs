@@ -16,6 +16,8 @@
 //! bytes 5–6    : right_toe LE u16
 //! ```
 
+use std::fmt;
+
 use crate::ChError;
 
 /// PID for the CH Products Pro Pedals (confirmed from Linux kernel hid-ids.h).
@@ -26,6 +28,7 @@ pub const PRO_PEDALS_MIN_REPORT_BYTES: usize = 7;
 
 /// Parsed input state from one CH Pro Pedals HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProPedalsState {
     /// Main rudder axis, 0–65535.
     pub rudder: u16,
@@ -64,6 +67,16 @@ pub fn parse_pro_pedals(report: &[u8]) -> Result<ProPedalsState, ChError> {
 /// For toe brakes the caller can map to `[0.0, 1.0]` via `(v + 1.0) / 2.0`.
 pub fn normalize_pedal(raw: u16) -> f32 {
     (raw as f32 / 65535.0 * 2.0 - 1.0).clamp(-1.0, 1.0)
+}
+
+impl fmt::Display for ProPedalsState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ProPedals rudder={} left_toe={} right_toe={}",
+            self.rudder, self.left_toe, self.right_toe
+        )
+    }
 }
 
 #[cfg(test)]
