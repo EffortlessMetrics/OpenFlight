@@ -107,12 +107,8 @@ fn backoff_first_delay_equals_initial() {
 
 #[test]
 fn backoff_exponential_growth_no_jitter() {
-    let mut b = ExponentialBackoff::new(
-        Duration::from_millis(50),
-        Duration::from_secs(60),
-        2.0,
-        0.0,
-    );
+    let mut b =
+        ExponentialBackoff::new(Duration::from_millis(50), Duration::from_secs(60), 2.0, 0.0);
     let expected = [50, 100, 200, 400, 800, 1600];
     for &ms in &expected {
         assert_eq!(b.next_delay(), Duration::from_millis(ms));
@@ -168,12 +164,8 @@ fn backoff_attempt_counter_increments() {
 
 #[test]
 fn backoff_multiplier_three() {
-    let mut b = ExponentialBackoff::new(
-        Duration::from_millis(10),
-        Duration::from_secs(60),
-        3.0,
-        0.0,
-    );
+    let mut b =
+        ExponentialBackoff::new(Duration::from_millis(10), Duration::from_secs(60), 3.0, 0.0);
     assert_eq!(b.next_delay(), Duration::from_millis(10));
     assert_eq!(b.next_delay(), Duration::from_millis(30));
     assert_eq!(b.next_delay(), Duration::from_millis(90));
@@ -219,9 +211,25 @@ fn backoff_jitter_produces_varied_values() {
     for _ in 0..5 {
         delays.push(b.next_delay());
     }
-    // At minimum, the delays should differ from the pure exponential sequence
-    // (unless jitter hash happens to produce exactly 0 for every attempt)
-    assert!(delays.len() == 5);
+    // Build the pure exponential sequence (no jitter) for comparison.
+    let mut pure = Vec::new();
+    {
+        let mut b_pure = ExponentialBackoff::new(
+            Duration::from_millis(1000),
+            Duration::from_secs(600),
+            2.0,
+            0.0,
+        );
+        for _ in 0..5 {
+            pure.push(b_pure.next_delay());
+        }
+    }
+    // Jitter (0.25) should cause at least one delay to differ from the pure sequence.
+    assert_eq!(delays.len(), 5);
+    assert!(
+        delays != pure,
+        "jittered delays should differ from pure exponential"
+    );
 }
 
 #[test]
@@ -280,13 +288,23 @@ fn backoff_panics_on_multiplier_below_one() {
 #[test]
 #[should_panic(expected = "jitter must be in [0.0, 1.0]")]
 fn backoff_panics_on_negative_jitter() {
-    ExponentialBackoff::new(Duration::from_millis(100), Duration::from_secs(1), 2.0, -0.1);
+    ExponentialBackoff::new(
+        Duration::from_millis(100),
+        Duration::from_secs(1),
+        2.0,
+        -0.1,
+    );
 }
 
 #[test]
 #[should_panic(expected = "jitter must be in [0.0, 1.0]")]
 fn backoff_panics_on_jitter_above_one() {
-    ExponentialBackoff::new(Duration::from_millis(100), Duration::from_secs(1), 2.0, 1.01);
+    ExponentialBackoff::new(
+        Duration::from_millis(100),
+        Duration::from_secs(1),
+        2.0,
+        1.01,
+    );
 }
 
 #[test]
@@ -323,12 +341,7 @@ fn backoff_clone_independence() {
 
 #[test]
 fn backoff_many_iterations_saturate_gracefully() {
-    let mut b = ExponentialBackoff::new(
-        Duration::from_millis(1),
-        Duration::from_secs(5),
-        2.0,
-        0.0,
-    );
+    let mut b = ExponentialBackoff::new(Duration::from_millis(1), Duration::from_secs(5), 2.0, 0.0);
     for _ in 0..100 {
         let d = b.next_delay();
         assert!(d <= Duration::from_secs(5));
@@ -743,12 +756,8 @@ fn reconnect_strategy_from_config() {
 
 #[test]
 fn backoff_total_wait_within_budget() {
-    let mut b = ExponentialBackoff::new(
-        Duration::from_millis(100),
-        Duration::from_secs(5),
-        2.0,
-        0.0,
-    );
+    let mut b =
+        ExponentialBackoff::new(Duration::from_millis(100), Duration::from_secs(5), 2.0, 0.0);
     let mut total = Duration::ZERO;
     for _ in 0..10 {
         total += b.next_delay();
