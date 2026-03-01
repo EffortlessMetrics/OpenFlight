@@ -9,6 +9,7 @@
 //! and error recovery.
 
 use std::collections::HashMap;
+use std::time::Duration;
 
 use flight_service::{
     // Service / config
@@ -151,7 +152,9 @@ mod graceful_shutdown {
 
         // Drain all pending health events — at least one should mention shutdown
         let mut found_shutdown_event = false;
-        while let Ok(event) = rx.try_recv() {
+        while let Ok(Ok(event)) =
+            tokio::time::timeout(Duration::from_millis(100), rx.recv()).await
+        {
             if event.message.to_lowercase().contains("shutdown") {
                 found_shutdown_event = true;
             }
@@ -160,7 +163,7 @@ mod graceful_shutdown {
     }
 
     #[test]
-    fn orchestrator_stop_reverses_boot_order() {
+    fn orchestrator_stop_stops_all_subsystems() {
         let mut orch = ServiceOrchestrator::new(ServiceConfig::default());
         orch.start().unwrap();
         orch.stop().unwrap();
@@ -842,7 +845,7 @@ mod health_reporting {
             });
 
         let report = checker.check_all();
-        // Scheduler stopped is Critical, adapter disconnected is only Critical
+        // Scheduler stopped is Critical, adapter disconnected is Critical — worst status wins
         assert_eq!(report.status, OverallStatus::Critical);
     }
 
@@ -1177,7 +1180,7 @@ mod error_recovery {
     }
 
     #[tokio::test]
-    async fn service_degraded_recovery_via_profile() {
+    async fn try_recover_returns_false_when_not_degraded() {
         let mut service = FlightService::new(FlightServiceConfig::default());
         service.start().await.unwrap();
 
