@@ -73,9 +73,9 @@ proptest! {
 
     // ── 2. compile→evaluate deterministic ───────────────────────────────────
 
-    /// Evaluating compiled bytecode with same variable values twice produces same actions.
+    /// Compiling a condition produces structurally sound bytecode with correct action count.
     #[test]
-    fn compile_evaluate_deterministic(
+    fn compile_produces_sound_bytecode(
         var in "[a-zA-Z_][a-zA-Z0-9_]{0,12}",
         threshold in -100.0f32..=100.0f32,
         target in "[A-Z][A-Z0-9_]{0,8}",

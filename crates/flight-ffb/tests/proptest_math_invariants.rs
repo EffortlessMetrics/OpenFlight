@@ -193,7 +193,7 @@ proptest! {
         let mut ramp = EffectRamp::new(0.0, target, duration);
         let first = ramp.tick();
         prop_assert!(
-            first.abs() < target + 1e-5,
+            first.abs() < 1e-4,
             "fade-in first tick {} should be near 0, target={}", first, target
         );
         // Run to completion

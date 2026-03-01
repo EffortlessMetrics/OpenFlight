@@ -137,10 +137,10 @@ proptest! {
         publisher.unsubscribe(sub_id).unwrap();
         let stats_after_count = publisher.stats().subscribers_count;
 
-        prop_assert!(
-            stats_after_count < stats_before_count
-                || stats_before_count == 1,
-            "unsubscribe should reduce subscriber count"
+        prop_assert_eq!(
+            stats_after_count,
+            stats_before_count.saturating_sub(1),
+            "unsubscribe should reduce subscriber count by exactly one"
         );
     }
 

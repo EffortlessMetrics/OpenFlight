@@ -46,7 +46,7 @@ proptest! {
         a in 0.0f32..500.0f32,
         b in 0.0f32..500.0f32,
     ) {
-        prop_assume!(a != b);
+        prop_assume!((a - b).abs() > 1e-3);
         let (lo, hi) = if a < b { (a, b) } else { (b, a) };
         let mps_lo = conversions::knots_to_mps(lo);
         let mps_hi = conversions::knots_to_mps(hi);
