@@ -11,6 +11,7 @@ pub mod escalation;
 pub mod health_aggregator;
 pub mod health_check;
 pub mod monitor;
+pub mod probe;
 pub mod recovery;
 pub mod supervisor;
 
