@@ -155,10 +155,7 @@ pub struct FakeDeviceBackend {
 impl FakeDeviceBackend {
     /// Create a new backend with the given configuration.
     pub fn new(config: FakeDeviceBackendConfig) -> Self {
-        assert!(
-            config.polling_rate_hz > 0,
-            "polling_rate_hz must be > 0"
-        );
+        assert!(config.polling_rate_hz > 0, "polling_rate_hz must be > 0");
         Self {
             config,
             devices: HashMap::new(),

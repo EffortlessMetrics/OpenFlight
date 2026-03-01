@@ -47,8 +47,7 @@ impl DeterministicClock {
 
     /// Advance the clock by a [`Duration`].
     pub fn advance_duration(&mut self, duration: Duration) {
-        self.current_time_us +=
-            u64::try_from(duration.as_micros()).expect("duration too large");
+        self.current_time_us += u64::try_from(duration.as_micros()).expect("duration too large");
     }
 
     /// Advance the clock by `ms` milliseconds.

@@ -121,10 +121,13 @@ impl FakeGameBackend {
             .recorded_outputs
             .last()
             .expect("no outputs recorded to assert on");
-        let actual = *last
-            .axes
-            .get(axis_index)
-            .unwrap_or_else(|| panic!("axis_index {} out of range (len={})", axis_index, last.axes.len()));
+        let actual = *last.axes.get(axis_index).unwrap_or_else(|| {
+            panic!(
+                "axis_index {} out of range (len={})",
+                axis_index,
+                last.axes.len()
+            )
+        });
         assert!(
             (actual - expected).abs() <= tolerance,
             "axis {axis_index}: expected ~{expected} got {actual} (tolerance {tolerance})"
