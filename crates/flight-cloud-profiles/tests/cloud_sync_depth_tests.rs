@@ -335,9 +335,9 @@ async fn storage_cache_invalidation_ttl_zero() {
     cleanup_dir(&tmp);
 }
 
-/// Cache size limits: clearing the cache removes all entries.
+/// Cache clear: verify that `clear()` removes all cached entries.
 #[tokio::test]
-async fn storage_cache_clear_enforces_size_limit() {
+async fn storage_cache_clear_removes_all_entries() {
     let tmp = tempfile_dir();
     let cache = ProfileCache::new(tmp.clone(), 3600);
 
@@ -352,7 +352,7 @@ async fn storage_cache_clear_enforces_size_limit() {
     cleanup_dir(&tmp);
 }
 
-/// Compression: profile data survives JSON serialization round-trip through backend.
+/// JSON round-trip: profile data survives JSON serialization through backend.
 #[tokio::test]
 async fn storage_compression_round_trip_through_backend() {
     let backend = MockCloudBackend::new();
@@ -367,7 +367,7 @@ async fn storage_compression_round_trip_through_backend() {
     assert_eq!(restored.axes["pitch"].expo, Some(0.8));
 }
 
-/// Encryption at rest: FileSystemBackend data persists to disk and is retrievable.
+/// Disk persistence: FileSystemBackend data persists to disk and is retrievable.
 #[tokio::test]
 async fn storage_filesystem_persistence() {
     let tmp = tempfile_dir();
@@ -655,7 +655,7 @@ async fn error_partial_upload_overwrite_replaces() {
     assert_eq!(meta.checksum, compute_version_hash(b"complete-data"));
 }
 
-/// Corrupt download: invalid JSON in cache does not crash, returns None.
+/// Corrupt download: invalid JSON in cache produces an error, not a panic.
 #[tokio::test]
 async fn error_corrupt_download_cache_handles_invalid_json() {
     let tmp = tempfile_dir();
@@ -721,11 +721,16 @@ proptest! {
 
     /// Merge commutativity where applicable: LWW always picks the hash
     /// associated with the higher timestamp, regardless of local/remote order.
+    /// Note: when timestamps are equal, the local side wins (tie-break rule).
     #[test]
     fn prop_merge_commutativity_lww(
         ts_a in 1u64..1_000_000u64,
         ts_b in 1u64..1_000_000u64,
     ) {
+        // Skip equal timestamps — the tie-break favors local, so swapping
+        // local/remote changes the winner and commutativity does not hold.
+        prop_assume!(ts_a != ts_b);
+
         let engine = SyncEngine::new(MockCloudBackend::new());
 
         // hash-a is associated with ts_a, hash-b with ts_b.
