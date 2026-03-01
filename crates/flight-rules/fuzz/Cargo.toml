@@ -49,3 +49,9 @@ name = "fuzz_bytecode_decoder"
 path = "fuzz_targets/fuzz_bytecode_decoder.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_validate_compile"
+path = "fuzz_targets/fuzz_validate_compile.rs"
+test = false
+doc = false

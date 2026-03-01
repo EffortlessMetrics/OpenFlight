@@ -181,11 +181,11 @@ impl RulesSchema {
     }
 
     fn validate_rule(&self, rule: &Rule) -> std::result::Result<(), String> {
-        if rule.when.is_empty() {
+        if rule.when.trim().is_empty() {
             return Err("Rule condition cannot be empty".to_string());
         }
 
-        if rule.action.is_empty() {
+        if rule.action.trim().is_empty() {
             return Err("Rule action cannot be empty".to_string());
         }
 
@@ -284,10 +284,22 @@ impl RulesCompiler {
         // Handle negated boolean variables
         if condition_str.starts_with('!') && !condition_str.contains(['>', '<', '=']) {
             let variable = condition_str[1..].trim().to_string();
+            if variable.is_empty() {
+                return Err(RulesError::Validation(
+                    "Invalid condition syntax: negation requires a variable name".to_string(),
+                ));
+            }
             return Ok(Condition::Boolean {
                 variable,
                 negate: true,
             });
+        }
+
+        // Reject empty or whitespace-only condition strings
+        if condition_str.is_empty() {
+            return Err(RulesError::Validation(
+                "Invalid condition syntax: condition cannot be empty".to_string(),
+            ));
         }
 
         // Handle boolean variables (no operators)
@@ -1456,12 +1468,12 @@ mod tests {
 
     #[test]
     fn validate_whitespace_only_condition_fails() {
-        // Whitespace-only is not empty but also not a valid identifier
-        // The parser trims and then treats it as a boolean var with empty name
-        let result = validate_one("   ", "led.indexer.on()");
-        // Either the parser rejects the whitespace or treats "" as invalid
-        // after trimming — both are acceptable as long as it doesn't panic.
-        let _ = result;
+        let err = validate_one("   ", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("empty") || msg.contains("condition"),
+            "error should describe invalid condition, got: {msg}"
+        );
     }
 
     #[test]
@@ -1594,6 +1606,49 @@ mod tests {
                 "compile should also fail for: {:?} → {:?}",
                 cond,
                 act
+            );
+        }
+    }
+
+    // ── Negation edge cases ─────────────────────────────────────────────
+
+    #[test]
+    fn validate_bare_negation_operator_fails() {
+        let err = validate_one("!", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("negation") || msg.contains("variable"),
+            "error should mention negation problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_negation_with_whitespace_only_fails() {
+        let err = validate_one("!   ", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("negation") || msg.contains("variable"),
+            "error should mention negation problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_compile_agreement_on_whitespace_variants() {
+        let whitespace_cases = ["   ", "\t", "\n", "  \t  "];
+        for ws in &whitespace_cases {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: ws.to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                }],
+                defaults: None,
+            };
+            assert!(
+                schema.validate().is_err(),
+                "validate should reject whitespace-only condition: {:?}",
+                ws
             );
         }
     }
@@ -1867,5 +1922,37 @@ mod snapshot_tests {
         };
         let err = schema.validate().unwrap_err();
         insta::assert_debug_snapshot!("error_invalid_action", err);
+    }
+
+    /// Snapshot the validation error for whitespace-only condition.
+    #[test]
+    fn snapshot_error_whitespace_only_condition() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "   ".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_whitespace_only_condition", err);
+    }
+
+    /// Snapshot the validation error for bare negation operator.
+    #[test]
+    fn snapshot_error_bare_negation() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "!".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_bare_negation", err);
     }
 }
