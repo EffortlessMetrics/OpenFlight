@@ -59,7 +59,8 @@ pub struct Annotation {
 impl Annotation {
     /// View the message as a UTF-8 string slice.
     pub fn message(&self) -> &str {
-        std::str::from_utf8(&self.msg[..self.msg_len as usize]).unwrap_or("<invalid>")
+        let len = (self.msg_len as usize).min(ANNOTATION_MAX);
+        std::str::from_utf8(&self.msg[..len]).unwrap_or("<invalid>")
     }
 }
 
@@ -97,6 +98,14 @@ pub enum CodecError {
     UnknownTag(u8),
     /// Unsupported codec version.
     UnsupportedVersion(u8),
+    /// A decoded field length exceeds the allowed maximum.
+    InvalidFieldLength {
+        field: &'static str,
+        value: u8,
+        max: u8,
+    },
+    /// Time scale is invalid (must be finite and > 0).
+    InvalidTimeScale,
 }
 
 impl std::fmt::Display for CodecError {
@@ -106,6 +115,10 @@ impl std::fmt::Display for CodecError {
             CodecError::UnexpectedEof => write!(f, "unexpected end of input"),
             CodecError::UnknownTag(t) => write!(f, "unknown record tag: {t:#04x}"),
             CodecError::UnsupportedVersion(v) => write!(f, "unsupported codec version: {v}"),
+            CodecError::InvalidFieldLength { field, value, max } => {
+                write!(f, "invalid {field} length: {value} (max {max})")
+            }
+            CodecError::InvalidTimeScale => write!(f, "time_scale must be finite and > 0.0"),
         }
     }
 }
@@ -242,6 +255,13 @@ fn decode_bus_event(buf: &[u8]) -> Result<(Record, usize), CodecError> {
     let timestamp_ns = u64::from_le_bytes(buf[2..10].try_into().unwrap());
     let event_code = u16::from_le_bytes(buf[10..12].try_into().unwrap());
     let payload_len = buf[12];
+    if payload_len > 8 {
+        return Err(CodecError::InvalidFieldLength {
+            field: "payload_len",
+            value: payload_len,
+            max: 8,
+        });
+    }
     let mut payload = [0u8; 8];
     payload.copy_from_slice(&buf[13..21]);
     Ok((
@@ -280,6 +300,13 @@ fn decode_annotation(buf: &[u8]) -> Result<(Record, usize), CodecError> {
     }
     let timestamp_ns = u64::from_le_bytes(buf[2..10].try_into().unwrap());
     let msg_len = buf[10];
+    if msg_len as usize > ANNOTATION_MAX {
+        return Err(CodecError::InvalidFieldLength {
+            field: "msg_len",
+            value: msg_len,
+            max: ANNOTATION_MAX as u8,
+        });
+    }
     let mut msg = [0u8; ANNOTATION_MAX];
     msg.copy_from_slice(&buf[11..11 + ANNOTATION_MAX]);
     Ok((

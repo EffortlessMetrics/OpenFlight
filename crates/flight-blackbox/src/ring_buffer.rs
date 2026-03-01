@@ -27,7 +27,12 @@ impl<T: Copy, const N: usize> RingBuffer<T, N> {
     /// Create a new ring buffer filled with `init`.
     ///
     /// This is the only allocation; all subsequent operations are O(1).
+    ///
+    /// # Compile-time guarantee
+    /// Instantiation with `N == 0` is a compile error.
     pub fn new(init: T) -> Self {
+        // Compile-time check: N must be > 0 to avoid division-by-zero in `% N`.
+        const { assert!(N > 0, "RingBuffer capacity N must be greater than zero") };
         Self {
             buf: [init; N],
             head: 0,
@@ -45,20 +50,16 @@ impl<T: Copy, const N: usize> RingBuffer<T, N> {
         }
     }
 
-    /// Drain all valid entries into `dst`, oldest first. Returns the number of
-    /// entries written. The buffer is empty after this call.
+    /// Drain up to `min(len, dst.len())` entries into `dst`, oldest first.
+    /// Returns the number of entries actually drained. Remaining entries are
+    /// preserved.
     pub fn drain_to(&mut self, dst: &mut [T]) -> usize {
         let count = self.len.min(dst.len());
-        let start = if self.len == N {
-            self.head // oldest entry is at head when full
-        } else {
-            0
-        };
+        let start = self.oldest_index();
         for (i, slot) in dst.iter_mut().enumerate().take(count) {
             *slot = self.buf[(start + i) % N];
         }
-        self.len = 0;
-        self.head = 0;
+        self.len -= count;
         count
     }
 
@@ -85,8 +86,7 @@ impl<T: Copy, const N: usize> RingBuffer<T, N> {
         if self.len == 0 {
             return None;
         }
-        let start = if self.len == N { self.head } else { 0 };
-        Some(&self.buf[start])
+        Some(&self.buf[self.oldest_index()])
     }
 
     /// Peek at the newest entry without removing it.
@@ -100,12 +100,16 @@ impl<T: Copy, const N: usize> RingBuffer<T, N> {
 
     /// Iterate over valid entries in chronological order (oldest first).
     pub fn iter(&self) -> RingBufferIter<'_, T, N> {
-        let start = if self.len == N { self.head } else { 0 };
         RingBufferIter {
             buf: &self.buf,
-            pos: start,
+            pos: self.oldest_index(),
             remaining: self.len,
         }
+    }
+
+    /// Index of the oldest valid entry.
+    fn oldest_index(&self) -> usize {
+        (self.head + N - self.len) % N
     }
 
     /// Clear the buffer without deallocating.
@@ -213,6 +217,10 @@ mod tests {
         let n = rb.drain_to(&mut dst);
         assert_eq!(n, 3);
         assert_eq!(dst, [0, 1, 2]);
+        // Remaining entries are preserved
+        assert_eq!(rb.len(), 2);
+        let remaining: Vec<u32> = rb.iter().copied().collect();
+        assert_eq!(remaining, vec![3, 4]);
     }
 
     #[test]

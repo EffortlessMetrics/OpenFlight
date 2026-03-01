@@ -6,7 +6,7 @@
 //! Provides iterator-based playback of [`Record`] streams with time-scaling
 //! and per-type filtering. All replay state is stack-allocated.
 
-use crate::codec::{self, Record};
+use crate::codec::{self, CodecError, Record};
 
 /// Which record types to include during replay.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,13 +114,18 @@ pub struct ReplayEngine<'a> {
 
 impl<'a> ReplayEngine<'a> {
     /// Create a replay engine over encoded record data.
-    pub fn new(data: &'a [u8], config: ReplayConfig) -> Self {
-        Self {
+    ///
+    /// Returns an error if `time_scale` is non-finite or ≤ 0.
+    pub fn new(data: &'a [u8], config: ReplayConfig) -> Result<Self, CodecError> {
+        if !config.time_scale.is_finite() || config.time_scale <= 0.0 {
+            return Err(CodecError::InvalidTimeScale);
+        }
+        Ok(Self {
             data,
             offset: 0,
             config,
             base_ts: None,
-        }
+        })
     }
 
     /// Reset the engine to the beginning of the data.
@@ -136,7 +141,7 @@ impl<'a> ReplayEngine<'a> {
 }
 
 impl Iterator for ReplayEngine<'_> {
-    type Item = ReplayEntry;
+    type Item = Result<ReplayEntry, CodecError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
@@ -145,27 +150,26 @@ impl Iterator for ReplayEngine<'_> {
             }
             let (record, consumed) = match codec::decode(&self.data[self.offset..]) {
                 Ok(r) => r,
-                Err(_) => return None,
+                Err(e) => return Some(Err(e)),
             };
             self.offset += consumed;
+
+            // Set base_ts from the first decoded record regardless of filter.
+            let ts = record.timestamp_ns();
+            self.base_ts.get_or_insert(ts);
 
             if !self.config.filter.accepts(&record) {
                 continue;
             }
 
-            let ts = record.timestamp_ns();
-            let base = *self.base_ts.get_or_insert(ts);
+            let base = self.base_ts.unwrap();
             let delta = ts.saturating_sub(base);
-            let scaled = if self.config.time_scale == 0.0 {
-                0
-            } else {
-                (delta as f64 / self.config.time_scale) as u64
-            };
+            let scaled = (delta as f64 / self.config.time_scale) as u64;
 
-            return Some(ReplayEntry {
+            return Some(Ok(ReplayEntry {
                 record,
                 scaled_time_ns: scaled,
-            });
+            }));
         }
     }
 }
@@ -235,8 +239,8 @@ mod tests {
             make_axis(3_000_000, 3),
         ];
         let data = encode_records(&records);
-        let engine = ReplayEngine::new(&data, ReplayConfig::default());
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, ReplayConfig::default()).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 3);
         assert_eq!(entries[0].scaled_time_ns, 0);
         assert_eq!(entries[1].scaled_time_ns, 1_000_000);
@@ -254,8 +258,8 @@ mod tests {
             time_scale: 2.0,
             ..Default::default()
         };
-        let engine = ReplayEngine::new(&data, config);
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, config).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 2);
         // At 2x speed, 4ms becomes 2ms
         assert_eq!(entries[1].scaled_time_ns, 2_000_000);
@@ -269,8 +273,8 @@ mod tests {
             time_scale: 0.5,
             ..Default::default()
         };
-        let engine = ReplayEngine::new(&data, config);
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, config).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 2);
         // At 0.5x speed, 4ms becomes 8ms
         assert_eq!(entries[1].scaled_time_ns, 8_000_000);
@@ -289,8 +293,8 @@ mod tests {
             filter: RecordFilter::only_axis_frames(),
             ..Default::default()
         };
-        let engine = ReplayEngine::new(&data, config);
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, config).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 2);
         assert!(matches!(entries[0].record, Record::AxisFrame(_)));
         assert!(matches!(entries[1].record, Record::AxisFrame(_)));
@@ -308,8 +312,8 @@ mod tests {
             filter: RecordFilter::only_bus_events(),
             ..Default::default()
         };
-        let engine = ReplayEngine::new(&data, config);
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, config).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 2);
         assert!(matches!(entries[0].record, Record::BusEvent(_)));
     }
@@ -326,16 +330,16 @@ mod tests {
             filter: RecordFilter::only_timing_marks(),
             ..Default::default()
         };
-        let engine = ReplayEngine::new(&data, config);
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, config).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 2);
         assert!(matches!(entries[0].record, Record::TimingMark(_)));
     }
 
     #[test]
     fn replay_empty_data() {
-        let engine = ReplayEngine::new(&[], ReplayConfig::default());
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&[], ReplayConfig::default()).unwrap();
+        let entries: Vec<_> = engine.collect();
         assert!(entries.is_empty());
     }
 
@@ -348,8 +352,8 @@ mod tests {
             make_annotation(4_000_000, "test"),
         ];
         let data = encode_records(&records);
-        let engine = ReplayEngine::new(&data, ReplayConfig::default());
-        let entries: Vec<ReplayEntry> = engine.collect();
+        let engine = ReplayEngine::new(&data, ReplayConfig::default()).unwrap();
+        let entries: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(entries.len(), 4);
         assert!(matches!(entries[0].record, Record::AxisFrame(_)));
         assert!(matches!(entries[1].record, Record::BusEvent(_)));
@@ -361,12 +365,12 @@ mod tests {
     fn replay_reset_replays_from_start() {
         let records = vec![make_axis(1_000_000, 1), make_axis(2_000_000, 2)];
         let data = encode_records(&records);
-        let mut engine = ReplayEngine::new(&data, ReplayConfig::default());
-        let first_pass: Vec<ReplayEntry> = engine.by_ref().collect();
+        let mut engine = ReplayEngine::new(&data, ReplayConfig::default()).unwrap();
+        let first_pass: Vec<ReplayEntry> = engine.by_ref().map(|r| r.unwrap()).collect();
         assert_eq!(first_pass.len(), 2);
 
         engine.reset();
-        let second_pass: Vec<ReplayEntry> = engine.collect();
+        let second_pass: Vec<ReplayEntry> = engine.map(|r| r.unwrap()).collect();
         assert_eq!(second_pass.len(), 2);
         assert_eq!(first_pass[0].record, second_pass[0].record);
     }
@@ -376,7 +380,7 @@ mod tests {
         let records = vec![make_axis(0, 1)];
         let data = encode_records(&records);
         let total = data.len();
-        let mut engine = ReplayEngine::new(&data, ReplayConfig::default());
+        let mut engine = ReplayEngine::new(&data, ReplayConfig::default()).unwrap();
         assert_eq!(engine.remaining_bytes(), total);
         engine.next();
         assert_eq!(engine.remaining_bytes(), 0);
