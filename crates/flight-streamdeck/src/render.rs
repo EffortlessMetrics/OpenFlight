@@ -244,8 +244,7 @@ mod tests {
         for model in StreamDeckModel::all() {
             let result = KeyIcon::for_model(*model, "TST", IconTheme::Custom);
             if model.has_display() {
-                assert!(result.is_some(), "{:?} should produce an icon", model);
-                let icon = result.unwrap();
+                let icon = result.expect(&format!("{:?} should produce an icon", model));
                 assert_eq!(icon.size, model.icon_size().unwrap());
             } else {
                 assert!(result.is_none(), "{:?} should not produce an icon", model);

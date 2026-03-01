@@ -466,8 +466,8 @@ mod tests {
             for model in StreamDeckModel::all() {
                 let result = ProfileLayout::build(*aircraft, *model, &templates);
                 if model.grid_layout().is_some() {
-                    assert!(result.is_ok(), "{:?} + {:?} should build", aircraft, model);
-                    assert!(result.unwrap().page_count() >= 1);
+                    let layout = result.expect(&format!("{:?} + {:?} should build", aircraft, model));
+                    assert!(layout.page_count() >= 1);
                 } else {
                     assert!(result.is_err(), "{:?} + {:?} should fail (no grid)", aircraft, model);
                 }

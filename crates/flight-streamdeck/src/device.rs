@@ -105,16 +105,7 @@ impl StreamDeckModel {
 
     /// Identify model from a USB product ID, assuming the Elgato vendor ID.
     pub fn from_product_id(pid: u16) -> Option<Self> {
-        match pid {
-            0x0060 => Some(Self::Original),
-            0x0063 => Some(Self::Mini),
-            0x006C => Some(Self::Xl),
-            0x0080 => Some(Self::Mk2),
-            0x0084 => Some(Self::Plus),
-            0x0086 => Some(Self::Pedal),
-            0x009A => Some(Self::Neo),
-            _ => None,
-        }
+        Self::all().iter().find(|m| m.product_id() == pid).copied()
     }
 
     /// All known models.
