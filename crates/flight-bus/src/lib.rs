@@ -54,6 +54,7 @@ pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecordi
 pub use routing::{
     BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
     EventRouter as RoutingEventRouter, RouteId, RouteInfo, RouteMatches, RoutePattern, SourceType,
+    SubscriberInfo, SubscriberStatus, Topic, MAX_SUBSCRIBERS,
 };
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
