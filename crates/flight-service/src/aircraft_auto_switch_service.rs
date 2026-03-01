@@ -45,12 +45,14 @@ use tracing::{debug, error, info, warn};
 #[allow(dead_code)]
 pub(crate) trait AdapterDetector: Send {
     /// Simulator this adapter is responsible for.
+    #[allow(dead_code)]
     fn sim_id(&self) -> BusSimId;
 
     /// Base confidence for detections originating from this adapter.
     ///
     /// Values closer to 1.0 indicate higher trust.  This is combined with
     /// per-detection adjustments (e.g. fuzzy vs exact match) at the call site.
+    #[allow(dead_code)]
     fn base_confidence(&self) -> f32;
 }
 
@@ -1068,6 +1070,9 @@ impl AircraftAutoSwitchService {
                     _ = interval.tick() => {
                         match detector.detect_aircraft(&udp_client).await {
                             Ok(detected) => {
+                                if detected.icao.trim().is_empty() {
+                                    continue;
+                                }
                                 let aircraft = BusAircraftId::new(&detected.icao);
                                 if last_aircraft.as_ref() != Some(&aircraft) {
                                     last_aircraft = Some(aircraft.clone());
@@ -1087,6 +1092,7 @@ impl AircraftAutoSwitchService {
                 }
             }
 
+            udp_client.shutdown();
             debug!("X-Plane adapter task stopped");
         });
 
@@ -1119,6 +1125,10 @@ impl AircraftAutoSwitchService {
                         }
                     }
                     _ = interval.tick() => {
+                        // Drive adapter I/O so connections and telemetry are processed.
+                        if let Err(err) = adapter.update().await {
+                            debug!("DCS adapter update failed (may be transient): {}", err);
+                        }
                         // DCS adapter surfaces aircraft via convert_to_bus_snapshot;
                         // here we poll the connection for aircraft changes.
                         match adapter.poll_aircraft().await {
@@ -1169,15 +1179,24 @@ impl SimAdapters {
         let dcs = self.dcs.take();
         let ac7 = self.ac7.take();
         self.wingman = None;
-        if let Some(adapter) = xplane {
-            adapter.stop().await;
-        }
-        if let Some(adapter) = dcs {
-            adapter.stop().await;
-        }
-        if let Some(adapter) = ac7 {
-            adapter.stop().await;
-        }
+
+        let xplane_fut = async {
+            if let Some(adapter) = xplane {
+                adapter.stop().await;
+            }
+        };
+        let dcs_fut = async {
+            if let Some(adapter) = dcs {
+                adapter.stop().await;
+            }
+        };
+        let ac7_fut = async {
+            if let Some(adapter) = ac7 {
+                adapter.stop().await;
+            }
+        };
+        tokio::join!(xplane_fut, dcs_fut, ac7_fut);
+
         Ok(())
     }
 }
@@ -2028,8 +2047,9 @@ mod tests {
             "XPlane and Wingman should have distinct confidences"
         );
         assert!(
-            (xplane_conf - 0.9_f32).abs() > f32::EPSILON || true,
-            "Confidence should not be the old hardcoded 0.9"
+            (xplane_conf - 0.92).abs() <= f32::EPSILON,
+            "XPlane confidence should be 0.92, got {}",
+            xplane_conf,
         );
     }
 

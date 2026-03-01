@@ -168,8 +168,8 @@ impl DcsAdapter {
         }
     }
 
-    /// Update adapter state
-    async fn update(&mut self) -> Result<(), DcsAdapterError> {
+    /// Update adapter state — accept connections and process messages.
+    pub async fn update(&mut self) -> Result<(), DcsAdapterError> {
         // Accept new connections
         match self.socket_bridge.accept_connection().await {
             Ok(Some(addr)) => {
