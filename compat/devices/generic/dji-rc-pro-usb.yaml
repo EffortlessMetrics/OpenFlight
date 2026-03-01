@@ -10,7 +10,7 @@ device:
   vendor: "DJI"
   usb:
     vendor_id: 0x2CA3       # Confirmed
-    product_id: 0x001B      # Community estimate — verify with lsusb
+    product_id: 0x001B      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick

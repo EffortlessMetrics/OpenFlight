@@ -3,8 +3,8 @@ device:
   vendor: "STMicroelectronics"
   name: "STM32F103 Blue Pill Panel Controller"
   usb:
-    vid: "0x1EAF"
-    pid: "0x0004"
+    vendor_id: 0x1EAF
+    product_id: 0x0004
   type: "button_box"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "STM32F103 Blue Pill board configured as USB HID panel."
   driver: "built-in HID"
 quirks:

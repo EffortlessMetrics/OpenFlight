@@ -10,7 +10,7 @@ device:
   vendor: "TBS"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0x5741      # Community estimate — verify with lsusb
+    product_id: 0x5741      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x0483 (STMicroelectronics — used by EdgeTX). PID 0x5741 estimated for TBS Tango 2. Verify with lsusb.
+      VID 0x0483 (STMicroelectronics - used by EdgeTX). PID 0x5741 estimated for TBS Tango 2. Verify with lsusb.
 
 support:
   tier: 3
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    TBS Tango 2 — compact FPV RC transmitter running EdgeTX. Hall-effect gimbals, USB joystick mode for sim use.
+    TBS Tango 2 - compact FPV RC transmitter running EdgeTX. Hall-effect gimbals, USB joystick mode for sim use.
     Wave-97 addition. Last reviewed: 2026-07.

@@ -3,8 +3,8 @@ device:
   vendor: "MOZA Racing"
   name: "MOZA R12 Direct Drive Base"
   usb:
-    vid: "0x346E"
-    pid: "0x0012"
+    vendor_id: 0x346E
+    product_id: 0x0012
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "MOZA R12 high-torque direct drive base."
   driver: "built-in HID"
 quirks: []

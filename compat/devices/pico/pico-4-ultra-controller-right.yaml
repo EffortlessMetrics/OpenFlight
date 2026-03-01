@@ -3,8 +3,8 @@ device:
   vendor: "Pico Interactive"
   name: "Pico 4 Ultra Controller (Right)"
   usb:
-    vid: "0x2D1F"
-    pid: "0x0004"
+    vendor_id: 0x2D1F
+    product_id: 0x0004
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Pico 4 Ultra right VR controller."
   driver: "SteamVR/OpenXR"
 quirks:

@@ -3,8 +3,8 @@ device:
   vendor: "Thrustmaster"
   name: "Thrustmaster T818 Direct Drive"
   usb:
-    vid: "0x044F"
-    pid: "0xB6A1"
+    vendor_id: 0x044F
+    product_id: 0xB6A1
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Thrustmaster T818 direct drive wheelbase for flight sim."
   driver: "built-in HID"
 quirks: []

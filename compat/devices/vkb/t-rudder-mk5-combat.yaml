@@ -3,8 +3,8 @@ device:
   vendor: "VKB"
   name: "VKB T-Rudder Mk.V Combat"
   usb:
-    vid: "0x231D"
-    pid: "0x0156"
+    vendor_id: 0x231D
+    product_id: 0x0156
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "VKB T-Rudder Mk.V Combat variant with stiffer centering."
   driver: "built-in HID"
 quirks: []

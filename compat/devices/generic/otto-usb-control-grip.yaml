@@ -3,8 +3,8 @@ device:
   vendor: "OTTO Engineering"
   name: "OTTO USB Control Grip"
   usb:
-    vid: "0x1DED"
-    pid: "0x0001"
+    vendor_id: 0x1DED
+    product_id: 0x0001
   type: "joystick"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "OTTO USB control grip with multiple switches and hat."
   driver: "built-in HID"
 quirks: []

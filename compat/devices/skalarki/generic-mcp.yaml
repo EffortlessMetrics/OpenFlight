@@ -54,7 +54,7 @@ quirks:
       by HID output reports from the sim telemetry pipeline.
 
 support:
-  tier: 4
+  tier: 3
   test_coverage:
     simulated: false
     hil: false

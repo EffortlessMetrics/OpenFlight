@@ -3,8 +3,8 @@ device:
   vendor: "Baur"
   name: "Baur Helicopter Pedals"
   usb:
-    vid: "0x1209"
-    pid: "0xBA10"
+    vendor_id: 0x1209
+    product_id: 0xBA10
   type: "rudder"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Baur helicopter-style anti-torque pedals without toe brakes."
   driver: "built-in HID"
 quirks: []

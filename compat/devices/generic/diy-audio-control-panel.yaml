@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY Audio Control Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xAC08"
+    vendor_id: 0x1209
+    product_id: 0xAC08
   type: "panel"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY audio control panel with multiple volume knobs and selectors."
   driver: "built-in HID"
 quirks: []

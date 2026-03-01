@@ -3,8 +3,8 @@ device:
   vendor: "Baur"
   name: "Baur Military Rudder Pedals V2"
   usb:
-    vid: "0x1209"
-    pid: "0xBA11"
+    vendor_id: 0x1209
+    product_id: 0xBA11
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Baur Military Rudder Pedals V2 with toe brakes."
   driver: "built-in HID"
 quirks: []

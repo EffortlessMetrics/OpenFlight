@@ -3,8 +3,8 @@ device:
   vendor: "Thrustmaster"
   name: "Thrustmaster T-LCM Pedals"
   usb:
-    vid: "0x044F"
-    pid: "0xB6A2"
+    vendor_id: 0x044F
+    product_id: 0xB6A2
   type: "pedals"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Thrustmaster T-LCM load cell pedals for flight sim rudder."
   driver: "built-in HID"
 quirks: []

@@ -10,7 +10,7 @@ device:
   vendor: "Generic"
   usb:
     vendor_id: 0xFF01       # Community estimate
-    product_id: 0x0008      # Community estimate — verify with lsusb
+    product_id: 0x0008      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Generic one-handed accessible joystick — compact single-hand controller with programmable buttons for full sim control.
+    Generic one-handed accessible joystick - compact single-hand controller with programmable buttons for full sim control.
     Wave-98 addition. Last reviewed: 2026-07.

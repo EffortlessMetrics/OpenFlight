@@ -3,8 +3,8 @@ device:
   vendor: "HTC Corporation"
   name: "HTC Vive Focus 3 Controller (Right)"
   usb:
-    vid: "0x0BB4"
-    pid: "0x0314"
+    vendor_id: 0x0BB4
+    product_id: 0x0314
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Vive Focus 3 right controller for enterprise VR flight sim."
   driver: "SteamVR/OpenXR"
 quirks:

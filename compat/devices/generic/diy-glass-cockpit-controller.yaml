@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY Glass Cockpit USB Controller"
   usb:
-    vid: "0x1209"
-    pid: "0xAC01"
+    vendor_id: 0x1209
+    product_id: 0xAC01
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY USB controller board for custom glass cockpit panel builds."
   driver: "built-in HID"
 quirks: []

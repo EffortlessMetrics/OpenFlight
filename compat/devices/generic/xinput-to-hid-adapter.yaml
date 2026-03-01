@@ -14,8 +14,8 @@ device:
   name: "Generic XInput-to-HID Adapter"
   vendor: "Various"
   usb:
-    vendor_id: ~            # Varies by adapter brand
-    product_id: ~           # Varies by adapter SKU
+    vendor_id: 0              # Varies by adapter brand
+    product_id: 0           # Varies by adapter SKU
   hid:
     usage_page: 0x01
     usage: 0x05             # Game Pad

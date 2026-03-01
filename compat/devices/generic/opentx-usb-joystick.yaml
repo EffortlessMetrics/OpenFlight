@@ -10,7 +10,7 @@ device:
   vendor: "Generic"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0x5742      # Community estimate — verify with lsusb
+    product_id: 0x5742      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x0483 (STMicroelectronics — common for OpenTX/EdgeTX radios). PID 0x5742 is generic estimate. Actual PID varies by model.
+      VID 0x0483 (STMicroelectronics - common for OpenTX/EdgeTX radios). PID 0x5742 is generic estimate. Actual PID varies by model.
 
 support:
   tier: 3

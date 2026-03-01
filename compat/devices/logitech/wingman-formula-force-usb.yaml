@@ -10,7 +10,7 @@ device:
   vendor: "Logitech"
   usb:
     vendor_id: 0x046D       # Confirmed
-    product_id: 0xC293      # Community estimate — verify with lsusb
+    product_id: 0xC293      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Logitech WingMan Formula Force USB — force feedback racing wheel from late 1990s. Used as rudder pedal substitute in sims.
+    Logitech WingMan Formula Force USB - force feedback racing wheel from late 1990s. Used as rudder pedal substitute in sims.
     Wave-99 addition. Last reviewed: 2026-07.

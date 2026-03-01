@@ -10,7 +10,7 @@ device:
   vendor: "GameSir"
   usb:
     vendor_id: 0x1949       # Confirmed
-    product_id: 0x0410      # Community estimate — verify with lsusb
+    product_id: 0x0410      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x5             # Game Pad

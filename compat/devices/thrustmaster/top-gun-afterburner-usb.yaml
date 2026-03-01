@@ -10,7 +10,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F       # Confirmed
-    product_id: 0xB302      # Community estimate — verify with lsusb
+    product_id: 0xB302      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Thrustmaster Top Gun Afterburner USB — movie tie-in joystick with throttle lever. Budget stick from early 2000s.
+    Thrustmaster Top Gun Afterburner USB - movie tie-in joystick with throttle lever. Budget stick from early 2000s.
     Wave-99 addition. Last reviewed: 2026-07.

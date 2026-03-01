@@ -3,8 +3,8 @@ device:
   vendor: "Sony Interactive Entertainment"
   name: "PlayStation VR2 Sense Controller (Right)"
   usb:
-    vid: "0x054C"
-    pid: "0x0E46"
+    vendor_id: 0x054C
+    product_id: 0x0E46
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "PS VR2 Sense right controller for PC VR flight sim."
   driver: "SteamVR"
 quirks:

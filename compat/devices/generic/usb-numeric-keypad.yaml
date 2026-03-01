@@ -15,8 +15,8 @@ device:
   name: "Generic USB Numeric Keypad (Button Box)"
   vendor: "Generic"
   usb:
-    vendor_id: null         # Varies by manufacturer — wildcard match
-    product_id: null        # Varies by manufacturer — wildcard match
+    vendor_id: 0           # Varies by manufacturer — wildcard match
+    product_id: 0        # Varies by manufacturer — wildcard match
   hid:
     usage_page: 0x01        # Generic Desktop
     usage: 0x06             # Keyboard
@@ -57,7 +57,7 @@ quirks:
       autopilot target altitude/heading entry, or general macro button box.
 
 support:
-  tier: 5
+  tier: 3
   test_coverage:
     simulated: true
     hil: false

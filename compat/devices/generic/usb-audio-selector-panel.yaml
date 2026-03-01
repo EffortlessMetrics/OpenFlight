@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Generic USB Audio Selector Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xAC04"
+    vendor_id: 0x1209
+    product_id: 0xAC04
   type: "panel"
 capabilities:
   axes: 1
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "USB audio selector panel with volume knob for sim intercom."
   driver: "built-in HID"
 quirks: []

@@ -14,7 +14,7 @@ device:
   name: "GoFlight QPRO Controller"
   vendor: "GoFlight"
   usb:
-    vendor_id: 0x0F7B   # GoFlight Technologies â confirmed in USB ID database
+    vendor_id: 0x0F7B   # GoFlight Technologies — confirmed in USB ID database
     product_id: 0x0220  # Estimated — PID_UNCONFIRMED for QPRO model; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop

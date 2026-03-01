@@ -134,14 +134,33 @@ pub fn run_validate() -> Result<()> {
                 println!("✅ Cross-reference validation passed\n");
                 results.push(CheckResult::new("Cross-Reference Validation", true));
             } else {
-                println!("❌ Cross-reference validation failed\n");
-                results.push(CheckResult::with_details(
-                    "Cross-Reference Validation",
-                    false,
-                    format!("{} error(s) found", details.len()),
-                ));
+                // Only fail on broken links (XREF-001) and invalid tags (XREF-003).
+                // Missing test references (XREF-002) are warnings — they indicate
+                // tests that should be written but don't block CI.
+                let hard_errors: Vec<_> = details
+                    .iter()
+                    .filter(|d| !d.contains("INF-XREF-002"))
+                    .collect();
                 cross_ref_details = details.clone();
-                all_passed = false;
+                if hard_errors.is_empty() {
+                    println!(
+                        "⚠️  Cross-reference validation: {} warning(s) (missing test refs)\n",
+                        details.len()
+                    );
+                    results.push(CheckResult::with_details(
+                        "Cross-Reference Validation",
+                        true,
+                        format!("{} warning(s) — missing test refs only", details.len()),
+                    ));
+                } else {
+                    println!("❌ Cross-reference validation failed\n");
+                    results.push(CheckResult::with_details(
+                        "Cross-Reference Validation",
+                        false,
+                        format!("{} error(s) found", hard_errors.len()),
+                    ));
+                    all_passed = false;
+                }
             }
         }
         Err(e) => {

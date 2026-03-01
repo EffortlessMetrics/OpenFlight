@@ -3,8 +3,8 @@ device:
   vendor: "Derek Speare Designs"
   name: "DSD Button Box 48"
   usb:
-    vid: "0x04D8"
-    pid: "0xF6B3"
+    vendor_id: 0x04D8
+    product_id: 0xF6B3
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DSD 48-button USB button box for flight sim."
   driver: "built-in HID"
 quirks: []

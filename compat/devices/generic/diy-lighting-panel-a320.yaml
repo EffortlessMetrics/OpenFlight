@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY A320 Lighting Control Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC08"
+    vendor_id: 0x1209
+    product_id: 0xEC08
   type: "panel"
 capabilities:
   axes: 6
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Airbus A320 exterior/interior lighting panel replica."
   driver: "built-in HID"
 quirks: []

@@ -3,8 +3,8 @@ device:
   vendor: "NaturalPoint Inc."
   name: "NaturalPoint TrackClip Pro V2"
   usb:
-    vid: "0x131D"
-    pid: "0x015A"
+    vendor_id: 0x131D
+    product_id: 0x015A
   type: "head_tracker"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "TrackClip Pro V2 active IR LED clip for TrackIR."
   driver: "passive accessory"
 quirks:

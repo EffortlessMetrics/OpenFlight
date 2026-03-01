@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY RP2040 Rudder Pedals"
   usb:
-    vid: "0x2E8A"
-    pid: "0x010D"
+    vendor_id: 0x2E8A
+    product_id: 0x010D
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY RP2040-based rudder pedals with Raspberry Pi Pico."
   driver: "built-in HID"
 quirks: []

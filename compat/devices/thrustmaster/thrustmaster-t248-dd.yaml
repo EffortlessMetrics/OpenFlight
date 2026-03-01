@@ -3,8 +3,8 @@ device:
   vendor: "Thrustmaster"
   name: "Thrustmaster T248 Direct Drive"
   usb:
-    vid: "0x044F"
-    pid: "0xB6A0"
+    vendor_id: 0x044F
+    product_id: 0xB6A0
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Thrustmaster T248 hybrid direct drive racing wheel for flight sim rudder use."
   driver: "built-in HID"
 quirks: []

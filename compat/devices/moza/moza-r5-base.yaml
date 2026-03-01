@@ -3,8 +3,8 @@ device:
   vendor: "MOZA Racing"
   name: "MOZA R5 Direct Drive Base"
   usb:
-    vid: "0x346E"
-    pid: "0x0010"
+    vendor_id: 0x346E
+    product_id: 0x0010
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "MOZA R5 entry-level direct drive base for flight sim."
   driver: "built-in HID"
 quirks: []

@@ -10,7 +10,7 @@ device:
   vendor: "VKB"
   usb:
     vendor_id: 0x231D       # Confirmed
-    product_id: 0x0145      # Community estimate — verify with lsusb
+    product_id: 0x0145      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick

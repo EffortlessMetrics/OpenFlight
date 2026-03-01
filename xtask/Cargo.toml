@@ -3,6 +3,7 @@ name = "xtask"
 version = "0.1.0"
 edition = "2024"
 description = "Workspace automation and validation tasks for OpenFlight."
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["flight-sim", "openflight", "xtask", "tooling"]
 publish = false

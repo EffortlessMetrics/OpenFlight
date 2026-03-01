@@ -44,7 +44,7 @@ quirks:
       resistance is fixed and cannot be adjusted by software.
 
 support:
-  tier: 4
+  tier: 3
   test_coverage:
     simulated: false
     hil: false

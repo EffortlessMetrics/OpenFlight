@@ -3,8 +3,8 @@ device:
   vendor: "Sim Instruments"
   name: "Sim Instruments GNS 530 Panel"
   usb:
-    vid: "0x04D8"
-    pid: "0xF711"
+    vendor_id: 0x04D8
+    product_id: 0xF711
   type: "panel"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Sim Instruments hardware replica of Garmin GNS 530."
   driver: "built-in HID"
 quirks: []

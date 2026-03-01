@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "BU0836 Clone 12-Axis Interface"
   usb:
-    vid: "0x1DD2"
-    pid: "0x000B"
+    vendor_id: 0x1DD2
+    product_id: 0x000B
   type: "joystick"
 capabilities:
   axes: 12
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Third-party BU0836 clone 12-axis USB interface."
   driver: "built-in HID"
 quirks:

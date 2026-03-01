@@ -71,7 +71,7 @@ fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
 #[test]
 fn saitek_x52_parses_centred_report() {
     let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
-    // 11-bit centre ≈ 0x400 (1024); throttle centre ≈ 127.
+    // 11-bit centre ≈ 0x400 (1024) normalizes to ~0.0; throttle byte 127 normalizes to ~0.498 (midpoint of 0.0–1.0 range).
     let report = make_x52_report(0x400, 0x400, 127, 0);
     let state = handler.parse_report(&report);
 
@@ -86,8 +86,8 @@ fn saitek_x52_parses_centred_report() {
         state.axes.stick_y
     );
     assert!(
-        state.axes.throttle.abs() < 0.01,
-        "centred throttle should be ~0.0, got {}",
+        (state.axes.throttle - 0.498).abs() < 0.02,
+        "midpoint throttle (byte 127/255) should be ~0.498, got {}",
         state.axes.throttle
     );
     assert_eq!(state.buttons.primary, 0, "no buttons should be pressed");

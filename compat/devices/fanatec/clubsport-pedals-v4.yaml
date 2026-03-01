@@ -13,7 +13,7 @@ device:
   name: "Fanatec ClubSport Pedals V4"
   vendor: "Fanatec"
   usb:
-    vendor_id: 0x0EB7   # Fanatec (Endor AG) â confirmed in USB ID database
+    vendor_id: 0x0EB7   # Fanatec (Endor AG) — confirmed in USB ID database
     product_id: 0x0009  # Estimated — PID_UNCONFIRMED for V4 (V3 is 0x0005); verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop

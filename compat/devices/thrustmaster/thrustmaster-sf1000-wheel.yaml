@@ -3,8 +3,8 @@ device:
   vendor: "Thrustmaster"
   name: "Thrustmaster SF1000 Formula Wheel"
   usb:
-    vid: "0x044F"
-    pid: "0xB6A3"
+    vendor_id: 0x044F
+    product_id: 0xB6A3
   type: "wheel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Thrustmaster SF1000 F1 wheel add-on for sim racing and flight."
   driver: "built-in HID"
 quirks: []

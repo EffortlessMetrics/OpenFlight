@@ -3,8 +3,8 @@ device:
   vendor: "Raspberry Pi Foundation"
   name: "Raspberry Pi Pico USB Joystick"
   usb:
-    vid: "0x2E8A"
-    pid: "0x0003"
+    vendor_id: 0x2E8A
+    product_id: 0x0003
   type: "joystick"
 capabilities:
   axes: 8
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Raspberry Pi Pico RP2040 configured as USB HID joystick."
   driver: "built-in HID"
 quirks:

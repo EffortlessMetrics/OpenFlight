@@ -10,7 +10,7 @@ device:
   vendor: "VKB"
   usb:
     vendor_id: 0x231D       # Confirmed
-    product_id: 0x0270      # Community estimate — verify with lsusb
+    product_id: 0x0270      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    VKB Space Combat Grip Mk3 — third-generation SCG with improved ministick and additional selectors.
+    VKB Space Combat Grip Mk3 - third-generation SCG with improved ministick and additional selectors.
     Wave-96 addition. Last reviewed: 2026-07.

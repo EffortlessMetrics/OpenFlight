@@ -10,7 +10,7 @@ device:
   vendor: "QuadStick"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0xA0F0      # Community estimate — verify with lsusb
+    product_id: 0xA0F0      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    QuadStick FPS Game Controller — mouth-operated joystick for quadriplegic users. Sip/puff and lip position sensors.
+    QuadStick FPS Game Controller - mouth-operated joystick for quadriplegic users. Sip/puff and lip position sensors.
     Wave-98 addition. Last reviewed: 2026-07.

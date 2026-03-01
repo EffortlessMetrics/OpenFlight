@@ -3,8 +3,8 @@ device:
   vendor: "VKB"
   name: "VKB Space Combat Grip Mk.II"
   usb:
-    vid: "0x231D"
-    pid: "0x0150"
+    vendor_id: 0x231D
+    product_id: 0x0150
   type: "joystick"
 capabilities:
   axes: 5
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "VKB Space Combat Grip Mk.II for HOSAS setups."
   driver: "built-in HID"
 quirks: []

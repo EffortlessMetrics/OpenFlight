@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Air Manager Knobster Compatible Controller"
   usb:
-    vid: "0x04D8"
-    pid: "0xF710"
+    vendor_id: 0x04D8
+    product_id: 0xF710
   type: "panel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Air Manager compatible knobster-style rotary controller."
   driver: "built-in HID"
 quirks: []

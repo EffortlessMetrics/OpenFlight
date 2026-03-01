@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY Generic Hydraulic Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC11"
+    vendor_id: 0x1209
+    product_id: 0xEC11
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY generic hydraulic system panel for cockpit builds."
   driver: "built-in HID"
 quirks: []

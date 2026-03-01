@@ -10,7 +10,7 @@ device:
   vendor: "Virpil"
   usb:
     vendor_id: 0x3344       # Confirmed
-    product_id: 0x831F      # Community estimate — verify with lsusb
+    product_id: 0x831F      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick

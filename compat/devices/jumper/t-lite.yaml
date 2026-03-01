@@ -10,7 +10,7 @@ device:
   vendor: "Jumper"
   usb:
     vendor_id: 0x16C0       # Confirmed
-    product_id: 0x0484      # Community estimate — verify with lsusb
+    product_id: 0x0484      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Jumper T-Lite — compact gamepad-style RC transmitter with EdgeTX USB joystick mode.
+    Jumper T-Lite - compact gamepad-style RC transmitter with EdgeTX USB joystick mode.
     Wave-97 addition. Last reviewed: 2026-07.

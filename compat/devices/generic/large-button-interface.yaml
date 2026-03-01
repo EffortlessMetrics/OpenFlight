@@ -10,7 +10,7 @@ device:
   vendor: "Generic"
   usb:
     vendor_id: 0xFF01       # Community estimate
-    product_id: 0x000F      # Community estimate — verify with lsusb
+    product_id: 0x000F      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x5             # Game Pad
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Large button accessibility interface — oversized buttons for users with limited dexterity. Maps to sim commands.
+    Large button accessibility interface - oversized buttons for users with limited dexterity. Maps to sim commands.
     Wave-98 addition. Last reviewed: 2026-07.

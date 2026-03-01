@@ -10,7 +10,7 @@ device:
   vendor: "BETAFPV"
   usb:
     vendor_id: 0x1781       # Confirmed
-    product_id: 0x089C      # Community estimate — verify with lsusb
+    product_id: 0x089C      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    BETAFPV LiteRadio 3 Pro — compact FPV RC transmitter with Hall gimbals and USB joystick mode.
+    BETAFPV LiteRadio 3 Pro - compact FPV RC transmitter with Hall gimbals and USB joystick mode.
     Wave-97 addition. Last reviewed: 2026-07.

@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Generic USB PTT Box 4-Channel"
   usb:
-    vid: "0x0C45"
-    pid: "0x7415"
+    vendor_id: 0x0C45
+    product_id: 0x7415
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "4-channel USB PTT box for multi-radio communication."
   driver: "built-in HID"
 quirks: []

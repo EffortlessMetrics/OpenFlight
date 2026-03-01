@@ -3,8 +3,8 @@ device:
   vendor: "TrackHat"
   name: "TrackHat Clip Plus V3"
   usb:
-    vid: "0x04D8"
-    pid: "0xF380"
+    vendor_id: 0x04D8
+    product_id: 0xF380
   type: "head_tracker"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "TrackHat Clip Plus V3 IR LED clip for opentrack."
   driver: "passive accessory"
 quirks:

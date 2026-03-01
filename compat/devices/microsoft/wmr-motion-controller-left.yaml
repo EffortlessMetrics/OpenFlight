@@ -3,8 +3,8 @@ device:
   vendor: "Microsoft Corporation"
   name: "WMR Motion Controller (Left)"
   usb:
-    vid: "0x045E"
-    pid: "0x065B"
+    vendor_id: 0x045E
+    product_id: 0x065B
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Generic Windows Mixed Reality left motion controller."
   driver: "WMR/SteamVR"
 quirks:

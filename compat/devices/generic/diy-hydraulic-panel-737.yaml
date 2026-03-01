@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY 737 Hydraulic Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC0F"
+    vendor_id: 0x1209
+    product_id: 0xEC0F
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Boeing 737 hydraulic system control panel replica."
   driver: "built-in HID"
 quirks: []

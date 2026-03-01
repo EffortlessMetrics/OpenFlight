@@ -3,8 +3,8 @@ device:
   vendor: "Delan Clip"
   name: "Delan Clip Gamer"
   usb:
-    vid: "0x04D8"
-    pid: "0xF375"
+    vendor_id: 0x04D8
+    product_id: 0xF375
   type: "head_tracker"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Delan Clip Gamer budget IR LED clip."
   driver: "passive accessory"
 quirks:

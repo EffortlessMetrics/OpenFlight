@@ -134,6 +134,13 @@ impl Pipeline {
             "Pipeline and state mismatch"
         );
 
+        // Sanitize input: clamp to valid axis range, replace NaN/Inf with 0.0
+        if !frame.out.is_finite() {
+            frame.out = 0.0;
+        } else {
+            frame.out = frame.out.clamp(-1.0, 1.0);
+        }
+
         let base_ptr = state.state_buffer.as_mut_ptr();
 
         // If we have source nodes, use them directly for better integration

@@ -3,8 +3,8 @@ device:
   vendor: "Slaw Device"
   name: "Slaw Device RX Viper V2"
   usb:
-    vid: "0x0483"
-    pid: "0xA212"
+    vendor_id: 0x0483
+    product_id: 0xA212
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Slaw Device RX Viper V2 contactless Hall sensor rudder pedals."
   driver: "built-in HID"
 quirks: []

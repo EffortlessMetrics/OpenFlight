@@ -10,7 +10,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F       # Confirmed
-    product_id: 0x0200      # Community estimate — verify with lsusb
+    product_id: 0x0200      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Thrustmaster FCS (original) — the classic F-16 FLCS replica from the early 1990s. Gameport design, needs adapter.
+    Thrustmaster FCS (original) - the classic F-16 FLCS replica from the early 1990s. Gameport design, needs adapter.
     Wave-99 addition. Last reviewed: 2026-07.

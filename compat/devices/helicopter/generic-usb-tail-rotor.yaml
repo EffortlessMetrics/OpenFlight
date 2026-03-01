@@ -16,8 +16,8 @@ device:
   name: "Generic USB Anti-Torque Pedals"
   vendor: "Unknown"
   usb:
-    vendor_id: ~         # Unidentified — update with confirmed VID
-    product_id: ~        # Unidentified — update with confirmed PID
+    vendor_id: 0            # Unidentified — update with confirmed VID
+    product_id: 0        # Unidentified — update with confirmed PID
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x04          # Joystick

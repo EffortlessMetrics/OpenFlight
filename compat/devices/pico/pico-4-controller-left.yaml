@@ -3,8 +3,8 @@ device:
   vendor: "Pico Interactive"
   name: "Pico 4 Controller (Left)"
   usb:
-    vid: "0x2D1F"
-    pid: "0x0001"
+    vendor_id: 0x2D1F
+    product_id: 0x0001
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Pico 4 left VR controller for flight sim."
   driver: "SteamVR/OpenXR"
 quirks:

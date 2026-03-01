@@ -3,8 +3,8 @@ device:
   vendor: "Sony"
   name: "PS3 Eye IR Camera (Modified)"
   usb:
-    vid: "0x1415"
-    pid: "0x2000"
+    vendor_id: 0x1415
+    product_id: 0x2000
   type: "head_tracker"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Modified PS3 Eye camera with IR filter for head tracking."
   driver: "UVC camera"
 quirks:

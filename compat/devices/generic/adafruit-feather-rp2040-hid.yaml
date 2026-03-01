@@ -3,8 +3,8 @@ device:
   vendor: "Adafruit"
   name: "Adafruit Feather RP2040 USB HID"
   usb:
-    vid: "0x239A"
-    pid: "0x8120"
+    vendor_id: 0x239A
+    product_id: 0x8120
   type: "joystick"
 capabilities:
   axes: 6
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Adafruit Feather RP2040 board in USB HID mode."
   driver: "built-in HID"
 quirks:

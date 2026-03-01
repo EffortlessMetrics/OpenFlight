@@ -10,7 +10,7 @@ device:
   vendor: "AbleNet"
   usb:
     vendor_id: 0xFF01       # Community estimate
-    product_id: 0x0001      # Community estimate — verify with lsusb
+    product_id: 0x0001      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x5             # Game Pad
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    AbleNet Blue2 Bluetooth switch — dual switch interface for accessibility. Maps to button inputs for sim commands.
+    AbleNet Blue2 Bluetooth switch - dual switch interface for accessibility. Maps to button inputs for sim commands.
     Wave-98 addition. Last reviewed: 2026-07.

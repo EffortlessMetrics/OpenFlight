@@ -3,8 +3,8 @@ device:
   vendor: "MFG"
   name: "MFG Crosswind V3 Combat Edition"
   usb:
-    vid: "0x1551"
-    pid: "0x0031"
+    vendor_id: 0x1551
+    product_id: 0x0031
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "MFG Crosswind V3 Combat Edition with stiffer springs."
   driver: "built-in HID"
 quirks: []

@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY A320 Pressurization Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC05"
+    vendor_id: 0x1209
+    product_id: 0xEC05
   type: "panel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Airbus A320 cabin pressure controller panel replica."
   driver: "built-in HID"
 quirks: []

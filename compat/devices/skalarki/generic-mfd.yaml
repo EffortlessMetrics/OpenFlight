@@ -52,7 +52,7 @@ quirks:
       this generic entry covers panels with undefined bezel layouts.
 
 support:
-  tier: 4
+  tier: 3
   test_coverage:
     simulated: false
     hil: false

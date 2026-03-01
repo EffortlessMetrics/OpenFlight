@@ -33,7 +33,7 @@ polling:
 
 quirks:
   - id: VID_MICROCHIP_BRIDGE
-    description: "VID 0x04D8 (Microchip Technology) is plausible â Elite Simulations devices typically use Microchip USB MCU bridges."
+    description: "VID 0x04D8 (Microchip Technology) is plausible — Elite Simulations devices typically use Microchip USB MCU bridges."
   - id: PID_UNCONFIRMED
     description: "PID 0x0203 is a placeholder; must be verified before production use."
   - id: THROTTLE_NOT_CENTERED

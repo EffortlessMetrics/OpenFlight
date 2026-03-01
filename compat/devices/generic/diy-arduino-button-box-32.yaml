@@ -3,8 +3,8 @@ device:
   vendor: "DIY/Arduino"
   name: "DIY Arduino Button Box 32"
   usb:
-    vid: "0x2341"
-    pid: "0x8037"
+    vendor_id: 0x2341
+    product_id: 0x8037
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Arduino-based 32-button box for flight sim."
   driver: "built-in HID"
 quirks:

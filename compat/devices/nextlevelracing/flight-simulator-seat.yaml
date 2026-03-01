@@ -13,8 +13,8 @@ device:
   vendor: "Next Level Racing"
   is_virtual: true
   usb:
-    vendor_id: ~    # Not a USB device — physical cockpit seat/frame
-    product_id: ~
+    vendor_id: 0       # Not a USB device — physical cockpit seat/frame
+    product_id: 0
   type: virtual_bundle
 
 capabilities:

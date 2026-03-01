@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Generic USB Intercom Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xAC05"
+    vendor_id: 0x1209
+    product_id: 0xAC05
   type: "panel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "USB intercom panel with pilot/copilot volume for crew communication."
   driver: "built-in HID"
 quirks: []

@@ -3,8 +3,8 @@ device:
   vendor: "Virpil Controls"
   name: "Virpil VPC MongoosT-50CM3 HOSAS Left"
   usb:
-    vid: "0x3344"
-    pid: "0x0280"
+    vendor_id: 0x3344
+    product_id: 0x0280
   type: "joystick"
 capabilities:
   axes: 5
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Virpil VPC MongoosT-50CM3 HOSAS left-hand grip configuration."
   driver: "built-in HID"
 quirks: []

@@ -1,0 +1,50 @@
+# DIY SimHQ Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# Community DIY helicopter collective based on SimHQ forum designs.
+# Uses Arduino/STM32 USB HID firmware. VID 0x1209 (pid.codes open namespace).
+# PID unknown — placeholder 0x0000 used until confirmed.
+schema_version: "1"
+
+device:
+  name: "DIY SimHQ Collective"
+  vendor: "DIY / SimHQ Community"
+  usb:
+    vendor_id: 0x1209    # pid.codes — DIY/open USB VID
+    product_id: 0x0000   # placeholder — PID unconfirmed
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [collective, throttle]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 8
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID is a placeholder. Actual PID depends on the specific firmware
+      and Arduino/STM32 board used in the build.
+  - id: DIY_BUILD_VARIANCE
+    description: >
+      SimHQ community collective builds vary by builder. Axis count,
+      resolution, and button layout depend on the specific build.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    DIY SimHQ community helicopter collective. VID 0x1209, PID unconfirmed.
+    Capabilities are representative; actual builds vary. Last reviewed: 2026-07.

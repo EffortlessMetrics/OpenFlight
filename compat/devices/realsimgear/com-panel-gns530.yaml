@@ -3,8 +3,8 @@ device:
   vendor: "RealSimGear"
   name: "RealSimGear GNS530 COM Panel"
   usb:
-    vid: "0x04D8"
-    pid: "0xF246"
+    vendor_id: 0x04D8
+    product_id: 0xF246
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "RealSimGear GNS530 COM/NAV radio with GPS bezel."
   driver: "built-in HID"
 quirks: []

@@ -33,7 +33,7 @@ polling:
 
 quirks:
   - id: VID_MICROCHIP_BRIDGE
-    description: "VID 0x04D8 (Microchip Technology) is plausible â DHC uses various USB bridge chips across product runs."
+    description: "VID 0x04D8 (Microchip Technology) is plausible — DHC uses various USB bridge chips across product runs."
 
 support:
   tier: 3

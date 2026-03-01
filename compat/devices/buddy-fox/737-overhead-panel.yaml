@@ -3,8 +3,8 @@ device:
   vendor: "Buddy Fox"
   name: "Buddy Fox 737 Overhead Panel"
   usb:
-    vid: "0x2FD0"
-    pid: "0x0001"
+    vendor_id: 0x2FD0
+    product_id: 0x0001
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Buddy Fox 737 overhead panel replica with USB HID."
   driver: "built-in HID"
 quirks: []
