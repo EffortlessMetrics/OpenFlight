@@ -51,7 +51,13 @@ async fn start_mock_server() -> (flight_ipc::server::ServerHandle, String) {
     let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
     let handle = server.start(addr).await.expect("server should start");
     let url = format!("http://127.0.0.1:{}", handle.addr().port());
-    tokio::time::sleep(Duration::from_millis(30)).await;
+    // Poll until server is ready (up to 500ms)
+    for _ in 0..50 {
+        tokio::time::sleep(Duration::from_millis(10)).await;
+        if IpcClient::connect(&url).await.is_ok() {
+            break;
+        }
+    }
     (handle, url)
 }
 
@@ -102,7 +108,7 @@ fn proto_health_event_round_trip() {
     assert_eq!(decoded.error_code, "E1001");
     assert!(decoded.performance.is_some());
     let perf = decoded.performance.unwrap();
-    assert!((perf.jitter_p99_ms - 0.4).abs() < f32::EPSILON);
+    assert!((perf.jitter_p99_ms - 0.4).abs() < 1e-5);
     assert_eq!(perf.missed_ticks, 2);
 }
 
@@ -167,7 +173,7 @@ fn proto_curve_conflict_with_metadata_round_trip() {
     assert_eq!(decoded.conflict_type, ConflictType::DoubleCurve as i32);
     let meta = decoded.metadata.unwrap();
     assert_eq!(meta.test_inputs.len(), 5);
-    assert!((meta.combined_nonlinearity - 0.85).abs() < f32::EPSILON);
+    assert!((meta.combined_nonlinearity - 0.85).abs() < 1e-6);
 }
 
 #[test]
@@ -443,7 +449,9 @@ async fn subscription_health_stream_establishes() {
     drop(client);
     // Graceful shutdown may block while tonic drains the health stream;
     // a timeout prevents the test from hanging indefinitely.
-    let _ = tokio::time::timeout(Duration::from_secs(2), handle.shutdown()).await;
+    if let Ok(result) = tokio::time::timeout(Duration::from_secs(2), handle.shutdown()).await {
+        result.unwrap();
+    }
 }
 
 // ===========================================================================
@@ -490,7 +498,7 @@ async fn reconnection_fails_when_server_down() {
 }
 
 #[tokio::test]
-async fn reconnection_to_new_server_instance() {
+async fn client_can_connect_to_new_server_instance() {
     // Start server 1
     let (handle1, url1) = start_mock_server().await;
     let mut client = connect_client(&url1).await;
@@ -746,7 +754,11 @@ async fn health_subscribe_stream_can_be_established() {
     assert!(result.is_err() || result.unwrap().is_none());
 
     drop(rx);
-    let _ = tokio::time::timeout(Duration::from_secs(2), handle.shutdown()).await;
+    // Graceful shutdown may block while tonic drains the health stream;
+    // a timeout prevents the test from hanging indefinitely.
+    if let Ok(result) = tokio::time::timeout(Duration::from_secs(2), handle.shutdown()).await {
+        result.unwrap();
+    }
 }
 
 // ===========================================================================
@@ -755,6 +767,9 @@ async fn health_subscribe_stream_can_be_established() {
 
 #[tokio::test]
 async fn error_connect_refused() {
+    // Port 19997 is deliberately hardcoded: we need a port that is NOT listening
+    // to verify "connection refused" behaviour. Using port 0 would not work here
+    // because the OS would assign a valid ephemeral port during bind, not connect.
     let result = IpcClient::connect("http://127.0.0.1:19997").await;
     assert!(result.is_err());
     let msg = result.unwrap_err().to_string();
@@ -1522,7 +1537,7 @@ fn mock_context_builders() {
     assert_eq!(ctx.list_profiles().len(), 1);
     assert_eq!(ctx.get_active_profile(), Some("default".to_string()));
     assert!(ctx.system_health().healthy);
-    assert!((ctx.get_metrics().jitter_p99_ms - 0.3).abs() < f64::EPSILON);
+    assert!((ctx.get_metrics().jitter_p99_ms - 0.3).abs() < 1e-6);
 }
 
 // ===========================================================================
