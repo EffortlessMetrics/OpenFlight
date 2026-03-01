@@ -268,6 +268,156 @@ pub fn build_led_command(led: VkbLedIndex, color: VkbLedColor, brightness: u8) -
     ]
 }
 
+// ─── Unified stick state ──────────────────────────────────────────────────────
+
+/// Unified stick axes common to all VKB joystick-class devices.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct StickAxes {
+    /// Main stick roll (X axis), `−1.0..=1.0`.
+    pub roll: f32,
+    /// Main stick pitch (Y axis), `−1.0..=1.0`.
+    pub pitch: f32,
+    /// Stick twist / yaw (Z axis), `−1.0..=1.0`.
+    pub yaw: f32,
+    /// Throttle wheel / slider, `0.0..=1.0`.
+    pub throttle: f32,
+    /// Mini-stick analogue X axis, `−1.0..=1.0`.
+    pub mini_x: f32,
+    /// Mini-stick analogue Y axis, `−1.0..=1.0`.
+    pub mini_y: f32,
+}
+
+/// Unified parsed state from any VKB joystick-class device.
+///
+/// This type abstracts over the Gladiator and Gunfighter input state types,
+/// providing a single API for consumers that do not need family-specific details.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StickState {
+    /// Device family that produced this report.
+    pub family: VkbDeviceFamily,
+    /// Normalised axes.
+    pub axes: StickAxes,
+    /// Button bitmap (up to 64 buttons, `true` = pressed).
+    pub buttons: [bool; 64],
+    /// POV hat states (up to 2, `None` = centred).
+    pub hat_switches: [Option<u8>; 2],
+}
+
+impl StickState {
+    /// Return 1-based indices of all currently pressed buttons.
+    pub fn pressed_buttons(&self) -> Vec<u16> {
+        self.buttons
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &pressed)| if pressed { Some((i + 1) as u16) } else { None })
+            .collect()
+    }
+}
+
+/// Parse error returned by [`VkbProtocol::parse_report`].
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum VkbProtocolParseError {
+    /// Report payload too short.
+    #[error("report too short: expected at least {expected} bytes, got {actual}")]
+    ReportTooShort {
+        /// Minimum bytes expected.
+        expected: usize,
+        /// Actual bytes received.
+        actual: usize,
+    },
+}
+
+/// Unified VKB protocol handler for any supported joystick-class device.
+///
+/// Wraps device family detection and delegates to the appropriate parser.
+#[derive(Debug, Clone, Copy)]
+pub struct VkbProtocol {
+    family: VkbDeviceFamily,
+    has_report_id: bool,
+}
+
+impl VkbProtocol {
+    /// Create a protocol handler for a VKB device identified by VID/PID.
+    ///
+    /// Returns `None` if the VID is not VKB or the PID is not a known joystick.
+    pub fn new(vid: u16, pid: u16) -> Option<Self> {
+        if vid != VKB_VENDOR_ID {
+            return None;
+        }
+        VkbDeviceFamily::from_pid(pid).map(|family| Self {
+            family,
+            has_report_id: false,
+        })
+    }
+
+    /// Enable stripping a 1-byte HID report ID prefix before parsing.
+    pub fn with_report_id(mut self, enabled: bool) -> Self {
+        self.has_report_id = enabled;
+        self
+    }
+
+    /// Return the detected device family.
+    pub fn family(&self) -> VkbDeviceFamily {
+        self.family
+    }
+
+    /// Parse a raw HID report into a unified [`StickState`].
+    ///
+    /// Works for Gladiator NXT EVO, Gunfighter, and related joystick families.
+    /// For SEM THQ or STECS, use the dedicated parsers instead.
+    pub fn parse_report(&self, report: &[u8]) -> Result<StickState, VkbProtocolParseError> {
+        let payload = if self.has_report_id {
+            report.get(1..).unwrap_or(&[])
+        } else {
+            report
+        };
+
+        const MIN_LEN: usize = 12;
+        if payload.len() < MIN_LEN {
+            return Err(VkbProtocolParseError::ReportTooShort {
+                expected: MIN_LEN,
+                actual: payload.len(),
+            });
+        }
+
+        let axes = StickAxes {
+            roll: normalize_signed(le_u16(payload, 0)),
+            pitch: normalize_signed(le_u16(payload, 2)),
+            yaw: normalize_signed(le_u16(payload, 4)),
+            mini_x: normalize_signed(le_u16(payload, 6)),
+            mini_y: normalize_signed(le_u16(payload, 8)),
+            throttle: normalize_u16(le_u16(payload, 10)),
+        };
+
+        let mut buttons = [false; 64];
+        if payload.len() >= 16 {
+            let btn_lo = le_u32(payload, 12);
+            for (bit, btn) in buttons[..32].iter_mut().enumerate() {
+                *btn = ((btn_lo >> bit) & 1) != 0;
+            }
+        }
+        if payload.len() >= 20 {
+            let btn_hi = le_u32(payload, 16);
+            for (bit, btn) in buttons[32..64].iter_mut().enumerate() {
+                *btn = ((btn_hi >> bit) & 1) != 0;
+            }
+        }
+
+        let mut hat_switches = [None; 2];
+        if let Some(&hat_byte) = payload.get(20) {
+            hat_switches[0] = decode_hat_nibble(hat_byte & 0x0F);
+            hat_switches[1] = decode_hat_nibble((hat_byte >> 4) & 0x0F);
+        }
+
+        Ok(StickState {
+            family: self.family,
+            axes,
+            buttons,
+            hat_switches,
+        })
+    }
+}
+
 // ─── Device identification helpers ────────────────────────────────────────────
 
 /// Check whether a VID/PID pair belongs to a known VKB joystick-class device.
@@ -1009,5 +1159,106 @@ mod tests {
     fn normalize_u16_midpoint() {
         let mid = normalize_u16(0x8000);
         assert!((mid - 0.5).abs() < 0.01);
+    }
+
+    // ─── VkbProtocol / StickState ─────────────────────────────────────────
+
+    #[test]
+    fn vkb_protocol_new_valid_gladiator() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
+        assert!(proto.is_some());
+        assert_eq!(proto.unwrap().family(), VkbDeviceFamily::GladiatorNxtEvo);
+    }
+
+    #[test]
+    fn vkb_protocol_new_valid_gunfighter() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID);
+        assert!(proto.is_some());
+        assert_eq!(proto.unwrap().family(), VkbDeviceFamily::Gunfighter);
+    }
+
+    #[test]
+    fn vkb_protocol_new_wrong_vid() {
+        assert!(VkbProtocol::new(0x0000, VKB_GLADIATOR_NXT_EVO_RIGHT_PID).is_none());
+    }
+
+    #[test]
+    fn vkb_protocol_new_unknown_pid() {
+        assert!(VkbProtocol::new(VKB_VENDOR_ID, 0x9999).is_none());
+    }
+
+    #[test]
+    fn vkb_protocol_parse_report_centre() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID).unwrap();
+        let report =
+            make_gunfighter_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+        let state = proto.parse_report(&report).unwrap();
+        assert_eq!(state.family, VkbDeviceFamily::GladiatorNxtEvo);
+        assert!(state.axes.roll.abs() < 0.01);
+        assert!(state.axes.pitch.abs() < 0.01);
+        assert!(state.axes.yaw.abs() < 0.01);
+        assert!(state.axes.throttle.abs() < 1e-5);
+    }
+
+    #[test]
+    fn vkb_protocol_parse_report_buttons() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID).unwrap();
+        let report = make_gunfighter_report(
+            [0x8000; 6],
+            0x0000_0003, // buttons 1 and 2
+            0x0000_0000,
+            0xFF,
+        );
+        let state = proto.parse_report(&report).unwrap();
+        assert_eq!(state.pressed_buttons(), vec![1, 2]);
+    }
+
+    #[test]
+    fn vkb_protocol_parse_report_hats() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID).unwrap();
+        let report = make_gunfighter_report([0x8000; 6], 0, 0, 0xF3); // hat0=SE(3), hat1=centred
+        let state = proto.parse_report(&report).unwrap();
+        assert_eq!(state.hat_switches[0], Some(3));
+        assert_eq!(state.hat_switches[1], None);
+    }
+
+    #[test]
+    fn vkb_protocol_parse_report_too_short() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID).unwrap();
+        let err = proto.parse_report(&[0u8; 8]);
+        assert!(matches!(
+            err,
+            Err(VkbProtocolParseError::ReportTooShort {
+                expected: 12,
+                actual: 8
+            })
+        ));
+    }
+
+    #[test]
+    fn vkb_protocol_with_report_id() {
+        let proto = VkbProtocol::new(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID)
+            .unwrap()
+            .with_report_id(true);
+        let mut report = vec![0x01u8];
+        report.extend_from_slice(&make_gunfighter_report(
+            [0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF],
+            0,
+            0,
+            0xFF,
+        ));
+        let state = proto.parse_report(&report).unwrap();
+        assert!((state.axes.throttle - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn stick_state_pressed_buttons_empty() {
+        let state = StickState {
+            family: VkbDeviceFamily::GladiatorNxtEvo,
+            axes: StickAxes::default(),
+            buttons: [false; 64],
+            hat_switches: [None; 2],
+        };
+        assert!(state.pressed_buttons().is_empty());
     }
 }
