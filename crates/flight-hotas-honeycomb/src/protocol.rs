@@ -1116,63 +1116,43 @@ mod tests {
     fn test_alpha_rocker1_up() {
         // Rocker 1 up = button 7 = bit 6
         let mask: u64 = 1 << (ROCKER1_UP_BUTTON - 1);
-        assert_eq!(
-            decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1),
-            1
-        );
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), 1);
     }
 
     #[test]
     fn test_alpha_rocker1_down() {
         // Rocker 1 down = button 8 = bit 7
         let mask: u64 = 1 << (ROCKER1_DOWN_BUTTON - 1);
-        assert_eq!(
-            decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1),
-            -1
-        );
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), -1);
     }
 
     #[test]
     fn test_alpha_rocker1_neutral() {
-        assert_eq!(
-            decode_alpha_rocker(0, AlphaRockerSwitch::Rocker1),
-            0
-        );
+        assert_eq!(decode_alpha_rocker(0, AlphaRockerSwitch::Rocker1), 0);
     }
 
     #[test]
     fn test_alpha_rocker2_up() {
         let mask: u64 = 1 << (ROCKER2_UP_BUTTON - 1);
-        assert_eq!(
-            decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2),
-            1
-        );
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2), 1);
     }
 
     #[test]
     fn test_alpha_rocker2_down() {
         let mask: u64 = 1 << (ROCKER2_DOWN_BUTTON - 1);
-        assert_eq!(
-            decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2),
-            -1
-        );
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2), -1);
     }
 
     #[test]
     fn test_alpha_rocker_both_pressed_neutral() {
-        let mask: u64 =
-            (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER1_DOWN_BUTTON - 1));
-        assert_eq!(
-            decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1),
-            0
-        );
+        let mask: u64 = (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER1_DOWN_BUTTON - 1));
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), 0);
     }
 
     #[test]
     fn test_decode_all_alpha_rockers() {
         // Rocker 1 up + Rocker 2 down
-        let mask: u64 =
-            (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER2_DOWN_BUTTON - 1));
+        let mask: u64 = (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER2_DOWN_BUTTON - 1));
         let rockers = decode_all_alpha_rockers(mask);
         assert_eq!(rockers[0], 1);
         assert_eq!(rockers[1], -1);
