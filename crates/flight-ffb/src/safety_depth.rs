@@ -98,7 +98,7 @@ impl ViolationTracker {
 
     /// Number of violations inside the current window.
     pub fn recent_count(&self, now: Instant) -> usize {
-        let cutoff = now - self.window;
+        let cutoff = now.checked_sub(self.window).unwrap_or(now);
         self.buf
             .iter()
             .filter(|slot| slot.as_ref().is_some_and(|v| v.timestamp >= cutoff))
@@ -109,7 +109,7 @@ impl ViolationTracker {
     ///
     /// Returns a value ≥ 0.0 where higher means more severe.
     pub fn severity(&self, now: Instant) -> f32 {
-        let cutoff = now - self.window;
+        let cutoff = now.checked_sub(self.window).unwrap_or(now);
         self.buf
             .iter()
             .filter_map(|slot| slot.as_ref())
@@ -270,6 +270,10 @@ pub struct WatchdogTimer {
 impl WatchdogTimer {
     /// Create a watchdog with the given `deadline` and `ramp_duration`.
     pub fn new(deadline: std::time::Duration, ramp_duration: std::time::Duration) -> Self {
+        assert!(
+            !ramp_duration.is_zero(),
+            "ramp_duration must be positive"
+        );
         let now = Instant::now();
         Self {
             deadline,
@@ -280,20 +284,23 @@ impl WatchdogTimer {
         }
     }
 
-    /// Notify the watchdog that a valid command has been received.
-    pub fn feed(&mut self) {
-        self.last_command = Instant::now();
+    /// Notify the watchdog that a valid command has been received at `now`.
+    pub fn feed_at(&mut self, now: Instant) {
+        self.last_command = now;
         self.state = WatchdogState::Active;
     }
 
-    /// Evaluate the watchdog and return a force multiplier in `[0.0, 1.0]`.
+    /// Convenience wrapper — calls [`feed_at`](Self::feed_at) with `Instant::now()`.
+    pub fn feed(&mut self) {
+        self.feed_at(Instant::now());
+    }
+
+    /// Evaluate the watchdog at `now` and return a force multiplier in `[0.0, 1.0]`.
     ///
     /// Call this every tick. When the watchdog is active the multiplier is 1.0.
     /// During ramp-down it decreases linearly to 0.0. After the ramp it stays
     /// at 0.0 until [`feed`](Self::feed) is called.
-    pub fn evaluate(&mut self, _current_force: f32) -> f32 {
-        let now = Instant::now();
-
+    pub fn evaluate_at(&mut self, now: Instant) -> f32 {
         match self.state {
             WatchdogState::Active => {
                 if now.duration_since(self.last_command) >= self.deadline {
@@ -324,6 +331,11 @@ impl WatchdogTimer {
             }
             WatchdogState::Stopped => 0.0,
         }
+    }
+
+    /// Convenience wrapper — calls [`evaluate_at`](Self::evaluate_at) with `Instant::now()`.
+    pub fn evaluate(&mut self) -> f32 {
+        self.evaluate_at(Instant::now())
     }
 
     /// Current watchdog state.
@@ -620,7 +632,7 @@ mod tests {
     fn watchdog_active_when_fed() {
         let mut wd = WatchdogTimer::new(Duration::from_millis(100), Duration::from_millis(50));
         wd.feed();
-        let mult = wd.evaluate(1.0);
+        let mult = wd.evaluate();
         assert!((mult - 1.0).abs() < 0.001);
         assert_eq!(wd.state(), WatchdogState::Active);
     }
@@ -630,7 +642,7 @@ mod tests {
         let mut wd = WatchdogTimer::new(Duration::from_millis(10), Duration::from_millis(50));
         // Let the deadline pass
         std::thread::sleep(Duration::from_millis(20));
-        let mult = wd.evaluate(1.0);
+        let _mult = wd.evaluate();
         // Should have entered ramp-down (first tick returns 1.0 then ramps)
         assert!(wd.is_tripped());
     }
@@ -639,7 +651,7 @@ mod tests {
     fn watchdog_resets_on_feed() {
         let mut wd = WatchdogTimer::new(Duration::from_millis(10), Duration::from_millis(50));
         std::thread::sleep(Duration::from_millis(20));
-        let _ = wd.evaluate(1.0);
+        let _ = wd.evaluate();
         assert!(wd.is_tripped());
 
         wd.feed();
@@ -656,12 +668,12 @@ mod tests {
         std::thread::sleep(Duration::from_millis(5));
 
         // Trigger ramp-down
-        let _ = wd.evaluate(1.0);
+        let _ = wd.evaluate();
         assert!(wd.is_tripped());
 
         // Wait for ramp to finish
         std::thread::sleep(Duration::from_millis(30));
-        let mult = wd.evaluate(1.0);
+        let mult = wd.evaluate();
         assert!(
             (mult - 0.0).abs() < 0.001,
             "expected 0.0 after ramp, got {mult}"
@@ -673,18 +685,18 @@ mod tests {
     fn watchdog_stays_stopped_until_feed() {
         let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(1));
         std::thread::sleep(Duration::from_millis(10));
-        let _ = wd.evaluate(1.0); // trigger
+        let _ = wd.evaluate(); // trigger
         std::thread::sleep(Duration::from_millis(10));
-        let _ = wd.evaluate(1.0); // should be stopped
+        let _ = wd.evaluate(); // should be stopped
 
         assert_eq!(wd.state(), WatchdogState::Stopped);
-        let mult = wd.evaluate(1.0);
+        let mult = wd.evaluate();
         assert!((mult - 0.0).abs() < 0.001);
 
         // Now feed
         wd.feed();
         assert_eq!(wd.state(), WatchdogState::Active);
-        let mult = wd.evaluate(1.0);
+        let mult = wd.evaluate();
         assert!((mult - 1.0).abs() < 0.001);
     }
 
@@ -721,9 +733,9 @@ mod tests {
         let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(1));
 
         std::thread::sleep(Duration::from_millis(10));
-        let _ = wd.evaluate(1.0);
+        let _ = wd.evaluate();
         std::thread::sleep(Duration::from_millis(10));
-        let _ = wd.evaluate(1.0);
+        let _ = wd.evaluate();
 
         let now = Instant::now();
         let report = SafetyReport::from_state(&tracker, &limiter, &wd, now);
@@ -781,21 +793,8 @@ mod tests {
     }
 
     #[test]
-    fn test_watchdog_zero_ramp() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(1),
-            Duration::ZERO, // zero ramp → instant cutoff
-        );
-        std::thread::sleep(Duration::from_millis(5));
-        let mult = wd.evaluate(1.0);
-        // Should transition to ramping then immediately stop
-        assert!(wd.is_tripped(), "watchdog should trip");
-        // Next evaluate should return 0.0 (instant cutoff)
-        let mult = wd.evaluate(1.0);
-        assert!(
-            mult.abs() < 0.001,
-            "zero ramp duration should give 0.0, got {mult}"
-        );
-        assert_eq!(wd.state(), WatchdogState::Stopped);
+    #[should_panic(expected = "ramp_duration must be positive")]
+    fn test_watchdog_zero_ramp_panics() {
+        let _wd = WatchdogTimer::new(Duration::from_millis(1), Duration::ZERO);
     }
 }
