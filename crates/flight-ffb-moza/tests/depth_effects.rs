@@ -160,7 +160,7 @@ fn ffb_mode_equality() {
 #[test]
 fn ffb_mode_clone() {
     let mode = FfbMode::Direct;
-    let cloned = mode;
+    let cloned = mode.clone();
     assert_eq!(mode, cloned);
 }
 
@@ -177,7 +177,7 @@ fn torque_command_debug() {
 #[test]
 fn torque_command_clone() {
     let cmd = TorqueCommand { x: 0.5, y: -0.5 };
-    let cloned = cmd;
+    let cloned = cmd.clone();
     assert_eq!(cmd, cloned);
 }
 

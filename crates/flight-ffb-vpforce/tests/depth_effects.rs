@@ -315,7 +315,7 @@ fn ffb_effect_debug() {
 #[test]
 fn ffb_effect_clone() {
     let effect = FfbEffect::ConstantForce { direction_deg: 90.0, magnitude: 0.5 };
-    let cloned = effect;
+    let cloned = effect.clone();
     assert_eq!(effect, cloned);
 }
 

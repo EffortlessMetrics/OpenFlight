@@ -83,8 +83,8 @@ fn infinity_clamped_in_report() {
 
 #[test]
 fn nan_clamped_in_report() {
-    // NaN.clamp(-1.0, 1.0) behaviour: returns NaN on some platforms,
-    // but (NaN * 32767) as i16 = 0 on most. Verify it doesn't exceed bounds.
+    // In Rust, f32::clamp propagates NaN and float→int casts saturate,
+    // so (f32::NAN * 32767.0) as i16 is defined to be 0.
     let cmd = TorqueCommand { x: f32::NAN, y: f32::NAN };
     let r = cmd.to_report();
     let x = decode_x(&r) as i32;

@@ -239,13 +239,13 @@ fn longer_report_parses_ignoring_extra_bytes() {
 fn one_byte_short_fails() {
     let data = vec![0x01u8; RHINO_REPORT_LEN - 1];
     let err = parse_report(&data).unwrap_err();
-    assert!(matches!(err, RhinoParseError::TooShort { expected: 20, got: 19 }));
+    assert!(matches!(err, RhinoParseError::TooShort { expected: RHINO_REPORT_LEN, got } if got == data.len()));
 }
 
 #[test]
 fn empty_report_fails() {
     let err = parse_report(&[]).unwrap_err();
-    assert!(matches!(err, RhinoParseError::TooShort { expected: 20, got: 0 }));
+    assert!(matches!(err, RhinoParseError::TooShort { expected: RHINO_REPORT_LEN, got: 0 }));
 }
 
 // ── Report ID tests ────────────────────────────────────────────────────
