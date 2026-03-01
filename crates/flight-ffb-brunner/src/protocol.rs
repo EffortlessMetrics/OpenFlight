@@ -5,14 +5,13 @@
 //!
 //! The Brunner CLS-E communicates force-feedback commands through the
 //! **CLS2Sim** middleware, which exposes a TCP/UDP remote control interface.
-//! Commands are framed as length-prefixed ASCII or binary packets depending
-//! on the protocol version.
+//! Commands are sent as ASCII text lines terminated with `\r\n` (CRLF).
 //!
 //! # USB identifiers
 //!
 //! - **VID 0x25BB** (Brunner Elektronik AG)
 //! - **PID 0x0063** — CLS-E joystick / yoke base
-//! - **PID 0x0064** — CLS-P FFB pedals
+//! - **PID 0x006B** — CLS-P FFB pedals (CLS-E MK II Rudder, PRT.5123)
 //!
 //! # CLS2Sim command interface
 //!
@@ -35,8 +34,8 @@ pub const BRUNNER_VENDOR_ID: u16 = 0x25BB;
 /// USB Product ID for the CLS-E joystick / yoke base.
 pub const CLS_E_PID: u16 = 0x0063;
 
-/// USB Product ID for the CLS-P FFB pedals.
-pub const CLS_P_PID: u16 = 0x0064;
+/// USB Product ID for the CLS-P FFB pedals (CLS-E MK II Rudder, PRT.5123).
+pub const CLS_P_PID: u16 = 0x006B;
 
 /// Default CLS2Sim TCP port.
 pub const CLS2SIM_DEFAULT_PORT: u16 = 8090;

@@ -7,7 +7,7 @@
 //!
 //! - **Magnitude limiting** — clamp output to the device's safe envelope
 //! - **Rate-of-change limiting** — prevent sudden force spikes
-//! - **Watchdog** — ramp to zero if no updates within the timeout
+//! - **Watchdog** — immediately sets output to zero if no updates within the timeout
 //! - **Emergency stop** — immediate force zero on critical faults
 //!
 //! All forces pass through the safety envelope before reaching the device.
@@ -83,6 +83,9 @@ pub enum WatchdogState {
     EmergencyStopped,
 }
 
+/// Maximum number of safety events retained between drains.
+const MAX_SAFETY_EVENTS: usize = 64;
+
 /// Safety envelope for Brunner FFB output.
 ///
 /// Enforces hardware-safe force limits, rate limiting, and watchdog timeouts.
@@ -104,7 +107,7 @@ pub struct SafetyEnvelope {
     state: WatchdogState,
     /// Emergency stop reason (if latched).
     estop_reason: Option<EmergencyStopReason>,
-    /// Collected safety events since last drain.
+    /// Collected safety events since last drain (bounded).
     events: Vec<SafetyEvent>,
 }
 
@@ -119,7 +122,7 @@ impl SafetyEnvelope {
             last_update: None,
             state: WatchdogState::Active,
             estop_reason: None,
-            events: Vec::new(),
+            events: Vec::with_capacity(MAX_SAFETY_EVENTS),
         }
     }
 
@@ -156,6 +159,14 @@ impl SafetyEnvelope {
         self.estop_reason
     }
 
+    /// Push a safety event, dropping oldest events when the buffer is full.
+    fn push_event(&mut self, event: SafetyEvent) {
+        if self.events.len() >= MAX_SAFETY_EVENTS {
+            self.events.remove(0);
+        }
+        self.events.push(event);
+    }
+
     /// Apply the safety envelope to a raw force command.
     ///
     /// Returns the safe force value. Use [`SafetyEnvelope::drain_events`] to
@@ -182,7 +193,7 @@ impl SafetyEnvelope {
             && self.state == WatchdogState::Active
         {
             self.state = WatchdogState::Triggered;
-            self.events.push(SafetyEvent::WatchdogTriggered);
+            self.push_event(SafetyEvent::WatchdogTriggered);
             self.last_force = 0.0;
             self.last_update = Some(now);
             return 0.0;
@@ -200,7 +211,7 @@ impl SafetyEnvelope {
         // 1. Magnitude clamp
         let clamped = raw_force.clamp(-self.max_magnitude, self.max_magnitude);
         if (clamped - raw_force).abs() > 1e-6 {
-            self.events.push(SafetyEvent::MagnitudeClamped {
+            self.push_event(SafetyEvent::MagnitudeClamped {
                 requested: raw_force,
                 clamped,
             });
@@ -210,7 +221,7 @@ impl SafetyEnvelope {
         let delta = clamped - self.last_force;
         let limited = if delta.abs() > self.max_rate {
             let result = self.last_force + delta.signum() * self.max_rate;
-            self.events.push(SafetyEvent::RateLimited {
+            self.push_event(SafetyEvent::RateLimited {
                 requested: clamped,
                 limited: result,
             });
@@ -229,7 +240,7 @@ impl SafetyEnvelope {
         self.state = WatchdogState::EmergencyStopped;
         self.estop_reason = Some(reason);
         self.last_force = 0.0;
-        self.events.push(SafetyEvent::EmergencyStop(reason));
+        self.push_event(SafetyEvent::EmergencyStop(reason));
     }
 
     /// Reset the safety system after an emergency stop or watchdog trigger.
@@ -240,7 +251,7 @@ impl SafetyEnvelope {
         self.estop_reason = None;
         self.last_force = 0.0;
         self.last_update = None;
-        self.events.push(SafetyEvent::Reset);
+        self.push_event(SafetyEvent::Reset);
     }
 
     /// Drain collected safety events.

@@ -12,7 +12,7 @@
 //! | Device        | VID    | PID    |
 //! |---------------|--------|--------|
 //! | CLS-E Joystick | 0x25BB | 0x0063 |
-//! | CLS-P Pedals   | 0x25BB | 0x0064 |
+//! | CLS-P Pedals   | 0x25BB | 0x006B |
 //!
 //! # Architecture
 //!
@@ -31,8 +31,9 @@ pub mod protocol;
 pub mod safety;
 
 pub use effects::{
-    BrunnerEffect, ConstantForceParams, DamperParams, EffectComposite, FrictionParams,
-    PeriodicParams, PeriodicWaveform, SpringParams, compute_effect_force,
+    BrunnerEffect, ConstantForceParams, DamperParams, EffectComposite, EffectsFull,
+    FrictionParams, MAX_EFFECTS, PeriodicParams, PeriodicWaveform, SpringParams,
+    compute_effect_force,
 };
 pub use profiles::{AircraftCategory, BrunnerProfile, default_cls_e_profile};
 pub use protocol::{

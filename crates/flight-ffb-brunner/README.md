@@ -16,7 +16,7 @@ remote control interface.
 | Device | VID | PID | Description |
 |--------|------|------|-------------|
 | CLS-E Joystick | 0x25BB | 0x0063 | FFB yoke / joystick base |
-| CLS-P Pedals | 0x25BB | 0x0064 | FFB rudder pedals |
+| CLS-P Pedals | 0x25BB | 0x006B | FFB rudder pedals |
 
 ## Modules
 

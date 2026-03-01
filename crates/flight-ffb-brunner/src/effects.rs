@@ -134,6 +134,19 @@ pub enum BrunnerEffect {
     Periodic(PeriodicParams),
 }
 
+/// Maximum number of effects in a single composite.
+pub const MAX_EFFECTS: usize = 16;
+
+/// Error returned when the effect composite is full.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct EffectsFull;
+
+impl std::fmt::Display for EffectsFull {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("effect composite is full")
+    }
+}
+
 /// Composite of multiple effects applied to a single axis.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct EffectComposite {
@@ -141,16 +154,32 @@ pub struct EffectComposite {
 }
 
 impl EffectComposite {
-    /// Create an empty composite.
+    /// Create an empty composite pre-allocated for [`MAX_EFFECTS`].
     pub fn new() -> Self {
         Self {
-            effects: Vec::new(),
+            effects: Vec::with_capacity(MAX_EFFECTS),
         }
     }
 
-    /// Add an effect to the composite.
-    pub fn add(&mut self, effect: BrunnerEffect) {
+    /// Try to add an effect to the composite.
+    ///
+    /// Returns `Err(EffectsFull)` if the composite already contains
+    /// [`MAX_EFFECTS`] effects.
+    pub fn try_add(&mut self, effect: BrunnerEffect) -> Result<(), EffectsFull> {
+        if self.effects.len() >= MAX_EFFECTS {
+            return Err(EffectsFull);
+        }
         self.effects.push(effect);
+        Ok(())
+    }
+
+    /// Add an effect to the composite.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the composite already contains [`MAX_EFFECTS`] effects.
+    pub fn add(&mut self, effect: BrunnerEffect) {
+        self.try_add(effect).expect("effect composite is full");
     }
 
     /// Remove all effects.
