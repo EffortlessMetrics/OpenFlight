@@ -795,3 +795,213 @@ fn budget_out_of_range_accessors() {
     assert_eq!(b.phase_name(999), "");
     assert_eq!(b.phase_max_ns(999), 0);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 8. ADDITIONAL DEPTH TESTS (ring, PLL, budget, timer, executor)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// SPSC ring: drop-tail policy increments dropped counter and stats
+/// track produced + dropped = total pushes.
+#[test]
+fn ring_drop_tail_stats_accounting() {
+    let ring = SpscRing::new(4); // capacity 4, usable slots = 3
+    for i in 0..10u32 {
+        ring.try_push(i);
+    }
+    let stats = ring.stats();
+    assert_eq!(stats.produced + stats.dropped, 10);
+    assert!(stats.dropped > 0, "some items should have been dropped");
+}
+
+/// SPSC ring: is_full returns true when the ring cannot accept more,
+/// and is_empty returns true after draining.
+#[test]
+fn ring_full_and_empty_transitions() {
+    let ring = SpscRing::new(4);
+    assert!(ring.is_empty());
+    assert!(!ring.is_full());
+
+    // Fill to capacity (ring of size 4 can hold 3 elements)
+    ring.try_push(1u32);
+    ring.try_push(2);
+    ring.try_push(3);
+    assert!(ring.is_full());
+    assert!(!ring.is_empty());
+
+    // Drain
+    ring.try_pop();
+    ring.try_pop();
+    ring.try_pop();
+    assert!(ring.is_empty());
+    assert!(!ring.is_full());
+}
+
+/// SPSC ring: reset_stats zeroes counters without affecting buffered data.
+#[test]
+fn ring_reset_stats_preserves_data() {
+    let ring = SpscRing::new(16);
+    ring.try_push(42u32);
+    ring.try_push(43);
+    assert_eq!(ring.stats().produced, 2);
+
+    ring.reset_stats();
+    assert_eq!(ring.stats().produced, 0);
+    assert_eq!(ring.stats().dropped, 0);
+
+    // Data still readable
+    assert_eq!(ring.try_pop(), Some(42));
+    assert_eq!(ring.try_pop(), Some(43));
+}
+
+/// PLL reset returns corrected period to nominal and zeroes state.
+#[test]
+fn pll_reset_returns_to_nominal() {
+    let mut pll = Pll::new(0.001, 4_000_000.0);
+    // Drive it away from nominal
+    for _ in 0..500 {
+        pll.update(1000.0);
+    }
+    assert!(pll.period_correction().abs() > 0.0);
+
+    pll.reset();
+    assert!(
+        pll.phase_error().abs() < f64::EPSILON,
+        "phase error should be 0 after reset"
+    );
+    assert!(
+        pll.period_correction().abs() < f64::EPSILON,
+        "correction should be 0 after reset"
+    );
+}
+
+/// PhaseLockLoop update() (period-based interface) returns a consistent
+/// PllCorrection with correct sign relationships.
+#[test]
+fn pll_update_period_interface() {
+    let mut pll = PhaseLockLoop::from_hz(250);
+    // Feed a period that is too long (late arrival)
+    let correction = pll.update(4_100_000); // 4.1 ms vs 4.0 ms nominal
+    assert!(
+        correction.phase_error_ns > 0,
+        "late arrival should produce positive phase error"
+    );
+    assert!(
+        correction.sleep_adjust_ns < 0,
+        "late arrival should shorten next sleep"
+    );
+    assert!(
+        correction.frequency_ratio < 1.0,
+        "running slow → ratio < 1.0"
+    );
+}
+
+/// PhaseLockLoop reset clears lock state, tick count, and integral.
+#[test]
+fn pll_phase_lock_loop_reset() {
+    let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
+        .with_lock_detection(50_000.0, 200_000.0, 5);
+    // Lock it
+    for _ in 0..20 {
+        pll.tick(100.0);
+    }
+    assert!(pll.locked());
+    assert!(pll.tick_count() > 0);
+    assert!(pll.integral().abs() > 0.0);
+
+    pll.reset();
+    assert!(!pll.locked());
+    assert_eq!(pll.tick_count(), 0);
+    assert!(pll.integral().abs() < f64::EPSILON);
+    assert!(
+        (pll.corrected_period_ns() - pll.nominal_period_ns()).abs() < f64::EPSILON,
+        "corrected period should equal nominal after reset"
+    );
+}
+
+/// Scheduler config with non-default frequency derives the correct period.
+#[test]
+fn scheduler_custom_frequency_period() {
+    for &freq in &[100u32, 250, 500, 1000] {
+        let config = SchedulerConfig {
+            frequency_hz: freq,
+            busy_spin_us: 0,
+            pll_gain: 0.001,
+            measure_jitter: false,
+        };
+        let scheduler = Scheduler::new(config);
+        let expected_ns = 1_000_000_000u64 / freq as u64;
+        assert_eq!(
+            scheduler.period_ns, expected_ns,
+            "freq={freq}: expected {expected_ns} ns, got {}",
+            scheduler.period_ns
+        );
+    }
+}
+
+/// TimerStats reset preserves the configured bucket width.
+#[test]
+fn timer_stats_reset_preserves_bucket_width() {
+    let mut stats = TimerStats::with_bucket_width(25_000);
+    for i in 0..50 {
+        stats.record_tick(i * 1000, false);
+    }
+    assert!(stats.tick_count() > 0);
+
+    stats.reset();
+    assert_eq!(stats.tick_count(), 0);
+    assert_eq!(stats.missed_ticks(), 0);
+    assert_eq!(stats.min_jitter_ns(), 0);
+    assert_eq!(stats.max_jitter_ns(), 0);
+    assert_eq!(
+        stats.bucket_width_ns(),
+        25_000,
+        "bucket width should survive reset"
+    );
+}
+
+/// TickExecutor Default trait creates the same state as new().
+#[test]
+fn executor_default_matches_new() {
+    let a = TickExecutor::new();
+    let b = TickExecutor::default();
+    assert_eq!(a.tick_count(), b.tick_count());
+    assert_eq!(a.overrun_count(), b.overrun_count());
+    assert_eq!(a.task_count(), b.task_count());
+}
+
+/// JitterTracker reset makes subsequent statistics start fresh.
+#[test]
+fn jitter_tracker_reset_fresh_stats() {
+    let mut t = JitterTracker::new();
+    for v in 0..100u64 {
+        t.record(v * 1000);
+    }
+    assert!(t.count() > 0);
+    assert!(t.max_ns() > 0);
+
+    t.reset();
+    assert_eq!(t.count(), 0);
+    assert_eq!(t.min_ns(), 0);
+    assert_eq!(t.max_ns(), 0);
+    assert_eq!(t.mean_ns(), 0);
+    assert_eq!(t.p99_ns(), 0);
+    assert!(t.stddev_ns() < f64::EPSILON);
+
+    // Recording after reset works correctly
+    t.record(500);
+    assert_eq!(t.count(), 1);
+    assert_eq!(t.min_ns(), 500);
+    assert_eq!(t.max_ns(), 500);
+}
+
+/// PllJitterStats stddev is zero for identical values.
+#[test]
+fn pll_jitter_stats_uniform_zero_stddev() {
+    let mut js = PllJitterStats::new();
+    for _ in 0..100 {
+        js.record(42_000);
+    }
+    assert_eq!(js.count(), 100);
+    assert!((js.mean() - 42_000.0).abs() < 0.01);
+    assert!(js.stddev() < 1.0, "stddev should be ~0 for uniform data, got {}", js.stddev());
+}
