@@ -65,18 +65,13 @@ impl WriteBatch {
 
 /// Strategy for resolving conflicts when multiple sources write to the same
 /// sim variable within a single tick.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum ConflictStrategy {
     /// Highest priority wins.  Among equal priorities, last-write wins.
+    #[default]
     Priority,
     /// Last write in submission order always wins regardless of priority.
     LastWriteWins,
-}
-
-impl Default for ConflictStrategy {
-    fn default() -> Self {
-        Self::Priority
-    }
 }
 
 /// Resolves write conflicts according to a [`ConflictStrategy`].

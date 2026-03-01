@@ -28,6 +28,8 @@ pub enum ValidationError {
         version: String,
         base_version: String,
     },
+    /// A JSON parse error occurred when loading a variable table.
+    JsonParseError { message: String },
     /// A `bool` data type variable has a numeric range, which is unexpected.
     BoolWithRange { axis: String },
 }
@@ -56,6 +58,9 @@ impl std::fmt::Display for ValidationError {
             Self::BoolWithRange { axis } => {
                 write!(f, "{axis}: bool data type should not have numeric range")
             }
+            Self::JsonParseError { message } => {
+                write!(f, "JSON parse error: {message}")
+            }
         }
     }
 }
@@ -77,23 +82,24 @@ pub fn validate_mapping(axis: &str, mapping: &VariableMapping) -> Vec<Validation
     }
 
     // min/max range checks
-    if let (Some(min), Some(max)) = (mapping.min, mapping.max) {
-        if min > max {
-            errors.push(ValidationError::MinExceedsMax {
-                axis: axis.to_string(),
-                min,
-                max,
-            });
-        }
+    if let (Some(min), Some(max)) = (mapping.min, mapping.max)
+        && min > max
+    {
+        errors.push(ValidationError::MinExceedsMax {
+            axis: axis.to_string(),
+            min,
+            max,
+        });
     }
 
     // Settable variables should declare a range (except bool)
-    if mapping.settable && mapping.data_type != VarDataType::Bool {
-        if mapping.min.is_none() || mapping.max.is_none() {
-            errors.push(ValidationError::MissingRangeForSettable {
-                axis: axis.to_string(),
-            });
-        }
+    if mapping.settable
+        && mapping.data_type != VarDataType::Bool
+        && (mapping.min.is_none() || mapping.max.is_none())
+    {
+        errors.push(ValidationError::MissingRangeForSettable {
+            axis: axis.to_string(),
+        });
     }
 
     // Bool type should not have a numeric range
@@ -118,24 +124,45 @@ pub fn validate_table_data(data: &VariableTableData) -> Vec<ValidationError> {
 /// Validate a [`VariableTable`] including cross-version checks.
 ///
 /// Checks each loaded table individually, plus verifies that declared
-/// `base_version` references are resolvable.
+/// `base_version` references are resolvable and that no duplicate axis
+/// names shadow base entries without an actual override.
 pub fn validate_table(table: &VariableTable) -> Vec<ValidationError> {
-    // VariableTable's internal tables aren't directly iterable from here,
-    // so we rely on callers loading tables through `validate_table_data`
-    // for individual tables and this function for cross-table checks.
-    //
-    // For a complete check, load each JSON file separately via
-    // `validate_table_data`, and then pass the composite table here for
-    // cross-version validation.
-    let _ = table;
-    Vec::new()
+    let mut errors = Vec::new();
+    let versions: Vec<_> = table.table_entries().collect();
+
+    for (key, data) in &versions {
+        // Check that base_version references exist
+        if let Some(base) = &data.base_version {
+            let base_key = (key.0, base.clone());
+            if !versions.iter().any(|(k, _)| *k == base_key) {
+                errors.push(ValidationError::MissingBaseVersion {
+                    version: data.version.clone(),
+                    base_version: base.clone(),
+                });
+            }
+        }
+
+        // Check for duplicate variable names within this table's own entries
+        let mut seen = std::collections::HashSet::new();
+        for axis in data.variables.keys() {
+            if !seen.insert(axis.clone()) {
+                errors.push(ValidationError::DuplicateAxisInBase { axis: axis.clone() });
+            }
+        }
+
+        // Validate individual mappings
+        errors.extend(validate_table_data(data));
+    }
+    errors
 }
 
 /// Validate a JSON string as a variable table.
 pub fn validate_json(json: &str) -> Vec<ValidationError> {
     match serde_json::from_str::<VariableTableData>(json) {
         Ok(data) => validate_table_data(&data),
-        Err(_) => vec![], // Parse errors are handled at a higher level
+        Err(e) => vec![ValidationError::JsonParseError {
+            message: e.to_string(),
+        }],
     }
 }
 
@@ -160,7 +187,6 @@ pub fn validate_directory(dir: &Path) -> HashMap<String, Vec<ValidationError>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::SimulatorType;
 
     fn msfs_2020_data() -> VariableTableData {
         serde_json::from_str(include_str!("../writers/msfs_2020.json")).unwrap()
@@ -364,15 +390,20 @@ mod tests {
         assert!(!results.is_empty(), "should find JSON files in writers/");
 
         // Check that our new variable table files pass
+        let variable_table_files = [
+            "msfs_2020.json",
+            "msfs_2024.json",
+            "xplane_12.json",
+            "dcs_world.json",
+        ];
         for (filename, errors) in &results {
-            if filename.starts_with("msfs_20")
-                || filename.starts_with("xplane_12")
-                || filename.starts_with("dcs_world")
-            {
+            if variable_table_files.contains(&filename.as_str()) {
                 // Variable table files must pass; the older writer config files
-                // have a different schema and may not parse as VariableTableData,
-                // which is fine (validate_json returns empty for parse errors).
-                let _ = errors;
+                // have a different schema and may not parse as VariableTableData.
+                assert!(
+                    errors.is_empty(),
+                    "{filename} has validation errors: {errors:?}"
+                );
             }
         }
     }

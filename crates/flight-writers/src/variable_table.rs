@@ -8,7 +8,7 @@
 
 use crate::types::SimulatorType;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 /// Data type for sim variables
@@ -92,6 +92,13 @@ impl VariableTable {
         }
     }
 
+    /// Iterate over all loaded `(sim, version)` entries.
+    pub fn table_entries(
+        &self,
+    ) -> impl Iterator<Item = ((SimulatorType, String), &VariableTableData)> {
+        self.tables.iter().map(|(k, v)| (k.clone(), v))
+    }
+
     /// Load a variable table from a JSON string.
     pub fn load_from_json(&mut self, json: &str) -> anyhow::Result<()> {
         let data: VariableTableData = serde_json::from_str(json)?;
@@ -110,7 +117,22 @@ impl VariableTable {
     ///
     /// If the version declares a `base_version`, variables from the base are
     /// loaded first and then overridden by the version's own entries.
+    /// Cycles in the `base_version` chain are detected and short-circuited.
     fn resolve(&self, sim: SimulatorType, version: &str) -> HashMap<String, VariableMapping> {
+        let mut visited = HashSet::new();
+        self.resolve_inner(sim, version, &mut visited)
+    }
+
+    fn resolve_inner(
+        &self,
+        sim: SimulatorType,
+        version: &str,
+        visited: &mut HashSet<String>,
+    ) -> HashMap<String, VariableMapping> {
+        if !visited.insert(version.to_string()) {
+            return HashMap::new();
+        }
+
         let key = (sim, version.to_string());
         let data = match self.tables.get(&key) {
             Some(d) => d,
@@ -118,7 +140,7 @@ impl VariableTable {
         };
 
         let mut resolved = if let Some(base) = &data.base_version {
-            self.resolve(sim, base)
+            self.resolve_inner(sim, base, visited)
         } else {
             HashMap::new()
         };
@@ -130,9 +152,26 @@ impl VariableTable {
     }
 
     /// Look up a variable mapping for a specific sim, axis name, and version.
+    ///
+    /// Follows the `base_version` chain incrementally for just the requested
+    /// axis instead of resolving the entire table.
     pub fn lookup(&self, sim: SimulatorType, axis: &str, version: &str) -> Option<VariableMapping> {
-        let resolved = self.resolve(sim, version);
-        resolved.get(axis).cloned()
+        let mut visited = HashSet::new();
+        let mut current = version.to_string();
+        loop {
+            if !visited.insert(current.clone()) {
+                return None;
+            }
+            let key = (sim, current.clone());
+            let data = self.tables.get(&key)?;
+            if let Some(mapping) = data.variables.get(axis) {
+                return Some(mapping.clone());
+            }
+            match &data.base_version {
+                Some(base) => current = base.clone(),
+                None => return None,
+            }
+        }
     }
 
     /// Compute the diff between two versions of the same simulator.
@@ -160,6 +199,7 @@ impl VariableTable {
                         || from_mapping.settable != to_mapping.settable
                         || from_mapping.min != to_mapping.min
                         || from_mapping.max != to_mapping.max
+                        || from_mapping.description != to_mapping.description
                     {
                         changes.insert(
                             axis.clone(),
