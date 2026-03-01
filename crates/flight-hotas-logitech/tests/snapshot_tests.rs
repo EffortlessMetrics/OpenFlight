@@ -9,6 +9,7 @@
 
 use flight_hotas_logitech::{
     parse_g_flight_yoke, parse_g27, parse_g29, parse_g940_joystick, parse_g940_throttle,
+    parse_rudder_pedals, parse_x56_stick, parse_x56_throttle,
 };
 
 // ── G940 report builders ──────────────────────────────────────────────────────
@@ -249,4 +250,150 @@ fn test_g29_full_right_steer_snapshot() {
     let report = g29_report(65535, 8, 0, 0, 0, 0);
     let state = parse_g29(&report).expect("valid report");
     insta::assert_debug_snapshot!("g29_full_right_steer", state);
+}
+
+// ── X56 stick report builder ──────────────────────────────────────────────────
+
+/// Build a 13-byte X56 stick report from logical field values.
+fn x56_stick_report(
+    x: u16,
+    y: u16,
+    rz: u16,
+    rx: u8,
+    ry: u8,
+    buttons: u32,
+    hat1: u8,
+    hat2: u8,
+) -> [u8; 13] {
+    let x = x & 0xFFF;
+    let y = y & 0xFFF;
+    let rz = rz & 0xFFF;
+    let buttons = buttons & 0x00FF_FFFF;
+    let hat1 = hat1 & 0x0F;
+    let hat2 = hat2 & 0x0F;
+
+    let mut d = [0u8; 13];
+    d[0] = x as u8;
+    d[1] = ((x >> 8) as u8 & 0x0F) | (((y & 0x0F) as u8) << 4);
+    d[2] = (y >> 4) as u8;
+    d[3] = rz as u8;
+    d[4] = ((rz >> 8) as u8) & 0x0F;
+    d[5] = rx;
+    d[6] = ry;
+    d[7] = buttons as u8;
+    d[8] = (buttons >> 8) as u8;
+    d[9] = (buttons >> 16) as u8;
+    d[10] = hat1 | (hat2 << 4);
+    d[11] = 0;
+    d[12] = 0;
+    d
+}
+
+// ── X56 throttle report builder ───────────────────────────────────────────────
+
+/// Build a 14-byte X56 throttle report from logical field values.
+fn x56_throttle_report(
+    tl: u16,
+    tr: u16,
+    rot_l: u8,
+    rot_r: u8,
+    sld_l: u8,
+    sld_r: u8,
+    buttons: u32,
+    hat1: u8,
+    hat2: u8,
+) -> [u8; 14] {
+    let tl = tl & 0x3FF;
+    let tr = tr & 0x3FF;
+    let buttons = buttons & 0x0FFF_FFFF;
+    let hat1 = hat1 & 0x0F;
+    let hat2 = hat2 & 0x0F;
+
+    let mut d = [0u8; 14];
+    d[0] = tl as u8;
+    d[1] = ((tl >> 8) as u8 & 0x03) | (((tr & 0x3F) as u8) << 2);
+    d[2] = ((tr >> 6) as u8 & 0x0F) | ((rot_l & 0x0F) << 4);
+    d[3] = (rot_l >> 4) | ((rot_r & 0x0F) << 4);
+    d[4] = (rot_r >> 4) | ((sld_l & 0x0F) << 4);
+    d[5] = (sld_l >> 4) | ((sld_r & 0x0F) << 4);
+    d[6] = (sld_r >> 4) | (((buttons & 0x0F) as u8) << 4);
+    d[7] = ((buttons >> 4) & 0xFF) as u8;
+    d[8] = ((buttons >> 12) & 0xFF) as u8;
+    d[9] = ((buttons >> 20) & 0xFF) as u8;
+    d[10] = hat1 | (hat2 << 4);
+    d[11] = 0;
+    d[12] = 0;
+    d[13] = 0;
+    d
+}
+
+// ── Rudder pedals report builder ──────────────────────────────────────────────
+
+/// Build a 5-byte rudder pedals report from logical field values.
+fn rudder_report(rudder: u16, left_brake: u16, right_brake: u16) -> [u8; 5] {
+    let rudder = rudder & 0x3FF;
+    let lb = left_brake & 0x3FF;
+    let rb = right_brake & 0x3FF;
+
+    let mut d = [0u8; 5];
+    d[0] = rudder as u8;
+    d[1] = ((rudder >> 8) as u8 & 0x03) | (((lb & 0x3F) as u8) << 2);
+    d[2] = ((lb >> 6) as u8 & 0x0F) | (((rb & 0x0F) as u8) << 4);
+    d[3] = ((rb >> 4) as u8) & 0x3F;
+    d[4] = 0;
+    d
+}
+
+// ── X56 stick snapshots ──────────────────────────────────────────────────────
+
+/// Pin the parsed X56 stick state at center position.
+#[test]
+fn snapshot_x56_stick_center() {
+    let report = x56_stick_report(2048, 2048, 2048, 128, 128, 0, 8, 8);
+    let state = parse_x56_stick(&report).expect("valid report");
+    insta::assert_debug_snapshot!("x56_stick_center", state);
+}
+
+/// Pin the parsed X56 stick state at full deflection.
+#[test]
+fn snapshot_x56_stick_full_deflection() {
+    let report = x56_stick_report(4095, 0, 4095, 255, 0, 0x00FF_FFFF, 0, 2);
+    let state = parse_x56_stick(&report).expect("valid report");
+    insta::assert_debug_snapshot!("x56_stick_full_deflection", state);
+}
+
+// ── X56 throttle snapshots ───────────────────────────────────────────────────
+
+/// Pin the parsed X56 throttle state at idle.
+#[test]
+fn snapshot_x56_throttle_idle() {
+    let report = x56_throttle_report(0, 0, 0, 0, 0, 0, 0, 8, 8);
+    let state = parse_x56_throttle(&report).expect("valid report");
+    insta::assert_debug_snapshot!("x56_throttle_idle", state);
+}
+
+/// Pin the parsed X56 throttle state at full.
+#[test]
+fn snapshot_x56_throttle_full() {
+    let report = x56_throttle_report(1023, 1023, 255, 255, 255, 255, 0x0FFF_FFFF, 0, 0);
+    let state = parse_x56_throttle(&report).expect("valid report");
+    insta::assert_debug_snapshot!("x56_throttle_full", state);
+}
+
+// ── Rudder pedals snapshots ──────────────────────────────────────────────────
+
+/// Pin the parsed rudder pedals state at center with brakes released.
+#[test]
+fn snapshot_rudder_pedals_center() {
+    let report = rudder_report(512, 0, 0);
+    let state = parse_rudder_pedals(&report).expect("valid report");
+    insta::assert_debug_snapshot!("rudder_pedals_center", state);
+}
+
+/// Pin the parsed rudder pedals state with full deflection and brakes.
+#[test]
+fn snapshot_rudder_pedals_full() {
+    let report = rudder_report(1023, 1023, 1023);
+    let state = parse_rudder_pedals(&report).expect("valid report");
+    insta::assert_debug_snapshot!("rudder_pedals_full", state);
 }

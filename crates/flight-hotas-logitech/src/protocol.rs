@@ -65,6 +65,10 @@ pub enum DeviceId {
     GFlightThrottle,
     /// Logitech Flight Rudder Pedals.
     FlightRudderPedals,
+    /// Logitech X56 RGB — stick unit.
+    X56LogitechStick,
+    /// Logitech X56 RGB — throttle unit.
+    X56LogitechThrottle,
 }
 
 /// A device identification table entry.
@@ -159,6 +163,18 @@ pub const DEVICE_TABLE: &[DeviceInfo] = &[
         pid: 0xC264,
         id: DeviceId::FlightRudderPedals,
         name: "Logitech Flight Rudder Pedals",
+    },
+    DeviceInfo {
+        vid: SAITEK_VID,
+        pid: 0x0C59,
+        id: DeviceId::X56LogitechStick,
+        name: "Logitech X56 RGB Stick",
+    },
+    DeviceInfo {
+        vid: SAITEK_VID,
+        pid: 0x0C5B,
+        id: DeviceId::X56LogitechThrottle,
+        name: "Logitech X56 RGB Throttle",
     },
 ];
 
