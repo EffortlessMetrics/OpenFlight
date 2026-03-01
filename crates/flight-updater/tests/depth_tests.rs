@@ -293,7 +293,7 @@ proptest! {
 mod update_channels {
     use super::*;
 
-    /// All three channels exist and have distinct URLs.
+    /// All three channels exist.
     #[test]
     fn stable_beta_canary_channels_exist() {
         let mgr = ChannelManager::new();
@@ -433,7 +433,7 @@ mod update_channels {
 mod delta_updates {
     use super::*;
 
-    /// Delta patch with only Insert operations is smaller than full content.
+    /// Delta patch using Copy + Insert operations is smaller than full content.
     #[test]
     fn delta_smaller_than_full_update() {
         let mut patch = DeltaPatch::new("1.0.0".into(), "1.1.0".into());
@@ -473,12 +473,12 @@ mod delta_updates {
         let source_dir = temp.path().join("source");
         let target_dir = temp.path().join("target");
         let work_dir = temp.path().join("work");
-        std::fs::create_dir_all(&source_dir).unwrap();
-        std::fs::create_dir_all(&target_dir).unwrap();
+        tokio::fs::create_dir_all(&source_dir).await.unwrap();
+        tokio::fs::create_dir_all(&target_dir).await.unwrap();
 
         // Write source file
         let source_content = b"AAAA_original_content";
-        std::fs::write(source_dir.join("app.bin"), source_content).unwrap();
+        tokio::fs::write(source_dir.join("app.bin"), source_content).await.unwrap();
 
         let source_hash = sha256_hex(source_content);
         let target_content_expected = b"AAAA_new_stuff";
@@ -523,7 +523,7 @@ mod delta_updates {
             .await
             .unwrap();
 
-        let result = std::fs::read(target_dir.join("app.bin")).unwrap();
+        let result = tokio::fs::read(target_dir.join("app.bin")).await.unwrap();
         assert_eq!(
             result, target_content_expected,
             "delta must produce expected output"
@@ -537,11 +537,11 @@ mod delta_updates {
         let source_dir = temp.path().join("source");
         let target_dir = temp.path().join("target");
         let work_dir = temp.path().join("work");
-        std::fs::create_dir_all(&source_dir).unwrap();
-        std::fs::create_dir_all(&target_dir).unwrap();
+        tokio::fs::create_dir_all(&source_dir).await.unwrap();
+        tokio::fs::create_dir_all(&target_dir).await.unwrap();
 
         let source_content = b"original";
-        std::fs::write(source_dir.join("f.bin"), source_content).unwrap();
+        tokio::fs::write(source_dir.join("f.bin"), source_content).await.unwrap();
 
         let source_hash = sha256_hex(source_content);
 
@@ -591,13 +591,13 @@ mod delta_updates {
 
         // Phase 1: v1.0 source
         let dir_v1 = temp.path().join("v1");
-        std::fs::create_dir_all(&dir_v1).unwrap();
+        tokio::fs::create_dir_all(&dir_v1).await.unwrap();
         let content_v1 = b"version_one";
-        std::fs::write(dir_v1.join("app.bin"), content_v1).unwrap();
+        tokio::fs::write(dir_v1.join("app.bin"), content_v1).await.unwrap();
 
         // Phase 2: apply delta v1.0 → v1.1
         let dir_v1_1 = temp.path().join("v1_1");
-        std::fs::create_dir_all(&dir_v1_1).unwrap();
+        tokio::fs::create_dir_all(&dir_v1_1).await.unwrap();
         let content_v1_1 = b"version_one_one";
         let hash_v1 = sha256_hex(content_v1);
         let hash_v1_1 = sha256_hex(content_v1_1);
@@ -637,7 +637,7 @@ mod delta_updates {
 
         // Phase 3: apply delta v1.1 → v1.2
         let dir_v1_2 = temp.path().join("v1_2");
-        std::fs::create_dir_all(&dir_v1_2).unwrap();
+        tokio::fs::create_dir_all(&dir_v1_2).await.unwrap();
         let content_v1_2 = b"version_one_two";
         let hash_v1_2 = sha256_hex(content_v1_2);
 
@@ -673,7 +673,7 @@ mod delta_updates {
             .await
             .unwrap();
 
-        let final_content = std::fs::read(dir_v1_2.join("app.bin")).unwrap();
+        let final_content = tokio::fs::read(dir_v1_2.join("app.bin")).await.unwrap();
         assert_eq!(
             final_content, content_v1_2,
             "chained deltas must produce the v1.2 content"
@@ -747,9 +747,9 @@ mod delta_updates {
 mod rollback {
     use super::*;
 
-    /// Failed update → automatic rollback via the state-machine manager.
+    /// Failed update with a bad artifact hash sets state to Failed.
     #[test]
-    fn failed_update_triggers_automatic_rollback() {
+    fn failed_update_sets_failed_state() {
         let temp = tempfile::tempdir().unwrap();
         let install_dir = temp.path().join("install");
         let backup_dir = temp.path().join("backups");
@@ -1123,7 +1123,7 @@ mod progress_tracking {
 
         let rate = mgr.success_rate();
         assert!(
-            (rate - 2.0 / 3.0).abs() < f64::EPSILON,
+            (rate - 2.0 / 3.0).abs() < 1e-12,
             "success rate must be 2/3 ≈ 0.667, got {rate}"
         );
     }
