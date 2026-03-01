@@ -1282,4 +1282,247 @@ mod tests {
         assert!(matches!(conn.sent[2], PanelMessage::WriteDisplay { .. }));
         assert_eq!(conn.sent[3], PanelMessage::Calibrate);
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 7. LED backend & latency (4 tests)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn depth_recording_backend_captures_all_writes() {
+        let (backend, writes) = RecordingBackend::new();
+        let mut ctrl = LedController::with_backend(Box::new(backend));
+        ctrl.set_min_interval(Duration::ZERO);
+
+        let actions = vec![
+            Action::LedOn {
+                target: "A".to_string(),
+            },
+            Action::LedBrightness {
+                target: "B".to_string(),
+                brightness: 0.7,
+            },
+            Action::LedOff {
+                target: "C".to_string(),
+            },
+        ];
+        ctrl.execute_actions(&actions).unwrap();
+
+        let w = writes.lock().unwrap();
+        assert_eq!(w.len(), 3);
+        assert_eq!(w[0].0, LedTarget::Panel("A".to_string()));
+        assert!(w[0].1); // on
+        assert_eq!(w[1].0, LedTarget::Panel("B".to_string()));
+        assert!((w[1].2 - 0.7).abs() < f32::EPSILON);
+        assert_eq!(w[2].0, LedTarget::Panel("C".to_string()));
+        assert!(!w[2].1); // off
+    }
+
+    #[test]
+    fn depth_led_brightness_transitions() {
+        let mut ctrl = LedController::new();
+        ctrl.set_min_interval(Duration::ZERO);
+        let target = LedTarget::Panel("DIM".to_string());
+
+        let steps = [0.0, 0.25, 0.5, 0.75, 1.0, 0.5, 0.0];
+        for &b in &steps {
+            ctrl.execute_actions(&[Action::LedBrightness {
+                target: "DIM".to_string(),
+                brightness: b,
+            }])
+            .unwrap();
+            let state = ctrl.get_led_state(&target).unwrap();
+            assert!(
+                (state.brightness - b).abs() < f32::EPSILON,
+                "expected {b}, got {}",
+                state.brightness
+            );
+        }
+    }
+
+    #[test]
+    fn depth_latency_stats_clear() {
+        let mut ctrl = LedController::new();
+        ctrl.set_min_interval(Duration::ZERO);
+
+        for i in 0..5 {
+            ctrl.execute_actions(&[Action::LedOn {
+                target: format!("S{i}"),
+            }])
+            .unwrap();
+        }
+        let stats = ctrl.get_latency_stats().unwrap();
+        assert_eq!(stats.sample_count, 5);
+
+        ctrl.clear_latency_stats();
+        assert!(ctrl.get_latency_stats().is_none());
+
+        // New samples after clear
+        ctrl.execute_actions(&[Action::LedOn {
+            target: "S_NEW".to_string(),
+        }])
+        .unwrap();
+        let stats = ctrl.get_latency_stats().unwrap();
+        assert_eq!(stats.sample_count, 1);
+    }
+
+    #[test]
+    fn depth_led_controller_default_trait() {
+        let ctrl = LedController::default();
+        assert!(ctrl.get_led_state(&LedTarget::Indexer).is_none());
+        assert!(ctrl.get_latency_stats().is_none());
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 8. PanelId identity & hashing (2 tests)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn depth_panel_id_as_hashmap_key() {
+        use std::collections::HashMap;
+
+        let id_a = PanelId {
+            vendor_id: 0x06A3,
+            product_id: 0x0D05,
+            device_path: "/dev/hidraw0".to_string(),
+        };
+        let id_b = PanelId {
+            vendor_id: 0x06A3,
+            product_id: 0x0D06,
+            device_path: "/dev/hidraw1".to_string(),
+        };
+
+        let mut map: HashMap<PanelId, &str> = HashMap::new();
+        map.insert(id_a.clone(), "radio");
+        map.insert(id_b.clone(), "multi");
+
+        assert_eq!(map[&id_a], "radio");
+        assert_eq!(map[&id_b], "multi");
+        assert_eq!(map.len(), 2);
+
+        // Same key overwrites
+        map.insert(id_a.clone(), "radio_v2");
+        assert_eq!(map[&id_a], "radio_v2");
+        assert_eq!(map.len(), 2);
+    }
+
+    #[test]
+    fn depth_panel_id_display_format() {
+        let id = PanelId {
+            vendor_id: 0x0000,
+            product_id: 0xFFFF,
+            device_path: r"\\?\hid#vid_06a3".to_string(),
+        };
+        let s = id.to_string();
+        assert!(s.contains("0000:FFFF"));
+        assert!(s.contains(r"\\?\hid#vid_06a3"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 9. Display edge cases (2 tests)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn depth_com_nav_freq_clamping() {
+        // Below-range COM clamps to lower bound
+        assert_eq!(format_com_freq(100_000), "11800");
+        // Above-range COM clamps to upper bound
+        assert_eq!(format_com_freq(200_000), "13697");
+
+        // Below-range NAV
+        assert_eq!(format_nav_freq(50_000), "10800");
+        // Above-range NAV
+        assert_eq!(format_nav_freq(200_000), "11795");
+
+        // ADF boundary clamping
+        assert_eq!(format_adf(0), "  190");
+        assert_eq!(format_adf(5000), " 1750");
+
+        // XPDR clamping
+        assert_eq!(format_xpdr(9999), " 7777");
+    }
+
+    #[test]
+    fn depth_altitude_boundary_formatting() {
+        // Exact boundaries
+        assert_eq!(format_altitude(99999), "99999");
+        assert_eq!(format_altitude(-9999), "-9999");
+        // Just within range
+        assert_eq!(format_altitude(1), "    1");
+        assert_eq!(format_altitude(-1), "   -1");
+        // Negative zero is still "    0"
+        // (Rust i32 has no negative zero, so -0 == 0)
+        assert_eq!(format_altitude(0), "    0");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 10. Evaluator edge cases (2 tests)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn depth_evaluator_missing_telemetry_defaults_zero() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(Duration::ZERO);
+
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled = schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        // Empty telemetry — missing variable defaults to 0.0 (falsy)
+        let tel: HashMap<String, f32> = HashMap::new();
+        let actions = evaluator.evaluate(&compiled, &tel);
+        assert_eq!(actions.len(), 0, "missing var should default to 0 (false)");
+    }
+
+    #[test]
+    fn depth_evaluator_reuse_across_programs() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(Duration::ZERO);
+
+        // First program
+        let schema1 = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled1 = schema1.compile().unwrap();
+        evaluator.initialize_for_program(&compiled1.bytecode);
+
+        let mut tel = HashMap::new();
+        tel.insert("gear_down".to_string(), 1.0_f32);
+        let actions = evaluator.evaluate(&compiled1, &tel);
+        assert_eq!(actions.len(), 1);
+
+        // Re-initialize with a different program
+        let schema2 = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "flaps_deployed".to_string(),
+                do_action: "led.panel('FLAPS').on()".to_string(),
+                action: "led.panel('FLAPS').on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let compiled2 = schema2.compile().unwrap();
+        evaluator.initialize_for_program(&compiled2.bytecode);
+
+        // Old telemetry variable is irrelevant to new program
+        let actions = evaluator.evaluate(&compiled2, &tel);
+        assert_eq!(actions.len(), 0, "old var should not trigger new program");
+
+        tel.insert("flaps_deployed".to_string(), 1.0);
+        let actions = evaluator.evaluate(&compiled2, &tel);
+        assert_eq!(actions.len(), 1);
+    }
 }
