@@ -246,6 +246,9 @@ impl PanelMessage {
     /// Decodes a message from its type ID and payload bytes.
     pub fn decode_payload(message_type: u8, payload: &[u8], len: u16) -> Result<Self, FrameError> {
         let len = len as usize;
+        if payload.len() < len {
+            return Err(FrameError::InvalidPayload);
+        }
         match message_type {
             MSG_LED_UPDATE => {
                 if len < 4 {
@@ -279,12 +282,7 @@ impl PanelMessage {
                     panel_id: payload[0],
                     button_id: payload[1],
                     pressed: payload[2] != 0,
-                    timestamp: u32::from_le_bytes([
-                        payload[3],
-                        payload[4],
-                        payload[5],
-                        payload[6],
-                    ]),
+                    timestamp: u32::from_le_bytes([payload[3], payload[4], payload[5], payload[6]]),
                 })
             }
             MSG_ENCODER_EVENT => {
@@ -295,12 +293,7 @@ impl PanelMessage {
                     panel_id: payload[0],
                     encoder_id: payload[1],
                     delta: i16::from_le_bytes([payload[2], payload[3]]),
-                    timestamp: u32::from_le_bytes([
-                        payload[4],
-                        payload[5],
-                        payload[6],
-                        payload[7],
-                    ]),
+                    timestamp: u32::from_le_bytes([payload[4], payload[5], payload[6], payload[7]]),
                 })
             }
             MSG_SWITCH_EVENT => {
@@ -311,12 +304,7 @@ impl PanelMessage {
                     panel_id: payload[0],
                     switch_id: payload[1],
                     position: payload[2],
-                    timestamp: u32::from_le_bytes([
-                        payload[3],
-                        payload[4],
-                        payload[5],
-                        payload[6],
-                    ]),
+                    timestamp: u32::from_le_bytes([payload[3], payload[4], payload[5], payload[6]]),
                 })
             }
             MSG_HEARTBEAT => {
@@ -711,7 +699,12 @@ mod tests {
 
     #[test]
     fn all_led_colors_roundtrip() {
-        for color in [LedColor::Off, LedColor::Green, LedColor::Amber, LedColor::Red] {
+        for color in [
+            LedColor::Off,
+            LedColor::Green,
+            LedColor::Amber,
+            LedColor::Red,
+        ] {
             let msg = PanelMessage::LedUpdate {
                 panel_id: 1,
                 led_id: 0,
@@ -811,5 +804,27 @@ mod tests {
             d.register(250, noop_handler),
             Err(FrameError::InvalidMessageType(250))
         );
+    }
+
+    // ── Payload bounds-check tests ───────────────────────────────────────────
+
+    #[test]
+    fn test_decode_short_payload_returns_error() {
+        // Payload slice is shorter than what `len` claims — must not panic.
+        let result = PanelMessage::decode_payload(MSG_BUTTON_EVENT, &[1, 2], 7);
+        assert_eq!(result, Err(FrameError::InvalidPayload));
+    }
+
+    #[test]
+    fn test_decode_empty_payload_returns_error() {
+        let result = PanelMessage::decode_payload(MSG_LED_UPDATE, &[], 4);
+        assert_eq!(result, Err(FrameError::InvalidPayload));
+    }
+
+    #[test]
+    fn test_decode_inflated_len_returns_error() {
+        // 3-byte payload but len says 12 — must be caught before indexing.
+        let result = PanelMessage::decode_payload(MSG_DISPLAY_UPDATE, &[0, 0, 0], 12);
+        assert_eq!(result, Err(FrameError::InvalidPayload));
     }
 }
