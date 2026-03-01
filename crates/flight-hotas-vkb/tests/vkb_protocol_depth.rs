@@ -486,8 +486,8 @@ fn button_matrix_virtual_buttons_pressed_list() {
 fn button_matrix_hat_centred_all_nibble_values() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
 
-    // Nibbles 8-15 should all produce None (centred)
-    for high_nibble in 8u8..=15 {
+    // Nibbles 0-7 should produce Some (valid direction), 8-15 should produce None (centred)
+    for high_nibble in 0u8..=15 {
         let hat_byte = (high_nibble << 4) | 0x0F; // hat0 = centred, hat1 = high_nibble
         let report = make_joystick_report([0x8000; 6], 0, 0, hat_byte);
         let state = handler.parse_report(&report).unwrap();
