@@ -330,7 +330,11 @@ pub fn build_display_text_command(
     text: &str,
 ) -> Result<FeatureReportFrame, ProtocolError> {
     let bytes = text.as_bytes();
-    let truncated = if bytes.len() > 16 { &bytes[..16] } else { bytes };
+    let truncated = if bytes.len() > 16 {
+        &bytes[..16]
+    } else {
+        bytes
+    };
     // payload: panel_id(1) + field_index(1) + text bytes
     let mut payload = Vec::with_capacity(2 + truncated.len());
     payload.push(panel_id);
@@ -580,10 +584,7 @@ impl DeviceType {
     pub fn has_leds(&self) -> bool {
         matches!(
             self,
-            Self::OrionThrottle
-                | Self::Orion2Throttle
-                | Self::SuperTaurus
-                | Self::F18Panel
+            Self::OrionThrottle | Self::Orion2Throttle | Self::SuperTaurus | Self::F18Panel
         )
     }
 
