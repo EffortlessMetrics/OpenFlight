@@ -184,6 +184,26 @@ struct SubscriptionRecord {
     last_delivery: Option<Instant>,
     /// Last delivered payload hash – used for `changed_only`.
     last_payload_hash: Option<u64>,
+    /// Maximum pending deliveries before the subscriber is considered slow.
+    capacity: usize,
+    /// Number of pending (unacknowledged) deliveries.
+    pending: usize,
+    /// Cumulative number of events dropped due to backpressure.
+    dropped: u64,
+}
+
+// ---------------------------------------------------------------------------
+// BackpressureStats
+// ---------------------------------------------------------------------------
+
+/// Per-broadcast statistics returned by
+/// [`SubscriptionManager::broadcast_with_backpressure`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BackpressureStats {
+    /// Subscription IDs that received the event.
+    pub delivered: Vec<SubscriptionId>,
+    /// Subscription IDs that were skipped because their queue was full.
+    pub dropped: Vec<SubscriptionId>,
 }
 
 // ---------------------------------------------------------------------------
@@ -213,6 +233,19 @@ impl SubscriptionManager {
     /// Returns a [`SubscriptionHandle`] the caller can use to check liveness
     /// or cancel the subscription.
     pub fn subscribe(&mut self, topic: Topic, filter: SubscriptionFilter) -> SubscriptionHandle {
+        self.subscribe_with_capacity(topic, filter, usize::MAX)
+    }
+
+    /// Subscribe with an explicit backpressure capacity.
+    ///
+    /// When the subscriber accumulates more than `capacity` pending deliveries,
+    /// new events are dropped and counted via [`dropped_count`](Self::dropped_count).
+    pub fn subscribe_with_capacity(
+        &mut self,
+        topic: Topic,
+        filter: SubscriptionFilter,
+        capacity: usize,
+    ) -> SubscriptionHandle {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let active = Arc::new(AtomicBool::new(true));
         let now = Instant::now();
@@ -227,6 +260,9 @@ impl SubscriptionManager {
                 active: Arc::clone(&active),
                 last_delivery: None,
                 last_payload_hash: None,
+                capacity,
+                pending: 0,
+                dropped: 0,
             },
         );
 
@@ -304,6 +340,71 @@ impl SubscriptionManager {
         }
 
         delivered
+    }
+
+    /// Broadcast with backpressure: slow subscribers whose pending count has
+    /// reached their capacity will have the event dropped (and counted).
+    pub fn broadcast_with_backpressure(&mut self, message: &BroadcastMessage) -> BackpressureStats {
+        self.gc();
+
+        let now = Instant::now();
+        let payload_hash = simple_hash(&message.payload);
+        let mut delivered = Vec::new();
+        let mut dropped = Vec::new();
+
+        for rec in self.subscriptions.values_mut() {
+            if rec.topic != message.topic {
+                continue;
+            }
+
+            if !rec
+                .filter
+                .matches(message.device_id.as_deref(), message.axis_id.as_deref())
+            {
+                continue;
+            }
+
+            if let Some(min_ms) = rec.filter.min_interval_ms
+                && let Some(last) = rec.last_delivery
+                && now.duration_since(last).as_millis() < u128::from(min_ms)
+            {
+                continue;
+            }
+
+            if rec.filter.changed_only && rec.last_payload_hash == Some(payload_hash) {
+                continue;
+            }
+
+            // Backpressure check
+            if rec.pending >= rec.capacity {
+                rec.dropped += 1;
+                dropped.push(rec.id);
+                continue;
+            }
+
+            rec.last_delivery = Some(now);
+            rec.last_payload_hash = Some(payload_hash);
+            rec.pending += 1;
+            delivered.push(rec.id);
+        }
+
+        BackpressureStats { delivered, dropped }
+    }
+
+    /// Acknowledge that a subscriber has consumed a pending delivery.
+    ///
+    /// This decrements the subscriber's pending counter, allowing future
+    /// deliveries when backpressure is in effect.
+    pub fn acknowledge(&mut self, id: SubscriptionId) {
+        if let Some(rec) = self.subscriptions.get_mut(&id) {
+            rec.pending = rec.pending.saturating_sub(1);
+        }
+    }
+
+    /// Return the cumulative number of events dropped for `id` due to
+    /// backpressure.
+    pub fn dropped_count(&self, id: SubscriptionId) -> u64 {
+        self.subscriptions.get(&id).map_or(0, |rec| rec.dropped)
     }
 
     /// Number of active subscriptions (after garbage collection).
@@ -806,5 +907,98 @@ mod tests {
         let ids = mgr.broadcast(&msg(Topic::AxisData, "val"));
         assert_eq!(ids.len(), 2);
         assert!(!ids.contains(&h1.id));
+    }
+
+    // ===== Backpressure tests ==============================================
+
+    // -----------------------------------------------------------------------
+    // 28. Backpressure drops events when subscriber is slow
+    // -----------------------------------------------------------------------
+    #[test]
+    fn backpressure_drops_slow_subscriber() {
+        let mut mgr = SubscriptionManager::new();
+        let h = mgr.subscribe_with_capacity(Topic::AxisData, no_filter(), 2);
+
+        // First two deliveries should succeed
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::AxisData, "v1"));
+        assert_eq!(stats.delivered, vec![h.id]);
+        assert!(stats.dropped.is_empty());
+
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::AxisData, "v2"));
+        assert_eq!(stats.delivered, vec![h.id]);
+
+        // Third delivery exceeds capacity → dropped
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::AxisData, "v3"));
+        assert!(stats.delivered.is_empty());
+        assert_eq!(stats.dropped, vec![h.id]);
+
+        assert_eq!(mgr.dropped_count(h.id), 1);
+    }
+
+    // -----------------------------------------------------------------------
+    // 29. Acknowledge frees capacity
+    // -----------------------------------------------------------------------
+    #[test]
+    fn acknowledge_frees_capacity() {
+        let mut mgr = SubscriptionManager::new();
+        let h = mgr.subscribe_with_capacity(Topic::DeviceEvents, no_filter(), 1);
+
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::DeviceEvents, "e1"));
+        assert_eq!(stats.delivered, vec![h.id]);
+
+        // At capacity — next would be dropped
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::DeviceEvents, "e2"));
+        assert!(stats.delivered.is_empty());
+
+        // Acknowledge → free a slot
+        mgr.acknowledge(h.id);
+
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::DeviceEvents, "e3"));
+        assert_eq!(stats.delivered, vec![h.id]);
+    }
+
+    // -----------------------------------------------------------------------
+    // 30. Dropped count accumulates
+    // -----------------------------------------------------------------------
+    #[test]
+    fn dropped_count_accumulates() {
+        let mut mgr = SubscriptionManager::new();
+        let h = mgr.subscribe_with_capacity(Topic::HealthStatus, no_filter(), 0);
+
+        for i in 0..5 {
+            mgr.broadcast_with_backpressure(&msg(Topic::HealthStatus, &format!("d{i}")));
+        }
+        assert_eq!(mgr.dropped_count(h.id), 5);
+    }
+
+    // -----------------------------------------------------------------------
+    // 31. Mixed fast and slow subscribers
+    // -----------------------------------------------------------------------
+    #[test]
+    fn backpressure_mixed_fast_slow() {
+        let mut mgr = SubscriptionManager::new();
+        let fast = mgr.subscribe(Topic::AxisData, no_filter()); // unlimited
+        let slow = mgr.subscribe_with_capacity(Topic::AxisData, no_filter(), 1);
+
+        // First event reaches both
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::AxisData, "a"));
+        assert!(stats.delivered.contains(&fast.id));
+        assert!(stats.delivered.contains(&slow.id));
+
+        // Second event: slow is at capacity
+        let stats = mgr.broadcast_with_backpressure(&msg(Topic::AxisData, "b"));
+        assert!(stats.delivered.contains(&fast.id));
+        assert!(stats.dropped.contains(&slow.id));
+        assert_eq!(mgr.dropped_count(slow.id), 1);
+        assert_eq!(mgr.dropped_count(fast.id), 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // 32. Dropped count for unknown subscription returns 0
+    // -----------------------------------------------------------------------
+    #[test]
+    fn dropped_count_unknown_id() {
+        let mgr = SubscriptionManager::new();
+        assert_eq!(mgr.dropped_count(9999), 0);
     }
 }
