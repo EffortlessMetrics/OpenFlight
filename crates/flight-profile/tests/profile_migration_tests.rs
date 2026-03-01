@@ -70,6 +70,24 @@ fn sample_v3() -> Value {
 // ── 1. Schema version detection ─────────────────────────────────────────────
 
 #[test]
+fn sample_v1_contains_version() {
+    let v1 = sample_v1_minimal();
+    assert_eq!(v1["schema_version"], "v1");
+}
+
+#[test]
+fn sample_v2_contains_version() {
+    let v2 = sample_v2();
+    assert_eq!(v2["schema_version"], "v2");
+}
+
+#[test]
+fn sample_v3_contains_version() {
+    let v3 = sample_v3();
+    assert_eq!(v3["schema_version"], "v3");
+}
+
+#[test]
 fn registry_recognises_all_builtin_versions() {
     let reg = MigrationRegistry::new();
     let versions = reg.available_versions();
@@ -755,8 +773,8 @@ mod proptest_migration {
             let result = reg.migrate(profile, "v1", "v3").unwrap();
             for (name, orig) in &input_axes {
                 let migrated = &result["axes"][name];
-                prop_assert_eq!(
-                    &orig["deadzone"], &migrated["deadzone"],
+                prop_assert!(
+                    orig["deadzone"] == migrated["deadzone"],
                     "deadzone changed for axis {}", name
                 );
             }
