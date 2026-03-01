@@ -88,6 +88,7 @@ members = [
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",
     "crates/flight-plugin",
+    "crates/flight-testkit",
     "examples",
     "installer",
     "xtask",

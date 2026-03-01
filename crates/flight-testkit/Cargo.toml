@@ -1,0 +1,20 @@
+[package]
+homepage.workspace = true
+name = "flight-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Deterministic test infrastructure: fake backends, clocks, fixture builders, and golden-file utilities."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "test", "testkit"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+flight-axis = { workspace = true }
