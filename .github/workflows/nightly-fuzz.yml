@@ -1,8 +1,8 @@
 name: Nightly Fuzz
 
+  # Scheduled fuzz runs are handled by ci.yml (cron '0 3 * * *').
+  # This workflow exists for manual/on-demand fuzz runs only.
 on:
-  schedule:
-    - cron: '0 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -43,6 +43,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix: ${{ fromJson(needs.discover-targets.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +63,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: fuzz-${{ matrix.crate }}-${{ hashFiles('**/Cargo.lock') }}
+          key: fuzz-${{ hashFiles('rust-toolchain.toml') }}-${{ matrix.crate }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             fuzz-${{ matrix.crate }}-
 

@@ -1,10 +1,8 @@
 name: Nightly Coverage
 
-# This workflow can be called from ci.yml via workflow_call to avoid
-# duplicating coverage logic. It also runs nightly on a schedule.
+# Scheduled coverage runs are handled by ci.yml.
+# This workflow exists for manual/on-demand coverage runs and workflow_call.
 on:
-  schedule:
-    - cron: '0 4 * * *'
   workflow_dispatch:
   workflow_call:
 
