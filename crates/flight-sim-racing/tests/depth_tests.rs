@@ -222,12 +222,12 @@ fn rpm_clamped_to_non_negative() {
 }
 
 #[test]
-fn nan_throttle_clamps_to_zero() {
+fn nan_throttle_does_not_panic() {
     // f32::NAN.clamp(0.0, 1.0) ⇒ NaN on most platforms; verify parser doesn't panic.
     let pkt = build_packet(0, 0.0, 0.0, 0.0, 0.0, f32::NAN, 0.0, 0.0, 0.0, 0.0);
     let result = parse_generic_udp(&pkt);
-    // The parser shouldn't panic; the exact value of throttle with NaN input is
-    // implementation-defined (clamp of NaN is NaN), but no crash is the invariant.
+    // The exact value of throttle with NaN input is implementation-defined
+    // (clamp of NaN is NaN), but no crash is the invariant.
     assert!(result.is_ok());
 }
 
@@ -246,13 +246,14 @@ fn negative_infinity_steering_clamps() {
 }
 
 #[test]
-fn rpm_normalized_with_zero_max_returns_zero() {
+fn division_by_near_zero_rpm_max_is_finite() {
     let t = RacingTelemetry {
         rpm: 5000.0,
         rpm_max: 0.0,
         ..Default::default()
     };
-    // rpm_max.max(1.0) prevents division by zero → result = 5000.0 / 1.0 = 5000.0
+    // rpm_max.max(1.0) prevents division by zero → result = 5000.0 / 1.0 = 5000.0,
+    // which is finite (not zero). We only assert finiteness here.
     let norm = t.rpm_normalized();
     assert!(!norm.is_nan(), "should not be NaN");
     assert!(!norm.is_infinite(), "should not be infinite");
@@ -285,6 +286,8 @@ fn rpm_normalized_above_redline() {
 #[test]
 fn magic_bytes_exact_match() {
     // RACING_MAGIC = 0x5241_4345, which is "RACE" read as big-endian ASCII.
+    // The packet format stores this as little-endian bytes via to_le_bytes(),
+    // but here we verify the constant's identity using to_be_bytes() → "RACE".
     assert_eq!(RACING_MAGIC, 0x5241_4345);
     let bytes = RACING_MAGIC.to_be_bytes();
     assert_eq!(&bytes, b"RACE");
