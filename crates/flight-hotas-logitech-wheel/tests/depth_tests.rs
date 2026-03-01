@@ -136,7 +136,7 @@ fn g29_too_short_all_lengths() {
     for len in 0..G29_REPORT_LEN {
         let data = vec![0x01; len];
         let err = parse_g29(&data).unwrap_err();
-        assert_eq!(err, WheelError::TooShort { need: 12, got: len });
+        assert_eq!(err, WheelError::TooShort { need: G29_REPORT_LEN, got: len });
     }
 }
 
@@ -220,7 +220,7 @@ fn g27_too_short_all_lengths() {
     for len in 0..G27_REPORT_LEN {
         let data = vec![0x01; len];
         let err = parse_g27(&data).unwrap_err();
-        assert_eq!(err, WheelError::TooShort { need: 11, got: len });
+        assert_eq!(err, WheelError::TooShort { need: G27_REPORT_LEN, got: len });
     }
 }
 

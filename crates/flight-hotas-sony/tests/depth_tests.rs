@@ -200,7 +200,7 @@ fn ds4_single_byte_error() {
     assert_eq!(
         err,
         flight_hotas_sony::SonyError::TooShort {
-            expected: 10,
+            expected: DS4_MIN_REPORT_BYTES,
             actual: 1
         }
     );
@@ -314,7 +314,7 @@ fn dualsense_single_byte_error() {
     assert_eq!(
         err,
         flight_hotas_sony::SonyError::TooShort {
-            expected: 11,
+            expected: DUALSENSE_MIN_REPORT_BYTES,
             actual: 1,
         }
     );

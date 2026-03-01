@@ -336,6 +336,7 @@ fn torque_nan_clamped() {
     // f32::NAN.clamp() returns NAN on some platforms, but our to_i16 should
     // not panic. We just verify no panic occurs.
     let _t = TorqueCommand::new(f32::NAN);
+    let _ = _t.to_i16(); // Actually exercise the method
 }
 
 #[test]
