@@ -203,6 +203,8 @@ cc = "1.2.55"
 
 # Testing and benchmarking utilities
 tokio-test = "0.4.5"
+assert_cmd = "2.0.16"
+predicates = "3.1.3"
 chrono = { version = "0.4.43", features = ["serde"] }
 
 # Additional common dependencies
