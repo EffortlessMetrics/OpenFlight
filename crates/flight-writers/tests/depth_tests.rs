@@ -968,8 +968,13 @@ fn int_curve_conflict_writer_default_configs() {
         enable_verification: false,
     };
 
-    let writer = CurveConflictWriter::with_config(config).unwrap();
+    let writer = CurveConflictWriter::with_config(config.clone()).unwrap();
     let backups = writer.list_backups().unwrap();
     // No backups yet, but writer was created successfully with default configs
     assert!(backups.is_empty());
+
+    // Verify that default config files were actually created
+    assert!(config.config_dir.join("msfs_1.36.0.json").exists(), "MSFS default config missing");
+    assert!(config.config_dir.join("xplane_12.0.json").exists(), "X-Plane default config missing");
+    assert!(config.config_dir.join("dcs_2.9.json").exists(), "DCS default config missing");
 }
