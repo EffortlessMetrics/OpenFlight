@@ -467,9 +467,12 @@ impl ServiceOrchestrator {
         let adapter_states = Self::init_adapter_states(&config);
 
         // Set up config watcher if a config path was provided.
+        // Prime the watcher by running one poll cycle so the initial file state
+        // is recorded and the first real poll does not emit a spurious Created.
         let config_watcher = config.config_path.as_ref().map(|path| {
             let mut watcher = ConfigWatcher::new(Duration::from_secs(2));
             watcher.watch(path);
+            let _ = watcher.check_for_changes();
             watcher
         });
 
@@ -581,10 +584,9 @@ impl ServiceOrchestrator {
 
         // Mark enabled adapters as Running after the adapters subsystem starts.
         if self.config.enable_adapters {
-            for (name, state) in &mut self.adapter_states {
+            for state in self.adapter_states.values_mut() {
                 if *state == AdapterLifecycleState::Stopped {
                     *state = AdapterLifecycleState::Running;
-                    let _ = name; // used for logging in production
                 }
             }
         }
@@ -767,20 +769,22 @@ impl ServiceOrchestrator {
                     self.connected_sims.push(sim_name.clone());
                     self.metrics.adapter_connects += 1;
                     // Update per-adapter lifecycle if we recognise the sim name.
-                    let key = sim_name.to_lowercase();
+                    let key = Self::normalize_adapter_name(sim_name);
                     if let Some(state) = self.adapter_states.get_mut(&key) {
                         *state = AdapterLifecycleState::Running;
                     }
                 }
             }
             AdapterEvent::SimDisconnected { ref sim_name } => {
-                self.connected_sims.retain(|s| s != sim_name);
-                self.metrics.adapter_disconnects += 1;
-                let key = sim_name.to_lowercase();
-                if let Some(state) = self.adapter_states.get_mut(&key)
-                    && *state != AdapterLifecycleState::Disabled
-                {
-                    *state = AdapterLifecycleState::Stopped;
+                if self.connected_sims.contains(sim_name) {
+                    self.connected_sims.retain(|s| s != sim_name);
+                    self.metrics.adapter_disconnects += 1;
+                    let key = Self::normalize_adapter_name(sim_name);
+                    if let Some(state) = self.adapter_states.get_mut(&key)
+                        && *state != AdapterLifecycleState::Disabled
+                    {
+                        *state = AdapterLifecycleState::Stopped;
+                    }
                 }
             }
             AdapterEvent::DataReceived { .. } => {
@@ -872,9 +876,10 @@ impl ServiceOrchestrator {
 
     /// Start a named adapter. Only transitions `Stopped → Running`.
     pub fn start_adapter(&mut self, adapter: &str) -> Result<(), OrchestratorError> {
+        let key = Self::normalize_adapter_name(adapter);
         let state = self
             .adapter_states
-            .get_mut(adapter)
+            .get_mut(&key)
             .ok_or_else(|| OrchestratorError::SubsystemNotFound(adapter.to_string()))?;
         match state {
             AdapterLifecycleState::Disabled => Err(OrchestratorError::SubsystemStartFailed {
@@ -894,9 +899,10 @@ impl ServiceOrchestrator {
 
     /// Stop a named adapter. Only transitions `Running → Stopped`.
     pub fn stop_adapter(&mut self, adapter: &str) -> Result<(), OrchestratorError> {
+        let key = Self::normalize_adapter_name(adapter);
         let state = self
             .adapter_states
-            .get_mut(adapter)
+            .get_mut(&key)
             .ok_or_else(|| OrchestratorError::SubsystemNotFound(adapter.to_string()))?;
         match state {
             AdapterLifecycleState::Running | AdapterLifecycleState::Error(_) => {
@@ -910,7 +916,8 @@ impl ServiceOrchestrator {
 
     /// Record an error against a named adapter.
     pub fn record_adapter_error(&mut self, adapter: &str, error: &str) {
-        if let Some(state) = self.adapter_states.get_mut(adapter) {
+        let key = Self::normalize_adapter_name(adapter);
+        if let Some(state) = self.adapter_states.get_mut(&key) {
             *state = AdapterLifecycleState::Error(error.to_string());
         }
     }
@@ -946,7 +953,36 @@ impl ServiceOrchestrator {
     /// Updates adapter enable flags and propagates changes to per-adapter
     /// lifecycle states without restarting the orchestrator.
     pub fn apply_config_update(&mut self, new_config: ServiceConfig) {
+        // Update config_watcher if config_path changed.
+        if new_config.config_path != self.config.config_path {
+            self.config_watcher = new_config.config_path.as_ref().map(|path| {
+                let mut watcher = ConfigWatcher::new(Duration::from_secs(2));
+                watcher.watch(path);
+                let _ = watcher.check_for_changes();
+                watcher
+            });
+        }
+
+        let old_enable_adapters = self.config.enable_adapters;
         self.config = new_config;
+
+        // When adapters are globally disabled, mark all existing states as Disabled.
+        if !self.config.enable_adapters {
+            for state in self.adapter_states.values_mut() {
+                *state = AdapterLifecycleState::Disabled;
+            }
+            return;
+        }
+
+        // When toggling from false→true, only create adapter states if the
+        // adapters subsystem was registered at construction time.
+        if !old_enable_adapters
+            && self.config.enable_adapters
+            && !self.subsystems.contains_key(SUBSYSTEM_ADAPTERS)
+        {
+            return;
+        }
+
         let updated = Self::init_adapter_states(&self.config);
         // Build a list of mutations to avoid conflicting borrows.
         let mutations: Vec<(String, AdapterLifecycleState)> = updated
@@ -974,6 +1010,11 @@ impl ServiceOrchestrator {
     }
 
     // -- internal helpers ----------------------------------------------------
+
+    /// Canonical form for adapter names: lowercase with hyphens and spaces stripped.
+    fn normalize_adapter_name(name: &str) -> String {
+        name.to_lowercase().replace(['-', ' '], "")
+    }
 
     fn transition(&mut self, next: BootSequence) -> Result<(), OrchestratorError> {
         if !self.phase.can_transition_to(next) {
