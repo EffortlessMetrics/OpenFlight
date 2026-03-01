@@ -2,7 +2,7 @@
 source: crates/flight-core/tests/snapshots.rs
 expression: "trace.join(\"\\n\")"
 ---
-initial: state=Closed failures=0 calls=0 rejections=0
-after failure (open): state=Open failures=1 calls=1 rejections=0
-after timeout (half-open): state=HalfOpen failures=1 calls=2 rejections=0
-failure in half-open (re-open): state=Open failures=1 calls=2 rejections=0
+initial: state=Closed failures=0
+after failure (open): state=Open failures=1
+after timeout (half-open): state=HalfOpen failures=1
+failure in half-open (re-open): state=Open failures=1

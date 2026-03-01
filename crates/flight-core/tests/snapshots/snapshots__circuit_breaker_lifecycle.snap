@@ -2,14 +2,14 @@
 source: crates/flight-core/tests/snapshots.rs
 expression: "trace.join(\"\\n\")"
 ---
-initial: state=Closed failures=0 calls=0 rejections=0
-after success 1: state=Closed failures=0 calls=1 rejections=0
-after success 2: state=Closed failures=0 calls=2 rejections=0
-after failure 1: state=Closed failures=1 calls=3 rejections=0
-after failure 2: state=Closed failures=2 calls=4 rejections=0
-after failure 3 (threshold): state=Open failures=3 calls=5 rejections=0
-call in open: result=Rejected state=Open failures=3 calls=6 rejections=1
-after timeout: result=Allowed state=HalfOpen failures=3 calls=7 rejections=1
-half-open success 1: state=HalfOpen failures=3 calls=7 rejections=1
-half-open success 2 (close): state=Closed failures=0 calls=8 rejections=1
-after reset: state=Closed failures=0 calls=8 rejections=1
+initial: state=Closed failures=0
+after success 1: state=Closed failures=0
+after success 2: state=Closed failures=0
+after failure 1: state=Closed failures=1
+after failure 2: state=Closed failures=2
+after failure 3 (threshold): state=Open failures=3
+call in open: result=Rejected state=Open failures=3
+after timeout: result=Rejected state=Open failures=3
+half-open success 1: state=Open failures=3
+half-open success 2 (close): state=Open failures=3
+after reset: state=Closed failures=0

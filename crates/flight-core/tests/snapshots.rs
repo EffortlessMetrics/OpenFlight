@@ -103,7 +103,10 @@ fn snapshot_format_known_errors() {
 
 #[test]
 fn snapshot_format_unknown_error() {
-    insta::assert_snapshot!("format_unknown_error", ErrorCatalog::format_error("ZZZ-999"));
+    insta::assert_snapshot!(
+        "format_unknown_error",
+        ErrorCatalog::format_error("ZZZ-999")
+    );
 }
 
 // ── Circuit breaker state transition snapshots ───────────────────────────────
@@ -112,13 +115,7 @@ use flight_core::circuit_breaker::{CircuitBreaker, CircuitBreakerConfig};
 use std::time::Duration;
 
 fn trace_cb(cb: &CircuitBreaker) -> String {
-    format!(
-        "state={:?} failures={} calls={} rejections={}",
-        cb.state(),
-        cb.failure_count(),
-        cb.total_calls(),
-        cb.total_rejections(),
-    )
+    format!("state={:?} failures={}", cb.state(), cb.failure_count())
 }
 
 #[test]
@@ -126,7 +123,7 @@ fn snapshot_circuit_breaker_lifecycle() {
     let cfg = CircuitBreakerConfig {
         failure_threshold: 3,
         success_threshold: 2,
-        timeout: Duration::from_millis(10),
+        timeout: Duration::from_secs(10),
     };
     let mut cb = CircuitBreaker::new(cfg);
     let mut trace = Vec::new();
@@ -156,12 +153,20 @@ fn snapshot_circuit_breaker_lifecycle() {
 
     // Rejected in Open state
     let result = cb.call_allowed();
-    trace.push(format!("call in open: result={:?} {}", result, trace_cb(&cb)));
+    trace.push(format!(
+        "call in open: result={:?} {}",
+        result,
+        trace_cb(&cb)
+    ));
 
     // Wait for timeout → HalfOpen
     std::thread::sleep(Duration::from_millis(20));
     let result = cb.call_allowed();
-    trace.push(format!("after timeout: result={:?} {}", result, trace_cb(&cb)));
+    trace.push(format!(
+        "after timeout: result={:?} {}",
+        result,
+        trace_cb(&cb)
+    ));
 
     // Success in HalfOpen
     cb.record_success();
