@@ -19,6 +19,7 @@ pub mod presets;
 pub mod profiles;
 pub mod protocol;
 pub mod t16000m;
+pub mod tflight;
 pub mod tfrp;
 pub mod tpr;
 pub mod warthog;
@@ -65,4 +66,9 @@ pub use profiles::{AxisDescriptor, AxisNormalization, DeviceProfile, device_prof
 pub use protocol::{
     DEVICE_TABLE, DeviceEntry, LedState, ThrustmasterDevice, VENDOR_ID, build_led_report,
     identify_device, is_pinkie_held, is_throttle_split, resolve_shifted_button,
+};
+pub use tflight::{
+    TFLIGHT_MERGED_MIN_BYTES, TFLIGHT_SEPARATE_MIN_BYTES, TFlightAxisMode, TFlightHat,
+    TFlightStickAxes, TFlightStickButtons, TFlightStickParseError, TFlightStickState,
+    parse_tflight_auto, parse_tflight_merged, parse_tflight_separate,
 };
