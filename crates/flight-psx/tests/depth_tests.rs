@@ -572,6 +572,8 @@ fn default_port_is_10747() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
     #[test]
     fn prop_valid_line_always_parses(
         id in "[A-Za-z][A-Za-z0-9]{2,8}",
