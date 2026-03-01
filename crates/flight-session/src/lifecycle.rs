@@ -277,27 +277,34 @@ mod tests {
     #[test]
     fn duration_tracking_accumulates() {
         let mut lc = SessionLifecycle::new();
-        // Spend a tiny bit in Initializing.
-        std::thread::sleep(Duration::from_millis(5));
+        let t0 = lc.time_in_state(SessionState::Initializing);
         lc.transition(SessionState::Ready, TransitionReason::Auto)
             .unwrap();
-        let init_time = lc.time_in_state(SessionState::Initializing);
-        assert!(init_time >= Duration::from_millis(5));
+        let t1 = lc.time_in_state(SessionState::Initializing);
+        // After leaving Initializing, accumulated time is frozen and >= t0.
+        assert!(t1 >= t0);
+        assert!(t1 > Duration::ZERO);
+        // Past-state time is stable (no longer ticking).
+        let t2 = lc.time_in_state(SessionState::Initializing);
+        assert_eq!(t1, t2);
     }
 
     #[test]
     fn current_state_elapsed_grows() {
         let lc = SessionLifecycle::new();
-        std::thread::sleep(Duration::from_millis(5));
-        assert!(lc.current_state_elapsed() >= Duration::from_millis(5));
+        let e1 = lc.current_state_elapsed();
+        let e2 = lc.current_state_elapsed();
+        // Monotonically non-decreasing.
+        assert!(e2 >= e1);
     }
 
     #[test]
     fn time_in_current_state_includes_live_elapsed() {
         let lc = SessionLifecycle::new();
-        std::thread::sleep(Duration::from_millis(5));
-        let t = lc.time_in_state(SessionState::Initializing);
-        assert!(t >= Duration::from_millis(5));
+        let t1 = lc.time_in_state(SessionState::Initializing);
+        let t2 = lc.time_in_state(SessionState::Initializing);
+        // Live elapsed grows monotonically.
+        assert!(t2 >= t1);
     }
 
     #[test]

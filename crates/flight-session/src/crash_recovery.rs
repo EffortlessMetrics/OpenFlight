@@ -60,11 +60,12 @@ pub struct CrashRecovery {
 
 impl CrashRecovery {
     /// Create a recovery manager that stores files in `dir`.
+    ///
+    /// Scans any existing journal to resume sequence numbering.
     pub fn new(dir: impl Into<PathBuf>) -> Self {
-        Self {
-            dir: dir.into(),
-            next_seq: 1,
-        }
+        let dir = dir.into();
+        let next_seq = Self::init_next_seq(&dir);
+        Self { dir, next_seq }
     }
 
     /// The state directory.
@@ -73,6 +74,25 @@ impl CrashRecovery {
     }
 
     // ── Lock file ────────────────────────────────────────────────────────
+
+    /// Scan an existing journal for the highest sequence number.
+    fn init_next_seq(dir: &Path) -> u64 {
+        let journal_path = dir.join(JOURNAL_FILE);
+        let data = match std::fs::read_to_string(&journal_path) {
+            Ok(d) => d,
+            Err(_) => return 1,
+        };
+        let mut max_seq = 0u64;
+        for line in data.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            if let Ok(entry) = serde_json::from_str::<JournalEntry>(line) {
+                max_seq = max_seq.max(entry.seq);
+            }
+        }
+        max_seq + 1
+    }
 
     fn lock_path(&self) -> PathBuf {
         self.dir.join(LOCK_FILE)
@@ -83,10 +103,17 @@ impl CrashRecovery {
     }
 
     /// Acquire the session lock. Writes the current PID and timestamp.
+    ///
+    /// Fails with [`io::ErrorKind::AlreadyExists`] if a lock file is already
+    /// present (i.e. another session is running or a previous one crashed).
     pub fn acquire_lock(&self) -> Result<(), CrashRecoveryError> {
         std::fs::create_dir_all(&self.dir)?;
         let content = format!("{}:{}", std::process::id(), now_secs());
-        std::fs::write(self.lock_path(), content)?;
+        let mut file = std::fs::File::create_new(self.lock_path())?;
+        {
+            use std::io::Write;
+            file.write_all(content.as_bytes())?;
+        }
         Ok(())
     }
 
@@ -144,8 +171,14 @@ impl CrashRecovery {
             .create(true)
             .append(true)
             .open(self.journal_path())?;
-        file.write_all(line.as_bytes())?;
-        file.flush()?;
+        let n = file.write(line.as_bytes())?;
+        if n < line.len() {
+            return Err(CrashRecoveryError::Io(io::Error::new(
+                io::ErrorKind::WriteZero,
+                "short write to journal",
+            )));
+        }
+        file.sync_data()?;
 
         Ok(entry)
     }
