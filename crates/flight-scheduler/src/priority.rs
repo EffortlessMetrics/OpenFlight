@@ -189,11 +189,11 @@ pub struct TimerDiscipline {
     ring_idx: u16,
     /// Total ticks recorded.
     count: u64,
-    // Running statistics
-    min_ns: u64,
-    max_ns: u64,
-    sum_ns: u64,
-    sum_sq_ns: u128,
+    // Running jitter statistics
+    min_jitter_ns: u64,
+    max_jitter_ns: u64,
+    sum_jitter_ns: u64,
+    sum_sq_jitter_ns: u128,
 }
 
 impl TimerDiscipline {
@@ -206,10 +206,10 @@ impl TimerDiscipline {
             ring: [0u64; DISCIPLINE_RING_SIZE],
             ring_idx: 0,
             count: 0,
-            min_ns: u64::MAX,
-            max_ns: 0,
-            sum_ns: 0,
-            sum_sq_ns: 0,
+            min_jitter_ns: u64::MAX,
+            max_jitter_ns: 0,
+            sum_jitter_ns: 0,
+            sum_sq_jitter_ns: 0,
         }
     }
 
@@ -232,13 +232,13 @@ impl TimerDiscipline {
         let ns = actual_duration.as_nanos() as u64;
         let jitter = ns.abs_diff(self.target_period_ns);
         self.count += 1;
-        self.sum_ns += jitter;
-        self.sum_sq_ns += jitter as u128 * jitter as u128;
-        if jitter < self.min_ns {
-            self.min_ns = jitter;
+        self.sum_jitter_ns += jitter;
+        self.sum_sq_jitter_ns += jitter as u128 * jitter as u128;
+        if jitter < self.min_jitter_ns {
+            self.min_jitter_ns = jitter;
         }
-        if jitter > self.max_ns {
-            self.max_ns = jitter;
+        if jitter > self.max_jitter_ns {
+            self.max_jitter_ns = jitter;
         }
         let idx = self.ring_idx as usize % DISCIPLINE_RING_SIZE;
         self.ring[idx] = jitter;
@@ -266,17 +266,17 @@ impl TimerDiscipline {
         let p95 = buf[p95_idx.min(len.saturating_sub(1))];
         let p99 = buf[p99_idx.min(len.saturating_sub(1))];
 
-        let mean = self.sum_ns / self.count;
+        let mean = self.sum_jitter_ns / self.count;
 
         TimerReport {
             target_period_ns: self.target_period_ns,
             sample_count: self.count,
-            min_ns: self.min_ns,
-            max_ns: self.max_ns,
-            mean_ns: mean,
-            p50_ns: p50,
-            p95_ns: p95,
-            p99_ns: p99,
+            min_jitter_ns: self.min_jitter_ns,
+            max_jitter_ns: self.max_jitter_ns,
+            mean_jitter_ns: mean,
+            p50_jitter_ns: p50,
+            p95_jitter_ns: p95,
+            p99_jitter_ns: p99,
         }
     }
 
@@ -303,18 +303,18 @@ pub struct TimerReport {
     pub target_period_ns: u64,
     /// Number of samples used to compute this report.
     pub sample_count: u64,
-    /// Minimum observed tick duration (ns).
-    pub min_ns: u64,
-    /// Maximum observed tick duration (ns).
-    pub max_ns: u64,
-    /// Mean tick duration (ns).
-    pub mean_ns: u64,
-    /// 50th percentile tick duration (ns).
-    pub p50_ns: u64,
-    /// 95th percentile tick duration (ns).
-    pub p95_ns: u64,
-    /// 99th percentile tick duration (ns).
-    pub p99_ns: u64,
+    /// Minimum observed jitter — absolute deviation from target period (ns).
+    pub min_jitter_ns: u64,
+    /// Maximum observed jitter — absolute deviation from target period (ns).
+    pub max_jitter_ns: u64,
+    /// Mean jitter — absolute deviation from target period (ns).
+    pub mean_jitter_ns: u64,
+    /// 50th percentile jitter (ns).
+    pub p50_jitter_ns: u64,
+    /// 95th percentile jitter (ns).
+    pub p95_jitter_ns: u64,
+    /// 99th percentile jitter (ns).
+    pub p99_jitter_ns: u64,
 }
 
 impl TimerReport {
@@ -322,12 +322,12 @@ impl TimerReport {
     pub const EMPTY: Self = Self {
         target_period_ns: 0,
         sample_count: 0,
-        min_ns: 0,
-        max_ns: 0,
-        mean_ns: 0,
-        p50_ns: 0,
-        p95_ns: 0,
-        p99_ns: 0,
+        min_jitter_ns: 0,
+        max_jitter_ns: 0,
+        mean_jitter_ns: 0,
+        p50_jitter_ns: 0,
+        p95_jitter_ns: 0,
+        p99_jitter_ns: 0,
     };
 }
 
@@ -562,9 +562,9 @@ mod tests {
         td.record_tick(Duration::from_micros(4000)); // exact 4ms → jitter = 0
         let report = td.tick_report();
         assert_eq!(report.sample_count, 1);
-        assert_eq!(report.min_ns, 0);
-        assert_eq!(report.max_ns, 0);
-        assert_eq!(report.mean_ns, 0);
+        assert_eq!(report.min_jitter_ns, 0);
+        assert_eq!(report.max_jitter_ns, 0);
+        assert_eq!(report.mean_jitter_ns, 0);
     }
 
     #[test]
@@ -577,9 +577,9 @@ mod tests {
         }
         let report = td.tick_report();
         assert_eq!(report.sample_count, 5);
-        assert_eq!(report.min_ns, 0);
-        assert_eq!(report.max_ns, 100_000);
-        assert_eq!(report.mean_ns, 60_000);
+        assert_eq!(report.min_jitter_ns, 0);
+        assert_eq!(report.max_jitter_ns, 100_000);
+        assert_eq!(report.mean_jitter_ns, 60_000);
         assert_eq!(report.target_period_ns, 4_000_000);
     }
 
@@ -595,9 +595,9 @@ mod tests {
         let report = td.tick_report();
         assert_eq!(report.sample_count, 100);
         // p99 index = (100*99)/100 = 99, which is the outlier jitter
-        assert_eq!(report.p99_ns, 4_000_000);
+        assert_eq!(report.p99_jitter_ns, 4_000_000);
         // p50 should be 0 (on-target ticks)
-        assert_eq!(report.p50_ns, 0);
+        assert_eq!(report.p50_jitter_ns, 0);
     }
 
     #[test]
@@ -613,8 +613,8 @@ mod tests {
         }
         let report = td.tick_report();
         // Ring should now contain only the 1ms jitter values
-        assert_eq!(report.p99_ns, 1_000_000);
-        assert_eq!(report.p50_ns, 1_000_000);
+        assert_eq!(report.p99_jitter_ns, 1_000_000);
+        assert_eq!(report.p50_jitter_ns, 1_000_000);
     }
 
     #[test]
