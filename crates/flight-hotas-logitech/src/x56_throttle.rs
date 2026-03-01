@@ -107,9 +107,8 @@ fn normalize_8bit_unipolar(raw: u8) -> f32 {
 /// Byte  5:    SliderL[7:4] in bits 3:0, SliderR[3:0] in bits 7:4
 /// Byte  6:    SliderR[7:4] in bits 3:0, Buttons[3:0] in bits 7:4
 /// Bytes 7-9:  Buttons continued
-/// Byte 10:    Buttons[27:24] in lower nibble, Hat1[3:0] in upper nibble
-/// Byte 11:    Hat2[3:0] in lower nibble, padding
-/// Bytes 12-13: Padding
+/// Byte 10:    Hat1[3:0] in lower nibble, Hat2[3:0] in upper nibble
+/// Bytes 11-13: Padding
 /// ```
 ///
 /// Simplified (byte-aligned) layout used here:

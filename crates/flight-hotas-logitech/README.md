@@ -9,7 +9,10 @@ Logitech joystick driver for OpenFlight.
 | Logitech Extreme 3D Pro | 0x046D | 0xC215 | Tier 2 (parser tests) |
 | X56 Rhino Stick (Mad Catz) | 0x0738 | 0x2221 | Tier 2 (parser tests) |
 | X56 Rhino Throttle (Mad Catz) | 0x0738 | 0xA221 | Tier 2 (parser tests) |
+| X56 RGB Stick (Logitech) | 0x06A3 | 0x0C59 | Tier 2 (parser tests) |
+| X56 RGB Throttle (Logitech) | 0x06A3 | 0x0C5B | Tier 2 (parser tests) |
 | Saitek Pro Flight Rudder Pedals | 0x06A3 | 0x0763 | Tier 2 (parser tests) |
+| Logitech Flight Rudder Pedals | 0x046D | 0xC264 | Tier 2 (parser tests) |
 | G Flight Yoke System | 0x046D | 0xC259 | Tier 2 (parser tests) |
 | G Flight Throttle Quadrant | 0x046D | 0xC25A | Tier 2 (parser tests) |
 | Flight System G940 | 0x046D | 0xC287 | Tier 2 (parser tests) |

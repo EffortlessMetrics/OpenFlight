@@ -13,7 +13,10 @@
 //! - Logitech G920 Racing Wheel (VID 0x046D, PID 0xC262)
 //! - X56 Rhino HOTAS — stick (VID 0x0738, PID 0x2221)
 //! - X56 Rhino HOTAS — throttle (VID 0x0738, PID 0xA221)
+//! - Logitech X56 RGB HOTAS — stick (VID 0x06A3, PID 0x0C59)
+//! - Logitech X56 RGB HOTAS — throttle (VID 0x06A3, PID 0x0C5B)
 //! - Saitek Pro Flight Rudder Pedals (VID 0x06A3, PID 0x0763)
+//! - Logitech Flight Rudder Pedals (VID 0x046D, PID 0xC264)
 //!
 //! # Architecture
 //!

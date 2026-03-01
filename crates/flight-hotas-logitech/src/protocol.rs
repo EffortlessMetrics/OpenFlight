@@ -572,6 +572,20 @@ mod tests {
     }
 
     #[test]
+    fn identify_x56_logitech_stick() {
+        let info = identify_device(SAITEK_VID, 0x0C59).unwrap();
+        assert_eq!(info.id, DeviceId::X56LogitechStick);
+        assert!(info.name.contains("X56"));
+    }
+
+    #[test]
+    fn identify_x56_logitech_throttle() {
+        let info = identify_device(SAITEK_VID, 0x0C5B).unwrap();
+        assert_eq!(info.id, DeviceId::X56LogitechThrottle);
+        assert!(info.name.contains("X56"));
+    }
+
+    #[test]
     fn device_table_has_no_duplicate_vid_pid() {
         for (i, a) in DEVICE_TABLE.iter().enumerate() {
             for b in &DEVICE_TABLE[i + 1..] {
