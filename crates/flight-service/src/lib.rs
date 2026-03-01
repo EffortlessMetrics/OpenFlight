@@ -100,9 +100,9 @@ pub use stecs_runtime::{
 };
 
 pub use orchestrator::{
-    AdapterEvent, BootSequence, CompiledProfile, DeviceEvent, OrchestratorError,
-    OrchestratorStatus, ServiceConfig, ServiceOrchestrator, SubsystemHandle, SubsystemHealth,
-    SubsystemStatus,
+    AdapterEvent, AdapterFlags, AdapterLifecycleState, BootSequence, CompiledProfile, DeviceEvent,
+    OrchestratorError, OrchestratorMetrics, OrchestratorStatus, ServiceConfig,
+    ServiceOrchestrator, SubsystemHandle, SubsystemHealth, SubsystemStatus,
 };
 pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
 pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};

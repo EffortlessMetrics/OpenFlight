@@ -17,7 +17,10 @@
 
 use std::collections::HashMap;
 use std::fmt;
-use std::time::Instant;
+use std::path::PathBuf;
+use std::time::{Duration, Instant};
+
+use crate::config_watcher::{ChangeType, ConfigWatcher};
 
 // ---------------------------------------------------------------------------
 // Boot sequence state machine
@@ -300,6 +303,20 @@ pub struct ServiceConfig {
     pub enable_watchdog: bool,
     /// Whether to enable simulator adapters.
     pub enable_adapters: bool,
+    /// Per-simulator adapter enable flags.
+    pub adapter_flags: AdapterFlags,
+    /// Optional path to the service configuration file for hot-reload.
+    pub config_path: Option<PathBuf>,
+}
+
+/// Per-simulator adapter enable flags.
+#[derive(Debug, Clone, Default)]
+pub struct AdapterFlags {
+    pub msfs: bool,
+    pub xplane: bool,
+    pub dcs: bool,
+    pub ac7: bool,
+    pub wingman: bool,
 }
 
 impl Default for ServiceConfig {
@@ -308,6 +325,14 @@ impl Default for ServiceConfig {
             shutdown_timeout_ms: 5_000,
             enable_watchdog: true,
             enable_adapters: true,
+            adapter_flags: AdapterFlags {
+                msfs: true,
+                xplane: true,
+                dcs: true,
+                ac7: true,
+                wingman: true,
+            },
+            config_path: None,
         }
     }
 }
@@ -321,6 +346,48 @@ impl Default for ServiceConfig {
 pub struct CompiledProfile {
     pub name: String,
     pub version: u64,
+    /// Number of axis pipelines included in this compiled profile.
+    pub axis_count: usize,
+    /// Simulator filter from the source profile (e.g. "msfs", "xplane").
+    pub sim_filter: Option<String>,
+    /// Aircraft filter from the source profile (e.g. "C172").
+    pub aircraft_filter: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// Orchestrator metrics
+// ---------------------------------------------------------------------------
+
+/// Aggregated metrics collected by the orchestrator.
+#[derive(Debug, Clone)]
+pub struct OrchestratorMetrics {
+    /// Total profile swaps performed since boot.
+    pub profile_swaps: u64,
+    /// Total device connect events.
+    pub device_connects: u64,
+    /// Total device disconnect events.
+    pub device_disconnects: u64,
+    /// Total adapter connect events.
+    pub adapter_connects: u64,
+    /// Total adapter disconnect events.
+    pub adapter_disconnects: u64,
+    /// Total config-reload attempts.
+    pub config_reloads: u64,
+    /// Total subsystem restarts.
+    pub subsystem_restarts: u64,
+    /// Per-adapter state map.
+    pub adapter_states: HashMap<String, AdapterLifecycleState>,
+    /// Orchestrator uptime since last start.
+    pub uptime: Option<Duration>,
+}
+
+/// Lifecycle state of a single simulator adapter tracked by the orchestrator.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AdapterLifecycleState {
+    Disabled,
+    Stopped,
+    Running,
+    Error(String),
 }
 
 // ---------------------------------------------------------------------------
@@ -347,6 +414,25 @@ pub struct ServiceOrchestrator {
     profile_version: u64,
     connected_devices: HashMap<String, String>,
     connected_sims: Vec<String>,
+    /// Per-adapter lifecycle state.
+    adapter_states: HashMap<String, AdapterLifecycleState>,
+    /// Config watcher for hot-reload.
+    config_watcher: Option<ConfigWatcher>,
+    /// Cumulative counters.
+    metrics: InternalMetrics,
+    /// Instant when the orchestrator entered `Running`.
+    started_at: Option<Instant>,
+}
+
+/// Internal mutable counters.
+struct InternalMetrics {
+    profile_swaps: u64,
+    device_connects: u64,
+    device_disconnects: u64,
+    adapter_connects: u64,
+    adapter_disconnects: u64,
+    config_reloads: u64,
+    subsystem_restarts: u64,
 }
 
 impl ServiceOrchestrator {
@@ -377,6 +463,16 @@ impl ServiceOrchestrator {
             boot_order.push(SUBSYSTEM_WATCHDOG.to_string());
         }
 
+        // Initialise per-adapter lifecycle states from flags.
+        let adapter_states = Self::init_adapter_states(&config);
+
+        // Set up config watcher if a config path was provided.
+        let config_watcher = config.config_path.as_ref().map(|path| {
+            let mut watcher = ConfigWatcher::new(Duration::from_secs(2));
+            watcher.watch(path);
+            watcher
+        });
+
         Self {
             config,
             phase: BootSequence::Initializing,
@@ -386,7 +482,68 @@ impl ServiceOrchestrator {
             profile_version: 0,
             connected_devices: HashMap::new(),
             connected_sims: Vec::new(),
+            adapter_states,
+            config_watcher,
+            metrics: InternalMetrics {
+                profile_swaps: 0,
+                device_connects: 0,
+                device_disconnects: 0,
+                adapter_connects: 0,
+                adapter_disconnects: 0,
+                config_reloads: 0,
+                subsystem_restarts: 0,
+            },
+            started_at: None,
         }
+    }
+
+    /// Build a new orchestrator from a [`FlightServiceConfig`](crate::FlightServiceConfig).
+    ///
+    /// This bridges the service-level config to the orchestrator, extracting
+    /// adapter enable flags and config-file path.
+    pub fn from_service_config(
+        svc: &crate::service::FlightServiceConfig,
+        config_path: Option<PathBuf>,
+    ) -> Self {
+        let cfg = ServiceConfig {
+            shutdown_timeout_ms: 5_000,
+            enable_watchdog: true,
+            enable_adapters: true,
+            adapter_flags: AdapterFlags {
+                msfs: svc.auto_switch_config.adapters.enable_msfs,
+                xplane: svc.auto_switch_config.adapters.enable_xplane,
+                dcs: svc.auto_switch_config.adapters.enable_dcs,
+                ac7: svc.auto_switch_config.adapters.enable_ac7,
+                wingman: svc.auto_switch_config.adapters.enable_wingman,
+            },
+            config_path,
+        };
+        Self::new(cfg)
+    }
+
+    fn init_adapter_states(config: &ServiceConfig) -> HashMap<String, AdapterLifecycleState> {
+        let mut states = HashMap::new();
+        if !config.enable_adapters {
+            return states;
+        }
+        let flags = [
+            ("msfs", config.adapter_flags.msfs),
+            ("xplane", config.adapter_flags.xplane),
+            ("dcs", config.adapter_flags.dcs),
+            ("ac7", config.adapter_flags.ac7),
+            ("wingman", config.adapter_flags.wingman),
+        ];
+        for (name, enabled) in flags {
+            states.insert(
+                name.to_string(),
+                if enabled {
+                    AdapterLifecycleState::Stopped
+                } else {
+                    AdapterLifecycleState::Disabled
+                },
+            );
+        }
+        states
     }
 
     // -- lifecycle -----------------------------------------------------------
@@ -420,6 +577,18 @@ impl ServiceOrchestrator {
         }
 
         self.transition(BootSequence::Running)?;
+        self.started_at = Some(Instant::now());
+
+        // Mark enabled adapters as Running after the adapters subsystem starts.
+        if self.config.enable_adapters {
+            for (name, state) in &mut self.adapter_states {
+                if *state == AdapterLifecycleState::Stopped {
+                    *state = AdapterLifecycleState::Running;
+                    let _ = name; // used for logging in production
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -442,6 +611,15 @@ impl ServiceOrchestrator {
         }
 
         self.phase = BootSequence::Stopped;
+
+        // Reset adapter states to Stopped (keep Disabled as-is).
+        for state in self.adapter_states.values_mut() {
+            if *state != AdapterLifecycleState::Disabled {
+                *state = AdapterLifecycleState::Stopped;
+            }
+        }
+        self.started_at = None;
+
         Ok(())
     }
 
@@ -503,8 +681,41 @@ impl ServiceOrchestrator {
         let compiled = CompiledProfile {
             name: profile_name.to_string(),
             version: self.profile_version,
+            axis_count: 0,
+            sim_filter: None,
+            aircraft_filter: None,
         };
         self.active_profile = Some(compiled.clone());
+        self.metrics.profile_swaps += 1;
+        Ok(compiled)
+    }
+
+    /// Compile and swap a full [`Profile`](flight_core::profile::Profile).
+    ///
+    /// Populates the compiled profile with axis count, sim, and aircraft
+    /// metadata from the source profile.
+    pub fn handle_profile_update(
+        &mut self,
+        profile: &flight_core::profile::Profile,
+    ) -> Result<CompiledProfile, OrchestratorError> {
+        if self.phase != BootSequence::Running {
+            return Err(OrchestratorError::NotRunning);
+        }
+
+        self.profile_version += 1;
+        let compiled = CompiledProfile {
+            name: profile
+                .aircraft
+                .as_ref()
+                .map(|a| a.icao.clone())
+                .unwrap_or_else(|| "default".to_string()),
+            version: self.profile_version,
+            axis_count: profile.axes.len(),
+            sim_filter: profile.sim.clone(),
+            aircraft_filter: profile.aircraft.as_ref().map(|a| a.icao.clone()),
+        };
+        self.active_profile = Some(compiled.clone());
+        self.metrics.profile_swaps += 1;
         Ok(compiled)
     }
 
@@ -527,9 +738,11 @@ impl ServiceOrchestrator {
                 device_type,
             } => {
                 self.connected_devices.insert(device_id, device_type);
+                self.metrics.device_connects += 1;
             }
             DeviceEvent::Disconnected { device_id } => {
                 self.connected_devices.remove(&device_id);
+                self.metrics.device_disconnects += 1;
             }
         }
         Ok(())
@@ -549,13 +762,26 @@ impl ServiceOrchestrator {
         }
 
         match event {
-            AdapterEvent::SimConnected { sim_name } => {
-                if !self.connected_sims.contains(&sim_name) {
-                    self.connected_sims.push(sim_name);
+            AdapterEvent::SimConnected { ref sim_name } => {
+                if !self.connected_sims.contains(sim_name) {
+                    self.connected_sims.push(sim_name.clone());
+                    self.metrics.adapter_connects += 1;
+                    // Update per-adapter lifecycle if we recognise the sim name.
+                    let key = sim_name.to_lowercase();
+                    if let Some(state) = self.adapter_states.get_mut(&key) {
+                        *state = AdapterLifecycleState::Running;
+                    }
                 }
             }
-            AdapterEvent::SimDisconnected { sim_name } => {
-                self.connected_sims.retain(|s| s != &sim_name);
+            AdapterEvent::SimDisconnected { ref sim_name } => {
+                self.connected_sims.retain(|s| s != sim_name);
+                self.metrics.adapter_disconnects += 1;
+                let key = sim_name.to_lowercase();
+                if let Some(state) = self.adapter_states.get_mut(&key)
+                    && *state != AdapterLifecycleState::Disabled
+                {
+                    *state = AdapterLifecycleState::Stopped;
+                }
             }
             AdapterEvent::DataReceived { .. } => {
                 // Handled by the adapter subsystem itself.
@@ -581,7 +807,9 @@ impl ServiceOrchestrator {
         if handle.is_running() {
             handle.stop().ok();
         }
-        handle.start()
+        handle.start()?;
+        self.metrics.subsystem_restarts += 1;
+        Ok(())
     }
 
     /// Record an error against a specific subsystem.
@@ -621,6 +849,132 @@ impl ServiceOrchestrator {
     /// The orchestrator configuration.
     pub fn config(&self) -> &ServiceConfig {
         &self.config
+    }
+
+    // -- metrics -------------------------------------------------------------
+
+    /// Collect an aggregated metrics snapshot.
+    pub fn metrics(&self) -> OrchestratorMetrics {
+        OrchestratorMetrics {
+            profile_swaps: self.metrics.profile_swaps,
+            device_connects: self.metrics.device_connects,
+            device_disconnects: self.metrics.device_disconnects,
+            adapter_connects: self.metrics.adapter_connects,
+            adapter_disconnects: self.metrics.adapter_disconnects,
+            config_reloads: self.metrics.config_reloads,
+            subsystem_restarts: self.metrics.subsystem_restarts,
+            adapter_states: self.adapter_states.clone(),
+            uptime: self.started_at.map(|t| t.elapsed()),
+        }
+    }
+
+    // -- per-adapter lifecycle -----------------------------------------------
+
+    /// Start a named adapter. Only transitions `Stopped → Running`.
+    pub fn start_adapter(&mut self, adapter: &str) -> Result<(), OrchestratorError> {
+        let state = self
+            .adapter_states
+            .get_mut(adapter)
+            .ok_or_else(|| OrchestratorError::SubsystemNotFound(adapter.to_string()))?;
+        match state {
+            AdapterLifecycleState::Disabled => Err(OrchestratorError::SubsystemStartFailed {
+                name: adapter.to_string(),
+                reason: "adapter is disabled in config".to_string(),
+            }),
+            AdapterLifecycleState::Running => Err(OrchestratorError::SubsystemAlreadyRunning(
+                adapter.to_string(),
+            )),
+            AdapterLifecycleState::Stopped | AdapterLifecycleState::Error(_) => {
+                *state = AdapterLifecycleState::Running;
+                self.metrics.adapter_connects += 1;
+                Ok(())
+            }
+        }
+    }
+
+    /// Stop a named adapter. Only transitions `Running → Stopped`.
+    pub fn stop_adapter(&mut self, adapter: &str) -> Result<(), OrchestratorError> {
+        let state = self
+            .adapter_states
+            .get_mut(adapter)
+            .ok_or_else(|| OrchestratorError::SubsystemNotFound(adapter.to_string()))?;
+        match state {
+            AdapterLifecycleState::Running | AdapterLifecycleState::Error(_) => {
+                *state = AdapterLifecycleState::Stopped;
+                self.metrics.adapter_disconnects += 1;
+                Ok(())
+            }
+            _ => Err(OrchestratorError::SubsystemNotRunning(
+                adapter.to_string(),
+            )),
+        }
+    }
+
+    /// Record an error against a named adapter.
+    pub fn record_adapter_error(&mut self, adapter: &str, error: &str) {
+        if let Some(state) = self.adapter_states.get_mut(adapter) {
+            *state = AdapterLifecycleState::Error(error.to_string());
+        }
+    }
+
+    /// Current per-adapter lifecycle states.
+    pub fn adapter_states(&self) -> &HashMap<String, AdapterLifecycleState> {
+        &self.adapter_states
+    }
+
+    // -- config hot-reload ---------------------------------------------------
+
+    /// Poll the config watcher and return paths that changed since last check.
+    pub fn poll_config_changes(&mut self) -> Vec<PathBuf> {
+        let watcher = match self.config_watcher.as_mut() {
+            Some(w) => w,
+            None => return Vec::new(),
+        };
+        let changes = watcher.check_for_changes();
+        let mut paths = Vec::new();
+        for change in changes {
+            if change.change_type != ChangeType::Deleted {
+                paths.push(change.path);
+            }
+        }
+        if !paths.is_empty() {
+            self.metrics.config_reloads += 1;
+        }
+        paths
+    }
+
+    /// Apply a new [`ServiceConfig`] at runtime (e.g. after a config reload).
+    ///
+    /// Updates adapter enable flags and propagates changes to per-adapter
+    /// lifecycle states without restarting the orchestrator.
+    pub fn apply_config_update(&mut self, new_config: ServiceConfig) {
+        self.config = new_config;
+        let updated = Self::init_adapter_states(&self.config);
+        // Build a list of mutations to avoid conflicting borrows.
+        let mutations: Vec<(String, AdapterLifecycleState)> = updated
+            .iter()
+            .filter_map(|(name, desired)| {
+                match self.adapter_states.get(name) {
+                    Some(current) => {
+                        if *desired == AdapterLifecycleState::Disabled
+                            && *current != AdapterLifecycleState::Disabled
+                        {
+                            return Some((name.clone(), AdapterLifecycleState::Disabled));
+                        }
+                        if *desired != AdapterLifecycleState::Disabled
+                            && *current == AdapterLifecycleState::Disabled
+                        {
+                            return Some((name.clone(), AdapterLifecycleState::Stopped));
+                        }
+                        None
+                    }
+                    None => Some((name.clone(), desired.clone())),
+                }
+            })
+            .collect();
+        for (name, state) in mutations {
+            self.adapter_states.insert(name, state);
+        }
     }
 
     // -- internal helpers ----------------------------------------------------
@@ -1197,10 +1551,16 @@ mod tests {
         let a = CompiledProfile {
             name: "a".into(),
             version: 1,
+            axis_count: 0,
+            sim_filter: None,
+            aircraft_filter: None,
         };
         let b = CompiledProfile {
             name: "a".into(),
             version: 1,
+            axis_count: 0,
+            sim_filter: None,
+            aircraft_filter: None,
         };
         assert_eq!(a, b);
     }
@@ -1269,6 +1629,286 @@ mod tests {
         // Nothing should be running
         for name in orch.boot_order() {
             assert!(!orch.subsystem(name).unwrap().is_running());
+        }
+    }
+
+    // -- metrics population --------------------------------------------------
+
+    #[test]
+    fn metrics_start_at_zero() {
+        let orch = default_orchestrator();
+        let m = orch.metrics();
+        assert_eq!(m.profile_swaps, 0);
+        assert_eq!(m.device_connects, 0);
+        assert_eq!(m.device_disconnects, 0);
+        assert_eq!(m.adapter_connects, 0);
+        assert_eq!(m.adapter_disconnects, 0);
+        assert_eq!(m.config_reloads, 0);
+        assert_eq!(m.subsystem_restarts, 0);
+        assert!(m.uptime.is_none());
+    }
+
+    #[test]
+    fn metrics_populated_after_events() {
+        let mut orch = started_orchestrator();
+
+        orch.handle_profile_change("p1").unwrap();
+        orch.handle_profile_change("p2").unwrap();
+
+        orch.handle_device_change(DeviceEvent::Connected {
+            device_id: "js-1".into(),
+            device_type: "joystick".into(),
+        })
+        .unwrap();
+        orch.handle_device_change(DeviceEvent::Disconnected {
+            device_id: "js-1".into(),
+        })
+        .unwrap();
+
+        orch.handle_adapter_event(AdapterEvent::SimConnected {
+            sim_name: "msfs".into(),
+        })
+        .unwrap();
+        orch.handle_adapter_event(AdapterEvent::SimDisconnected {
+            sim_name: "msfs".into(),
+        })
+        .unwrap();
+
+        orch.restart_subsystem(SUBSYSTEM_BUS).unwrap();
+
+        let m = orch.metrics();
+        assert_eq!(m.profile_swaps, 2);
+        assert_eq!(m.device_connects, 1);
+        assert_eq!(m.device_disconnects, 1);
+        assert_eq!(m.adapter_connects, 1);
+        assert_eq!(m.adapter_disconnects, 1);
+        assert_eq!(m.subsystem_restarts, 1);
+        assert!(m.uptime.is_some());
+    }
+
+    // -- per-adapter lifecycle -----------------------------------------------
+
+    #[test]
+    fn adapter_states_initialised_from_flags() {
+        let cfg = ServiceConfig {
+            adapter_flags: AdapterFlags {
+                msfs: true,
+                xplane: false,
+                dcs: true,
+                ac7: false,
+                wingman: true,
+            },
+            ..ServiceConfig::default()
+        };
+        let orch = ServiceOrchestrator::new(cfg);
+        let states = orch.adapter_states();
+        assert_eq!(states["msfs"], AdapterLifecycleState::Stopped);
+        assert_eq!(states["xplane"], AdapterLifecycleState::Disabled);
+        assert_eq!(states["dcs"], AdapterLifecycleState::Stopped);
+        assert_eq!(states["ac7"], AdapterLifecycleState::Disabled);
+        assert_eq!(states["wingman"], AdapterLifecycleState::Stopped);
+    }
+
+    #[test]
+    fn adapter_states_running_after_start() {
+        let mut orch = default_orchestrator();
+        orch.start().unwrap();
+        for (_, state) in orch.adapter_states() {
+            // All enabled by default → should be Running.
+            assert_eq!(*state, AdapterLifecycleState::Running);
+        }
+    }
+
+    #[test]
+    fn adapter_start_stop_lifecycle() {
+        let mut orch = started_orchestrator();
+        // Stop the msfs adapter
+        orch.stop_adapter("msfs").unwrap();
+        assert_eq!(
+            orch.adapter_states()["msfs"],
+            AdapterLifecycleState::Stopped
+        );
+
+        // Restart it
+        orch.start_adapter("msfs").unwrap();
+        assert_eq!(
+            orch.adapter_states()["msfs"],
+            AdapterLifecycleState::Running
+        );
+    }
+
+    #[test]
+    fn adapter_error_and_restart() {
+        let mut orch = started_orchestrator();
+        orch.record_adapter_error("dcs", "connection timed out");
+        assert!(matches!(
+            orch.adapter_states()["dcs"],
+            AdapterLifecycleState::Error(_)
+        ));
+
+        // Can restart from Error state
+        orch.start_adapter("dcs").unwrap();
+        assert_eq!(orch.adapter_states()["dcs"], AdapterLifecycleState::Running);
+    }
+
+    #[test]
+    fn start_disabled_adapter_fails() {
+        let cfg = ServiceConfig {
+            adapter_flags: AdapterFlags {
+                msfs: false,
+                ..AdapterFlags::default()
+            },
+            ..ServiceConfig::default()
+        };
+        let mut orch = ServiceOrchestrator::new(cfg);
+        orch.start().unwrap();
+
+        let err = orch.start_adapter("msfs").unwrap_err();
+        assert!(matches!(
+            err,
+            OrchestratorError::SubsystemStartFailed { .. }
+        ));
+    }
+
+    // -- config watcher integration ------------------------------------------
+
+    #[test]
+    fn config_watcher_created_when_path_provided() {
+        let dir = tempfile::tempdir().unwrap();
+        let cfg_path = dir.path().join("service.json");
+        std::fs::write(&cfg_path, "{}").unwrap();
+
+        let cfg = ServiceConfig {
+            config_path: Some(cfg_path.clone()),
+            ..ServiceConfig::default()
+        };
+        let mut orch = ServiceOrchestrator::new(cfg);
+
+        // First poll primes the state — may or may not detect a change
+        // depending on mtime resolution, so just capture the baseline.
+        let _ = orch.poll_config_changes();
+        let baseline = orch.metrics().config_reloads;
+
+        // Modify the file
+        std::fs::write(&cfg_path, "{\"updated\":true}").unwrap();
+        let changed = orch.poll_config_changes();
+        assert!(!changed.is_empty(), "should detect config file change");
+        assert_eq!(orch.metrics().config_reloads, baseline + 1);
+    }
+
+    #[test]
+    fn poll_config_changes_empty_without_path() {
+        let mut orch = default_orchestrator();
+        let changed = orch.poll_config_changes();
+        assert!(changed.is_empty());
+    }
+
+    // -- apply_config_update -------------------------------------------------
+
+    #[test]
+    fn apply_config_update_toggles_adapters() {
+        let mut orch = started_orchestrator();
+        // All enabled and Running after start
+        assert_eq!(
+            orch.adapter_states()["xplane"],
+            AdapterLifecycleState::Running
+        );
+
+        // Disable xplane via config update
+        let mut new_cfg = orch.config().clone();
+        new_cfg.adapter_flags.xplane = false;
+        orch.apply_config_update(new_cfg);
+        assert_eq!(
+            orch.adapter_states()["xplane"],
+            AdapterLifecycleState::Disabled
+        );
+
+        // Re-enable → goes to Stopped (not Running; needs explicit start)
+        let mut new_cfg2 = orch.config().clone();
+        new_cfg2.adapter_flags.xplane = true;
+        orch.apply_config_update(new_cfg2);
+        assert_eq!(
+            orch.adapter_states()["xplane"],
+            AdapterLifecycleState::Stopped
+        );
+    }
+
+    // -- from_service_config -------------------------------------------------
+
+    #[test]
+    fn from_service_config_maps_adapter_flags() {
+        use crate::service::FlightServiceConfig;
+
+        let mut svc_cfg = FlightServiceConfig::default();
+        svc_cfg.auto_switch_config.adapters.enable_msfs = false;
+        svc_cfg.auto_switch_config.adapters.enable_dcs = false;
+
+        let orch = ServiceOrchestrator::from_service_config(&svc_cfg, None);
+        assert!(!orch.config().adapter_flags.msfs);
+        assert!(orch.config().adapter_flags.xplane);
+        assert!(!orch.config().adapter_flags.dcs);
+    }
+
+    // -- handle_profile_update with real Profile -----------------------------
+
+    #[test]
+    fn handle_profile_update_populates_fields() {
+        use flight_core::profile::{AircraftId, AxisConfig, Profile};
+
+        let mut orch = started_orchestrator();
+        let mut axes = HashMap::new();
+        axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.03),
+                expo: None,
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        axes.insert(
+            "roll".to_string(),
+            AxisConfig {
+                deadzone: Some(0.05),
+                expo: None,
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        let profile = Profile {
+            schema: "flight.profile/1".to_string(),
+            sim: Some("msfs".to_string()),
+            aircraft: Some(AircraftId { icao: "C172".to_string() }),
+            axes,
+            pof_overrides: None,
+        };
+
+        let compiled = orch.handle_profile_update(&profile).unwrap();
+        assert_eq!(compiled.name, "C172");
+        assert_eq!(compiled.axis_count, 2);
+        assert_eq!(compiled.sim_filter, Some("msfs".to_string()));
+        assert_eq!(compiled.aircraft_filter, Some("C172".to_string()));
+        assert_eq!(compiled.version, 1);
+        assert_eq!(orch.metrics().profile_swaps, 1);
+    }
+
+    // -- adapter states reset on stop ----------------------------------------
+
+    #[test]
+    fn adapter_states_reset_on_stop() {
+        let mut orch = started_orchestrator();
+        // All adapters should be Running
+        for (_, state) in orch.adapter_states() {
+            assert_eq!(*state, AdapterLifecycleState::Running);
+        }
+        orch.stop().unwrap();
+        // All should be Stopped
+        for (_, state) in orch.adapter_states() {
+            assert_eq!(*state, AdapterLifecycleState::Stopped);
         }
     }
 }
