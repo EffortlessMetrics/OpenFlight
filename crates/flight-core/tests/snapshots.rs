@@ -115,7 +115,12 @@ use flight_core::circuit_breaker::{CircuitBreaker, CircuitBreakerConfig};
 use std::time::Duration;
 
 fn trace_cb(cb: &CircuitBreaker) -> String {
-    format!("state={:?} failures={}", cb.state(), cb.failure_count())
+    format!(
+        "state={:?} failures={} total_calls={}",
+        cb.state(),
+        cb.failure_count(),
+        cb.total_calls(),
+    )
 }
 
 #[test]
@@ -123,7 +128,7 @@ fn snapshot_circuit_breaker_lifecycle() {
     let cfg = CircuitBreakerConfig {
         failure_threshold: 3,
         success_threshold: 2,
-        timeout: Duration::from_secs(10),
+        timeout: Duration::from_millis(500),
     };
     let mut cb = CircuitBreaker::new(cfg);
     let mut trace = Vec::new();
@@ -160,7 +165,7 @@ fn snapshot_circuit_breaker_lifecycle() {
     ));
 
     // Wait for timeout → HalfOpen
-    std::thread::sleep(Duration::from_millis(20));
+    std::thread::sleep(Duration::from_millis(600));
     let result = cb.call_allowed();
     trace.push(format!(
         "after timeout: result={:?} {}",
@@ -188,7 +193,7 @@ fn snapshot_circuit_breaker_half_open_failure() {
     let cfg = CircuitBreakerConfig {
         failure_threshold: 1,
         success_threshold: 2,
-        timeout: Duration::from_millis(10),
+        timeout: Duration::from_millis(500),
     };
     let mut cb = CircuitBreaker::new(cfg);
     let mut trace = Vec::new();
@@ -199,7 +204,7 @@ fn snapshot_circuit_breaker_half_open_failure() {
     cb.record_failure();
     trace.push(format!("after failure (open): {}", trace_cb(&cb)));
 
-    std::thread::sleep(Duration::from_millis(20));
+    std::thread::sleep(Duration::from_millis(600));
     cb.call_allowed();
     trace.push(format!("after timeout (half-open): {}", trace_cb(&cb)));
 
