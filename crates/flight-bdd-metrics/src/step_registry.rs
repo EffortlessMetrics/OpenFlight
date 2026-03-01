@@ -31,7 +31,7 @@ impl StepContext {
     pub fn set<T: Send + Sync + 'static>(&self, key: &str, value: T) {
         self.data
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .insert(key.to_string(), Arc::new(value));
     }
 
@@ -41,7 +41,7 @@ impl StepContext {
     pub fn get<T: Send + Sync + 'static>(&self, key: &str) -> Option<Arc<T>> {
         self.data
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .get(key)
             .and_then(|v| Arc::clone(v).downcast::<T>().ok())
     }
@@ -53,12 +53,12 @@ impl StepContext {
 
     /// Check whether `key` exists in the context.
     pub fn contains(&self, key: &str) -> bool {
-        self.data.lock().unwrap().contains_key(key)
+        self.data.lock().unwrap_or_else(|e| e.into_inner()).contains_key(key)
     }
 
     /// Remove all stored data (called between scenarios).
     pub fn clear(&self) {
-        self.data.lock().unwrap().clear();
+        self.data.lock().unwrap_or_else(|e| e.into_inner()).clear();
     }
 }
 

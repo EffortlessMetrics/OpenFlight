@@ -10,7 +10,7 @@
 //! - Merged-profile assertions
 
 use crate::step_registry::{StepOutcome, StepRegistry};
-use flight_profile::{AxisConfig, Profile};
+use flight_profile::{AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use std::collections::HashMap;
 
 /// Helper to build a default profile with the given number of axes.
@@ -31,7 +31,7 @@ fn make_profile(num_axes: usize) -> Profile {
         );
     }
     Profile {
-        schema: "flight.profile/1".to_string(),
+        schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: None,
         aircraft: None,
         axes,
@@ -71,7 +71,7 @@ pub fn register(registry: &mut StepRegistry) {
         |ctx, caps| {
             let name = &caps[1];
             let mut overlay = Profile {
-                schema: "flight.profile/1".to_string(),
+                schema: PROFILE_SCHEMA_VERSION.to_string(),
                 sim: Some("msfs".to_string()),
                 aircraft: Some(flight_profile::AircraftId {
                     icao: name.to_string(),
@@ -184,13 +184,13 @@ mod tests {
     #[test]
     fn create_global_profile() {
         let reg = registry();
-        let s = parse_scenario("create_profile", "Given a global profile with 3 axes");
+        let s = parse_scenario("create_profile", "Given a global profile with 3 axes").unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
 
     #[test]
-    fn merge_profiles_adds_overlay_axes() {
+    fn merge_profiles_preserves_axis_count() {
         let reg = registry();
         let text = r#"
             Given a global profile with 3 axes
@@ -198,7 +198,7 @@ mod tests {
             When profiles are merged
             Then the merged profile should have 3 axes
         "#;
-        let s = parse_scenario("merge", text);
+        let s = parse_scenario("merge", text).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -212,7 +212,7 @@ mod tests {
             When profiles are merged
             Then axis "pitch" should have deadzone 0.08
         "#;
-        let s = parse_scenario("dz_override", text);
+        let s = parse_scenario("dz_override", text).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -226,7 +226,7 @@ mod tests {
             When profiles are merged
             Then axis "roll" should have deadzone 0.03
         "#;
-        let s = parse_scenario("dz_base", text);
+        let s = parse_scenario("dz_base", text).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }

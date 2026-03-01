@@ -96,7 +96,9 @@ pub fn run_scenario(scenario: &Scenario, registry: &StepRegistry) -> ScenarioRes
         });
     }
 
-    let status = if failed {
+    let status = if step_results.is_empty() {
+        ScenarioStatus::Failed
+    } else if failed {
         ScenarioStatus::Failed
     } else if step_results.iter().all(|r| r.outcome.is_passed()) {
         ScenarioStatus::Passed
@@ -139,11 +141,14 @@ fn execute_step(step: &Step, registry: &StepRegistry, ctx: &StepContext) -> Step
 ///
 /// Recognises lines starting with `Given`, `When`, `Then`, `And`, `But`.
 /// `And`/`But` inherit the keyword of the preceding step.
-pub fn parse_scenario(name: &str, text: &str) -> Scenario {
+///
+/// Returns an error if any non-blank, non-comment line is not a recognised
+/// Gherkin keyword.
+pub fn parse_scenario(name: &str, text: &str) -> Result<Scenario, String> {
     let mut steps = Vec::new();
     let mut last_keyword: Option<StepKeyword> = None;
 
-    for line in text.lines() {
+    for (line_no, line) in text.lines().enumerate() {
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("Scenario") {
             continue;
@@ -160,7 +165,11 @@ pub fn parse_scenario(name: &str, text: &str) -> Scenario {
         } else if let Some(rest) = trimmed.strip_prefix("But ") {
             (last_keyword.unwrap_or(StepKeyword::Given), rest)
         } else {
-            continue;
+            return Err(format!(
+                "unrecognised line {} in scenario '{}': {trimmed}",
+                line_no + 1,
+                name,
+            ));
         };
 
         last_keyword = Some(keyword);
@@ -170,10 +179,10 @@ pub fn parse_scenario(name: &str, text: &str) -> Scenario {
         });
     }
 
-    Scenario {
+    Ok(Scenario {
         name: name.to_string(),
         steps,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -187,7 +196,7 @@ mod tests {
             When it is doubled
             Then the result is 2
         "#;
-        let scenario = parse_scenario("double", text);
+        let scenario = parse_scenario("double", text).unwrap();
         assert_eq!(scenario.steps.len(), 3);
         assert_eq!(scenario.steps[0].keyword, StepKeyword::Given);
         assert_eq!(scenario.steps[0].text, "a value of 1");
@@ -205,7 +214,7 @@ mod tests {
             Then e
             And f
         "#;
-        let scenario = parse_scenario("and_test", text);
+        let scenario = parse_scenario("and_test", text).unwrap();
         assert_eq!(scenario.steps.len(), 6);
         assert_eq!(scenario.steps[1].keyword, StepKeyword::Given);
         assert_eq!(scenario.steps[3].keyword, StepKeyword::When);
@@ -237,7 +246,7 @@ mod tests {
         let scenario = parse_scenario(
             "double",
             "Given a value of 3\nWhen it is doubled\nThen the result is 6",
-        );
+        ).unwrap();
         let result = run_scenario(&scenario, &reg);
         assert!(result.is_passed());
     }
@@ -252,7 +261,7 @@ mod tests {
         let scenario = parse_scenario(
             "fail_test",
             "Given setup\nWhen fail\nThen check",
-        );
+        ).unwrap();
         let result = run_scenario(&scenario, &reg);
         assert_eq!(result.status, ScenarioStatus::Failed);
         assert!(matches!(
@@ -264,7 +273,7 @@ mod tests {
     #[test]
     fn undefined_step_fails() {
         let reg = StepRegistry::new();
-        let scenario = parse_scenario("undef", "Given something undefined");
+        let scenario = parse_scenario("undef", "Given something undefined").unwrap();
         let result = run_scenario(&scenario, &reg);
         assert_eq!(result.status, ScenarioStatus::Failed);
         assert!(result.failures()[0]

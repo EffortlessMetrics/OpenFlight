@@ -148,7 +148,7 @@ mod tests {
         let s = parse_scenario(
             "dz_small",
             "Given an axis with deadzone 0.05\nWhen input 0.02 is processed\nThen output should be zero",
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "step results: {:?}", result.step_results);
     }
@@ -159,7 +159,7 @@ mod tests {
         let s = parse_scenario(
             "dz_large",
             "Given an axis with deadzone 0.05\nWhen input 1.0 is processed\nThen output should be 1.0 ±0.001",
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "step results: {:?}", result.step_results);
     }
@@ -170,7 +170,7 @@ mod tests {
         let s = parse_scenario(
             "dz_neg",
             "Given an axis with deadzone 0.1\nWhen input -0.05 is processed\nThen output should be zero",
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "step results: {:?}", result.step_results);
     }
@@ -181,7 +181,7 @@ mod tests {
         let s = parse_scenario(
             "engine_pass",
             "Given the axis engine is ready\nWhen input 0.75 is processed\nThen output should be 0.75 ±0.01",
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "step results: {:?}", result.step_results);
     }

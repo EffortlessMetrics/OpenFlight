@@ -205,7 +205,7 @@ mod tests {
             "connect",
             r#"Given a "Thrustmaster" "T.Flight HOTAS 4" is connected
 Then the device vendor ID should be 0x044F"#,
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -219,7 +219,7 @@ Then the device vendor ID should be 0x044F"#,
             r#"Given a "VKB" "Gladiator NXT EVO" is connected
 When the device sends HID report FF 7F 00 00 FF FF
 Then axis "X" should read 0.0 ±0.01"#,
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -234,7 +234,7 @@ Then axis "X" should read 0.0 ±0.01"#,
 When the device sends HID report 00 00 00 00 00 00 01
 Then button 1 should be pressed
 And button 2 should be released"#,
-        );
+        ).unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
