@@ -37,8 +37,15 @@ async fn start_mock_server() -> (flight_ipc::server::ServerHandle, String) {
     let addr: SocketAddr = "127.0.0.1:0".parse().unwrap();
     let handle = server.start(addr).await.expect("server should start");
     let url = format!("http://127.0.0.1:{}", handle.addr().port());
-    tokio::time::sleep(Duration::from_millis(30)).await;
-    (handle, url)
+
+    // Wait for server readiness by attempting to connect with retries.
+    for _ in 0..50 {
+        if GrpcClient::connect(url.clone()).await.is_ok() {
+            return (handle, url);
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    panic!("mock IPC server did not become ready after 50 attempts");
 }
 
 /// Connect a raw tonic client.
@@ -90,13 +97,21 @@ async fn start_server_with_health() -> (
             .await
     });
 
-    tokio::time::sleep(Duration::from_millis(30)).await;
+    tokio::time::sleep(Duration::from_millis(10)).await;
+
+    // Wait for server readiness by attempting to connect with retries.
+    let url = format!("http://127.0.0.1:{}", local_addr.port());
+    for _ in 0..50 {
+        if GrpcClient::connect(url.clone()).await.is_ok() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
 
     let handle = ManualServerHandle {
         shutdown_tx,
         join_handle,
     };
-    let url = format!("http://127.0.0.1:{}", local_addr.port());
     (handle, url, health_tx)
 }
 
@@ -573,7 +588,7 @@ async fn stream_cancellation_by_dropping_receiver() {
     handle.shutdown().await;
 }
 
-/// 3d. Stream ends when server shuts down.
+/// 3d. After server shutdown, no further health events are delivered.
 #[tokio::test]
 async fn stream_ends_on_server_shutdown() {
     let (handle, url, _health_tx) = start_server_with_health().await;
@@ -584,13 +599,22 @@ async fn stream_ends_on_server_shutdown() {
         .await
         .unwrap();
 
-    // Shut down the server
+    // Shut down the server and drop the client to close the connection.
     handle.shutdown().await;
+    drop(client);
 
-    // The stream should eventually close (recv returns None or errors)
-    let result = tokio::time::timeout(Duration::from_secs(2), rx.recv()).await;
-    // Either timeout or None — both indicate stream closure
-    assert!(result.is_err() || result.unwrap().is_none());
+    // Verify no further messages are delivered after shutdown.
+    // Ideally recv() returns None (clean stream close), but the internal streaming
+    // task may not detect the broken connection immediately, so a timeout with no
+    // message received is also acceptable.
+    let result = tokio::time::timeout(Duration::from_millis(500), rx.recv()).await;
+    match result {
+        Ok(None) => {} // stream closed cleanly
+        Err(_) => {}   // no message received within timeout — acceptable
+        Ok(Some(msg)) => panic!(
+            "expected no messages after shutdown, but received: {msg:?}"
+        ),
+    }
 }
 
 /// 3e. Backpressure: channel capacity is respected; server doesn't block.
@@ -712,6 +736,11 @@ async fn error_request_after_server_shutdown() {
 /// 4d. Connection to a server that doesn't exist fails with a clear error.
 #[tokio::test]
 async fn error_connection_to_nonexistent_server() {
+    // Use a dynamic port: bind, get the port, drop the listener, then try to connect.
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener);
+
     let tc = TransportConfig {
         connect_timeout: Duration::from_millis(200),
         retry_policy: RetryPolicy {
@@ -723,7 +752,7 @@ async fn error_connection_to_nonexistent_server() {
         ..TransportConfig::default()
     };
     let result =
-        IpcClient::connect_with_transport("http://127.0.0.1:19876", ClientConfig::default(), tc)
+        IpcClient::connect_with_transport(&format!("http://127.0.0.1:{port}"), ClientConfig::default(), tc)
             .await;
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
@@ -857,7 +886,8 @@ async fn concurrency_client_disconnect_during_stream() {
 async fn concurrency_server_shutdown_with_active_streams() {
     let (handle, url, _health_tx) = start_server_with_health().await;
 
-    // Open several streaming subscriptions
+    // Open several streaming subscriptions, keeping clients alive.
+    let mut clients = Vec::new();
     let mut receivers = Vec::new();
     for _ in 0..5 {
         let mut c = IpcClient::connect(&url).await.unwrap();
@@ -866,6 +896,7 @@ async fn concurrency_server_shutdown_with_active_streams() {
             .await
             .unwrap();
         receivers.push(rx);
+        clients.push(c);
     }
 
     // Shutdown should not hang or panic despite active streams
