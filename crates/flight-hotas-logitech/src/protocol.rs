@@ -84,6 +84,12 @@ pub struct DeviceInfo {
 pub const DEVICE_TABLE: &[DeviceInfo] = &[
     DeviceInfo {
         vid: SAITEK_VID,
+        pid: 0x0255,
+        id: DeviceId::X52,
+        name: "Saitek X52 Flight Control System (v1)",
+    },
+    DeviceInfo {
+        vid: SAITEK_VID,
         pid: 0x075C,
         id: DeviceId::X52,
         name: "Saitek X52 Flight Control System",
@@ -170,6 +176,71 @@ pub fn identify_device(vid: u16, pid: u16) -> Option<&'static DeviceInfo> {
 }
 
 // ── X52 / X52 Pro MFD display protocol ────────────────────────────────────────
+//
+// Source: nirenjan/libx52 (x52_commands.h, x52_control.c)
+//
+// The X52 Pro MFD is controlled via USB vendor control transfers, NOT HID
+// output reports. All commands use:
+//   bmRequestType = 0x40 (vendor, device, host-to-device)
+//   bRequest      = 0x91 (X52_VENDOR_REQUEST)
+//   wIndex        = command index
+//   wValue        = command value
+//   data          = none (zero-length data phase)
+
+/// USB vendor bRequest value for all X52 MFD/LED commands.
+///
+/// Source: libx52 `X52_VENDOR_REQUEST = 0x91`.
+pub const X52_VENDOR_REQUEST: u8 = 0x91;
+
+/// bmRequestType for X52 vendor commands (vendor, device, host-to-device).
+pub const X52_VENDOR_REQUEST_TYPE: u8 = 0x40;
+
+/// MFD line 1 index (clear = `| 0x08`, write = `| 0x00`).
+pub const X52_MFD_LINE1: u16 = 0x00D1;
+
+/// MFD line 2 index.
+pub const X52_MFD_LINE2: u16 = 0x00D2;
+
+/// MFD line 3 index.
+pub const X52_MFD_LINE3: u16 = 0x00D4;
+
+/// OR-mask applied to line index to select "clear line" sub-command.
+pub const X52_MFD_CLEAR_LINE: u16 = 0x0008;
+
+/// OR-mask applied to line index to select "write line" sub-command.
+pub const X52_MFD_WRITE_LINE: u16 = 0x0000;
+
+/// MFD brightness control index (wValue = 0..128).
+pub const X52_MFD_BRIGHTNESS: u16 = 0x00B1;
+
+/// LED brightness control index (wValue = 0..128).
+pub const X52_LED_BRIGHTNESS: u16 = 0x00B2;
+
+/// LED set command index (wValue = `state | (led_bit << 8)`).
+pub const X52_LED_CMD: u16 = 0x00B8;
+
+/// Shift indicator command index (wValue = 0x51 on, 0x50 off).
+pub const X52_SHIFT_INDICATOR: u16 = 0x00FD;
+
+/// Blink indicator command index (wValue = 0x51 on, 0x50 off).
+pub const X52_BLINK_INDICATOR: u16 = 0x00B4;
+
+/// Date DD-MM command index.
+pub const X52_DATE_DDMM: u16 = 0x00C4;
+
+/// Date year command index.
+pub const X52_DATE_YEAR: u16 = 0x00C8;
+
+/// Clock 1 (primary time) command index.
+pub const X52_TIME_CLOCK1: u16 = 0x00C0;
+
+/// Clock 2 offset command index.
+pub const X52_OFFS_CLOCK2: u16 = 0x00C1;
+
+/// Clock 3 offset command index.
+pub const X52_OFFS_CLOCK3: u16 = 0x00C2;
+
+// ── Legacy HID report constants (kept for backward compatibility) ──────────
 
 /// HID output report command byte for MFD text-line write.
 pub const MFD_CMD_LINE: u8 = 0xB4;
@@ -267,6 +338,152 @@ pub fn mfd_set_brightness(level: u8) -> [u8; 3] {
     [0x00, MFD_CMD_BRIGHTNESS, level.min(127)]
 }
 
+// ── X52 / X52 Pro vendor-command MFD protocol ──────────────────────────────────
+//
+// These functions build USB vendor control transfer descriptors that match
+// the libx52 protocol (nirenjan/libx52, x52_control.c).  Each returns
+// `(request_type, request, wValue, wIndex)` suitable for
+// `libusb_control_transfer`.
+
+/// Resolve the line index constant for a given MFD line number (0, 1, 2).
+const fn x52_mfd_line_index(line: u8) -> Option<u16> {
+    match line {
+        0 => Some(X52_MFD_LINE1),
+        1 => Some(X52_MFD_LINE2),
+        2 => Some(X52_MFD_LINE3),
+        _ => None,
+    }
+}
+
+/// Build a vendor command to clear a single MFD line.
+///
+/// Returns `None` if `line >= 3`.
+pub fn x52_mfd_clear_line(line: u8) -> Option<(u8, u8, u16, u16)> {
+    let idx = x52_mfd_line_index(line)?;
+    Some((
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        0x0000,
+        idx | X52_MFD_CLEAR_LINE,
+    ))
+}
+
+/// Build a sequence of vendor commands to write a 16-character text line to
+/// the MFD.
+///
+/// Returns `None` if `line >= 3`.  The returned vec contains:
+///   1. One clear-line command.
+///   2. Up to 8 write commands (2 characters per command).
+pub fn x52_mfd_write_line(line: u8, text: &str) -> Option<Vec<(u8, u8, u16, u16)>> {
+    let idx = x52_mfd_line_index(line)?;
+    let encoded = mfd_encode_text(text);
+    let mut cmds = Vec::with_capacity(9);
+    // Clear the line first.
+    cmds.push((
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        0x0000,
+        idx | X52_MFD_CLEAR_LINE,
+    ));
+    // Write 2 characters at a time (LSB = char 0, MSB = char 1).
+    for pair in encoded.chunks(2) {
+        let lo = pair[0] as u16;
+        let hi = if pair.len() > 1 { pair[1] as u16 } else { b' ' as u16 };
+        let w_value = lo | (hi << 8);
+        cmds.push((
+            X52_VENDOR_REQUEST_TYPE,
+            X52_VENDOR_REQUEST,
+            w_value,
+            idx | X52_MFD_WRITE_LINE,
+        ));
+    }
+    Some(cmds)
+}
+
+/// Build a vendor command to set MFD display brightness.
+///
+/// `level` is clamped to 0–128 (libx52 maximum).
+pub fn x52_mfd_set_brightness(level: u8) -> (u8, u8, u16, u16) {
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        level.min(128) as u16,
+        X52_MFD_BRIGHTNESS,
+    )
+}
+
+/// Build a vendor command to set LED panel brightness.
+///
+/// `level` is clamped to 0–128.
+pub fn x52_led_set_brightness(level: u8) -> (u8, u8, u16, u16) {
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        level.min(128) as u16,
+        X52_LED_BRIGHTNESS,
+    )
+}
+
+/// Build a vendor command to set the X52 primary clock (Clock 1).
+///
+/// `hour` (0–23), `minute` (0–59).  `h24` selects 24-hour format.
+pub fn x52_set_clock(hour: u8, minute: u8, h24: bool) -> (u8, u8, u16, u16) {
+    let h = (hour as u16).min(23);
+    let m = (minute as u16).min(59);
+    let w_value = m | (h << 8) | if h24 { 1 << 15 } else { 0 };
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        w_value,
+        X52_TIME_CLOCK1,
+    )
+}
+
+/// Build a vendor command to set the X52 date (DD-MM).
+///
+/// `day` (1–31), `month` (1–12).
+pub fn x52_set_date(day: u8, month: u8) -> (u8, u8, u16, u16) {
+    let d = (day as u16).clamp(1, 31);
+    let m = (month as u16).clamp(1, 12);
+    let w_value = d | (m << 8);
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        w_value,
+        X52_DATE_DDMM,
+    )
+}
+
+/// Build a vendor command to set the date year.
+pub fn x52_set_year(year: u8) -> (u8, u8, u16, u16) {
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        year as u16,
+        X52_DATE_YEAR,
+    )
+}
+
+/// Build a vendor command to control the shift indicator.
+pub fn x52_set_shift(on: bool) -> (u8, u8, u16, u16) {
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        if on { 0x51 } else { 0x50 },
+        X52_SHIFT_INDICATOR,
+    )
+}
+
+/// Build a vendor command to control the blink indicator.
+pub fn x52_set_blink(on: bool) -> (u8, u8, u16, u16) {
+    (
+        X52_VENDOR_REQUEST_TYPE,
+        X52_VENDOR_REQUEST,
+        if on { 0x51 } else { 0x50 },
+        X52_BLINK_INDICATOR,
+    )
+}
+
 // ── X52 / X52 Pro LED control protocol ─────────────────────────────────────────
 
 /// LED identifiers for X52/X52 Pro devices.
@@ -296,30 +513,57 @@ pub enum X52LedColor {
     Red,
 }
 
-/// Hypothesized bRequest value for LED USB control transfer.
-pub const LED_REQUEST: u8 = 0xB8;
+/// X52 LED command: bRequest is `X52_VENDOR_REQUEST` (0x91), wIndex is
+/// `X52_LED_CMD` (0xB8).  wValue encodes the LED bit and on/off state:
+/// `wValue = state | (led_bit << 8)`.
+///
+/// Source: libx52 `x52_control.c` — `libx52_vendor_command(x52, X52_LED, value | (bit << 8))`.
+pub const LED_REQUEST: u8 = X52_VENDOR_REQUEST;
 
-/// Hypothesized request type for LED USB control transfer.
-pub const LED_REQUEST_TYPE: u8 = 0x40;
+/// bmRequestType for LED USB control transfer (vendor, device, host-to-device).
+pub const LED_REQUEST_TYPE: u8 = X52_VENDOR_REQUEST_TYPE;
 
-/// Map an LED identifier to its hypothesized hardware index.
+/// Map an LED identifier to its libx52 hardware bit index.
+///
+/// Source: libx52 `x52_common.h` LED bit definitions:
+///   Fire=1, A_RED=2, A_GREEN=3, B_RED=4, B_GREEN=5, D_RED=6, D_GREEN=7,
+///   E_RED=8, E_GREEN=9, T1_RED=10, T1_GREEN=11, T2_RED=12, T2_GREEN=13,
+///   T3_RED=14, T3_GREEN=15, POV_RED=16, POV_GREEN=17, I_RED=18, I_GREEN=19,
+///   THROTTLE=20.
+///
+/// For bicolor LEDs, Red is the lower (even) bit and Green is the next (odd)
+/// bit.  Fire and Throttle are single-color LEDs with only one bit each.
 pub fn x52_led_index(led: X52LedId) -> u8 {
     match led {
-        X52LedId::Fire => 0,
-        X52LedId::ButtonA => 1,
-        X52LedId::ButtonB => 2,
-        X52LedId::ButtonD => 3,
-        X52LedId::ButtonE => 4,
-        X52LedId::Toggle1 => 5,
-        X52LedId::Toggle2 => 6,
-        X52LedId::Toggle3 => 7,
-        X52LedId::Pov2 => 8,
-        X52LedId::Clutch => 9,
-        X52LedId::Throttle => 10,
+        X52LedId::Fire => 1,
+        X52LedId::ButtonA => 2,
+        X52LedId::ButtonB => 4,
+        X52LedId::ButtonD => 6,
+        X52LedId::ButtonE => 8,
+        X52LedId::Toggle1 => 10,
+        X52LedId::Toggle2 => 12,
+        X52LedId::Toggle3 => 14,
+        X52LedId::Pov2 => 16,
+        X52LedId::Clutch => 18,
+        X52LedId::Throttle => 20,
     }
 }
 
-/// Map an LED color to its hypothesized protocol color code.
+/// Map an LED color to its protocol state.
+///
+/// For bicolor LEDs (all except Fire/Throttle) the caller must issue two
+/// vendor commands — one for the red sub-LED and one for the green sub-LED.
+/// The state value is 0 (off) or 1 (on).
+///
+/// | Desired color | Red sub-LED | Green sub-LED |
+/// |:---:|:---:|:---:|
+/// | Off   | 0 | 0 |
+/// | Red   | 1 | 0 |
+/// | Green | 0 | 1 |
+/// | Amber | 1 | 1 |
+///
+/// For single-color LEDs (Fire, Throttle), only one command is needed with
+/// state = 0 (off) or 1 (on).
 pub fn x52_led_color_code(color: X52LedColor) -> u8 {
     match color {
         X52LedColor::Off => 0,
@@ -329,16 +573,45 @@ pub fn x52_led_color_code(color: X52LedColor) -> u8 {
     }
 }
 
-/// Build a USB control transfer descriptor for setting an X52 LED.
+/// Build a USB vendor control transfer descriptor for setting an X52 LED.
+///
+/// For bicolor LEDs, this builds the red sub-LED command.  Call
+/// `x52_led_command_green` for the green sub-LED.  For single-color LEDs
+/// (Fire, Throttle), only one command is needed.
 ///
 /// Returns `(request_type, request, wValue, wIndex)` suitable for a
-/// USB control transfer.
+/// USB control transfer via `libusb_control_transfer`.
+///
+/// Source: libx52 — `libx52_vendor_command(x52, X52_LED, value | (bit << 8))`
+/// where X52_LED = 0xB8 is the wIndex, and wValue encodes state + LED bit.
 pub fn x52_led_command(led: X52LedId, color: X52LedColor) -> (u8, u8, u16, u16) {
+    let led_bit = x52_led_index(led);
+    let color_code = x52_led_color_code(color);
+    // For bicolor LEDs, the red sub-LED is at `led_bit` and green at `led_bit + 1`.
+    // The state for the red sub-LED: on if color is Red or Amber, off otherwise.
+    let red_state: u16 = if color_code & 0x02 != 0 { 1 } else { 0 };
+    let w_value = red_state | ((led_bit as u16) << 8);
     (
         LED_REQUEST_TYPE,
         LED_REQUEST,
-        x52_led_index(led) as u16,
-        x52_led_color_code(color) as u16,
+        w_value,
+        X52_LED_CMD,
+    )
+}
+
+/// Build the green sub-LED vendor command for a bicolor X52 LED.
+///
+/// Not meaningful for single-color LEDs (Fire, Throttle).
+pub fn x52_led_command_green(led: X52LedId, color: X52LedColor) -> (u8, u8, u16, u16) {
+    let led_bit = x52_led_index(led) + 1;
+    let color_code = x52_led_color_code(color);
+    let green_state: u16 = if color_code & 0x01 != 0 { 1 } else { 0 };
+    let w_value = green_state | ((led_bit as u16) << 8);
+    (
+        LED_REQUEST_TYPE,
+        LED_REQUEST,
+        w_value,
+        X52_LED_CMD,
     )
 }
 
@@ -676,9 +949,10 @@ mod tests {
 
     #[test]
     fn led_index_mapping() {
-        assert_eq!(x52_led_index(X52LedId::Fire), 0);
-        assert_eq!(x52_led_index(X52LedId::ButtonA), 1);
-        assert_eq!(x52_led_index(X52LedId::Throttle), 10);
+        // libx52 bit indices
+        assert_eq!(x52_led_index(X52LedId::Fire), 1);
+        assert_eq!(x52_led_index(X52LedId::ButtonA), 2);
+        assert_eq!(x52_led_index(X52LedId::Throttle), 20);
     }
 
     #[test]
@@ -691,25 +965,41 @@ mod tests {
 
     #[test]
     fn led_command_structure() {
+        // ButtonA Green: red sub-LED off (bit 2, state 0), green sub-LED on (bit 3, state 1)
         let (req_type, req, wvalue, windex) =
             x52_led_command(X52LedId::ButtonA, X52LedColor::Green);
         assert_eq!(req_type, LED_REQUEST_TYPE);
         assert_eq!(req, LED_REQUEST);
-        assert_eq!(wvalue, 1); // ButtonA index
-        assert_eq!(windex, 1); // Green color code
+        // Red sub-LED: state=0 (Green has no red), bit=2 → wValue = 0 | (2 << 8) = 0x0200
+        assert_eq!(wvalue, 0x0200);
+        assert_eq!(windex, X52_LED_CMD); // 0xB8
+    }
+
+    #[test]
+    fn led_command_green_sub() {
+        // ButtonA Green: green sub-LED on (bit 3, state 1)
+        let (_, _, wvalue, windex) =
+            x52_led_command_green(X52LedId::ButtonA, X52LedColor::Green);
+        // Green sub-LED: state=1, bit=3 → wValue = 1 | (3 << 8) = 0x0301
+        assert_eq!(wvalue, 0x0301);
+        assert_eq!(windex, X52_LED_CMD);
     }
 
     #[test]
     fn led_command_fire_red() {
+        // Fire is single-color (bit 1). Red state=1 (color code 3 has bit 1 set).
         let (_, _, wvalue, windex) = x52_led_command(X52LedId::Fire, X52LedColor::Red);
-        assert_eq!(wvalue, 0); // Fire index
-        assert_eq!(windex, 3); // Red color code
+        // state = 1 (red bit set), bit = 1 → wValue = 1 | (1 << 8) = 0x0101
+        assert_eq!(wvalue, 0x0101);
+        assert_eq!(windex, X52_LED_CMD);
     }
 
     #[test]
     fn led_command_off() {
-        let (_, _, _, windex) = x52_led_command(X52LedId::Toggle1, X52LedColor::Off);
-        assert_eq!(windex, 0);
+        let (_, _, wvalue, windex) = x52_led_command(X52LedId::Toggle1, X52LedColor::Off);
+        // Off: state=0, bit=10 → wValue = 0 | (10 << 8) = 0x0A00
+        assert_eq!(wvalue, 0x0A00);
+        assert_eq!(windex, X52_LED_CMD);
     }
 
     #[test]
@@ -726,14 +1016,15 @@ mod tests {
     fn blink_pattern_on_phase() {
         let pattern = X52BlinkPattern::new(X52LedId::ButtonA, X52LedColor::Green, 250);
         let (_, _, _, windex) = pattern.command_for_phase(true);
-        assert_eq!(windex, x52_led_color_code(X52LedColor::Green) as u16);
+        // Now wIndex is always X52_LED_CMD (0xB8); color is encoded in wValue
+        assert_eq!(windex, X52_LED_CMD);
     }
 
     #[test]
     fn blink_pattern_off_phase() {
         let pattern = X52BlinkPattern::new(X52LedId::ButtonA, X52LedColor::Green, 250);
         let (_, _, _, windex) = pattern.command_for_phase(false);
-        assert_eq!(windex, x52_led_color_code(X52LedColor::Off) as u16);
+        assert_eq!(windex, X52_LED_CMD);
     }
 
     // ── X56 RGB tests ──────────────────────────────────────────────────────
@@ -893,5 +1184,101 @@ mod tests {
         assert_eq!(resolve_mode_button(X52Mode::Mode1, phys, &map), Some(5));
         assert_eq!(resolve_mode_button(X52Mode::Mode2, phys, &map), Some(6));
         assert_eq!(resolve_mode_button(X52Mode::Mode3, phys, &map), Some(7));
+    }
+
+    // ── Vendor command MFD tests ───────────────────────────────────────────
+
+    #[test]
+    fn x52_mfd_clear_line_valid() {
+        let (rt, req, wval, widx) = x52_mfd_clear_line(0).unwrap();
+        assert_eq!(rt, X52_VENDOR_REQUEST_TYPE);
+        assert_eq!(req, X52_VENDOR_REQUEST);
+        assert_eq!(wval, 0x0000);
+        assert_eq!(widx, X52_MFD_LINE1 | X52_MFD_CLEAR_LINE);
+    }
+
+    #[test]
+    fn x52_mfd_clear_line_invalid() {
+        assert!(x52_mfd_clear_line(3).is_none());
+    }
+
+    #[test]
+    fn x52_mfd_write_line_command_count() {
+        let cmds = x52_mfd_write_line(0, "HELLO").unwrap();
+        // 1 clear + 8 write commands (16 chars / 2 per command)
+        assert_eq!(cmds.len(), 9);
+    }
+
+    #[test]
+    fn x52_mfd_write_line_first_is_clear() {
+        let cmds = x52_mfd_write_line(1, "TEST").unwrap();
+        let (_, _, _, widx) = cmds[0];
+        assert_eq!(widx, X52_MFD_LINE2 | X52_MFD_CLEAR_LINE);
+    }
+
+    #[test]
+    fn x52_mfd_write_line_char_encoding() {
+        let cmds = x52_mfd_write_line(0, "AB").unwrap();
+        // First write command (index 1) should encode 'A' (0x41) and 'B' (0x42)
+        let (_, _, wval, _) = cmds[1];
+        assert_eq!(wval, 0x41 | (0x42 << 8));
+    }
+
+    #[test]
+    fn x52_mfd_write_line_invalid() {
+        assert!(x52_mfd_write_line(3, "FAIL").is_none());
+    }
+
+    #[test]
+    fn x52_mfd_brightness_clamps() {
+        let (_, _, wval, widx) = x52_mfd_set_brightness(200);
+        assert_eq!(wval, 128);
+        assert_eq!(widx, X52_MFD_BRIGHTNESS);
+    }
+
+    #[test]
+    fn x52_led_brightness_cmd() {
+        let (_, _, wval, widx) = x52_led_set_brightness(64);
+        assert_eq!(wval, 64);
+        assert_eq!(widx, X52_LED_BRIGHTNESS);
+    }
+
+    #[test]
+    fn x52_clock_24h() {
+        let (_, _, wval, widx) = x52_set_clock(14, 30, true);
+        // wValue = 30 | (14 << 8) | (1 << 15)
+        assert_eq!(wval, 30 | (14 << 8) | (1 << 15));
+        assert_eq!(widx, X52_TIME_CLOCK1);
+    }
+
+    #[test]
+    fn x52_date_cmd() {
+        let (_, _, wval, widx) = x52_set_date(25, 12);
+        assert_eq!(wval, 25 | (12 << 8));
+        assert_eq!(widx, X52_DATE_DDMM);
+    }
+
+    #[test]
+    fn x52_shift_on() {
+        let (_, _, wval, widx) = x52_set_shift(true);
+        assert_eq!(wval, 0x51);
+        assert_eq!(widx, X52_SHIFT_INDICATOR);
+    }
+
+    #[test]
+    fn x52_blink_off() {
+        let (_, _, wval, widx) = x52_set_blink(false);
+        assert_eq!(wval, 0x50);
+        assert_eq!(widx, X52_BLINK_INDICATOR);
+    }
+
+    // ── Device table X52 v1 test ───────────────────────────────────────────
+
+    #[test]
+    fn device_table_has_x52_v1() {
+        let found = DEVICE_TABLE
+            .iter()
+            .any(|d| d.vid == SAITEK_VID && d.pid == 0x0255 && d.id == DeviceId::X52);
+        assert!(found, "X52 v1 (PID 0x0255) should be in DEVICE_TABLE");
     }
 }
