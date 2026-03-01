@@ -414,4 +414,64 @@ mod tests {
             ProfileLayout::build(AircraftType::GA, StreamDeckModel::Pedal, &templates).is_err()
         );
     }
+
+    #[test]
+    fn test_profile_layout_mk2() {
+        let templates: HashMap<String, ActionTemplate> = builtin_templates()
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
+
+        let layout =
+            ProfileLayout::build(AircraftType::GA, StreamDeckModel::Mk2, &templates).unwrap();
+        assert!(layout.page_count() >= 1);
+        // MK.2 has same layout as Original (15 keys)
+        let first = &layout.pages[0];
+        assert!(!first.keys.is_empty());
+    }
+
+    #[test]
+    fn test_page_navigation_go_and_back() {
+        let mut layout = PageLayout::new(StreamDeckModel::Xl).unwrap();
+        layout.add_page(Page::new("A"));
+        layout.add_page(Page::new("B"));
+        layout.add_page(Page::new("C"));
+
+        layout.go_to_page(2).unwrap();
+        assert_eq!(layout.current_index(), 2);
+        layout.prev_page();
+        assert_eq!(layout.current_index(), 1);
+    }
+
+    #[test]
+    fn test_key_slot_nav_target() {
+        let slot = KeySlot {
+            row: 0,
+            col: 0,
+            action_id: None,
+            nav_target: Some(NavTarget::NextPage),
+        };
+        assert!(slot.action_id.is_none());
+        assert!(slot.nav_target.is_some());
+    }
+
+    #[test]
+    fn test_all_aircraft_all_models() {
+        let templates: HashMap<String, ActionTemplate> = builtin_templates()
+            .into_iter()
+            .map(|t| (t.id.clone(), t))
+            .collect();
+
+        for aircraft in &[AircraftType::GA, AircraftType::Airbus, AircraftType::Helo] {
+            for model in StreamDeckModel::all() {
+                let result = ProfileLayout::build(*aircraft, *model, &templates);
+                if model.grid_layout().is_some() {
+                    assert!(result.is_ok(), "{:?} + {:?} should build", aircraft, model);
+                    assert!(result.unwrap().page_count() >= 1);
+                } else {
+                    assert!(result.is_err(), "{:?} + {:?} should fail (no grid)", aircraft, model);
+                }
+            }
+        }
+    }
 }

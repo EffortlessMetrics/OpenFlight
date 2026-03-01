@@ -33,7 +33,8 @@ pub use actions::{ActionCategory, ActionRegistry, ActionTemplate, builtin_templa
 pub use api::{ApiError, StreamDeckApi};
 pub use compatibility::{CompatibilityMatrix, VersionCompatibility, VersionRange};
 pub use device::{
-    Brightness, DeviceInfo, DeviceManager, LcdStripInfo, LcdStripLayout, StreamDeckModel,
+    Brightness, DeviceInfo, DeviceManager, DialAction, DialEvent, KeyEvent, LcdStripInfo,
+    LcdStripLayout, StreamDeckModel, TouchEvent, TouchType, validate_image_size,
 };
 pub use layout::{NavTarget, Page, PageLayout, ProfileLayout};
 pub use plugin::{PluginConfig, PluginError, StreamDeckPlugin};

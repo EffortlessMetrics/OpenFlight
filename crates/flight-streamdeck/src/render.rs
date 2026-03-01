@@ -232,6 +232,28 @@ mod tests {
     }
 
     #[test]
+    fn test_key_icon_for_mk2() {
+        let icon =
+            KeyIcon::for_model(StreamDeckModel::Mk2, "AP", IconTheme::Autopilot).unwrap();
+        assert_eq!(icon.size, 72);
+        assert_eq!(icon.label, "AP");
+    }
+
+    #[test]
+    fn test_key_icon_for_all_displayable_models() {
+        for model in StreamDeckModel::all() {
+            let result = KeyIcon::for_model(*model, "TST", IconTheme::Custom);
+            if model.has_display() {
+                assert!(result.is_some(), "{:?} should produce an icon", model);
+                let icon = result.unwrap();
+                assert_eq!(icon.size, model.icon_size().unwrap());
+            } else {
+                assert!(result.is_none(), "{:?} should not produce an icon", model);
+            }
+        }
+    }
+
+    #[test]
     fn test_key_icon_for_pedal_returns_none() {
         assert!(KeyIcon::for_model(StreamDeckModel::Pedal, "X", IconTheme::Custom).is_none());
     }
@@ -299,5 +321,50 @@ mod tests {
     fn test_renderer_icon_size() {
         let renderer = IconRenderer::new(StreamDeckModel::Plus);
         assert_eq!(renderer.icon_size(), Some(120));
+    }
+
+    #[test]
+    fn test_renderer_mk2() {
+        let renderer = IconRenderer::new(StreamDeckModel::Mk2);
+        assert_eq!(renderer.icon_size(), Some(72));
+        let icon = renderer.momentary_icon("BAT", IconTheme::Systems).unwrap();
+        assert_eq!(icon.size, 72);
+    }
+
+    #[test]
+    fn test_icon_style_default() {
+        let style = IconStyle::default();
+        assert_eq!(style.font_size, 14);
+        assert_eq!(style.text_align, TextAlign::Center);
+        assert!(!style.bold);
+    }
+
+    #[test]
+    fn test_with_style_override() {
+        let icon = KeyIcon::for_model(StreamDeckModel::Original, "X", IconTheme::Custom).unwrap();
+        let custom_style = IconStyle {
+            bold: true,
+            font_size: 24,
+            ..IconStyle::default()
+        };
+        let styled = icon.with_style(custom_style);
+        assert!(styled.style.bold);
+        assert_eq!(styled.style.font_size, 24);
+    }
+
+    #[test]
+    fn test_icon_sizes_match_model_spec() {
+        let cases: &[(StreamDeckModel, u32)] = &[
+            (StreamDeckModel::Original, 72),
+            (StreamDeckModel::Mk2, 72),
+            (StreamDeckModel::Mini, 80),
+            (StreamDeckModel::Xl, 96),
+            (StreamDeckModel::Plus, 120),
+            (StreamDeckModel::Neo, 96),
+        ];
+        for (model, expected) in cases {
+            let renderer = IconRenderer::new(*model);
+            assert_eq!(renderer.icon_size(), Some(*expected), "{:?}", model);
+        }
     }
 }
