@@ -147,8 +147,8 @@ mod curve_tests {
         assert!(approx_f32(curve.evaluate(0.0), 0.0));
         assert!(approx_f32(curve.evaluate(1.0), 1.0));
         // Below-zero and above-one are clamped
-        assert!(approx_f32(curve.evaluate(-10.0), 0.0));
-        assert!(approx_f32(curve.evaluate(10.0), 1.0));
+        assert_eq!(curve.evaluate(-10.0), 0.0);
+        assert_eq!(curve.evaluate(10.0), 1.0);
     }
 
     #[test]
@@ -746,9 +746,9 @@ mod nan_inf_safety {
         let expo = ExpoCurveConfig::new(0.5);
         let out = expo.apply(f32::INFINITY);
         // Clamp(INFINITY, -1, 1) = 1.0 → apply(1.0) = 1.0
-        assert!(approx_f32(out, 1.0));
+        assert_eq!(out, 1.0);
         let out_neg = expo.apply(f32::NEG_INFINITY);
-        assert!(approx_f32(out_neg, -1.0));
+        assert_eq!(out_neg, -1.0);
     }
 
     #[test]
