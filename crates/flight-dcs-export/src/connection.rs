@@ -251,9 +251,9 @@ impl DcsSessionHealth {
 
         if let Some(s) = seq {
             if let Some(prev) = self.last_seq
-                && s > prev + 1
+                && prev.checked_add(1).is_some_and(|next| s > next)
             {
-                self.gap_count += s - prev - 1;
+                self.gap_count += s.saturating_sub(prev).saturating_sub(1);
             }
             self.last_seq = Some(s);
         }
@@ -278,8 +278,9 @@ impl DcsSessionHealth {
         let newest = *times.last().unwrap();
         let span = newest.duration_since(oldest);
         if span.is_zero() {
-            // All packets arrived within the same clock tick — report capped rate
-            return Some(times.len() as f64 * 1000.0);
+            // All packets arrived faster than clock resolution — the honest
+            // answer is an infinite rate.
+            return Some(f64::INFINITY);
         }
         Some((times.len() - 1) as f64 / span.as_secs_f64())
     }
@@ -673,18 +674,50 @@ mod tests {
 
     #[test]
     fn test_packet_rate_zero_span() {
-        let mut h = DcsSessionHealth::new();
-        // Record multiple packets instantly — all get the same Instant
-        // (within the same clock tick)
-        for _ in 0..10 {
-            h.record_packet(None);
+        // Directly construct health with identical timestamps to guarantee
+        // a zero span, since Instant::now() may have sub-µs resolution.
+        let now = Instant::now();
+        let mut timestamps = [None; RATE_WINDOW];
+        for slot in timestamps.iter_mut().take(10) {
+            *slot = Some(now);
         }
-        // With zero span, packet_rate should return Some (capped), not None
+        let h = DcsSessionHealth {
+            timestamps,
+            cursor: 10,
+            total_packets: 10,
+            last_received: Some(now),
+            last_seq: None,
+            gap_count: 0,
+            error_count: 0,
+        };
         let rate = h.packet_rate();
         assert!(
             rate.is_some(),
             "zero-span packet_rate should return Some, not None"
         );
-        assert!(rate.unwrap() > 0.0, "rate must be positive");
+        assert!(
+            rate.unwrap().is_infinite(),
+            "zero-span rate should be INFINITY, got {:?}",
+            rate
+        );
+    }
+
+    #[test]
+    fn test_sequence_overflow_at_u64_max() {
+        let mut h = DcsSessionHealth::new();
+        h.record_packet(Some(u64::MAX));
+        // Next packet with a higher-than-MAX seq is impossible, but ensure
+        // no panic from overflow in the gap check.
+        h.record_packet(Some(u64::MAX));
+        assert_eq!(h.gap_count(), 0);
+    }
+
+    #[test]
+    fn error_state_overwritten_on_transport_error() {
+        let state = DcsConnectionState::Error("first".into());
+        let next = state
+            .transition(&DcsConnectionEvent::TransportError("second".into()))
+            .unwrap();
+        assert_eq!(next, DcsConnectionState::Error("second".into()));
     }
 }
