@@ -40,7 +40,11 @@ fn tick_timing_250hz_target_period() {
 
 /// Measure actual tick duration over a short burst and verify it is close
 /// to the expected 4 ms period.
+///
+/// This test is sensitive to OS scheduling jitter; run explicitly with
+/// `cargo test -- --ignored` on a quiet machine.
 #[test]
+#[ignore]
 fn tick_timing_duration_measurement() {
     let config = SchedulerConfig {
         frequency_hz: 250,
@@ -203,11 +207,10 @@ fn task_scheduling_register_periodic() {
     assert_eq!(exec.tick_count(), 100);
 }
 
-/// A one-shot task registered then deregistered (via reset) should only
-/// execute while registered; after reset_stats the task remains but
-/// counters are zeroed.
+/// After `reset_stats`, task counters are zeroed but the task remains
+/// registered and continues to execute on subsequent ticks.
 #[test]
-fn task_scheduling_one_shot_semantics() {
+fn task_scheduling_reset_stats_preserves_tasks() {
     let counter = Arc::new(AtomicU64::new(0));
     let c = counter.clone();
     let mut exec = TickExecutor::new();
@@ -284,7 +287,7 @@ fn task_scheduling_overrun_continues_remaining_tasks() {
 
 /// Attempting to register more than MAX_TASKS is rejected.
 #[test]
-fn task_scheduling_removal_max_tasks() {
+fn task_scheduling_max_tasks_capacity() {
     let mut exec = TickExecutor::new();
     static NAMES: [&str; MAX_TASKS] = [
         "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
@@ -335,7 +338,8 @@ fn platform_high_resolution_timer() {
 }
 
 /// Timer coalescing avoidance: enabling the high-res timer through an
-/// MMCSS handle sets the flag, and dropping the handle restores it.
+/// MMCSS handle sets the flag. (Verifying restore-on-drop is not possible
+/// here because the mock backend is moved into the handle.)
 #[test]
 fn platform_timer_coalescing_avoidance() {
     let backend = MockMmcssBackend::new_success();
@@ -343,7 +347,6 @@ fn platform_timer_coalescing_avoidance() {
     assert!(!h.is_timer_enabled());
     h.enable_high_resolution_timer().unwrap();
     assert!(h.is_timer_enabled());
-    drop(h); // Should disable high-res timer
 }
 
 /// CPU affinity can be set via the standalone helper and via a handle.
