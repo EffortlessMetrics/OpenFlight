@@ -159,9 +159,17 @@ fn warthog_stick_error_contains_actual_length() {
 
 #[allow(clippy::too_many_arguments)]
 fn make_throttle_report(
-    scx: u16, scy: u16, tl: u16, tr: u16, tc: u16,
-    btn_low: u16, btn_mid: u16, btn_high: u8, toggles: u8,
-    hat_dms: u8, hat_csl: u8,
+    scx: u16,
+    scy: u16,
+    tl: u16,
+    tr: u16,
+    tc: u16,
+    btn_low: u16,
+    btn_mid: u16,
+    btn_high: u8,
+    toggles: u8,
+    hat_dms: u8,
+    hat_csl: u8,
 ) -> Vec<u8> {
     let mut buf = vec![0u8; 20];
     buf[0..2].copy_from_slice(&scx.to_le_bytes());
@@ -248,7 +256,9 @@ fn shifted_layer_produces_contiguous_range_20_to_37() {
 
 #[test]
 fn shifted_and_unshifted_ranges_do_not_overlap() {
-    let unshifted: Vec<u8> = (1..=19).filter_map(|n| resolve_shifted_button(n, false)).collect();
+    let unshifted: Vec<u8> = (1..=19)
+        .filter_map(|n| resolve_shifted_button(n, false))
+        .collect();
     let shifted: Vec<u8> = (1..=19)
         .filter_map(|n| resolve_shifted_button(n, true))
         .filter(|&l| l >= 20)
@@ -352,7 +362,11 @@ fn t16000m_14bit_axis_masks_upper_bits() {
     let report = make_t16000m_report(0x4000, 8192, 8192, 0, 0, 0x0F);
     let state = parse_t16000m_report(&report).unwrap();
     // With masking, 0x4000 & 0x3FFF = 0, which normalises to ~ -1.0
-    assert!(state.axes.x < -0.99, "upper bits should be masked: x={}", state.axes.x);
+    assert!(
+        state.axes.x < -0.99,
+        "upper bits should be masked: x={}",
+        state.axes.x
+    );
 }
 
 #[test]
@@ -548,14 +562,26 @@ fn detent_tracker_full_sweep_enter_exit() {
     let mut tracker = ThrottleDetentTracker::hotas4_default();
     let enter = tracker.update(0.05);
     assert_eq!(enter.len(), 1);
-    assert!(matches!(enter[0], DetentEvent::Entered { detent_index: 0, .. }));
+    assert!(matches!(
+        enter[0],
+        DetentEvent::Entered {
+            detent_index: 0,
+            ..
+        }
+    ));
 
     let inside = tracker.update(0.04);
     assert!(inside.is_empty(), "no event while inside");
 
     let exit = tracker.update(0.20);
     assert_eq!(exit.len(), 1);
-    assert!(matches!(exit[0], DetentEvent::Exited { detent_index: 0, .. }));
+    assert!(matches!(
+        exit[0],
+        DetentEvent::Exited {
+            detent_index: 0,
+            ..
+        }
+    ));
 
     let outside = tracker.update(0.30);
     assert!(outside.is_empty(), "no event while outside");
@@ -564,8 +590,18 @@ fn detent_tracker_full_sweep_enter_exit() {
 #[test]
 fn detent_tracker_is_active_by_index() {
     let configs = vec![
-        ThrottleDetentConfig { name: "a", index: 0, position: 0.10, half_width: 0.02 },
-        ThrottleDetentConfig { name: "b", index: 1, position: 0.90, half_width: 0.02 },
+        ThrottleDetentConfig {
+            name: "a",
+            index: 0,
+            position: 0.10,
+            half_width: 0.02,
+        },
+        ThrottleDetentConfig {
+            name: "b",
+            index: 1,
+            position: 0.90,
+            half_width: 0.02,
+        },
     ];
     let mut tracker = ThrottleDetentTracker::new(configs);
     tracker.update(0.10);
@@ -627,7 +663,10 @@ fn pc_mode_transitions_require_confirmation() {
     // 2 console reports not enough to switch
     d.update(&[0u8; 5]);
     d.update(&[0u8; 5]);
-    assert!(d.is_pc_mode(), "should still be PC mode before 3 console reports");
+    assert!(
+        d.is_pc_mode(),
+        "should still be PC mode before 3 console reports"
+    );
 
     // 3rd console report confirms transition
     d.update(&[0u8; 5]);
@@ -646,7 +685,10 @@ fn pc_mode_reset_returns_to_unknown() {
 #[test]
 fn pc_mode_display_formatting() {
     assert_eq!(format!("{}", PcModeStatus::PcMode), "PC mode (Green LED)");
-    assert_eq!(format!("{}", PcModeStatus::ConsoleMode), "Console mode (Red LED)");
+    assert_eq!(
+        format!("{}", PcModeStatus::ConsoleMode),
+        "Console mode (Red LED)"
+    );
     assert_eq!(format!("{}", PcModeStatus::Unknown), "Unknown");
 }
 
@@ -676,9 +718,7 @@ fn pc_mode_console_guidance_only_when_console() {
 // §12  Profiles — structural invariants
 // ═══════════════════════════════════════════════════════════════════════════════
 
-use flight_hotas_thrustmaster::profiles::{
-    AxisNormalization, device_profile, profiled_devices,
-};
+use flight_hotas_thrustmaster::profiles::{AxisNormalization, device_profile, profiled_devices};
 use flight_hotas_thrustmaster::protocol::ThrustmasterDevice;
 
 #[test]
@@ -689,7 +729,12 @@ fn all_profiled_devices_have_valid_axis_normalization() {
             match ax.normalization {
                 AxisNormalization::Bipolar { center, half_span } => {
                     assert!(center > 0.0, "{:?}/{}: center must be positive", dev, ax.id);
-                    assert!(half_span > 0.0, "{:?}/{}: half_span must be positive", dev, ax.id);
+                    assert!(
+                        half_span > 0.0,
+                        "{:?}/{}: half_span must be positive",
+                        dev,
+                        ax.id
+                    );
                 }
                 AxisNormalization::Unipolar { max } => {
                     assert!(max > 0.0, "{:?}/{}: max must be positive", dev, ax.id);
@@ -892,7 +937,10 @@ fn toggle_every_bit_position() {
 #[test]
 fn toggle_bit_8_and_above_always_false() {
     for bit in 8..=255u8 {
-        assert!(!toggles::is_set(0xFF, bit), "bit {bit} should always be false");
+        assert!(
+            !toggles::is_set(0xFF, bit),
+            "bit {bit} should always be false"
+        );
     }
 }
 
@@ -933,9 +981,15 @@ fn re_exported_pid_constants_match_device_table() {
     check(TFRP_RUDDER_PEDALS_PID, ThrustmasterDevice::TfrpRudderPedals);
     check(T_RUDDER_PID, ThrustmasterDevice::TRudder);
     check(TPR_PENDULAR_RUDDER_PID, ThrustmasterDevice::TprPendular);
-    check(TPR_PENDULAR_RUDDER_BULK_PID, ThrustmasterDevice::TprPendularBulk);
+    check(
+        TPR_PENDULAR_RUDDER_BULK_PID,
+        ThrustmasterDevice::TprPendularBulk,
+    );
     check(TFLIGHT_HOTAS_4_PID, ThrustmasterDevice::TFlightHotas4);
-    check(TFLIGHT_HOTAS_4_PID_LEGACY, ThrustmasterDevice::TFlightHotas4Legacy);
+    check(
+        TFLIGHT_HOTAS_4_PID_LEGACY,
+        ThrustmasterDevice::TFlightHotas4Legacy,
+    );
     check(TFLIGHT_HOTAS_ONE_PID, ThrustmasterDevice::TFlightHotasOne);
     check(TFLIGHT_HOTAS_X_PID, ThrustmasterDevice::TFlightHotasX);
     // Note: TCA Boeing PIDs in flight-hid-support (0x0409..0x040B) differ
