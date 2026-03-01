@@ -1,0 +1,11 @@
+---
+source: crates/flight-units/tests/snapshots.rs
+expression: "table.join(\"\\n\")"
+---
+   -2000 fpm =  -10.160 m/s
+   -1000 fpm =   -5.080 m/s
+    -500 fpm =   -2.540 m/s
+       0 fpm =    0.000 m/s
+     500 fpm =    2.540 m/s
+    1000 fpm =    5.080 m/s
+    2000 fpm =   10.160 m/s

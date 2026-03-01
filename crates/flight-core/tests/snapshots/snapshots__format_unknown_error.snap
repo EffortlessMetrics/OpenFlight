@@ -1,0 +1,5 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "ErrorCatalog::format_error(\"ZZZ-999\")"
+---
+[ZZZ-999] Unknown error code

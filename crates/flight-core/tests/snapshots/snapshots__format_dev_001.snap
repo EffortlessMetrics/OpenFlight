@@ -1,0 +1,6 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "ErrorCatalog::format_error(\"DEV-001\")"
+---
+[DEV-001] Device not found — The requested HID device could not be located on any USB bus.
+Resolution: Reconnect the device and check USB cables.

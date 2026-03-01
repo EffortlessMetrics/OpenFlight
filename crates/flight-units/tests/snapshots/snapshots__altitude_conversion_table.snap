@@ -1,0 +1,11 @@
+---
+source: crates/flight-units/tests/snapshots.rs
+expression: "table.join(\"\\n\")"
+---
+       0 ft =      0.000 m
+     100 ft =     30.480 m
+    1000 ft =    304.800 m
+    5000 ft =   1524.000 m
+   10000 ft =   3048.000 m
+   35000 ft =  10668.000 m
+   41000 ft =  12496.800 m

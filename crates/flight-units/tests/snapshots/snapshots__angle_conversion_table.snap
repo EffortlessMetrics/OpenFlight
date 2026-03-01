@@ -1,0 +1,11 @@
+---
+source: crates/flight-units/tests/snapshots.rs
+expression: "table.join(\"\\n\")"
+---
+   0.0 deg =  0.00000 rad
+  30.0 deg =  0.52360 rad
+  45.0 deg =  0.78540 rad
+  90.0 deg =  1.57080 rad
+ 180.0 deg =  3.14159 rad
+ 270.0 deg =  4.71239 rad
+ 360.0 deg =  6.28319 rad

@@ -1,0 +1,15 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "entries.join(\"\\n---\\n\")"
+---
+[PRF-001] Profile parse error — The profile JSON/TOML could not be parsed.
+Resolution: Validate profile syntax with the profile linter.
+---
+[PRF-002] Profile schema invalid — The profile does not conform to the expected schema.
+Resolution: Compare against the profile JSON schema in docs/reference.
+---
+[PRF-003] Profile merge conflict — Two profiles define conflicting axis assignments.
+Resolution: Resolve overlapping assignments in the more-specific profile.
+---
+[PRF-004] Profile not found — The specified profile file does not exist.
+Resolution: Check the profile path and file name.

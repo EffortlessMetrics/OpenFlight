@@ -1,0 +1,15 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "entries.join(\"\\n---\\n\")"
+---
+[SIM-001] SimConnect unavailable — The MSFS SimConnect library could not be loaded.
+Resolution: Ensure MSFS is installed and SimConnect SDK is available.
+---
+[SIM-002] Sim connection lost — The connection to the simulator was unexpectedly closed.
+Resolution: Restart the simulator and reconnect.
+---
+[SIM-003] Sim variable not found — The requested simulator variable does not exist.
+Resolution: Check variable name against the sim's SDK documentation.
+---
+[SIM-004] Sim version mismatch — The simulator version is not compatible with this adapter.
+Resolution: Update OpenFlight or check compatibility matrix.

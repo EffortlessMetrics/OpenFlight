@@ -1,0 +1,15 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "entries.join(\"\\n---\\n\")"
+---
+[INT-001] RT spine overrun — The RT tick exceeded its time budget.
+Resolution: Check system load and disable non-essential plugins.
+---
+[INT-002] Bus queue full — A lock-free queue dropped messages due to overflow.
+Resolution: Reduce producer rate or increase queue capacity in config.
+---
+[INT-003] Unexpected state — An internal state machine reached an unexpected state.
+Resolution: File a bug report with diagnostic bundle attached.
+---
+[INT-004] Allocation in RT path — A heap allocation was detected on the RT hot path.
+Resolution: This is a bug — report it with a backtrace.

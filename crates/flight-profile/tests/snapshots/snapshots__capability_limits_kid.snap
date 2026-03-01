@@ -1,0 +1,12 @@
+---
+source: crates/flight-profile/tests/snapshots.rs
+expression: kid
+---
+mode: Kid
+limits:
+  max_axis_output: 0.5
+  max_ffb_torque: 5
+  allow_high_torque: false
+  max_expo: 0.3
+  max_slew_rate: 20
+audit_enabled: false

@@ -78,3 +78,85 @@ fn snapshot_compiled_and_with_comparisons() {
     )]));
     insta::assert_json_snapshot!("compiled_and_with_comparisons", snap);
 }
+
+// ── Additional bytecode pattern snapshots ────────────────────────────────────
+
+#[test]
+fn snapshot_compiled_boolean_rule() {
+    let snap = compile_snapshot(&schema(vec![rule(
+        "gear_down",
+        "led.panel('GEAR').on()",
+    )]));
+    insta::assert_json_snapshot!("compiled_boolean_rule", snap);
+}
+
+#[test]
+fn snapshot_compiled_negated_boolean_rule() {
+    let snap = compile_snapshot(&schema(vec![rule(
+        "!gear_down",
+        "led.panel('GEAR').off()",
+    )]));
+    insta::assert_json_snapshot!("compiled_negated_boolean_rule", snap);
+}
+
+#[test]
+fn snapshot_compiled_or_rule() {
+    let snap = compile_snapshot(&schema(vec![rule(
+        "master_warn or master_caution",
+        "led.panel('WARN').on()",
+    )]));
+    insta::assert_json_snapshot!("compiled_or_rule", snap);
+}
+
+#[test]
+fn snapshot_compiled_multi_rule_program() {
+    let snap = compile_snapshot(&schema(vec![
+        rule("gear_down", "led.panel('GEAR').on()"),
+        rule("!gear_down", "led.panel('GEAR').off()"),
+        rule("speed > 250", "led.panel('OVERSPEED').blink(rate_hz=4.0)"),
+    ]));
+    insta::assert_json_snapshot!("compiled_multi_rule_program", snap);
+}
+
+#[test]
+fn snapshot_compiled_with_hysteresis() {
+    use flight_rules::RuleDefaults;
+    let mut hysteresis = std::collections::HashMap::new();
+    hysteresis.insert("altitude".to_string(), 500.0_f32);
+    let s = RulesSchema {
+        schema: "flight.ledmap/1".to_string(),
+        rules: vec![rule("altitude > 10000", "led.panel('ALT').on()")],
+        defaults: Some(RuleDefaults {
+            hysteresis: Some(hysteresis),
+        }),
+    };
+    let snap = compile_snapshot(&s);
+    insta::assert_json_snapshot!("compiled_with_hysteresis", snap);
+}
+
+// ── Validation error message snapshots ───────────────────────────────────────
+
+#[test]
+fn snapshot_rules_validation_error_bad_schema() {
+    let s = RulesSchema {
+        schema: "bad/schema".to_string(),
+        rules: vec![],
+        defaults: None,
+    };
+    let err = s.validate().unwrap_err();
+    insta::assert_snapshot!("rules_validation_error_bad_schema", err.to_string());
+}
+
+#[test]
+fn snapshot_rules_validation_error_empty_condition() {
+    let s = schema(vec![rule("", "led.panel('GEAR').on()")]);
+    let err = s.validate().unwrap_err();
+    insta::assert_snapshot!("rules_validation_error_empty_condition", err.to_string());
+}
+
+#[test]
+fn snapshot_rules_validation_error_bad_action() {
+    let s = schema(vec![rule("gear_down", "do_something_weird()")]);
+    let err = s.validate().unwrap_err();
+    insta::assert_snapshot!("rules_validation_error_bad_action", err.to_string());
+}

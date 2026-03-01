@@ -1,0 +1,5 @@
+---
+source: crates/flight-profile/tests/snapshots.rs
+expression: err.to_string()
+---
+Validation error: axes.pitch.curve[2]: Curve input values must be strictly increasing (monotonic)

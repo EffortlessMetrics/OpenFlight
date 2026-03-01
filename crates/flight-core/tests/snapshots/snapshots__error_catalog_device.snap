@@ -1,0 +1,18 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "entries.join(\"\\n---\\n\")"
+---
+[DEV-001] Device not found — The requested HID device could not be located on any USB bus.
+Resolution: Reconnect the device and check USB cables.
+---
+[DEV-002] Device open failed — The operating system refused to open the HID device.
+Resolution: Run as administrator or check udev rules on Linux.
+---
+[DEV-003] Device read timeout — No data received from device within the expected interval.
+Resolution: Check device firmware and USB connection.
+---
+[DEV-004] Device write failed — Failed to send data to the HID device.
+Resolution: Verify device supports output reports and is connected.
+---
+[DEV-005] Calibration data missing — No calibration data found for this device.
+Resolution: Run the calibration wizard for this device.

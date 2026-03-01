@@ -1,0 +1,6 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "ErrorCatalog::format_error(\"SVC-001\")"
+---
+[SVC-001] Service start failed — The flightd daemon could not start.
+Resolution: Check logs for port conflicts or permission issues.

@@ -1,0 +1,5 @@
+---
+source: crates/flight-rules/tests/snapshots.rs
+expression: err.to_string()
+---
+Validation error: Unsupported schema version: bad/schema

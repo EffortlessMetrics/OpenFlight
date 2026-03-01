@@ -1,0 +1,6 @@
+---
+source: crates/flight-core/tests/snapshots.rs
+expression: "ErrorCatalog::format_error(\"PLG-003\")"
+---
+[PLG-003] Plugin timeout — The plugin exceeded its per-tick time budget.
+Resolution: Optimise the plugin or increase the budget in config.

@@ -1,0 +1,10 @@
+---
+source: crates/flight-units/tests/snapshots.rs
+expression: "table.join(\"\\n\")"
+---
+    0.0 kt =    0.000 m/s =    0.000 kph
+    1.0 kt =    0.514 m/s =    1.852 kph
+   60.0 kt =   30.867 m/s =  111.120 kph
+  120.0 kt =   61.733 m/s =  222.240 kph
+  250.0 kt =  128.611 m/s =  463.000 kph
+  500.0 kt =  257.222 m/s =  925.999 kph

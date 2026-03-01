@@ -1,0 +1,5 @@
+---
+source: crates/flight-rules/tests/snapshots.rs
+expression: err.to_string()
+---
+Validation error: Rule 1: Unsupported action syntax: do_something_weird()
