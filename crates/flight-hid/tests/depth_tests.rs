@@ -884,7 +884,8 @@ mod error_handling {
 
     #[test]
     fn registry_load_invalid_json_returns_error() {
-        let dir = std::env::temp_dir().join("flight_hid_depth_test_invalid");
+        let dir = std::env::temp_dir()
+            .join(format!("flight_hid_depth_test_invalid_{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("bad.json");
         std::fs::write(&path, "{{invalid json}}").unwrap();

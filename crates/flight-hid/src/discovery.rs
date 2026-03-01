@@ -188,7 +188,11 @@ impl<S: DeviceScanner> DeviceDiscovery<S> {
         &self.connected
     }
 
-    /// Mutable access to the underlying scanner, e.g. for mock device changes.
+    /// Mutable access to the underlying scanner — **intended for testing only**.
+    ///
+    /// Used by integration tests to inject/remove mock devices.
+    /// Not gated behind `#[cfg(test)]` because integration tests are external
+    /// to the crate and require a public API.
     pub fn scanner_mut(&mut self) -> &mut S {
         &mut self.scanner
     }
