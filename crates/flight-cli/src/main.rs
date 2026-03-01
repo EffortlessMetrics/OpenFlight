@@ -148,7 +148,11 @@ enum Commands {
     /// Enter safe mode (zero FFB, passthrough axes)
     SafeMode,
     /// Run diagnostic checks (shorthand for diag health)
-    Diagnostics,
+    Diagnostics {
+        /// Create a diagnostic bundle instead of showing health summary
+        #[arg(long)]
+        bundle: bool,
+    },
     /// Show product posture summary
     #[command(name = "--show-posture", hide = true)]
     ShowPosture,
@@ -264,14 +268,27 @@ async fn execute_command(
         Commands::SafeMode => {
             commands::safe_mode::execute(cli.output, cli.verbose, client_manager).await
         }
-        Commands::Diagnostics => {
-            commands::diag::execute(
-                &commands::DiagAction::Health,
-                cli.output,
-                cli.verbose,
-                client_manager,
-            )
-            .await
+        Commands::Diagnostics { bundle } => {
+            if *bundle {
+                commands::diag::execute(
+                    &commands::DiagAction::Bundle {
+                        output: None,
+                        include_recordings: false,
+                    },
+                    cli.output,
+                    cli.verbose,
+                    client_manager,
+                )
+                .await
+            } else {
+                commands::diag::execute(
+                    &commands::DiagAction::Health,
+                    cli.output,
+                    cli.verbose,
+                    client_manager,
+                )
+                .await
+            }
         }
         Commands::ShowPosture => {
             commands::posture::execute(cli.output, cli.verbose, client_manager).await
@@ -393,7 +410,7 @@ mod tests {
     #[test]
     fn parse_diagnostics_subcommand() {
         let cli = Cli::try_parse_from(["flightctl", "diagnostics"]).unwrap();
-        assert!(matches!(cli.command, Commands::Diagnostics));
+        assert!(matches!(cli.command, Commands::Diagnostics { .. }));
     }
 
     #[test]
@@ -640,6 +657,37 @@ mod tests {
         } = cli.command
         {
             assert_eq!(duration, 30);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_profile_active_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "profile", "active"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Profile {
+                action: commands::ProfileAction::Active
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diagnostics_with_bundle_flag() {
+        let cli = Cli::try_parse_from(["flightctl", "diagnostics", "--bundle"]).unwrap();
+        if let Commands::Diagnostics { bundle } = cli.command {
+            assert!(bundle);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_diagnostics_without_bundle_defaults_false() {
+        let cli = Cli::try_parse_from(["flightctl", "diagnostics"]).unwrap();
+        if let Commands::Diagnostics { bundle } = cli.command {
+            assert!(!bundle);
         } else {
             panic!("unexpected command variant");
         }

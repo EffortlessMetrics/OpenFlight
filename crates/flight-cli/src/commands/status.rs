@@ -26,6 +26,8 @@ fn offline_status(output_format: OutputFormat, verbose: bool, err: &anyhow::Erro
         "uptime_seconds": null,
         "connected_devices": null,
         "total_devices": null,
+        "active_profile": null,
+        "active_sim": null,
         "cli_version": env!("CARGO_PKG_VERSION"),
         "message": "Flight Hub service is not running or unreachable",
     });
@@ -63,6 +65,8 @@ async fn execute_online(
         "uptime_seconds": service_info.uptime_seconds,
         "connected_devices": connected_devices,
         "total_devices": total_devices,
+        "active_profile": "default",
+        "active_sim": null,
     });
 
     if verbose {
@@ -120,6 +124,46 @@ fn device_type_to_string(device_type: flight_ipc::DeviceType) -> &'static str {
     }
 }
 
+/// Format a human-readable status summary
+pub fn format_status_summary(
+    service_status: &str,
+    uptime: Option<i64>,
+    connected_devices: Option<usize>,
+    active_profile: Option<&str>,
+    active_sim: Option<&str>,
+) -> String {
+    let mut lines = Vec::new();
+    lines.push(format!("Service: {}", service_status));
+    if let Some(seconds) = uptime {
+        lines.push(format!("Uptime:  {}", format_uptime(seconds)));
+    }
+    if let Some(count) = connected_devices {
+        lines.push(format!("Devices: {} connected", count));
+    }
+    lines.push(format!(
+        "Profile: {}",
+        active_profile.unwrap_or("none")
+    ));
+    lines.push(format!("Sim:     {}", active_sim.unwrap_or("none")));
+    lines.join("\n")
+}
+
+fn format_uptime(seconds: i64) -> String {
+    let days = seconds / 86400;
+    let hours = (seconds % 86400) / 3600;
+    let minutes = (seconds % 3600) / 60;
+    let secs = seconds % 60;
+    if days > 0 {
+        format!("{}d {}h {}m {}s", days, hours, minutes, secs)
+    } else if hours > 0 {
+        format!("{}h {}m {}s", hours, minutes, secs)
+    } else if minutes > 0 {
+        format!("{}m {}s", minutes, secs)
+    } else {
+        format!("{}s", secs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,5 +200,67 @@ mod tests {
         let result = offline_status(OutputFormat::Human, false, &err);
         assert!(result.contains("unreachable"));
         assert!(result.contains("cli_version"));
+    }
+
+    #[test]
+    fn offline_status_includes_active_profile_null() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Json, false, &err);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed["data"]["active_profile"].is_null());
+    }
+
+    #[test]
+    fn offline_status_includes_active_sim_null() {
+        let err = anyhow::anyhow!("connection refused");
+        let result = offline_status(OutputFormat::Json, false, &err);
+        let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed["data"]["active_sim"].is_null());
+    }
+
+    #[test]
+    fn format_status_summary_running_service() {
+        let summary = format_status_summary(
+            "running",
+            Some(3661),
+            Some(3),
+            Some("combat"),
+            Some("msfs"),
+        );
+        assert!(summary.contains("Service: running"));
+        assert!(summary.contains("Uptime:"));
+        assert!(summary.contains("Devices: 3 connected"));
+        assert!(summary.contains("Profile: combat"));
+        assert!(summary.contains("Sim:     msfs"));
+    }
+
+    #[test]
+    fn format_status_summary_unreachable_service() {
+        let summary = format_status_summary("unreachable", None, None, None, None);
+        assert!(summary.contains("Service: unreachable"));
+        assert!(summary.contains("Profile: none"));
+        assert!(summary.contains("Sim:     none"));
+        assert!(!summary.contains("Uptime:"));
+        assert!(!summary.contains("Devices:"));
+    }
+
+    #[test]
+    fn format_uptime_seconds_only() {
+        assert_eq!(format_uptime(45), "45s");
+    }
+
+    #[test]
+    fn format_uptime_minutes_and_seconds() {
+        assert_eq!(format_uptime(130), "2m 10s");
+    }
+
+    #[test]
+    fn format_uptime_hours() {
+        assert_eq!(format_uptime(3723), "1h 2m 3s");
+    }
+
+    #[test]
+    fn format_uptime_days() {
+        assert_eq!(format_uptime(90061), "1d 1h 1m 1s");
     }
 }

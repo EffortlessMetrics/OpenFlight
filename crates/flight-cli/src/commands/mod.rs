@@ -88,6 +88,8 @@ pub enum ProfileAction {
         #[arg(long)]
         include_builtin: bool,
     },
+    /// Show currently active profile
+    Active,
     /// Apply a profile from file
     Apply {
         /// Path to profile JSON file
