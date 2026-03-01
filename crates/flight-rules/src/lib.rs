@@ -47,7 +47,7 @@ pub struct CompiledRule {
 }
 
 /// Rule condition parsed from DSL string
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Condition {
     /// Variable comparison: var op value
     Compare {
@@ -64,7 +64,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,

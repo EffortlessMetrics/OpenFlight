@@ -247,18 +247,8 @@ mod parser_conditions {
 
     #[test]
     fn missing_spaces_around_operator_is_error() {
-        // Without spaces the parser treats it as a plain boolean var
-        // "ias>=200" has `>` and `=` chars so it enters comparison parsing
-        // but fails because of no space-delimited operator
-        let result = compiler().parse_condition("ias>=200");
-        // Must not parse as a correct >= comparison
-        if let Ok(Condition::Compare {
-            operator: CompareOp::GreaterEqual,
-            ..
-        }) = &result
-        {
-            panic!("Should not parse ias>=200 as valid >=");
-        }
+        assert!(compiler().parse_condition("ias>=200").is_err());
+        assert!(compiler().parse_condition("ias>200").is_err());
     }
 
     #[test]
@@ -723,7 +713,7 @@ mod schema_validation {
             );
             // Empty strings short-circuit before compile, but compile also handles them
             let s = schema(vec![rule(when, act)]);
-            let _ = s.compile(); // Must not panic
+            assert!(s.compile().is_err(), "compile should fail for: {} → {}", when, act);
         }
     }
 
@@ -820,6 +810,9 @@ mod property_tests {
                 let r1 = c.parse_condition(&expr);
                 let r2 = c.parse_condition(&expr);
                 prop_assert_eq!(r1.is_ok(), r2.is_ok());
+                if let (Ok(c1), Ok(c2)) = (r1, r2) {
+                    prop_assert_eq!(c1, c2);
+                }
             }
         }
 
