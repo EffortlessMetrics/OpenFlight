@@ -742,6 +742,136 @@ pub fn efis_panel_profile() -> DeviceProfile {
     }
 }
 
+// ── F-16 ICP ──────────────────────────────────────────────────────────────────
+
+/// Profile for the WinWing F-16 ICP (Integrated Control Panel).
+///
+/// Replica F-16 data entry display/ICP with keypad buttons, priority
+/// function buttons, DEDUP/RET and SYM rotary wheels, and a rocker switch.
+pub fn f16_icp_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing F-16 ICP",
+        vid: 0x4098,
+        pid: 0xBEDF,
+        axes: vec![],
+        button_count: 26,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "keypad",
+                count: 10,
+            },
+            ButtonGroupDescriptor {
+                name: "data_entry",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "comm_override",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "iff_cni",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "dcs_sequence",
+                count: 4,
+            },
+            ButtonGroupDescriptor {
+                name: "countermeasures",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "mark_hack",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "misc",
+                count: 2,
+            },
+        ],
+        hats: vec![],
+        encoders: vec![
+            EncoderDescriptor {
+                name: "DEDUP/RET",
+                has_push: false,
+            },
+            EncoderDescriptor {
+                name: "SYM",
+                has_push: false,
+            },
+        ],
+        detents: vec![],
+        displays: vec![
+            DisplayFieldDescriptor {
+                name: "DED_LINE1",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE2",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE3",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE4",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE5",
+                display_type: "lcd",
+                width: 24,
+            },
+        ],
+        backlight_led_count: 26,
+    }
+}
+
+// ── MFD Panel ─────────────────────────────────────────────────────────────────
+
+/// Profile for the WinWing MFD (Multi-Function Display) Panel.
+///
+/// 20 bezel buttons arranged around an LCD screen mount (5 per side),
+/// each with an individually-addressable backlight LED, plus a
+/// brightness rocker.
+pub fn mfd_panel_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing MFD Panel",
+        vid: 0x4098,
+        pid: 0xBEE8,
+        axes: vec![],
+        button_count: 20,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "top_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "right_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "bottom_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "left_bezel",
+                count: 5,
+            },
+        ],
+        hats: vec![],
+        encoders: vec![],
+        detents: vec![],
+        displays: vec![],
+        backlight_led_count: 20,
+    }
+}
+
 // ── Lookup ────────────────────────────────────────────────────────────────────
 
 /// Look up a device profile by USB Product ID.
@@ -753,10 +883,13 @@ pub fn profile_by_pid(pid: u16) -> Option<DeviceProfile> {
         0xBE62 => Some(orion2_throttle_profile()),
         0xBEA8 => Some(f16ex_grip_profile()),
         0xBEB0 => Some(a10_grip_profile()),
+        0xBEDE => Some(f16_icp_profile()),  // F-16 ICP shares UFC PID space
+        0xBEDF => Some(f16_icp_profile()),
         0xBEE0 => Some(take_off_panel_profile()),
         0xBEE2 => Some(combat_ready_panel_profile()),
         0xBEE4 => Some(fcu_panel_profile()),
         0xBEE6 => Some(efis_panel_profile()),
+        0xBEE8 => Some(mfd_panel_profile()),
         _ => None,
     }
 }
@@ -773,6 +906,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
         combat_ready_panel_profile(),
         fcu_panel_profile(),
         efis_panel_profile(),
+        f16_icp_profile(),
+        mfd_panel_profile(),
     ]
 }
 
@@ -807,7 +942,7 @@ mod tests {
 
     #[test]
     fn test_all_profiles_count() {
-        assert_eq!(all_profiles().len(), 9);
+        assert_eq!(all_profiles().len(), 11);
     }
 
     #[test]
@@ -1158,6 +1293,8 @@ mod tests {
             combat_ready_panel_profile(),
             fcu_panel_profile(),
             efis_panel_profile(),
+            f16_icp_profile(),
+            mfd_panel_profile(),
         ] {
             assert!(p.axes.is_empty(), "{} should have no axes", p.name);
         }
@@ -1203,5 +1340,126 @@ mod tests {
                 );
             }
         }
+    }
+
+    // ── F-16 ICP ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_f16_icp_buttons() {
+        let p = f16_icp_profile();
+        assert_eq!(p.button_count, 26);
+    }
+
+    #[test]
+    fn test_f16_icp_encoders() {
+        let p = f16_icp_profile();
+        assert_eq!(p.encoders.len(), 2);
+        let enc_names: Vec<_> = p.encoders.iter().map(|e| e.name).collect();
+        assert!(enc_names.contains(&"DEDUP/RET"));
+        assert!(enc_names.contains(&"SYM"));
+    }
+
+    #[test]
+    fn test_f16_icp_displays() {
+        let p = f16_icp_profile();
+        assert_eq!(p.displays.len(), 5);
+        assert!(p.displays.iter().all(|d| d.display_type == "lcd"));
+        assert!(p.displays.iter().all(|d| d.width == 24));
+    }
+
+    #[test]
+    fn test_f16_icp_has_keypad_group() {
+        let p = f16_icp_profile();
+        assert!(p.button_groups.iter().any(|g| g.name == "keypad"));
+    }
+
+    #[test]
+    fn test_f16_icp_backlight() {
+        let p = f16_icp_profile();
+        assert_eq!(p.backlight_led_count, 26);
+    }
+
+    #[test]
+    fn test_f16_icp_pid() {
+        let p = f16_icp_profile();
+        assert_eq!(p.pid, 0xBEDF);
+    }
+
+    #[test]
+    fn test_f16_icp_no_axes() {
+        assert!(f16_icp_profile().axes.is_empty());
+    }
+
+    #[test]
+    fn test_f16_icp_no_detents() {
+        assert!(f16_icp_profile().detents.is_empty());
+    }
+
+    // ── MFD Panel ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_mfd_panel_buttons() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.button_count, 20);
+    }
+
+    #[test]
+    fn test_mfd_panel_button_groups() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.button_groups.len(), 4);
+        let names: Vec<_> = p.button_groups.iter().map(|g| g.name).collect();
+        assert!(names.contains(&"top_bezel"));
+        assert!(names.contains(&"right_bezel"));
+        assert!(names.contains(&"bottom_bezel"));
+        assert!(names.contains(&"left_bezel"));
+    }
+
+    #[test]
+    fn test_mfd_panel_each_side_five_buttons() {
+        let p = mfd_panel_profile();
+        for g in &p.button_groups {
+            assert_eq!(g.count, 5, "{} should have 5 buttons", g.name);
+        }
+    }
+
+    #[test]
+    fn test_mfd_panel_all_buttons_backlit() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.backlight_led_count, p.button_count);
+    }
+
+    #[test]
+    fn test_mfd_panel_no_encoders() {
+        assert!(mfd_panel_profile().encoders.is_empty());
+    }
+
+    #[test]
+    fn test_mfd_panel_no_displays() {
+        assert!(mfd_panel_profile().displays.is_empty());
+    }
+
+    #[test]
+    fn test_mfd_panel_pid() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.pid, 0xBEE8);
+    }
+
+    #[test]
+    fn test_mfd_panel_no_axes() {
+        assert!(mfd_panel_profile().axes.is_empty());
+    }
+
+    // ── PID lookup for new devices ────────────────────────────────────────
+
+    #[test]
+    fn test_profile_by_pid_f16_icp() {
+        let p = profile_by_pid(0xBEDF).unwrap();
+        assert!(p.name.contains("ICP"));
+    }
+
+    #[test]
+    fn test_profile_by_pid_mfd() {
+        let p = profile_by_pid(0xBEE8).unwrap();
+        assert!(p.name.contains("MFD"));
     }
 }
