@@ -76,6 +76,9 @@ pub use rtkit::{MockRtkitBackend, RtkitBackend, RtkitError, RtkitHandle};
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+mod depth_tests;
+
 /// Real-time scheduler configuration
 #[derive(Debug, Clone)]
 pub struct SchedulerConfig {
