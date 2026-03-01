@@ -1,0 +1,5 @@
+aircraft = "AH-64D"
+axis_count = 4
+throttle_range = [0.0, 1.0]
+stick_throw = 40.0
+quirks = ["collective", "cyclic", "anti-torque"]
