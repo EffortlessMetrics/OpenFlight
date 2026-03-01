@@ -131,8 +131,13 @@ impl TopicFilter {
     ///
     /// Preserves the `explicit` flag — clearing the last bit produces a
     /// match-nothing filter, **not** a wildcard.
+    ///
+    /// A wildcard filter is not modified by this operation.
     #[inline]
     pub fn remove(&mut self, domain: EventDomain) {
+        if !self.explicit {
+            return; // don't modify wildcard
+        }
         self.mask &= !domain.mask();
     }
 
@@ -424,6 +429,9 @@ impl FilteredSubscriber {
             }
             BackpressurePolicy::DropNewest => EnqueueResult::DroppedNewest,
             BackpressurePolicy::Block => {
+                if self.pending >= self.capacity {
+                    return EnqueueResult::WouldBlock;
+                }
                 self.pending += 1;
                 EnqueueResult::Accepted
             }
@@ -448,6 +456,8 @@ pub enum EnqueueResult {
     DroppedNewest,
     /// Event was filtered out (domain not accepted).
     Filtered,
+    /// Buffer is full and the subscriber uses `Block` policy.
+    WouldBlock,
 }
 
 // ---------------------------------------------------------------------------
@@ -522,11 +532,16 @@ impl FilteredSubscriberSet {
             };
 
             match sub.try_enqueue(domain) {
-                EnqueueResult::Accepted | EnqueueResult::AcceptedDroppedOldest => {
+                EnqueueResult::Accepted => {
                     accepted += 1;
                     stats.set_subscriber_lag(i, u64::from(sub.pending));
                 }
-                EnqueueResult::DroppedNewest => {
+                EnqueueResult::AcceptedDroppedOldest => {
+                    accepted += 1;
+                    stats.record_drop(domain);
+                    stats.set_subscriber_lag(i, u64::from(sub.pending));
+                }
+                EnqueueResult::DroppedNewest | EnqueueResult::WouldBlock => {
                     dropped += 1;
                     stats.record_drop(domain);
                     stats.set_subscriber_lag(i, u64::from(sub.pending));
@@ -745,16 +760,16 @@ mod tests {
     }
 
     #[test]
-    fn backpressure_block_keeps_accepting() {
+    fn backpressure_block_caps_at_capacity() {
         let mut sub = FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::Block, 2);
         sub.try_enqueue(EventDomain::Telemetry);
         sub.try_enqueue(EventDomain::Telemetry);
-        // Buffer "full" but Block allows overflow
+        // Buffer full — Block returns WouldBlock, pending stays at capacity
         assert_eq!(
             sub.try_enqueue(EventDomain::Telemetry),
-            EnqueueResult::Accepted
+            EnqueueResult::WouldBlock
         );
-        assert_eq!(sub.pending, 3);
+        assert_eq!(sub.pending, 2);
     }
 
     #[test]
@@ -936,10 +951,11 @@ mod tests {
 
         set.dispatch(EventDomain::Telemetry, &stats);
         set.dispatch(EventDomain::Telemetry, &stats);
-        // Third accepted (oldest dropped)
+        // Third accepted (oldest dropped) — counted as a drop stat
         let s = set.dispatch(EventDomain::Telemetry, &stats);
         assert_eq!(s.accepted, 1);
-        assert_eq!(s.dropped, 0); // not counted as a "drop" stat; it's a replacement
+        assert_eq!(s.dropped, 0);
+        assert_eq!(stats.total_dropped(), 1); // eviction is recorded
     }
 
     #[test]
@@ -980,5 +996,71 @@ mod tests {
         assert!(!filter.matches(EventDomain::Telemetry));
         assert!(!filter.matches(EventDomain::AxisData));
         assert!(!filter.is_wildcard());
+    }
+
+    #[test]
+    fn remove_on_wildcard_is_noop() {
+        let mut filter = TopicFilter::all();
+        assert!(filter.is_wildcard());
+
+        filter.remove(EventDomain::Telemetry);
+
+        // Wildcard must remain unchanged after remove.
+        assert!(filter.is_wildcard());
+        for d in EventDomain::ALL {
+            assert!(filter.matches(d), "wildcard should still match {d:?}");
+        }
+    }
+
+    // -- Regression: Block policy must not overflow pending ------------------
+
+    #[test]
+    fn block_policy_does_not_overflow_pending() {
+        let mut sub = FilteredSubscriber::new(1, TopicFilter::all(), BackpressurePolicy::Block, 4);
+        for _ in 0..4 {
+            assert_eq!(
+                sub.try_enqueue(EventDomain::Telemetry),
+                EnqueueResult::Accepted
+            );
+        }
+        assert_eq!(sub.pending, 4);
+
+        // Additional enqueues must return WouldBlock and not increase pending.
+        for _ in 0..10 {
+            assert_eq!(
+                sub.try_enqueue(EventDomain::Telemetry),
+                EnqueueResult::WouldBlock
+            );
+        }
+        assert_eq!(sub.pending, 4);
+    }
+
+    // -- Regression: DropOldest evictions counted in drop stats --------------
+
+    #[test]
+    fn drop_oldest_eviction_counted_in_stats() {
+        let mut set = FilteredSubscriberSet::new();
+        let stats = BusStatistics::new();
+
+        set.add(FilteredSubscriber::new(
+            1,
+            TopicFilter::all(),
+            BackpressurePolicy::DropOldest,
+            2,
+        ));
+
+        // Fill buffer
+        set.dispatch(EventDomain::Telemetry, &stats);
+        set.dispatch(EventDomain::Telemetry, &stats);
+        assert_eq!(stats.total_dropped(), 0);
+
+        // Third event evicts oldest — must be recorded as a drop
+        set.dispatch(EventDomain::Telemetry, &stats);
+        assert_eq!(stats.total_dropped(), 1);
+        assert_eq!(stats.domain_dropped(EventDomain::Telemetry), 1);
+
+        // Fourth event — another eviction
+        set.dispatch(EventDomain::Telemetry, &stats);
+        assert_eq!(stats.total_dropped(), 2);
     }
 }
