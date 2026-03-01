@@ -8,12 +8,18 @@
 //! button bitmask correctness, and device-table/profile agreement.
 
 use flight_hotas_virpil::{
-    // ─── Constants ────────────────────────────────────────────────────────
-    VIRPIL_AXIS_MAX,
-    VIRPIL_VENDOR_ID,
+    // ─── Button counts ───────────────────────────────────────────────────
+    ACE_PEDALS_BUTTON_COUNT,
+    ACE_TORQ_BUTTON_COUNT,
+    // ─── Variants / types ────────────────────────────────────────────────
+    AlphaPrimeVariant,
+    PANEL2_BUTTON_COUNT,
+    ROTOR_TCS_BUTTON_COUNT,
     // ─── Device table PIDs ───────────────────────────────────────────────
     VIRPIL_ACE_PEDALS_PID,
     VIRPIL_ACE_TORQ_PID,
+    // ─── Constants ────────────────────────────────────────────────────────
+    VIRPIL_AXIS_MAX,
     VIRPIL_CM3_THROTTLE_PID,
     VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
     VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID,
@@ -22,6 +28,7 @@ use flight_hotas_virpil::{
     VIRPIL_PANEL1_PID,
     VIRPIL_PANEL2_PID,
     VIRPIL_ROTOR_TCS_PLUS_PID,
+    VIRPIL_VENDOR_ID,
     VIRPIL_WARBRD_D_PID,
     VIRPIL_WARBRD_PID,
     // ─── Min report sizes ────────────────────────────────────────────────
@@ -35,11 +42,11 @@ use flight_hotas_virpil::{
     VPC_PANEL2_MIN_REPORT_BYTES,
     VPC_ROTOR_TCS_MIN_REPORT_BYTES,
     VPC_WARBRD_MIN_REPORT_BYTES,
-    // ─── Button counts ───────────────────────────────────────────────────
-    ACE_PEDALS_BUTTON_COUNT,
-    ACE_TORQ_BUTTON_COUNT,
-    PANEL2_BUTTON_COUNT,
-    ROTOR_TCS_BUTTON_COUNT,
+    VirpilModel,
+    VpcAlphaHat,
+    VpcMongoostHat,
+    WarBrdVariant,
+    is_virpil_device,
     // ─── Parsers ─────────────────────────────────────────────────────────
     parse_ace_pedals_report,
     parse_ace_torq_report,
@@ -51,25 +58,17 @@ use flight_hotas_virpil::{
     parse_panel2_report,
     parse_rotor_tcs_report,
     parse_warbrd_report,
-    // ─── Variants / types ────────────────────────────────────────────────
-    AlphaPrimeVariant,
-    VirpilModel,
-    VpcAlphaHat,
-    VpcMongoostHat,
-    WarBrdVariant,
-    is_virpil_device,
-    virpil_model,
+    // ─── Profiles ────────────────────────────────────────────────────────
+    profiles::{
+        ACE_PEDALS_PROFILE, ACE_TORQ_PROFILE, ALL_PROFILES, ALPHA_PROFILE, AxisRole,
+        CM3_THROTTLE_PROFILE, HatType, ROTOR_TCS_PROFILE, profile_for_pid,
+    },
     // ─── Protocol ────────────────────────────────────────────────────────
     protocol::{
         AXIS_MAX, AXIS_RESOLUTION_BITS, DEVICE_TABLE, INPUT_REPORT_ID, LED_REPORT_ID,
         LED_REPORT_SIZE, LedColor, build_led_report, denormalize_axis, device_info, normalize_axis,
     },
-    // ─── Profiles ────────────────────────────────────────────────────────
-    profiles::{
-        ACE_PEDALS_PROFILE, ACE_TORQ_PROFILE, ALL_PROFILES, ALPHA_PROFILE,
-        AxisRole, CM3_THROTTLE_PROFILE, HatType, ROTOR_TCS_PROFILE,
-        profile_for_pid,
-    },
+    virpil_model,
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -222,7 +221,7 @@ fn virpil_model_returns_none_for_unknown_pid() {
 #[test]
 fn device_table_pids_are_all_unique() {
     let mut pids: Vec<u16> = DEVICE_TABLE.iter().map(|d| d.pid).collect();
-    pids.sort();
+    pids.sort_unstable();
     let deduped_len = {
         pids.dedup();
         pids.len()
@@ -264,9 +263,7 @@ fn device_table_report_size_agrees_with_module_constants() {
         VPC_PANEL2_MIN_REPORT_BYTES
     );
     assert_eq!(
-        device_info(VIRPIL_ACE_PEDALS_PID)
-            .unwrap()
-            .min_report_bytes,
+        device_info(VIRPIL_ACE_PEDALS_PID).unwrap().min_report_bytes,
         VPC_ACE_PEDALS_MIN_REPORT_BYTES
     );
     assert_eq!(
@@ -432,7 +429,7 @@ fn led_color_default_is_off() {
 #[test]
 fn all_profiles_have_unique_pids() {
     let mut pids: Vec<u16> = ALL_PROFILES.iter().map(|p| p.pid).collect();
-    pids.sort();
+    pids.sort_unstable();
     pids.dedup();
     assert_eq!(pids.len(), ALL_PROFILES.len());
 }
@@ -555,20 +552,18 @@ fn all_parsers_reject_empty_input() {
 #[test]
 fn all_parsers_reject_one_byte_short() {
     assert!(parse_alpha_report(&[0x01; VPC_ALPHA_MIN_REPORT_BYTES - 1]).is_err());
-    assert!(parse_alpha_prime_report(
-        &[0x01; VPC_ALPHA_PRIME_MIN_REPORT_BYTES - 1],
-        AlphaPrimeVariant::Right
-    )
-    .is_err());
     assert!(
-        parse_mongoost_stick_report(&[0x01; VPC_MONGOOST_STICK_MIN_REPORT_BYTES - 1]).is_err()
+        parse_alpha_prime_report(
+            &[0x01; VPC_ALPHA_PRIME_MIN_REPORT_BYTES - 1],
+            AlphaPrimeVariant::Right
+        )
+        .is_err()
     );
+    assert!(parse_mongoost_stick_report(&[0x01; VPC_MONGOOST_STICK_MIN_REPORT_BYTES - 1]).is_err());
     assert!(
         parse_warbrd_report(&[0x01; VPC_WARBRD_MIN_REPORT_BYTES - 1], WarBrdVariant::D).is_err()
     );
-    assert!(
-        parse_cm3_throttle_report(&[0x01; VPC_CM3_THROTTLE_MIN_REPORT_BYTES - 1]).is_err()
-    );
+    assert!(parse_cm3_throttle_report(&[0x01; VPC_CM3_THROTTLE_MIN_REPORT_BYTES - 1]).is_err());
     assert!(parse_panel1_report(&[0x01; VPC_PANEL1_MIN_REPORT_BYTES - 1]).is_err());
     assert!(parse_panel2_report(&[0x01; VPC_PANEL2_MIN_REPORT_BYTES - 1]).is_err());
     assert!(parse_ace_pedals_report(&[0x01; VPC_ACE_PEDALS_MIN_REPORT_BYTES - 1]).is_err());
@@ -584,8 +579,7 @@ fn all_parsers_reject_one_byte_short() {
 fn all_parsers_accept_exact_min_length() {
     assert!(parse_alpha_report(&make_5ax_report([0; 5], [0; 4])).is_ok());
     assert!(
-        parse_alpha_prime_report(&make_5ax_report([0; 5], [0; 4]), AlphaPrimeVariant::Left)
-            .is_ok()
+        parse_alpha_prime_report(&make_5ax_report([0; 5], [0; 4]), AlphaPrimeVariant::Left).is_ok()
     );
     assert!(parse_mongoost_stick_report(&make_5ax_report([0; 5], [0; 4])).is_ok());
     assert!(parse_warbrd_report(&make_5ax_report([0; 5], [0; 4]), WarBrdVariant::Original).is_ok());
@@ -944,9 +938,8 @@ fn error_messages_contain_received_byte_count() {
 #[test]
 fn default_input_states_have_zero_axes_and_no_buttons() {
     use flight_hotas_virpil::{
-        VpcAcePedalsInputState, VpcAceTorqInputState, VpcAlphaInputState,
-        VpcCm3ThrottleInputState, VpcMongoostInputState, VpcPanel1InputState,
-        VpcPanel2InputState, VpcRotorTcsInputState,
+        VpcAcePedalsInputState, VpcAceTorqInputState, VpcAlphaInputState, VpcCm3ThrottleInputState,
+        VpcMongoostInputState, VpcPanel1InputState, VpcPanel2InputState, VpcRotorTcsInputState,
     };
 
     let alpha = VpcAlphaInputState::default();
