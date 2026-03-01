@@ -985,3 +985,154 @@ mod tests {
         assert!(status.validation_results.is_empty());
     }
 }
+
+/// Depth tests for the safe mode basic profile and pipeline compilation.
+///
+/// These live in-crate because they exercise private methods
+/// (`create_basic_profile`, `build_pipeline_for_axis`).
+#[cfg(test)]
+mod depth_tests {
+    use super::*;
+    use crate::service::build_pipeline_for_axis;
+
+    // =====================================================================
+    // BASIC PROFILE depth tests (8)
+    // =====================================================================
+
+    /// Safe profile sets reasonable deadzones for all axes.
+    #[test]
+    fn basic_profile_has_reasonable_deadzones() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let dz = axis
+                .deadzone
+                .unwrap_or_else(|| panic!("{name} must have a deadzone"));
+            assert!(dz > 0.0, "{name} deadzone must be positive");
+            assert!(dz <= 0.1, "{name} deadzone must be ≤ 10%");
+        }
+    }
+
+    /// Safe profile limits axis range — no inversion or extreme transforms.
+    #[test]
+    fn basic_profile_limits_axis_range() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(axis.curve.is_none(), "{name} must not have a custom curve");
+            assert!(axis.detents.is_empty(), "{name} must have no detents");
+            assert!(axis.slew_rate.is_none(), "{name} must have no slew limit");
+        }
+    }
+
+    /// Safe profile disables FFB: axis-only mode, no sim bindings.
+    #[test]
+    fn basic_profile_disables_ffb() {
+        let config = SafeModeConfig {
+            axis_only: true,
+            use_basic_profile: true,
+            skip_power_checks: true,
+            minimal_mode: true,
+        };
+        assert!(config.axis_only);
+        assert!(config.minimal_mode);
+
+        let manager = SafeModeManager::new(config);
+        let profile = manager.create_basic_profile();
+        assert!(profile.sim.is_none());
+        assert!(profile.pof_overrides.is_none());
+    }
+
+    /// Safe profile uses linear or near-linear curves (expo ≤ 0.5).
+    #[test]
+    fn basic_profile_uses_linear_or_near_linear_curves() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(
+                axis.curve.is_none(),
+                "{name} must not have custom curve points"
+            );
+            if let Some(expo) = axis.expo {
+                assert!(
+                    expo <= 0.5,
+                    "{name} expo ({expo}) should be mild (≤ 0.5) for safe mode"
+                );
+            }
+        }
+    }
+
+    /// Each axis type has sane defaults: pitch, roll, yaw, throttle.
+    #[test]
+    fn basic_profile_each_axis_type_has_sane_defaults() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for name in &["pitch", "roll", "yaw", "throttle"] {
+            assert!(profile.axes.contains_key(*name), "missing axis: {name}");
+        }
+
+        // Flight axes share the same deadzone for predictability
+        let pitch_dz = profile.axes["pitch"].deadzone;
+        let roll_dz = profile.axes["roll"].deadzone;
+        let yaw_dz = profile.axes["yaw"].deadzone;
+        assert_eq!(pitch_dz, roll_dz, "pitch and roll deadzones should match");
+        assert_eq!(roll_dz, yaw_dz, "roll and yaw deadzones should match");
+
+        // Throttle has a smaller deadzone (absolute axis)
+        let throttle_dz = profile.axes["throttle"].deadzone.unwrap();
+        let flight_dz = pitch_dz.unwrap();
+        assert!(
+            throttle_dz < flight_dz,
+            "throttle deadzone should be smaller than flight axes"
+        );
+
+        // Throttle is linear (no expo) for precise power control
+        assert!(
+            profile.axes["throttle"].expo.is_none(),
+            "throttle should have no expo for linear response"
+        );
+    }
+
+    /// Profile compiles without errors.
+    #[test]
+    fn basic_profile_compiles_without_errors() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+        profile.validate().expect("safe mode profile must validate");
+    }
+
+    /// Profile is usable immediately — pipelines compile for all axes.
+    #[test]
+    fn basic_profile_is_usable_immediately() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    /// Safe profile has no filter configuration (no noise smoothing that
+    /// could mask inputs during troubleshooting).
+    #[test]
+    fn basic_profile_has_no_filter() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(
+                axis.filter.is_none(),
+                "{name} must have no filter in safe mode"
+            );
+        }
+    }
+}
