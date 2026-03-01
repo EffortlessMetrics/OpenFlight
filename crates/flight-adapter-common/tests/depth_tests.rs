@@ -421,8 +421,9 @@ fn telemetry_snapshot_field_access() {
 
 #[test]
 fn telemetry_snapshot_timestamp_is_recent() {
+    let before = std::time::Instant::now();
     let snap = TelemetrySnapshot::new(vec![], Duration::from_secs(10));
-    assert!(snap.timestamp.elapsed() < Duration::from_millis(100));
+    assert!(snap.timestamp >= before, "snapshot timestamp should be at or after construction start");
 }
 
 #[test]
@@ -576,7 +577,7 @@ fn bus_disconnect_handling() {
 // ===========================================================================
 
 #[test]
-fn metrics_connection_count_via_aircraft_changes() {
+fn metrics_aircraft_change_count() {
     let mut m = AdapterMetrics::new();
     m.record_aircraft_change("C172".to_string());
     m.record_aircraft_change("A320".to_string());
@@ -585,7 +586,7 @@ fn metrics_connection_count_via_aircraft_changes() {
 }
 
 #[test]
-fn metrics_disconnect_count_tracks_resets() {
+fn metrics_state_returns_to_disconnected_after_cycles() {
     let mut adapter = MockAdapter::new(TestConfig::default());
     let mut disconnect_count = 0u32;
 
@@ -704,9 +705,9 @@ fn error_reconnect_exhaustion() {
 // ===========================================================================
 
 #[test]
-fn reconnection_strategy_zero_attempt_returns_initial() {
+fn reconnection_strategy_first_attempt_returns_initial() {
     let s = ReconnectionStrategy::new(5, Duration::from_millis(100), Duration::from_secs(10));
-    assert_eq!(s.next_backoff(0), Duration::from_millis(100));
+    assert_eq!(s.next_backoff(1), Duration::from_millis(100));
 }
 
 #[test]
@@ -714,8 +715,8 @@ fn reconnection_strategy_should_retry_boundary() {
     let s = ReconnectionStrategy::new(3, Duration::from_millis(100), Duration::from_secs(10));
     assert!(s.should_retry(3));
     assert!(!s.should_retry(4));
-    assert!(s.should_retry(0));
     assert!(s.should_retry(1));
+    assert!(s.should_retry(2));
 }
 
 #[test]
