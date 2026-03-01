@@ -113,6 +113,20 @@ cp "$SCRIPT_DIR/postinst" "$PKG_DIR/DEBIAN/"
 cp "$SCRIPT_DIR/postrm"   "$PKG_DIR/DEBIAN/"
 chmod 0755 "$PKG_DIR/DEBIAN/postinst" "$PKG_DIR/DEBIAN/postrm"
 
+# Copy prerm if it exists (may live in installer/linux/debian/ or installer/debian/)
+PRERM_CANDIDATES=(
+    "$SCRIPT_DIR/../linux/debian/prerm"
+    "$SCRIPT_DIR/prerm"
+)
+for candidate in "${PRERM_CANDIDATES[@]}"; do
+    if [[ -f "$candidate" ]]; then
+        cp "$candidate" "$PKG_DIR/DEBIAN/prerm"
+        chmod 0755 "$PKG_DIR/DEBIAN/prerm"
+        success "prerm script staged"
+        break
+    fi
+done
+
 # Substitute version placeholder
 sed "s/{{VERSION}}/$VERSION/" "$SCRIPT_DIR/control" > "$PKG_DIR/DEBIAN/control"
 

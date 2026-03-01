@@ -23,6 +23,7 @@ mod fuzz_smoke;
 mod gherkin;
 mod hotas;
 mod normalize_docs;
+mod package;
 mod quality_gates;
 mod release;
 mod schema;
@@ -122,6 +123,20 @@ enum Commands {
         #[arg(long)]
         save_baseline: bool,
     },
+
+    /// Build Windows MSI installer package (requires WiX Toolset 3.x)
+    PackageWindows {
+        /// Skip building Rust binaries (use existing release binaries)
+        #[arg(long)]
+        skip_build: bool,
+    },
+
+    /// Build Linux .deb installer package (requires dpkg-deb)
+    PackageLinux {
+        /// Skip building Rust binaries (use existing release binaries)
+        #[arg(long)]
+        skip_build: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -173,6 +188,8 @@ fn main() -> Result<()> {
             threshold,
             save_baseline,
         } => bench_compare::run_bench_compare(threshold, save_baseline),
+        Commands::PackageWindows { skip_build } => package::run_package_windows(skip_build),
+        Commands::PackageLinux { skip_build } => package::run_package_linux(skip_build),
     }
 }
 
