@@ -238,12 +238,12 @@ fn x52_pro_led_color() {
         X52LedColor::Red,
     ];
 
-    for (idx, led) in leds.iter().enumerate() {
+    for led in &leds {
         for color in &colors {
             let (req_type, req, wvalue, windex) = x52_led_command(*led, *color);
             assert_eq!(req_type, protocol::LED_REQUEST_TYPE);
             assert_eq!(req, protocol::LED_REQUEST);
-            assert_eq!(wvalue, idx as u16, "LED index for {:?}", led);
+            assert_eq!(wvalue, *led as u16, "LED index for {:?}", led);
             assert_eq!(
                 windex,
                 protocol::x52_led_color_code(*color) as u16,
@@ -313,12 +313,12 @@ fn x56_rhino_rgb_led_control() {
     ];
     let test_color = RgbColor::new(100, 200, 50);
 
-    for (idx, zone) in zones.iter().enumerate() {
+    for zone in &zones {
         let buf = x56_rgb_set_zone(*zone, test_color);
         assert_eq!(buf.len(), X56_RGB_REPORT_SIZE);
         assert_eq!(buf[0], protocol::X56_RGB_REPORT_ID);
         assert_eq!(buf[1], protocol::X56_RGB_CMD);
-        assert_eq!(buf[2], idx as u8, "zone index for {:?}", zone);
+        assert_eq!(buf[2], *zone as u8, "zone index for {:?}", zone);
         assert_eq!(buf[3], 100, "red");
         assert_eq!(buf[4], 200, "green");
         assert_eq!(buf[5], 50, "blue");
@@ -786,24 +786,23 @@ fn device_id_model_discrimination() {
 /// No duplicate VID/PID entries in the device table.
 #[test]
 fn device_id_no_duplicates() {
+    use std::collections::HashSet;
     let table = protocol::DEVICE_TABLE;
-    for (i, a) in table.iter().enumerate() {
-        for b in &table[i + 1..] {
-            assert!(
-                !(a.vid == b.vid && a.pid == b.pid),
-                "duplicate {:04X}:{:04X} ({} vs {})",
-                a.vid,
-                a.pid,
-                a.name,
-                b.name,
-            );
-        }
+    let mut seen = HashSet::with_capacity(table.len());
+    for entry in table {
+        assert!(
+            seen.insert((entry.vid, entry.pid)),
+            "duplicate {:04X}:{:04X} ({})",
+            entry.vid,
+            entry.pid,
+            entry.name,
+        );
     }
 }
 
-/// VID constants match documented vendor IDs.
+/// VID constants match documented vendor IDs and known model identifications.
 #[test]
-fn device_id_firmware_variants() {
+fn device_id_vendor_ids_and_known_models() {
     assert_eq!(SAITEK_VID, 0x06A3, "Saitek VID");
     assert_eq!(MAD_CATZ_VID, 0x0738, "Mad Catz VID");
     assert_eq!(LOGITECH_VID, 0x046D, "Logitech VID");
