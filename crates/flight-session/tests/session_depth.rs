@@ -128,9 +128,10 @@ fn lifecycle_list_sessions_via_snapshots() {
     assert_eq!(sp.snapshot_count(), 5);
     for i in 0..5 {
         let snap = sp.restore_by_index(i).unwrap();
+        let expected = format!("profile-{i}");
         assert_eq!(
             snap.active_profile.as_deref(),
-            Some(format!("profile-{i}").as_str())
+            Some(expected.as_str())
         );
     }
 }
@@ -143,7 +144,7 @@ fn lifecycle_session_versioning_envelope() {
 
     let raw = std::fs::read_to_string(store.path()).unwrap();
     let envelope: serde_json::Value = serde_json::from_str(&raw).unwrap();
-    assert_eq!(envelope["version"], CURRENT_VERSION);
+    assert_eq!(envelope["version"].as_u64(), Some(CURRENT_VERSION as u64));
     assert!(envelope["state"].is_object());
 }
 
@@ -369,7 +370,7 @@ fn serde_corrupt_file_returns_descriptive_error() {
 
     // Truncated JSON.
     std::fs::write(&path, r#"{"version": 2, "state": {"active_pro"#).unwrap();
-    let store = SessionStore::new(&path);
+    let store = SessionStore::new(path.as_path());
     let err = store.load().unwrap_err();
     let msg = err.to_string();
     assert!(
@@ -397,13 +398,13 @@ fn file_config_directory_created_recursively() {
 }
 
 #[test]
-fn file_locking_concurrent_writes_last_wins() {
+fn file_sequential_writes_last_wins() {
     let dir = TempDir::new().unwrap();
     let path = dir.path().join("state.json");
 
     // Simulate sequential "concurrent" writes — last one wins.
     for i in 0..10 {
-        let store = SessionStore::new(&path);
+        let store = SessionStore::new(path.as_path());
         let state = SessionState {
             active_profile: Some(format!("profile-{i}")),
             ..SessionState::default()
@@ -417,7 +418,7 @@ fn file_locking_concurrent_writes_last_wins() {
 }
 
 #[test]
-fn file_concurrent_read_does_not_corrupt() {
+fn file_sequential_reads_consistent() {
     let dir = TempDir::new().unwrap();
     let store = SessionStore::new(dir.path().join("state.json"));
     store.save(&rich_state()).unwrap();
@@ -488,7 +489,7 @@ fn recovery_from_corrupt_session_loads_defaults() {
     // Write heartbeat to signal crash.
     std::fs::write(session_dir.join("heartbeat"), "1700000000").unwrap();
 
-    let mgr = RecoveryManager::new(&session_dir);
+    let mgr = RecoveryManager::new(session_dir.as_path());
     assert!(mgr.needs_recovery().unwrap());
     // Recovery attempts to load the corrupt file — should error.
     let result = mgr.recover();
@@ -499,7 +500,7 @@ fn recovery_from_corrupt_session_loads_defaults() {
 fn recovery_from_partial_write_detects_crash() {
     let dir = TempDir::new().unwrap();
     let session_dir = dir.path().join("session");
-    let mgr = RecoveryManager::new(&session_dir);
+    let mgr = RecoveryManager::new(session_dir.as_path());
 
     // Normal save.
     let state = rich_state();
@@ -878,11 +879,11 @@ fn recovery_staleness_threshold_configurable() {
 
     // With 1s threshold → stale.
     let mgr_short =
-        RecoveryManager::new(&session_dir).with_staleness_threshold(Duration::from_secs(1));
+        RecoveryManager::new(session_dir.clone()).with_staleness_threshold(Duration::from_secs(1));
     assert!(mgr_short.is_heartbeat_stale().unwrap());
 
     // With 60s threshold → not stale.
     let mgr_long =
-        RecoveryManager::new(&session_dir).with_staleness_threshold(Duration::from_secs(60));
+        RecoveryManager::new(session_dir).with_staleness_threshold(Duration::from_secs(60));
     assert!(!mgr_long.is_heartbeat_stale().unwrap());
 }
