@@ -146,7 +146,7 @@ impl ProfileLinter {
     #[must_use]
     pub fn rule_codes(&self) -> Vec<&str> {
         let mut sorted: Vec<&LintRule> = self.rules.iter().collect();
-        sorted.sort_by_key(|r| r.priority);
+        sorted.sort_by(|a, b| a.priority.cmp(&b.priority).then_with(|| a.code.cmp(&b.code)));
         sorted.iter().map(|r| r.code.as_str()).collect()
     }
 
@@ -156,7 +156,7 @@ impl ProfileLinter {
         let mut warnings = Vec::new();
         let mut errors = Vec::new();
         let mut sorted: Vec<&LintRule> = self.rules.iter().collect();
-        sorted.sort_by_key(|r| r.priority);
+        sorted.sort_by(|a, b| a.priority.cmp(&b.priority).then_with(|| a.code.cmp(&b.code)));
         for rule in sorted {
             if self.disabled_rules.contains(&rule.code) {
                 continue;
@@ -489,7 +489,7 @@ impl ProfileLinter {
                 if let Some(axes) = profile.get("axes").and_then(Value::as_array) {
                     for (i, axis) in axes.iter().enumerate() {
                         for (old, new) in &deprecated {
-                            if axis.get(*old).is_some() {
+                            if let Some(old_val) = axis.get(*old) {
                                 warnings.push(LintWarning {
                                     code: "W006".into(),
                                     message: format!(
@@ -499,8 +499,8 @@ impl ProfileLinter {
                                     severity: Severity::Info,
                                     fix: Some(FixSuggestion {
                                         description: format!("Rename '{old}' to '{new}'"),
-                                        path: format!("axes[{i}].{old}"),
-                                        suggested_value: None,
+                                        path: format!("axes[{i}].{new}"),
+                                        suggested_value: Some(old_val.clone()),
                                     }),
                                 });
                             }
@@ -543,6 +543,7 @@ fn eval_poly(coeffs: &[f64], x: f64) -> f64 {
 }
 
 /// Set a value at a simple JSON path (supports `field` and `axes[0].field`).
+/// Returns without modifying the document on malformed or out-of-bounds paths.
 fn set_path(root: &mut Value, path: &str, value: Value) {
     let parts: Vec<&str> = path.split('.').collect();
     let mut current = root;
@@ -550,26 +551,42 @@ fn set_path(root: &mut Value, path: &str, value: Value) {
         let is_last = idx == parts.len() - 1;
         // Check for array index: e.g. "axes[0]"
         if let Some(bracket) = part.find('[') {
-            let key = &part[..bracket];
-            let index_str = &part[bracket + 1..part.len() - 1];
-            if let Ok(i) = index_str.parse::<usize>() {
-                if is_last {
-                    if let Some(arr) = current.get_mut(key).and_then(Value::as_array_mut)
-                        && i < arr.len()
-                    {
-                        arr[i] = value;
-                    }
-                    return;
-                }
-                current = &mut current[key][i];
-            } else {
+            if !part.ends_with(']') || bracket + 1 >= part.len() - 1 {
                 return;
             }
+            let key = &part[..bracket];
+            let index_str = &part[bracket + 1..part.len() - 1];
+            let Ok(i) = index_str.parse::<usize>() else {
+                return;
+            };
+            if is_last {
+                if let Some(arr) = current.get_mut(key).and_then(Value::as_array_mut)
+                    && i < arr.len()
+                {
+                    arr[i] = value;
+                }
+                return;
+            }
+            let Some(arr) = current.get_mut(key).and_then(Value::as_array_mut) else {
+                return;
+            };
+            if i >= arr.len() {
+                return;
+            }
+            current = &mut arr[i];
         } else if is_last {
-            current[part] = value;
+            match current {
+                Value::Object(map) => {
+                    map.insert((*part).to_string(), value);
+                }
+                _ => {}
+            }
             return;
         } else {
-            current = &mut current[*part];
+            let Some(next) = current.get_mut(*part) else {
+                return;
+            };
+            current = next;
         }
     }
 }
