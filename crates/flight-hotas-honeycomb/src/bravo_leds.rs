@@ -209,6 +209,46 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
     data
 }
 
+/// Deserialise a 5-byte HID feature report into a [`BravoLedState`].
+///
+/// This is the inverse of [`serialize_led_report`], useful for diagnostics
+/// and round-trip testing. The report ID byte (`data[0]`) is ignored.
+pub fn deserialize_led_report(data: &[u8; 5]) -> BravoLedState {
+    BravoLedState {
+        hdg: data[1] & (1 << 0) != 0,
+        nav: data[1] & (1 << 1) != 0,
+        apr: data[1] & (1 << 2) != 0,
+        rev: data[1] & (1 << 3) != 0,
+        alt: data[1] & (1 << 4) != 0,
+        vs: data[1] & (1 << 5) != 0,
+        ias: data[1] & (1 << 6) != 0,
+        autopilot: data[1] & (1 << 7) != 0,
+
+        gear_l_green: data[2] & (1 << 0) != 0,
+        gear_l_red: data[2] & (1 << 1) != 0,
+        gear_c_green: data[2] & (1 << 2) != 0,
+        gear_c_red: data[2] & (1 << 3) != 0,
+        gear_r_green: data[2] & (1 << 4) != 0,
+        gear_r_red: data[2] & (1 << 5) != 0,
+        master_warning: data[2] & (1 << 6) != 0,
+        engine_fire: data[2] & (1 << 7) != 0,
+
+        low_oil_pressure: data[3] & (1 << 0) != 0,
+        low_fuel_pressure: data[3] & (1 << 1) != 0,
+        anti_ice: data[3] & (1 << 2) != 0,
+        starter_engaged: data[3] & (1 << 3) != 0,
+        apu: data[3] & (1 << 4) != 0,
+        master_caution: data[3] & (1 << 5) != 0,
+        vacuum: data[3] & (1 << 6) != 0,
+        low_hyd_pressure: data[3] & (1 << 7) != 0,
+
+        aux_fuel_pump: data[4] & (1 << 0) != 0,
+        parking_brake: data[4] & (1 << 1) != 0,
+        low_volts: data[4] & (1 << 2) != 0,
+        door: data[4] & (1 << 3) != 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -378,5 +418,56 @@ mod tests {
         assert_eq!(report[3], 0xFF); // all annunciator 1 LEDs
         // annunciator 2 only has 4 named LEDs (bits 0–3), high nibble unused
         assert_eq!(report[4] & 0x0F, 0x0F);
+    }
+
+    #[test]
+    fn test_deserialize_all_off() {
+        let report = [0x00, 0, 0, 0, 0];
+        let leds = deserialize_led_report(&report);
+        assert_eq!(leds, BravoLedState::all_off());
+    }
+
+    #[test]
+    fn test_deserialize_all_on_roundtrip() {
+        let original = BravoLedState::all_on();
+        let report = serialize_led_report(&original);
+        let deserialized = deserialize_led_report(&report);
+        assert_eq!(deserialized, original);
+    }
+
+    #[test]
+    fn test_deserialize_single_led_hdg() {
+        let report = [0x00, 0b0000_0001, 0, 0, 0];
+        let leds = deserialize_led_report(&report);
+        assert!(leds.hdg);
+        assert!(!leds.nav);
+        assert!(!leds.autopilot);
+    }
+
+    #[test]
+    fn test_deserialize_gear_and_warning() {
+        let report = [0x00, 0, 0b1100_0101, 0, 0];
+        let leds = deserialize_led_report(&report);
+        assert!(leds.gear_l_green);
+        assert!(!leds.gear_l_red);
+        assert!(leds.gear_c_green);
+        assert!(!leds.gear_c_red);
+        assert!(!leds.gear_r_green);
+        assert!(!leds.gear_r_red);
+        assert!(leds.master_warning);
+        assert!(leds.engine_fire);
+    }
+
+    #[test]
+    fn test_roundtrip_arbitrary_state() {
+        let mut leds = BravoLedState::all_off();
+        leds.nav = true;
+        leds.alt = true;
+        leds.gear_c_green = true;
+        leds.parking_brake = true;
+        leds.master_caution = true;
+        let report = serialize_led_report(&leds);
+        let deserialized = deserialize_led_report(&report);
+        assert_eq!(deserialized, leds);
     }
 }

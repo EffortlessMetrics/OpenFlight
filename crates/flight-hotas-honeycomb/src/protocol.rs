@@ -363,6 +363,269 @@ pub fn decode_all_toggle_switches(button_mask: u64) -> [ToggleSwitchState; 7] {
     ]
 }
 
+// ── Flap switch position ─────────────────────────────────────────────────────
+
+/// Bravo flap switch position, derived from the flap up/down buttons.
+///
+/// The Bravo reports flap switch movement as two momentary buttons:
+/// - Bit 14: flaps down (increment)
+/// - Bit 15: flaps up (decrement)
+///
+/// This tracker maintains the current detent position by counting edges.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum FlapPosition {
+    /// Flaps fully retracted (position 0).
+    Up,
+    /// Flaps at takeoff/approach detent 1.
+    Detent1,
+    /// Flaps at detent 2.
+    Detent2,
+    /// Flaps fully extended (position 3).
+    Full,
+}
+
+impl FlapPosition {
+    /// Returns all positions in order from retracted to full.
+    pub fn all() -> &'static [FlapPosition; 4] {
+        &[
+            FlapPosition::Up,
+            FlapPosition::Detent1,
+            FlapPosition::Detent2,
+            FlapPosition::Full,
+        ]
+    }
+
+    /// Human-readable label.
+    pub fn label(self) -> &'static str {
+        match self {
+            FlapPosition::Up => "UP",
+            FlapPosition::Detent1 => "1",
+            FlapPosition::Detent2 => "2",
+            FlapPosition::Full => "FULL",
+        }
+    }
+
+    /// Numeric index (0–3).
+    pub fn index(self) -> u8 {
+        match self {
+            FlapPosition::Up => 0,
+            FlapPosition::Detent1 => 1,
+            FlapPosition::Detent2 => 2,
+            FlapPosition::Full => 3,
+        }
+    }
+
+    /// Create from numeric index, clamping to valid range.
+    pub fn from_index(idx: u8) -> Self {
+        match idx {
+            0 => FlapPosition::Up,
+            1 => FlapPosition::Detent1,
+            2 => FlapPosition::Detent2,
+            _ => FlapPosition::Full,
+        }
+    }
+}
+
+impl std::fmt::Display for FlapPosition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.label())
+    }
+}
+
+/// Button bit indices (0-indexed) for Bravo flap switch.
+pub const FLAP_DOWN_BIT: u8 = 14;
+/// Flap up button bit (0-indexed).
+pub const FLAP_UP_BIT: u8 = 15;
+
+/// Stateful flap position tracker for the Bravo Throttle.
+///
+/// The Bravo's flap switch reports movement as momentary button presses
+/// (bits 14/15). This tracker counts rising edges to maintain the current
+/// detent position (0–3).
+#[derive(Debug, Clone)]
+pub struct FlapSwitchTracker {
+    position: u8,
+    prev_down: bool,
+    prev_up: bool,
+    max_position: u8,
+}
+
+impl Default for FlapSwitchTracker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl FlapSwitchTracker {
+    /// Create a new flap tracker starting at position 0 (UP) with 4 detents.
+    pub fn new() -> Self {
+        Self {
+            position: 0,
+            prev_down: false,
+            prev_up: false,
+            max_position: 3,
+        }
+    }
+
+    /// Create a flap tracker with a custom number of detents.
+    pub fn with_detents(num_detents: u8) -> Self {
+        let max_position = match num_detents {
+            0 | 1 => 0,
+            n => (n.saturating_sub(1)).min(3),
+        };
+        Self {
+            position: 0,
+            prev_down: false,
+            prev_up: false,
+            max_position,
+        }
+    }
+
+    /// Update with the current button mask and return the current flap position.
+    pub fn update(&mut self, button_mask: u64) -> FlapPosition {
+        let down = (button_mask >> FLAP_DOWN_BIT) & 1 != 0;
+        let up = (button_mask >> FLAP_UP_BIT) & 1 != 0;
+
+        if down && !self.prev_down && self.position < self.max_position {
+            self.position += 1;
+        }
+        if up && !self.prev_up && self.position > 0 {
+            self.position -= 1;
+        }
+
+        self.prev_down = down;
+        self.prev_up = up;
+
+        FlapPosition::from_index(self.position)
+    }
+
+    /// Returns the current flap position.
+    pub fn position(&self) -> FlapPosition {
+        FlapPosition::from_index(self.position)
+    }
+
+    /// Set the position directly (e.g., syncing with sim state).
+    pub fn set_position(&mut self, pos: FlapPosition) {
+        self.position = pos.index().min(self.max_position);
+    }
+
+    /// Reset to UP position.
+    pub fn reset(&mut self) {
+        self.position = 0;
+        self.prev_down = false;
+        self.prev_up = false;
+    }
+}
+
+// ── Trim wheel tracker ───────────────────────────────────────────────────────
+
+/// Button bit indices (0-indexed) for the Bravo trim wheel.
+pub const TRIM_DOWN_BIT: u8 = 21;
+/// Trim up button bit (0-indexed).
+pub const TRIM_UP_BIT: u8 = 22;
+
+/// Stateful trim wheel tracker for the Bravo Throttle.
+///
+/// The Bravo's trim wheel reports as two momentary buttons: bit 21 (trim down)
+/// and bit 22 (trim up). This tracker counts rising edges and produces signed
+/// deltas suitable for feeding into elevator trim commands.
+#[derive(Debug, Clone, Default)]
+pub struct TrimWheelTracker {
+    prev_down: bool,
+    prev_up: bool,
+}
+
+impl TrimWheelTracker {
+    /// Create a new trim wheel tracker.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Update with the current button mask and return the trim delta.
+    ///
+    /// Returns `+1` for trim-up, `−1` for trim-down, or `0` if no edge.
+    pub fn update(&mut self, button_mask: u64) -> i32 {
+        let down = (button_mask >> TRIM_DOWN_BIT) & 1 != 0;
+        let up = (button_mask >> TRIM_UP_BIT) & 1 != 0;
+
+        let mut delta = 0i32;
+
+        if down && !self.prev_down {
+            delta -= 1;
+        }
+        if up && !self.prev_up {
+            delta += 1;
+        }
+
+        self.prev_down = down;
+        self.prev_up = up;
+
+        delta
+    }
+
+    /// Reset the tracker state.
+    pub fn reset(&mut self) {
+        self.prev_down = false;
+        self.prev_up = false;
+    }
+}
+
+// ── Alpha rocker switches ────────────────────────────────────────────────────
+
+/// Alpha Yoke rocker switch identifiers.
+///
+/// The Alpha Yoke has rocker switches on the left horn (typically used for
+/// view or zoom control). Each rocker reports as two buttons: one for each
+/// direction of the momentary toggle.
+///
+/// Button assignments (1-indexed, community-reported):
+/// - Rocker 1 up: button 7, down: button 8
+/// - Rocker 2 up: button 9, down: button 10
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AlphaRockerSwitch {
+    /// Left horn rocker 1 (typically view up/down or zoom in/out).
+    Rocker1,
+    /// Left horn rocker 2.
+    Rocker2,
+}
+
+/// Alpha rocker switch 1 up button (1-indexed).
+pub const ROCKER1_UP_BUTTON: u8 = 7;
+/// Alpha rocker switch 1 down button (1-indexed).
+pub const ROCKER1_DOWN_BUTTON: u8 = 8;
+/// Alpha rocker switch 2 up button (1-indexed).
+pub const ROCKER2_UP_BUTTON: u8 = 9;
+/// Alpha rocker switch 2 down button (1-indexed).
+pub const ROCKER2_DOWN_BUTTON: u8 = 10;
+
+/// Decode the state of an Alpha Yoke rocker switch from the button mask.
+///
+/// Returns `+1` if the up direction is pressed, `−1` if down, `0` if neutral.
+pub fn decode_alpha_rocker(button_mask: u64, rocker: AlphaRockerSwitch) -> i32 {
+    let (up_btn, down_btn) = match rocker {
+        AlphaRockerSwitch::Rocker1 => (ROCKER1_UP_BUTTON, ROCKER1_DOWN_BUTTON),
+        AlphaRockerSwitch::Rocker2 => (ROCKER2_UP_BUTTON, ROCKER2_DOWN_BUTTON),
+    };
+
+    let up = (button_mask >> (up_btn - 1)) & 1 != 0;
+    let down = (button_mask >> (down_btn - 1)) & 1 != 0;
+
+    match (up, down) {
+        (true, false) => 1,
+        (false, true) => -1,
+        _ => 0,
+    }
+}
+
+/// Decode both Alpha Yoke rocker switches. Returns `[rocker1, rocker2]` as
+/// signed values: `+1` = up, `−1` = down, `0` = neutral.
+pub fn decode_all_alpha_rockers(button_mask: u64) -> [i32; 2] {
+    [
+        decode_alpha_rocker(button_mask, AlphaRockerSwitch::Rocker1),
+        decode_alpha_rocker(button_mask, AlphaRockerSwitch::Rocker2),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -715,5 +978,193 @@ mod tests {
         // Both UP and DOWN set simultaneously → Center (invalid state)
         let mask: u64 = (1 << 33) | (1 << 34);
         assert_eq!(decode_toggle_switch(mask, 1), ToggleSwitchState::Center);
+    }
+
+    // ── Flap switch tracker tests ────────────────────────────────────────
+
+    #[test]
+    fn test_flap_initial_position_up() {
+        let tracker = FlapSwitchTracker::new();
+        assert_eq!(tracker.position(), FlapPosition::Up);
+    }
+
+    #[test]
+    fn test_flap_increment_on_rising_edge() {
+        let mut tracker = FlapSwitchTracker::new();
+        let down_mask: u64 = 1 << FLAP_DOWN_BIT;
+        let pos = tracker.update(down_mask);
+        assert_eq!(pos, FlapPosition::Detent1);
+    }
+
+    #[test]
+    fn test_flap_no_change_on_held_button() {
+        let mut tracker = FlapSwitchTracker::new();
+        let down_mask: u64 = 1 << FLAP_DOWN_BIT;
+        tracker.update(down_mask);
+        let pos = tracker.update(down_mask); // still held
+        assert_eq!(pos, FlapPosition::Detent1);
+    }
+
+    #[test]
+    fn test_flap_full_travel_down() {
+        let mut tracker = FlapSwitchTracker::new();
+        let down_mask: u64 = 1 << FLAP_DOWN_BIT;
+        for _ in 0..3 {
+            tracker.update(down_mask);
+            tracker.update(0); // release
+        }
+        assert_eq!(tracker.position(), FlapPosition::Full);
+    }
+
+    #[test]
+    fn test_flap_clamps_at_full() {
+        let mut tracker = FlapSwitchTracker::new();
+        let down_mask: u64 = 1 << FLAP_DOWN_BIT;
+        for _ in 0..10 {
+            tracker.update(down_mask);
+            tracker.update(0);
+        }
+        assert_eq!(tracker.position(), FlapPosition::Full);
+    }
+
+    #[test]
+    fn test_flap_up_from_full() {
+        let mut tracker = FlapSwitchTracker::new();
+        tracker.set_position(FlapPosition::Full);
+        let up_mask: u64 = 1 << FLAP_UP_BIT;
+        let pos = tracker.update(up_mask);
+        assert_eq!(pos, FlapPosition::Detent2);
+    }
+
+    #[test]
+    fn test_flap_clamps_at_up() {
+        let mut tracker = FlapSwitchTracker::new();
+        let up_mask: u64 = 1 << FLAP_UP_BIT;
+        let pos = tracker.update(up_mask);
+        assert_eq!(pos, FlapPosition::Up); // already at 0, should stay
+    }
+
+    #[test]
+    fn test_flap_position_labels() {
+        assert_eq!(FlapPosition::Up.label(), "UP");
+        assert_eq!(FlapPosition::Detent1.label(), "1");
+        assert_eq!(FlapPosition::Detent2.label(), "2");
+        assert_eq!(FlapPosition::Full.label(), "FULL");
+    }
+
+    #[test]
+    fn test_flap_position_display() {
+        assert_eq!(format!("{}", FlapPosition::Full), "FULL");
+    }
+
+    #[test]
+    fn test_flap_position_indices() {
+        for pos in FlapPosition::all() {
+            assert_eq!(FlapPosition::from_index(pos.index()), *pos);
+        }
+    }
+
+    #[test]
+    fn test_flap_reset() {
+        let mut tracker = FlapSwitchTracker::new();
+        tracker.set_position(FlapPosition::Detent2);
+        tracker.reset();
+        assert_eq!(tracker.position(), FlapPosition::Up);
+    }
+
+    // ── Trim wheel tracker tests ─────────────────────────────────────────
+
+    #[test]
+    fn test_trim_no_change() {
+        let mut tracker = TrimWheelTracker::new();
+        assert_eq!(tracker.update(0), 0);
+    }
+
+    #[test]
+    fn test_trim_up_rising_edge() {
+        let mut tracker = TrimWheelTracker::new();
+        let up_mask: u64 = 1 << TRIM_UP_BIT;
+        assert_eq!(tracker.update(up_mask), 1);
+        assert_eq!(tracker.update(up_mask), 0); // held
+        assert_eq!(tracker.update(0), 0); // released
+        assert_eq!(tracker.update(up_mask), 1); // new edge
+    }
+
+    #[test]
+    fn test_trim_down_rising_edge() {
+        let mut tracker = TrimWheelTracker::new();
+        let down_mask: u64 = 1 << TRIM_DOWN_BIT;
+        assert_eq!(tracker.update(down_mask), -1);
+        assert_eq!(tracker.update(down_mask), 0);
+    }
+
+    #[test]
+    fn test_trim_both_cancel() {
+        let mut tracker = TrimWheelTracker::new();
+        let both: u64 = (1 << TRIM_UP_BIT) | (1 << TRIM_DOWN_BIT);
+        assert_eq!(tracker.update(both), 0);
+    }
+
+    #[test]
+    fn test_trim_reset() {
+        let mut tracker = TrimWheelTracker::new();
+        let up_mask: u64 = 1 << TRIM_UP_BIT;
+        tracker.update(up_mask);
+        tracker.reset();
+        assert_eq!(tracker.update(up_mask), 1); // after reset, rising edge again
+    }
+
+    // ── Alpha rocker switch tests ────────────────────────────────────────
+
+    #[test]
+    fn test_alpha_rocker1_up() {
+        // Rocker 1 up = button 7 = bit 6
+        let mask: u64 = 1 << (ROCKER1_UP_BUTTON - 1);
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), 1);
+    }
+
+    #[test]
+    fn test_alpha_rocker1_down() {
+        // Rocker 1 down = button 8 = bit 7
+        let mask: u64 = 1 << (ROCKER1_DOWN_BUTTON - 1);
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), -1);
+    }
+
+    #[test]
+    fn test_alpha_rocker1_neutral() {
+        assert_eq!(decode_alpha_rocker(0, AlphaRockerSwitch::Rocker1), 0);
+    }
+
+    #[test]
+    fn test_alpha_rocker2_up() {
+        let mask: u64 = 1 << (ROCKER2_UP_BUTTON - 1);
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2), 1);
+    }
+
+    #[test]
+    fn test_alpha_rocker2_down() {
+        let mask: u64 = 1 << (ROCKER2_DOWN_BUTTON - 1);
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker2), -1);
+    }
+
+    #[test]
+    fn test_alpha_rocker_both_pressed_neutral() {
+        let mask: u64 = (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER1_DOWN_BUTTON - 1));
+        assert_eq!(decode_alpha_rocker(mask, AlphaRockerSwitch::Rocker1), 0);
+    }
+
+    #[test]
+    fn test_decode_all_alpha_rockers() {
+        // Rocker 1 up + Rocker 2 down
+        let mask: u64 = (1 << (ROCKER1_UP_BUTTON - 1)) | (1 << (ROCKER2_DOWN_BUTTON - 1));
+        let rockers = decode_all_alpha_rockers(mask);
+        assert_eq!(rockers[0], 1);
+        assert_eq!(rockers[1], -1);
+    }
+
+    #[test]
+    fn test_decode_all_alpha_rockers_neutral() {
+        let rockers = decode_all_alpha_rockers(0);
+        assert_eq!(rockers, [0, 0]);
     }
 }

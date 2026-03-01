@@ -99,9 +99,10 @@ pub fn honeycomb_model(product_id: u16) -> Option<HoneycombModel> {
 
 pub use alpha::{AlphaInputState, AlphaParseError, parse_alpha_report};
 pub use bravo::{BravoInputState, BravoParseError, parse_bravo_report};
-pub use bravo_leds::{BravoLedState, serialize_led_report};
+pub use bravo_leds::{BravoLedState, deserialize_led_report, serialize_led_report};
 pub use charlie::{CharlieInputState, CharlieParseError, parse_charlie_report};
 pub use protocol::{
-    EncoderTracker, GearIndicatorState, MagnetoPosition, ToggleSwitchState, WrappingEncoder,
-    decode_magneto, decode_toggle_switch,
+    AlphaRockerSwitch, EncoderTracker, FlapPosition, FlapSwitchTracker, GearIndicatorState,
+    MagnetoPosition, ToggleSwitchState, TrimWheelTracker, WrappingEncoder,
+    decode_all_alpha_rockers, decode_alpha_rocker, decode_magneto, decode_toggle_switch,
 };

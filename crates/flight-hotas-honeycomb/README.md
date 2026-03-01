@@ -1,6 +1,6 @@
 # flight-hotas-honeycomb
 
-Honeycomb Aeronautical Alpha Yoke and Bravo Throttle Quadrant driver for OpenFlight.
+Honeycomb Aeronautical Alpha Yoke, Bravo Throttle Quadrant, and Charlie Rudder Pedals driver for OpenFlight.
 
 ## Devices
 
@@ -8,9 +8,11 @@ Honeycomb Aeronautical Alpha Yoke and Bravo Throttle Quadrant driver for OpenFli
 |---|---|---|---|
 | Alpha Flight Controls XPC (Yoke) | 0x294B | 0x0102 | Tier 2 — simulated tests only |
 | Bravo Throttle Quadrant | 0x294B | 0x1901 | Tier 2 — simulated tests only |
+| Charlie Rudder Pedals | 0x294B | 0x1902 | Tier 3 — PID community-inferred |
 
 **Note:** The Alpha Yoke PID (0x0102) is a community-reported value that has not been
 hardware-validated. The Bravo PID (0x1901) is confirmed from multiple independent sources.
+The Charlie PID (0x1902) is inferred from the sequential Honeycomb numbering scheme.
 
 ## Features
 
@@ -19,12 +21,19 @@ hardware-validated. The Bravo PID (0x1901) is confirmed from multiple independen
 - 2 axes (roll/pitch), 12-bit resolution
 - 36 buttons (including magneto switch positions)
 - 1 hat switch (8-way)
+- 2 rocker switches (left horn, decoded as ±1 directional values)
+- Magneto switch decoding (Off/R/L/Both/Start)
 
 ### Bravo Throttle Input
 
 - 7 axes (5× throttle, flap lever, spoiler), 12-bit resolution
 - 64 buttons (AP panel, landing gear, toggle switches, reverse levers)
-- 21 LEDs via HID feature report
+- Rotary encoder tracking (CW/CCW edge detection)
+- Flap switch position tracking (4 detents: UP/1/2/FULL)
+- Trim wheel delta tracking (±1 per click)
+- 7 toggle switches (3-state: Up/Center/Down)
+- Landing gear indicator state (Up/Down/Transit)
+- Wrapping encoder presets (heading, altitude, VS, course)
 
 ### Bravo LED Output
 
@@ -40,6 +49,14 @@ LED control uses a 5-byte HID feature report (report ID 0x00):
 | 2 | GearLGreen | GearLRed | GearCGreen | GearCRed | GearRGreen | GearRRed | MasterWarning | EngineFire |
 | 3 | LowOilPressure | LowFuelPressure | AntiIce | StarterEngaged | APU | MasterCaution | Vacuum | LowHydPressure |
 | 4 | AuxFuelPump | ParkingBrake | LowVolts | Door | — | — | — | — |
+
+Supports both serialization (`serialize_led_report`) and deserialization
+(`deserialize_led_report`) for diagnostics and round-trip testing.
+
+### Charlie Rudder Pedals Input
+
+- 3 axes (rudder bipolar, left/right toe brakes unipolar), 12-bit resolution
+- No buttons
 
 ## Protocol Notes
 
