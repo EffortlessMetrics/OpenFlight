@@ -164,11 +164,11 @@ impl RulesSchema {
     }
 
     fn validate_rule(&self, rule: &Rule) -> std::result::Result<(), String> {
-        if rule.when.is_empty() {
+        if rule.when.trim().is_empty() {
             return Err("Rule condition cannot be empty".to_string());
         }
 
-        if rule.action.is_empty() {
+        if rule.action.trim().is_empty() {
             return Err("Rule action cannot be empty".to_string());
         }
 
@@ -243,6 +243,10 @@ impl RulesCompiler {
 
     pub fn parse_condition(&self, condition_str: &str) -> Result<Condition> {
         let condition_str = condition_str.trim();
+
+        if condition_str.is_empty() {
+            return Err(RulesError::Validation("condition string is empty".into()));
+        }
 
         // Handle compound OR (lower precedence — split first)
         let or_parts: Vec<&str> = condition_str.split(" or ").collect();
