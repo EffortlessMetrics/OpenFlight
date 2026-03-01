@@ -6,6 +6,8 @@
 //! This crate provides support for VKB STECS throttle variants, VKB Gladiator
 //! NXT EVO sticks, and VKB virtual-interface metadata utilities.
 
+pub mod axis_mapping;
+pub mod configuration;
 pub mod health;
 pub mod input;
 pub mod profiles;
@@ -24,6 +26,14 @@ pub use flight_hid_support::device_support::{
     vkb_stecs_interface_metadata, vkb_stecs_physical_id, vkb_stecs_variant,
 };
 
+pub use axis_mapping::{
+    AxisMapEntry, AxisResolveError, GLADIATOR_AXIS_MAP, GUNFIGHTER_AXIS_MAP, VkbAxis,
+    axis_map_for_family, resolve_axis, resolve_axis_by_name,
+};
+pub use configuration::{
+    ConfigParseError, ConfigProfile, CurveType, VKB_CONFIG_MIN_REPORT_BYTES, VKB_CONFIG_REPORT_ID,
+    VKB_MAX_CONFIG_AXES, VkbConfig, read_config_from_report,
+};
 pub use health::{StecsHealthMonitor, StecsHealthStatus};
 pub use input::{
     GLADIATOR_MAX_BUTTONS, GLADIATOR_MAX_HATS, GladiatorAxes, GladiatorInputHandler,
@@ -40,9 +50,10 @@ pub use protocol::{
     GLADIATOR_NXT_EVO_SHIFT, GUNFIGHTER_MAX_BUTTONS, GUNFIGHTER_MAX_HATS, GUNFIGHTER_MCG_SHIFT,
     GunfighterAxes, GunfighterInputHandler, GunfighterInputState, GunfighterParseError,
     GunfighterVariant, SemThqAxes, SemThqInputHandler, SemThqInputState, SemThqParseError,
-    VKB_AXIS_16BIT, VKB_JOYSTICK_STANDARD_LAYOUT, VKB_LED_REPORT_ID, VKB_SEM_THQ_LAYOUT,
-    VkbAxisResolution, VkbDeviceFamily, VkbJoystickReportLayout, VkbLedColor, VkbLedIndex,
-    VkbShiftMode, build_led_command, is_vkb_joystick, report_layout_for_family, vkb_device_family,
+    StickAxes, StickState, VKB_AXIS_16BIT, VKB_JOYSTICK_STANDARD_LAYOUT, VKB_LED_REPORT_ID,
+    VKB_SEM_THQ_LAYOUT, VkbAxisResolution, VkbDeviceFamily, VkbJoystickReportLayout, VkbLedColor,
+    VkbLedIndex, VkbProtocol, VkbProtocolParseError, VkbShiftMode, build_led_command,
+    is_vkb_joystick, report_layout_for_family, vkb_device_family,
 };
 pub use stecs_modern::{
     StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
