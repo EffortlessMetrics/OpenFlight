@@ -12,12 +12,13 @@
 //! Run with: `cargo xtask generate-compat`
 
 use crate::compat::{
-    DeviceEntry, GameEntry, bool_to_check, collect_manifests, parse_device, parse_game,
+    DeviceEntry, GameEntry, bool_to_check, collect_manifests, compute_devices_by_tier,
+    compute_games_by_tier, parse_device, parse_game,
 };
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fmt::Write as FmtWrite,
     fs,
     path::{Path, PathBuf},
@@ -106,16 +107,8 @@ pub fn run_generate_compat() -> Result<()> {
     devices.sort_by(|a, b| a.vendor.cmp(&b.vendor).then_with(|| a.name.cmp(&b.name)));
 
     // Compute summaries
-    let mut devices_by_tier: BTreeMap<String, usize> = BTreeMap::new();
-    for d in &devices {
-        *devices_by_tier
-            .entry(format!("tier_{}", d.tier))
-            .or_insert(0) += 1;
-    }
-    let mut games_by_tier: BTreeMap<String, usize> = BTreeMap::new();
-    for g in &games {
-        *games_by_tier.entry(format!("tier_{}", g.tier)).or_insert(0) += 1;
-    }
+    let devices_by_tier = compute_devices_by_tier(&devices);
+    let games_by_tier = compute_games_by_tier(&games);
 
     let vendors: BTreeMap<String, Vec<&DeviceEntry>> = {
         let mut m: BTreeMap<String, Vec<&DeviceEntry>> = BTreeMap::new();
@@ -134,7 +127,7 @@ pub fn run_generate_compat() -> Result<()> {
     };
 
     // Generate COMPATIBILITY.md
-    let md = generate_markdown(&devices, &games, &vendors, &devices_by_tier, &games_by_tier)?;
+    let md = generate_markdown(&games, &vendors)?;
     let md_path = "COMPATIBILITY.md";
     fs::write(md_path, &md).with_context(|| format!("Failed to write {md_path}"))?;
 
@@ -171,11 +164,8 @@ pub fn run_generate_compat() -> Result<()> {
 // ---------- markdown generation ----------
 
 fn generate_markdown(
-    devices: &[DeviceEntry],
     games: &[GameEntry],
     vendors: &BTreeMap<String, Vec<&DeviceEntry>>,
-    devices_by_tier: &BTreeMap<String, usize>,
-    games_by_tier: &BTreeMap<String, usize>,
 ) -> Result<String> {
     let mut out = String::new();
     writeln!(out, "# OpenFlight Compatibility Matrix")?;
@@ -186,18 +176,29 @@ fn generate_markdown(
     )?;
     writeln!(out)?;
 
+    // Derive device list and tier distributions from vendors map
+    let all_devices: Vec<&&DeviceEntry> = vendors.values().flatten().collect();
+    let devices_by_tier = {
+        let mut m: BTreeMap<String, usize> = BTreeMap::new();
+        for d in &all_devices {
+            *m.entry(format!("tier_{}", d.tier)).or_insert(0) += 1;
+        }
+        m
+    };
+    let games_by_tier = compute_games_by_tier(games);
+
     // Summary
     writeln!(out, "## Summary")?;
     writeln!(out)?;
-    writeln!(out, "- **Total devices:** {}", devices.len())?;
+    writeln!(out, "- **Total devices:** {}", all_devices.len())?;
     writeln!(out, "- **Total vendors:** {}", vendors.len())?;
     writeln!(out, "- **Total games:** {}", games.len())?;
     writeln!(out, "- **Tier distribution (devices):**")?;
-    for (tier, count) in devices_by_tier {
+    for (tier, count) in &devices_by_tier {
         writeln!(out, "  - {tier}: {count}")?;
     }
     writeln!(out, "- **Tier distribution (games):**")?;
-    for (tier, count) in games_by_tier {
+    for (tier, count) in &games_by_tier {
         writeln!(out, "  - {tier}: {count}")?;
     }
     writeln!(out)?;
@@ -213,18 +214,20 @@ fn generate_markdown(
         out,
         "|--------|--------|-----|-----|------|------|---------|-----|--------|"
     )?;
-    for d in devices {
-        let ffb = bool_to_check(d.force_feedback);
-        let quirks = if d.quirks.is_empty() {
-            "—".to_string()
-        } else {
-            d.quirks.join(", ")
-        };
-        writeln!(
-            out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
-            d.name, d.vendor, d.vendor_id, d.product_id, d.tier, d.axes, d.buttons, ffb, quirks
-        )?;
+    for devs in vendors.values() {
+        for d in devs {
+            let ffb = bool_to_check(d.force_feedback);
+            let quirks = if d.quirks.is_empty() {
+                "—".to_string()
+            } else {
+                d.quirks.join(", ")
+            };
+            writeln!(
+                out,
+                "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+                d.name, d.vendor, d.vendor_id, d.product_id, d.tier, d.axes, d.buttons, ffb, quirks
+            )?;
+        }
     }
     writeln!(out)?;
 
@@ -253,25 +256,33 @@ fn generate_markdown(
     }
     writeln!(out)?;
 
-    // Support tier legend
+    // Dynamic support tier legend from actual data
+    let all_data_tiers: BTreeSet<u64> = vendors
+        .values()
+        .flatten()
+        .map(|d| d.tier)
+        .chain(games.iter().map(|g| g.tier))
+        .collect();
     writeln!(out, "## Support Tier Legend")?;
     writeln!(out)?;
     writeln!(out, "| Tier | Meaning |")?;
     writeln!(out, "|------|---------|")?;
-    writeln!(
-        out,
-        "| 1 | **Tier 1** — Automated trace tests + recent HIL validation |"
-    )?;
-    writeln!(
-        out,
-        "| 2 | **Tier 2** — Automated tests (no HIL) + community confirmation |"
-    )?;
-    writeln!(
-        out,
-        "| 3 | **Tier 3** — Compiles / best-effort — no guarantees |"
-    )?;
+    for tier in &all_data_tiers {
+        writeln!(out, "| {} | {} |", tier, tier_meaning(*tier))?;
+    }
 
     Ok(out)
+}
+
+fn tier_meaning(tier: u64) -> &'static str {
+    match tier {
+        1 => "Automated trace tests + recent HIL validation",
+        2 => "Automated tests (no HIL) + community confirmation",
+        3 => "Compiles / best-effort — no guarantees",
+        4 => "Known compatible — limited testing",
+        5 => "Experimental / community-reported",
+        _ => "Uncategorized",
+    }
 }
 
 // ---------- manifest validation ----------
@@ -321,11 +332,11 @@ fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
     }
 
     if let Some(tier) = doc["support"]["tier"].as_u64()
-        && !(1..=3).contains(&tier)
+        && !(1..=5).contains(&tier)
     {
         errors.push(ValidationError {
             path: path.to_path_buf(),
-            message: format!("support.tier must be 1, 2, or 3 (got {tier})"),
+            message: format!("support.tier must be between 1 and 5 (got {tier})"),
         });
     }
 }
@@ -377,11 +388,11 @@ fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
     }
 
     if let Some(tier) = doc["support_tier"].as_u64()
-        && !(1..=3).contains(&tier)
+        && !(1..=5).contains(&tier)
     {
         errors.push(ValidationError {
             path: path.to_path_buf(),
-            message: format!("support_tier must be 1, 2, or 3 (got {tier})"),
+            message: format!("support_tier must be between 1 and 5 (got {tier})"),
         });
     }
 }
@@ -511,7 +522,7 @@ support:
         validate_device_manifest(&path, &mut errors);
         let msgs: Vec<String> = errors.iter().map(|e| e.message.clone()).collect();
         assert!(
-            msgs.iter().any(|m| m.contains("must be 1, 2, or 3")),
+            msgs.iter().any(|m| m.contains("must be between 1 and 5")),
             "Expected tier validation error, got: {msgs:?}"
         );
     }
@@ -625,7 +636,7 @@ support_tier: 7
         validate_game_manifest(&path, &mut errors);
         let msgs: Vec<String> = errors.iter().map(|e| e.message.clone()).collect();
         assert!(
-            msgs.iter().any(|m| m.contains("must be 1, 2, or 3")),
+            msgs.iter().any(|m| m.contains("must be between 1 and 5")),
             "Expected tier validation error, got: {msgs:?}"
         );
     }
@@ -688,14 +699,9 @@ support_tier: 7
         for d in &devices {
             vendors.entry(d.vendor.clone()).or_default().push(d);
         }
-        let devices_by_tier = BTreeMap::from([
-            ("tier_1".to_string(), 1usize),
-            ("tier_2".to_string(), 1usize),
-        ]);
-        let games_by_tier = BTreeMap::from([("tier_1".to_string(), 1usize)]);
 
         let md =
-            generate_markdown(&devices, &games, &vendors, &devices_by_tier, &games_by_tier)
+            generate_markdown(&games, &vendors)
                 .unwrap();
 
         // Verify required sections
@@ -722,10 +728,9 @@ support_tier: 7
         assert!(md.contains("Test Sim"));
         assert!(md.contains("SimConnect"));
 
-        // Verify tier legend
-        assert!(md.contains("**Tier 1**"));
-        assert!(md.contains("**Tier 2**"));
-        assert!(md.contains("**Tier 3**"));
+        // Verify dynamic tier legend covers tiers present in data
+        assert!(md.contains("Automated trace tests"));
+        assert!(md.contains("Automated tests (no HIL)"));
     }
 
     #[test]

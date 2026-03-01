@@ -3,11 +3,13 @@
 
 //! Shared types and parsing helpers for `compat/` YAML manifests.
 //!
-//! Used by `compat_matrix` to generate COMPATIBILITY-MATRIX.md and compat/matrix.json.
+//! Used by `compat_matrix` and `generate_compat` to generate compatibility
+//! documentation and JSON exports from device/game manifests.
 
 use anyhow::Result;
 use serde::Serialize;
 use std::{
+    collections::BTreeMap,
     fs,
     path::{Path, PathBuf},
 };
@@ -146,6 +148,24 @@ pub fn parse_game(path: &Path) -> Result<GameEntry> {
 }
 
 // ---------- helpers ----------
+
+/// Compute tier distribution for devices: `{ "tier_1": count, "tier_2": count, … }`.
+pub fn compute_devices_by_tier(devices: &[DeviceEntry]) -> BTreeMap<String, usize> {
+    let mut m = BTreeMap::new();
+    for d in devices {
+        *m.entry(format!("tier_{}", d.tier)).or_insert(0) += 1;
+    }
+    m
+}
+
+/// Compute tier distribution for games: `{ "tier_1": count, "tier_2": count, … }`.
+pub fn compute_games_by_tier(games: &[GameEntry]) -> BTreeMap<String, usize> {
+    let mut m = BTreeMap::new();
+    for g in games {
+        *m.entry(format!("tier_{}", g.tier)).or_insert(0) += 1;
+    }
+    m
+}
 
 /// Collect `.yaml` manifest paths from a directory tree, sorted.
 pub fn collect_manifests(dir: &Path) -> Result<Vec<PathBuf>> {

@@ -12,7 +12,8 @@
 //! Run with: `cargo xtask gen-compat` or `cargo xtask generate-compat`
 
 use crate::compat::{
-    DeviceEntry, GameEntry, bool_to_check, collect_manifests, parse_device, parse_game,
+    DeviceEntry, GameEntry, bool_to_check, collect_manifests, compute_devices_by_tier,
+    compute_games_by_tier, parse_device, parse_game,
 };
 use anyhow::{Context, Result};
 use serde::Serialize;
@@ -126,16 +127,8 @@ pub fn run_compat_matrix() -> Result<()> {
         .collect();
 
     // Tier distributions
-    let mut devices_by_tier: BTreeMap<String, usize> = BTreeMap::new();
-    for d in &devices {
-        *devices_by_tier
-            .entry(format!("tier_{}", d.tier))
-            .or_insert(0) += 1;
-    }
-    let mut games_by_tier: BTreeMap<String, usize> = BTreeMap::new();
-    for g in &games {
-        *games_by_tier.entry(format!("tier_{}", g.tier)).or_insert(0) += 1;
-    }
+    let devices_by_tier = compute_devices_by_tier(&devices);
+    let games_by_tier = compute_games_by_tier(&games);
 
     // Capability coverage
     let capability_coverage = CapabilityCoverage {
