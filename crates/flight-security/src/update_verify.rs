@@ -8,9 +8,8 @@
 //! pinning mechanism via a hard-coded public key.
 
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-use sha2::{Digest, Sha256};
 
-use crate::SecurityError;
+use crate::update_signature::{sha256_hex, verify_digest};
 
 /// Verify an Ed25519 signature over `manifest` bytes.
 ///
@@ -30,20 +29,17 @@ pub fn verify_update_signature(manifest: &[u8], signature: &[u8], pubkey: &[u8])
 }
 
 /// Compute the SHA-256 checksum of `data` and return it as a hex string.
+///
+/// This is a thin wrapper around [`crate::update_signature::sha256_hex`].
 pub fn sha256_checksum(data: &[u8]) -> String {
-    hex::encode(Sha256::digest(data))
+    sha256_hex(data)
 }
 
 /// Verify that `data` matches the expected hex-encoded SHA-256 checksum.
+///
+/// This is a thin wrapper around [`crate::update_signature::verify_digest`].
 pub fn verify_checksum(data: &[u8], expected_hex: &str) -> crate::Result<()> {
-    let actual = sha256_checksum(data);
-    if actual == expected_hex.to_ascii_lowercase() {
-        Ok(())
-    } else {
-        Err(SecurityError::SignatureVerificationFailed {
-            reason: format!("checksum mismatch: expected {expected_hex}, got {actual}"),
-        })
-    }
+    verify_digest(data, expected_hex)
 }
 
 /// Hard-coded pinned public key for the OpenFlight update channel.
@@ -162,7 +158,7 @@ mod tests {
             "0000000000000000000000000000000000000000000000000000000000000000",
         )
         .unwrap_err();
-        assert!(format!("{err}").contains("checksum mismatch"));
+        assert!(format!("{err}").contains("SHA-256 mismatch"));
     }
 
     // --- Pinned key ---

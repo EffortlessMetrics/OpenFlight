@@ -174,7 +174,10 @@ mod tests {
         #[cfg(windows)]
         {
             let result = validate_config_permissions(&file);
-            assert!(result.is_err(), "Windows permission validation should return not-implemented error");
+            assert!(
+                result.is_err(),
+                "Windows permission validation should return not-implemented error"
+            );
         }
     }
 
