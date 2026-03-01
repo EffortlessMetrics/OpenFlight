@@ -836,3 +836,275 @@ fn profile_layout_pedal_always_fails() {
         );
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  7. BUTTON PRESS / RELEASE EVENT HANDLING (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Plugin event: action triggered event carries correct UUID and context.
+#[test]
+fn event_action_triggered_roundtrip_serialization() {
+    use flight_streamdeck::plugin::PluginEvent;
+
+    let event = PluginEvent::ActionTriggered {
+        action_uuid: "com.flighthub.ap-toggle".to_string(),
+        context: "key-0-0".to_string(),
+    };
+    let json = serde_json::to_value(&event).unwrap();
+    let deserialized: PluginEvent = serde_json::from_value(json).unwrap();
+    match deserialized {
+        PluginEvent::ActionTriggered {
+            action_uuid,
+            context,
+        } => {
+            assert_eq!(action_uuid, "com.flighthub.ap-toggle");
+            assert_eq!(context, "key-0-0");
+        }
+        _ => panic!("wrong variant"),
+    }
+}
+
+/// Plugin event: device connected/disconnected serialize correctly.
+#[test]
+fn event_device_connect_disconnect_serialization() {
+    use flight_streamdeck::plugin::PluginEvent;
+
+    let connect = PluginEvent::DeviceConnected {
+        device_id: "sd-xl-001".to_string(),
+    };
+    let json = serde_json::to_string(&connect).unwrap();
+    assert!(json.contains("sd-xl-001"));
+
+    let disconnect = PluginEvent::DeviceDisconnected {
+        device_id: "sd-xl-001".to_string(),
+    };
+    let json = serde_json::to_string(&disconnect).unwrap();
+    assert!(json.contains("sd-xl-001"));
+}
+
+/// Plugin event: property inspector update carries settings payload.
+#[test]
+fn event_property_inspector_update() {
+    use flight_streamdeck::plugin::PluginEvent;
+
+    let settings = serde_json::json!({"brightness": 80, "theme": "dark"});
+    let event = PluginEvent::PropertyInspectorUpdate {
+        action_uuid: "com.flighthub.light-landing".to_string(),
+        settings: settings.clone(),
+    };
+    let json = serde_json::to_value(&event).unwrap();
+    let deserialized: PluginEvent = serde_json::from_value(json).unwrap();
+    match deserialized {
+        PluginEvent::PropertyInspectorUpdate {
+            action_uuid,
+            settings: s,
+        } => {
+            assert_eq!(action_uuid, "com.flighthub.light-landing");
+            assert_eq!(s["brightness"], 80);
+        }
+        _ => panic!("wrong variant"),
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  8. ERROR HANDLING (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Version parse error: non-numeric and too-few/too-many segments.
+#[test]
+fn error_version_parse_invalid_formats() {
+    assert!(AppVersion::from_string("").is_err());
+    assert!(AppVersion::from_string("abc").is_err());
+    assert!(AppVersion::from_string("6.2").is_err());
+    assert!(AppVersion::from_string("6.2.1.2.3").is_err());
+    assert!(AppVersion::from_string("x.y.z").is_err());
+}
+
+/// Device manager errors: operations on unknown devices fail gracefully.
+#[test]
+fn error_device_manager_unknown_device() {
+    let mut mgr = DeviceManager::new();
+    assert!(mgr.set_brightness("ghost", Brightness::new(50).unwrap()).is_err());
+    assert!(mgr.get_device("ghost").is_none());
+    assert!(mgr.get_brightness("ghost").is_none());
+    assert!(mgr.get_lcd_strip_info("ghost").is_err());
+}
+
+/// LCD strip: requesting strip layout on non-LCD model fails.
+#[test]
+fn error_lcd_strip_on_non_lcd_models() {
+    for model in [
+        StreamDeckModel::Original,
+        StreamDeckModel::Mini,
+        StreamDeckModel::Xl,
+        StreamDeckModel::Pedal,
+    ] {
+        assert!(
+            LcdStripLayout::new(model).is_err(),
+            "{model:?} should not support LCD strip layout"
+        );
+        assert!(LcdStripInfo::for_model(model).is_none());
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  9. API ENDPOINT ROUTING (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// API routing: GET profile by aircraft type via {aircraft_type} path param.
+#[tokio::test]
+async fn api_get_profile_by_aircraft_type() {
+    let compat = VersionCompatibility::new();
+    let mut pm = ProfileManager::new();
+    pm.load_sample_profiles().unwrap();
+    let api = StreamDeckApi::new(compat, pm);
+    let app = api.create_router();
+    let server = axum_test::TestServer::new(app).unwrap();
+
+    for aircraft in ["ga", "airbus", "helo"] {
+        let resp = server.get(&format!("/api/v1/profiles/{aircraft}")).await;
+        assert_eq!(resp.status_code(), axum::http::StatusCode::OK);
+        let body: ApiResponse<serde_json::Value> = resp.json();
+        assert!(body.success, "profile for {aircraft} should succeed");
+        assert!(body.data.is_some());
+    }
+}
+
+/// API routing: unknown aircraft type returns error (not 404 status, but error in body).
+#[tokio::test]
+async fn api_get_profile_unknown_aircraft() {
+    let compat = VersionCompatibility::new();
+    let mut pm = ProfileManager::new();
+    pm.load_sample_profiles().unwrap();
+    let api = StreamDeckApi::new(compat, pm);
+    let app = api.create_router();
+    let server = axum_test::TestServer::new(app).unwrap();
+
+    let resp = server.get("/api/v1/profiles/boeing").await;
+    let body: ApiResponse<serde_json::Value> = resp.json();
+    assert!(!body.success);
+    assert!(body.error.unwrap().contains("Unknown aircraft type"));
+}
+
+/// API routing: version check with invalid version format returns error in body.
+#[tokio::test]
+async fn api_version_check_invalid_format() {
+    let compat = VersionCompatibility::new();
+    let mut pm = ProfileManager::new();
+    pm.load_sample_profiles().unwrap();
+    let api = StreamDeckApi::new(compat, pm);
+    let app = api.create_router();
+    let server = axum_test::TestServer::new(app).unwrap();
+
+    let req = VersionCheckRequest {
+        app_version: "not-a-version".into(),
+        plugin_uuid: "test".into(),
+    };
+    let resp = server.post("/api/v1/version/check").json(&req).await;
+    assert_eq!(resp.status_code(), axum::http::StatusCode::OK);
+    let body: ApiResponse<VersionCheckResponse> = resp.json();
+    assert!(!body.success);
+    assert!(body.error.is_some());
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  10. PROPERTY-BASED TESTS (proptest)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+mod proptest_depth {
+    use super::*;
+    use proptest::prelude::*;
+
+    /// Strategy for generating valid brightness values (0..=100).
+    fn brightness_valid() -> impl Strategy<Value = u8> {
+        0u8..=100
+    }
+
+    /// Strategy for generating invalid brightness values (101..=255).
+    fn brightness_invalid() -> impl Strategy<Value = u8> {
+        101u8..=255
+    }
+
+    /// Strategy for generating a StreamDeckModel.
+    fn any_model() -> impl Strategy<Value = StreamDeckModel> {
+        prop_oneof![
+            Just(StreamDeckModel::Original),
+            Just(StreamDeckModel::Mini),
+            Just(StreamDeckModel::Xl),
+            Just(StreamDeckModel::Plus),
+            Just(StreamDeckModel::Pedal),
+            Just(StreamDeckModel::Neo),
+        ]
+    }
+
+    proptest! {
+        /// Any valid brightness value (0–100) succeeds and round-trips.
+        #[test]
+        fn prop_brightness_valid_roundtrip(pct in brightness_valid()) {
+            let b = Brightness::new(pct).unwrap();
+            prop_assert_eq!(b.percent(), pct);
+        }
+
+        /// Any brightness > 100 is rejected.
+        #[test]
+        fn prop_brightness_invalid_rejected(pct in brightness_invalid()) {
+            prop_assert!(Brightness::new(pct).is_err());
+        }
+
+        /// key_count is always > 0 for every model.
+        #[test]
+        fn prop_model_key_count_positive(model in any_model()) {
+            prop_assert!(model.key_count() > 0);
+        }
+
+        /// Grid-capable models always have rows*cols == key_count.
+        #[test]
+        fn prop_grid_models_key_count_matches(model in any_model()) {
+            if let Some((rows, cols)) = model.grid_layout() {
+                prop_assert_eq!(model.key_count(), rows * cols);
+            }
+        }
+
+        /// AppVersion with valid triple round-trips through Display.
+        #[test]
+        fn prop_version_display_roundtrip(major in 0u32..100, minor in 0u32..100, patch in 0u32..1000) {
+            let v = AppVersion::new(major, minor, patch);
+            let s = v.to_string();
+            let parsed = AppVersion::from_string(&s).unwrap();
+            prop_assert_eq!(parsed.major, major);
+            prop_assert_eq!(parsed.minor, minor);
+            prop_assert_eq!(parsed.patch, patch);
+            prop_assert_eq!(parsed.build, None);
+        }
+
+        /// AppVersion with build number round-trips through Display.
+        #[test]
+        fn prop_version_with_build_roundtrip(
+            major in 0u32..100,
+            minor in 0u32..100,
+            patch in 0u32..1000,
+            build in 0u32..10000
+        ) {
+            let v = AppVersion::with_build(major, minor, patch, build);
+            let s = v.to_string();
+            let parsed = AppVersion::from_string(&s).unwrap();
+            prop_assert_eq!(parsed.major, major);
+            prop_assert_eq!(parsed.minor, minor);
+            prop_assert_eq!(parsed.patch, patch);
+            prop_assert_eq!(parsed.build, Some(build));
+        }
+
+        /// IconRenderer returns None for Pedal, Some for all others.
+        #[test]
+        fn prop_renderer_pedal_none_others_some(model in any_model()) {
+            let renderer = IconRenderer::new(model);
+            if model == StreamDeckModel::Pedal {
+                prop_assert!(renderer.icon_size().is_none());
+                prop_assert!(renderer.momentary_icon("X", IconTheme::Custom).is_none());
+            } else {
+                prop_assert!(renderer.icon_size().is_some());
+                prop_assert!(renderer.momentary_icon("X", IconTheme::Custom).is_some());
+            }
+        }
+    }
+}
