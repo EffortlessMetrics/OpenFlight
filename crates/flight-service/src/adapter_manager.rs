@@ -126,7 +126,8 @@ impl AdapterManager {
         name: &str,
         orchestrator: &mut ServiceOrchestrator,
     ) -> Result<(), OrchestratorError> {
-        match orchestrator.start_adapter(name) {
+        let key = Self::normalize_adapter_name(name);
+        match orchestrator.start_adapter(&key) {
             Ok(()) => {}
             Err(OrchestratorError::SubsystemAlreadyRunning(_)) => {
                 // Already running — sync local state.
@@ -134,16 +135,16 @@ impl AdapterManager {
             Err(e) => return Err(e),
         }
 
-        if let Some(health) = self.health.get_mut(name) {
+        if let Some(health) = self.health.get_mut(&key) {
             health.state = AdapterLifecycleState::Running;
             health.consecutive_errors = 0;
             health.started_at = Some(Instant::now());
         }
 
         self.log_event(
-            name,
+            &key,
             AdapterEvent::SimConnected {
-                sim_name: name.to_string(),
+                sim_name: key.clone(),
             },
         );
 
@@ -158,7 +159,8 @@ impl AdapterManager {
         name: &str,
         orchestrator: &mut ServiceOrchestrator,
     ) -> Result<(), OrchestratorError> {
-        match orchestrator.stop_adapter(name) {
+        let key = Self::normalize_adapter_name(name);
+        match orchestrator.stop_adapter(&key) {
             Ok(()) => {}
             Err(OrchestratorError::SubsystemNotRunning(_)) => {
                 // Already stopped — sync local state.
@@ -166,15 +168,15 @@ impl AdapterManager {
             Err(e) => return Err(e),
         }
 
-        if let Some(health) = self.health.get_mut(name) {
+        if let Some(health) = self.health.get_mut(&key) {
             health.state = AdapterLifecycleState::Stopped;
             health.started_at = None;
         }
 
         self.log_event(
-            name,
+            &key,
             AdapterEvent::SimDisconnected {
-                sim_name: name.to_string(),
+                sim_name: key.clone(),
             },
         );
 
@@ -187,8 +189,9 @@ impl AdapterManager {
     /// errors exceeded threshold).
     pub fn record_health_check(&mut self, name: &str, healthy: bool) -> bool {
         let threshold = self.settings.max_consecutive_errors;
+        let key = Self::normalize_adapter_name(name);
 
-        if let Some(health) = self.health.get_mut(name) {
+        if let Some(health) = self.health.get_mut(&key) {
             health.last_check = Some(Instant::now());
 
             if healthy {
@@ -219,9 +222,10 @@ impl AdapterManager {
         error: &str,
         orchestrator: &mut ServiceOrchestrator,
     ) {
-        orchestrator.record_adapter_error(name, error);
+        let key = Self::normalize_adapter_name(name);
+        orchestrator.record_adapter_error(&key, error);
 
-        if let Some(health) = self.health.get_mut(name) {
+        if let Some(health) = self.health.get_mut(&key) {
             health.consecutive_errors += 1;
             health.total_errors += 1;
             if health.consecutive_errors >= self.settings.max_consecutive_errors {
@@ -243,7 +247,8 @@ impl AdapterManager {
 
     /// Get health for a specific adapter.
     pub fn adapter_health(&self, name: &str) -> Option<&AdapterHealth> {
-        self.health.get(name)
+        let key = Self::normalize_adapter_name(name);
+        self.health.get(&key)
     }
 
     /// Get a status snapshot of all adapters.
@@ -343,6 +348,11 @@ impl AdapterManager {
     }
 
     // -- internal helpers ----------------------------------------------------
+
+    /// Canonical form for adapter names: lowercase with hyphens and spaces stripped.
+    fn normalize_adapter_name(name: &str) -> String {
+        name.to_lowercase().replace(['-', ' '], "")
+    }
 
     fn log_event(&mut self, adapter: &str, event: AdapterEvent) {
         if self.event_log.len() >= self.max_log_size {
