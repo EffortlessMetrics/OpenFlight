@@ -904,9 +904,7 @@ impl ServiceOrchestrator {
                 self.metrics.adapter_disconnects += 1;
                 Ok(())
             }
-            _ => Err(OrchestratorError::SubsystemNotRunning(
-                adapter.to_string(),
-            )),
+            _ => Err(OrchestratorError::SubsystemNotRunning(adapter.to_string())),
         }
     }
 
@@ -953,23 +951,21 @@ impl ServiceOrchestrator {
         // Build a list of mutations to avoid conflicting borrows.
         let mutations: Vec<(String, AdapterLifecycleState)> = updated
             .iter()
-            .filter_map(|(name, desired)| {
-                match self.adapter_states.get(name) {
-                    Some(current) => {
-                        if *desired == AdapterLifecycleState::Disabled
-                            && *current != AdapterLifecycleState::Disabled
-                        {
-                            return Some((name.clone(), AdapterLifecycleState::Disabled));
-                        }
-                        if *desired != AdapterLifecycleState::Disabled
-                            && *current == AdapterLifecycleState::Disabled
-                        {
-                            return Some((name.clone(), AdapterLifecycleState::Stopped));
-                        }
-                        None
+            .filter_map(|(name, desired)| match self.adapter_states.get(name) {
+                Some(current) => {
+                    if *desired == AdapterLifecycleState::Disabled
+                        && *current != AdapterLifecycleState::Disabled
+                    {
+                        return Some((name.clone(), AdapterLifecycleState::Disabled));
                     }
-                    None => Some((name.clone(), desired.clone())),
+                    if *desired != AdapterLifecycleState::Disabled
+                        && *current == AdapterLifecycleState::Disabled
+                    {
+                        return Some((name.clone(), AdapterLifecycleState::Stopped));
+                    }
+                    None
                 }
+                None => Some((name.clone(), desired.clone())),
             })
             .collect();
         for (name, state) in mutations {
@@ -1882,7 +1878,9 @@ mod tests {
         let profile = Profile {
             schema: "flight.profile/1".to_string(),
             sim: Some("msfs".to_string()),
-            aircraft: Some(AircraftId { icao: "C172".to_string() }),
+            aircraft: Some(AircraftId {
+                icao: "C172".to_string(),
+            }),
             axes,
             pof_overrides: None,
         };
