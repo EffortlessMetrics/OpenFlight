@@ -8,11 +8,11 @@
 //! complement the existing unit and proptest suites.
 
 use approx::assert_abs_diff_eq;
-use flight_bus::types::{GForce, ValidatedAngle};
 use flight_bus::BusSnapshot;
+use flight_bus::types::{GForce, ValidatedAngle};
 use flight_motion::{
-    DoFConfig, HighPassFilter, LowPassFilter, MotionConfig, MotionError, MotionFrame,
-    MotionMapper, OutputError, SimToolsConfig, WashoutConfig, WashoutFilter,
+    DoFConfig, HighPassFilter, LowPassFilter, MotionConfig, MotionError, MotionFrame, MotionMapper,
+    OutputError, SimToolsConfig, WashoutConfig, WashoutFilter,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -112,7 +112,7 @@ fn frame_clamped_clips_all_channels_positive() {
         sway: 2.0,
         heave: 1.5,
         roll: 100.0,
-        pitch: 3.14,
+        pitch: 3.5,
         yaw: f32::MAX,
     };
     let c = f.clamped();
@@ -128,7 +128,7 @@ fn frame_clamped_clips_all_channels_negative() {
         sway: -2.0,
         heave: -1.5,
         roll: -100.0,
-        pitch: -3.14,
+        pitch: -3.5,
         yaw: f32::MIN,
     };
     let c = f.clamped();
@@ -233,10 +233,7 @@ fn frame_simtools_max_negative() {
         pitch: -1.0,
         yaw: -1.0,
     };
-    assert_eq!(
-        f.to_simtools_string(),
-        "A-100B-100C-100D-100E-100F-100\n"
-    );
+    assert_eq!(f.to_simtools_string(), "A-100B-100C-100D-100E-100F-100\n");
 }
 
 #[test]
@@ -412,7 +409,10 @@ fn hp_reset_then_new_step_gives_full_onset() {
     }
     hp.reset();
     let onset = hp.process(1.0);
-    assert!(onset > 0.9, "after reset, onset should be near 1.0: {onset}");
+    assert!(
+        onset > 0.9,
+        "after reset, onset should be near 1.0: {onset}"
+    );
 }
 
 #[test]
@@ -614,7 +614,10 @@ fn washout_custom_frequencies() {
         wf.surge_hp.process(1.0);
     }
     let surge = wf.surge_hp.process(1.0);
-    assert!(surge.abs() < 0.01, "high-freq HP should wash out fast: {surge}");
+    assert!(
+        surge.abs() < 0.01,
+        "high-freq HP should wash out fast: {surge}"
+    );
 
     // Higher LP freq → faster convergence
     let mut wf2 = WashoutFilter::new(&cfg, default_dt());
@@ -839,7 +842,11 @@ fn mapper_reset_behaves_like_new() {
     let mut fresh = MotionMapper::new(config, default_dt());
     let from_fresh = fresh.process(&snap);
 
-    for (a, b) in after_reset.to_array().iter().zip(from_fresh.to_array().iter()) {
+    for (a, b) in after_reset
+        .to_array()
+        .iter()
+        .zip(from_fresh.to_array().iter())
+    {
         assert_abs_diff_eq!(a, b, epsilon = 1e-5);
     }
 }
@@ -868,10 +875,7 @@ fn mapper_output_always_in_unit_range() {
     for _ in 0..100 {
         let frame = mapper.process(&snap);
         for &v in &frame.to_array() {
-            assert!(
-                v.abs() <= 1.0 + 1e-5,
-                "output out of bounds: {v}"
-            );
+            assert!(v.abs() <= 1.0 + 1e-5, "output out of bounds: {v}");
         }
     }
 }
@@ -911,7 +915,10 @@ fn motion_config_serde_json_roundtrip() {
     assert_abs_diff_eq!(config2.intensity, config.intensity, epsilon = 1e-6);
     assert_abs_diff_eq!(config2.max_g, config.max_g, epsilon = 1e-6);
     assert!(config2.surge.enabled);
-    assert_eq!(config2.washout.hp_frequency_hz, config.washout.hp_frequency_hz);
+    assert_eq!(
+        config2.washout.hp_frequency_hz,
+        config.washout.hp_frequency_hz
+    );
 }
 
 #[test]
@@ -1012,7 +1019,11 @@ fn scenario_level_turn_produces_roll_and_sway() {
     snap.kinematics.g_lateral = GForce::new(0.5).unwrap();
 
     let frame = settle_mapper(&mut mapper, &snap, 500);
-    assert!(frame.roll > 0.0, "should have positive roll: {}", frame.roll);
+    assert!(
+        frame.roll > 0.0,
+        "should have positive roll: {}",
+        frame.roll
+    );
     // Sway should have washed out for sustained g
 }
 
