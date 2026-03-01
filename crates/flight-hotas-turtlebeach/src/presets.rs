@@ -3,7 +3,7 @@
 
 //! Default axis configuration presets for Turtle Beach VelocityOne devices.
 //!
-//! Each device has tuned deadzone, expo, and filter parameters based on its
+//! Each device has tuned deadzone and filter parameters based on its
 //! hardware characteristics. The VelocityOne Flight and Flightstick use
 //! 12-bit Hall-effect sensors, which are relatively low-noise, so filtering
 //! is light.
@@ -32,46 +32,46 @@ pub struct RecommendedAxisConfig {
 pub fn flight_axis_config() -> [RecommendedAxisConfig; 6] {
     [
         RecommendedAxisConfig {
-            name: "roll",
+            name: flight_axes::ROLL,
             deadzone: 0.02,
             filter_alpha: Some(0.12),
             slew_rate: None,
             notes: "Yoke roll — Hall-effect, low noise, light filtering",
         },
         RecommendedAxisConfig {
-            name: "pitch",
+            name: flight_axes::PITCH,
             deadzone: 0.02,
             filter_alpha: Some(0.12),
             slew_rate: None,
             notes: "Yoke pitch — Hall-effect, low noise, light filtering",
         },
         RecommendedAxisConfig {
-            name: "rudder_twist",
+            name: flight_axes::RUDDER_TWIST,
             deadzone: 0.04,
             filter_alpha: Some(0.15),
             slew_rate: None,
             notes: "Twist rudder — slightly larger deadzone for centering",
         },
         RecommendedAxisConfig {
-            name: "throttle_left",
+            name: flight_axes::THROTTLE_LEFT,
             deadzone: 0.01,
             filter_alpha: Some(0.10),
             slew_rate: Some(2.0),
             notes: "Left throttle lever — 8-bit pot, slew-limited for smoothness",
         },
         RecommendedAxisConfig {
-            name: "throttle_right",
+            name: flight_axes::THROTTLE_RIGHT,
             deadzone: 0.01,
             filter_alpha: Some(0.10),
             slew_rate: Some(2.0),
             notes: "Right throttle lever — 8-bit pot, slew-limited for smoothness",
         },
         RecommendedAxisConfig {
-            name: "trim_wheel",
+            name: flight_axes::TRIM_WHEEL,
             deadzone: 0.0,
             filter_alpha: None,
             slew_rate: None,
-            notes: "Trim wheel — delta-encoded, no deadzone or filtering needed",
+            notes: "Trim wheel — 12-bit position; TrimWheelTracker derives deltas",
         },
     ]
 }
@@ -85,28 +85,28 @@ pub fn flight_axis_config() -> [RecommendedAxisConfig; 6] {
 pub fn flightstick_axis_config() -> [RecommendedAxisConfig; 4] {
     [
         RecommendedAxisConfig {
-            name: "x",
+            name: flightstick_axes::X,
             deadzone: 0.03,
             filter_alpha: Some(0.12),
             slew_rate: None,
             notes: "Stick X — Hall-effect, moderate deadzone for centering",
         },
         RecommendedAxisConfig {
-            name: "y",
+            name: flightstick_axes::Y,
             deadzone: 0.03,
             filter_alpha: Some(0.12),
             slew_rate: None,
             notes: "Stick Y — Hall-effect, moderate deadzone for centering",
         },
         RecommendedAxisConfig {
-            name: "twist",
+            name: flightstick_axes::TWIST,
             deadzone: 0.05,
             filter_alpha: Some(0.15),
             slew_rate: None,
             notes: "Twist rudder — larger deadzone to avoid unintended yaw",
         },
         RecommendedAxisConfig {
-            name: "throttle",
+            name: flightstick_axes::THROTTLE,
             deadzone: 0.02,
             filter_alpha: Some(0.10),
             slew_rate: Some(2.0),
@@ -123,21 +123,21 @@ pub fn flightstick_axis_config() -> [RecommendedAxisConfig; 4] {
 pub fn rudder_axis_config() -> [RecommendedAxisConfig; 3] {
     [
         RecommendedAxisConfig {
-            name: "rudder",
+            name: rudder_axes::RUDDER,
             deadzone: 0.03,
             filter_alpha: Some(0.12),
             slew_rate: None,
             notes: "Rudder axis — Hall-effect, centred bipolar",
         },
         RecommendedAxisConfig {
-            name: "left_toe_brake",
+            name: rudder_axes::LEFT_TOE_BRAKE,
             deadzone: 0.02,
             filter_alpha: Some(0.10),
             slew_rate: None,
             notes: "Left toe brake — Hall-effect, unipolar",
         },
         RecommendedAxisConfig {
-            name: "right_toe_brake",
+            name: rudder_axes::RIGHT_TOE_BRAKE,
             deadzone: 0.02,
             filter_alpha: Some(0.10),
             slew_rate: None,
@@ -202,18 +202,120 @@ pub const RUDDER_AXIS_NAMES: &[&str] = &[
 
 /// Look up recommended axis configurations by device model.
 ///
-/// Returns a `Vec` because different devices have different axis counts.
-/// For devices without dedicated presets (Flight Pro, Flight Universal,
-/// Flight Yoke), the Flight presets are used as a baseline.
-pub fn preset_for_device(device: crate::devices::VelocityOneDevice) -> Vec<RecommendedAxisConfig> {
+/// Returns a static slice — different devices have different axis counts.
+/// `FlightPro` uses the flightstick preset (4 axes, matching its
+/// capabilities). `FlightUniversal` and `FlightYoke` use the Flight
+/// preset (6 axes).
+pub fn preset_for_device(device: crate::devices::VelocityOneDevice) -> &'static [RecommendedAxisConfig] {
     use crate::devices::VelocityOneDevice;
+
+    static FLIGHT: &[RecommendedAxisConfig] = &[
+        RecommendedAxisConfig {
+            name: flight_axes::ROLL,
+            deadzone: 0.02,
+            filter_alpha: Some(0.12),
+            slew_rate: None,
+            notes: "Yoke roll — Hall-effect, low noise, light filtering",
+        },
+        RecommendedAxisConfig {
+            name: flight_axes::PITCH,
+            deadzone: 0.02,
+            filter_alpha: Some(0.12),
+            slew_rate: None,
+            notes: "Yoke pitch — Hall-effect, low noise, light filtering",
+        },
+        RecommendedAxisConfig {
+            name: flight_axes::RUDDER_TWIST,
+            deadzone: 0.04,
+            filter_alpha: Some(0.15),
+            slew_rate: None,
+            notes: "Twist rudder — slightly larger deadzone for centering",
+        },
+        RecommendedAxisConfig {
+            name: flight_axes::THROTTLE_LEFT,
+            deadzone: 0.01,
+            filter_alpha: Some(0.10),
+            slew_rate: Some(2.0),
+            notes: "Left throttle lever — 8-bit pot, slew-limited for smoothness",
+        },
+        RecommendedAxisConfig {
+            name: flight_axes::THROTTLE_RIGHT,
+            deadzone: 0.01,
+            filter_alpha: Some(0.10),
+            slew_rate: Some(2.0),
+            notes: "Right throttle lever — 8-bit pot, slew-limited for smoothness",
+        },
+        RecommendedAxisConfig {
+            name: flight_axes::TRIM_WHEEL,
+            deadzone: 0.0,
+            filter_alpha: None,
+            slew_rate: None,
+            notes: "Trim wheel — 12-bit position; TrimWheelTracker derives deltas",
+        },
+    ];
+
+    static FLIGHTSTICK: &[RecommendedAxisConfig] = &[
+        RecommendedAxisConfig {
+            name: flightstick_axes::X,
+            deadzone: 0.03,
+            filter_alpha: Some(0.12),
+            slew_rate: None,
+            notes: "Stick X — Hall-effect, moderate deadzone for centering",
+        },
+        RecommendedAxisConfig {
+            name: flightstick_axes::Y,
+            deadzone: 0.03,
+            filter_alpha: Some(0.12),
+            slew_rate: None,
+            notes: "Stick Y — Hall-effect, moderate deadzone for centering",
+        },
+        RecommendedAxisConfig {
+            name: flightstick_axes::TWIST,
+            deadzone: 0.05,
+            filter_alpha: Some(0.15),
+            slew_rate: None,
+            notes: "Twist rudder — larger deadzone to avoid unintended yaw",
+        },
+        RecommendedAxisConfig {
+            name: flightstick_axes::THROTTLE,
+            deadzone: 0.02,
+            filter_alpha: Some(0.10),
+            slew_rate: Some(2.0),
+            notes: "Throttle slider — 8-bit pot, slew-limited for smoothness",
+        },
+    ];
+
+    static RUDDER: &[RecommendedAxisConfig] = &[
+        RecommendedAxisConfig {
+            name: rudder_axes::RUDDER,
+            deadzone: 0.03,
+            filter_alpha: Some(0.12),
+            slew_rate: None,
+            notes: "Rudder axis — Hall-effect, centred bipolar",
+        },
+        RecommendedAxisConfig {
+            name: rudder_axes::LEFT_TOE_BRAKE,
+            deadzone: 0.02,
+            filter_alpha: Some(0.10),
+            slew_rate: None,
+            notes: "Left toe brake — Hall-effect, unipolar",
+        },
+        RecommendedAxisConfig {
+            name: rudder_axes::RIGHT_TOE_BRAKE,
+            deadzone: 0.02,
+            filter_alpha: Some(0.10),
+            slew_rate: None,
+            notes: "Right toe brake — Hall-effect, unipolar",
+        },
+    ];
+
     match device {
         VelocityOneDevice::Flight
-        | VelocityOneDevice::FlightPro
         | VelocityOneDevice::FlightUniversal
-        | VelocityOneDevice::FlightYoke => flight_axis_config().to_vec(),
-        VelocityOneDevice::Flightstick => flightstick_axis_config().to_vec(),
-        VelocityOneDevice::Rudder => rudder_axis_config().to_vec(),
+        | VelocityOneDevice::FlightYoke => FLIGHT,
+        VelocityOneDevice::FlightPro
+        | VelocityOneDevice::Flightstick => FLIGHTSTICK,
+        VelocityOneDevice::Rudder => RUDDER,
     }
 }
 
@@ -324,10 +426,10 @@ mod tests {
     }
 
     #[test]
-    fn test_preset_for_device_flight_pro_uses_flight() {
-        let flight = preset_for_device(VelocityOneDevice::Flight);
+    fn test_preset_for_device_flight_pro_uses_flightstick() {
+        let flightstick = preset_for_device(VelocityOneDevice::Flightstick);
         let pro = preset_for_device(VelocityOneDevice::FlightPro);
-        assert_eq!(flight, pro);
+        assert_eq!(flightstick, pro);
     }
 
     #[test]
@@ -340,7 +442,7 @@ mod tests {
     #[test]
     fn test_trim_wheel_has_no_deadzone_or_filter() {
         let config = flight_axis_config();
-        let trim = config.iter().find(|c| c.name == "trim_wheel").unwrap();
+        let trim = config.iter().find(|c| c.name == flight_axes::TRIM_WHEEL).unwrap();
         assert_eq!(trim.deadzone, 0.0);
         assert!(trim.filter_alpha.is_none());
         assert!(trim.slew_rate.is_none());
