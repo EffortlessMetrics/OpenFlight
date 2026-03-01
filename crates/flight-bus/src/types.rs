@@ -167,6 +167,7 @@ impl ValidatedSpeed {
             SpeedUnit::Knots => self.speed.value,
             SpeedUnit::Mps => conversions::mps_to_knots(self.speed.value),
             SpeedUnit::Kph => conversions::kph_to_knots(self.speed.value),
+            SpeedUnit::Mph => conversions::mph_to_knots_f32(self.speed.value),
         }
     }
 
@@ -176,6 +177,7 @@ impl ValidatedSpeed {
             SpeedUnit::Knots => conversions::knots_to_mps(self.speed.value),
             SpeedUnit::Mps => self.speed.value,
             SpeedUnit::Kph => conversions::kph_to_mps(self.speed.value),
+            SpeedUnit::Mph => conversions::mph_to_mps_f32(self.speed.value),
         }
     }
 }
