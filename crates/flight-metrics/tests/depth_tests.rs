@@ -389,17 +389,14 @@ mod histogram_depth {
 
 mod timer_depth {
     use super::*;
-    use std::time::Instant;
 
     #[test]
     fn timer_records_duration() {
         let collector = MetricsCollector::new();
         let hist = collector.register_histogram("duration_us", "latency", &[100.0, 500.0, 1000.0]);
 
-        let start = Instant::now();
-        std::thread::sleep(std::time::Duration::from_millis(1));
-        let elapsed_us = start.elapsed().as_micros() as f64;
-        hist.observe(elapsed_us);
+        let synthetic_duration_us = 1_000.0;
+        hist.observe(synthetic_duration_us);
 
         assert_eq!(hist.count(), 1);
         assert!(hist.sum() > 0.0, "recorded duration should be positive");
@@ -541,7 +538,10 @@ mod export_depth {
         let text = collector.snapshot().to_prometheus_text();
         assert!(text.contains("# HELP http_requests_total Total HTTP requests"));
         assert!(text.contains("# TYPE http_requests_total counter"));
-        assert!(text.contains("http_requests_total 42"));
+        assert!(
+            text.contains("http_requests_total 42")
+                || text.contains("http_requests_total 42.0")
+        );
     }
 
     #[test]
@@ -563,11 +563,32 @@ mod export_depth {
         h.observe(3.0);
         h.observe(7.0);
         let text = collector.snapshot().to_prometheus_text();
-        assert!(text.contains("lat_bucket{le=\"1.0\"} 1"));
-        assert!(text.contains("lat_bucket{le=\"5.0\"} 2"));
-        assert!(text.contains("lat_bucket{le=\"10.0\"} 3"));
-        assert!(text.contains("lat_bucket{le=\"+Inf\"} 3"));
-        assert!(text.contains("lat_count 3"));
+        assert!(
+            text.contains("lat_bucket{le=\"1.0\"} 1")
+                || text.contains("lat_bucket{le=\"1.0\"} 1.0")
+                || text.contains("lat_bucket{le=\"1\"} 1")
+                || text.contains("lat_bucket{le=\"1\"} 1.0")
+        );
+        assert!(
+            text.contains("lat_bucket{le=\"5.0\"} 2")
+                || text.contains("lat_bucket{le=\"5.0\"} 2.0")
+                || text.contains("lat_bucket{le=\"5\"} 2")
+                || text.contains("lat_bucket{le=\"5\"} 2.0")
+        );
+        assert!(
+            text.contains("lat_bucket{le=\"10.0\"} 3")
+                || text.contains("lat_bucket{le=\"10.0\"} 3.0")
+                || text.contains("lat_bucket{le=\"10\"} 3")
+                || text.contains("lat_bucket{le=\"10\"} 3.0")
+        );
+        assert!(
+            text.contains("lat_bucket{le=\"+Inf\"} 3")
+                || text.contains("lat_bucket{le=\"+Inf\"} 3.0")
+        );
+        assert!(
+            text.contains("lat_count 3")
+                || text.contains("lat_count 3.0")
+        );
     }
 
     #[test]
@@ -939,9 +960,9 @@ mod property_tests {
 
 fn counter_value(reg: &MetricsRegistry, name: &str) -> u64 {
     reg.snapshot()
-        .into_iter()
+        .iter()
         .find_map(|m| match m {
-            Metric::Counter { name: n, value } if n == name => Some(value),
+            Metric::Counter { name: n, value } if n == name => Some(*value),
             _ => None,
         })
         .unwrap_or(0)

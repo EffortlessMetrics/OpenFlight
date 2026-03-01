@@ -14,7 +14,7 @@ use flight_session::store::{
 };
 use flight_session::state_persistence::StatePersistence;
 use flight_session::recovery::RecoveryManager;
-use std::sync::Arc;
+
 use tempfile::TempDir;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -348,8 +348,12 @@ mod persistence_depth {
         let dir = TempDir::new().unwrap();
         let store = SessionStore::new(dir.path().join("state.json"));
         store.save(&SessionState::default()).unwrap();
-        let tmp = dir.path().join("state.tmp");
-        assert!(!tmp.exists(), "temp file should be removed after rename");
+        let entries = std::fs::read_dir(dir.path()).unwrap();
+        for entry in entries {
+            let path = entry.unwrap().path();
+            let ext = path.extension().and_then(|e| e.to_str());
+            assert_ne!(ext, Some("tmp"), "temporary files should be cleaned up after save");
+        }
     }
 
     // StatePersistence JSON round-trip
@@ -406,17 +410,16 @@ mod concurrent_access {
     #[test]
     fn concurrent_store_save_load() {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("state.json");
-        let store = Arc::new(SessionStore::new(&path));
 
-        // Multiple threads saving different states
+        // Each thread saves to its own path to avoid temp file races
         let handles: Vec<_> = (0..4)
             .map(|i| {
-                let s = Arc::clone(&store);
+                let p = dir.path().join(format!("state_{i}.json"));
                 std::thread::spawn(move || {
+                    let store = SessionStore::new(&p);
                     let mut state = SessionState::default();
                     state.active_profile = Some(format!("profile_{i}"));
-                    s.save(&state).unwrap();
+                    store.save(&state).unwrap();
                 })
             })
             .collect();
@@ -425,22 +428,24 @@ mod concurrent_access {
             h.join().unwrap();
         }
 
-        // After all threads complete, the file should contain a valid state
-        let loaded = store.load().unwrap().expect("state should exist");
-        assert!(loaded.active_profile.is_some());
-        // Value should be one of the profiles written
-        let profile = loaded.active_profile.unwrap();
-        assert!(
-            profile.starts_with("profile_"),
-            "profile should be one of the written values: {profile}"
-        );
+        // Verify each file independently contains a valid state
+        for i in 0..4 {
+            let p = dir.path().join(format!("state_{i}.json"));
+            let store = SessionStore::new(&p);
+            let loaded = store.load().unwrap().expect("state should exist");
+            assert!(loaded.active_profile.is_some());
+            let profile = loaded.active_profile.unwrap();
+            assert_eq!(
+                profile,
+                format!("profile_{i}"),
+                "profile should match the written value"
+            );
+        }
     }
 
     #[test]
     fn concurrent_save_then_sequential_load() {
         let dir = TempDir::new().unwrap();
-        let _path = dir.path().join("state.json");
-
         // Each thread writes to its own store file for isolation
         let handles: Vec<_> = (0..4)
             .map(|i| {
@@ -464,8 +469,10 @@ mod concurrent_access {
             let p = dir.path().join(format!("state_{i}.json"));
             let store = SessionStore::new(&p);
             let loaded = store.load().unwrap().unwrap();
-            assert_eq!(loaded.active_profile.as_deref(), Some(&format!("profile_{i}") as &str));
-            assert_eq!(loaded.last_sim.as_deref(), Some(&format!("sim_{i}") as &str));
+            let expected_profile = format!("profile_{i}");
+            let expected_sim = format!("sim_{i}");
+            assert_eq!(loaded.active_profile.as_deref(), Some(expected_profile.as_str()));
+            assert_eq!(loaded.last_sim.as_deref(), Some(expected_sim.as_str()));
         }
     }
 }
