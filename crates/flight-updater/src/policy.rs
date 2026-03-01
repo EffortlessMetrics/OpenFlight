@@ -144,6 +144,28 @@ mod duration_secs {
 }
 
 // ---------------------------------------------------------------------------
+// RollbackPolicy
+// ---------------------------------------------------------------------------
+
+/// Configuration for automatic rollback behaviour.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RollbackPolicy {
+    /// Maximum number of previous versions to retain for rollback.
+    pub max_rollback_versions: usize,
+    /// Automatically roll back if the application crashes on startup.
+    pub auto_rollback_on_crash: bool,
+}
+
+impl Default for RollbackPolicy {
+    fn default() -> Self {
+        Self {
+            max_rollback_versions: 3,
+            auto_rollback_on_crash: true,
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -378,5 +400,25 @@ mod tests {
         };
         let decision = should_apply(&auto_policy(), &state);
         assert_eq!(decision, UpdateDecision::Apply);
+    }
+
+    // -- RollbackPolicy ---------------------------------------------------
+
+    #[test]
+    fn rollback_policy_defaults() {
+        let rp = RollbackPolicy::default();
+        assert_eq!(rp.max_rollback_versions, 3);
+        assert!(rp.auto_rollback_on_crash);
+    }
+
+    #[test]
+    fn rollback_policy_serde_roundtrip() {
+        let rp = RollbackPolicy {
+            max_rollback_versions: 5,
+            auto_rollback_on_crash: false,
+        };
+        let json = serde_json::to_string(&rp).unwrap();
+        let back: RollbackPolicy = serde_json::from_str(&json).unwrap();
+        assert_eq!(rp, back);
     }
 }

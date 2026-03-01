@@ -18,6 +18,7 @@
 //! Implements signed updates with automatic rollback on startup crashes.
 
 pub mod channels;
+pub mod checker;
 pub mod delta;
 pub mod integration_docs;
 pub mod manifest;
@@ -30,19 +31,22 @@ pub mod update_manifest;
 pub mod updater;
 
 pub use channels::{Channel, ChannelConfig};
+pub use checker::{UpdateCheckResult, UpdateChecker};
 pub use delta::{DeltaApplier, DeltaPatch, calculate_delta, verify_install};
 pub use integration_docs::{IntegrationDocsManager, SimIntegrationDocs, ValidationReport};
 pub use manifest::{
-    FileOperation, FileUpdate, SemVer, UpdateManifest as SignedUpdateManifest,
-    parse as parse_manifest, verify_signature as verify_manifest_signature,
+    Architecture, FileOperation, FileUpdate, Platform, PlatformArtifact, ReleaseManifest, SemVer,
+    UpdateManifest as SignedUpdateManifest, parse as parse_manifest,
+    verify_signature as verify_manifest_signature,
 };
 pub use packaging::{MsiPackageBuilder, PackageConfig, SystemdPackageBuilder};
 pub use policy::{
-    CurrentState, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy, should_apply,
+    CurrentState, RollbackPolicy, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy,
+    should_apply,
 };
 pub use rollback::{
     ArtifactFile, FileSystem, JournalEntry, RealFileSystem, RollbackManager, UpdateJournal,
-    UpdateRollbackConfig, UpdateRollbackManager, UpdateState, VersionInfo,
+    UpdateRollbackConfig, UpdateRollbackManager, UpdateState, VersionInfo, VersionRetention,
 };
 pub use signature::{SignatureVerifier, UpdateSignature};
 pub use update_manifest::{

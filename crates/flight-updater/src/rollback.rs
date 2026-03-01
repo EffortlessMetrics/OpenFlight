@@ -867,6 +867,70 @@ impl<F: FileSystem> UpdateRollbackManager<F> {
     }
 }
 
+/// Manages a bounded list of version identifiers, evicting the oldest
+/// entries when the retention limit is exceeded.
+#[derive(Debug)]
+pub struct VersionRetention {
+    versions: Vec<String>,
+    max_versions: usize,
+}
+
+impl VersionRetention {
+    pub fn new(max_versions: usize) -> Self {
+        Self {
+            versions: Vec::new(),
+            max_versions,
+        }
+    }
+
+    /// Push a new version. If the retention limit is exceeded, the oldest
+    /// version is removed and returned.
+    pub fn push(&mut self, version: String) -> Option<String> {
+        self.versions.push(version);
+        if self.versions.len() > self.max_versions {
+            Some(self.versions.remove(0))
+        } else {
+            None
+        }
+    }
+
+    /// Swap the current (latest) version with the previous one.
+    /// Returns `true` if a swap occurred.
+    pub fn swap_to_previous(&mut self) -> bool {
+        let len = self.versions.len();
+        if len >= 2 {
+            self.versions.swap(len - 1, len - 2);
+            true
+        } else {
+            false
+        }
+    }
+
+    /// The current (latest) version, if any.
+    pub fn current(&self) -> Option<&str> {
+        self.versions.last().map(|s| s.as_str())
+    }
+
+    /// The previous version (one before current), if any.
+    pub fn previous(&self) -> Option<&str> {
+        if self.versions.len() >= 2 {
+            Some(&self.versions[self.versions.len() - 2])
+        } else {
+            None
+        }
+    }
+
+    /// Number of retained versions.
+    pub fn len(&self) -> usize {
+        self.versions.len()
+    }
+
+    /// Whether the retention list is empty.
+    pub fn is_empty(&self) -> bool {
+        self.versions.is_empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1131,6 +1195,48 @@ mod tests {
             result,
             "timestamp 0 must produce a large elapsed duration that exceeds timeout"
         );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // VersionRetention tests
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn version_retention_push_and_current() {
+        let mut vr = VersionRetention::new(3);
+        assert!(vr.is_empty());
+        assert!(vr.current().is_none());
+        vr.push("1.0.0".into());
+        assert_eq!(vr.current(), Some("1.0.0"));
+        assert_eq!(vr.len(), 1);
+    }
+
+    #[test]
+    fn version_retention_evicts_oldest() {
+        let mut vr = VersionRetention::new(2);
+        assert!(vr.push("1.0.0".into()).is_none());
+        assert!(vr.push("2.0.0".into()).is_none());
+        let evicted = vr.push("3.0.0".into());
+        assert_eq!(evicted.as_deref(), Some("1.0.0"));
+        assert_eq!(vr.len(), 2);
+        assert_eq!(vr.current(), Some("3.0.0"));
+    }
+
+    #[test]
+    fn version_retention_swap_to_previous() {
+        let mut vr = VersionRetention::new(3);
+        vr.push("1.0.0".into());
+        vr.push("2.0.0".into());
+        assert!(vr.swap_to_previous());
+        assert_eq!(vr.current(), Some("1.0.0"));
+        assert_eq!(vr.previous(), Some("2.0.0"));
+    }
+
+    #[test]
+    fn version_retention_swap_with_single_returns_false() {
+        let mut vr = VersionRetention::new(3);
+        vr.push("1.0.0".into());
+        assert!(!vr.swap_to_previous());
     }
 
     // ═══════════════════════════════════════════════════════════════════════
