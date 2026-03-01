@@ -6,13 +6,13 @@
 //!
 //! **Validates: ADR-009 Safety Interlock Design, FFB-SAFETY-01.x, FFB-SAFETY-02/03**
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use flight_ffb::effects::{
     CompositeEffect, ConstantForceParams, DamperParams, EffectInput, EffectWatchdog, FfbEffect,
     PeriodicParams, SpringParams, Waveform,
 };
-use flight_ffb::interlock::{ButtonId, InterlockResponse, InterlockSystem};
+use flight_ffb::interlock::InterlockSystem;
 use flight_ffb::mode_negotiation::ModeNegotiator;
 use flight_ffb::safety::{FaultReason, SafetyState, SafetyStateManager, TransitionReason};
 use flight_ffb::safety_envelope::{SafetyEnvelope, SafetyEnvelopeConfig};
@@ -606,7 +606,7 @@ mod trim_system {
         // Run with deterministic 1ms timesteps
         for _ in 0..1000 {
             tc.update();
-            std::thread::sleep(Duration::from_micros(100));
+            std::thread::sleep(Duration::from_millis(1));
         }
 
         assert!(
