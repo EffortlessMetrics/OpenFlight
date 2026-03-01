@@ -37,6 +37,8 @@
 //!
 //! LED indices and counts are device-specific.
 
+use thiserror::Error;
+
 use crate::VIRPIL_AXIS_MAX;
 pub use flight_hid_support::device_support::{
     VIRPIL_ACE_PEDALS_PID, VIRPIL_ACE_TORQ_PID, VIRPIL_CM3_THROTTLE_PID,
@@ -282,9 +284,9 @@ impl VirpilDeviceFamily {
             VirpilModel::WarBrd | VirpilModel::WarBrdD => VirpilDeviceFamily::Base,
             VirpilModel::Cm3Throttle | VirpilModel::Cm2Throttle => VirpilDeviceFamily::Throttle,
             VirpilModel::AcePedals => VirpilDeviceFamily::Pedals,
-            VirpilModel::ControlPanel1
-            | VirpilModel::ControlPanel2
-            | VirpilModel::SharkPanel => VirpilDeviceFamily::Panel,
+            VirpilModel::ControlPanel1 | VirpilModel::ControlPanel2 | VirpilModel::SharkPanel => {
+                VirpilDeviceFamily::Panel
+            }
             VirpilModel::RotorTcsPlus | VirpilModel::AceTorq => VirpilDeviceFamily::Collective,
         }
     }
@@ -337,8 +339,6 @@ impl VirpilProtocol {
 
 // ─── Unified report types ─────────────────────────────────────────────────────
 
-use thiserror::Error;
-
 /// Error from the unified report parsers.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum VirpilParseError {
@@ -349,10 +349,10 @@ pub enum VirpilParseError {
 /// Unified grip/stick state: normalised axes + button bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GripState {
-    /// Normalised axis values `[0.0, 1.0]`. Typically 5 axes (X, Y, Z, SZ, SL).
-    pub axes: Vec<f32>,
+    /// Normalised axis values `[0.0, 1.0]`. 5 axes (X, Y, Z, SZ, SL).
+    pub axes: [f32; GRIP_AXIS_COUNT],
     /// Raw button bytes (LSB-first per byte).
-    pub buttons_raw: Vec<u8>,
+    pub buttons_raw: [u8; GRIP_BUTTON_BYTES],
 }
 
 impl GripState {
@@ -373,19 +373,19 @@ impl GripState {
 /// Unified base/gimbal state: normalised axes + button bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BaseState {
-    /// Normalised axis values `[0.0, 1.0]`. Typically 5 axes (X, Y, Z, SZ, SL).
-    pub axes: Vec<f32>,
+    /// Normalised axis values `[0.0, 1.0]`. 5 axes (X, Y, Z, SZ, SL).
+    pub axes: [f32; BASE_AXIS_COUNT],
     /// Raw button bytes (LSB-first per byte).
-    pub buttons_raw: Vec<u8>,
+    pub buttons_raw: [u8; BASE_BUTTON_BYTES],
 }
 
 /// Unified throttle state: normalised axes + button bitmap.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ThrottleState {
-    /// Normalised axis values `[0.0, 1.0]`. Typically 6 axes.
-    pub axes: Vec<f32>,
+    /// Normalised axis values `[0.0, 1.0]`. 6 axes.
+    pub axes: [f32; THROTTLE_AXIS_COUNT],
     /// Raw button bytes (LSB-first per byte).
-    pub buttons_raw: Vec<u8>,
+    pub buttons_raw: [u8; THROTTLE_BUTTON_BYTES],
 }
 
 // ─── Unified parse functions ──────────────────────────────────────────────────
@@ -410,13 +410,14 @@ pub fn parse_grip_report(data: &[u8]) -> Result<GripState, VirpilParseError> {
         return Err(VirpilParseError::TooShort(data.len()));
     }
     let payload = &data[1..];
-    let mut axes = Vec::with_capacity(GRIP_AXIS_COUNT);
+    let mut axes = [0.0f32; GRIP_AXIS_COUNT];
     for i in 0..GRIP_AXIS_COUNT {
         let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
-        axes.push(normalize_axis(raw));
+        axes[i] = normalize_axis(raw);
     }
     let btn_start = 1 + GRIP_AXIS_COUNT * 2;
-    let buttons_raw = data[btn_start..btn_start + GRIP_BUTTON_BYTES].to_vec();
+    let mut buttons_raw = [0u8; GRIP_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + GRIP_BUTTON_BYTES]);
     Ok(GripState { axes, buttons_raw })
 }
 
@@ -428,13 +429,14 @@ pub fn parse_base_report(data: &[u8]) -> Result<BaseState, VirpilParseError> {
         return Err(VirpilParseError::TooShort(data.len()));
     }
     let payload = &data[1..];
-    let mut axes = Vec::with_capacity(BASE_AXIS_COUNT);
+    let mut axes = [0.0f32; BASE_AXIS_COUNT];
     for i in 0..BASE_AXIS_COUNT {
         let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
-        axes.push(normalize_axis(raw));
+        axes[i] = normalize_axis(raw);
     }
     let btn_start = 1 + BASE_AXIS_COUNT * 2;
-    let buttons_raw = data[btn_start..btn_start + BASE_BUTTON_BYTES].to_vec();
+    let mut buttons_raw = [0u8; BASE_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + BASE_BUTTON_BYTES]);
     Ok(BaseState { axes, buttons_raw })
 }
 
@@ -446,13 +448,14 @@ pub fn parse_throttle_report(data: &[u8]) -> Result<ThrottleState, VirpilParseEr
         return Err(VirpilParseError::TooShort(data.len()));
     }
     let payload = &data[1..];
-    let mut axes = Vec::with_capacity(THROTTLE_AXIS_COUNT);
+    let mut axes = [0.0f32; THROTTLE_AXIS_COUNT];
     for i in 0..THROTTLE_AXIS_COUNT {
         let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
-        axes.push(normalize_axis(raw));
+        axes[i] = normalize_axis(raw);
     }
     let btn_start = 1 + THROTTLE_AXIS_COUNT * 2;
-    let buttons_raw = data[btn_start..btn_start + THROTTLE_BUTTON_BYTES].to_vec();
+    let mut buttons_raw = [0u8; THROTTLE_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + THROTTLE_BUTTON_BYTES]);
     Ok(ThrottleState { axes, buttons_raw })
 }
 

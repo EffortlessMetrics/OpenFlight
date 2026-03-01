@@ -18,10 +18,10 @@
 //! ```
 //! use flight_hotas_virpil::button_matrix::ButtonMatrix;
 //!
-//! let matrix = ButtonMatrix::new(8, 16, 2);
+//! let matrix = ButtonMatrix::new(8, 15, 2).unwrap();
 //! assert_eq!(matrix.resolve(0, 0), Some(1));
 //! assert_eq!(matrix.resolve(0, 1), Some(2));
-//! assert_eq!(matrix.resolve_shifted(0, 0, 1), Some(129));
+//! assert_eq!(matrix.resolve_shifted(0, 0, 1), Some(121));
 //! ```
 
 use thiserror::Error;
@@ -40,6 +40,8 @@ pub enum ButtonMatrixError {
     LayerOutOfRange { layer: u8, max_layers: u8 },
     #[error("matrix dimensions too large: {rows}×{cols}×{layers} exceeds u8 button space")]
     DimensionsTooLarge { rows: u8, cols: u8, layers: u8 },
+    #[error("rows and columns must be non-zero")]
+    ZeroDimension,
 }
 
 /// A physical-to-logical button matrix resolver for VIRPIL VPC devices.
@@ -66,17 +68,21 @@ impl ButtonMatrix {
     ///
     /// # Errors
     ///
-    /// Returns [`ButtonMatrixError::DimensionsTooLarge`] if the total button
-    /// count (`rows × cols × layers`) exceeds 255.
-    pub fn new(rows: u8, cols: u8, shift_layers: u8) -> Self {
+    /// Returns [`ButtonMatrixError::ZeroDimension`] if `rows` or `cols` is zero.
+    /// Use [`ButtonMatrix::validate`] to check if the total button count
+    /// (`rows × cols × layers`) exceeds 255.
+    pub fn new(rows: u8, cols: u8, shift_layers: u8) -> Result<Self, ButtonMatrixError> {
+        if rows == 0 || cols == 0 {
+            return Err(ButtonMatrixError::ZeroDimension);
+        }
         let layers = shift_layers.clamp(1, MAX_SHIFT_LAYERS);
         let buttons_per_layer = rows as u16 * cols as u16;
-        Self {
+        Ok(Self {
             rows,
             cols,
             shift_layers: layers,
             buttons_per_layer,
-        }
+        })
     }
 
     /// Validate that the matrix dimensions fit within the button ID space.
@@ -160,7 +166,7 @@ mod tests {
 
     #[test]
     fn basic_resolve() {
-        let m = ButtonMatrix::new(4, 4, 1);
+        let m = ButtonMatrix::new(4, 4, 1).unwrap();
         assert_eq!(m.resolve(0, 0), Some(1));
         assert_eq!(m.resolve(0, 3), Some(4));
         assert_eq!(m.resolve(1, 0), Some(5));
@@ -169,7 +175,7 @@ mod tests {
 
     #[test]
     fn out_of_range_returns_none() {
-        let m = ButtonMatrix::new(4, 4, 1);
+        let m = ButtonMatrix::new(4, 4, 1).unwrap();
         assert_eq!(m.resolve(4, 0), None);
         assert_eq!(m.resolve(0, 4), None);
         assert_eq!(m.resolve(255, 255), None);
@@ -177,7 +183,7 @@ mod tests {
 
     #[test]
     fn shift_layers() {
-        let m = ButtonMatrix::new(8, 16, 2);
+        let m = ButtonMatrix::new(8, 16, 2).unwrap();
         // Base layer: buttons 1..=128
         assert_eq!(m.resolve(0, 0), Some(1));
         assert_eq!(m.resolve(7, 15), Some(128));
@@ -187,20 +193,20 @@ mod tests {
 
     #[test]
     fn shift_layer_out_of_range() {
-        let m = ButtonMatrix::new(4, 4, 2);
+        let m = ButtonMatrix::new(4, 4, 2).unwrap();
         assert_eq!(m.resolve_shifted(0, 0, 2), None);
         assert_eq!(m.resolve_shifted(0, 0, 255), None);
     }
 
     #[test]
     fn max_shift_layers_clamped() {
-        let m = ButtonMatrix::new(2, 2, 10);
+        let m = ButtonMatrix::new(2, 2, 10).unwrap();
         assert_eq!(m.shift_layers(), MAX_SHIFT_LAYERS);
     }
 
     #[test]
     fn reverse_basic() {
-        let m = ButtonMatrix::new(4, 4, 1);
+        let m = ButtonMatrix::new(4, 4, 1).unwrap();
         assert_eq!(m.reverse(1), Some((0, 0, 0)));
         assert_eq!(m.reverse(4), Some((0, 3, 0)));
         assert_eq!(m.reverse(5), Some((1, 0, 0)));
@@ -209,7 +215,7 @@ mod tests {
 
     #[test]
     fn reverse_with_layers() {
-        let m = ButtonMatrix::new(4, 4, 2);
+        let m = ButtonMatrix::new(4, 4, 2).unwrap();
         assert_eq!(m.reverse(1), Some((0, 0, 0)));
         assert_eq!(m.reverse(16), Some((3, 3, 0)));
         assert_eq!(m.reverse(17), Some((0, 0, 1)));
@@ -218,25 +224,29 @@ mod tests {
 
     #[test]
     fn reverse_zero_returns_none() {
-        let m = ButtonMatrix::new(4, 4, 1);
+        let m = ButtonMatrix::new(4, 4, 1).unwrap();
         assert_eq!(m.reverse(0), None);
     }
 
     #[test]
     fn reverse_out_of_range_returns_none() {
-        let m = ButtonMatrix::new(4, 4, 1);
+        let m = ButtonMatrix::new(4, 4, 1).unwrap();
         assert_eq!(m.reverse(17), None);
     }
 
     #[test]
     fn roundtrip_resolve_reverse() {
-        let m = ButtonMatrix::new(8, 16, 2);
+        let m = ButtonMatrix::new(8, 16, 2).unwrap();
         for layer in 0..m.shift_layers() {
             for row in 0..m.rows() {
                 for col in 0..m.cols() {
                     if let Some(btn) = m.resolve_shifted(row, col, layer) {
                         let (r, c, l) = m.reverse(btn).unwrap();
-                        assert_eq!((r, c, l), (row, col, layer), "roundtrip failed for btn {btn}");
+                        assert_eq!(
+                            (r, c, l),
+                            (row, col, layer),
+                            "roundtrip failed for btn {btn}"
+                        );
                     }
                 }
             }
@@ -245,37 +255,37 @@ mod tests {
 
     #[test]
     fn total_buttons() {
-        let m = ButtonMatrix::new(4, 4, 2);
+        let m = ButtonMatrix::new(4, 4, 2).unwrap();
         assert_eq!(m.total_buttons(), 32);
     }
 
     #[test]
     fn single_layer_matrix() {
-        let m = ButtonMatrix::new(1, 1, 1);
+        let m = ButtonMatrix::new(1, 1, 1).unwrap();
         assert_eq!(m.resolve(0, 0), Some(1));
         assert_eq!(m.total_buttons(), 1);
     }
 
     #[test]
     fn validate_ok() {
-        let m = ButtonMatrix::new(4, 4, 2);
+        let m = ButtonMatrix::new(4, 4, 2).unwrap();
         assert!(m.validate().is_ok());
     }
 
     #[test]
     fn validate_too_large() {
-        let m = ButtonMatrix::new(16, 16, 2);
+        let m = ButtonMatrix::new(16, 16, 2).unwrap();
         assert!(m.validate().is_err());
     }
 
     #[test]
     fn overflow_returns_none() {
         // 15×15×1 = 225 buttons, all fit in u8
-        let m = ButtonMatrix::new(15, 15, 1);
+        let m = ButtonMatrix::new(15, 15, 1).unwrap();
         assert_eq!(m.resolve(14, 14), Some(225));
         // But with 2 layers, button 226+ would exceed for some, while
         // the second layer starts at 226 which fits in u8 up to 255
-        let m2 = ButtonMatrix::new(15, 15, 2);
+        let m2 = ButtonMatrix::new(15, 15, 2).unwrap();
         // Layer 1, row 0, col 0 → 225 + 1 = 226
         assert_eq!(m2.resolve_shifted(0, 0, 1), Some(226));
         // Layer 1, row 1, col 14 → 225 + 30 = 255
@@ -286,9 +296,25 @@ mod tests {
 
     #[test]
     fn accessors() {
-        let m = ButtonMatrix::new(8, 16, 3);
+        let m = ButtonMatrix::new(8, 16, 3).unwrap();
         assert_eq!(m.rows(), 8);
         assert_eq!(m.cols(), 16);
         assert_eq!(m.shift_layers(), 3);
+    }
+
+    #[test]
+    fn zero_rows_returns_error() {
+        assert_eq!(
+            ButtonMatrix::new(0, 4, 1),
+            Err(ButtonMatrixError::ZeroDimension)
+        );
+    }
+
+    #[test]
+    fn zero_cols_returns_error() {
+        assert_eq!(
+            ButtonMatrix::new(4, 0, 1),
+            Err(ButtonMatrixError::ZeroDimension)
+        );
     }
 }

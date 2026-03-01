@@ -154,7 +154,10 @@ pub fn read_axis_curve(data: &[u8]) -> Result<AxisCurve, AxisCurveError> {
     for i in 0..point_count {
         let x_pct = data[1 + i * 2];
         let y_pct = data[2 + i * 2];
-        points.push(ControlPoint::new(x_pct as f64 / 100.0, y_pct as f64 / 100.0));
+        points.push(ControlPoint::new(
+            x_pct as f64 / 100.0,
+            y_pct as f64 / 100.0,
+        ));
     }
 
     // Validate sorted order
@@ -179,9 +182,9 @@ pub fn read_axis_curve(data: &[u8]) -> Result<AxisCurve, AxisCurveError> {
 /// Apply a response curve to a normalised input value.
 ///
 /// The input is clamped to `[0.0, 1.0]`. Linear interpolation is used between
-/// control points. Values below the first control point or above the last are
-/// extrapolated from the nearest segment (but the result is still clamped to
-/// `[0.0, 1.0]`).
+/// control points. Values below the first control point are clamped to the
+/// first control point's y value; values above the last control point are
+/// clamped to the last control point's y value.
 pub fn apply_curve(input: f64, curve: &AxisCurve) -> f64 {
     let input = input.clamp(0.0, 1.0);
     let points = &curve.points;
@@ -272,10 +275,7 @@ mod tests {
 
     #[test]
     fn from_points_unsorted() {
-        let points = [
-            ControlPoint::new(0.5, 0.5),
-            ControlPoint::new(0.3, 0.3),
-        ];
+        let points = [ControlPoint::new(0.5, 0.5), ControlPoint::new(0.3, 0.3)];
         assert!(AxisCurve::from_points(&points).is_err());
     }
 
@@ -382,10 +382,7 @@ mod tests {
 
     #[test]
     fn apply_below_first_point() {
-        let points = [
-            ControlPoint::new(0.2, 0.3),
-            ControlPoint::new(0.8, 0.9),
-        ];
+        let points = [ControlPoint::new(0.2, 0.3), ControlPoint::new(0.8, 0.9)];
         let curve = AxisCurve::from_points(&points).unwrap();
         // Input below first point → returns first point's y
         assert!((apply_curve(0.1, &curve) - 0.3).abs() < 1e-9);
@@ -393,10 +390,7 @@ mod tests {
 
     #[test]
     fn apply_above_last_point() {
-        let points = [
-            ControlPoint::new(0.2, 0.3),
-            ControlPoint::new(0.8, 0.9),
-        ];
+        let points = [ControlPoint::new(0.2, 0.3), ControlPoint::new(0.8, 0.9)];
         let curve = AxisCurve::from_points(&points).unwrap();
         assert!((apply_curve(0.9, &curve) - 0.9).abs() < 1e-9);
     }
