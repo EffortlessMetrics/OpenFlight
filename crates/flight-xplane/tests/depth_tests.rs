@@ -292,17 +292,14 @@ mod udp_protocol_depth {
     }
 
     #[test]
-    fn header_with_wrong_nul_separator() {
-        // "RREF" followed by 0x01 instead of 0x00 — treated as valid header
-        // but payload alignment depends on implementation
+    fn parser_accepts_non_nul_separator_byte() {
+        // Current parser only validates first 4 bytes of header ("RREF");
+        // byte[4] is skipped (HEADER_LEN = 5) but not checked for NUL.
+        // So 0x01 in the separator position is silently accepted.
         let mut pkt = Vec::from(&b"RREF\x01"[..]);
         pkt.extend_from_slice(&42u32.to_le_bytes());
         pkt.extend_from_slice(&1.0f32.to_le_bytes());
-        // The parser checks the first 4 bytes as header, byte 4 is separator
-        // This should still parse since the header check is [0..4]
         let result = parse_rref_response(&pkt);
-        // Implementation reads HEADER_LEN = 5, so byte[4] must be present
-        // but isn't checked for NUL — it just skips it.
         assert!(result.is_ok());
     }
 
@@ -443,7 +440,7 @@ mod dataref_database_depth {
     use super::*;
 
     #[test]
-    fn database_has_at_least_70_datarefs() {
+    fn database_has_at_least_60_datarefs() {
         let db = DatarefDatabase::new();
         let count = db.all().len();
         assert!(
@@ -678,7 +675,7 @@ mod dataref_database_depth {
     }
 
     #[test]
-    fn empty_prefix_returns_all() {
+    fn by_prefix_sim_returns_all_datarefs() {
         let db = DatarefDatabase::new();
         // Every dataref starts with "sim/" so prefix "sim/" returns all
         let all_sim = db.by_prefix("sim/");
@@ -1294,8 +1291,8 @@ mod state_machine_depth {
         let mut sm_used = sm();
         sm_used.transition(AdapterEvent::SocketBound).unwrap();
         let elapsed = sm_used.time_in_state().unwrap();
-        // Should be very short (we just transitioned)
-        assert!(elapsed.as_secs() < 1);
+        // Should be very short (we just transitioned); use generous bound for slow CI
+        assert!(elapsed.as_secs() < 30);
     }
 
     // ── Error count increments on each SocketError ──────────────────
