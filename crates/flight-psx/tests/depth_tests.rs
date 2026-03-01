@@ -25,21 +25,21 @@ use proptest::prelude::*;
 fn parse_integer_value_without_decimal() {
     let (var, val) = parse_psx_line("Qi0200=1").unwrap();
     assert_eq!(var, PsxVariable::GearDown);
-    assert!((val - 1.0).abs() < f64::EPSILON);
+    assert!((val - 1.0).abs() < 1e-9);
 }
 
 #[test]
 fn parse_negative_value() {
     let (var, val) = parse_psx_line("Qi0001=-50.0").unwrap();
     assert_eq!(var, PsxVariable::FcuSpd);
-    assert!((val - (-50.0)).abs() < f64::EPSILON);
+    assert!((val - (-50.0)).abs() < 1e-9);
 }
 
 #[test]
 fn parse_zero_value() {
     let (var, val) = parse_psx_line("Qi0010=0").unwrap();
     assert_eq!(var, PsxVariable::N1Left);
-    assert!((val).abs() < f64::EPSILON);
+    assert!((val).abs() < 1e-9);
 }
 
 #[test]
@@ -51,46 +51,46 @@ fn parse_very_large_value() {
 #[test]
 fn parse_very_small_positive_value() {
     let (_, val) = parse_psx_line("Qi0100=0.0001").unwrap();
-    assert!((val - 0.0001).abs() < f64::EPSILON);
+    assert!((val - 0.0001).abs() < 1e-9);
 }
 
 #[test]
 fn parse_scientific_notation() {
     let (_, val) = parse_psx_line("Qi0100=1.5e3").unwrap();
-    assert!((val - 1500.0).abs() < f64::EPSILON);
+    assert!((val - 1500.0).abs() < 1e-9);
 }
 
 #[test]
 fn parse_negative_scientific_notation() {
     let (_, val) = parse_psx_line("Qi0100=-2.5e-2").unwrap();
-    assert!((val - (-0.025)).abs() < f64::EPSILON);
+    assert!((val - (-0.025)).abs() < 1e-9);
 }
 
 #[test]
 fn parse_leading_whitespace_only() {
     let (var, val) = parse_psx_line("   Qi0001=100.0").unwrap();
     assert_eq!(var, PsxVariable::FcuSpd);
-    assert!((val - 100.0).abs() < f64::EPSILON);
+    assert!((val - 100.0).abs() < 1e-9);
 }
 
 #[test]
 fn parse_trailing_whitespace_only() {
     let (var, val) = parse_psx_line("Qi0001=100.0   ").unwrap();
     assert_eq!(var, PsxVariable::FcuSpd);
-    assert!((val - 100.0).abs() < f64::EPSILON);
+    assert!((val - 100.0).abs() < 1e-9);
 }
 
 #[test]
 fn parse_tab_whitespace_trimmed() {
     let (var, val) = parse_psx_line("\tQi0002=45.0\t").unwrap();
     assert_eq!(var, PsxVariable::FcuHdg);
-    assert!((val - 45.0).abs() < f64::EPSILON);
+    assert!((val - 45.0).abs() < 1e-9);
 }
 
 #[test]
 fn parse_value_with_leading_plus_sign() {
     let (_, val) = parse_psx_line("Qi0001=+250.0").unwrap();
-    assert!((val - 250.0).abs() < f64::EPSILON);
+    assert!((val - 250.0).abs() < 1e-9);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -204,42 +204,42 @@ fn telemetry_default_all_zeroed() {
 fn telemetry_apply_fcu_spd() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::FcuSpd, 310.0);
-    assert!((t.fcu_spd - 310.0).abs() < f64::EPSILON);
+    assert!((t.fcu_spd - 310.0).abs() < 1e-9);
 }
 
 #[test]
 fn telemetry_apply_fcu_hdg() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::FcuHdg, 270.0);
-    assert!((t.fcu_hdg - 270.0).abs() < f64::EPSILON);
+    assert!((t.fcu_hdg - 270.0).abs() < 1e-9);
 }
 
 #[test]
 fn telemetry_apply_n1_left() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::N1Left, 92.3);
-    assert!((t.n1_left - 92.3).abs() < f64::EPSILON);
+    assert!((t.n1_left - 92.3).abs() < 1e-9);
 }
 
 #[test]
 fn telemetry_apply_n1_right() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::N1Right, 91.7);
-    assert!((t.n1_right - 91.7).abs() < f64::EPSILON);
+    assert!((t.n1_right - 91.7).abs() < 1e-9);
 }
 
 #[test]
 fn telemetry_apply_fuel_left() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::FuelLeft, 50000.0);
-    assert!((t.fuel_left - 50000.0).abs() < f64::EPSILON);
+    assert!((t.fuel_left - 50000.0).abs() < 1e-9);
 }
 
 #[test]
 fn telemetry_apply_fuel_right() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::FuelRight, 48000.0);
-    assert!((t.fuel_right - 48000.0).abs() < f64::EPSILON);
+    assert!((t.fuel_right - 48000.0).abs() < 1e-9);
 }
 
 #[test]
@@ -280,7 +280,7 @@ fn telemetry_overwrite_value() {
     let mut t = PsxTelemetry::default();
     t.apply(&PsxVariable::FcuSpd, 200.0);
     t.apply(&PsxVariable::FcuSpd, 350.0);
-    assert!((t.fcu_spd - 350.0).abs() < f64::EPSILON);
+    assert!((t.fcu_spd - 350.0).abs() < 1e-9);
 }
 
 #[test]
@@ -289,8 +289,8 @@ fn telemetry_clone_independence() {
     t.apply(&PsxVariable::N1Left, 80.0);
     let snapshot = t.clone();
     t.apply(&PsxVariable::N1Left, 95.0);
-    assert!((snapshot.n1_left - 80.0).abs() < f64::EPSILON);
-    assert!((t.n1_left - 95.0).abs() < f64::EPSILON);
+    assert!((snapshot.n1_left - 80.0).abs() < 1e-9);
+    assert!((t.n1_left - 95.0).abs() < 1e-9);
 }
 
 #[test]
@@ -351,15 +351,16 @@ fn adapter_process_line_returns_parsed_pair() {
     let mut a = PsxAdapter::new();
     let (var, val) = a.process_line("Qi0002=90.0").unwrap();
     assert_eq!(var, PsxVariable::FcuHdg);
-    assert!((val - 90.0).abs() < f64::EPSILON);
+    assert!((val - 90.0).abs() < 1e-9);
 }
 
 #[test]
 fn adapter_process_line_error_leaves_telemetry_intact() {
     let mut a = PsxAdapter::new();
     a.process_line("Qi0001=250.0").unwrap();
-    let _ = a.process_line("garbage");
-    assert!((a.telemetry().fcu_spd - 250.0).abs() < f64::EPSILON);
+    let res = a.process_line("garbage");
+    assert!(res.is_err());
+    assert!((a.telemetry().fcu_spd - 250.0).abs() < 1e-9);
 }
 
 #[test]
@@ -395,8 +396,8 @@ fn adapter_handles_interleaved_known_and_unknown() {
     a.process_line("Qi0010=91.0").unwrap();
     a.process_line("QiBBBB=0.0").unwrap();
 
-    assert!((a.telemetry().fcu_spd - 250.0).abs() < f64::EPSILON);
-    assert!((a.telemetry().n1_left - 91.0).abs() < f64::EPSILON);
+    assert!((a.telemetry().fcu_spd - 250.0).abs() < 1e-9);
+    assert!((a.telemetry().n1_left - 91.0).abs() < 1e-9);
 }
 
 #[test]
@@ -405,7 +406,7 @@ fn adapter_rapid_update_same_variable() {
     for i in 0..100 {
         a.process_line(&format!("Qi0001={}.0", i)).unwrap();
     }
-    assert!((a.telemetry().fcu_spd - 99.0).abs() < f64::EPSILON);
+    assert!((a.telemetry().fcu_spd - 99.0).abs() < 1e-9);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -581,8 +582,12 @@ proptest! {
         prop_assert!(result.is_ok(), "failed to parse: {line}");
         let (var, parsed_val) = result.unwrap();
         prop_assert_eq!(var, PsxVariable::from_id(&id));
-        prop_assert!((parsed_val - val).abs() < 1e-6 || (parsed_val == val),
-            "value mismatch: expected {val}, got {parsed_val}");
+        if val.is_nan() {
+            prop_assert!(parsed_val.is_nan(), "value mismatch for NaN: expected NaN, got {parsed_val}");
+        } else {
+            prop_assert!((parsed_val - val).abs() < 1e-6 || (parsed_val == val),
+                "value mismatch: expected {val}, got {parsed_val}");
+        }
     }
 
     #[test]
