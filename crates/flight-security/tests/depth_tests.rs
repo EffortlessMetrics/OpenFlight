@@ -341,7 +341,7 @@ mod sandbox_boundaries {
         assert!(policy.validate(&attack).is_err());
     }
 
-    /// Memory limits: max_plugin_budget_us is respected in configuration.
+    /// Memory limits: max_plugin_budget_us is accepted in configuration.
     #[test]
     fn plugin_budget_limit_configured() {
         let config = SecurityConfig {
@@ -354,10 +354,9 @@ mod sandbox_boundaries {
             TelemetryConfig::default(),
             AclConfig::default(),
         );
-        // Verify the budget is carried through (accessible via config roundtrip).
-        let _registry = mgr.get_plugin_registry();
-        // The config was accepted without panic; real enforcement is in the
-        // scheduler, but the security module must accept the value.
+        // Verify the config was accepted and the manager is functional.
+        let registry = mgr.get_plugin_registry();
+        assert!(registry.is_empty(), "fresh registry should have no plugins");
     }
 
     /// Empty policy rejects everything.
@@ -425,9 +424,9 @@ mod audit_logging {
         assert!(entry.details.is_some(), "denied entry should include details");
     }
 
-    /// Audit-log tamper detection: exported JSON is parseable and entries match.
+    /// Audit-log export format: exported JSON is parseable and entries have expected fields.
     #[test]
-    fn audit_log_tamper_detection_via_export() {
+    fn audit_log_export_format_valid() {
         let mut log = AuditLog::new(100);
         for i in 0..5 {
             log.record_event(
@@ -543,13 +542,13 @@ mod audit_logging {
 }
 
 // =========================================================================
-// 4. Signature verification
+// 4. Signature-status validation
 // =========================================================================
 
-mod signature_verification {
+mod signature_status_validation {
     use super::*;
 
-    /// Valid (non-expired) signature → plugin accepted.
+    /// Valid (non-expired) signature status → plugin accepted.
     #[test]
     fn valid_signature_accepted() {
         let mut mgr = SecurityManager::new(); // signatures enforced
