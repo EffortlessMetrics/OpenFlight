@@ -1,0 +1,63 @@
+# VKB STECS Standard/Plus Throttle
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). STECS Space series throttle grip.
+# PID 0x013C (Right Standard), 0x0138 (Left Standard).
+schema_version: "1"
+
+device:
+  name: "VKB STECS Standard/Plus"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x013C   # Right Standard; Left = 0x0138
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 5
+    names: [rx, ry, x, y, z]
+    resolution_bits: 16
+  buttons: 24
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: MULTI_VIRTUAL_CONTROLLER
+    description: >
+      STECS firmware exposes up to 3 virtual controllers (VC0..VC2) as
+      separate HID interfaces. Each VC reports 32 buttons. Aggregate all
+      VCs before mapping (VC0 buttons 1-32, VC1 33-64, VC2 65-96).
+  - id: CONFIGURABLE_AXES
+    description: >
+      VKBDevCfg can remap axes and buttons. Factory defaults assumed.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB STECS Standard/Plus throttle. Full HID report parser with multi-VC
+    aggregation, axis normalization, and button extraction. VID 0x231D,
+    PID 0x013C/0x0138. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg for firmware updates and axis remapping.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Main throttle and detent switches recognized."
+  - game: "Microsoft Flight Simulator"
+    integration: direct_input
+    notes: "All axes recognized."
