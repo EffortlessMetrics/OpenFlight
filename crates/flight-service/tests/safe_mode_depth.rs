@@ -346,10 +346,10 @@ fn recovery_auto_after_successful_ticks() {
     assert!(mgr.can_operate());
 }
 
-/// Recovery restores previous profile: after safe mode shutdown, the manager
-/// releases axis engine resources so the normal profile can be re-applied.
+/// Recovery allows clean reinitialization: after safe mode shutdown, a
+/// brand-new manager can initialize from default config (fresh state).
 #[tokio::test]
-async fn recovery_restores_previous_profile() {
+async fn recovery_allows_clean_reinitialization() {
     let config = SafeModeConfig {
         axis_only: true,
         use_basic_profile: true,
@@ -370,14 +370,14 @@ async fn recovery_restores_previous_profile() {
     assert!(fresh_status.active, "fresh initialization should work after recovery");
 }
 
-/// Recovery re-enables FFB gradually: safe mode config disables FFB via
-/// axis_only; recovery means creating a new non-safe-mode configuration
-/// that does NOT set axis_only.
+/// Recovery config allows FFB: safe mode config disables FFB via axis_only;
+/// recovery means creating a new non-safe-mode configuration that does NOT
+/// set axis_only.
 ///
-/// TODO: When full FFB gradual re-enable is implemented, test the ramp-up
-/// sequence (e.g., 25% → 50% → 75% → 100% over successive ticks).
+/// TODO: When full FFB gradual re-enable is implemented, add a separate test
+/// for the ramp-up sequence (e.g., 25% → 50% → 75% → 100% over successive ticks).
 #[test]
-fn recovery_re_enables_ffb_gradually() {
+fn recovery_config_allows_ffb() {
     let safe_config = SafeModeConfig {
         axis_only: true,
         use_basic_profile: true,
