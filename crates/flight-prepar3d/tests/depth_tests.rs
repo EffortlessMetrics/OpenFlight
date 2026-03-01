@@ -735,9 +735,9 @@ proptest! {
         adapter.process_data(first);
         adapter.process_data(second.clone());
         let last = adapter.last_data().unwrap();
-        prop_assert!((last.pitch_rad - second.pitch_rad).abs() < f32::EPSILON);
-        prop_assert!((last.throttle - second.throttle).abs() < f32::EPSILON);
-        prop_assert!((last.altitude_ft - second.altitude_ft).abs() < 0.01);
+        prop_assert!((last.pitch_rad - second.pitch_rad).abs() < 1e-6);
+        prop_assert!((last.throttle - second.throttle).abs() < 1e-6);
+        prop_assert!((last.altitude_ft - second.altitude_ft).abs() < 1e-6);
     }
 
     #[test]
@@ -760,12 +760,12 @@ proptest! {
     #[test]
     fn prop_clone_flight_data_preserves_fields(data in arb_flight_data()) {
         let cloned = data.clone();
-        prop_assert!((data.pitch_rad - cloned.pitch_rad).abs() < f32::EPSILON);
-        prop_assert!((data.roll_rad - cloned.roll_rad).abs() < f32::EPSILON);
-        prop_assert!((data.yaw_rad - cloned.yaw_rad).abs() < f32::EPSILON);
-        prop_assert!((data.throttle - cloned.throttle).abs() < f32::EPSILON);
-        prop_assert!((data.altitude_ft - cloned.altitude_ft).abs() < 0.01);
-        prop_assert!((data.airspeed_kts - cloned.airspeed_kts).abs() < f32::EPSILON);
+        prop_assert!((data.pitch_rad - cloned.pitch_rad).abs() < 1e-6);
+        prop_assert!((data.roll_rad - cloned.roll_rad).abs() < 1e-6);
+        prop_assert!((data.yaw_rad - cloned.yaw_rad).abs() < 1e-6);
+        prop_assert!((data.throttle - cloned.throttle).abs() < 1e-6);
+        prop_assert!((data.altitude_ft - cloned.altitude_ft).abs() < 1e-6);
+        prop_assert!((data.airspeed_kts - cloned.airspeed_kts).abs() < 1e-6);
     }
 
     #[test]
@@ -774,12 +774,12 @@ proptest! {
     ) {
         let mut adapter = Prepar3DAdapter::new();
         for v in &versions {
-            assert_eq!(adapter.state(), P3DState::Disconnected);
+            prop_assert_eq!(adapter.state(), P3DState::Disconnected);
             adapter.simulate_connect(v);
-            assert_eq!(adapter.state(), P3DState::Connected);
+            prop_assert_eq!(adapter.state(), P3DState::Connected);
             adapter.simulate_disconnect();
         }
-        assert_eq!(adapter.state(), P3DState::Disconnected);
+        prop_assert_eq!(adapter.state(), P3DState::Disconnected);
     }
 
     #[test]
