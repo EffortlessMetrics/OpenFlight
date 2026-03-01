@@ -141,6 +141,10 @@ pub struct AircraftAutoSwitchService {
     adapter_errors: Arc<AtomicU64>,
     /// Minimum detection confidence observed (stored as `f64::to_bits`).
     min_confidence_bits: Arc<AtomicU64>,
+    /// Aggregate auto-switch metrics (lock-free counters).
+    switch_metrics: Arc<AutoSwitchMetrics>,
+    /// Adapter lifecycle hooks invoked during detection start/stop.
+    detection_hooks: Arc<RwLock<Vec<Box<dyn AdapterDetectionHooks>>>>,
 }
 
 /// Simulator adapters
@@ -337,8 +341,10 @@ impl AutoSwitchMetrics {
                     Some(sample_us)
                 } else {
                     // Integer EMA: new = old + (sample - old) / 10
-                    let diff = sample_us as i64 - old as i64;
-                    Some((old as i64 + diff / 10) as u64)
+                    // Use i128 to avoid overflow when values exceed i64::MAX.
+                    let diff = sample_us as i128 - old as i128;
+                    let adjustment = diff / 10;
+                    Some((old as i128 + adjustment).clamp(0, u64::MAX as i128) as u64)
                 }
             },
         );
@@ -421,18 +427,17 @@ impl std::fmt::Debug for AutoSwitchMetrics {
 /// detection for a particular simulator. This allows adapters to perform
 /// setup/teardown (e.g. opening a SimConnect handle, binding a UDP socket)
 /// exactly when needed.
-#[allow(unused_variables)]
 pub trait AdapterDetectionHooks: Send + Sync {
     /// Called when process detection triggers adapter initialisation.
     ///
     /// The adapter should perform any expensive setup here (connections,
     /// allocations, background tasks).  Returns `Ok(())` on success.
-    fn on_detection_start(&mut self, sim: BusSimId) -> std::result::Result<(), String> {
+    fn on_detection_start(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
         Ok(())
     }
 
     /// Called when the process is lost and the adapter should tear down.
-    fn on_detection_stop(&mut self, sim: BusSimId) -> std::result::Result<(), String> {
+    fn on_detection_stop(&mut self, _sim: BusSimId) -> std::result::Result<(), String> {
         Ok(())
     }
 
@@ -502,6 +507,8 @@ impl AircraftAutoSwitchService {
             detection_latency_us: Arc::new(AtomicU64::new(0)),
             adapter_errors: Arc::new(AtomicU64::new(0)),
             min_confidence_bits: Arc::new(AtomicU64::new(1.0_f64.to_bits())),
+            switch_metrics: Arc::new(AutoSwitchMetrics::new()),
+            detection_hooks: Arc::new(RwLock::new(Vec::new())),
         }
     }
 
@@ -543,6 +550,8 @@ impl AircraftAutoSwitchService {
         let detection_latency_us = Arc::clone(&self.detection_latency_us);
         let adapter_errors = Arc::clone(&self.adapter_errors);
         let min_confidence_bits = Arc::clone(&self.min_confidence_bits);
+        let switch_metrics = Arc::clone(&self.switch_metrics);
+        let detection_hooks = Arc::clone(&self.detection_hooks);
 
         tokio::spawn(async move {
             info!("Aircraft auto-switch service started");
@@ -582,12 +591,20 @@ impl AircraftAutoSwitchService {
                             entry.state = AdapterState::Error;
                             entry.detection_errors += 1;
                             adapter_errors.fetch_add(1, Ordering::Relaxed);
+                            switch_metrics.record_failure();
                         } else {
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.state = AdapterState::Running;
                             entry.started_at = Some(Instant::now());
                             entry.connections += 1;
+                            // Invoke detection hooks on successful start
+                            let mut hooks = detection_hooks.write().await;
+                            for hook in hooks.iter_mut() {
+                                if let Err(e) = hook.on_detection_start(sim) {
+                                    warn!("Detection hook on_detection_start failed: {}", e);
+                                }
+                            }
                         }
                     }
                     ServiceEvent::ProcessLost(sim) => {
@@ -603,6 +620,15 @@ impl AircraftAutoSwitchService {
                             }
                             entry.state = AdapterState::Stopped;
                             entry.disconnections += 1;
+                        }
+                        // Invoke detection hooks on stop
+                        {
+                            let mut hooks = detection_hooks.write().await;
+                            for hook in hooks.iter_mut() {
+                                if let Err(e) = hook.on_detection_stop(sim) {
+                                    warn!("Detection hook on_detection_stop failed: {}", e);
+                                }
+                            }
                         }
                         // Clear aircraft tracking for this sim so next snapshot triggers detection
                         last_aircraft_per_sim.remove(&sim);
@@ -624,9 +650,11 @@ impl AircraftAutoSwitchService {
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.detection_errors += 1;
+                            switch_metrics.record_failure();
                         } else {
                             // Track successful detection + time
                             let elapsed = detection_start.elapsed();
+                            switch_metrics.record_switch(elapsed);
                             let mut metrics = adapter_metrics.write().await;
                             let entry = metrics.entry(sim).or_default();
                             entry.aircraft_detections += 1;
@@ -769,6 +797,16 @@ impl AircraftAutoSwitchService {
             adapter_errors: self.adapter_errors.load(Ordering::Relaxed),
             min_confidence: f64::from_bits(self.min_confidence_bits.load(Ordering::Relaxed)),
         }
+    }
+
+    /// Return a snapshot of the aggregate auto-switch metrics.
+    pub fn get_switch_metrics(&self) -> HashMap<String, u64> {
+        self.switch_metrics.snapshot()
+    }
+
+    /// Register a detection lifecycle hook.
+    pub async fn add_detection_hook(&self, hook: Box<dyn AdapterDetectionHooks>) {
+        self.detection_hooks.write().await.push(hook);
     }
 
     /// Get current aircraft
