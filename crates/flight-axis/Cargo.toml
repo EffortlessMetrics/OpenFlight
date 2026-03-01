@@ -92,6 +92,7 @@ required-features = ["tests-optin"]
 
 [[test]]
 name = "depth_tests"
+required-features = ["tests-optin"]
 
 [[example]]
 name = "basic_usage"

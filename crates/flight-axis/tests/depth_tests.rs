@@ -155,9 +155,9 @@ mod curve_tests {
     fn expo_extreme_values_clamped() {
         // Expo outside [-1, 1] is clamped by constructor
         let expo = ExpoCurveConfig::new(5.0);
-        assert!((expo.expo - 1.0).abs() < f32::EPSILON);
+        assert_eq!(expo.expo, 1.0); // clamped to exactly 1.0
         let expo_neg = ExpoCurveConfig::new(-5.0);
-        assert!((expo_neg.expo - (-1.0)).abs() < f32::EPSILON);
+        assert_eq!(expo_neg.expo, -1.0); // clamped to exactly -1.0
     }
 
     #[test]
@@ -186,7 +186,7 @@ mod curve_tests {
         // At x=0.25 → interpolate between (0.0, 0.0) and (0.5, 0.25): t=0.5 → 0.125
         let out = stage.process(0.25);
         assert!(
-            (out - 0.125).abs() < 1e-6,
+            approx_f64(out, 0.125),
             "custom curve at 0.25: expected ~0.125, got {out}"
         );
     }
@@ -249,7 +249,7 @@ mod deadzone_tests {
         for i in -100..=100 {
             let v = i as f32 / 100.0;
             assert!(
-                (proc.apply(v) - v).abs() < f32::EPSILON * 4.0,
+                approx_f32(proc.apply(v), v),
                 "zero deadzone should pass through: {v}"
             );
         }
@@ -274,7 +274,7 @@ mod deadzone_tests {
         // axis 0 has deadzone
         assert_eq!(bank.apply(0, 0.1), 0.0);
         // axis 1 has default (passthrough)
-        assert!((bank.apply(1, 0.1) - 0.1).abs() < f32::EPSILON);
+        assert!(approx_f32(bank.apply(1, 0.1), 0.1));
     }
 
     #[test]
@@ -290,7 +290,7 @@ mod deadzone_tests {
         let out = stage.process(0.55);
         // (0.55 - 0.1) / (1.0 - 0.1) = 0.45 / 0.9 = 0.5
         assert!(
-            (out - 0.5).abs() < 1e-6,
+            approx_f64(out, 0.5),
             "rescaled deadzone: expected 0.5, got {out}"
         );
     }
@@ -352,7 +352,7 @@ mod detent_tests {
         // Exit past hysteresis
         let out = proc.process(0.58);
         assert!(
-            (out - 0.58).abs() < f32::EPSILON,
+            approx_f32(out, 0.58),
             "should exit detent: {out}"
         );
     }
@@ -662,7 +662,7 @@ mod property_tests {
                 let pos = proc.apply(input);
                 let neg = proc.apply(-input);
                 prop_assert!(
-                    (pos + neg).abs() < 1e-5,
+                    approx_f32(pos + neg, 0.0),
                     "antisymmetry: apply({input})={pos}, apply({})={neg}",
                     -input
                 );
@@ -684,7 +684,7 @@ mod property_tests {
             let out1 = p1.process(input);
             let out2 = p2.process(input);
             prop_assert!(
-                (out1 - out2).abs() < f64::EPSILON,
+                approx_f64(out1, out2),
                 "non-deterministic: {out1} != {out2} for input={input}"
             );
         }
@@ -898,7 +898,7 @@ mod zero_alloc_tests {
 
         for (i, (&o1, &o2)) in outputs1.iter().zip(outputs2.iter()).enumerate() {
             assert!(
-                (o1 - o2).abs() < f64::EPSILON,
+                approx_f64(o1, o2),
                 "tick {i}: {o1} != {o2}"
             );
         }
@@ -963,7 +963,7 @@ mod throughput_tests {
             let input = ((i as f64) * 0.001 * std::f64::consts::PI).sin();
             let out2 = pipeline2.process(input);
             assert!(
-                (outputs[i] - out2).abs() < f64::EPSILON,
+                approx_f64(outputs[i], out2),
                 "tick {i}: non-deterministic"
             );
         }
