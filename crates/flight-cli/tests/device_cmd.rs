@@ -21,10 +21,7 @@ fn devices_list_fails_gracefully_without_daemon() {
 
 #[test]
 fn devices_list_json_error_has_stable_fields() {
-    let output = cli()
-        .args(["--json", "devices", "list"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "devices", "list"]).output().unwrap();
     assert!(!output.status.success());
 
     let stderr = String::from_utf8(output.stderr).unwrap();

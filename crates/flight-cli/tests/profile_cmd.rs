@@ -20,10 +20,7 @@ fn profile_list_succeeds_without_daemon() {
 
 #[test]
 fn profile_list_json_returns_array_data() {
-    let output = cli()
-        .args(["--json", "profile", "list"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "profile", "list"]).output().unwrap();
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout).unwrap();
@@ -47,7 +44,10 @@ fn profile_list_with_builtin_includes_default() {
 
     let profiles = json["data"].as_array().unwrap();
     let has_builtin = profiles.iter().any(|p| p["source"] == "builtin");
-    assert!(has_builtin, "Should include builtin profiles when --include-builtin is set");
+    assert!(
+        has_builtin,
+        "Should include builtin profiles when --include-builtin is set"
+    );
 }
 
 // ── profile validate ──────────────────────────────────────────────────────
@@ -55,7 +55,12 @@ fn profile_list_with_builtin_includes_default() {
 #[test]
 fn profile_validate_nonexistent_file_fails() {
     let output = cli()
-        .args(["--json", "profile", "validate", "nonexistent_file_12345.json"])
+        .args([
+            "--json",
+            "profile",
+            "validate",
+            "nonexistent_file_12345.json",
+        ])
         .output()
         .unwrap();
 
@@ -73,12 +78,7 @@ fn profile_validate_invalid_json_fails() {
     fs::write(&bad_json, "{ not valid json }").unwrap();
 
     let output = cli()
-        .args([
-            "--json",
-            "profile",
-            "validate",
-            bad_json.to_str().unwrap(),
-        ])
+        .args(["--json", "profile", "validate", bad_json.to_str().unwrap()])
         .output()
         .unwrap();
 
@@ -168,10 +168,7 @@ fn profile_activate_missing_name_fails() {
 #[test]
 fn profile_show_without_name_returns_message() {
     // When no profile name given and daemon is down, should still succeed with a message
-    let output = cli()
-        .args(["--json", "profile", "show"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "profile", "show"]).output().unwrap();
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout).unwrap();

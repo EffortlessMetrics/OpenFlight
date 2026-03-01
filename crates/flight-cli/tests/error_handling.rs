@@ -58,10 +58,7 @@ fn invalid_timeout_not_a_number_fails() {
 
 #[test]
 fn negative_timeout_fails() {
-    cli()
-        .args(["--timeout", "-1", "status"])
-        .assert()
-        .failure();
+    cli().args(["--timeout", "-1", "status"]).assert().failure();
 }
 
 // ── Missing required arguments ────────────────────────────────────────────

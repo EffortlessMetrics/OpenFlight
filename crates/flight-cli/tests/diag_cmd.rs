@@ -37,8 +37,7 @@ fn diag_bundle_json_output_has_bundle_path() {
         // If we got JSON output, check it has expected fields
         if json.get("success").is_some() && json["success"] == true {
             assert!(
-                json["data"]["bundle_path"].is_string()
-                    || json["data"]["contents"].is_array(),
+                json["data"]["bundle_path"].is_string() || json["data"]["contents"].is_array(),
                 "bundle JSON should have bundle_path or contents"
             );
         }
@@ -56,10 +55,7 @@ fn diag_health_fails_without_daemon() {
 
 #[test]
 fn diag_health_json_error_format() {
-    let output = cli()
-        .args(["--json", "diag", "health"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "diag", "health"]).output().unwrap();
     assert!(!output.status.success());
 
     let stderr = String::from_utf8(output.stderr).unwrap();
@@ -223,10 +219,7 @@ fn diagnostics_shorthand_json_error_format() {
 
 #[test]
 fn diag_status_succeeds_with_simulated_data() {
-    let output = cli()
-        .args(["--json", "diag", "status"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "diag", "status"]).output().unwrap();
 
     if output.status.success() {
         let stdout = String::from_utf8(output.stdout).unwrap();
@@ -239,10 +232,7 @@ fn diag_status_succeeds_with_simulated_data() {
 
 #[test]
 fn diag_stop_succeeds_with_simulated_data() {
-    let output = cli()
-        .args(["--json", "diag", "stop"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "diag", "stop"]).output().unwrap();
 
     if output.status.success() {
         let stdout = String::from_utf8(output.stdout).unwrap();

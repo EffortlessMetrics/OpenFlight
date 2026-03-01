@@ -56,7 +56,9 @@ fn top_level_help_contains_description() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Flight Hub command line interface"));
+        .stdout(predicate::str::contains(
+            "Flight Hub command line interface",
+        ));
 }
 
 // ── Subcommand help descriptions ──────────────────────────────────────────
@@ -133,7 +135,9 @@ fn torque_help_has_description() {
         .args(["torque", "--help"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Force feedback and torque commands"));
+        .stdout(predicate::str::contains(
+            "Force feedback and torque commands",
+        ));
 }
 
 #[test]
@@ -142,7 +146,9 @@ fn diag_help_has_description() {
         .args(["diag", "--help"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Diagnostics and recording commands"));
+        .stdout(predicate::str::contains(
+            "Diagnostics and recording commands",
+        ));
 }
 
 #[test]
@@ -150,7 +156,9 @@ fn diag_help_lists_subcommands() {
     let output = cli().args(["diag", "--help"]).output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    for subcmd in &["bundle", "health", "metrics", "trace", "record", "replay", "status", "stop", "export"] {
+    for subcmd in &[
+        "bundle", "health", "metrics", "trace", "record", "replay", "status", "stop", "export",
+    ] {
         assert!(
             stdout.contains(subcmd),
             "diag help missing '{}': {}",
@@ -193,7 +201,9 @@ fn ac7_help_has_description() {
         .args(["ac7", "--help"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("Ace Combat 7 integration commands"));
+        .stdout(predicate::str::contains(
+            "Ace Combat 7 integration commands",
+        ));
 }
 
 #[test]

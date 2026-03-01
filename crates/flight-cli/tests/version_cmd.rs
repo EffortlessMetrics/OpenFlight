@@ -77,7 +77,12 @@ fn version_subcommand_json_cli_version_matches_cargo_version() {
     let cli_version = json["data"]["cli_version"].as_str().unwrap();
     // Should be a valid semver
     let parts: Vec<&str> = cli_version.split('.').collect();
-    assert_eq!(parts.len(), 3, "cli_version should be semver: {}", cli_version);
+    assert_eq!(
+        parts.len(),
+        3,
+        "cli_version should be semver: {}",
+        cli_version
+    );
     assert!(
         parts.iter().all(|p| p.parse::<u32>().is_ok()),
         "semver parts should be numbers: {}",

@@ -55,8 +55,7 @@ fn json_shorthand_flag_equivalent_to_output_json() {
     let output_long = cli().args(["--output", "json", "status"]).output().unwrap();
     let output_short = cli().args(["--json", "status"]).output().unwrap();
 
-    let json_long: Value =
-        parse_json_from(&String::from_utf8(output_long.stdout.clone()).unwrap());
+    let json_long: Value = parse_json_from(&String::from_utf8(output_long.stdout.clone()).unwrap());
     let json_short: Value =
         parse_json_from(&String::from_utf8(output_short.stdout.clone()).unwrap());
 
@@ -104,10 +103,7 @@ fn human_error_output_starts_with_error_prefix() {
 
 #[test]
 fn overlay_show_json_output_is_valid() {
-    let output = cli()
-        .args(["--json", "overlay", "show"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "overlay", "show"]).output().unwrap();
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout).unwrap();
@@ -118,10 +114,7 @@ fn overlay_show_json_output_is_valid() {
 
 #[test]
 fn overlay_hide_json_output_is_valid() {
-    let output = cli()
-        .args(["--json", "overlay", "hide"])
-        .output()
-        .unwrap();
+    let output = cli().args(["--json", "overlay", "hide"]).output().unwrap();
     assert!(output.status.success());
 
     let stdout = String::from_utf8(output.stdout).unwrap();
