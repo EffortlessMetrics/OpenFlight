@@ -154,7 +154,12 @@ fn input_parse_15_bytes_rejected() {
 
 #[test]
 fn input_parse_every_wrong_report_id() {
-    for id in [0x00, 0x02, 0x10, 0x20, 0xF0, 0xFF] {
+    let wrong_ids: Vec<u8> = [0x00, 0x02, 0x10, 0x20, 0xF0, 0xFF]
+        .iter()
+        .filter(|&&id| id != INPUT_REPORT_ID)
+        .copied()
+        .collect();
+    for id in wrong_ids {
         let mut buf = [0u8; INPUT_REPORT_LEN];
         buf[0] = id;
         assert!(
@@ -525,7 +530,12 @@ fn firmware_parse_empty() {
 
 #[test]
 fn firmware_parse_wrong_ids() {
-    for id in [0x00, 0x01, 0x10, 0x20, 0xFF] {
+    let wrong_ids: Vec<u8> = [0x00, 0x01, 0x10, 0x20, 0xFF]
+        .iter()
+        .filter(|&&id| id != FIRMWARE_REPORT_ID)
+        .copied()
+        .collect();
+    for id in wrong_ids {
         let mut buf = [0u8; 8];
         buf[0] = id;
         assert!(FirmwareVersionReport::parse(&buf).is_none());
