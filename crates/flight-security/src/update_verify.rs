@@ -16,7 +16,11 @@ use crate::SecurityError;
 ///
 /// Returns `true` when the signature is valid for the given public key.
 pub fn verify_update_signature(manifest: &[u8], signature: &[u8], pubkey: &[u8]) -> bool {
-    let Ok(vk) = VerifyingKey::from_bytes(pubkey.try_into().unwrap_or(&[0u8; 32])) else {
+    let pubkey_bytes: &[u8; 32] = match pubkey.try_into() {
+        Ok(b) => b,
+        Err(_) => return false,
+    };
+    let Ok(vk) = VerifyingKey::from_bytes(pubkey_bytes) else {
         return false;
     };
     let Ok(sig) = Signature::from_slice(signature) else {

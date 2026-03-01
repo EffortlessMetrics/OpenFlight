@@ -30,9 +30,8 @@ impl PermissionChecker for OsPermissionChecker {
 
 /// Validate that `path` has restrictive permissions appropriate for config data.
 ///
-/// - **Unix**: directories must be mode 700, files must be mode 600.
-/// - **Windows**: only the current user should have write access (simplified
-///   check via read-only attribute; full ACL checks require the `windows` crate).
+/// - **Unix**: directories must be exactly mode 0700, files must be exactly mode 0600.
+/// - **Windows**: returns an error because proper ACL checks are not yet implemented.
 pub fn validate_config_permissions(path: &Path) -> crate::Result<()> {
     let metadata = std::fs::metadata(path).map_err(|e| SecurityError::PolicyViolation {
         reason: format!("cannot stat {}: {e}", path.display()),
@@ -59,19 +58,19 @@ fn validate_unix_permissions(path: &Path, metadata: &std::fs::Metadata) -> crate
     let is_dir = metadata.is_dir();
 
     if is_dir {
-        if mode & 0o077 != 0 {
+        if mode != 0o700 {
             return Err(SecurityError::PolicyViolation {
                 reason: format!(
-                    "directory {} has mode {mode:04o}; expected 0700 (no group/other access)",
+                    "directory {} has mode {mode:04o}; expected exactly 0700",
                     path.display()
                 ),
             });
         }
     } else {
-        if mode & 0o177 != 0 {
+        if mode != 0o600 {
             return Err(SecurityError::PolicyViolation {
                 reason: format!(
-                    "file {} has mode {mode:04o}; expected 0600 (no group/other access)",
+                    "file {} has mode {mode:04o}; expected exactly 0600",
                     path.display()
                 ),
             });
@@ -81,18 +80,16 @@ fn validate_unix_permissions(path: &Path, metadata: &std::fs::Metadata) -> crate
 }
 
 #[cfg(windows)]
-fn validate_windows_permissions(_path: &Path, metadata: &std::fs::Metadata) -> crate::Result<()> {
-    // Simplified check: verify the file is not read-only (which would mean
-    // the current user may not even be the writer) and that the path exists
-    // under the user's profile directory. Full DACL checks would require the
-    // `windows` crate.
-    if metadata.permissions().readonly() && !metadata.is_dir() {
-        // read-only files are acceptable (immutable config)
-        return Ok(());
-    }
-    // Basic sanity: the path should be under the user profile or TEMP.
-    // In production we would parse the DACL via Win32 APIs.
-    Ok(())
+fn validate_windows_permissions(path: &Path, _metadata: &std::fs::Metadata) -> crate::Result<()> {
+    // Full DACL-based permission checks are not yet implemented on Windows.
+    // Return an error to avoid giving a false sense of security.
+    Err(SecurityError::PolicyViolation {
+        reason: format!(
+            "permission validation for {} is not implemented on Windows; \
+             full DACL checks require the `windows` crate",
+            path.display()
+        ),
+    })
 }
 
 /// A mock checker for unit tests.
@@ -161,18 +158,24 @@ mod tests {
         let file = tmp.path().join("config.toml");
         std::fs::write(&file, b"key = 'value'").unwrap();
 
-        // On Unix, set mode 600; on Windows this is a basic existence check.
+        // On Unix, set mode 600 and expect success.
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o600)).unwrap();
+            let result = validate_config_permissions(&file);
+            assert!(
+                result.is_ok(),
+                "properly restricted file should pass: {result:?}"
+            );
         }
 
-        let result = validate_config_permissions(&file);
-        assert!(
-            result.is_ok(),
-            "properly restricted file should pass: {result:?}"
-        );
+        // On Windows, permission validation is not implemented and should error.
+        #[cfg(windows)]
+        {
+            let result = validate_config_permissions(&file);
+            assert!(result.is_err(), "Windows permission validation should return not-implemented error");
+        }
     }
 
     #[cfg(unix)]

@@ -82,7 +82,7 @@ impl AuditRecord {
 /// Append-only audit log that can be serialized for forensics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SecurityAuditLog {
-    records: Vec<AuditRecord>,
+    records: std::collections::VecDeque<AuditRecord>,
     max_records: usize,
 }
 
@@ -90,21 +90,24 @@ impl SecurityAuditLog {
     /// Create a new log with the given capacity limit.
     pub fn new(max_records: usize) -> Self {
         Self {
-            records: Vec::with_capacity(max_records.min(4096)),
+            records: std::collections::VecDeque::with_capacity(max_records.min(4096)),
             max_records,
         }
     }
 
-    /// Append an event.
+    /// Append an event. Does nothing when `max_records` is zero.
     pub fn append(&mut self, event: SecurityAuditEvent, details: Option<String>) {
-        if self.records.len() >= self.max_records {
-            self.records.remove(0);
+        if self.max_records == 0 {
+            return;
         }
-        self.records.push(AuditRecord::now(event, details));
+        if self.records.len() >= self.max_records {
+            self.records.pop_front();
+        }
+        self.records.push_back(AuditRecord::now(event, details));
     }
 
     /// All records.
-    pub fn records(&self) -> &[AuditRecord] {
+    pub fn records(&self) -> &std::collections::VecDeque<AuditRecord> {
         &self.records
     }
 

@@ -87,18 +87,49 @@ pub fn token_dir() -> PathBuf {
 
 /// Persist a token to disk with restrictive permissions.
 pub fn write_token(token: &SessionToken, path: &Path) -> crate::Result<()> {
-    // Write the token bytes.
-    std::fs::write(path, token.as_bytes()).map_err(|e| SecurityError::PolicyViolation {
-        reason: format!("failed to write token file: {e}"),
-    })?;
-
-    // On Unix, restrict to owner-only.
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
-        let perms = std::fs::Permissions::from_mode(0o600);
-        std::fs::set_permissions(path, perms).map_err(|e| SecurityError::PolicyViolation {
-            reason: format!("failed to set token permissions: {e}"),
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+
+        // Atomically create with restrictive mode; fail if the file already exists
+        // to prevent symlink attacks (O_CREAT | O_EXCL with mode 0o600).
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(path)
+            .or_else(|e| {
+                if e.kind() == std::io::ErrorKind::AlreadyExists {
+                    // Overwrite: remove and recreate to keep atomic semantics.
+                    std::fs::remove_file(path).map_err(|re| SecurityError::PolicyViolation {
+                        reason: format!("failed to remove existing token file: {re}"),
+                    })?;
+                    std::fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .mode(0o600)
+                        .open(path)
+                        .map_err(|e2| SecurityError::PolicyViolation {
+                            reason: format!("failed to create token file: {e2}"),
+                        })
+                } else {
+                    Err(SecurityError::PolicyViolation {
+                        reason: format!("failed to create token file: {e}"),
+                    })
+                }
+            })?;
+        file.write_all(token.as_bytes())
+            .map_err(|e| SecurityError::PolicyViolation {
+                reason: format!("failed to write token data: {e}"),
+            })?;
+    }
+
+    #[cfg(not(unix))]
+    {
+        // On non-Unix, fall back to plain write.
+        std::fs::write(path, token.as_bytes()).map_err(|e| SecurityError::PolicyViolation {
+            reason: format!("failed to write token file: {e}"),
         })?;
     }
 
