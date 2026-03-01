@@ -95,10 +95,8 @@ impl VirtualOutput {
         }
         self.accumulated_time -= self.min_interval;
 
-        // Grow smoothed state to match snapshot.
-        if self.smoothed_axes.len() < snapshot.axes.len() {
-            self.smoothed_axes.resize(snapshot.axes.len(), 0.0);
-        }
+        // Resize smoothed state to match snapshot (truncate on shrink, zero-fill on grow).
+        self.smoothed_axes.resize(snapshot.axes.len(), 0.0);
 
         let axes = if self.config.smoothing_enabled {
             let alpha = self.config.smoothing_alpha.clamp(0.0, 1.0);
@@ -269,6 +267,75 @@ mod tests {
         let snap_step = default_snapshot(1.0);
         let frame = out.compute_frame(&snap_step, 0.004).unwrap();
         assert!(frame.axes[0] < 0.5, "should be near 0 after reset");
+    }
+
+    #[test]
+    fn test_axis_count_changes_between_frames() {
+        // Verify that shrinking and growing the axis count between frames
+        // does not panic and produces correctly-sized output.
+        let config = VirtualOutputConfig {
+            output_rate_hz: 1000.0,
+            smoothing_enabled: false,
+            ..Default::default()
+        };
+        let mut out = VirtualOutput::new(config);
+
+        // Start with 4 axes.
+        let snap4 = ControllerSnapshot {
+            axes: vec![0.1, 0.2, 0.3, 0.4],
+            buttons: vec![],
+            hats: vec![],
+        };
+        let frame = out.compute_frame(&snap4, 0.001).unwrap();
+        assert_eq!(frame.axes.len(), 4);
+
+        // Shrink to 2 axes — must not panic.
+        let snap2 = ControllerSnapshot {
+            axes: vec![0.5, 0.6],
+            buttons: vec![],
+            hats: vec![],
+        };
+        let frame = out.compute_frame(&snap2, 0.001).unwrap();
+        assert_eq!(frame.axes.len(), 2);
+        assert!((frame.axes[0] - 0.5).abs() < f64::EPSILON);
+        assert!((frame.axes[1] - 0.6).abs() < f64::EPSILON);
+
+        // Grow to 3 axes.
+        let snap3 = ControllerSnapshot {
+            axes: vec![0.7, 0.8, 0.9],
+            buttons: vec![],
+            hats: vec![],
+        };
+        let frame = out.compute_frame(&snap3, 0.001).unwrap();
+        assert_eq!(frame.axes.len(), 3);
+    }
+
+    #[test]
+    fn test_axis_count_changes_with_smoothing() {
+        let config = VirtualOutputConfig {
+            output_rate_hz: 1000.0,
+            smoothing_enabled: true,
+            smoothing_alpha: 0.5,
+        };
+        let mut out = VirtualOutput::new(config);
+
+        // Start with 3 axes.
+        let snap3 = ControllerSnapshot {
+            axes: vec![1.0, 1.0, 1.0],
+            buttons: vec![],
+            hats: vec![],
+        };
+        let frame = out.compute_frame(&snap3, 0.001).unwrap();
+        assert_eq!(frame.axes.len(), 3);
+
+        // Shrink to 1 axis — no stale trailing values.
+        let snap1 = ControllerSnapshot {
+            axes: vec![0.0],
+            buttons: vec![],
+            hats: vec![],
+        };
+        let frame = out.compute_frame(&snap1, 0.001).unwrap();
+        assert_eq!(frame.axes.len(), 1);
     }
 
     #[test]
