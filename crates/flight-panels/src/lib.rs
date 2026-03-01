@@ -24,6 +24,7 @@ pub use flight_panels_cougar as cougar;
 pub use flight_panels_saitek as saitek;
 pub use flight_panels_saitek::verify_matrix;
 
+pub mod message_engine;
 pub mod protocol_handler;
 
 #[cfg(test)]
