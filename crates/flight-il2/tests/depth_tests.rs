@@ -974,6 +974,23 @@ fn throttle_just_inside_boundaries() {
     assert!(t_high >= 0.0 && t_high < 1.0);
 }
 
+#[test]
+fn throttle_nan_sanitized_to_zero() {
+    let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, f32::NAN, 0);
+    let frame = parse_telemetry_frame(&data).unwrap();
+    assert_eq!(frame.throttle, 0.0, "NaN throttle should be sanitized to 0.0");
+}
+
+#[test]
+fn throttle_nan_frame_converts_to_snapshot() {
+    // After parser sanitizes NaN → 0.0, conversion should succeed
+    let data = build_frame(0.0, 0.0, 0.0, 50.0, 100.0, f32::NAN, 0);
+    let frame = parse_telemetry_frame(&data).unwrap();
+    assert_eq!(frame.throttle, 0.0);
+    let snap = convert_frame_to_snapshot(&frame).unwrap();
+    assert!(!snap.engines[0].running);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // §11  Constants
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1026,12 +1043,10 @@ proptest! {
 
     #[test]
     fn prop_throttle_always_clamped_to_unit_interval(raw_throttle in proptest::num::f32::ANY) {
-        if !raw_throttle.is_nan() {
-            let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, raw_throttle, 0);
-            let frame = parse_telemetry_frame(&data).unwrap();
-            prop_assert!(frame.throttle >= 0.0);
-            prop_assert!(frame.throttle <= 1.0);
-        }
+        let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, raw_throttle, 0);
+        let frame = parse_telemetry_frame(&data).unwrap();
+        prop_assert!(frame.throttle >= 0.0, "throttle={} from raw={}", frame.throttle, raw_throttle);
+        prop_assert!(frame.throttle <= 1.0, "throttle={} from raw={}", frame.throttle, raw_throttle);
     }
 
     #[test]
