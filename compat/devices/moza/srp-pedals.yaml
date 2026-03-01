@@ -13,7 +13,7 @@ device:
   name: "MOZA SR-P Pedals"
   vendor: "MOZA Racing"
   usb:
-    vendor_id: 0x346E   # MOZA Racing (Gudsen Technology) â confirmed in USB ID database
+    vendor_id: 0x346E   # MOZA Racing (Gudsen Technology) — confirmed in USB ID database
     product_id: 0x0007  # Estimated — PID_UNCONFIRMED for SR-P; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop

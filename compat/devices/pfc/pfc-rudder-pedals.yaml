@@ -32,7 +32,7 @@ polling:
 
 quirks:
   - id: VID_MICROCHIP_BRIDGE
-    description: "VID 0x04D8 (Microchip Technology) is plausible â PFC devices typically use Microchip USB MCU bridges."
+    description: "VID 0x04D8 (Microchip Technology) is plausible — PFC devices typically use Microchip USB MCU bridges."
   - id: PID_UNCONFIRMED
     description: "PID 0x0101 is a placeholder; must be verified against real hardware."
   - id: DIFFERENTIAL_TOE_BRAKES

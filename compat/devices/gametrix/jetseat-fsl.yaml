@@ -13,7 +13,7 @@ device:
   name: "Gametrix JetSeat FSL Edition"
   vendor: "Gametrix"
   usb:
-    vendor_id: 0x0483   # STMicroelectronics MCU â plausible for Gametrix firmware interface
+    vendor_id: 0x0483   # STMicroelectronics MCU — plausible for Gametrix firmware interface
     product_id: 0x5740  # Placeholder — STM32 virtual COM port class (PID_UNCONFIRMED)
   hid:
     usage_page: 0x01    # Generic Desktop

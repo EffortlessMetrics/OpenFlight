@@ -32,7 +32,7 @@ polling:
 
 quirks:
   - id: VID_MICROCHIP_BRIDGE
-    description: "VID 0x04D8 (Microchip Technology) is plausible â many indie controllers use Microchip MCUs. PID 0xF503 requires verification."
+    description: "VID 0x04D8 (Microchip Technology) is plausible — many indie controllers use Microchip MCUs. PID 0xF503 requires verification."
   - id: MAGNETIC_DETENTS
     description: >
       Throttle lever uses magnetic detents for IDLE, CLIMB, and MAX positions.

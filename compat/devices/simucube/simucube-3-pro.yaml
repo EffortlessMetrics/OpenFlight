@@ -12,7 +12,7 @@ device:
   name: "Simucube 3 Pro"
   vendor: "Granite Devices (Simucube)"
   usb:
-    vendor_id: 0x16D0   # Granite Devices â confirmed in USB ID database (SC2 and SC3)
+    vendor_id: 0x16D0   # Granite Devices — confirmed in USB ID database (SC2 and SC3)
     product_id: 0x0D71  # Estimated — PID_UNCONFIRMED for SC3 Pro; verify with lsusb
   hid:
     usage_page: 0x01    # Generic Desktop

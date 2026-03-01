@@ -13,7 +13,7 @@ device:
   name: "Next Level Racing Motion Platform V3"
   vendor: "Next Level Racing"
   usb:
-    vendor_id: 0x0403   # FTDI USB-Serial bridge â plausible for NLR motion controller
+    vendor_id: 0x0403   # FTDI USB-Serial bridge — plausible for NLR motion controller
     product_id: 0x6001  # Placeholder — FTDI FT232R generic PID (PID_UNCONFIRMED)
   hid:
     usage_page: 0x01    # Generic Desktop
