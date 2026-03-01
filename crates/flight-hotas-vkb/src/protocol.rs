@@ -970,7 +970,11 @@ mod tests {
         let mut pids: Vec<u16> = VKB_DEVICE_TABLE.iter().map(|d| d.pid).collect();
         pids.sort();
         pids.dedup();
-        assert_eq!(pids.len(), VKB_DEVICE_TABLE.len(), "duplicate PIDs in table");
+        assert_eq!(
+            pids.len(),
+            VKB_DEVICE_TABLE.len(),
+            "duplicate PIDs in table"
+        );
     }
 
     // ─── Axis resolution ──────────────────────────────────────────────────

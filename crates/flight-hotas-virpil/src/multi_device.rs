@@ -118,7 +118,10 @@ impl SetupSummary {
 
     /// Count of devices in the given category.
     pub fn count_category(&self, category: DeviceCategory) -> usize {
-        self.devices.iter().filter(|d| d.category == category).count()
+        self.devices
+            .iter()
+            .filter(|d| d.category == category)
+            .count()
     }
 }
 
@@ -142,9 +145,7 @@ pub fn detect_setup(pids: &[u16]) -> SetupSummary {
     let has_throttle = devices
         .iter()
         .any(|d| d.category == DeviceCategory::Throttle);
-    let has_pedals = devices
-        .iter()
-        .any(|d| d.category == DeviceCategory::Pedals);
+    let has_pedals = devices.iter().any(|d| d.category == DeviceCategory::Pedals);
     let has_collective = devices
         .iter()
         .any(|d| d.category == DeviceCategory::Collective);

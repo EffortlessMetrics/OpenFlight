@@ -57,9 +57,7 @@ pub struct TRudderInputState {
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum TRudderParseError {
     /// Report payload is shorter than the minimum required size.
-    #[error(
-        "T-Rudder report too short: expected at least {expected} bytes, got {actual}"
-    )]
+    #[error("T-Rudder report too short: expected at least {expected} bytes, got {actual}")]
     ReportTooShort { expected: usize, actual: usize },
 }
 

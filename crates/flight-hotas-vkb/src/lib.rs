@@ -26,6 +26,7 @@ pub use flight_hid_support::device_support::{
     vkb_stecs_interface_metadata, vkb_stecs_physical_id, vkb_stecs_variant,
 };
 
+pub use calibration::{AxisCalibration, CalibratedNormMode, DeviceCalibration};
 pub use health::{StecsHealthMonitor, StecsHealthStatus};
 pub use input::{
     GLADIATOR_MAX_BUTTONS, GLADIATOR_MAX_HATS, GladiatorAxes, GladiatorInputHandler,
@@ -56,4 +57,3 @@ pub use t_rudder::{
     T_RUDDER_MIN_REPORT_BYTES, TRudderAxes, TRudderInputHandler, TRudderInputState,
     TRudderParseError,
 };
-pub use calibration::{AxisCalibration, CalibratedNormMode, DeviceCalibration};
