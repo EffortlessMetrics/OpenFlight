@@ -129,18 +129,18 @@ impl SpanSlot {
         let min_ns = if min_raw == u64::MAX { 0 } else { min_raw };
         let mean_ns = sum / count;
 
-        // Collect valid samples for p99.
+        // Collect valid samples for p99 using a stack-allocated buffer.
         let sample_count = (count as usize).min(SAMPLES_PER_SPAN);
-        let mut buf = vec![0u64; sample_count];
+        let mut buf = [0u64; SAMPLES_PER_SPAN];
         // Read the most recent `sample_count` entries.
         let cursor = self.cursor.load(Ordering::Relaxed) as usize;
-        for (i, slot) in buf.iter_mut().enumerate() {
+        for (i, slot) in buf[..sample_count].iter_mut().enumerate() {
             // Walk backwards from cursor so the newest samples are always included.
             let ring_idx = (cursor.wrapping_sub(1).wrapping_sub(i)) % SAMPLES_PER_SPAN;
             *slot = self.samples[ring_idx].load(Ordering::Relaxed);
         }
-        buf.sort_unstable();
-        let p99_idx = ((buf.len() * 99) / 100).min(buf.len().saturating_sub(1));
+        buf[..sample_count].sort_unstable();
+        let p99_idx = ((sample_count * 99) / 100).min(sample_count.saturating_sub(1));
         let p99_ns = buf[p99_idx];
 
         SpanStats {

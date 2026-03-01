@@ -126,6 +126,7 @@ impl ErrorAggregator {
     /// Create an aggregator with custom suppression config and per-code
     /// ring-buffer capacity.
     pub fn with_config(suppression: SuppressionConfig, bucket_capacity: usize) -> Self {
+        assert!(bucket_capacity > 0, "bucket_capacity must be > 0");
         Self {
             inner: Mutex::new(AggregatorInner {
                 buckets: HashMap::new(),
@@ -323,6 +324,12 @@ mod tests {
         let agg = ErrorAggregator::default();
         agg.record_error(1, Severity::Info);
         assert_eq!(agg.total_count(1), 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "bucket_capacity must be > 0")]
+    fn zero_bucket_capacity_panics() {
+        ErrorAggregator::with_config(SuppressionConfig::default(), 0);
     }
 
     #[test]
