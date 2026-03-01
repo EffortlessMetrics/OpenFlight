@@ -222,12 +222,11 @@ fn rpm_clamped_to_non_negative() {
 }
 
 #[test]
-fn nan_throttle_does_not_panic() {
-    // f32::NAN.clamp(0.0, 1.0) ⇒ NaN on most platforms; verify parser doesn't panic.
+fn nan_throttle_does_not_error() {
+    // f32::NAN.clamp(0.0, 1.0) ⇒ NaN on most platforms; the invariant is
+    // that the parser returns Ok (no error/panic), not a specific value.
     let pkt = build_packet(0, 0.0, 0.0, 0.0, 0.0, f32::NAN, 0.0, 0.0, 0.0, 0.0);
     let result = parse_generic_udp(&pkt);
-    // The exact value of throttle with NaN input is implementation-defined
-    // (clamp of NaN is NaN), but no crash is the invariant.
     assert!(result.is_ok());
 }
 
@@ -246,17 +245,17 @@ fn negative_infinity_steering_clamps() {
 }
 
 #[test]
-fn division_by_near_zero_rpm_max_is_finite() {
+fn rpm_normalized_with_zero_rpm_max_is_finite() {
     let t = RacingTelemetry {
         rpm: 5000.0,
         rpm_max: 0.0,
         ..Default::default()
     };
-    // rpm_max.max(1.0) prevents division by zero → result = 5000.0 / 1.0 = 5000.0,
-    // which is finite (not zero). We only assert finiteness here.
+    // rpm_max.max(1.0) prevents division by zero → 5000.0 / 1.0 = 5000.0.
     let norm = t.rpm_normalized();
     assert!(!norm.is_nan(), "should not be NaN");
     assert!(!norm.is_infinite(), "should not be infinite");
+    assert!((norm - 5000.0).abs() < f32::EPSILON, "expected 5000.0, got {norm}");
 }
 
 #[test]
