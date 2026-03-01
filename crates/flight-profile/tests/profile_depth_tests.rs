@@ -4,7 +4,7 @@
 //! Depth tests for the profile system covering schema validation, cascade,
 //! merge_with, migration, serialization, and property-based verification.
 //!
-//! 35 tests total across 6 categories.
+//! Depth tests across 6 categories.
 
 use flight_profile::{
     AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PofOverrides, Profile,
@@ -148,12 +148,13 @@ fn schema_optional_fields_absent_valid() {
 /// Type validation: deadzone must be a number, not a string.
 #[test]
 fn schema_type_validation_deadzone_string_rejected() {
-    let json = r#"{
-        "schema": "flight.profile/1",
+    let json_value = json!({
+        "schema": PROFILE_SCHEMA_VERSION,
         "axes": { "pitch": { "deadzone": "high", "detents": [] } }
-    }"#;
+    });
+    let json = json_value.to_string();
     assert!(
-        serde_json::from_str::<Profile>(json).is_err(),
+        serde_json::from_str::<Profile>(&json).is_err(),
         "string deadzone must fail deserialization"
     );
 }
@@ -245,11 +246,11 @@ fn cascade_full_chain_global_sim_aircraft_phase() {
 
     let merged = g
         .merge_with(&s)
-        .unwrap()
+        .expect("merge global->sim")
         .merge_with(&a)
-        .unwrap()
+        .expect("merge sim->aircraft")
         .merge_with(&ph)
-        .unwrap();
+        .expect("merge aircraft->phase");
 
     let pitch = merged.axes.get("pitch").unwrap();
     // Phase overrides aircraft (deadzone=0.01), aircraft overrides sim (expo=0.4 kept since phase has None)
