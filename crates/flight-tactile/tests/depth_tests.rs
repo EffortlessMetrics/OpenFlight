@@ -909,3 +909,291 @@ fn manager_config_roundtrip() {
     assert_eq!(retrieved.update_rate_hz, config.update_rate_hz);
     assert_eq!(retrieved.max_queue_size, config.max_queue_size);
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+//  7 · ADDITIONAL DEPTH: EDGE CASES & PROPERTY TESTS
+// ═══════════════════════════════════════════════════════════════════════
+
+#[test]
+fn engine_zero_amplitude_produces_silence() {
+    let mut engine = TactileEngine::new();
+    engine.add_effect(TactileEffect::Rumble {
+        frequency_hz: 100.0,
+        amplitude: 0.0,
+        duration_ticks: 50,
+    });
+    for _ in 0..50 {
+        assert_eq!(engine.tick(), 0.0, "zero amplitude must produce silence");
+    }
+}
+
+#[test]
+fn engine_remove_effect_by_slot() {
+    let mut engine = TactileEngine::new();
+    let slot = engine
+        .add_effect(TactileEffect::Engine {
+            rpm: 2400.0,
+            amplitude: 0.5,
+        })
+        .unwrap();
+    assert_eq!(engine.active_count(), 1);
+
+    engine.remove_effect(slot);
+    assert_eq!(engine.active_count(), 0);
+    assert_eq!(engine.tick(), 0.0, "removed effect must not produce output");
+}
+
+#[test]
+fn engine_remove_out_of_bounds_is_noop() {
+    let mut engine = TactileEngine::new();
+    engine.add_effect(TactileEffect::Impact {
+        magnitude: 0.5,
+        decay_rate: 5.0,
+    });
+    engine.remove_effect(MAX_EFFECTS + 10); // out of bounds
+    assert_eq!(engine.active_count(), 1, "out-of-bounds remove must be no-op");
+}
+
+#[test]
+fn effect_processor_custom_stall_threshold() {
+    let mut processor = EffectProcessor::new();
+    processor.set_stall_threshold(25.0); // raise threshold
+
+    let mut snap = make_snapshot();
+    snap.kinematics.aoa = ValidatedAngle::new_degrees(22.0).unwrap();
+    snap.kinematics.ias = ValidatedSpeed::new_knots(55.0).unwrap();
+
+    let events = processor.process(&snap);
+    assert!(
+        !events.iter().any(|e| e.effect_type == EffectType::StallBuffet),
+        "22° AoA should not trigger stall at 25° threshold"
+    );
+}
+
+#[test]
+fn effect_processor_custom_ground_roll_threshold() {
+    let mut processor = EffectProcessor::new();
+    processor.set_ground_roll_threshold(50.0); // raise threshold
+
+    let mut snap = make_snapshot();
+    snap.environment.altitude = 5.0;
+    snap.kinematics.ground_speed = ValidatedSpeed::new_knots(30.0).unwrap();
+
+    let events = processor.process(&snap);
+    assert!(
+        !events.iter().any(|e| e.effect_type == EffectType::GroundRoll),
+        "30 kt should not trigger ground roll at 50 kt threshold"
+    );
+}
+
+#[test]
+fn channel_router_clear_active_effects() {
+    let mapping = ChannelMapping::new();
+    let mut router = ChannelRouter::new(mapping);
+
+    let evt = EffectEvent::new(EffectType::Touchdown, EffectIntensity::new(0.8).unwrap());
+    router.process_events(vec![evt]);
+    assert!(!router.get_active_effects().is_empty());
+
+    router.clear_active_effects();
+    assert!(router.get_active_effects().is_empty());
+}
+
+#[test]
+fn channel_mapping_get_all_channels_sorted() {
+    let mapping = ChannelMapping::new();
+    let channels = mapping.get_all_channels();
+    // Default has 8 channels (0..8)
+    assert_eq!(channels.len(), 8);
+    for (i, ch) in channels.iter().enumerate() {
+        assert_eq!(ch.value(), i as u8, "channels must be sorted by ID");
+    }
+}
+
+#[test]
+fn channel_gain_rejects_out_of_range() {
+    let mut mapping = ChannelMapping::new();
+    let ch = ChannelId::new(0);
+    assert!(mapping.set_channel_gain(ch, 1.5).is_err());
+    assert!(mapping.set_channel_gain(ch, -0.1).is_err());
+    assert!(mapping.set_channel_gain(ch, 0.5).is_ok());
+}
+
+#[test]
+fn mixer_slot_gain_out_of_bounds_returns_zero() {
+    let mixer = TactileMixer::new();
+    assert_eq!(mixer.slot_gain(MAX_EFFECTS + 5), 0.0);
+}
+
+#[test]
+fn preset_turbulence_clamped_at_extremes() {
+    // Negative intensity should clamp to 0
+    match TactilePresets::turbulence(-1.0) {
+        TactileEffect::Texture { amplitude, .. } => {
+            assert_eq!(amplitude, 0.0, "negative intensity → zero amplitude");
+        }
+        _ => panic!("expected Texture"),
+    }
+    // Very high intensity should clamp to max
+    match TactilePresets::turbulence(5.0) {
+        TactileEffect::Texture { amplitude, .. } => {
+            assert!(amplitude <= 0.7 + 1e-9, "clamped intensity → max amplitude");
+        }
+        _ => panic!("expected Texture"),
+    }
+}
+
+#[test]
+fn preset_weapon_fire_decays_quickly() {
+    let mut engine = TactileEngine::new();
+    engine.add_effect(TactilePresets::weapon_fire());
+
+    let first = engine.tick();
+    assert!((first - 1.0).abs() < 0.01, "weapon fire starts at magnitude 1.0");
+
+    // After 10 ticks, should have decayed significantly
+    for _ in 0..9 {
+        engine.tick();
+    }
+    let tenth = engine.tick();
+    assert!(tenth < 0.6, "weapon fire must decay fast (decay_rate=15)");
+}
+
+#[test]
+fn effect_event_remaining_duration_decreases() {
+    let event = EffectEvent::with_duration(
+        EffectType::Touchdown,
+        EffectIntensity::new(1.0).unwrap(),
+        std::time::Duration::from_secs(1),
+    );
+    let remaining = event.remaining_duration().unwrap();
+    assert!(remaining <= std::time::Duration::from_secs(1));
+    assert!(remaining > std::time::Duration::from_millis(900));
+}
+
+#[test]
+fn effect_event_no_duration_never_expires() {
+    let event = EffectEvent::new(EffectType::EngineVibration, EffectIntensity::new(0.5).unwrap());
+    assert!(!event.is_expired(), "no-duration event must never expire");
+    assert!(event.remaining_duration().is_none());
+}
+
+#[test]
+fn mixer_tick_count_tracks_engine() {
+    let mut mixer = TactileMixer::new();
+    for _ in 0..42 {
+        mixer.tick();
+    }
+    assert_eq!(mixer.tick_count(), 42);
+    assert_eq!(mixer.engine().tick_count(), 42);
+}
+
+#[test]
+fn manager_stats_none_before_init() {
+    let mgr = TactileManager::new();
+    assert!(mgr.get_stats().is_none(), "stats require bridge init");
+}
+
+#[test]
+fn manager_stats_some_after_init() {
+    let mut mgr = TactileManager::new();
+    mgr.initialize(TactileConfig::default()).unwrap();
+    assert!(mgr.get_stats().is_some());
+}
+
+#[test]
+fn touchdown_intensity_scales_with_descent_rate() {
+    let mut processor = EffectProcessor::new();
+    let mut snap = make_snapshot();
+
+    // First call: airborne
+    snap.environment.altitude = 200.0;
+    snap.kinematics.vertical_speed = -300.0;
+    processor.process(&snap);
+
+    // Gentle touchdown
+    snap.environment.altitude = 10.0;
+    snap.kinematics.vertical_speed = -250.0;
+    let gentle = processor.process(&snap);
+    let gentle_int = gentle
+        .iter()
+        .find(|e| e.effect_type == EffectType::Touchdown)
+        .unwrap()
+        .intensity
+        .value();
+
+    // Reset: airborne again
+    snap.environment.altitude = 200.0;
+    snap.kinematics.vertical_speed = -300.0;
+    processor.process(&snap);
+
+    // Hard touchdown
+    snap.environment.altitude = 10.0;
+    snap.kinematics.vertical_speed = -500.0;
+    let hard = processor.process(&snap);
+    let hard_int = hard
+        .iter()
+        .find(|e| e.effect_type == EffectType::Touchdown)
+        .unwrap()
+        .intensity
+        .value();
+
+    assert!(
+        hard_int > gentle_int,
+        "harder landing must produce stronger effect"
+    );
+}
+
+// ── proptest ────────────────────────────────────────────────────────────
+
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn engine_output_always_clamped(
+            freq in 1.0f64..500.0,
+            amp in 0.0f64..1.0,
+            ticks in 1u32..200,
+        ) {
+            let mut engine = TactileEngine::new();
+            engine.add_effect(TactileEffect::Rumble {
+                frequency_hz: freq,
+                amplitude: amp,
+                duration_ticks: ticks,
+            });
+            for _ in 0..ticks {
+                let v = engine.tick();
+                prop_assert!((-1.0..=1.0).contains(&v));
+            }
+        }
+
+        #[test]
+        fn effect_intensity_rejects_out_of_range(val in -10.0f32..10.0) {
+            let result = EffectIntensity::new(val);
+            if (0.0..=1.0).contains(&val) {
+                prop_assert!(result.is_ok());
+            } else {
+                prop_assert!(result.is_err());
+            }
+        }
+
+        #[test]
+        fn mixer_combined_always_clamped(
+            mag in 0.0f64..1.0,
+            decay in 0.1f64..20.0,
+            gain in 0.0f64..2.0,
+        ) {
+            let mut mixer = TactileMixer::new();
+            mixer.set_master_gain(gain);
+            mixer.add_effect(TactileEffect::Impact {
+                magnitude: mag,
+                decay_rate: decay,
+            });
+            let out = mixer.tick();
+            prop_assert!((-1.0..=1.0).contains(&out.combined));
+            prop_assert!((-1.0..=1.0).contains(&out.low));
+        }
+    }
+}
