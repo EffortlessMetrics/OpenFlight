@@ -304,7 +304,8 @@ pub struct CapabilityReport {
     pub service_clamp_events: u64,
     /// Maximum pre-clamp value across all axes (from engine counters).
     pub max_original_value_before_clamp: f32,
-    /// Per-axis clamp statistics (from service-level metrics).
+    /// Per-axis clamp statistics (merged from engine and service-level metrics).
+    /// When both sources exist for an axis, service-level data takes priority.
     pub axes: Vec<AxisClampStats>,
 }
 
@@ -652,6 +653,9 @@ impl CapabilityService {
 
     /// Build a capability report combining engine counters and service-level
     /// metrics into a single observability snapshot.
+    ///
+    /// The `axes` section merges engine per-axis counters with service-level
+    /// metrics so that every axis with clamp activity appears in the report.
     pub fn get_capability_report(&self) -> Result<CapabilityReport, String> {
         let engines = self
             .engines
@@ -661,33 +665,49 @@ impl CapabilityService {
         let mut engine_clamp_events: u64 = 0;
         let mut max_before_clamp: f32 = 0.0;
 
-        // Collect engine-level totals
-        for engine in engines.values() {
-            engine_clamp_events += engine.counters().capability_clamp_events();
-            let v = engine.counters().max_value_before_clamp();
+        // Collect engine-level totals and per-axis stats into a map
+        let mut axes_map: HashMap<String, AxisClampStats> = HashMap::new();
+        for (axis_id, engine) in engines.iter() {
+            let counters = engine.counters();
+            let events = counters.capability_clamp_events();
+            engine_clamp_events += events;
+            let v = counters.max_value_before_clamp();
             if v > max_before_clamp {
                 max_before_clamp = v;
             }
+            if events > 0 {
+                let ns = counters.last_capability_clamp_ns();
+                axes_map.insert(
+                    axis_id.clone(),
+                    AxisClampStats {
+                        axis_id: axis_id.clone(),
+                        clamp_events: events,
+                        last_clamp_timestamp_ms: ns / 1_000_000,
+                        min_clamped_value: 0.0, // engine counters don't track min clamped
+                        max_original_value_before_clamp: f64::from(v),
+                    },
+                );
+            }
         }
 
-        // Collect service-level per-axis stats
+        // Merge service-level per-axis stats (overrides engine-only entries)
         let service_counters = self.metrics.all_counters();
-
         let mut service_clamp_events: u64 = 0;
-        for counter in service_counters.values() {
+        for (axis_id, counter) in &service_counters {
             service_clamp_events += counter.clamp_events();
+            axes_map.insert(
+                axis_id.clone(),
+                AxisClampStats {
+                    axis_id: axis_id.clone(),
+                    clamp_events: counter.clamp_events(),
+                    last_clamp_timestamp_ms: counter.last_clamp_timestamp(),
+                    min_clamped_value: counter.min_clamped_value(),
+                    max_original_value_before_clamp: counter.max_original_value_before_clamp(),
+                },
+            );
         }
 
-        let mut axes: Vec<AxisClampStats> = service_counters
-            .iter()
-            .map(|(axis_id, counter)| AxisClampStats {
-                axis_id: axis_id.clone(),
-                clamp_events: counter.clamp_events(),
-                last_clamp_timestamp_ms: counter.last_clamp_timestamp(),
-                min_clamped_value: counter.min_clamped_value(),
-                max_original_value_before_clamp: counter.max_original_value_before_clamp(),
-            })
-            .collect();
+        let mut axes: Vec<AxisClampStats> = axes_map.into_values().collect();
         axes.sort_by(|a, b| a.axis_id.cmp(&b.axis_id));
 
         Ok(CapabilityReport {
@@ -1411,5 +1431,47 @@ mod tests {
         counter.record(0.9, 0.5);
         let ts2 = counter.last_clamp_timestamp();
         assert!(ts2 >= ts1, "timestamps must be non-decreasing");
+    }
+
+    #[test]
+    fn counter_overflow_wraps_gracefully() {
+        let counter = ClampCounter::new();
+        // Simulate near-overflow by writing a high value directly
+        counter
+            .clamp_events
+            .store(u64::MAX - 1, Ordering::Relaxed);
+        assert_eq!(counter.clamp_events(), u64::MAX - 1);
+
+        // One more event
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), u64::MAX);
+
+        // Next event wraps to 0 (AtomicU64::fetch_add wraps)
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), 0);
+    }
+
+    #[test]
+    fn report_includes_engine_only_clamp_axes() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Clamp via engine only — no explicit service.record_clamp_event()
+        let mut frame = AxisFrame::new(0.9, 1000);
+        frame.out = 0.9;
+        engine.process(&mut frame).unwrap();
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.engine_clamp_events, 1);
+        assert_eq!(report.service_clamp_events, 0);
+        // The axes section must still contain the engine-sourced clamp data
+        assert_eq!(report.axes.len(), 1);
+        assert_eq!(report.axes[0].axis_id, "pitch");
+        assert_eq!(report.axes[0].clamp_events, 1);
     }
 }
