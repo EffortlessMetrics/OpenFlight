@@ -167,16 +167,6 @@ fn parse_typical_opentrack_values() {
 }
 
 #[test]
-fn parse_oversize_packet_ignores_trailing_bytes() {
-    let mut pkt = build_packet(7.0, 8.0, 9.0, 10.0, 11.0, 12.0);
-    pkt.extend_from_slice(&[0xFF; 128]);
-    assert_eq!(pkt.len(), 48 + 128);
-    let pos = parse_packet(&pkt).unwrap();
-    assert!((pos.x_mm - 7.0).abs() < 1e-10);
-    assert!((pos.roll_deg - 12.0).abs() < 1e-10);
-}
-
-#[test]
 fn parse_exactly_48_bytes_succeeds() {
     let pkt = build_packet(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
     assert_eq!(pkt.len(), 48);
@@ -195,22 +185,6 @@ fn parse_49_bytes_succeeds() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[test]
-fn parse_empty_packet_is_too_short() {
-    assert_eq!(
-        parse_packet(&[]),
-        Err(OpenTrackError::PacketTooShort { actual: 0 })
-    );
-}
-
-#[test]
-fn parse_single_byte_is_too_short() {
-    assert_eq!(
-        parse_packet(&[0x42]),
-        Err(OpenTrackError::PacketTooShort { actual: 1 })
-    );
-}
-
-#[test]
 fn parse_every_length_below_48_fails() {
     for len in 0..OPENTRACK_PACKET_SIZE {
         let data = vec![0u8; len];
@@ -220,33 +194,6 @@ fn parse_every_length_below_48_fails() {
             "length {len} should produce PacketTooShort"
         );
     }
-}
-
-#[test]
-fn parse_47_bytes_is_too_short() {
-    let data = vec![0u8; 47];
-    assert_eq!(
-        parse_packet(&data),
-        Err(OpenTrackError::PacketTooShort { actual: 47 })
-    );
-}
-
-#[test]
-fn parse_8_bytes_is_too_short() {
-    let data = vec![0u8; 8];
-    assert_eq!(
-        parse_packet(&data),
-        Err(OpenTrackError::PacketTooShort { actual: 8 })
-    );
-}
-
-#[test]
-fn parse_40_bytes_is_too_short() {
-    let data = vec![0u8; 40];
-    assert_eq!(
-        parse_packet(&data),
-        Err(OpenTrackError::PacketTooShort { actual: 40 })
-    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
