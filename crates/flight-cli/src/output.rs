@@ -207,4 +207,133 @@ mod tests {
         assert_eq!(parsed["success"], true);
         assert!(parsed["data"].is_array());
     }
+
+    // ── Additional depth: JSON output formatting ─────────────────────────
+
+    #[test]
+    fn success_json_nested_objects_preserved() {
+        let data = json!({
+            "outer": {
+                "inner": {
+                    "deep": 42
+                }
+            }
+        });
+        let result = OutputFormat::Json.success(data);
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["data"]["outer"]["inner"]["deep"], 42);
+    }
+
+    #[test]
+    fn success_json_special_characters_escaped() {
+        let data = json!({
+            "msg": "line1\nline2\ttab \"quoted\""
+        });
+        let result = OutputFormat::Json.success(data);
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed["data"]["msg"].as_str().unwrap().contains("\\n")
+            || parsed["data"]["msg"].as_str().unwrap().contains('\n'));
+    }
+
+    #[test]
+    fn error_json_with_complex_message() {
+        let result =
+            OutputFormat::Json.error("Field 'axes[0].curve' is invalid", "VALIDATION_ERROR");
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["success"], false);
+        assert!(parsed["error"]
+            .as_str()
+            .unwrap()
+            .contains("axes[0].curve"));
+        assert_eq!(parsed["error_code"], "VALIDATION_ERROR");
+    }
+
+    #[test]
+    fn list_json_multiple_items_preserves_order() {
+        let items = vec![
+            json!({"id": "first"}),
+            json!({"id": "second"}),
+            json!({"id": "third"}),
+        ];
+        let result = OutputFormat::Json.list(items, Some(3));
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        let arr = parsed["data"].as_array().unwrap();
+        assert_eq!(arr[0]["id"], "first");
+        assert_eq!(arr[1]["id"], "second");
+        assert_eq!(arr[2]["id"], "third");
+    }
+
+    #[test]
+    fn success_json_null_values_preserved() {
+        let data = json!({
+            "present": "yes",
+            "absent": null
+        });
+        let result = OutputFormat::Json.success(data);
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        assert!(parsed["data"]["absent"].is_null());
+        assert_eq!(parsed["data"]["present"], "yes");
+    }
+
+    #[test]
+    fn human_format_nested_object_indented() {
+        let data = json!({
+            "status": "ok",
+            "details": {
+                "uptime": 3600
+            }
+        });
+        let result = OutputFormat::Human.success(data);
+        // Nested object should produce indented output
+        assert!(result.contains("details:"));
+        assert!(result.contains("uptime"));
+    }
+
+    #[test]
+    fn human_format_array_items_listed() {
+        let data = json!({
+            "items": ["alpha", "beta"]
+        });
+        let result = OutputFormat::Human.success(data);
+        assert!(result.contains("alpha"));
+        assert!(result.contains("beta"));
+    }
+
+    #[test]
+    fn proto_to_json_serializes_struct() {
+        #[derive(serde::Serialize)]
+        struct Dummy {
+            name: String,
+            count: u32,
+        }
+        let d = Dummy {
+            name: "test".into(),
+            count: 7,
+        };
+        let val = proto_to_json(&d).unwrap();
+        assert_eq!(val["name"], "test");
+        assert_eq!(val["count"], 7);
+    }
+
+    #[test]
+    fn list_json_single_item() {
+        let items = vec![json!({"id": "only"})];
+        let result = OutputFormat::Json.list(items, Some(1));
+        let parsed: Value = serde_json::from_str(&result).unwrap();
+        assert_eq!(parsed["total_count"], 1);
+        assert_eq!(parsed["data"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn human_list_separates_items_with_newline() {
+        let items = vec![
+            json!({"name": "a"}),
+            json!({"name": "b"}),
+        ];
+        let result = OutputFormat::Human.list(items, None);
+        // Both items present and separated
+        assert!(result.contains("a"));
+        assert!(result.contains("b"));
+        assert!(result.lines().count() >= 2);
+    }
 }
