@@ -498,8 +498,13 @@ fn bus_snapshot_all_fields_mapped() {
     // Altitude
     assert!(snap.environment.altitude > 0.0, "altitude should be set");
     // Attitude
-    // Heading (could be 0 due to normalisation, just verify it's set)
-    let _heading = snap.kinematics.heading.to_degrees();
+    // Heading: verify it matches the normalized value from full_indicators()
+    // 180° normalizes to -180° via signed normalization.
+    let heading_deg = snap.kinematics.heading.to_degrees();
+    assert!(
+        (heading_deg - (-180.0)).abs() < 1e-3,
+        "heading should be -180° after signed normalization, got {heading_deg}"
+    );
     assert!(snap.kinematics.pitch.to_degrees().abs() > 0.0, "pitch set");
     assert!(snap.kinematics.bank.to_degrees().abs() > 0.0, "roll set");
     // G-load
@@ -535,9 +540,9 @@ fn bus_snapshot_stale_when_speeds_missing() {
     );
 }
 
-/// Vehicle change detection: metrics track aircraft changes.
+/// AdapterMetrics tracks aircraft change counts and last-seen title.
 #[test]
-fn bus_vehicle_change_detected_in_metrics() {
+fn adapter_metrics_record_aircraft_change() {
     let a = adapter();
     let metrics_before = a.metrics();
     assert_eq!(metrics_before.aircraft_changes, 0);
@@ -559,13 +564,18 @@ fn bus_vehicle_change_detected_in_metrics() {
     assert_eq!(metrics.aircraft_changes, 2);
 }
 
-/// Timestamp field is populated in the snapshot (non-zero after conversion).
+/// Timestamp field is monotonic across snapshots.
 #[test]
 fn bus_snapshot_timestamp_populated() {
     let a = adapter();
-    let snap = a.convert_indicators(&full_indicators()).unwrap();
-    // Timestamp is nanoseconds since adapter creation; should be > 0.
-    assert!(snap.timestamp > 0, "timestamp should be > 0");
+    let first = a.convert_indicators(&full_indicators()).unwrap();
+    let second = a.convert_indicators(&full_indicators()).unwrap();
+    // Timestamp is nanoseconds since adapter creation; may be 0 on first call,
+    // but must be monotonic for subsequent snapshots from the same adapter.
+    assert!(
+        second.timestamp >= first.timestamp,
+        "snapshot timestamps must be monotonic (second >= first)"
+    );
 }
 
 // ============================================================================
@@ -604,7 +614,11 @@ fn combined_indicators_then_state_overlay() {
     // aero_valid should now be true due to AoA
     assert!(snap.validity.aero_valid);
     // Confirm AoA actually changed from default
-    let _ = aoa_before; // used to ensure we captured before
+    assert!(
+        (snap.kinematics.aoa.to_degrees() - aoa_before).abs() > 0.01,
+        "AoA should differ after state overlay (before={aoa_before}, after={})",
+        snap.kinematics.aoa.to_degrees()
+    );
 }
 
 /// Partial state overlay only modifies provided fields.
@@ -653,7 +667,7 @@ fn negative_heading_normalises() {
     );
 }
 
-/// Config: auto-reconnect is enabled, max_reconnect_attempts is 0 (unlimited).
+/// Config: auto-reconnect is enabled, max_reconnect_attempts defaults to 0.
 #[test]
 fn config_reconnect_policy() {
     let cfg = WarThunderConfig::default();
