@@ -32,6 +32,19 @@ fn small_recorder(cap: usize) -> BlackboxRecorder {
     BlackboxRecorder::new(RecorderConfig { capacity: cap })
 }
 
+/// Poll until `path` exists on disk, with a bounded 5-second timeout.
+async fn wait_for_file(path: &std::path::Path) {
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+    while !path.exists() {
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "timed out waiting for file creation: {}",
+            path.display()
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+}
+
 fn test_config(dir: &std::path::Path) -> BlackboxConfig {
     BlackboxConfig {
         output_dir: dir.to_path_buf(),
@@ -54,14 +67,12 @@ async fn writer_creates_fbb_file() {
         .await
         .unwrap();
 
-    // Yield to let the spawned writer task create the file
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    // Poll for file creation with a bounded timeout
+    wait_for_file(&path).await;
 
     assert!(path.exists(), "file should be created on start");
     assert!(
-        path.extension().unwrap() == "fbb",
+        path.extension() == Some(std::ffi::OsStr::new("fbb")),
         "file should have .fbb extension"
     );
 
@@ -113,9 +124,7 @@ async fn writer_records_are_length_prefixed_postcard() {
 
     writer.record_axis_frame(1000, &[0xAA, 0xBB]).unwrap();
 
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let raw = std::fs::read(&path).unwrap();
@@ -154,9 +163,7 @@ async fn reader_reads_all_records_in_order() {
     for &ts in &timestamps {
         writer.record_axis_frame(ts, &[0x01]).unwrap();
     }
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -186,9 +193,7 @@ async fn reader_returns_none_after_last_record() {
         .unwrap();
 
     writer.record_event(1000, &[0xFF]).unwrap();
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -248,9 +253,7 @@ async fn roundtrip_all_stream_types() {
         }
     }
 
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -281,9 +284,7 @@ async fn roundtrip_large_payload() {
     let large_data: Vec<u8> = (0..4096).map(|i| (i % 256) as u8).collect();
     writer.record_axis_frame(999, &large_data).unwrap();
 
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -305,9 +306,7 @@ async fn roundtrip_empty_payload() {
 
     writer.record_event(42, &[]).unwrap();
 
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -372,9 +371,7 @@ async fn truncated_record_does_not_panic() {
         .unwrap();
 
     writer.record_axis_frame(1000, &[0x01, 0x02]).unwrap();
-    for _ in 0..16 {
-        tokio::task::yield_now().await;
-    }
+    wait_for_file(&path).await;
     writer.stop_recording().await.unwrap();
 
     let raw = std::fs::read(&path).unwrap();
@@ -468,7 +465,9 @@ fn ring_buffer_overflow_is_allocation_free() {
     assert_eq!(rec.overflow_count(), 2000);
 }
 
+// Run with: cargo test -p flight-blackbox -- --ignored (benchmark suite)
 #[test]
+#[ignore]
 fn mixed_record_types_throughput() {
     let mut rec = small_recorder(10_000);
     let start = std::time::Instant::now();
@@ -578,7 +577,7 @@ fn export_json_binary_csv_consistency() {
         .unwrap()
         .lines()
         .count();
-    assert_eq!(csv_lines, 11); // header + 10 axis rows
+    assert_eq!(csv_lines, 11); // 1 CSV header row + 10 axis rows (events are not included in CSV export)
 
     let bin_bytes = std::fs::read(&bin_path).unwrap();
     let bin_doc: RecorderExportDoc = postcard::from_bytes(&bin_bytes).unwrap();

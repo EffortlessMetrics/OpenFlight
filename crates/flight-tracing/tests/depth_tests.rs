@@ -389,7 +389,9 @@ fn file_sink_rotation_triggers() {
 // 5. Performance — event recording overhead measurement
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Run with: cargo test -p flight-tracing -- --ignored (benchmark suite)
 #[test]
+#[ignore]
 fn perf_counters_throughput() {
     let counters = PerfCounters::new();
     let start = std::time::Instant::now();
@@ -408,7 +410,9 @@ fn perf_counters_throughput() {
     );
 }
 
+// Run with: cargo test -p flight-tracing -- --ignored (benchmark suite)
 #[test]
+#[ignore]
 fn span_collector_throughput() {
     let collector = SpanCollector::new(10_000);
     let start = std::time::Instant::now();
@@ -427,7 +431,9 @@ fn span_collector_throughput() {
     );
 }
 
+// Run with: cargo test -p flight-tracing -- --ignored (benchmark suite)
 #[test]
+#[ignore]
 fn structured_event_creation_overhead() {
     let start = std::time::Instant::now();
 
@@ -766,8 +772,8 @@ fn regression_detector_baseline_persistence() {
 proptest! {
     #[test]
     fn prop_trace_event_json_round_trip(
-        tick in 0u64..u64::MAX,
-        duration in 0u64..u64::MAX,
+        tick in any::<u64>(),
+        duration in any::<u64>(),
         jitter in i64::MIN..i64::MAX,
     ) {
         let ev = TraceEvent::tick_end(tick, duration, jitter);
