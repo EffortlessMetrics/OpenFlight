@@ -300,10 +300,7 @@ mod tests {
         let mut mgr = PluginManager::new();
         mgr.discover(test_manifest("p1")).unwrap();
         assert_eq!(mgr.len(), 1);
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Discovered)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Discovered));
     }
 
     #[test]
@@ -335,10 +332,7 @@ mod tests {
     #[test]
     fn load_nonexistent_rejected() {
         let mut mgr = PluginManager::new();
-        assert!(matches!(
-            mgr.load("nope"),
-            Err(LifecycleError::NotFound(_))
-        ));
+        assert!(matches!(mgr.load("nope"), Err(LifecycleError::NotFound(_))));
     }
 
     // ── Suspend / Resume ──────────────────────────────────────────────
@@ -349,10 +343,7 @@ mod tests {
         mgr.discover(test_manifest("p1")).unwrap();
         mgr.load("p1").unwrap();
         mgr.suspend("p1").unwrap();
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Suspended)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Suspended));
     }
 
     #[test]
@@ -401,10 +392,7 @@ mod tests {
         mgr.discover(test_manifest("p1")).unwrap();
         mgr.load("p1").unwrap();
         mgr.unload("p1").unwrap();
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Unloading)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Unloading));
     }
 
     #[test]
@@ -414,10 +402,7 @@ mod tests {
         mgr.load("p1").unwrap();
         mgr.suspend("p1").unwrap();
         mgr.unload("p1").unwrap();
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Unloading)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Unloading));
     }
 
     #[test]
@@ -425,10 +410,7 @@ mod tests {
         let mut mgr = PluginManager::new();
         mgr.discover(test_manifest("p1")).unwrap();
         mgr.unload("p1").unwrap();
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Unloading)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Unloading));
     }
 
     #[test]
@@ -469,10 +451,7 @@ mod tests {
         mgr.record_error("p1", "e1").unwrap();
         mgr.record_error("p1", "e2").unwrap();
         mgr.record_error("p1", "e3").unwrap(); // hits budget
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Suspended)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Suspended));
     }
 
     #[test]
@@ -481,10 +460,7 @@ mod tests {
         mgr.discover(test_manifest("p1")).unwrap();
         mgr.load("p1").unwrap();
         mgr.record_error("p1", "boom").unwrap();
-        assert_eq!(
-            mgr.state("p1"),
-            Some(&LifecycleState::Suspended)
-        );
+        assert_eq!(mgr.state("p1"), Some(&LifecycleState::Suspended));
     }
 
     #[test]
@@ -501,10 +477,7 @@ mod tests {
         mgr.discover(test_manifest("p1")).unwrap();
         mgr.load("p1").unwrap();
         mgr.fail("p1", "fatal error").unwrap();
-        assert!(matches!(
-            mgr.state("p1"),
-            Some(LifecycleState::Failed(_))
-        ));
+        assert!(matches!(mgr.state("p1"), Some(LifecycleState::Failed(_))));
     }
 
     // ── Listing ───────────────────────────────────────────────────────
