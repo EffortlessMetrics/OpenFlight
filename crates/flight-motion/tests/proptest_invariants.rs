@@ -69,27 +69,29 @@ proptest! {
         prop_assert_eq!(hp.process(0.0), 0.0);
     }
 
-    /// **Washout property**: for a constant input at moderate frequencies the
-    /// HP output must decay to near-zero over time — that is the whole point of
-    /// the washout filter.
+    /// **Washout property**: for a constant input the HP output must decay to
+    /// near-zero over time — that is the whole point of the washout filter.
     ///
-    /// Frequency range 0.5–100 Hz with dt 1–10 ms gives at least 6 time
-    /// constants in 500 ticks (worst case: 0.5 Hz at 10 ms → 5 s / 0.318 s ≈ 16 τ).
+    /// We simulate 6 time constants (τ = 1/(2πf)) worth of ticks, ensuring
+    /// ample decay regardless of frequency and timestep.
     #[test]
     fn prop_hp_constant_input_washes_out(
         freq  in 0.5_f32..=100.0_f32,
         dt    in 0.001_f32..=0.01_f32,
         input in -10.0_f32..=10.0_f32,
     ) {
+        let tau = 1.0_f32 / (2.0 * std::f32::consts::PI * freq);
+        let sim_time = 6.0 * tau;
+        let ticks = ((sim_time / dt).ceil() as usize).max(100);
         let mut hp = HighPassFilter::new(freq, dt);
         let mut out = 0.0_f32;
-        for _ in 0..500 {
+        for _ in 0..ticks {
             out = hp.process(input);
         }
         let threshold = 0.01_f32 * input.abs().max(0.01_f32);
         prop_assert!(
             out.abs() < threshold,
-            "HP did not wash out: out={out}, input={input}, threshold={threshold}"
+            "HP did not wash out: out={out}, input={input}, threshold={threshold}, ticks={ticks}"
         );
     }
 }
