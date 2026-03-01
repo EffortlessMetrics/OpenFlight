@@ -3,13 +3,12 @@
 
 //! Tests for `flightctl profile` subcommands
 
+mod common;
+
+use common::{cli, parse_json_from};
 use serde_json::Value;
 use std::fs;
 use tempfile::TempDir;
-
-fn cli() -> assert_cmd::Command {
-    assert_cmd::Command::new(assert_cmd::cargo_bin!("flightctl"))
-}
 
 // ── profile list ──────────────────────────────────────────────────────────
 
@@ -167,7 +166,7 @@ fn profile_activate_missing_name_fails() {
 
 #[test]
 fn profile_show_without_name_returns_message() {
-    // When no profile name given and daemon is down, should still succeed with a message
+    // When no profile name given, returns a local stub with a message (no daemon needed)
     let output = cli().args(["--json", "profile", "show"]).output().unwrap();
     assert!(output.status.success());
 
@@ -178,10 +177,3 @@ fn profile_show_without_name_returns_message() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-fn parse_json_from(text: &str) -> Value {
-    text.lines()
-        .find(|l| l.trim().starts_with('{'))
-        .and_then(|l| serde_json::from_str(l).ok())
-        .unwrap_or_else(|| panic!("No valid JSON line found in:\n{}", text))
-}

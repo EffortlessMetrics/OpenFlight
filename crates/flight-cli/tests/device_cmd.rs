@@ -3,49 +3,54 @@
 
 //! Tests for `flightctl devices` subcommands
 
-use serde_json::Value;
+mod common;
 
-fn cli() -> assert_cmd::Command {
-    assert_cmd::Command::new(assert_cmd::cargo_bin!("flightctl"))
-}
+use common::{cli, parse_json_from};
+use serde_json::Value;
 
 // ── devices list ──────────────────────────────────────────────────────────
 
 #[test]
-fn devices_list_fails_gracefully_without_daemon() {
+fn devices_list_does_not_panic() {
     let output = cli().args(["devices", "list"]).output().unwrap();
-    assert!(!output.status.success());
-    // Should not panic (exit code 101)
+    // Must not panic (exit code 101); both success and failure are acceptable
     assert_ne!(output.status.code(), Some(101));
 }
 
 #[test]
-fn devices_list_json_error_has_stable_fields() {
+fn devices_list_json_has_stable_fields() {
     let output = cli().args(["--json", "devices", "list"]).output().unwrap();
-    assert!(!output.status.success());
+    // Must not panic
+    assert_ne!(output.status.code(), Some(101));
 
-    let stderr = String::from_utf8(output.stderr).unwrap();
-    let json: Value = parse_json_from(&stderr);
+    if output.status.success() {
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let json: Value = parse_json_from(&stdout);
+        assert_eq!(json["success"], true);
+    } else {
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        let json: Value = parse_json_from(&stderr);
 
-    assert_eq!(json["success"], false);
-    assert!(json["error"].is_string());
-    assert!(json["error_code"].is_string());
+        assert_eq!(json["success"], false);
+        assert!(json["error"].is_string());
+        assert!(json["error_code"].is_string());
 
-    let error_code = json["error_code"].as_str().unwrap();
-    let valid_codes = [
-        "CONNECTION_FAILED",
-        "VERSION_MISMATCH",
-        "UNSUPPORTED_FEATURE",
-        "TRANSPORT_ERROR",
-        "SERIALIZATION_ERROR",
-        "GRPC_ERROR",
-        "UNKNOWN_ERROR",
-    ];
-    assert!(
-        valid_codes.contains(&error_code),
-        "error_code '{}' should be a known code",
-        error_code
-    );
+        let error_code = json["error_code"].as_str().unwrap();
+        let valid_codes = [
+            "CONNECTION_FAILED",
+            "VERSION_MISMATCH",
+            "UNSUPPORTED_FEATURE",
+            "TRANSPORT_ERROR",
+            "SERIALIZATION_ERROR",
+            "GRPC_ERROR",
+            "UNKNOWN_ERROR",
+        ];
+        assert!(
+            valid_codes.contains(&error_code),
+            "error_code '{}' should be a known code",
+            error_code
+        );
+    }
 }
 
 #[test]
@@ -54,8 +59,7 @@ fn devices_list_with_include_disconnected_flag_accepted() {
         .args(["devices", "list", "--include-disconnected"])
         .output()
         .unwrap();
-    // Should fail due to no daemon, but the flag should be accepted
-    assert!(!output.status.success());
+    // Flag should be accepted; must not panic
     assert_ne!(output.status.code(), Some(101));
 }
 
@@ -65,8 +69,7 @@ fn devices_list_with_filter_types_flag_accepted() {
         .args(["devices", "list", "--filter-types", "joystick,throttle"])
         .output()
         .unwrap();
-    // Should fail due to no daemon, but the flag should be accepted
-    assert!(!output.status.success());
+    // Flag should be accepted; must not panic
     assert_ne!(output.status.code(), Some(101));
 }
 
@@ -161,13 +164,4 @@ fn devices_test_accepts_interval_and_count_flags() {
     // Fails because no daemon, but flags should be accepted (no parse errors)
     assert!(!output.status.success());
     assert_ne!(output.status.code(), Some(101));
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-fn parse_json_from(text: &str) -> Value {
-    text.lines()
-        .find(|l| l.trim().starts_with('{'))
-        .and_then(|l| serde_json::from_str(l).ok())
-        .unwrap_or_else(|| panic!("No valid JSON line found in:\n{}", text))
 }

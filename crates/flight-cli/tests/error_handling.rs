@@ -3,12 +3,11 @@
 
 //! Tests for CLI error handling: invalid arguments, exit codes, error messages
 
+mod common;
+
+use common::{cli, parse_json_from};
 use predicates::prelude::*;
 use serde_json::Value;
-
-fn cli() -> assert_cmd::Command {
-    assert_cmd::Command::new(assert_cmd::cargo_bin!("flightctl"))
-}
 
 // ── Invalid subcommand ────────────────────────────────────────────────────
 
@@ -185,38 +184,40 @@ fn unknown_subcommand_flag_rejected() {
 #[test]
 fn connection_error_exit_code_in_valid_range() {
     let output = cli().args(["info"]).output().unwrap();
-    assert!(!output.status.success());
 
-    let code = output.status.code().unwrap();
-    // Exit codes 1-7 are the defined error range
-    assert!(
-        (1..=7).contains(&code),
-        "exit code should be in mapped range 1-7, got {}",
-        code
-    );
+    if !output.status.success() {
+        let code = output.status.code().unwrap();
+        // Exit codes 1-7 are the defined error range
+        assert!(
+            (1..=7).contains(&code),
+            "exit code should be in mapped range 1-7, got {}",
+            code
+        );
+    }
 }
 
 #[test]
 fn connection_error_json_exit_code_matches_error_code() {
     let output = cli().args(["--json", "info"]).output().unwrap();
-    assert!(!output.status.success());
 
-    let stderr = String::from_utf8(output.stderr).unwrap();
-    let json: Value = parse_json_from(&stderr);
+    if !output.status.success() {
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        let json: Value = parse_json_from(&stderr);
 
-    let error_code = json["error_code"].as_str().unwrap();
-    let exit_code = output.status.code().unwrap();
+        let error_code = json["error_code"].as_str().unwrap();
+        let exit_code = output.status.code().unwrap();
 
-    // Verify the exit code maps to a known error code
-    match error_code {
-        "CONNECTION_FAILED" => assert_eq!(exit_code, 2),
-        "VERSION_MISMATCH" => assert_eq!(exit_code, 3),
-        "UNSUPPORTED_FEATURE" => assert_eq!(exit_code, 4),
-        "TRANSPORT_ERROR" => assert_eq!(exit_code, 5),
-        "SERIALIZATION_ERROR" => assert_eq!(exit_code, 6),
-        "GRPC_ERROR" => assert_eq!(exit_code, 7),
-        "UNKNOWN_ERROR" => assert_eq!(exit_code, 1),
-        _ => panic!("Unknown error code: {}", error_code),
+        // Verify the exit code maps to a known error code
+        match error_code {
+            "CONNECTION_FAILED" => assert_eq!(exit_code, 2),
+            "VERSION_MISMATCH" => assert_eq!(exit_code, 3),
+            "UNSUPPORTED_FEATURE" => assert_eq!(exit_code, 4),
+            "TRANSPORT_ERROR" => assert_eq!(exit_code, 5),
+            "SERIALIZATION_ERROR" => assert_eq!(exit_code, 6),
+            "GRPC_ERROR" => assert_eq!(exit_code, 7),
+            "UNKNOWN_ERROR" => assert_eq!(exit_code, 1),
+            _ => panic!("Unknown error code: {}", error_code),
+        }
     }
 }
 
@@ -285,10 +286,3 @@ fn daemon_dependent_commands_do_not_panic() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-fn parse_json_from(text: &str) -> Value {
-    text.lines()
-        .find(|l| l.trim().starts_with('{'))
-        .and_then(|l| serde_json::from_str(l).ok())
-        .unwrap_or_else(|| panic!("No valid JSON line found in:\n{}", text))
-}

@@ -3,13 +3,12 @@
 
 //! Tests for `flightctl diag` and `flightctl diagnostics` subcommands
 
+mod common;
+
+use common::{cli, parse_json_from, try_parse_json_from};
 use serde_json::Value;
 use std::fs;
 use tempfile::TempDir;
-
-fn cli() -> assert_cmd::Command {
-    assert_cmd::Command::new(assert_cmd::cargo_bin!("flightctl"))
-}
 
 // ── diag bundle ───────────────────────────────────────────────────────────
 
@@ -243,16 +242,3 @@ fn diag_stop_succeeds_with_simulated_data() {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-fn parse_json_from(text: &str) -> Value {
-    text.lines()
-        .find(|l| l.trim().starts_with('{'))
-        .and_then(|l| serde_json::from_str(l).ok())
-        .unwrap_or_else(|| panic!("No valid JSON line found in:\n{}", text))
-}
-
-fn try_parse_json_from(text: &str) -> Option<Value> {
-    text.lines()
-        .find(|l| l.trim().starts_with('{'))
-        .and_then(|l| serde_json::from_str(l).ok())
-}

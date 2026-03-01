@@ -3,11 +3,10 @@
 
 //! Tests verifying all subcommands have help text and descriptions
 
-use predicates::prelude::*;
+mod common;
 
-fn cli() -> assert_cmd::Command {
-    assert_cmd::Command::new(assert_cmd::cargo_bin!("flightctl"))
-}
+use common::cli;
+use predicates::prelude::*;
 
 // ── Top-level help ────────────────────────────────────────────────────────
 
