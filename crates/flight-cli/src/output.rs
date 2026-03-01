@@ -230,9 +230,14 @@ mod tests {
             "msg": "line1\nline2\ttab \"quoted\""
         });
         let result = OutputFormat::Json.success(data);
+        // Ensure the raw JSON string contains an escaped newline sequence.
+        assert!(result.contains(r#"\n"#));
+        // Also ensure that after parsing we get back the original string with actual control characters.
         let parsed: Value = serde_json::from_str(&result).unwrap();
-        assert!(parsed["data"]["msg"].as_str().unwrap().contains("\\n")
-            || parsed["data"]["msg"].as_str().unwrap().contains('\n'));
+        assert_eq!(
+            parsed["data"]["msg"].as_str().unwrap(),
+            "line1\nline2\ttab \"quoted\""
+        );
     }
 
     #[test]

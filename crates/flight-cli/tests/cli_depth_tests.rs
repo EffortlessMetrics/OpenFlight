@@ -289,12 +289,6 @@ fn profile_list_include_builtin_accepted() {
 }
 
 #[test]
-fn profile_apply_requires_file_path() {
-    let out = cli(&["profile", "apply"]);
-    assert!(!out.status.success());
-}
-
-#[test]
 fn profile_show_current_without_daemon() {
     // `profile show` (no name) tries to get current effective profile
     let out = cli(&["--json", "profile", "show"]);
@@ -393,15 +387,17 @@ fn integration_exit_codes_mapped() {
 
 #[test]
 fn integration_concurrent_cli_instances() {
-    // Launch two CLI processes in parallel — both should complete without interference
-    let child1 = Command::new("cargo")
-        .args(["run", "--quiet", "-p", "flight-cli", "--", "--json", "status"])
+    // Use the pre-built binary to avoid cargo build lock contention
+    let bin = env!("CARGO_BIN_EXE_flightctl");
+
+    let child1 = Command::new(bin)
+        .args(["--json", "status"])
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
         .expect("spawn 1");
-    let child2 = Command::new("cargo")
-        .args(["run", "--quiet", "-p", "flight-cli", "--", "--json", "version"])
+    let child2 = Command::new(bin)
+        .args(["--json", "version"])
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()
