@@ -730,7 +730,7 @@ fn hash_stable_across_serialization_roundtrip() {
 // ── Test: Merge Ordering / Associativity ────────────────────────────────────
 
 #[test]
-fn merge_ordering_left_associative() {
+fn merge_with_associative_for_selected_overlays() {
     let global = global_profile();
     let sim = msfs_sim_profile();
     let aircraft = fa18c_aircraft_profile();
@@ -747,8 +747,9 @@ fn merge_ordering_left_associative() {
         .merge_with(&sim.merge_with(&aircraft).unwrap())
         .unwrap();
 
-    // With all-Some fields, merge_with is last-writer-wins so both should equal
-    // because aircraft values dominate in both orderings for the same axis
+    // For the compared pitch fields, merge_with is effectively last-writer-wins
+    // in both orderings (aircraft values dominate for those fields), so the
+    // results should match.
     let left_pitch = left.axes.get("pitch").unwrap();
     let right_pitch = right.axes.get("pitch").unwrap();
 
