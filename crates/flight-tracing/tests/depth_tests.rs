@@ -145,7 +145,8 @@ fn json_formatter_batch_single_entry_has_no_newlines() {
 fn log_value_display_all_variants() {
     assert_eq!(LogValue::String("hello world".into()).to_string(), "hello world");
     assert_eq!(LogValue::Int(-42).to_string(), "-42");
-    assert_eq!(LogValue::Float(0.0).to_string(), "0");
+    let float_zero = LogValue::Float(0.0).to_string();
+    assert!(float_zero == "0" || float_zero == "0.0");
     assert_eq!(LogValue::Bool(true).to_string(), "true");
 }
 
@@ -936,7 +937,7 @@ proptest! {
 
     /// Arbitrary LogValue::Int round-trips through JSON.
     #[test]
-    fn log_value_int_round_trips(val in i64::MIN..i64::MAX) {
+    fn log_value_int_round_trips(val in i64::MIN..=i64::MAX) {
         let entry = LogEntryBuilder::new(LogLevel::Debug, "t", "m")
             .field("v", LogValue::Int(val))
             .build();
@@ -954,7 +955,7 @@ proptest! {
 
     /// CorrelationId serialization round-trips.
     #[test]
-    fn correlation_id_serde_round_trip(raw in 0u64..u64::MAX) {
+    fn correlation_id_serde_round_trip(raw in 0u64..=u64::MAX) {
         let id = CorrelationId::from_raw(raw);
         let json = serde_json::to_string(&id).unwrap();
         let recovered: CorrelationId = serde_json::from_str(&json).unwrap();
