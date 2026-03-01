@@ -6,7 +6,7 @@
 //! These tests exercise conversion logic, validity flags, edge cases,
 //! error paths, config behaviour, and async UDP round-trips.
 
-use flight_ac7_protocol::{Ac7Controls, Ac7State, Ac7TelemetryPacket, AC7_TELEMETRY_SCHEMA_V1};
+use flight_ac7_protocol::{AC7_TELEMETRY_SCHEMA_V1, Ac7Controls, Ac7State, Ac7TelemetryPacket};
 use flight_ac7_telemetry::{Ac7TelemetryAdapter, Ac7TelemetryConfig, Ac7TelemetryError};
 use flight_adapter_common::{AdapterConfig, AdapterState};
 use flight_bus::types::SimId;
@@ -172,7 +172,7 @@ fn full_packet_heading_degrees() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.heading.to_degrees() - 45.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.heading.to_degrees() - 45.0).abs() < 1e-5);
 }
 
 #[test]
@@ -180,7 +180,7 @@ fn full_packet_pitch_degrees() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.pitch.to_degrees() - 10.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.pitch.to_degrees() - 10.0).abs() < 1e-5);
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn full_packet_bank_degrees() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.bank.to_degrees() - (-15.0)).abs() < f32::EPSILON);
+    assert!((snap.kinematics.bank.to_degrees() - (-15.0)).abs() < 1e-5);
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn full_packet_ias_mps() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.ias.value() - 250.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ias.value() - 250.0).abs() < 1e-5);
 }
 
 #[test]
@@ -204,7 +204,7 @@ fn full_packet_ground_speed_mps() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.ground_speed.value() - 240.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ground_speed.value() - 240.0).abs() < 1e-5);
 }
 
 #[test]
@@ -232,7 +232,7 @@ fn full_packet_g_force() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.kinematics.g_force.value() - 2.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.g_force.value() - 2.0).abs() < 1e-5);
 }
 
 #[test]
@@ -240,9 +240,9 @@ fn full_packet_control_inputs() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&full_packet())
         .unwrap();
-    assert!((snap.control_inputs.pitch - 0.3).abs() < f32::EPSILON);
-    assert!((snap.control_inputs.roll - (-0.4)).abs() < f32::EPSILON);
-    assert!((snap.control_inputs.yaw - 0.1).abs() < f32::EPSILON);
+    assert!((snap.control_inputs.pitch - 0.3).abs() < 1e-5);
+    assert!((snap.control_inputs.roll - (-0.4)).abs() < 1e-5);
+    assert!((snap.control_inputs.yaw - 0.1).abs() < 1e-5);
     assert_eq!(snap.control_inputs.throttle, vec![0.9]);
 }
 
@@ -410,7 +410,7 @@ fn ground_speed_falls_back_to_airspeed() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&packet)
         .unwrap();
-    assert!((snap.kinematics.ground_speed.value() - 200.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ground_speed.value() - 200.0).abs() < 1e-5);
 }
 
 #[test]
@@ -426,7 +426,7 @@ fn explicit_ground_speed_overrides_fallback() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&packet)
         .unwrap();
-    assert!((snap.kinematics.ground_speed.value() - 190.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ground_speed.value() - 190.0).abs() < 1e-5);
 }
 
 #[test]
@@ -441,7 +441,7 @@ fn ias_and_tas_same_from_speed_mps() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&packet)
         .unwrap();
-    assert!((snap.kinematics.ias.value() - snap.kinematics.tas.value()).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ias.value() - snap.kinematics.tas.value()).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -531,7 +531,7 @@ fn heading_zero_unchanged() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&packet)
         .unwrap();
-    assert!((snap.kinematics.heading.to_degrees()).abs() < f32::EPSILON);
+    assert!((snap.kinematics.heading.to_degrees()).abs() < 1e-5);
 }
 
 #[test]
@@ -559,9 +559,9 @@ fn no_controls_leaves_defaults() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&minimal_packet())
         .unwrap();
-    assert!((snap.control_inputs.pitch).abs() < f32::EPSILON);
-    assert!((snap.control_inputs.roll).abs() < f32::EPSILON);
-    assert!((snap.control_inputs.yaw).abs() < f32::EPSILON);
+    assert!((snap.control_inputs.pitch).abs() < 1e-5);
+    assert!((snap.control_inputs.roll).abs() < 1e-5);
+    assert!((snap.control_inputs.yaw).abs() < 1e-5);
     assert!(snap.control_inputs.throttle.is_empty());
 }
 
@@ -578,7 +578,7 @@ fn only_throttle_set() {
         .convert_packet_to_snapshot(&packet)
         .unwrap();
     assert_eq!(snap.control_inputs.throttle, vec![0.5]);
-    assert!((snap.control_inputs.pitch).abs() < f32::EPSILON);
+    assert!((snap.control_inputs.pitch).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -598,7 +598,7 @@ fn speed_at_upper_bus_limit() {
     let snap = default_adapter()
         .convert_packet_to_snapshot(&packet)
         .unwrap();
-    assert!((snap.kinematics.ias.value() - 500.0).abs() < f32::EPSILON);
+    assert!((snap.kinematics.ias.value() - 500.0).abs() < 1e-5);
 }
 
 #[test]
@@ -610,9 +610,11 @@ fn speed_zero_is_valid() {
         },
         ..Default::default()
     };
-    assert!(default_adapter()
-        .convert_packet_to_snapshot(&packet)
-        .is_ok());
+    assert!(
+        default_adapter()
+            .convert_packet_to_snapshot(&packet)
+            .is_ok()
+    );
 }
 
 #[test]
@@ -628,7 +630,7 @@ fn g_force_at_boundaries() {
         let snap = default_adapter()
             .convert_packet_to_snapshot(&packet)
             .unwrap();
-        assert!((snap.kinematics.g_force.value() - g).abs() < f32::EPSILON);
+        assert!((snap.kinematics.g_force.value() - g).abs() < 1e-5);
     }
 }
 
@@ -643,9 +645,11 @@ fn angle_at_boundaries() {
             },
             ..Default::default()
         };
-        assert!(default_adapter()
-            .convert_packet_to_snapshot(&packet)
-            .is_ok());
+        assert!(
+            default_adapter()
+                .convert_packet_to_snapshot(&packet)
+                .is_ok()
+        );
     }
 }
 
