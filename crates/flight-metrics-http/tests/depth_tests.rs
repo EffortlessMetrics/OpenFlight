@@ -6,8 +6,8 @@
 
 use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::Duration;
 
@@ -32,7 +32,10 @@ fn http_get(addr: &str, path: &str) -> (String, Vec<String>, String) {
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .unwrap();
-    let request = format!("GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n", path, addr);
+    let request = format!(
+        "GET {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
+        path, addr
+    );
     stream.write_all(request.as_bytes()).unwrap();
     stream.flush().unwrap();
 
@@ -40,7 +43,7 @@ fn http_get(addr: &str, path: &str) -> (String, Vec<String>, String) {
     let mut lines: Vec<String> = Vec::new();
     for line in reader.lines() {
         match line {
-            Ok(l) => lines.push(l),
+            Ok(l) => lines.push(l.trim_end_matches('\r').to_string()),
             Err(_) => break,
         }
     }
@@ -160,9 +163,14 @@ fn start_server(collector: Arc<dyn MetricsCollector>) -> (MetricsHttpServer, Str
     let addr = format!("127.0.0.1:{}", port);
     let server = MetricsHttpServer::new(config, collector);
     server.start().expect("server start");
-    // Give the listener thread time to bind.
-    thread::sleep(Duration::from_millis(50));
-    (server, addr)
+    // Poll until the listener is accepting connections.
+    for _ in 0..50 {
+        if TcpStream::connect(&addr).is_ok() {
+            return (server, addr);
+        }
+        thread::sleep(Duration::from_millis(5));
+    }
+    panic!("server did not become ready in time");
 }
 
 // ===========================================================================
@@ -641,7 +649,10 @@ fn http_metrics_empty_collector() {
     let (status, _headers, body) = http_get(&addr, "/metrics");
     assert!(status.contains("200 OK"));
     // Empty snapshot produces empty body.
-    assert!(body.trim().is_empty(), "body should be empty for zero entries");
+    assert!(
+        body.trim().is_empty(),
+        "body should be empty for zero entries"
+    );
 
     server.stop();
 }
@@ -891,8 +902,5 @@ fn snapshot_no_blank_lines_between_entries() {
         ],
     };
     let text = snap.to_prometheus_text();
-    assert!(
-        !text.contains("\n\n"),
-        "no blank lines between entries"
-    );
+    assert!(!text.contains("\n\n"), "no blank lines between entries");
 }
