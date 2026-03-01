@@ -76,6 +76,7 @@ pub struct LedController {
 impl LedController {
     /// Create a new controller for `led_count` LEDs on `panel_id`, all initially off.
     pub fn new(panel_id: u8, led_count: u8) -> Self {
+        let led_count = led_count.min(MAX_LEDS as u8);
         Self {
             panel_id,
             led_count,
@@ -186,14 +187,17 @@ impl LedController {
             let first = self.state[0];
             let all_same = self.state[..count].iter().all(|&s| s == first);
             if all_same {
-                self.dirty[..count].fill(false);
                 let frame = match first {
                     LedState::Intensity(v) => build_backlight_all_command(self.panel_id, v),
                     LedState::Rgb(c) => {
                         build_backlight_all_rgb_command(self.panel_id, c.r, c.g, c.b)
                     }
                 };
-                return frame.into_iter().collect();
+                if let Ok(f) = frame {
+                    self.dirty[..count].fill(false);
+                    return vec![f];
+                }
+                // Fall through to per-LED path without clearing dirty
             }
         }
 

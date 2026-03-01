@@ -883,7 +883,6 @@ pub fn profile_by_pid(pid: u16) -> Option<DeviceProfile> {
         0xBE62 => Some(orion2_throttle_profile()),
         0xBEA8 => Some(f16ex_grip_profile()),
         0xBEB0 => Some(a10_grip_profile()),
-        0xBEDE => Some(f16_icp_profile()),  // F-16 ICP shares UFC PID space
         0xBEDF => Some(f16_icp_profile()),
         0xBEE0 => Some(take_off_panel_profile()),
         0xBEE2 => Some(combat_ready_panel_profile()),
