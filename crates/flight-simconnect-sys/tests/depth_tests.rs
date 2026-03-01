@@ -174,10 +174,12 @@ fn struct_recv_simobject_data_field_offsets() {
         mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwDefineID),
         20
     );
+    assert_eq!(mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwFlags), 24);
     assert_eq!(
-        mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwFlags),
-        24
+        mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwentrynumber),
+        28
     );
+    assert_eq!(mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwoutof), 32);
     assert_eq!(
         mem::offset_of!(SIMCONNECT_RECV_SIMOBJECT_DATA, dwDefineCount),
         36
@@ -302,8 +304,8 @@ fn enum_datatype_derives_debug_clone_copy_eq() {
     let c = a.clone(); // Clone
     assert_eq!(a, b); // PartialEq
     assert_eq!(b, c); // Eq (via PartialEq)
-    let _debug = format!("{:?}", a); // Debug
-    assert!(_debug.contains("FLOAT64"));
+    let debug = format!("{:?}", a); // Debug
+    assert!(debug.contains("FLOAT64"));
 }
 
 #[test]
@@ -426,7 +428,7 @@ fn error_api_error_display_hex_format() {
     let err = SimConnectError::ApiError(0x80004005_u32 as i32);
     let msg = err.to_string();
     // Should display in hex (uppercase) with 0x prefix
-    assert!(msg.contains("80004005"), "got: {msg}");
+    assert!(msg.contains("0x80004005"), "got: {msg}");
 }
 
 #[test]
@@ -487,14 +489,14 @@ fn recv_simobject_data_starts_with_recv_header() {
 // ── Enum round-trip through discriminant ──────────────────────────────
 
 #[test]
-fn enum_datatype_round_trip_via_transmute() {
+fn enum_datatype_round_trip_via_cast() {
     // Verify repr(C) discriminant can be read as a raw u32 and back
     for (variant, expected) in [
         (SIMCONNECT_DATATYPE::INVALID, 0u32),
         (SIMCONNECT_DATATYPE::FLOAT64, 4),
         (SIMCONNECT_DATATYPE::XYZ, 16),
     ] {
-        let raw: u32 = unsafe { mem::transmute(variant) };
+        let raw = variant as u32;
         assert_eq!(raw, expected);
         let back: SIMCONNECT_DATATYPE = unsafe { mem::transmute(raw) };
         assert_eq!(back, variant);
@@ -502,12 +504,12 @@ fn enum_datatype_round_trip_via_transmute() {
 }
 
 #[test]
-fn enum_period_round_trip_via_transmute() {
+fn enum_period_round_trip_via_cast() {
     for (variant, expected) in [
         (SIMCONNECT_PERIOD::NEVER, 0u32),
         (SIMCONNECT_PERIOD::SECOND, 4),
     ] {
-        let raw: u32 = unsafe { mem::transmute(variant) };
+        let raw = variant as u32;
         assert_eq!(raw, expected);
         let back: SIMCONNECT_PERIOD = unsafe { mem::transmute(raw) };
         assert_eq!(back, variant);
