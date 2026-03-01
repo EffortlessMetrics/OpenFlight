@@ -1,12 +1,11 @@
-//! Depth tests for the plugin system — WASM sandbox, lifecycle, capabilities.
+//! Depth tests for the plugin system — lifecycle, WASM sandboxing, capabilities,
+//! and error handling around the registry/sandbox boundary.
 //!
-//! Covers 33 test cases across six areas:
-//! 1. Plugin lifecycle (6)
-//! 2. WASM sandbox (6)
-//! 3. Capability system (6)
-//! 4. Plugin discovery / manifest validation (5)
-//! 5. Inter-plugin communication patterns (5)
-//! 6. Error handling & recovery (5)
+//! This module exercises:
+//! - Plugin lifecycle state transitions (`Unloaded` → `Loaded` → `Running` → `Failed`)
+//! - WASM sandbox initialization with resource limits
+//! - Capability declaration and filtering via `CapabilitySet`
+//! - Failure modes and recovery paths when loading/starting plugins
 
 #[cfg(test)]
 mod plugin_lifecycle {
@@ -152,18 +151,65 @@ mod wasm_sandbox {
 
     #[test]
     fn create_sandbox_with_custom_defaults() {
-        let (runtime, _controls) = MockWasmRuntime::new();
+        // First sandbox: verify custom memory limit of 4 MiB is enforced
+        let (runtime_mem, controls_mem) = MockWasmRuntime::new();
         let limits = ResourceLimits {
             max_memory_bytes: 4 * 1024 * 1024,
             max_fuel: Some(500_000),
         };
-        let sandbox = WasmSandbox::new(Box::new(runtime), limits);
+        let sandbox_mem = WasmSandbox::new(Box::new(runtime_mem), limits);
         let manifest = wasm_manifest_with_caps(&[Capability::ReadAxes]);
-        let instance = sandbox.load(&manifest, b"wasm").unwrap();
-        // Plugin inherits sandbox defaults when manifest doesn't override
-        // Verify via memory_used (mock returns 1024) — instance is functional
-        assert_eq!(instance.memory_used(), 1024);
-        assert_eq!(instance.fuel_consumed(), 0);
+        let mut inst_mem = sandbox_mem.load(&manifest, b"wasm").unwrap();
+
+        // Plugin inherits sandbox defaults when manifest doesn't override.
+        assert_eq!(inst_mem.memory_used(), 1024);
+        assert_eq!(inst_mem.fuel_consumed(), 0);
+
+        inst_mem.call_init().unwrap();
+
+        // Below custom memory limit — succeeds
+        controls_mem
+            .memory_used
+            .store(4 * 1024 * 1024 - 1, Ordering::Relaxed);
+        assert!(inst_mem.call_tick(b"mem-ok").is_ok());
+
+        // At exact custom memory limit — still succeeds
+        controls_mem
+            .memory_used
+            .store(4 * 1024 * 1024, Ordering::Relaxed);
+        assert!(inst_mem.call_tick(b"mem-edge").is_ok());
+
+        // Above custom memory limit — fails with ResourceExhausted
+        controls_mem
+            .memory_used
+            .store(4 * 1024 * 1024 + 1, Ordering::Relaxed);
+        let err = inst_mem.call_tick(b"mem-boom").unwrap_err();
+        assert!(matches!(err, PluginError::ResourceExhausted(_)));
+        assert!(err.to_string().contains("memory limit exceeded"));
+
+        // Second sandbox: verify custom fuel limit of 500k is enforced
+        let (runtime_fuel, controls_fuel) = MockWasmRuntime::new();
+        let limits = ResourceLimits {
+            max_memory_bytes: 4 * 1024 * 1024,
+            max_fuel: Some(500_000),
+        };
+        let sandbox_fuel = WasmSandbox::new(Box::new(runtime_fuel), limits);
+        let mut inst_fuel = sandbox_fuel.load(&manifest, b"wasm").unwrap();
+        inst_fuel.call_init().unwrap();
+
+        // Below custom fuel limit — succeeds
+        controls_fuel
+            .fuel_consumed
+            .store(500_000 - 1, Ordering::Relaxed);
+        assert!(inst_fuel.call_tick(b"fuel-ok").is_ok());
+
+        // Above custom fuel limit — fails with ResourceExhausted
+        controls_fuel
+            .fuel_consumed
+            .store(500_000 + 1, Ordering::Relaxed);
+        let err = inst_fuel.call_tick(b"fuel-boom").unwrap_err();
+        assert!(matches!(err, PluginError::ResourceExhausted(_)));
+        assert!(err.to_string().contains("fuel exhausted"));
     }
 
     #[test]
@@ -231,29 +277,44 @@ mod wasm_sandbox {
 
     #[test]
     fn sandbox_isolation_between_plugins() {
-        let (runtime, controls_a) = MockWasmRuntime::new();
-        let sandbox = WasmSandbox::new(Box::new(runtime), ResourceLimits::default());
+        // Each plugin instance should have independent resource accounting.
+        // We model this by giving each instance its own sandbox + mock controls.
+        let (sandbox_a, controls_a) = make_sandbox();
+        let (sandbox_b, _controls_b) = make_sandbox();
 
-        let manifest_a = wasm_manifest_with_caps(&[Capability::ReadAxes]);
-        let mut inst_a = sandbox.load(&manifest_a, b"plugin-a").unwrap();
+        let manifest = wasm_manifest_with_caps(&[Capability::ReadAxes]);
+
+        let mut inst_a = sandbox_a.load(&manifest, b"plugin-a").unwrap();
+        let mut inst_b = sandbox_b.load(&manifest, b"plugin-b").unwrap();
+
         inst_a.call_init().unwrap();
+        inst_b.call_init().unwrap();
 
-        // Tick plugin A — fuel increments
-        inst_a.call_tick(b"a-data").unwrap();
-        let fuel_a = inst_a.fuel_consumed();
-        assert_eq!(fuel_a, 100);
+        // Initial tick for both plugins — they each consume some fuel.
+        inst_a.call_tick(b"a-data-1").unwrap();
+        inst_b.call_tick(b"b-data-1").unwrap();
 
-        // Plugin A's memory change doesn't affect a fresh load's baseline
+        let fuel_a_initial = inst_a.fuel_consumed();
+        let fuel_b_initial = inst_b.fuel_consumed();
+        assert_eq!(fuel_a_initial, 100);
+        assert_eq!(fuel_b_initial, 100);
+
+        // Change plugin A's observed memory usage via its mock controls.
         controls_a
             .memory_used
             .store(10 * 1024 * 1024, Ordering::Relaxed);
         assert_eq!(inst_a.memory_used(), 10 * 1024 * 1024);
 
-        // Each plugin instance tracks its own resource consumption
-        // (here they share the mock controls, but in production each gets
-        // a separate WASM instance with independent memory and fuel counters)
-        let mem_a = inst_a.memory_used();
-        assert!(mem_a > 0);
+        // Plugin B's memory usage should be unaffected by changes to plugin A.
+        let mem_b_after_a_change = inst_b.memory_used();
+        assert_eq!(mem_b_after_a_change, 1024);
+
+        // Now advance plugin A further and ensure fuel for B does not change.
+        inst_a.call_tick(b"a-data-2").unwrap();
+        let fuel_a_after = inst_a.fuel_consumed();
+        let fuel_b_after = inst_b.fuel_consumed();
+        assert!(fuel_a_after > fuel_a_initial);
+        assert_eq!(fuel_b_after, fuel_b_initial);
     }
 
     #[test]
