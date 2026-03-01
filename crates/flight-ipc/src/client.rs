@@ -11,12 +11,16 @@ use crate::{
     proto::{
         ApplyProfileRequest, ApplyProfileResponse, ConfigureTelemetryRequest,
         ConfigureTelemetryResponse, DetectCurveConflictsRequest, DetectCurveConflictsResponse,
+        DeviceEvent, DisableAdapterRequest, DisableAdapterResponse, EnableAdapterRequest,
+        EnableAdapterResponse, GetActiveProfileRequest, GetActiveProfileResponse,
         GetCapabilityModeRequest, GetCapabilityModeResponse, GetSecurityStatusRequest,
         GetSecurityStatusResponse, GetServiceInfoRequest, GetServiceInfoResponse,
         GetSupportBundleRequest, GetSupportBundleResponse, HealthEvent, HealthSubscribeRequest,
-        ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest, OneClickResolveRequest,
-        OneClickResolveResponse, ResolveCurveConflictRequest, ResolveCurveConflictResponse,
-        SetCapabilityModeRequest, SetCapabilityModeResponse,
+        ListAdaptersRequest, ListAdaptersResponse, ListDevicesRequest, ListDevicesResponse,
+        ListProfilesRequest, ListProfilesResponse, NegotiateFeaturesRequest,
+        OneClickResolveRequest, OneClickResolveResponse, ResolveCurveConflictRequest,
+        ResolveCurveConflictResponse, SetCapabilityModeRequest, SetCapabilityModeResponse,
+        SubscribeDeviceEventsRequest, SubscribeTelemetryRequest, TelemetryEvent,
         flight_service_client::FlightServiceClient as GrpcClient,
     },
     transport::TransportConfig,
@@ -279,6 +283,68 @@ impl IpcClient {
     }
 
     // ------------------------------------------------------------------
+    // Profile listing
+    // ------------------------------------------------------------------
+
+    /// List profiles known to the service.
+    pub async fn list_profiles(&mut self) -> Result<ListProfilesResponse, IpcError> {
+        Ok(self
+            .inner
+            .list_profiles(ListProfilesRequest {
+                include_inactive: true,
+            })
+            .await?
+            .into_inner())
+    }
+
+    /// Get the name of the currently active profile.
+    pub async fn get_active_profile(&mut self) -> Result<GetActiveProfileResponse, IpcError> {
+        Ok(self
+            .inner
+            .get_active_profile(GetActiveProfileRequest {})
+            .await?
+            .into_inner())
+    }
+
+    // ------------------------------------------------------------------
+    // Adapter management
+    // ------------------------------------------------------------------
+
+    /// List simulator adapter statuses.
+    pub async fn list_adapters(&mut self) -> Result<ListAdaptersResponse, IpcError> {
+        Ok(self
+            .inner
+            .list_adapters(ListAdaptersRequest {})
+            .await?
+            .into_inner())
+    }
+
+    /// Enable a simulator adapter.
+    pub async fn enable_adapter(&mut self, sim_id: &str) -> Result<EnableAdapterResponse, IpcError> {
+        Ok(self
+            .inner
+            .enable_adapter(EnableAdapterRequest {
+                sim_id: sim_id.to_string(),
+            })
+            .await?
+            .into_inner())
+    }
+
+    /// Disable a simulator adapter.
+    pub async fn disable_adapter(
+        &mut self,
+        sim_id: &str,
+    ) -> Result<DisableAdapterResponse, IpcError> {
+        Ok(self
+            .inner
+            .disable_adapter(DisableAdapterRequest {
+                sim_id: sim_id.to_string(),
+            })
+            .await?
+            .into_inner())
+    }
+
+    // ------------------------------------------------------------------
     // Streaming subscriptions
     // ------------------------------------------------------------------
 
@@ -337,6 +403,60 @@ impl IpcClient {
         }
     }
 
+    /// Subscribe to device connection/disconnection events.
+    pub async fn subscribe_device_events(
+        &mut self,
+        request: SubscribeDeviceEventsRequest,
+    ) -> Result<tokio::sync::mpsc::Receiver<DeviceEvent>, IpcError> {
+        let resp = self.inner.subscribe_device_events(request).await?;
+        let mut stream = resp.into_inner();
+        let (tx, rx) = tokio::sync::mpsc::channel(128);
+        tokio::spawn(async move {
+            while let Some(result) = stream.next().await {
+                match result {
+                    Ok(event) => {
+                        if tx.send(event).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(status) => {
+                        warn!("Device event stream error: {status}");
+                        break;
+                    }
+                }
+            }
+            debug!("Device event subscription ended");
+        });
+        Ok(rx)
+    }
+
+    /// Subscribe to simulator telemetry updates.
+    pub async fn subscribe_telemetry(
+        &mut self,
+        request: SubscribeTelemetryRequest,
+    ) -> Result<tokio::sync::mpsc::Receiver<TelemetryEvent>, IpcError> {
+        let resp = self.inner.subscribe_telemetry(request).await?;
+        let mut stream = resp.into_inner();
+        let (tx, rx) = tokio::sync::mpsc::channel(128);
+        tokio::spawn(async move {
+            while let Some(result) = stream.next().await {
+                match result {
+                    Ok(event) => {
+                        if tx.send(event).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(status) => {
+                        warn!("Telemetry stream error: {status}");
+                        break;
+                    }
+                }
+            }
+            debug!("Telemetry subscription ended");
+        });
+        Ok(rx)
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
@@ -346,6 +466,22 @@ impl IpcClient {
             status.code(),
             tonic::Code::Unavailable | tonic::Code::Unknown
         )
+    }
+
+    /// Execute an async operation with a per-call deadline.
+    ///
+    /// Returns [`IpcError::Timeout`] if the future does not complete within
+    /// `timeout`.
+    pub async fn with_deadline<F, T>(timeout: Duration, fut: F) -> Result<T, IpcError>
+    where
+        F: std::future::Future<Output = Result<T, IpcError>>,
+    {
+        match tokio::time::timeout(timeout, fut).await {
+            Ok(result) => result,
+            Err(_) => Err(IpcError::Timeout {
+                reason: format!("operation exceeded {timeout:?} deadline"),
+            }),
+        }
     }
 }
 
@@ -423,6 +559,34 @@ impl FlightClient {
         request: ResolveCurveConflictRequest,
     ) -> Result<ResolveCurveConflictResponse, IpcError> {
         self.inner.resolve_curve_conflict(request).await
+    }
+
+    /// List profiles.
+    pub async fn list_profiles(&mut self) -> Result<ListProfilesResponse, IpcError> {
+        self.inner.list_profiles().await
+    }
+
+    /// Get active profile.
+    pub async fn get_active_profile(&mut self) -> Result<GetActiveProfileResponse, IpcError> {
+        self.inner.get_active_profile().await
+    }
+
+    /// List adapters.
+    pub async fn list_adapters(&mut self) -> Result<ListAdaptersResponse, IpcError> {
+        self.inner.list_adapters().await
+    }
+
+    /// Enable adapter.
+    pub async fn enable_adapter(&mut self, sim_id: &str) -> Result<EnableAdapterResponse, IpcError> {
+        self.inner.enable_adapter(sim_id).await
+    }
+
+    /// Disable adapter.
+    pub async fn disable_adapter(
+        &mut self,
+        sim_id: &str,
+    ) -> Result<DisableAdapterResponse, IpcError> {
+        self.inner.disable_adapter(sim_id).await
     }
 }
 
@@ -853,5 +1017,91 @@ mod tests {
         assert!(result.is_err() || result.unwrap().is_none());
 
         handle.shutdown().await.unwrap();
+    }
+
+    // -----------------------------------------------------------------------
+    // New RPC endpoint tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_list_profiles() {
+        let (addr, handle) = start_test_server().await;
+        let mut client = IpcClient::connect(&format!("http://{addr}")).await.unwrap();
+
+        let resp = client.list_profiles().await.unwrap();
+        assert!(resp.success);
+
+        handle.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_get_active_profile() {
+        let (addr, handle) = start_test_server().await;
+        let mut client = IpcClient::connect(&format!("http://{addr}")).await.unwrap();
+
+        let resp = client.get_active_profile().await.unwrap();
+        assert!(resp.success);
+
+        handle.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_list_adapters() {
+        let (addr, handle) = start_test_server().await;
+        let mut client = IpcClient::connect(&format!("http://{addr}")).await.unwrap();
+
+        let resp = client.list_adapters().await.unwrap();
+        assert!(resp.success);
+        assert!(resp.adapters.is_empty());
+
+        handle.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_enable_adapter() {
+        let (addr, handle) = start_test_server().await;
+        let mut client = IpcClient::connect(&format!("http://{addr}")).await.unwrap();
+
+        let resp = client.enable_adapter("msfs").await.unwrap();
+        assert!(resp.success);
+
+        handle.shutdown().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_disable_adapter() {
+        let (addr, handle) = start_test_server().await;
+        let mut client = IpcClient::connect(&format!("http://{addr}")).await.unwrap();
+
+        let resp = client.disable_adapter("xplane").await.unwrap();
+        assert!(resp.success);
+
+        handle.shutdown().await.unwrap();
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-call deadline tests
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_with_deadline_success() {
+        let result = IpcClient::with_deadline(Duration::from_secs(1), async { Ok(42) }).await;
+        assert_eq!(result.unwrap(), 42);
+    }
+
+    #[tokio::test]
+    async fn test_with_deadline_timeout() {
+        let result: Result<(), IpcError> = IpcClient::with_deadline(
+            Duration::from_millis(10),
+            async {
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                Ok(())
+            },
+        )
+        .await;
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(matches!(err, IpcError::Timeout { .. }));
+        assert!(err.to_string().contains("deadline"));
     }
 }

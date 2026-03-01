@@ -131,6 +131,13 @@ pub enum IpcError {
     /// gRPC status error from tonic
     #[error("gRPC error: {0}")]
     Grpc(#[from] tonic::Status),
+
+    /// An RPC or connection attempt exceeded the configured deadline
+    #[error("Timeout: {reason}")]
+    Timeout {
+        /// Human-readable description of what timed out
+        reason: String,
+    },
 }
 
 /// Feature negotiation result
@@ -211,4 +218,30 @@ pub fn default_bind_address() -> String {
 
     #[cfg(unix)]
     return "/tmp/flight-hub.sock".to_string();
+}
+
+/// Map a gRPC status code to a user-friendly description.
+///
+/// Useful for CLI error messages and diagnostics where the raw tonic code
+/// is too terse.
+pub fn grpc_status_description(status: &tonic::Status) -> &'static str {
+    match status.code() {
+        tonic::Code::Ok => "Success",
+        tonic::Code::Cancelled => "Request was cancelled",
+        tonic::Code::Unknown => "Unknown server error",
+        tonic::Code::InvalidArgument => "Invalid request argument",
+        tonic::Code::DeadlineExceeded => "Request deadline exceeded",
+        tonic::Code::NotFound => "Requested resource not found",
+        tonic::Code::AlreadyExists => "Resource already exists",
+        tonic::Code::PermissionDenied => "Permission denied",
+        tonic::Code::ResourceExhausted => "Server resources exhausted",
+        tonic::Code::FailedPrecondition => "Operation precondition failed",
+        tonic::Code::Aborted => "Operation was aborted",
+        tonic::Code::OutOfRange => "Value out of valid range",
+        tonic::Code::Unimplemented => "Operation not implemented by the server",
+        tonic::Code::Internal => "Internal server error",
+        tonic::Code::Unavailable => "Service is unavailable — is flightd running?",
+        tonic::Code::DataLoss => "Unrecoverable data loss",
+        tonic::Code::Unauthenticated => "Authentication required",
+    }
 }

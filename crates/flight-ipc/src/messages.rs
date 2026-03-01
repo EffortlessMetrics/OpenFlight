@@ -157,6 +157,31 @@ pub enum IpcMessage {
         /// Magnetic heading in degrees.
         heading: f64,
     },
+
+    // -- Adapter messages --------------------------------------------------
+    /// A simulator adapter connected.
+    AdapterConnected {
+        /// Simulator identifier (e.g. `"msfs"`, `"xplane"`, `"dcs"`).
+        sim_id: String,
+        /// Human-readable display name for the adapter.
+        display_name: String,
+    },
+
+    /// A simulator adapter disconnected.
+    AdapterDisconnected {
+        /// Simulator identifier.
+        sim_id: String,
+        /// Reason the adapter disconnected.
+        reason: String,
+    },
+
+    /// A simulator adapter encountered an error.
+    AdapterError {
+        /// Simulator identifier.
+        sim_id: String,
+        /// Error description.
+        error: String,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -178,6 +203,9 @@ impl IpcMessage {
             Self::SimConnected { .. } => "SimConnected",
             Self::SimDisconnected { .. } => "SimDisconnected",
             Self::TelemetryUpdate { .. } => "TelemetryUpdate",
+            Self::AdapterConnected { .. } => "AdapterConnected",
+            Self::AdapterDisconnected { .. } => "AdapterDisconnected",
+            Self::AdapterError { .. } => "AdapterError",
         }
     }
 
@@ -440,6 +468,67 @@ mod tests {
         let msg = IpcMessage::ProfileActivated {
             name: "generic".into(),
             aircraft: None,
+        };
+        let json = msg.to_json();
+        let restored = IpcMessage::from_json(&json).unwrap();
+        assert_eq!(msg, restored);
+    }
+
+    // -- 7. Adapter message variants --------------------------------------
+    #[test]
+    fn message_type_adapter_connected() {
+        let msg = IpcMessage::AdapterConnected {
+            sim_id: "msfs".into(),
+            display_name: "MSFS 2024".into(),
+        };
+        assert_eq!(msg.message_type(), "AdapterConnected");
+    }
+
+    #[test]
+    fn message_type_adapter_disconnected() {
+        let msg = IpcMessage::AdapterDisconnected {
+            sim_id: "xplane".into(),
+            reason: "sim exited".into(),
+        };
+        assert_eq!(msg.message_type(), "AdapterDisconnected");
+    }
+
+    #[test]
+    fn message_type_adapter_error() {
+        let msg = IpcMessage::AdapterError {
+            sim_id: "dcs".into(),
+            error: "export.lua not found".into(),
+        };
+        assert_eq!(msg.message_type(), "AdapterError");
+    }
+
+    #[test]
+    fn json_roundtrip_adapter_connected() {
+        let msg = IpcMessage::AdapterConnected {
+            sim_id: "msfs".into(),
+            display_name: "MSFS 2024".into(),
+        };
+        let json = msg.to_json();
+        let restored = IpcMessage::from_json(&json).unwrap();
+        assert_eq!(msg, restored);
+    }
+
+    #[test]
+    fn json_roundtrip_adapter_disconnected() {
+        let msg = IpcMessage::AdapterDisconnected {
+            sim_id: "xplane".into(),
+            reason: "sim crashed".into(),
+        };
+        let json = msg.to_json();
+        let restored = IpcMessage::from_json(&json).unwrap();
+        assert_eq!(msg, restored);
+    }
+
+    #[test]
+    fn json_roundtrip_adapter_error() {
+        let msg = IpcMessage::AdapterError {
+            sim_id: "dcs".into(),
+            error: "connection reset".into(),
         };
         let json = msg.to_json();
         let restored = IpcMessage::from_json(&json).unwrap();

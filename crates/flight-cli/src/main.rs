@@ -61,6 +61,10 @@ struct Cli {
     #[arg(long, default_value = "5000")]
     timeout: u64,
 
+    /// Daemon address (e.g. http://127.0.0.1:50051)
+    #[arg(long, default_value = "http://127.0.0.1:50051")]
+    address: String,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -170,7 +174,7 @@ async fn main() -> anyhow::Result<()> {
         ..ClientConfig::default()
     };
 
-    let client_manager = ClientManager::new(client_config);
+    let client_manager = ClientManager::with_address(client_config, cli.address.clone());
 
     // Execute command and handle result
     let result = execute_command(&cli, &client_manager).await;
@@ -290,6 +294,7 @@ fn error_to_code(error: &anyhow::Error) -> &'static str {
             flight_ipc::IpcError::Transport(_) => "TRANSPORT_ERROR",
             flight_ipc::IpcError::Serialization(_) => "SERIALIZATION_ERROR",
             flight_ipc::IpcError::Grpc(_) => "GRPC_ERROR",
+            flight_ipc::IpcError::Timeout { .. } => "TIMEOUT",
         }
     } else {
         "UNKNOWN_ERROR"
@@ -307,6 +312,7 @@ fn error_to_exit_code(error: &anyhow::Error) -> i32 {
             flight_ipc::IpcError::Transport(_) => 5,
             flight_ipc::IpcError::Serialization(_) => 6,
             flight_ipc::IpcError::Grpc(_) => 7,
+            flight_ipc::IpcError::Timeout { .. } => 8,
         }
     } else {
         1 // Generic error
@@ -597,6 +603,72 @@ mod tests {
         } else {
             panic!("unexpected command variant");
         }
+    }
+
+    #[test]
+    fn parse_address_flag() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "--address",
+            "http://10.0.0.1:9000",
+            "status",
+        ])
+        .unwrap();
+        assert_eq!(cli.address, "http://10.0.0.1:9000");
+    }
+
+    #[test]
+    fn parse_default_address() {
+        let cli = Cli::try_parse_from(["flightctl", "status"]).unwrap();
+        assert_eq!(cli.address, "http://127.0.0.1:50051");
+    }
+
+    #[test]
+    fn error_to_code_maps_timeout() {
+        let err: anyhow::Error = flight_ipc::IpcError::Timeout {
+            reason: "test".into(),
+        }
+        .into();
+        assert_eq!(error_to_code(&err), "TIMEOUT");
+    }
+
+    #[test]
+    fn error_to_exit_code_maps_timeout() {
+        let err: anyhow::Error = flight_ipc::IpcError::Timeout {
+            reason: "test".into(),
+        }
+        .into();
+        assert_eq!(error_to_exit_code(&err), 8);
+    }
+
+    #[test]
+    fn error_to_code_maps_connection_failed() {
+        let err: anyhow::Error = flight_ipc::IpcError::ConnectionFailed {
+            reason: "refused".into(),
+        }
+        .into();
+        assert_eq!(error_to_code(&err), "CONNECTION_FAILED");
+    }
+
+    #[test]
+    fn error_to_exit_code_maps_connection_failed() {
+        let err: anyhow::Error = flight_ipc::IpcError::ConnectionFailed {
+            reason: "refused".into(),
+        }
+        .into();
+        assert_eq!(error_to_exit_code(&err), 2);
+    }
+
+    #[test]
+    fn error_to_code_maps_unknown() {
+        let err: anyhow::Error = anyhow::anyhow!("generic");
+        assert_eq!(error_to_code(&err), "UNKNOWN_ERROR");
+    }
+
+    #[test]
+    fn error_to_exit_code_maps_unknown() {
+        let err: anyhow::Error = anyhow::anyhow!("generic");
+        assert_eq!(error_to_exit_code(&err), 1);
     }
 
     #[test]

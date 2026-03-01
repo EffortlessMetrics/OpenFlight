@@ -12,13 +12,17 @@ use crate::{
     proto::{
         self, ApplyProfileRequest, ApplyProfileResponse, ConfigureTelemetryRequest,
         ConfigureTelemetryResponse, DetectCurveConflictsRequest, DetectCurveConflictsResponse,
+        DeviceEvent, DisableAdapterRequest, DisableAdapterResponse, EnableAdapterRequest,
+        EnableAdapterResponse, GetActiveProfileRequest, GetActiveProfileResponse,
         GetCapabilityModeRequest, GetCapabilityModeResponse, GetSecurityStatusRequest,
         GetSecurityStatusResponse, GetServiceInfoRequest, GetServiceInfoResponse,
         GetSupportBundleRequest, GetSupportBundleResponse, HealthEvent, HealthSubscribeRequest,
-        ListDevicesRequest, ListDevicesResponse, NegotiateFeaturesRequest,
+        ListAdaptersRequest, ListAdaptersResponse, ListDevicesRequest, ListDevicesResponse,
+        ListProfilesRequest, ListProfilesResponse, NegotiateFeaturesRequest,
         NegotiateFeaturesResponse, OneClickResolveRequest, OneClickResolveResponse,
         ResolveCurveConflictRequest, ResolveCurveConflictResponse, ServiceStatus,
-        SetCapabilityModeRequest, SetCapabilityModeResponse,
+        SetCapabilityModeRequest, SetCapabilityModeResponse, SubscribeDeviceEventsRequest,
+        SubscribeTelemetryRequest, TelemetryEvent,
         flight_service_server::FlightService as GrpcFlightService,
     },
 };
@@ -92,6 +96,23 @@ pub struct MetricsSnapshot {
     pub cpu_usage_percent: f64,
     /// Memory usage in bytes.
     pub memory_usage_bytes: u64,
+}
+
+/// Simplified adapter info for ServiceContext consumers.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AdapterStatus {
+    /// Simulator identifier (e.g. `"msfs"`, `"xplane"`, `"dcs"`).
+    pub sim_id: String,
+    /// Human-readable display name.
+    pub display_name: String,
+    /// Whether the adapter is enabled.
+    pub enabled: bool,
+    /// Whether the adapter is currently connected to its simulator.
+    pub connected: bool,
+    /// Detected sim version, if connected.
+    pub version: Option<String>,
+    /// Last error message, if any.
+    pub error: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -279,6 +300,59 @@ pub trait ServiceContext: Send + Sync + 'static {
             memory_usage_bytes: 0,
         }
     }
+
+    // ---- Profile RPC domain ----
+
+    /// List profiles via RPC (as proto response).
+    fn list_profiles_rpc(
+        &self,
+        _request: &ListProfilesRequest,
+    ) -> Result<ListProfilesResponse, Status> {
+        let profiles = self.list_profiles();
+        let summaries = profiles
+            .into_iter()
+            .map(|p| proto::ProfileSummary {
+                name: p.name,
+                active: p.active,
+                aircraft: p.aircraft.unwrap_or_default(),
+                path: String::new(),
+            })
+            .collect();
+        Ok(ListProfilesResponse {
+            success: true,
+            profiles: summaries,
+            error_message: String::new(),
+        })
+    }
+
+    /// Get the active profile via RPC (as proto response).
+    fn get_active_profile_rpc(
+        &self,
+        _request: &GetActiveProfileRequest,
+    ) -> Result<GetActiveProfileResponse, Status> {
+        Ok(GetActiveProfileResponse {
+            success: true,
+            profile_name: self.get_active_profile().unwrap_or_default(),
+            error_message: String::new(),
+        })
+    }
+
+    // ---- Adapter domain ----
+
+    /// List simulator adapters and their status.
+    fn list_adapters(&self) -> Vec<AdapterStatus> {
+        vec![]
+    }
+
+    /// Enable a simulator adapter.
+    fn enable_adapter(&self, _sim_id: &str) -> Result<(), String> {
+        Ok(())
+    }
+
+    /// Disable a simulator adapter.
+    fn disable_adapter(&self, _sim_id: &str) -> Result<(), String> {
+        Ok(())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -450,6 +524,120 @@ impl<C: ServiceContext> GrpcFlightService for FlightServiceHandler<C> {
         let inner = request.into_inner();
         self.ctx.get_support_bundle(&inner).map(Response::new)
     }
+
+    async fn list_profiles(
+        &self,
+        request: Request<ListProfilesRequest>,
+    ) -> Result<Response<ListProfilesResponse>, Status> {
+        let inner = request.into_inner();
+        debug!("list_profiles request");
+        self.ctx.list_profiles_rpc(&inner).map(Response::new)
+    }
+
+    async fn get_active_profile(
+        &self,
+        request: Request<GetActiveProfileRequest>,
+    ) -> Result<Response<GetActiveProfileResponse>, Status> {
+        let inner = request.into_inner();
+        debug!("get_active_profile request");
+        self.ctx.get_active_profile_rpc(&inner).map(Response::new)
+    }
+
+    async fn list_adapters(
+        &self,
+        _request: Request<ListAdaptersRequest>,
+    ) -> Result<Response<ListAdaptersResponse>, Status> {
+        debug!("list_adapters request");
+        let adapters = self
+            .ctx
+            .list_adapters()
+            .into_iter()
+            .map(|a| proto::AdapterInfo {
+                sim_id: a.sim_id,
+                display_name: a.display_name,
+                enabled: a.enabled,
+                state: if a.connected {
+                    proto::AdapterState::Connected.into()
+                } else {
+                    proto::AdapterState::Disconnected.into()
+                },
+                version: a.version.unwrap_or_default(),
+                error_message: a.error.unwrap_or_default(),
+            })
+            .collect();
+        Ok(Response::new(ListAdaptersResponse {
+            success: true,
+            adapters,
+            error_message: String::new(),
+        }))
+    }
+
+    async fn enable_adapter(
+        &self,
+        request: Request<EnableAdapterRequest>,
+    ) -> Result<Response<EnableAdapterResponse>, Status> {
+        let inner = request.into_inner();
+        debug!("enable_adapter request: {}", inner.sim_id);
+        match self.ctx.enable_adapter(&inner.sim_id) {
+            Ok(()) => Ok(Response::new(EnableAdapterResponse {
+                success: true,
+                error_message: String::new(),
+            })),
+            Err(e) => Ok(Response::new(EnableAdapterResponse {
+                success: false,
+                error_message: e,
+            })),
+        }
+    }
+
+    async fn disable_adapter(
+        &self,
+        request: Request<DisableAdapterRequest>,
+    ) -> Result<Response<DisableAdapterResponse>, Status> {
+        let inner = request.into_inner();
+        debug!("disable_adapter request: {}", inner.sim_id);
+        match self.ctx.disable_adapter(&inner.sim_id) {
+            Ok(()) => Ok(Response::new(DisableAdapterResponse {
+                success: true,
+                error_message: String::new(),
+            })),
+            Err(e) => Ok(Response::new(DisableAdapterResponse {
+                success: false,
+                error_message: e,
+            })),
+        }
+    }
+
+    type SubscribeDeviceEventsStream =
+        std::pin::Pin<Box<dyn futures_core::Stream<Item = Result<DeviceEvent, Status>> + Send>>;
+
+    async fn subscribe_device_events(
+        &self,
+        request: Request<SubscribeDeviceEventsRequest>,
+    ) -> Result<Response<Self::SubscribeDeviceEventsStream>, Status> {
+        let inner = request.into_inner();
+        debug!("subscribe_device_events request: {:?}", inner);
+
+        // Create a channel-backed stream (events fed by service internals)
+        let (_tx, rx) = tokio::sync::mpsc::channel::<Result<DeviceEvent, Status>>(100);
+        let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+        Ok(Response::new(Box::pin(stream)))
+    }
+
+    type SubscribeTelemetryStream =
+        std::pin::Pin<Box<dyn futures_core::Stream<Item = Result<TelemetryEvent, Status>> + Send>>;
+
+    async fn subscribe_telemetry(
+        &self,
+        request: Request<SubscribeTelemetryRequest>,
+    ) -> Result<Response<Self::SubscribeTelemetryStream>, Status> {
+        let inner = request.into_inner();
+        debug!("subscribe_telemetry request: {:?}", inner);
+
+        let (_tx, rx) = tokio::sync::mpsc::channel::<Result<TelemetryEvent, Status>>(100);
+        let stream = tokio_stream::wrappers::ReceiverStream::new(rx);
+        Ok(Response::new(Box::pin(stream)))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -531,6 +719,8 @@ pub struct MockServiceContext {
     pub health: Option<HealthStatus>,
     /// Custom metrics snapshot.
     pub metrics: Option<MetricsSnapshot>,
+    /// Adapter status list.
+    pub adapters: Vec<AdapterStatus>,
 }
 
 impl MockServiceContext {
@@ -544,6 +734,7 @@ impl MockServiceContext {
             active_profile: None,
             health: None,
             metrics: None,
+            adapters: vec![],
         }
     }
 
@@ -574,6 +765,12 @@ impl MockServiceContext {
     /// Builder: set metrics snapshot.
     pub fn with_metrics(mut self, metrics: MetricsSnapshot) -> Self {
         self.metrics = Some(metrics);
+        self
+    }
+
+    /// Builder: set adapter statuses.
+    pub fn with_adapters(mut self, adapters: Vec<AdapterStatus>) -> Self {
+        self.adapters = adapters;
         self
     }
 }
@@ -644,6 +841,10 @@ impl ServiceContext for MockServiceContext {
             cpu_usage_percent: 0.0,
             memory_usage_bytes: 0,
         })
+    }
+
+    fn list_adapters(&self) -> Vec<AdapterStatus> {
+        self.adapters.clone()
     }
 }
 
@@ -1084,5 +1285,185 @@ mod tests {
         assert_eq!(ctx.get_active_profile(), Some("p1".to_string()));
         assert!(ctx.system_health().healthy);
         assert!((ctx.get_metrics().jitter_p99_ms - 0.1).abs() < f64::EPSILON);
+    }
+
+    // -----------------------------------------------------------------------
+    // Handler: new profile/adapter/streaming RPCs
+    // -----------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn handler_list_profiles() {
+        let ctx = Arc::new(
+            MockServiceContext::new().with_profiles(vec![
+                mock_profile("default", true),
+                mock_profile("combat", false),
+            ]),
+        );
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .list_profiles(Request::new(ListProfilesRequest {
+                include_inactive: true,
+            }))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert_eq!(resp.profiles.len(), 2);
+        assert_eq!(resp.profiles[0].name, "default");
+        assert!(resp.profiles[0].active);
+    }
+
+    #[tokio::test]
+    async fn handler_get_active_profile() {
+        let ctx = Arc::new(MockServiceContext::new().with_active_profile("combat"));
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .get_active_profile(Request::new(GetActiveProfileRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert_eq!(resp.profile_name, "combat");
+    }
+
+    #[tokio::test]
+    async fn handler_get_active_profile_none() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .get_active_profile(Request::new(GetActiveProfileRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert!(resp.profile_name.is_empty());
+    }
+
+    #[tokio::test]
+    async fn handler_list_adapters_empty() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .list_adapters(Request::new(ListAdaptersRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert!(resp.adapters.is_empty());
+    }
+
+    #[tokio::test]
+    async fn handler_list_adapters_with_data() {
+        let ctx = Arc::new(MockServiceContext::new().with_adapters(vec![
+            AdapterStatus {
+                sim_id: "msfs".into(),
+                display_name: "MSFS 2024".into(),
+                enabled: true,
+                connected: true,
+                version: Some("1.0".into()),
+                error: None,
+            },
+            AdapterStatus {
+                sim_id: "dcs".into(),
+                display_name: "DCS World".into(),
+                enabled: true,
+                connected: false,
+                version: None,
+                error: Some("Export.lua missing".into()),
+            },
+        ]));
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .list_adapters(Request::new(ListAdaptersRequest {}))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+        assert_eq!(resp.adapters.len(), 2);
+        assert_eq!(resp.adapters[0].sim_id, "msfs");
+        assert!(resp.adapters[0].enabled);
+        assert_eq!(resp.adapters[1].error_message, "Export.lua missing");
+    }
+
+    #[tokio::test]
+    async fn handler_enable_adapter() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .enable_adapter(Request::new(EnableAdapterRequest {
+                sim_id: "msfs".into(),
+            }))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    #[tokio::test]
+    async fn handler_disable_adapter() {
+        let ctx = Arc::new(MockServiceContext::new());
+        let handler = FlightServiceHandler::new(ctx, ServerConfig::default());
+
+        let resp = handler
+            .disable_adapter(Request::new(DisableAdapterRequest {
+                sim_id: "xplane".into(),
+            }))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert!(resp.success);
+    }
+
+    // -----------------------------------------------------------------------
+    // Domain types: AdapterStatus serialization
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn adapter_status_serde_roundtrip() {
+        let a = AdapterStatus {
+            sim_id: "msfs".into(),
+            display_name: "MSFS 2024".into(),
+            enabled: true,
+            connected: true,
+            version: Some("2024.1".into()),
+            error: None,
+        };
+        let json = serde_json::to_string(&a).unwrap();
+        let restored: AdapterStatus = serde_json::from_str(&json).unwrap();
+        assert_eq!(a, restored);
+    }
+
+    #[test]
+    fn mock_list_adapters_default_empty() {
+        let ctx = MockServiceContext::new();
+        assert!(ctx.list_adapters().is_empty());
+    }
+
+    #[test]
+    fn mock_list_adapters_with_data() {
+        let ctx = MockServiceContext::new().with_adapters(vec![AdapterStatus {
+            sim_id: "xplane".into(),
+            display_name: "X-Plane 12".into(),
+            enabled: false,
+            connected: false,
+            version: None,
+            error: None,
+        }]);
+        let adapters = ctx.list_adapters();
+        assert_eq!(adapters.len(), 1);
+        assert_eq!(adapters[0].sim_id, "xplane");
     }
 }

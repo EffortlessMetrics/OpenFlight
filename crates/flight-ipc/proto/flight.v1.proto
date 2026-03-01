@@ -28,6 +28,19 @@ service FlightService {
   // Service health
   rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
   
+  // Profile listing and activation
+  rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);
+  rpc GetActiveProfile(GetActiveProfileRequest) returns (GetActiveProfileResponse);
+
+  // Simulator adapter management
+  rpc ListAdapters(ListAdaptersRequest) returns (ListAdaptersResponse);
+  rpc EnableAdapter(EnableAdapterRequest) returns (EnableAdapterResponse);
+  rpc DisableAdapter(DisableAdapterRequest) returns (DisableAdapterResponse);
+
+  // Streaming subscriptions
+  rpc SubscribeDeviceEvents(SubscribeDeviceEventsRequest) returns (stream DeviceEvent);
+  rpc SubscribeTelemetry(SubscribeTelemetryRequest) returns (stream TelemetryEvent);
+
   // Security and privacy
   rpc GetSecurityStatus(GetSecurityStatusRequest) returns (GetSecurityStatusResponse);
   rpc ConfigureTelemetry(ConfigureTelemetryRequest) returns (ConfigureTelemetryResponse);
@@ -439,4 +452,113 @@ message GetSupportBundleResponse {
   string error_message = 2;
   string redacted_data = 3; // JSON string with redacted support data
   uint64 bundle_size_bytes = 4;
+}
+
+// Profile listing
+message ListProfilesRequest {
+  bool include_inactive = 1;
+}
+
+message ListProfilesResponse {
+  bool success = 1;
+  repeated ProfileSummary profiles = 2;
+  string error_message = 3;
+}
+
+message ProfileSummary {
+  string name = 1;
+  bool active = 2;
+  string aircraft = 3; // Empty if not bound to an aircraft
+  string path = 4;     // File path on disk
+}
+
+message GetActiveProfileRequest {}
+
+message GetActiveProfileResponse {
+  bool success = 1;
+  string profile_name = 2; // Empty if no profile is active
+  string error_message = 3;
+}
+
+// Adapter management
+message ListAdaptersRequest {}
+
+message ListAdaptersResponse {
+  bool success = 1;
+  repeated AdapterInfo adapters = 2;
+  string error_message = 3;
+}
+
+message AdapterInfo {
+  string sim_id = 1;
+  string display_name = 2;
+  bool enabled = 3;
+  AdapterState state = 4;
+  string version = 5;       // Detected sim version, if connected
+  string error_message = 6; // Last error, if any
+}
+
+enum AdapterState {
+  ADAPTER_STATE_UNSPECIFIED = 0;
+  ADAPTER_STATE_DISCONNECTED = 1;
+  ADAPTER_STATE_CONNECTING = 2;
+  ADAPTER_STATE_CONNECTED = 3;
+  ADAPTER_STATE_ERROR = 4;
+}
+
+message EnableAdapterRequest {
+  string sim_id = 1;
+}
+
+message EnableAdapterResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message DisableAdapterRequest {
+  string sim_id = 1;
+}
+
+message DisableAdapterResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+// Device event streaming
+message SubscribeDeviceEventsRequest {
+  repeated string device_ids = 1;     // Empty = all devices
+  repeated DeviceEventType filter = 2; // Empty = all event types
+}
+
+message DeviceEvent {
+  int64 timestamp = 1;
+  string device_id = 2;
+  DeviceEventType event_type = 3;
+  string message = 4;
+  map<string, string> metadata = 5;
+}
+
+enum DeviceEventType {
+  DEVICE_EVENT_TYPE_UNSPECIFIED = 0;
+  DEVICE_EVENT_TYPE_CONNECTED = 1;
+  DEVICE_EVENT_TYPE_DISCONNECTED = 2;
+  DEVICE_EVENT_TYPE_INPUT = 3;
+  DEVICE_EVENT_TYPE_ERROR = 4;
+  DEVICE_EVENT_TYPE_CALIBRATION = 5;
+}
+
+// Telemetry streaming
+message SubscribeTelemetryRequest {
+  uint32 min_interval_ms = 1; // Minimum interval between updates (0 = every tick)
+  repeated string fields = 2; // Empty = all fields
+}
+
+message TelemetryEvent {
+  int64 timestamp = 1;
+  string sim_id = 2;
+  double altitude_ft = 3;
+  double airspeed_kts = 4;
+  double heading_deg = 5;
+  double vertical_speed_fpm = 6;
+  map<string, double> custom_fields = 7;
 }
