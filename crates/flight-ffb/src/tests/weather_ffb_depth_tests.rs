@@ -471,11 +471,11 @@ fn transition_altitude_based_ground_effect() {
 
 #[test]
 fn transition_terrain_induced_turbulence() {
-    // Low altitude + high turbulence + crosswind: multiple systems engaged
+    // Low altitude + high turbulence + combined wind (45° gives both crosswind and headwind)
     let bridge = default_bridge();
     let w = WeatherData {
         wind_speed_kts: 30.0,
-        wind_direction_deg: 90.0,
+        wind_direction_deg: 45.0,
         turbulence_intensity: 0.7,
         gust_factor: 1.5,
         aircraft_heading_deg: 0.0,
@@ -490,7 +490,7 @@ fn transition_terrain_induced_turbulence() {
         f.crosswind_force
     );
     assert!(
-        f.headwind_buffet > 0.0,
+        f.headwind_buffet > 0.1,
         "terrain turbulence should engage buffet: {}",
         f.headwind_buffet
     );
