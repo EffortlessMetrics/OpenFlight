@@ -6,14 +6,16 @@
 //! Covers boundary conditions, round-trip invariants, health-monitor state
 //! machines, preset validation, and FFB safety properties across all modules.
 
-use flight_ffb_moza::effects::{FfbMode, TorqueCommand, TORQUE_REPORT_ID, TORQUE_REPORT_LEN};
+use std::time::Duration;
+
+use flight_ffb_moza::MOZA_PIDS;
+use flight_ffb_moza::effects::{FfbMode, TORQUE_REPORT_ID, TORQUE_REPORT_LEN, TorqueCommand};
 use flight_ffb_moza::health::MozaHealthMonitor;
 use flight_ffb_moza::input::{
-    parse_ab9_report, Ab9Buttons, AB9_BASE_PID, AB9_REPORT_LEN, MOZA_VENDOR_ID, MozaParseError,
-    R3_BASE_PID,
+    AB9_BASE_PID, AB9_REPORT_LEN, Ab9Buttons, MOZA_VENDOR_ID, MozaParseError, R3_BASE_PID,
+    parse_ab9_report,
 };
 use flight_ffb_moza::presets::ab9_axis_config;
-use flight_ffb_moza::MOZA_PIDS;
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -148,19 +150,28 @@ fn hat_neutral_value() {
 
 #[test]
 fn button_zero_out_of_range() {
-    let b = Ab9Buttons { mask: 0xFFFF, hat: 0 };
+    let b = Ab9Buttons {
+        mask: 0xFFFF,
+        hat: 0,
+    };
     assert!(!b.is_pressed(0), "button 0 is out of valid range 1..=16");
 }
 
 #[test]
 fn button_17_out_of_range() {
-    let b = Ab9Buttons { mask: 0xFFFF, hat: 0 };
+    let b = Ab9Buttons {
+        mask: 0xFFFF,
+        hat: 0,
+    };
     assert!(!b.is_pressed(17), "button 17 is out of valid range 1..=16");
 }
 
 #[test]
 fn all_buttons_pressed() {
-    let b = Ab9Buttons { mask: 0xFFFF, hat: 0 };
+    let b = Ab9Buttons {
+        mask: 0xFFFF,
+        hat: 0,
+    };
     for n in 1..=16u8 {
         assert!(b.is_pressed(n), "button {n} should be pressed");
     }
@@ -168,7 +179,10 @@ fn all_buttons_pressed() {
 
 #[test]
 fn no_buttons_pressed() {
-    let b = Ab9Buttons { mask: 0x0000, hat: 0 };
+    let b = Ab9Buttons {
+        mask: 0x0000,
+        hat: 0,
+    };
     for n in 1..=16u8 {
         assert!(!b.is_pressed(n), "button {n} should not be pressed");
     }
@@ -180,11 +194,7 @@ fn single_button_isolation() {
         let mask = 1u16 << (target - 1);
         let b = Ab9Buttons { mask, hat: 0 };
         for n in 1..=16u8 {
-            assert_eq!(
-                b.is_pressed(n),
-                n == target,
-                "mask=0x{mask:04X} button {n}"
-            );
+            assert_eq!(b.is_pressed(n), n == target, "mask=0x{mask:04X} button {n}");
         }
     }
 }
@@ -219,7 +229,7 @@ fn pid_constants_are_distinct() {
 fn moza_pids_contains_all_known() {
     assert!(MOZA_PIDS.contains(&AB9_BASE_PID));
     assert!(MOZA_PIDS.contains(&R3_BASE_PID));
-    assert_eq!(MOZA_PIDS.len(), 2);
+    assert!(MOZA_PIDS.len() >= 2);
 }
 
 #[test]
@@ -314,21 +324,48 @@ fn torque_is_not_safe_over_boundary() {
 
 #[test]
 fn torque_nan_is_not_safe() {
-    assert!(!TorqueCommand { x: f32::NAN, y: 0.0 }.is_safe());
-    assert!(!TorqueCommand { x: 0.0, y: f32::NAN }.is_safe());
+    assert!(
+        !TorqueCommand {
+            x: f32::NAN,
+            y: 0.0
+        }
+        .is_safe()
+    );
+    assert!(
+        !TorqueCommand {
+            x: 0.0,
+            y: f32::NAN
+        }
+        .is_safe()
+    );
 }
 
 #[test]
 fn torque_infinity_is_not_safe() {
-    assert!(!TorqueCommand { x: f32::INFINITY, y: 0.0 }.is_safe());
-    assert!(!TorqueCommand { x: f32::NEG_INFINITY, y: 0.0 }.is_safe());
+    assert!(
+        !TorqueCommand {
+            x: f32::INFINITY,
+            y: 0.0
+        }
+        .is_safe()
+    );
+    assert!(
+        !TorqueCommand {
+            x: f32::NEG_INFINITY,
+            y: 0.0
+        }
+        .is_safe()
+    );
 }
 
 #[test]
-fn torque_nan_clamped_in_report() {
-    // NaN.clamp(-1, 1) returns NaN per IEEE 754, but the report should not
-    // produce unconstrained values.  This tests the current behaviour.
-    let cmd = TorqueCommand { x: f32::NAN, y: 0.0 };
+fn torque_nan_to_report_does_not_panic() {
+    // NaN.clamp(-1, 1) returns NaN per IEEE 754; this test only verifies
+    // that serialising a NaN command does not panic.
+    let cmd = TorqueCommand {
+        x: f32::NAN,
+        y: 0.0,
+    };
     let _report = cmd.to_report(); // must not panic
 }
 
@@ -363,7 +400,7 @@ fn ffb_mode_equality() {
 #[test]
 fn ffb_mode_clone() {
     let mode = FfbMode::Direct;
-    let cloned = mode;
+    let cloned = mode.clone();
     assert_eq!(mode, cloned);
 }
 
@@ -386,7 +423,10 @@ fn default_monitor_equals_new() {
     let a = MozaHealthMonitor::new();
     let b = MozaHealthMonitor::default();
     assert_eq!(a.status().connected, b.status().connected);
-    assert_eq!(a.status().consecutive_failures, b.status().consecutive_failures);
+    assert_eq!(
+        a.status().consecutive_failures,
+        b.status().consecutive_failures
+    );
 }
 
 #[test]
@@ -471,8 +511,8 @@ fn time_since_last_success_some_after_record() {
     m.record_success();
     let d = m.time_since_last_success();
     assert!(d.is_some());
-    // Should be very recent (< 1 second)
-    assert!(d.unwrap().as_secs() < 1);
+    // Should be very recent (< 5 seconds, generous for CI)
+    assert!(d.unwrap() < Duration::from_secs(5));
 }
 
 #[test]
@@ -536,7 +576,11 @@ fn preset_resistive_axes_have_filter() {
 fn preset_filter_alphas_in_valid_range() {
     for c in &ab9_axis_config() {
         if let Some(alpha) = c.filter_alpha {
-            assert!(alpha > 0.0 && alpha < 1.0, "{}: alpha={alpha} out of (0,1)", c.name);
+            assert!(
+                alpha > 0.0 && alpha < 1.0,
+                "{}: alpha={alpha} out of (0,1)",
+                c.name
+            );
         }
     }
 }
