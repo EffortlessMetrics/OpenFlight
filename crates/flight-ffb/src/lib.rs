@@ -58,6 +58,8 @@ pub mod performance_validation;
 pub mod ramp;
 pub mod safety;
 pub mod safety_depth;
+#[cfg(test)]
+pub mod safety_depth_tests;
 pub mod safety_envelope;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
