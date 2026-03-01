@@ -48,7 +48,8 @@ support:
     hil: false
   notes: >
     Commonly paired with the Honeycomb Alpha yoke (VID 0x294B / PID 0x1900).
-    Bravo-only axis configuration supported; no dedicated crate yet.
+    Full protocol support in the `flight-hotas-honeycomb` crate including axis
+    parsing, button matrix decoding, LED control, and encoder tracking.
     Last validated: 2026-02.
 
 driver: standard_hid   # No vendor software required; plug and play on Windows and Linux.
