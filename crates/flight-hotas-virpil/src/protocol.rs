@@ -37,6 +37,8 @@
 //!
 //! LED indices and counts are device-specific.
 
+use thiserror::Error;
+
 use crate::VIRPIL_AXIS_MAX;
 pub use flight_hid_support::device_support::{
     VIRPIL_ACE_PEDALS_PID, VIRPIL_ACE_TORQ_PID, VIRPIL_CM3_THROTTLE_PID,
@@ -251,6 +253,212 @@ pub fn device_info(pid: u16) -> Option<&'static VirpilDeviceInfo> {
     DEVICE_TABLE.iter().find(|d| d.pid == pid)
 }
 
+// ─── Device family ────────────────────────────────────────────────────────────
+
+/// High-level grouping of VIRPIL VPC devices by function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum VirpilDeviceFamily {
+    /// Grip/stick devices: Alpha, Alpha Prime, MongoosT.
+    Grip,
+    /// Base/gimbal devices: WarBRD, WarBRD-D.
+    Base,
+    /// Throttle devices: CM3 Throttle, CM2 Throttle.
+    Throttle,
+    /// Pedal devices: ACE Collection Pedals.
+    Pedals,
+    /// Panel devices: Control Panel 1, Control Panel 2, Shark Panel.
+    Panel,
+    /// Collective/helicopter devices: Rotor TCS Plus, ACE Torq.
+    Collective,
+}
+
+impl VirpilDeviceFamily {
+    /// Determine the device family for a given [`VirpilModel`].
+    pub fn from_model(model: VirpilModel) -> Self {
+        match model {
+            VirpilModel::ConstellationAlphaLeft
+            | VirpilModel::ConstellationAlphaPrimeLeft
+            | VirpilModel::ConstellationAlphaPrimeRight
+            | VirpilModel::MongoostStick
+            | VirpilModel::Cm2Stick => VirpilDeviceFamily::Grip,
+            VirpilModel::WarBrd | VirpilModel::WarBrdD => VirpilDeviceFamily::Base,
+            VirpilModel::Cm3Throttle | VirpilModel::Cm2Throttle => VirpilDeviceFamily::Throttle,
+            VirpilModel::AcePedals => VirpilDeviceFamily::Pedals,
+            VirpilModel::ControlPanel1 | VirpilModel::ControlPanel2 | VirpilModel::SharkPanel => {
+                VirpilDeviceFamily::Panel
+            }
+            VirpilModel::RotorTcsPlus | VirpilModel::AceTorq => VirpilDeviceFamily::Collective,
+        }
+    }
+}
+
+// ─── VirpilProtocol — unified device handle ───────────────────────────────────
+
+/// A protocol handle for a detected VIRPIL VPC device.
+///
+/// Created from a USB Product ID via [`VirpilProtocol::from_pid`]. Provides
+/// access to the device's model, family, and static info.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VirpilProtocol {
+    model: VirpilModel,
+    info: &'static VirpilDeviceInfo,
+}
+
+impl VirpilProtocol {
+    /// Detect a VIRPIL device from its USB Product ID.
+    ///
+    /// Returns `None` for unrecognised PIDs.
+    pub fn from_pid(pid: u16) -> Option<Self> {
+        let info = device_info(pid)?;
+        Some(Self {
+            model: info.model,
+            info,
+        })
+    }
+
+    /// The detected device model.
+    pub fn model(&self) -> VirpilModel {
+        self.model
+    }
+
+    /// The device family (grip, base, throttle, etc.).
+    pub fn family(&self) -> VirpilDeviceFamily {
+        VirpilDeviceFamily::from_model(self.model)
+    }
+
+    /// Static device info (axis count, button count, min report size, etc.).
+    pub fn info(&self) -> &'static VirpilDeviceInfo {
+        self.info
+    }
+
+    /// Human-readable product name.
+    pub fn name(&self) -> &'static str {
+        self.info.name
+    }
+}
+
+// ─── Unified report types ─────────────────────────────────────────────────────
+
+/// Error from the unified report parsers.
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum VirpilParseError {
+    #[error("report too short: got {0} bytes")]
+    TooShort(usize),
+}
+
+/// Unified grip/stick state: normalised axes + button bitmap.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GripState {
+    /// Normalised axis values `[0.0, 1.0]`. 5 axes (X, Y, Z, SZ, SL).
+    pub axes: [f32; GRIP_AXIS_COUNT],
+    /// Raw button bytes (LSB-first per byte).
+    pub buttons_raw: [u8; GRIP_BUTTON_BYTES],
+}
+
+impl GripState {
+    /// Return `true` if button `n` (1-indexed) is pressed.
+    pub fn is_pressed(&self, n: u8) -> bool {
+        if n == 0 {
+            return false;
+        }
+        let idx = (n - 1) as usize;
+        let byte = idx / 8;
+        let bit = idx % 8;
+        self.buttons_raw
+            .get(byte)
+            .is_some_and(|b| (b >> bit) & 1 == 1)
+    }
+}
+
+/// Unified base/gimbal state: normalised axes + button bitmap.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BaseState {
+    /// Normalised axis values `[0.0, 1.0]`. 5 axes (X, Y, Z, SZ, SL).
+    pub axes: [f32; BASE_AXIS_COUNT],
+    /// Raw button bytes (LSB-first per byte).
+    pub buttons_raw: [u8; BASE_BUTTON_BYTES],
+}
+
+/// Unified throttle state: normalised axes + button bitmap.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ThrottleState {
+    /// Normalised axis values `[0.0, 1.0]`. 6 axes.
+    pub axes: [f32; THROTTLE_AXIS_COUNT],
+    /// Raw button bytes (LSB-first per byte).
+    pub buttons_raw: [u8; THROTTLE_BUTTON_BYTES],
+}
+
+// ─── Unified parse functions ──────────────────────────────────────────────────
+
+const GRIP_AXIS_COUNT: usize = 5;
+const GRIP_BUTTON_BYTES: usize = 4;
+const GRIP_MIN_BYTES: usize = 1 + GRIP_AXIS_COUNT * 2 + GRIP_BUTTON_BYTES; // 15
+
+const BASE_AXIS_COUNT: usize = 5;
+const BASE_BUTTON_BYTES: usize = 4;
+const BASE_MIN_BYTES: usize = 1 + BASE_AXIS_COUNT * 2 + BASE_BUTTON_BYTES; // 15
+
+const THROTTLE_AXIS_COUNT: usize = 6;
+const THROTTLE_BUTTON_BYTES: usize = 10;
+const THROTTLE_MIN_BYTES: usize = 1 + THROTTLE_AXIS_COUNT * 2 + THROTTLE_BUTTON_BYTES; // 23
+
+/// Parse a generic grip/stick HID report into [`GripState`].
+///
+/// Compatible with Alpha, Alpha Prime, MongoosT-50CM3 grips (15-byte reports).
+pub fn parse_grip_report(data: &[u8]) -> Result<GripState, VirpilParseError> {
+    if data.len() < GRIP_MIN_BYTES {
+        return Err(VirpilParseError::TooShort(data.len()));
+    }
+    let payload = &data[1..];
+    let mut axes = [0.0f32; GRIP_AXIS_COUNT];
+    for i in 0..GRIP_AXIS_COUNT {
+        let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
+        axes[i] = normalize_axis(raw);
+    }
+    let btn_start = 1 + GRIP_AXIS_COUNT * 2;
+    let mut buttons_raw = [0u8; GRIP_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + GRIP_BUTTON_BYTES]);
+    Ok(GripState { axes, buttons_raw })
+}
+
+/// Parse a generic base/gimbal HID report into [`BaseState`].
+///
+/// Compatible with WarBRD, WarBRD-D bases (15-byte reports, same format as grips).
+pub fn parse_base_report(data: &[u8]) -> Result<BaseState, VirpilParseError> {
+    if data.len() < BASE_MIN_BYTES {
+        return Err(VirpilParseError::TooShort(data.len()));
+    }
+    let payload = &data[1..];
+    let mut axes = [0.0f32; BASE_AXIS_COUNT];
+    for i in 0..BASE_AXIS_COUNT {
+        let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
+        axes[i] = normalize_axis(raw);
+    }
+    let btn_start = 1 + BASE_AXIS_COUNT * 2;
+    let mut buttons_raw = [0u8; BASE_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + BASE_BUTTON_BYTES]);
+    Ok(BaseState { axes, buttons_raw })
+}
+
+/// Parse a generic throttle HID report into [`ThrottleState`].
+///
+/// Compatible with VPC Throttle CM3 (23-byte reports).
+pub fn parse_throttle_report(data: &[u8]) -> Result<ThrottleState, VirpilParseError> {
+    if data.len() < THROTTLE_MIN_BYTES {
+        return Err(VirpilParseError::TooShort(data.len()));
+    }
+    let payload = &data[1..];
+    let mut axes = [0.0f32; THROTTLE_AXIS_COUNT];
+    for i in 0..THROTTLE_AXIS_COUNT {
+        let raw = u16::from_le_bytes([payload[i * 2], payload[i * 2 + 1]]);
+        axes[i] = normalize_axis(raw);
+    }
+    let btn_start = 1 + THROTTLE_AXIS_COUNT * 2;
+    let mut buttons_raw = [0u8; THROTTLE_BUTTON_BYTES];
+    buttons_raw.copy_from_slice(&data[btn_start..btn_start + THROTTLE_BUTTON_BYTES]);
+    Ok(ThrottleState { axes, buttons_raw })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -409,5 +617,197 @@ mod tests {
     #[test]
     fn axis_resolution_bits_matches_max() {
         assert_eq!(1u32 << AXIS_RESOLUTION_BITS, AXIS_MAX as u32);
+    }
+
+    // ── Device family ─────────────────────────────────────────────────────
+
+    #[test]
+    fn family_alpha_is_grip() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::ConstellationAlphaLeft),
+            VirpilDeviceFamily::Grip,
+        );
+    }
+
+    #[test]
+    fn family_alpha_prime_left_is_grip() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::ConstellationAlphaPrimeLeft),
+            VirpilDeviceFamily::Grip,
+        );
+    }
+
+    #[test]
+    fn family_mongoost_is_grip() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::MongoostStick),
+            VirpilDeviceFamily::Grip,
+        );
+    }
+
+    #[test]
+    fn family_warbrd_is_base() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::WarBrd),
+            VirpilDeviceFamily::Base,
+        );
+    }
+
+    #[test]
+    fn family_warbrd_d_is_base() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::WarBrdD),
+            VirpilDeviceFamily::Base,
+        );
+    }
+
+    #[test]
+    fn family_cm3_is_throttle() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::Cm3Throttle),
+            VirpilDeviceFamily::Throttle,
+        );
+    }
+
+    #[test]
+    fn family_ace_pedals_is_pedals() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::AcePedals),
+            VirpilDeviceFamily::Pedals,
+        );
+    }
+
+    #[test]
+    fn family_panel1_is_panel() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::ControlPanel1),
+            VirpilDeviceFamily::Panel,
+        );
+    }
+
+    #[test]
+    fn family_rotor_tcs_is_collective() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::RotorTcsPlus),
+            VirpilDeviceFamily::Collective,
+        );
+    }
+
+    #[test]
+    fn family_ace_torq_is_collective() {
+        assert_eq!(
+            VirpilDeviceFamily::from_model(VirpilModel::AceTorq),
+            VirpilDeviceFamily::Collective,
+        );
+    }
+
+    // ── VirpilProtocol ────────────────────────────────────────────────────
+
+    #[test]
+    fn protocol_detect_alpha() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_CONSTELLATION_ALPHA_LEFT_PID);
+        assert!(proto.is_some());
+        let proto = proto.unwrap();
+        assert_eq!(proto.family(), VirpilDeviceFamily::Grip);
+    }
+
+    #[test]
+    fn protocol_detect_throttle() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_CM3_THROTTLE_PID);
+        assert!(proto.is_some());
+        let proto = proto.unwrap();
+        assert_eq!(proto.family(), VirpilDeviceFamily::Throttle);
+    }
+
+    #[test]
+    fn protocol_detect_pedals() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_ACE_PEDALS_PID);
+        assert!(proto.is_some());
+        let proto = proto.unwrap();
+        assert_eq!(proto.family(), VirpilDeviceFamily::Pedals);
+    }
+
+    #[test]
+    fn protocol_detect_warbrd() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_WARBRD_PID);
+        assert!(proto.is_some());
+        let proto = proto.unwrap();
+        assert_eq!(proto.family(), VirpilDeviceFamily::Base);
+    }
+
+    #[test]
+    fn protocol_unknown_pid_is_none() {
+        assert!(VirpilProtocol::from_pid(0xFFFF).is_none());
+    }
+
+    #[test]
+    fn protocol_model_accessor() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_CM3_THROTTLE_PID).unwrap();
+        assert_eq!(proto.model(), VirpilModel::Cm3Throttle);
+    }
+
+    #[test]
+    fn protocol_info_accessor() {
+        let proto = VirpilProtocol::from_pid(VIRPIL_ACE_PEDALS_PID).unwrap();
+        assert_eq!(proto.info().axis_count, 3);
+        assert_eq!(proto.info().button_count, 16);
+    }
+
+    // ── Unified parse dispatchers ─────────────────────────────────────────
+
+    #[test]
+    fn parse_grip_report_alpha_ok() {
+        let mut data = vec![0x01u8]; // report_id
+        for _ in 0..5 {
+            data.extend_from_slice(&8192u16.to_le_bytes()); // mid-range axes
+        }
+        data.extend_from_slice(&[0u8; 4]); // 4 button bytes
+        let state = parse_grip_report(&data).unwrap();
+        assert!((state.axes[0] - 0.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn parse_grip_report_too_short() {
+        assert!(parse_grip_report(&[0x01; 5]).is_err());
+    }
+
+    #[test]
+    fn parse_base_report_ok() {
+        let mut data = vec![0x01u8];
+        for _ in 0..5 {
+            data.extend_from_slice(&0u16.to_le_bytes());
+        }
+        data.extend_from_slice(&[0u8; 4]);
+        let state = parse_base_report(&data).unwrap();
+        assert_eq!(state.axes[0], 0.0);
+    }
+
+    #[test]
+    fn parse_throttle_report_ok() {
+        let mut data = vec![0x01u8];
+        for _ in 0..6 {
+            data.extend_from_slice(&AXIS_MAX.to_le_bytes());
+        }
+        data.extend_from_slice(&[0u8; 10]);
+        let state = parse_throttle_report(&data).unwrap();
+        assert!((state.axes[0] - 1.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn parse_throttle_report_too_short() {
+        assert!(parse_throttle_report(&[0x01; 10]).is_err());
+    }
+
+    #[test]
+    fn grip_state_buttons() {
+        let mut data = vec![0x01u8];
+        for _ in 0..5 {
+            data.extend_from_slice(&0u16.to_le_bytes());
+        }
+        // Set button 1 (bit 0 of first button byte)
+        data.extend_from_slice(&[0x01, 0x00, 0x00, 0x00]);
+        let state = parse_grip_report(&data).unwrap();
+        assert!(state.is_pressed(1));
+        assert!(!state.is_pressed(2));
     }
 }

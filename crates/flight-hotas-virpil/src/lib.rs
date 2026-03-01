@@ -37,6 +37,9 @@ pub mod profiles;
 pub mod protocol;
 pub mod throttle_ace_torq;
 
+pub mod axis_curves;
+pub mod button_matrix;
+
 /// Maximum raw axis value for all VIRPIL VPC devices (14-bit resolution).
 ///
 /// From Buzzec/virpil source: `u16::from_le_bytes([0, 64])` = 16384.
@@ -99,3 +102,12 @@ pub use throttle_ace_torq::{
     ACE_TORQ_BUTTON_COUNT, VPC_ACE_TORQ_MIN_REPORT_BYTES, VpcAceTorqAxis, VpcAceTorqButtons,
     VpcAceTorqInputState, VpcAceTorqParseError, parse_ace_torq_report,
 };
+
+pub use protocol::{
+    BaseState, GripState, ThrottleState, VirpilDeviceFamily, VirpilParseError, VirpilProtocol,
+    parse_base_report, parse_grip_report, parse_throttle_report,
+};
+
+pub use axis_curves::{AxisCurve, AxisCurveError, ControlPoint, apply_curve, read_axis_curve};
+
+pub use button_matrix::{ButtonMatrix, ButtonMatrixError};
