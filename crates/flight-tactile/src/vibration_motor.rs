@@ -134,7 +134,7 @@ impl VibrationMotor {
     pub fn apply(&self, intensity: f64) -> MotorCommand {
         let intensity = intensity.clamp(0.0, 1.0);
 
-        if intensity < self.config.dead_zone {
+        if intensity <= self.config.dead_zone {
             return MotorCommand::off();
         }
 
