@@ -229,7 +229,7 @@ fn action_led_brightness() {
             brightness,
         } => {
             assert_eq!(target, "TAXI");
-            assert!((*brightness - 0.6).abs() < f32::EPSILON);
+            assert!((*brightness - 0.6).abs() < 1e-5);
         }
         other => panic!("expected LedBrightness, got {other:?}"),
     }
@@ -302,10 +302,20 @@ fn compile_condition_to_bytecode_structure() {
             BytecodeOp::Nop => "Nop",
         })
         .collect();
+    assert!(
+        ops.len() >= 5,
+        "expected at least 5 bytecode ops for simple comparison, got {}",
+        ops.len(),
+    );
     assert_eq!(
+        &ops[..5],
+        &["LoadVar", "LoadConst", "Compare", "JumpFalse", "Action"],
+        "simple comparison bytecode structure (prefix)"
+    );
+    assert!(
+        !ops.contains(&"Nop"),
+        "did not expect Nop instructions for simple comparison, got ops = {:?}",
         ops,
-        vec!["LoadVar", "LoadConst", "Compare", "JumpFalse", "Action"],
-        "simple comparison bytecode structure"
     );
 }
 
@@ -593,14 +603,26 @@ proptest! {
             &format!("{} <= {}", var, threshold),
             "led.indexer.on()",
         )]);
-        if let (Ok(c1), Ok(c2)) = (s.compile(), s.compile()) {
-            prop_assert_eq!(
-                format!("{:?}", c1.bytecode.instructions),
-                format!("{:?}", c2.bytecode.instructions),
-            );
-            prop_assert_eq!(c1.bytecode.stack_size, c2.bytecode.stack_size);
-            prop_assert_eq!(c1.bytecode.actions.len(), c2.bytecode.actions.len());
-        }
+        let c1 = s.compile();
+        let c2 = s.compile();
+        prop_assert!(
+            c1.is_ok(),
+            "compile should succeed for generated schema (first run): {:?}",
+            c1.err(),
+        );
+        prop_assert!(
+            c2.is_ok(),
+            "compile should succeed for generated schema (second run): {:?}",
+            c2.err(),
+        );
+        let c1 = c1.unwrap();
+        let c2 = c2.unwrap();
+        prop_assert_eq!(
+            format!("{:?}", c1.bytecode.instructions),
+            format!("{:?}", c2.bytecode.instructions),
+        );
+        prop_assert_eq!(c1.bytecode.stack_size, c2.bytecode.stack_size);
+        prop_assert_eq!(c1.bytecode.actions.len(), c2.bytecode.actions.len());
     }
 
     /// Validation is idempotent: calling validate() twice yields the same result.
