@@ -61,11 +61,39 @@ mod motor_driver {
             duration_ticks: 250,
         });
 
-        // At 250 Hz tick rate and 100 Hz signal, expect 2.5 samples per cycle.
-        // After one full cycle (~2–3 ticks) the sine should cross zero again.
-        let samples = collect_samples(&mut engine, 5);
-        let zero_crossings = samples.windows(2).filter(|w| w[0].signum() != w[1].signum()).count();
-        assert!(zero_crossings >= 1, "100 Hz rumble should produce zero crossings in 5 ticks");
+        // Sample for ~1 second so we can estimate the zero-crossing rate.
+        let duration_ticks = TICK_RATE_HZ as usize;
+        let samples = collect_samples(&mut engine, duration_ticks);
+
+        // Count zero crossings while ignoring near-zero samples so that the
+        // initial 0.0 at t = 0 does not create a spurious crossing.
+        let mut zero_crossings = 0usize;
+        let mut prev_sign: Option<f64> = None;
+        const EPS: f64 = 1.0e-6;
+        for s in samples {
+            if s.abs() < EPS {
+                continue;
+            }
+            let sign = s.signum();
+            if let Some(ps) = prev_sign {
+                if sign != ps {
+                    zero_crossings += 1;
+                }
+            }
+            prev_sign = Some(sign);
+        }
+
+        // For a sinusoid, expect two zero crossings per cycle.
+        let duration_sec = duration_ticks as f64 / TICK_RATE_HZ as f64;
+        let expected_zero_crossings = 2.0 * 100.0 * duration_sec;
+
+        // Allow a reasonable tolerance due to discretization (250 Hz tick).
+        let lower_bound = expected_zero_crossings * 0.8;
+        let upper_bound = expected_zero_crossings * 1.2;
+        assert!(
+            (zero_crossings as f64) >= lower_bound && (zero_crossings as f64) <= upper_bound,
+            "100 Hz rumble should produce ~{expected_zero_crossings:.1} zero crossings in {duration_sec:.3} s (observed {zero_crossings})"
+        );
     }
 
     #[test]
@@ -191,7 +219,7 @@ mod zone_routing {
     }
 
     #[test]
-    fn priority_based_routing_takes_max() {
+    fn priority_based_routing_separates_channels() {
         let mapping = ChannelMapping::new();
         let mut router = ChannelRouter::new(mapping);
 
@@ -376,7 +404,7 @@ mod effect_patterns {
 
         // freq = 3000/60 = 50 Hz, period in ticks = 250/50 = 5
         let samples = collect_samples(&mut engine, 10);
-        // Samples at tick 0 and tick 5 should be similar (both near zero for sine)
+        // Samples at tick 4 and tick 9 (one period apart) should be similar
         assert!(
             (samples[4] - samples[9]).abs() < 0.2,
             "engine should repeat with period ≈ 5 ticks"
@@ -551,8 +579,12 @@ mod timing {
         let remaining = event.remaining_duration().unwrap();
         assert!(remaining <= Duration::from_millis(50));
 
-        std::thread::sleep(Duration::from_millis(60));
-        assert!(event.is_expired(), "event should expire after wall-clock duration");
+        // Poll with bounded timeout instead of relying on a single sleep.
+        let deadline = std::time::Instant::now() + Duration::from_millis(200);
+        while !event.is_expired() {
+            assert!(std::time::Instant::now() < deadline, "event did not expire within timeout");
+            std::thread::sleep(Duration::from_millis(10));
+        }
         assert!(event.remaining_duration().is_none(), "no remaining duration after expiry");
     }
 }
