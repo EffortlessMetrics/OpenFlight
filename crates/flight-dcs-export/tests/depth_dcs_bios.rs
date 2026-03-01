@@ -192,9 +192,9 @@ fn bios_corrupted_frame_handling() {
     assert!(!parse_bios_frame(&[], &mut state));
 }
 
-/// Buffer overflow protection: data length exceeding buffer is rejected.
+/// Truncated frame: declared data length larger than available bytes is rejected.
 #[test]
-fn bios_buffer_overflow_protection() {
+fn bios_truncated_frame_rejection() {
     let mut state = vec![0u8; 64];
 
     // Frame claims 100 bytes of data but only has 2
@@ -209,9 +209,9 @@ fn bios_buffer_overflow_protection() {
     assert!(state.iter().all(|&b| b == 0));
 }
 
-/// Partial frame buffering: accumulate bytes across chunks.
+/// Frame reconstruction: concatenating chunks reconstructs the full frame.
 #[test]
-fn bios_partial_frame_buffering() {
+fn bios_frame_reconstructs_after_concatenation() {
     // Simulate receiving a frame in two chunks
     let full_frame = build_bios_frame(&[(0x0008, &[0xBE, 0xEF])]);
     let split = full_frame.len() / 2;
@@ -411,7 +411,7 @@ fn module_missing_graceful_handling() {
     assert!(loader.get("nonexistent-aircraft-xyz").is_none());
 }
 
-/// Module version compatibility: different module files can coexist.
+/// Module version compatibility: reloading the same module file overwrites the previous version.
 #[test]
 fn module_version_compatibility() {
     use flight_dcs_modules::ModuleLoader;
@@ -719,7 +719,7 @@ fn display_refresh_rate_management() {
         for entry in &entries {
             let changed = prev_values
                 .get(&entry.arg_number)
-                .is_none_or(|&prev| (prev - entry.value).abs() > 1e-6);
+                .map_or(true, |&prev| (prev - entry.value).abs() > 1e-6);
             if changed {
                 update_count += 1;
                 prev_values.insert(entry.arg_number, entry.value);
