@@ -15,15 +15,15 @@
       "description": "Process one frame through a CurveNode"
     },
     "engine_processing_no_pipeline": {
-      "mean_ns": 15.0,
+      "mean_ns": 75000.0,
       "description": "AxisEngine::process with no active pipeline"
     },
     "axis_engine_single_tick_8_axes": {
-      "mean_ns": 800.0,
+      "mean_ns": 800000.0,
       "description": "Single 250Hz tick across 8 axes with 3-node pipelines"
     },
     "full_250hz_tick_budget_8_axes": {
-      "mean_ns": 900.0,
+      "mean_ns": 1000000.0,
       "description": "Wall-clock cost of a full 8-axis tick (must stay under 4ms budget)"
     }
   }

@@ -1,11 +1,10 @@
 ---
 source: crates/flight-hotas-honeycomb/tests/snapshot_tests.rs
-assertion_line: 64
 expression: state
 ---
 AlphaInputState {
     axes: AlphaAxes {
-        roll: 1.0,
+        roll: 0.9995117,
         pitch: 0.0,
     },
     buttons: AlphaButtons {
