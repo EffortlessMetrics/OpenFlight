@@ -148,7 +148,12 @@ pub struct BytecodeProgram {
     pub hysteresis_bands: Vec<f32>,
     /// Actions by index
     pub actions: Vec<Action>,
-    /// Pre-allocated evaluation stack size
+    /// Pre-allocated evaluation stack size.
+    ///
+    /// Kept as `usize` internally for zero-cost indexing.  Serialized as
+    /// `u32` via the `stack_size_u32` serde adapter so the wire format is
+    /// architecture-independent (values >u32::MAX are rejected on
+    /// serialization).
     #[serde(serialize_with = "stack_size_u32::serialize", deserialize_with = "stack_size_u32::deserialize")]
     pub stack_size: usize,
 }
@@ -1099,7 +1104,7 @@ mod tests {
             }
         }
 
-        // Prop: bytecode compilation is deterministic — same input always yields identical instructions
+        // Prop: bytecode compilation is deterministic — same input always yields identical output
         #[test]
         fn prop_compilation_is_deterministic(
             var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
@@ -1116,10 +1121,9 @@ mod tests {
             };
             let compiled1 = schema.compile().unwrap();
             let compiled2 = schema.compile().unwrap();
-            // Use Debug representation of the instructions Vec (deterministic for ordered collections)
-            let instructions1 = format!("{:?}", compiled1.bytecode.instructions);
-            let instructions2 = format!("{:?}", compiled2.bytecode.instructions);
-            prop_assert_eq!(instructions1, instructions2);
+            let val1 = serde_json::to_value(&compiled1.bytecode).unwrap();
+            let val2 = serde_json::to_value(&compiled2.bytecode).unwrap();
+            prop_assert_eq!(val1, val2);
         }
     }
 
