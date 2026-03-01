@@ -10,8 +10,8 @@
 //! - Event ordering: route results are deterministic
 
 use flight_bus::routing::{
-    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType, MAX_MATCHES, MAX_ROUTES,
+    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, MAX_MATCHES,
+    MAX_ROUTES, RoutePattern, SourceType,
 };
 use proptest::prelude::*;
 
@@ -33,6 +33,7 @@ fn make_axis_event(
 }
 
 proptest! {
+    #![proptest_config(ProptestConfig::with_cases(256))]
     // ── RouteMatches never exceeds MAX_MATCHES ──────────────────────────────
 
     /// Even with many routes registered, route_event returns at most MAX_MATCHES.
@@ -46,10 +47,11 @@ proptest! {
             SourceType::Device, 1, 0.5, EventPriority::Normal, 1000,
         );
         let matches = router.route_event(&event);
-        prop_assert!(
-            matches.len() <= MAX_MATCHES,
-            "route_event returned {} matches, exceeding MAX_MATCHES={}",
-            matches.len(), MAX_MATCHES
+        let expected = n_routes.min(MAX_MATCHES);
+        prop_assert_eq!(
+            matches.len(), expected,
+            "route_event returned {} matches, expected min({}, MAX_MATCHES={})={}",
+            matches.len(), n_routes, MAX_MATCHES, expected
         );
     }
 
@@ -179,9 +181,11 @@ proptest! {
         );
         let m1 = router1.route_event(&event);
         let m2 = router2.route_event(&event);
+        let v1: Vec<u32> = m1.iter().collect();
+        let v2: Vec<u32> = m2.iter().collect();
         prop_assert_eq!(
-            m1.len(), m2.len(),
-            "routing should be deterministic: {} vs {} matches", m1.len(), m2.len()
+            &v1, &v2,
+            "routing should be deterministic: {:?} vs {:?}", v1, v2
         );
     }
 

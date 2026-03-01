@@ -24,7 +24,7 @@ proptest! {
         let mps_lo = conversions::knots_to_mps(lo);
         let mps_hi = conversions::knots_to_mps(hi);
         prop_assert!(
-            mps_lo <= mps_hi + 1e-3,
+            mps_lo <= mps_hi,
             "ordering violated: knots_to_mps({})={} > knots_to_mps({})={}",
             lo, mps_lo, hi, mps_hi
         );
@@ -40,7 +40,7 @@ proptest! {
         let mps_lo = conversions::kph_to_mps(lo);
         let mps_hi = conversions::kph_to_mps(hi);
         prop_assert!(
-            mps_lo <= mps_hi + 1e-3,
+            mps_lo <= mps_hi,
             "ordering violated: kph_to_mps({})={} > kph_to_mps({})={}",
             lo, mps_lo, hi, mps_hi
         );
@@ -56,7 +56,7 @@ proptest! {
         let m_lo = conversions::feet_to_meters(lo);
         let m_hi = conversions::feet_to_meters(hi);
         prop_assert!(
-            m_lo <= m_hi + 1e-2,
+            m_lo <= m_hi,
             "ordering violated: feet_to_meters({})={} > feet_to_meters({})={}",
             lo, m_lo, hi, m_hi
         );
@@ -118,7 +118,7 @@ proptest! {
         );
     }
 
-    // ── Degree-radian ordering within a quadrant ────────────────────────────
+    // ── Degree-radian ordering (full circle) ───────────────────────────────
 
     /// Degrees-to-radians preserves ordering for inputs in [0, 360].
     #[test]
@@ -130,7 +130,7 @@ proptest! {
         let rad_lo = conversions::degrees_to_radians(lo);
         let rad_hi = conversions::degrees_to_radians(hi);
         prop_assert!(
-            rad_lo <= rad_hi + 1e-5,
+            rad_lo <= rad_hi,
             "ordering violated: deg_to_rad({})={} > deg_to_rad({})={}",
             lo, rad_lo, hi, rad_hi
         );

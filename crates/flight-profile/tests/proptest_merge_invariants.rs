@@ -9,9 +9,7 @@
 //! - Serialization round-trip preserves merge result
 //! - Merged profile with valid inputs passes validation
 
-use flight_profile::{
-    AircraftId, AxisConfig, Profile, PROFILE_SCHEMA_VERSION,
-};
+use flight_profile::{AircraftId, AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use proptest::prelude::*;
 use std::collections::HashMap;
 
@@ -92,22 +90,31 @@ proptest! {
 
     // ── Hash stability after merge ──────────────────────────────────────────
 
-    /// Effective hash is deterministic after merge.
+    /// Effective hash is deterministic after merge, regardless of insertion order.
     #[test]
     fn hash_stable_after_merge(
         dz in 0.0f32..0.5,
         expo in 0.0f32..1.0,
     ) {
-        let base = make_profile(
-            [("pitch".to_string(), make_axis(Some(dz), Some(expo), None))].into(),
-        );
+        // Build two base profiles with axes inserted in different order
+        let mut axes_fwd = HashMap::new();
+        axes_fwd.insert("pitch".to_string(), make_axis(Some(dz), Some(expo), None));
+        axes_fwd.insert("roll".to_string(), make_axis(Some(0.01), Some(0.2), None));
+        let base_fwd = make_profile(axes_fwd);
+
+        let mut axes_rev = HashMap::new();
+        axes_rev.insert("roll".to_string(), make_axis(Some(0.01), Some(0.2), None));
+        axes_rev.insert("pitch".to_string(), make_axis(Some(dz), Some(expo), None));
+        let base_rev = make_profile(axes_rev);
+
         let over = make_profile(
             [("pitch".to_string(), make_axis(None, Some(0.5), None))].into(),
         );
-        let merged = base.merge_with(&over).unwrap();
-        let h1 = merged.effective_hash();
-        let h2 = merged.effective_hash();
-        prop_assert_eq!(h1, h2, "hash should be stable after merge");
+        let merged_fwd = base_fwd.merge_with(&over).unwrap();
+        let merged_rev = base_rev.merge_with(&over).unwrap();
+        let h1 = merged_fwd.effective_hash();
+        let h2 = merged_rev.effective_hash();
+        prop_assert_eq!(h1, h2, "hash should be stable regardless of insertion order");
     }
 
     // ── Serialization round-trip after merge ────────────────────────────────
