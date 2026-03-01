@@ -329,18 +329,70 @@ impl PanelMessage {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MessageFrame {
     /// Monotonically increasing frame identifier.
-    pub frame_id: u16,
+    frame_id: u16,
     /// Message type byte (see [`PanelMessage::message_type_id`]).
-    pub message_type: u8,
+    message_type: u8,
     /// Number of valid bytes in `payload`.
-    pub payload_len: u16,
+    payload_len: u16,
     /// Fixed-size payload buffer.
-    pub payload: [u8; MAX_PAYLOAD],
+    payload: [u8; MAX_PAYLOAD],
     /// CRC-16/CCITT-FALSE computed over header + payload.
-    pub checksum: u16,
+    checksum: u16,
 }
 
 impl MessageFrame {
+    /// Creates a new frame with validated payload.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FrameError::PayloadTooLarge`] if `payload` exceeds [`MAX_PAYLOAD`].
+    pub fn new(frame_id: u16, message_type: u8, payload: &[u8]) -> Result<Self, FrameError> {
+        if payload.len() > MAX_PAYLOAD {
+            return Err(FrameError::PayloadTooLarge);
+        }
+        let mut buf = [0u8; MAX_PAYLOAD];
+        buf[..payload.len()].copy_from_slice(payload);
+        let mut frame = Self {
+            frame_id,
+            message_type,
+            payload_len: payload.len() as u16,
+            payload: buf,
+            checksum: 0,
+        };
+        frame.checksum = frame.compute_checksum();
+        Ok(frame)
+    }
+
+    /// Returns the frame identifier.
+    #[must_use]
+    pub fn frame_id(&self) -> u16 {
+        self.frame_id
+    }
+
+    /// Returns the message type byte.
+    #[must_use]
+    pub fn message_type(&self) -> u8 {
+        self.message_type
+    }
+
+    /// Returns the number of valid payload bytes.
+    #[must_use]
+    pub fn payload_len(&self) -> u16 {
+        self.payload_len
+    }
+
+    /// Returns the payload buffer.
+    #[must_use]
+    pub fn payload(&self) -> &[u8; MAX_PAYLOAD] {
+        &self.payload
+    }
+
+    /// Returns the checksum value.
+    #[must_use]
+    pub fn checksum(&self) -> u16 {
+        self.checksum
+    }
+
     /// Creates a frame from a [`PanelMessage`], encoding payload and computing the checksum.
     #[must_use]
     pub fn from_message(frame_id: u16, msg: &PanelMessage) -> Self {
@@ -360,8 +412,14 @@ impl MessageFrame {
     }
 
     /// Serialises the frame to wire bytes.
-    #[must_use]
-    pub fn encode(&self) -> Vec<u8> {
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FrameError::PayloadTooLarge`] if `payload_len` exceeds [`MAX_PAYLOAD`].
+    pub fn encode(&self) -> Result<Vec<u8>, FrameError> {
+        if self.payload_len as usize > MAX_PAYLOAD {
+            return Err(FrameError::PayloadTooLarge);
+        }
         let total = FRAME_HEADER_SIZE + self.payload_len as usize + CHECKSUM_SIZE;
         let mut buf = Vec::with_capacity(total);
         buf.extend_from_slice(&self.frame_id.to_le_bytes());
@@ -369,7 +427,7 @@ impl MessageFrame {
         buf.extend_from_slice(&self.payload_len.to_le_bytes());
         buf.extend_from_slice(&self.payload[..self.payload_len as usize]);
         buf.extend_from_slice(&self.checksum.to_le_bytes());
-        buf
+        Ok(buf)
     }
 
     /// Deserialises a frame from wire bytes, validating the checksum.
@@ -427,6 +485,8 @@ impl MessageFrame {
     /// CRC-16/CCITT-FALSE over header + payload.
     fn compute_checksum(&self) -> u16 {
         let plen = self.payload_len as usize;
+        // Safety: clamp to MAX_PAYLOAD to prevent OOB if payload_len is invalid.
+        let plen = if plen > MAX_PAYLOAD { MAX_PAYLOAD } else { plen };
         let total = FRAME_HEADER_SIZE + plen;
         let mut buf = [0u8; FRAME_HEADER_SIZE + MAX_PAYLOAD];
         buf[0..2].copy_from_slice(&self.frame_id.to_le_bytes());
@@ -536,7 +596,7 @@ mod tests {
 
     fn roundtrip(msg: &PanelMessage) {
         let frame = MessageFrame::from_message(1, msg);
-        let wire = frame.encode();
+        let wire = frame.encode().unwrap();
         let decoded_frame = MessageFrame::decode(&wire).unwrap();
         let decoded_msg = decoded_frame.to_message().unwrap();
         assert_eq!(*msg, decoded_msg);
@@ -623,7 +683,7 @@ mod tests {
             timestamp: 1000,
         };
         let frame = MessageFrame::from_message(1, &msg);
-        let mut wire = frame.encode();
+        let mut wire = frame.encode().unwrap();
         wire[FRAME_HEADER_SIZE] ^= 0xFF;
         assert_eq!(
             MessageFrame::decode(&wire),
@@ -638,7 +698,7 @@ mod tests {
             sequence: 1,
         };
         let frame = MessageFrame::from_message(1, &msg);
-        let mut wire = frame.encode();
+        let mut wire = frame.encode().unwrap();
         let last = wire.len() - 1;
         wire[last] ^= 0x01;
         assert_eq!(
@@ -690,9 +750,9 @@ mod tests {
             sequence: 1,
         };
         let frame = MessageFrame::from_message(0xBEEF, &msg);
-        let wire = frame.encode();
+        let wire = frame.encode().unwrap();
         let decoded = MessageFrame::decode(&wire).unwrap();
-        assert_eq!(decoded.frame_id, 0xBEEF);
+        assert_eq!(decoded.frame_id(), 0xBEEF);
     }
 
     // ── Enum variant coverage ────────────────────────────────────────────────
