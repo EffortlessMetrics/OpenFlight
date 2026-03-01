@@ -706,6 +706,83 @@ fn angular_rates_never_valid() {
     }
 }
 
+// ── NaN / Inf finiteness guards ─────────────────────────────────────────────
+
+#[test]
+fn telemetry_nan_vertical_speed_is_skipped() {
+    let mut snap = default_snapshot();
+    // Set a known vertical_speed, then feed NaN — should not overwrite
+    apply_telemetry(
+        &mut snap,
+        &KspRawTelemetry {
+            vertical_speed_mps: 10.0,
+            situation: situation::FLYING,
+            ..Default::default()
+        },
+    );
+    let before = snap.kinematics.vertical_speed;
+    apply_telemetry(
+        &mut snap,
+        &KspRawTelemetry {
+            vertical_speed_mps: f64::NAN,
+            situation: situation::FLYING,
+            ..Default::default()
+        },
+    );
+    assert_eq!(snap.kinematics.vertical_speed, before, "NaN should not overwrite vertical_speed");
+}
+
+#[test]
+fn telemetry_inf_altitude_coerced_to_zero() {
+    let mut snap = default_snapshot();
+    apply_telemetry(
+        &mut snap,
+        &KspRawTelemetry {
+            altitude_m: f64::INFINITY,
+            situation: situation::FLYING,
+            ..Default::default()
+        },
+    );
+    assert!(snap.environment.altitude.is_finite(), "altitude must be finite after Inf input");
+    assert_eq!(snap.environment.altitude, 0.0);
+}
+
+#[test]
+fn telemetry_nan_latitude_longitude_coerced_to_zero() {
+    let mut snap = default_snapshot();
+    apply_telemetry(
+        &mut snap,
+        &KspRawTelemetry {
+            latitude_deg: f64::NAN,
+            longitude_deg: f64::NEG_INFINITY,
+            situation: situation::FLYING,
+            ..Default::default()
+        },
+    );
+    assert!(snap.navigation.latitude.is_finite());
+    assert!(snap.navigation.longitude.is_finite());
+    assert_eq!(snap.navigation.latitude, 0.0);
+    assert_eq!(snap.navigation.longitude, 0.0);
+}
+
+#[test]
+fn controls_clamped_nan_becomes_zero() {
+    let c = KspControls {
+        pitch: f32::NAN,
+        roll: f32::NAN,
+        yaw: f32::INFINITY,
+        throttle: f32::NEG_INFINITY,
+        gear: Some(true),
+    };
+    let cl = c.clamped();
+    assert!(cl.is_valid(), "clamped NaN/Inf must produce valid controls");
+    assert_eq!(cl.pitch, 0.0);
+    assert_eq!(cl.roll, 0.0);
+    assert_eq!(cl.yaw, 0.0);
+    assert_eq!(cl.throttle, 0.0);
+    assert_eq!(cl.gear, Some(true));
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // §4  CONTROLS: validation and clamping
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -877,12 +954,11 @@ fn error_from_decode_conversion() {
     // Provoke a real prost::DecodeError by decoding invalid data as a message
     let bad_data = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02];
     let result = ConnectionResponse::decode(bad_data.as_slice());
-    if let Err(decode_err) = result {
-        let ksp_err: KspError = decode_err.into();
-        assert!(matches!(ksp_err, KspError::Decode(_)));
-        let msg = format!("{ksp_err}");
-        assert!(msg.contains("Protobuf decode error"));
-    }
+    let decode_err = result.expect_err("decoding invalid ConnectionResponse data should fail");
+    let ksp_err: KspError = decode_err.into();
+    assert!(matches!(ksp_err, KspError::Decode(_)));
+    let msg = format!("{ksp_err}");
+    assert!(msg.contains("Protobuf decode error"));
 }
 
 #[test]
@@ -979,12 +1055,15 @@ fn backoff_never_exceeds_max_delay() {
 fn backoff_reaches_max_in_expected_steps() {
     let max = Duration::from_secs(60);
     let mut delay = Duration::from_secs(2);
-    let mut steps = 0;
     while delay < max {
-        delay = (delay * 2).min(max);
-        steps += 1;
+        let next = (delay * 2).min(max);
+        // Backoff should be monotonic and never exceed the configured maximum.
+        assert!(next >= delay);
+        assert!(next <= max);
+        delay = next;
     }
-    assert_eq!(steps, 5, "2→4→8→16→32→60 = 5 steps");
+    // We should end exactly at the maximum delay, not above or below it.
+    assert_eq!(delay, max);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1068,7 +1147,8 @@ mod property_tests {
             let _ = Response::decode(data.as_slice());
         }
 
-        /// apply_telemetry must never panic for arbitrary f32/f64/i32 inputs.
+        /// apply_telemetry must never panic for arbitrary f32/f64/i32 inputs,
+        /// and all scalar snapshot fields must be finite afterward.
         #[test]
         fn prop_telemetry_never_panics(
             pitch in proptest::num::f32::ANY,
@@ -1102,9 +1182,15 @@ mod property_tests {
             // GForce must always be within bounds after clamping
             let g_val = snap.kinematics.g_force.value();
             prop_assert!((-20.0..=20.0).contains(&g_val), "g_force out of range: {g_val}");
+            // All scalar fields must be finite (no NaN/Inf leakage)
+            prop_assert!(snap.kinematics.vertical_speed.is_finite(), "vertical_speed not finite");
+            prop_assert!(snap.environment.altitude.is_finite(), "altitude not finite");
+            prop_assert!(snap.navigation.latitude.is_finite(), "latitude not finite");
+            prop_assert!(snap.navigation.longitude.is_finite(), "longitude not finite");
         }
 
-        /// KspControls::clamped() must always produce a valid result.
+        /// KspControls::clamped() must always produce a valid result for any input,
+        /// including NaN and Inf values.
         #[test]
         fn prop_clamped_always_valid(
             pitch in proptest::num::f32::ANY,
@@ -1113,10 +1199,8 @@ mod property_tests {
             throttle in proptest::num::f32::ANY,
         ) {
             let c = KspControls { pitch, roll, yaw, throttle, gear: None };
-            if !pitch.is_nan() && !roll.is_nan() && !yaw.is_nan() && !throttle.is_nan() {
-                let cl = c.clamped();
-                prop_assert!(cl.is_valid(), "clamped() must produce valid controls: {cl:?}");
-            }
+            let cl = c.clamped();
+            prop_assert!(cl.is_valid(), "clamped() must produce valid controls: {cl:?}");
         }
 
         /// TAS must never exceed 1000 knots after apply_telemetry.
