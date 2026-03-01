@@ -4,12 +4,12 @@
 //! Depth tests for legacy Microsoft SideWinder devices.
 //!
 //! Covers: FFB effect semantics, axis handling, button/hat behaviour, and
-//! device-identification logic for the Force Feedback 2, Precision 2, and
-//! Strategic Commander form-factor devices (VID 0x045E).
+//! device-identification logic for the Force Feedback Pro, Force Feedback 2,
+//! and Precision 2 SideWinder sticks (VID 0x045E).
 
 use flight_hotas_microsoft::{
     MICROSOFT_VENDOR_ID, SIDEWINDER_FFB2_PID, SIDEWINDER_FFB_PRO_PID, SIDEWINDER_PRECISION_2_PID,
-    SidewinderFfbButtons, SidewinderFfbHat, SidewinderFfbInputState, SidewinderModel,
+    SidewinderFfbHat, SidewinderFfbInputState, SidewinderModel,
     SidewinderP2Hat, is_sidewinder_device, parse_sidewinder_ffb2, parse_sidewinder_ffb_pro,
     parse_sidewinder_precision2, sidewinder_model,
 };
@@ -204,7 +204,7 @@ fn axis_precision2_matches_ffb_layout() {
 // 3. Button / hat depth tests
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// All 8 primary buttons (plus button 9) must independently register.
+/// All 8 primary buttons must independently register.
 #[test]
 fn button_eight_buttons_independent() {
     for btn in 1u8..=8 {
@@ -261,10 +261,8 @@ fn button_pov_hat_eight_way() {
 #[test]
 fn button_debounce_stable_repeated_parse() {
     let data = build_report(512, 512, 128, 0, 8, 0b10101);
-    let results: Vec<SidewinderFfbButtons> = (0..100)
-        .map(|_| parse_sidewinder_ffb2(&data).unwrap().buttons)
-        .collect();
-    for r in &results {
+    for _ in 0..100 {
+        let r = parse_sidewinder_ffb2(&data).unwrap().buttons;
         assert_eq!(r.buttons, 0b10101, "button mask must be stable");
         assert_eq!(r.hat, SidewinderFfbHat::Center);
     }
