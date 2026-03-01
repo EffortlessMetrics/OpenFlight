@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-FileCopyrightText: Copyright (c) 2024-2026 OpenFlight Contributors
+
 //! Update manifest validation tests.
 //!
 //! Validates the JSON schema, channel progression, rollback metadata,
@@ -14,7 +17,8 @@ struct UpdateManifest {
     schema_version: u32,
     product: String,
     channel: String,
-    generated_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    generated_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     signature: Option<String>,
     entries: Vec<UpdateEntry>,
@@ -83,7 +87,7 @@ fn sample_manifest(channel: &str) -> UpdateManifest {
         schema_version: 1,
         product: "flight-hub".into(),
         channel: channel.into(),
-        generated_at: "2025-01-15T10:00:00Z".into(),
+        generated_at: Some("2025-01-15T10:00:00Z".into()),
         signature: None,
         entries: vec![
             UpdateEntry {
@@ -95,8 +99,7 @@ fn sample_manifest(channel: &str) -> UpdateManifest {
                     sha256: "a".repeat(64),
                 },
                 urls: Urls {
-                    primary: "https://releases.flight-hub.dev/v0.2.0/flight-hub-full.tar.gz"
-                        .into(),
+                    primary: "https://releases.flight-hub.dev/v0.2.0/flight-hub-full.tar.gz".into(),
                     mirror: Some(
                         "https://mirror.flight-hub.dev/v0.2.0/flight-hub-full.tar.gz".into(),
                     ),
@@ -121,9 +124,8 @@ fn sample_manifest(channel: &str) -> UpdateManifest {
                     sha256: "c".repeat(64),
                 },
                 urls: Urls {
-                    primary:
-                        "https://releases.flight-hub.dev/v0.2.0/flight-hub-delta-0.1.0.tar.gz"
-                            .into(),
+                    primary: "https://releases.flight-hub.dev/v0.2.0/flight-hub-delta-0.1.0.tar.gz"
+                        .into(),
                     mirror: None,
                 },
                 size_bytes: Some(3_000_000),
@@ -253,17 +255,16 @@ fn every_entry_has_rollback_metadata() {
 fn rollback_previous_version_is_valid_semver() {
     let m = sample_manifest("stable");
     for entry in &m.entries {
-        let v: semver::Version = entry
-            .rollback
-            .previous_version
-            .parse()
-            .unwrap_or_else(|e| {
-                panic!(
-                    "invalid semver in rollback.previous_version '{}': {e}",
-                    entry.rollback.previous_version
-                )
-            });
-        assert!(v.major + v.minor + v.patch < 1000, "suspiciously large version");
+        let v: semver::Version = entry.rollback.previous_version.parse().unwrap_or_else(|e| {
+            panic!(
+                "invalid semver in rollback.previous_version '{}': {e}",
+                entry.rollback.previous_version
+            )
+        });
+        assert!(
+            v.major + v.minor + v.patch < 1000,
+            "suspiciously large version"
+        );
     }
 }
 

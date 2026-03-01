@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-FileCopyrightText: Copyright (c) 2024-2026 OpenFlight Contributors
+
 //! MSI manifest validation tests.
 //!
 //! Verifies the Windows installer packaging list, install paths, service
@@ -96,11 +99,7 @@ fn msi_binaries_in_bin_subdirectory() {
     let bins: Vec<&FileEntry> = m
         .files
         .iter()
-        .filter(|f| {
-            f.source
-                .extension()
-                .is_some_and(|e| e == "exe")
-        })
+        .filter(|f| f.source.extension().and_then(|e| e.to_str()) == Some("exe"))
         .collect();
     assert!(!bins.is_empty(), "no binaries found");
     for b in &bins {
@@ -118,11 +117,7 @@ fn msi_configs_in_config_subdirectory() {
     let configs: Vec<&FileEntry> = m
         .files
         .iter()
-        .filter(|f| {
-            f.source
-                .extension()
-                .is_some_and(|e| e == "toml")
-        })
+        .filter(|f| f.source.extension().is_some_and(|e| e == "toml"))
         .collect();
     assert!(!configs.is_empty(), "no config files found");
     for c in &configs {

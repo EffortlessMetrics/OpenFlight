@@ -100,7 +100,15 @@
           }
         },
         "release_notes": { "type": "string" }
-      }
+      },
+      "if": {
+        "properties": { "update_type": { "const": "delta" } },
+        "required": ["update_type"]
+      },
+      "then": {
+        "required": ["delta_from"]
+      },
+      "else": {}
     }
   }
 }

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-FileCopyrightText: Copyright (c) 2024-2026 OpenFlight Contributors
+
 //! Deb package validation tests.
 //!
 //! Validates the Linux Debian packaging against `installer/linux/files.toml`,
@@ -78,10 +81,7 @@ fn deb_control_depends_includes_libc() {
         .lines()
         .find(|l| l.starts_with("Depends:"))
         .expect("no Depends line");
-    assert!(
-        deps_line.contains("libc6"),
-        "Depends must include libc6"
-    );
+    assert!(deps_line.contains("libc6"), "Depends must include libc6");
 }
 
 #[test]
@@ -148,10 +148,7 @@ fn deb_postrm_removes_udev_rules() {
 #[test]
 fn deb_postrm_removes_config_on_purge() {
     let script = read_debian_file("postrm");
-    assert!(
-        script.contains("purge"),
-        "postrm must handle purge action"
-    );
+    assert!(script.contains("purge"), "postrm must handle purge action");
     assert!(
         script.contains("/etc/flight-hub") || script.contains("CONFIG_DIR"),
         "postrm purge must clean system config directory"
@@ -279,5 +276,9 @@ fn deb_manifest_preserves_user_dirs() {
         .map(|p| p.to_string_lossy().into_owned())
         .collect();
     assert!(preserved.iter().any(|p| p.contains(".config/flight-hub")));
-    assert!(preserved.iter().any(|p| p.contains(".local/share/flight-hub")));
+    assert!(
+        preserved
+            .iter()
+            .any(|p| p.contains(".local/share/flight-hub"))
+    );
 }

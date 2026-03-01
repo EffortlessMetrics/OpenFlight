@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-FileCopyrightText: Copyright (c) 2024-2026 OpenFlight Contributors
+
 //! Artifact trust tests.
 //!
 //! Validates checksum generation/verification, Ed25519 signing/verification,
