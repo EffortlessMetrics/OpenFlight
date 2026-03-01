@@ -9,9 +9,10 @@
 //! property-based fuzzing.
 
 use flight_hotas_brunner::{
-    brunner_model, is_brunner_device, parse_cls_e_report, BrunnerModel, ClsEAxes, ClsEButtons,
-    ClsEInputState, ClsEParseError, CLS_E_MIN_REPORT_BYTES, BRUNNER_CLS_E_YOKE_PID,
-    BRUNNER_VENDOR_ID,
+    BRUNNER_CLS_E_JOYSTICK_PID, BRUNNER_CLS_E_NG_YOKE_PID, BRUNNER_CLS_E_RUDDER_PID,
+    BRUNNER_CLS_E_YOKE_PID, BRUNNER_VENDOR_ID, BrunnerModel, CLS_E_MIN_REPORT_BYTES, ClsEAxes,
+    ClsEButtons, ClsEInputState, ClsEParseError, brunner_model, is_brunner_device,
+    parse_cls_e_report,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -73,19 +74,13 @@ fn single_byte_is_rejected() {
 #[test]
 fn seven_bytes_is_rejected() {
     let data = [0x01, 0, 0, 0, 0, 0, 0];
-    assert_eq!(
-        parse_cls_e_report(&data),
-        Err(ClsEParseError::TooShort(7))
-    );
+    assert_eq!(parse_cls_e_report(&data), Err(ClsEParseError::TooShort(7)));
 }
 
 #[test]
 fn eight_bytes_is_rejected() {
     let data = [0x01, 0, 0, 0, 0, 0, 0, 0];
-    assert_eq!(
-        parse_cls_e_report(&data),
-        Err(ClsEParseError::TooShort(8))
-    );
+    assert_eq!(parse_cls_e_report(&data), Err(ClsEParseError::TooShort(8)));
 }
 
 #[test]
@@ -128,7 +123,10 @@ fn error_clone_eq() {
 fn error_debug_format() {
     let err = ClsEParseError::TooShort(4);
     let dbg = format!("{err:?}");
-    assert!(dbg.contains("TooShort"), "debug should contain variant name: {dbg}");
+    assert!(
+        dbg.contains("TooShort"),
+        "debug should contain variant name: {dbg}"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -200,8 +198,7 @@ fn half_negative_normalises_correctly() {
 
 #[test]
 fn roll_and_pitch_are_independent() {
-    let state =
-        parse_cls_e_report(&make_report(i16::MAX, i16::MIN, [0; 4])).unwrap();
+    let state = parse_cls_e_report(&make_report(i16::MAX, i16::MIN, [0; 4])).unwrap();
     assert_eq!(state.axes.roll, 1.0);
     assert_eq!(state.axes.pitch, -1.0);
 }
@@ -470,7 +467,7 @@ fn axes_clone_is_equal() {
         roll: 0.5,
         pitch: -0.25,
     };
-    let cloned = axes;
+    let cloned = axes.clone();
     assert_eq!(axes, cloned);
 }
 
@@ -479,14 +476,14 @@ fn buttons_clone_is_equal() {
     let buttons = ClsEButtons {
         raw: [0x01, 0x02, 0x04, 0x08],
     };
-    let cloned = buttons;
+    let cloned = buttons.clone();
     assert_eq!(buttons, cloned);
 }
 
 #[test]
 fn input_state_clone_is_equal() {
     let state = parse_cls_e_report(&make_report(1234, -5678, [0xAA, 0xBB, 0xCC, 0xDD])).unwrap();
-    let cloned = state;
+    let cloned = state.clone();
     assert_eq!(state, cloned);
 }
 
@@ -503,9 +500,7 @@ fn axes_debug_contains_field_names() {
 
 #[test]
 fn buttons_debug_contains_raw() {
-    let buttons = ClsEButtons {
-        raw: [1, 2, 3, 4],
-    };
+    let buttons = ClsEButtons { raw: [1, 2, 3, 4] };
     let dbg = format!("{buttons:?}");
     assert!(dbg.contains("raw"), "debug missing 'raw': {dbg}");
 }
@@ -524,22 +519,31 @@ fn input_state_debug_format() {
 
 #[test]
 fn brunner_yoke_is_detected() {
-    assert!(is_brunner_device(0x25BB, 0x0063));
+    assert!(is_brunner_device(BRUNNER_VENDOR_ID, BRUNNER_CLS_E_YOKE_PID));
 }
 
 #[test]
 fn brunner_joystick_is_detected() {
-    assert!(is_brunner_device(0x25BB, 0x0067));
+    assert!(is_brunner_device(
+        BRUNNER_VENDOR_ID,
+        BRUNNER_CLS_E_JOYSTICK_PID
+    ));
 }
 
 #[test]
 fn brunner_ng_yoke_is_detected() {
-    assert!(is_brunner_device(0x25BB, 0x006D));
+    assert!(is_brunner_device(
+        BRUNNER_VENDOR_ID,
+        BRUNNER_CLS_E_NG_YOKE_PID
+    ));
 }
 
 #[test]
 fn brunner_rudder_is_detected() {
-    assert!(is_brunner_device(0x25BB, 0x006B));
+    assert!(is_brunner_device(
+        BRUNNER_VENDOR_ID,
+        BRUNNER_CLS_E_RUDDER_PID
+    ));
 }
 
 #[test]
@@ -628,8 +632,7 @@ fn parse_is_deterministic_across_100_calls() {
 
 #[test]
 fn full_deflection_with_all_buttons() {
-    let state =
-        parse_cls_e_report(&make_report(i16::MAX, i16::MIN, [0xFF; 4])).unwrap();
+    let state = parse_cls_e_report(&make_report(i16::MAX, i16::MIN, [0xFF; 4])).unwrap();
     assert_eq!(state.axes.roll, 1.0);
     assert_eq!(state.axes.pitch, -1.0);
     assert_eq!(state.buttons.pressed().len(), 32);
