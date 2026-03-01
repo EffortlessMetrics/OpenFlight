@@ -130,7 +130,7 @@ impl TopicFilter {
     /// Remove a domain from this filter.
     ///
     /// Preserves the `explicit` flag — clearing the last bit produces a
-    /// match-nothing filter, **not** a wildcard.
+    /// match-nothing filter (`none()`), **not** a wildcard (`all()`).
     ///
     /// A wildcard filter is not modified by this operation.
     #[inline]
