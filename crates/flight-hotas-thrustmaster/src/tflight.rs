@@ -224,6 +224,11 @@ pub enum TFlightStickParseError {
         "T.Flight report too short: expected at least {expected} bytes, got {actual}"
     )]
     TooShort { expected: usize, actual: usize },
+
+    #[error(
+        "T.Flight report length {actual} is ambiguous: expected exactly 8 (merged) or 9 (separate) bytes; strip any Report ID prefix and pass the exact payload"
+    )]
+    AmbiguousLength { actual: usize },
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -336,14 +341,24 @@ pub fn parse_tflight_separate(
 /// Auto-detect report mode from payload length and parse accordingly.
 ///
 /// - 8 bytes → merged mode
-/// - 9+ bytes → separate mode
+/// - 9 bytes → separate mode
+/// - Other lengths → [`TFlightStickParseError::AmbiguousLength`]
+///
+/// Callers must strip any leading Report ID byte and pass the exact payload
+/// (8 or 9 bytes) for unambiguous parsing.
 ///
 /// # Errors
 /// Returns [`TFlightStickParseError::TooShort`] if `data.len() < 8`.
+/// Returns [`TFlightStickParseError::AmbiguousLength`] if `data.len() > 9`.
 pub fn parse_tflight_auto(data: &[u8]) -> Result<TFlightStickState, TFlightStickParseError> {
     if data.len() < TFLIGHT_MERGED_MIN_BYTES {
         return Err(TFlightStickParseError::TooShort {
             expected: TFLIGHT_MERGED_MIN_BYTES,
+            actual: data.len(),
+        });
+    }
+    if data.len() > TFLIGHT_SEPARATE_MIN_BYTES {
+        return Err(TFlightStickParseError::AmbiguousLength {
             actual: data.len(),
         });
     }
@@ -658,11 +673,14 @@ mod tests {
     }
 
     #[test]
-    fn auto_detect_long_report_is_separate() {
+    fn auto_detect_padded_report_is_ambiguous() {
         let mut r = make_separate(32768, 32768, 128, 128, 128, 0, 0);
         r.extend_from_slice(&[0; 10]);
-        let s = parse_tflight_auto(&r).unwrap();
-        assert_eq!(s.mode, TFlightAxisMode::Separate);
+        let err = parse_tflight_auto(&r).unwrap_err();
+        assert!(
+            matches!(err, TFlightStickParseError::AmbiguousLength { .. }),
+            "padded report should be rejected as ambiguous, got: {err}"
+        );
     }
 
     // ── Button name tests ────────────────────────────────────────────────
