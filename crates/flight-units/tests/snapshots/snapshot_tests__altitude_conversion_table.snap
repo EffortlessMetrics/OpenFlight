@@ -1,0 +1,13 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 41
+expression: table
+---
+feet → meters
+──────────────────────────
+       0 ft  →        0.00 m
+    1000 ft  →      304.80 m
+    5000 ft  →     1524.00 m
+   18000 ft  →     5486.40 m
+   35000 ft  →    10668.00 m
+   41000 ft  →    12496.80 m

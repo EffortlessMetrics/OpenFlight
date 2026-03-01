@@ -1,0 +1,10 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 184
+expression: output
+---
+[
+    "msfs",
+    "xplane",
+    "dcs",
+]

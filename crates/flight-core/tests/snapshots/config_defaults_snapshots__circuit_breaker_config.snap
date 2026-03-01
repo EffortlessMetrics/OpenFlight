@@ -1,0 +1,10 @@
+---
+source: crates/flight-core/tests/config_defaults_snapshots.rs
+assertion_line: 60
+expression: cfg
+---
+CircuitBreakerConfig {
+    failure_threshold: 5,
+    success_threshold: 3,
+    timeout: 30s,
+}
