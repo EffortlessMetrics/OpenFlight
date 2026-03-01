@@ -41,12 +41,14 @@ jobs:
     needs: discover-targets
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover-targets.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
 
       - name: Install Rust nightly
         run: |
@@ -68,6 +70,8 @@ jobs:
         run: cargo install cargo-fuzz --locked
 
       - name: Run fuzzer
+        id: run_fuzzer
+        continue-on-error: true
         working-directory: ${{ matrix.crate_dir }}
         run: |
           cargo +nightly fuzz run ${{ matrix.target }} -- -max_total_time=60
@@ -82,7 +86,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload crash artifacts
-        if: failure()
+        if: steps.run_fuzzer.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: crashes-${{ matrix.crate }}-${{ matrix.target }}
