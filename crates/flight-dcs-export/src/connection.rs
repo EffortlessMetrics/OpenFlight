@@ -165,6 +165,9 @@ impl DcsConnectionPolicy {
     }
 
     /// Current backoff delay based on attempt count.
+    ///
+    /// Uses `Duration` arithmetic to preserve sub-millisecond precision.
+    /// The result is always clamped to `max_delay`.
     pub fn current_delay(&self) -> Duration {
         if self.attempt == 0 {
             return self.base_delay.min(self.max_delay);
@@ -266,7 +269,9 @@ impl DcsSessionHealth {
 
     /// Compute the current packet rate (packets/sec) over the window.
     ///
-    /// Returns `None` if fewer than 2 samples exist.
+    /// Returns `None` if fewer than 2 samples exist. Returns
+    /// `Some(f64::INFINITY)` when all samples share the same timestamp
+    /// (zero-span window).
     pub fn packet_rate(&self) -> Option<f64> {
         // Collect all present timestamps
         let mut times: Vec<Instant> = self.timestamps.iter().filter_map(|t| *t).collect();
