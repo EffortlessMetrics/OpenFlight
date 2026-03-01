@@ -74,21 +74,15 @@ impl EncoderBank {
         ccw_button_id: u8,
         ccw_pressed: bool,
     ) -> i8 {
-        if let Some(pair) = self.pairs.get(index) {
-            if cw_button_id == pair.cw_button
-                && ccw_button_id == pair.ccw_button
-                && cw_pressed
-                && !ccw_pressed
-            {
-                return 1;
-            }
-            if cw_button_id == pair.cw_button
-                && ccw_button_id == pair.ccw_button
-                && !cw_pressed
-                && ccw_pressed
-            {
-                return -1;
-            }
+        if let Some(pair) = self.pairs.get(index)
+            && cw_button_id == pair.cw_button
+            && ccw_button_id == pair.ccw_button
+        {
+            return match (cw_pressed, ccw_pressed) {
+                (true, false) => 1,
+                (false, true) => -1,
+                _ => 0,
+            };
         }
         0
     }
