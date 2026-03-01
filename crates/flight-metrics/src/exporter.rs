@@ -93,8 +93,30 @@ impl MetricsExporter {
                 let (type_str, value_json) = match &m.value {
                     MetricValue::Counter(v) => ("counter", format!("{v}")),
                     MetricValue::Gauge(v) => ("gauge", format_f64(*v)),
-                    MetricValue::Histogram { count, sum, .. } => {
-                        ("histogram", format!("{{\"count\":{count},\"sum\":{}}}", format_f64(*sum)))
+                    MetricValue::Histogram {
+                        buckets,
+                        count,
+                        sum,
+                    } => {
+                        let bucket_entries: Vec<String> = buckets
+                            .iter()
+                            .map(|(le, c)| {
+                                let le_str = if le.is_infinite() {
+                                    "\"+Inf\"".to_string()
+                                } else {
+                                    format_f64(*le)
+                                };
+                                format!("{{\"le\":{le_str},\"count\":{c}}}")
+                            })
+                            .collect();
+                        (
+                            "histogram",
+                            format!(
+                                "{{\"buckets\":[{}],\"count\":{count},\"sum\":{}}}",
+                                bucket_entries.join(","),
+                                format_f64(*sum)
+                            ),
+                        )
                     }
                 };
                 format!(
@@ -112,7 +134,10 @@ fn format_labels(labels: &[(String, String)]) -> String {
     if labels.is_empty() {
         return String::new();
     }
-    let pairs: Vec<String> = labels.iter().map(|(k, v)| format!("{k}=\"{v}\"")).collect();
+    let pairs: Vec<String> = labels
+        .iter()
+        .map(|(k, v)| format!("{k}=\"{}\"", escape_prometheus_label(v)))
+        .collect();
     format!("{{{}}}", pairs.join(","))
 }
 
@@ -130,6 +155,12 @@ fn format_f64(v: f64) -> String {
     } else {
         format!("{v}")
     }
+}
+
+fn escape_prometheus_label(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
 }
 
 fn escape_json(s: &str) -> String {
@@ -293,5 +324,38 @@ mod tests {
         assert!(json.contains("\"type\":\"histogram\""));
         assert!(json.contains("\"count\":3"));
         assert!(json.contains("\"sum\":7.5"));
+    }
+
+    #[test]
+    fn json_histogram_includes_buckets() {
+        let json = MetricsExporter::format_json(&[histogram(
+            "lat",
+            "Latency",
+            &[(1.0, 1), (5.0, 3), (f64::INFINITY, 4)],
+            4,
+            12.5,
+        )]);
+        assert!(json.contains("\"buckets\":["));
+        assert!(json.contains("{\"le\":1.0,\"count\":1}"));
+        assert!(json.contains("{\"le\":5.0,\"count\":3}"));
+        assert!(json.contains("{\"le\":\"+Inf\",\"count\":4}"));
+    }
+
+    #[test]
+    fn prometheus_label_escaping() {
+        let m = LabeledMetric {
+            name: "test_metric".to_string(),
+            help: "test".to_string(),
+            labels: vec![
+                ("path".to_string(), "val with \"quotes\"".to_string()),
+                ("info".to_string(), "back\\slash".to_string()),
+                ("multi".to_string(), "line1\nline2".to_string()),
+            ],
+            value: MetricValue::Counter(1),
+        };
+        let text = MetricsExporter::format_prometheus(&[m]);
+        assert!(text.contains(r#"path="val with \"quotes\"""#));
+        assert!(text.contains(r#"info="back\\slash""#));
+        assert!(text.contains(r#"multi="line1\nline2""#));
     }
 }
