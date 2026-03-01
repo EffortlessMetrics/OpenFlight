@@ -241,7 +241,7 @@ impl RulesCompiler {
         })
     }
 
-    fn parse_condition(&self, condition_str: &str) -> Result<Condition> {
+    pub fn parse_condition(&self, condition_str: &str) -> Result<Condition> {
         let condition_str = condition_str.trim();
 
         // Handle compound OR (lower precedence — split first)
@@ -379,7 +379,7 @@ impl RulesCompiler {
         )))
     }
 
-    fn parse_action(&self, action_str: &str) -> Result<Action> {
+    pub fn parse_action(&self, action_str: &str) -> Result<Action> {
         let action_str = action_str.trim();
 
         // Parse led.panel('TARGET').on() / .off() / .blink(rate_hz=N)
