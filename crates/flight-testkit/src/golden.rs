@@ -76,6 +76,10 @@ pub fn golden_test_raw(test_name: &str, actual: &str) {
 
 /// Resolve the path to a golden file.
 fn golden_file_path(test_name: &str) -> PathBuf {
+    assert!(
+        !test_name.contains("..") && !test_name.contains('/') && !test_name.contains('\\'),
+        "test_name must not contain path separators or '..'"
+    );
     // Use CARGO_MANIFEST_DIR if available (i.e. running under `cargo test`),
     // otherwise fall back to current directory.
     let base = std::env::var("CARGO_MANIFEST_DIR")

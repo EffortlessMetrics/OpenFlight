@@ -55,7 +55,7 @@ impl DeterministicClock {
     /// Advance the clock by `duration`.
     pub fn advance(&self, duration: Duration) {
         self.time_us
-            .fetch_add(duration.as_micros() as u64, Ordering::Release);
+            .fetch_add(u64::try_from(duration.as_micros()).unwrap_or(u64::MAX), Ordering::Release);
     }
 
     /// Advance the clock by `us` microseconds.
@@ -76,7 +76,7 @@ impl DeterministicClock {
 
     /// Set the clock to an absolute [`Duration`].
     pub fn set_time_duration(&self, time: Duration) {
-        self.set_time(time.as_micros() as u64);
+        self.set_time(u64::try_from(time.as_micros()).unwrap_or(u64::MAX));
     }
 
     /// Reset the clock to zero.

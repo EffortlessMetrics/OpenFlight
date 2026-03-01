@@ -143,6 +143,9 @@ impl FakeDevice {
         match pattern {
             SignalPattern::Constant(v) => v,
             SignalPattern::Ramp { start, end, steps } => {
+                if steps == 0 {
+                    return start;
+                }
                 let t = (idx % u64::from(steps)) as f64 / (f64::from(steps) - 1.0).max(1.0);
                 start + (end - start) * t
             }
@@ -170,6 +173,9 @@ impl FakeDevice {
                 high,
                 period,
             } => {
+                if period == 0 {
+                    return low;
+                }
                 let phase = (idx / u64::from(period)) % 2;
                 if phase == 0 { low } else { high }
             }
