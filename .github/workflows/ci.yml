@@ -46,9 +46,9 @@ jobs:
 
       - name: Verify COMPATIBILITY.md is up-to-date
         run: |
-          cargo xtask gen-compat
-          if ! git diff --exit-code COMPATIBILITY.md; then
-            echo "❌ COMPATIBILITY.md is stale — run 'cargo xtask gen-compat' and commit the result"
+          cargo xtask generate-compat
+          if ! git diff --exit-code COMPATIBILITY.md compat/compatibility.json; then
+            echo "❌ COMPATIBILITY.md is stale — run 'cargo xtask generate-compat' and commit the result"
             exit 1
           fi
           echo "✅ COMPATIBILITY.md is up-to-date"

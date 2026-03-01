@@ -465,6 +465,7 @@ support_tier: 1
                 buttons: 12,
                 force_feedback: true,
                 tier: 1,
+                quirks: vec![],
                 test_coverage: TestCoverage {
                     simulated: true,
                     hil: true,
@@ -479,6 +480,7 @@ support_tier: 1
                 buttons: 8,
                 force_feedback: false,
                 tier: 2,
+                quirks: vec![],
                 test_coverage: TestCoverage {
                     simulated: true,
                     hil: false,
@@ -493,6 +495,7 @@ support_tier: 1
                 buttons: 16,
                 force_feedback: false,
                 tier: 3,
+                quirks: vec![],
                 test_coverage: TestCoverage {
                     simulated: false,
                     hil: false,

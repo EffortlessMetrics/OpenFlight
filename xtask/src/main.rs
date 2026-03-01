@@ -22,6 +22,7 @@ mod device_report;
 mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
+mod generate_compat;
 mod hotas;
 mod normalize_docs;
 mod quality_gates;
@@ -72,7 +73,7 @@ enum Commands {
     /// Generate COMPATIBILITY-MATRIX.md and compat/matrix.json from compat/ manifests
     GenCompat,
 
-    /// Generate COMPATIBILITY-MATRIX.md and compat/matrix.json from compat/ manifests
+    /// Generate COMPATIBILITY.md and compat/compatibility.json from compat/ manifests
     GenerateCompat,
 
     /// Run code coverage report on core crates using cargo-llvm-cov
@@ -164,7 +165,7 @@ fn main() -> Result<()> {
         }
         Commands::Hotas { command } => hotas::run(command),
         Commands::GenCompat => compat_matrix::run_compat_matrix(),
-        Commands::GenerateCompat => compat_matrix::run_compat_matrix(),
+        Commands::GenerateCompat => generate_compat::run_generate_compat(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),

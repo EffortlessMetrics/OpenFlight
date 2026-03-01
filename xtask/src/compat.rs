@@ -24,6 +24,7 @@ pub struct DeviceEntry {
     pub buttons: u64,
     pub force_feedback: bool,
     pub tier: u64,
+    pub quirks: Vec<String>,
     pub test_coverage: TestCoverage,
 }
 
@@ -64,6 +65,15 @@ pub fn parse_device(path: &Path) -> Result<DeviceEntry> {
     let text = fs::read_to_string(path)?;
     let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
 
+    let quirks = doc["quirks"]
+        .as_sequence()
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|q| q["id"].as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default();
+
     Ok(DeviceEntry {
         name: doc["device"]["name"].as_str().unwrap_or("?").to_string(),
         vendor: doc["device"]["vendor"].as_str().unwrap_or("?").to_string(),
@@ -79,6 +89,7 @@ pub fn parse_device(path: &Path) -> Result<DeviceEntry> {
             .as_bool()
             .unwrap_or(false),
         tier: doc["support"]["tier"].as_u64().unwrap_or(0),
+        quirks,
         test_coverage: TestCoverage {
             simulated: doc["support"]["test_coverage"]["simulated"]
                 .as_bool()
