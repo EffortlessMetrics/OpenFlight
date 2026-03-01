@@ -69,14 +69,11 @@ enum Commands {
         command: hotas::HotasCommand,
     },
 
-    /// Generate COMPATIBILITY.md from compat/ manifests
+    /// Generate COMPATIBILITY.md and compat/matrix.json from compat/ manifests
     GenCompat,
 
-    /// Generate COMPATIBILITY.md and compatibility.json from compat/ manifests
+    /// Generate COMPATIBILITY.md and compat/matrix.json from compat/ manifests
     GenerateCompat,
-
-    /// Generate COMPATIBILITY.md and compat/matrix.json with vendor-grouped stats
-    CompatMatrix,
 
     /// Run code coverage report on core crates using cargo-llvm-cov
     Coverage {
@@ -166,9 +163,8 @@ fn main() -> Result<()> {
             }
         }
         Commands::Hotas { command } => hotas::run(command),
-        Commands::GenCompat => compat::run_gen_compat(),
-        Commands::GenerateCompat => compat::run_gen_compat(),
-        Commands::CompatMatrix => compat_matrix::run_compat_matrix(),
+        Commands::GenCompat => compat_matrix::run_compat_matrix(),
+        Commands::GenerateCompat => compat_matrix::run_compat_matrix(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),
