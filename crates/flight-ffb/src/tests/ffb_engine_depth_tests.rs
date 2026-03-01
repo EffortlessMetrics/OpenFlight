@@ -675,6 +675,7 @@ mod rt_safety {
 
     // ── 6.1 No allocation in force calculation loop ─────────────────────
     #[test]
+    #[ignore = "wall-clock timing; run in controlled perf jobs"]
     fn rt_force_loop_no_allocation() {
         // The entire compute pipeline is stack-resident.
         // Running 10k iterations with no allocator instrumentation;
@@ -760,6 +761,7 @@ mod rt_safety {
 
     // ── 6.4 Bounded compute time ────────────────────────────────────────
     #[test]
+    #[ignore = "wall-clock timing; run in controlled perf jobs"]
     fn rt_bounded_compute_time_per_tick() {
         let mut slots = EffectSlotManager::new();
         let mut sched = EffectScheduler::new();
