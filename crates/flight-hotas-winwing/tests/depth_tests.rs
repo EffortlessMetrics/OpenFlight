@@ -144,14 +144,14 @@ fn throttle_all_50_buttons_individually_pressed() {
         let bit = u64::from(btn - 1);
         r[11..19].copy_from_slice(&(1u64 << bit).to_le_bytes());
         let s = parse_orion2_throttle_report(&r).unwrap();
-        assert!(
-            s.buttons.is_pressed(btn),
-            "button {btn} should be pressed"
-        );
+        assert!(s.buttons.is_pressed(btn), "button {btn} should be pressed");
         // All other buttons should be unpressed.
         for other in 1u8..=ORION2_THROTTLE_BUTTON_COUNT {
             if other != btn {
-                assert!(!s.buttons.is_pressed(other), "button {other} should NOT be pressed when only {btn} is set");
+                assert!(
+                    !s.buttons.is_pressed(other),
+                    "button {other} should NOT be pressed when only {btn} is set"
+                );
             }
         }
     }
@@ -160,10 +160,10 @@ fn throttle_all_50_buttons_individually_pressed() {
 #[test]
 fn throttle_encoder_positive_and_negative_deltas() {
     let mut r = make_throttle_report(0, 0, 0, 32768, 32768);
-    r[19] = 5u8;           // encoder 0: +5
-    r[20] = (-7i8) as u8;  // encoder 1: -7
-    r[21] = 0;             // encoder 2: 0
-    r[22] = 127u8;         // encoder 3: +127 (max)
+    r[19] = 5u8; // encoder 0: +5
+    r[20] = (-7i8) as u8; // encoder 1: -7
+    r[21] = 0; // encoder 2: 0
+    r[22] = 127u8; // encoder 3: +127 (max)
     r[23] = (-128i8) as u8; // encoder 4: -128 (min)
     let s = parse_orion2_throttle_report(&r).unwrap();
     assert_eq!(s.buttons.encoders[0], 5);
@@ -288,7 +288,10 @@ fn tfrp_rudder_clamps_at_i16_min() {
     let r = make_tfrp_report(i16::MIN, 0, 0);
     let s = parse_tfrp_report(&r).unwrap();
     assert!(s.axes.rudder >= -1.0, "rudder should be clamped to >= -1.0");
-    assert!(s.axes.rudder <= -0.99, "i16::MIN should normalize near -1.0");
+    assert!(
+        s.axes.rudder <= -0.99,
+        "i16::MIN should normalize near -1.0"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -384,8 +387,8 @@ fn super_taurus_all_32_buttons() {
 #[test]
 fn super_taurus_encoder_deltas() {
     let mut r = make_super_taurus_report(0, 0, 0);
-    r[11] = 3u8;           // encoder 0: +3
-    r[12] = (-5i8) as u8;  // encoder 1: -5
+    r[11] = 3u8; // encoder 0: +3
+    r[12] = (-5i8) as u8; // encoder 1: -5
     let s = parse_super_taurus_report(&r).unwrap();
     assert_eq!(s.buttons.encoders[0], 3);
     assert_eq!(s.buttons.encoders[1], -5);
@@ -447,8 +450,14 @@ fn ufc_panel_all_ufc_buttons() {
         bytes[byte_idx] = 1 << bit;
         let r = make_ufc_report(bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]);
         let s = parse_ufc_panel_report(&r).unwrap();
-        assert!(s.buttons.is_ufc_pressed(btn), "UFC button {btn} should be pressed");
-        assert!(s.buttons.is_pressed(btn), "overall button {btn} should be pressed");
+        assert!(
+            s.buttons.is_ufc_pressed(btn),
+            "UFC button {btn} should be pressed"
+        );
+        assert!(
+            s.buttons.is_pressed(btn),
+            "overall button {btn} should be pressed"
+        );
     }
 }
 
@@ -462,8 +471,14 @@ fn ufc_panel_all_hud_buttons() {
         bytes[byte_idx] = 1 << bit;
         let r = make_ufc_report(bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]);
         let s = parse_ufc_panel_report(&r).unwrap();
-        assert!(s.buttons.is_hud_pressed(hud_btn), "HUD button {hud_btn} should be pressed");
-        assert!(s.buttons.is_pressed(overall), "overall button {overall} should be pressed");
+        assert!(
+            s.buttons.is_hud_pressed(hud_btn),
+            "HUD button {hud_btn} should be pressed"
+        );
+        assert!(
+            s.buttons.is_pressed(overall),
+            "overall button {overall} should be pressed"
+        );
     }
 }
 
@@ -629,8 +644,16 @@ fn protocol_detent_response_idle_and_afterburner() {
     let idle_pos = 100u16.to_le_bytes();
     let ab_pos = 62000u16.to_le_bytes();
     let payload = [
-        0, 0, idle_pos[0], idle_pos[1], 0,
-        0, 1, ab_pos[0], ab_pos[1], 0,
+        0,
+        0,
+        idle_pos[0],
+        idle_pos[1],
+        0,
+        0,
+        1,
+        ab_pos[0],
+        ab_pos[1],
+        0,
     ];
     let report = parse_detent_response(&payload).unwrap();
     assert_eq!(report.positions.len(), 2);
@@ -810,13 +833,25 @@ fn health_status_healthy_thresholds() {
 #[test]
 fn preset_configs_have_valid_deadzones() {
     for cfg in &orion2_throttle_config() {
-        assert!(cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0, "bad deadzone for {}", cfg.name);
+        assert!(
+            cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0,
+            "bad deadzone for {}",
+            cfg.name
+        );
     }
     for cfg in &orion2_stick_config() {
-        assert!(cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0, "bad deadzone for {}", cfg.name);
+        assert!(
+            cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0,
+            "bad deadzone for {}",
+            cfg.name
+        );
     }
     for cfg in &tfrp_rudder_config() {
-        assert!(cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0, "bad deadzone for {}", cfg.name);
+        assert!(
+            cfg.deadzone >= 0.0 && cfg.deadzone <= 1.0,
+            "bad deadzone for {}",
+            cfg.name
+        );
     }
 }
 
@@ -829,7 +864,10 @@ fn preset_filter_alpha_within_range() {
         .filter_map(|c| c.filter_alpha)
         .collect();
     for alpha in all_configs {
-        assert!(alpha > 0.0 && alpha <= 1.0, "filter_alpha {alpha} out of (0, 1]");
+        assert!(
+            alpha > 0.0 && alpha <= 1.0,
+            "filter_alpha {alpha} out of (0, 1]"
+        );
     }
 }
 
