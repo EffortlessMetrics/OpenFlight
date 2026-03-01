@@ -217,7 +217,7 @@ pub static COMBAT_READY_PANEL_LEDS: LedZoneMap = LedZoneMap {
 /// Look up a LED zone by name within a zone map (case-insensitive).
 pub fn find_zone_by_name<'a>(map: &'a LedZoneMap, name: &str) -> Option<&'a LedZone> {
     let upper = name.to_uppercase();
-    map.zones.iter().find(|z| z.name == upper)
+    map.zones.iter().find(|z| z.name.to_uppercase() == upper)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

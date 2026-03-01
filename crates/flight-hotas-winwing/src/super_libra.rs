@@ -136,7 +136,7 @@ pub enum SuperLibraParseError {
 
 /// Normalise a signed 16-bit integer to the range \[−1.0, 1.0\].
 fn norm_i16(v: i16) -> f32 {
-    (v as f32 / 32767.0).clamp(-1.0, 1.0)
+    (v as f32 / 32768.0).clamp(-1.0, 1.0)
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

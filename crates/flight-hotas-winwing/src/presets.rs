@@ -110,7 +110,7 @@ pub fn tfrp_rudder_config() -> [RecommendedAxisConfig; 3] {
 ///
 /// The Super Taurus uses the same Hall-effect sensors as the Orion 2 with
 /// dual throttle levers plus friction and slew axes.
-pub fn super_taurus_config() -> [RecommendedAxisConfig; 4] {
+pub fn super_taurus_config() -> [RecommendedAxisConfig; 3] {
     [
         RecommendedAxisConfig {
             name: "throttle_left",
@@ -127,18 +127,11 @@ pub fn super_taurus_config() -> [RecommendedAxisConfig; 4] {
             notes: "Right throttle lever — Hall-effect, very low noise",
         },
         RecommendedAxisConfig {
-            name: "friction",
+            name: "trim",
             deadzone: 0.03,
             filter_alpha: Some(0.10),
             slew_rate: None,
-            notes: "Friction slider — resistive; light filter",
-        },
-        RecommendedAxisConfig {
-            name: "mouse_stick",
-            deadzone: 0.08,
-            filter_alpha: Some(0.20),
-            slew_rate: None,
-            notes: "Slew/mouse stick — spring return; larger deadzone",
+            notes: "Trim wheel — signed axis",
         },
     ]
 }
@@ -186,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_super_taurus_preset_count() {
-        assert_eq!(super_taurus_config().len(), 4);
+        assert_eq!(super_taurus_config().len(), 3);
     }
 
     #[test]

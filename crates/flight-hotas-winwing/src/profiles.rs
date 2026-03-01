@@ -477,7 +477,7 @@ pub fn take_off_panel_profile() -> DeviceProfile {
     DeviceProfile {
         name: "WinWing Take Off Panel",
         vid: 0x4098,
-        pid: 0xBEE0, // estimated
+        pid: 0xBE04, // F/A-18 Takeoff Panel
         axes: vec![],
         button_count: 32,
         button_groups: vec![
@@ -576,7 +576,7 @@ pub fn combat_ready_panel_profile() -> DeviceProfile {
     DeviceProfile {
         name: "WinWing Combat Ready Panel",
         vid: 0x4098,
-        pid: 0xBEE2, // estimated
+        pid: 0xBE05, // F/A-18 Combat Ready Panel
         axes: vec![],
         button_count: 30,
         button_groups: vec![
@@ -770,25 +770,11 @@ pub fn super_taurus_profile() -> DeviceProfile {
                 notes: "Right throttle lever — Hall-effect",
             },
             RecommendedAxisConfig {
-                name: "friction",
+                name: "trim",
                 deadzone: 0.03,
                 filter_alpha: Some(0.10),
                 slew_rate: None,
-                notes: "Friction slider — resistive",
-            },
-            RecommendedAxisConfig {
-                name: "mouse_x",
-                deadzone: 0.08,
-                filter_alpha: Some(0.20),
-                slew_rate: None,
-                notes: "Mouse/slew X — spring return",
-            },
-            RecommendedAxisConfig {
-                name: "mouse_y",
-                deadzone: 0.08,
-                filter_alpha: Some(0.20),
-                slew_rate: None,
-                notes: "Mouse/slew Y — spring return",
+                notes: "Trim wheel — signed axis",
             },
         ],
         button_count: 58,
@@ -1151,7 +1137,7 @@ mod tests {
     #[test]
     fn test_super_taurus_axes() {
         let p = super_taurus_profile();
-        assert_eq!(p.axes.len(), 5, "Super Taurus should have 5 axes");
+        assert_eq!(p.axes.len(), 3, "Super Taurus should have 3 axes");
         let names: Vec<_> = p.axes.iter().map(|a| a.name).collect();
         assert!(names.contains(&"throttle_left"));
         assert!(names.contains(&"throttle_right"));
