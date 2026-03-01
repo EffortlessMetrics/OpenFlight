@@ -22,6 +22,7 @@
 pub mod adapter;
 pub mod adapter_state;
 pub mod aircraft_db;
+pub mod connection;
 pub mod aircraft_detection;
 pub mod auto_deploy;
 pub mod control_injection;
@@ -62,5 +63,9 @@ pub use protocol::{
     DcsExportEntry, DcsFlightData, DcsTelemetryPacket, DeviceArgEntry, InstrumentReading,
     ParseError, dcs_to_ned, m_to_ft, ms_to_knots, parse_aircraft_type, parse_device_arg_block,
     parse_instrument_block, rad_to_deg,
+};
+pub use connection::{
+    ConnectionTransitionError, DcsConnectionEvent, DcsConnectionPolicy, DcsConnectionState,
+    DcsSessionHealth,
 };
 pub use socket_bridge::{DcsMessage, ProtocolVersion, SocketBridge, SocketBridgeConfig};
