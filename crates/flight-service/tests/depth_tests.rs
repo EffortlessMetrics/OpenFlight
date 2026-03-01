@@ -845,7 +845,8 @@ mod health_reporting {
             });
 
         let report = checker.check_all();
-        // Scheduler stopped is Critical, adapter disconnected is Critical — worst status wins
+        // Scheduler stopped is Critical, and a single disconnected adapter is also Critical.
+        // The overall status should be Critical.
         assert_eq!(report.status, OverallStatus::Critical);
     }
 
@@ -1180,14 +1181,14 @@ mod error_recovery {
     }
 
     #[tokio::test]
-    async fn try_recover_returns_false_when_not_degraded() {
+    async fn service_recovery_returns_false_when_not_degraded() {
+        // NOTE: Full recovery path (degraded → recovered) needs a trigger mechanism
+        // to programmatically put the service into a degraded state. This test only
+        // covers the non-degraded case.
         let mut service = FlightService::new(FlightServiceConfig::default());
         service.start().await.unwrap();
 
-        // Force degrade — we start() which transitions to Running, then
-        // we apply a bad profile to trigger degradation (or call directly via
-        // the public state).
-        // Alternatively, apply valid + check recovery path:
+        // Apply a valid profile — service is Running, not Degraded, so recovery is a no-op.
         let profile = Profile {
             schema: "flight.profile/1".to_string(),
             sim: None,
