@@ -183,7 +183,7 @@ pub fn normalize_pose(raw: TrackIrPacket) -> HeadPose {
 ///
 /// * **`alpha = 1.0`** → no smoothing (pass-through)
 /// * **`alpha → 0.0`** → very heavy smoothing (slow response)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct PoseFilter {
     alpha: f32,
     state: Option<HeadPose>,
@@ -192,10 +192,16 @@ pub struct PoseFilter {
 impl PoseFilter {
     /// Create a new EMA filter with the given smoothing factor.
     ///
-    /// `alpha` is clamped to `[0.0, 1.0]`.
+    /// `alpha` is clamped to `[0.0, 1.0]`. Non-finite values (NaN or
+    /// infinities) are treated as `1.0` (no smoothing).
     pub fn new(alpha: f32) -> Self {
+        let alpha = if alpha.is_finite() {
+            alpha.clamp(0.0, 1.0)
+        } else {
+            1.0 // Non-finite defaults to pass-through (no smoothing)
+        };
         Self {
-            alpha: alpha.clamp(0.0, 1.0),
+            alpha,
             state: None,
         }
     }
