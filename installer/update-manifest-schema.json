@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://flight-hub.dev/schemas/update-manifest.json",
+  "title": "Flight Hub Update Manifest",
+  "description": "Schema for Flight Hub update distribution manifests",
+  "type": "object",
+  "required": ["schema_version", "product", "channel", "entries"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema version for forward compatibility"
+    },
+    "product": {
+      "type": "string",
+      "const": "flight-hub",
+      "description": "Product identifier"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["canary", "beta", "stable"],
+      "description": "Release channel"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of manifest generation"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Ed25519 signature of the canonical manifest body (hex-encoded)"
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/update_entry" },
+      "minItems": 1
+    }
+  },
+  "definitions": {
+    "update_entry": {
+      "type": "object",
+      "required": ["version", "platforms", "checksums", "urls", "rollback"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+          "description": "Semantic version"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["windows-x86_64", "linux-x86_64", "linux-aarch64"]
+          },
+          "minItems": 1
+        },
+        "update_type": {
+          "type": "string",
+          "enum": ["full", "delta"],
+          "default": "full"
+        },
+        "delta_from": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+          "description": "Base version for delta updates (required when update_type is 'delta')"
+        },
+        "checksums": {
+          "type": "object",
+          "required": ["sha256"],
+          "properties": {
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "urls": {
+          "type": "object",
+          "required": ["primary"],
+          "properties": {
+            "primary": { "type": "string", "format": "uri" },
+            "mirror": { "type": "string", "format": "uri" }
+          }
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rollback": {
+          "type": "object",
+          "required": ["supported", "previous_version"],
+          "properties": {
+            "supported": { "type": "boolean" },
+            "previous_version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$"
+            },
+            "rollback_url": { "type": "string", "format": "uri" },
+            "rollback_checksum": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "release_notes": { "type": "string" }
+      }
+    }
+  }
+}
