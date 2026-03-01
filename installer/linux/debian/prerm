@@ -1,0 +1,43 @@
+#!/bin/sh
+# prerm script for flight-hub
+#
+# See: https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html
+
+set -e
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        # Stop the user service if running under the invoking user.
+        # Note: systemd user services run per-user, so we attempt to stop
+        # via SUDO_USER if available.  This is best-effort — the user may
+        # have already stopped the service, or it may be running under a
+        # different user session.
+        if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+            if command -v systemctl >/dev/null 2>&1; then
+                su - "$SUDO_USER" -c "systemctl --user stop flightd.service 2>/dev/null" || true
+                su - "$SUDO_USER" -c "systemctl --user disable flightd.service 2>/dev/null" || true
+            fi
+        fi
+
+        echo ""
+        echo "Flight Hub service stop requested."
+        echo ""
+        echo "If the service is running under other user sessions, those"
+        echo "users should run:"
+        echo "  systemctl --user stop flightd.service"
+        echo "  systemctl --user disable flightd.service"
+        echo ""
+        ;;
+
+    failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

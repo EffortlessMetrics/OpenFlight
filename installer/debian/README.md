@@ -8,6 +8,7 @@ This directory contains the Debian package configuration for Flight Hub.
 |------|-------------|
 | `control` | Package metadata and dependencies |
 | `postinst` | Post-installation script (POSIX-compliant) |
+| `prerm` | Pre-removal script — stops service (see `installer/linux/debian/prerm`) |
 | `postrm` | Post-removal script (POSIX-compliant) |
 | `99-flight-hub.rules` | udev rules for HID device access |
 | `flightd.service` | Systemd user service unit |
