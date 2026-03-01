@@ -14,7 +14,6 @@ use flight_profile::{AircraftId, AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use proptest::prelude::*;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -65,25 +64,8 @@ fn sync_state(id: &str, hash: &str, ts: u64) -> ProfileSyncState {
     }
 }
 
-fn tempfile_dir() -> PathBuf {
-    use std::sync::atomic::{AtomicU64, Ordering};
-    static COUNTER: AtomicU64 = AtomicU64::new(0);
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos() as u64)
-        .unwrap_or(0);
-    let seq = COUNTER.fetch_add(1, Ordering::Relaxed);
-    let tid = std::thread::current().id();
-    let name = format!("depth-{nanos:016x}-{seq:04x}-{tid:?}").replace(['(', ')', ' '], "_");
-    let dir = std::env::temp_dir()
-        .join("flight-cloud-depth-tests")
-        .join(name);
-    std::fs::create_dir_all(&dir).unwrap();
-    dir
-}
-
-fn cleanup_dir(path: &Path) {
-    let _ = std::fs::remove_dir_all(path);
+fn tempfile_dir() -> tempfile::TempDir {
+    tempfile::TempDir::new().expect("failed to create temp dir")
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -199,7 +181,7 @@ async fn storage_metadata_updated_at_is_recent() {
 #[tokio::test]
 async fn storage_filesystem_round_trip_preserves_data() {
     let tmp = tempfile_dir();
-    let backend = FileSystemBackend::new(&tmp);
+    let backend = FileSystemBackend::new(tmp.path());
     let profile = profile_with_axes(&[("roll", 0.1, 0.5)]);
     let data = serde_json::to_vec(&profile).unwrap();
 
@@ -209,7 +191,6 @@ async fn storage_filesystem_round_trip_preserves_data() {
 
     assert_eq!(recovered.axes["roll"].deadzone, Some(0.1));
     assert_eq!(recovered.axes["roll"].expo, Some(0.5));
-    cleanup_dir(&tmp);
 }
 
 #[tokio::test]
@@ -684,6 +665,14 @@ fn serialization_schema_validation_rejects_malformed_json() {
 // 6. Property Tests (6 tests)
 // ═════════════════════════════════════════════════════════════════════════════
 
+// Shared Tokio runtime for proptest cases to avoid per-case construction overhead.
+thread_local! {
+    static PROPTEST_RT: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("failed to create proptest runtime");
+}
+
 proptest! {
     /// Planning the same state twice produces an identical (empty) plan.
     #[test]
@@ -731,15 +720,13 @@ proptest! {
     fn prop_storage_round_trip(
         data in proptest::collection::vec(any::<u8>(), 0..1024),
     ) {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        rt.block_on(async {
-            let backend = MockCloudBackend::new();
-            backend.upload("rt-prop", &data).await.unwrap();
-            let downloaded = backend.download("rt-prop").await.unwrap();
-            assert_eq!(data, downloaded);
+        PROPTEST_RT.with(|rt| {
+            rt.block_on(async {
+                let backend = MockCloudBackend::new();
+                backend.upload("rt-prop", &data).await.unwrap();
+                let downloaded = backend.download("rt-prop").await.unwrap();
+                assert_eq!(data, downloaded);
+            });
         });
     }
 
@@ -771,22 +758,20 @@ proptest! {
     fn prop_checksum_matches_sha256(
         data in proptest::collection::vec(any::<u8>(), 1..256),
     ) {
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-        rt.block_on(async {
-            let backend = MockCloudBackend::new();
-            backend.upload("chk", &data).await.unwrap();
-            let meta = backend
-                .list_profiles()
-                .await
-                .unwrap()
-                .into_iter()
-                .find(|m| m.id == "chk")
-                .unwrap();
-            let expected = format!("{:x}", Sha256::digest(&data));
-            assert_eq!(meta.checksum, expected);
+        PROPTEST_RT.with(|rt| {
+            rt.block_on(async {
+                let backend = MockCloudBackend::new();
+                backend.upload("chk", &data).await.unwrap();
+                let meta = backend
+                    .list_profiles()
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .find(|m| m.id == "chk")
+                    .unwrap();
+                let expected = format!("{:x}", Sha256::digest(&data));
+                assert_eq!(meta.checksum, expected);
+            });
         });
     }
 }
