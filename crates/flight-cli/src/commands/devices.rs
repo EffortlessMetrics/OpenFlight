@@ -173,7 +173,10 @@ async fn list_devices(
         })
         .collect();
 
-    let output = output_format.list(devices, Some(response.total_count));
+    let output = match output_format {
+        OutputFormat::Human => format_device_table(&devices),
+        OutputFormat::Json => output_format.list(devices, Some(response.total_count)),
+    };
     Ok(Some(output))
 }
 
@@ -413,6 +416,26 @@ async fn test_device(
     Ok(Some(output))
 }
 
+/// Format a list of devices as an aligned table for human-readable output
+pub fn format_device_table(devices: &[Value]) -> String {
+    if devices.is_empty() {
+        return "No devices found".to_string();
+    }
+
+    let header = format!("{:<30} {:<15} {:<12}", "NAME", "TYPE", "STATUS");
+    let separator = "-".repeat(header.len());
+    let mut lines = vec![header, separator];
+
+    for device in devices {
+        let name = device["name"].as_str().unwrap_or("unknown");
+        let device_type = device["type"].as_str().unwrap_or("unknown");
+        let status = device["status"].as_str().unwrap_or("unknown");
+        lines.push(format!("{:<30} {:<15} {:<12}", name, device_type, status));
+    }
+
+    lines.join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -483,5 +506,50 @@ mod tests {
             .insert("test_key".to_string(), "plain text".to_string());
         let result = metadata_json(&device, "test_key").unwrap().unwrap();
         assert_eq!(result, "plain text");
+    }
+
+    #[test]
+    fn format_device_table_with_devices() {
+        let devices = vec![
+            json!({
+                "name": "VKB Gladiator NXT",
+                "type": "joystick",
+                "status": "connected",
+            }),
+            json!({
+                "name": "Virpil CM2 Throttle",
+                "type": "throttle",
+                "status": "connected",
+            }),
+        ];
+        let table = format_device_table(&devices);
+        assert!(table.contains("NAME"));
+        assert!(table.contains("TYPE"));
+        assert!(table.contains("STATUS"));
+        assert!(table.contains("VKB Gladiator NXT"));
+        assert!(table.contains("joystick"));
+        assert!(table.contains("Virpil CM2 Throttle"));
+        assert!(table.contains("throttle"));
+    }
+
+    #[test]
+    fn format_device_table_empty() {
+        let table = format_device_table(&[]);
+        assert_eq!(table, "No devices found");
+    }
+
+    #[test]
+    fn format_device_table_single_device() {
+        let devices = vec![json!({
+            "name": "Test Device",
+            "type": "panel",
+            "status": "disconnected",
+        })];
+        let table = format_device_table(&devices);
+        assert!(table.contains("Test Device"));
+        assert!(table.contains("panel"));
+        assert!(table.contains("disconnected"));
+        // Header, separator, one device row
+        assert_eq!(table.lines().count(), 3);
     }
 }

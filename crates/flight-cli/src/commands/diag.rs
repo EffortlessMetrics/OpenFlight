@@ -224,7 +224,15 @@ async fn health_summary(
         result["device_details"] = json!(device_details);
     }
 
-    let output = output_format.success(result);
+    let output = match output_format {
+        OutputFormat::Human => format_health_summary(
+            overall_status,
+            connected_count,
+            devices_response.total_count,
+            faulted_count,
+        ),
+        OutputFormat::Json => output_format.success(result),
+    };
     Ok(Some(output))
 }
 
@@ -621,6 +629,23 @@ async fn stop_recording(
     Ok(Some(output))
 }
 
+/// Format health summary for human-readable output
+pub fn format_health_summary(
+    overall: &str,
+    connected: usize,
+    total: i32,
+    faulted: usize,
+) -> String {
+    let mut lines = vec![
+        format!("Overall: {}", overall),
+        format!("Devices: {}/{} connected", connected, total),
+    ];
+    if faulted > 0 {
+        lines.push(format!("Faulted: {} device(s)", faulted));
+    }
+    lines.join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -744,5 +769,31 @@ mod tests {
         let parsed: Value = serde_json::from_str(&output).unwrap();
         assert_eq!(parsed["success"], true);
         assert_eq!(parsed["data"]["recording_active"], false);
+    }
+
+    #[test]
+    fn format_health_summary_healthy() {
+        let summary = format_health_summary("healthy", 3, 3, 0);
+        assert!(summary.contains("Overall: healthy"));
+        assert!(summary.contains("Devices: 3/3 connected"));
+        assert!(!summary.contains("Faulted"));
+    }
+
+    #[test]
+    fn format_health_summary_degraded() {
+        let summary = format_health_summary("degraded", 2, 3, 1);
+        assert!(summary.contains("Overall: degraded"));
+        assert!(summary.contains("Devices: 2/3 connected"));
+        assert!(summary.contains("Faulted: 1 device(s)"));
+    }
+
+    #[test]
+    fn bundle_human_format_contains_path() {
+        let result = json!({
+            "bundle_path": "diag-2024.zip",
+            "daemon_reachable": true,
+        });
+        let output = OutputFormat::Human.success(result);
+        assert!(output.contains("diag-2024.zip"));
     }
 }

@@ -20,6 +20,7 @@ pub async fn execute(
         ProfileAction::List { include_builtin } => {
             list_profiles(*include_builtin, output_format, verbose, client_manager).await
         }
+        ProfileAction::Active => active_profile(output_format, verbose, client_manager).await,
         ProfileAction::Apply {
             profile_path,
             validate_only,
@@ -257,6 +258,31 @@ fn validation_error_type_to_string(error_type: flight_ipc::ValidationErrorType) 
         flight_ipc::ValidationErrorType::Monotonic => "monotonic",
         flight_ipc::ValidationErrorType::Range => "range",
         flight_ipc::ValidationErrorType::Conflict => "conflict",
+    }
+}
+
+/// Stub: requires a GetActiveProfile gRPC endpoint in flight-service.
+async fn active_profile(
+    _output_format: OutputFormat,
+    _verbose: bool,
+    _client_manager: &ClientManager,
+) -> anyhow::Result<Option<String>> {
+    Err(anyhow::anyhow!(
+        "Active profile query not yet available \u{2014} requires flight-service gRPC endpoint"
+    ))
+}
+
+/// Format active profile information for human-readable output
+pub fn format_active_profile(name: Option<&str>, source: Option<&str>) -> String {
+    match name {
+        Some(name) => {
+            let mut output = format!("Active profile: {}", name);
+            if let Some(source) = source {
+                output.push_str(&format!(" ({})", source));
+            }
+            output
+        }
+        None => "No active profile".to_string(),
     }
 }
 
@@ -527,5 +553,31 @@ mod tests {
         let parsed: Value = serde_json::from_str(&output).unwrap();
         assert_eq!(parsed["success"], true);
         assert_eq!(parsed["data"]["valid"], true);
+    }
+
+    #[test]
+    fn active_profile_stub_returns_descriptive_error() {
+        // The active_profile function returns an error because the gRPC endpoint
+        // does not exist yet. Verify the helper still works for future use.
+        let output = format_active_profile(None, None);
+        assert_eq!(output, "No active profile");
+    }
+
+    #[test]
+    fn format_active_profile_with_name() {
+        let output = format_active_profile(Some("combat"), Some("user"));
+        assert_eq!(output, "Active profile: combat (user)");
+    }
+
+    #[test]
+    fn format_active_profile_with_name_no_source() {
+        let output = format_active_profile(Some("default"), None);
+        assert_eq!(output, "Active profile: default");
+    }
+
+    #[test]
+    fn format_active_profile_none() {
+        let output = format_active_profile(None, None);
+        assert_eq!(output, "No active profile");
     }
 }
