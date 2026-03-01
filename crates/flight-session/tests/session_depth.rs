@@ -887,3 +887,187 @@ fn recovery_staleness_threshold_configurable() {
         RecoveryManager::new(session_dir).with_staleness_threshold(Duration::from_secs(60));
     assert!(!mgr_long.is_heartbeat_stale().unwrap());
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 10. Additional depth tests for 50+ coverage
+// ═══════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn snapshot_is_deep_clone_not_alias() {
+    let mut sp = StatePersistence::new("deep-clone", 5);
+    sp.set_profile("original");
+    sp.set_device_config("stick", "cfg-a");
+    sp.snapshot();
+
+    // Mutate current state after snapshot.
+    sp.set_profile("mutated");
+    sp.set_device_config("stick", "cfg-b");
+
+    // The snapshot should still hold the original values.
+    let snap = sp.restore_by_index(0).unwrap();
+    assert_eq!(snap.active_profile.as_deref(), Some("original"));
+    assert_eq!(snap.device_configs.get("stick").unwrap(), "cfg-a");
+}
+
+#[test]
+fn multiple_independent_sessions_do_not_interfere() {
+    let mut sp1 = StatePersistence::new("sess-A", 5);
+    let mut sp2 = StatePersistence::new("sess-B", 5);
+
+    sp1.set_profile("profile-A");
+    sp1.set_sim("MSFS");
+    sp2.set_profile("profile-B");
+    sp2.set_sim("XPlane");
+
+    sp1.snapshot();
+    sp2.snapshot();
+
+    let snap1 = sp1.restore_by_index(0).unwrap();
+    let snap2 = sp2.restore_by_index(0).unwrap();
+
+    assert_eq!(snap1.session_id, "sess-A");
+    assert_eq!(snap1.active_profile.as_deref(), Some("profile-A"));
+    assert_eq!(snap2.session_id, "sess-B");
+    assert_eq!(snap2.active_profile.as_deref(), Some("profile-B"));
+}
+
+#[test]
+fn preference_overwrite_keeps_only_latest() {
+    let mut sp = StatePersistence::new("pref-overwrite", 5);
+    sp.set_preference("theme", "light");
+    assert_eq!(sp.get_preference("theme"), Some("light"));
+
+    sp.set_preference("theme", "dark");
+    assert_eq!(sp.get_preference("theme"), Some("dark"));
+
+    // JSON round-trip should also reflect only the latest.
+    let json = sp.to_json();
+    let restored = StatePersistence::from_json(&json).unwrap();
+    assert_eq!(restored.preferences.get("theme").unwrap(), "dark");
+}
+
+#[test]
+fn empty_state_json_roundtrip() {
+    let state = SessionState::default();
+    let json = serde_json::to_string(&state).unwrap();
+    let back: SessionState = serde_json::from_str(&json).unwrap();
+    assert_eq!(state, back);
+    assert!(back.active_profile.is_none());
+    assert!(back.device_assignments.is_empty());
+    assert!(back.window_positions.is_empty());
+    assert!(back.calibration_data.is_empty());
+    assert!(back.last_shutdown.is_none());
+}
+
+#[test]
+fn large_device_assignment_map_round_trip() {
+    let dir = TempDir::new().unwrap();
+    let store = SessionStore::new(dir.path().join("state.json"));
+
+    let mut state = SessionState::default();
+    for i in 0..100 {
+        state
+            .device_assignments
+            .insert(format!("device-{i:04}"), format!("role-{i}"));
+    }
+
+    store.save(&state).unwrap();
+    let loaded = store.load().unwrap().unwrap();
+    assert_eq!(loaded.device_assignments.len(), 100);
+    assert_eq!(loaded.device_assignments["device-0042"], "role-42");
+}
+
+#[test]
+fn recovery_double_clean_shutdown_is_idempotent() {
+    let dir = TempDir::new().unwrap();
+    let mgr = RecoveryManager::new(dir.path().join("session"));
+
+    mgr.set_heartbeat().unwrap();
+    mgr.mark_clean_shutdown().unwrap();
+    // Second clean shutdown should not error.
+    mgr.mark_clean_shutdown().unwrap();
+
+    assert!(!mgr.needs_recovery().unwrap());
+    assert!(mgr.check_clean_shutdown().unwrap());
+}
+
+#[test]
+fn recovery_recover_then_save_new_state() {
+    let dir = TempDir::new().unwrap();
+    let mgr = RecoveryManager::new(dir.path().join("session"));
+
+    // Save initial state and simulate crash.
+    let state = SessionState {
+        active_profile: Some("old".into()),
+        ..SessionState::default()
+    };
+    mgr.store().save(&state).unwrap();
+    mgr.set_heartbeat().unwrap();
+
+    // Recover.
+    let recovered = mgr.recover().unwrap().unwrap();
+    assert_eq!(recovered.active_profile.as_deref(), Some("old"));
+
+    // Save new state after recovery.
+    let new_state = SessionState {
+        active_profile: Some("new".into()),
+        ..SessionState::default()
+    };
+    mgr.save_and_mark_shutdown(&new_state, ShutdownReason::Clean)
+        .unwrap();
+
+    let loaded = mgr.store().load().unwrap().unwrap();
+    assert_eq!(loaded.active_profile.as_deref(), Some("new"));
+    assert!(!mgr.needs_recovery().unwrap());
+}
+
+#[test]
+fn state_persistence_max_snapshots_of_one() {
+    let mut sp = StatePersistence::new("one-snap", 1);
+    sp.set_profile("a");
+    sp.snapshot();
+    sp.set_profile("b");
+    sp.snapshot();
+
+    assert_eq!(sp.snapshot_count(), 1);
+    let snap = sp.restore_by_index(0).unwrap();
+    assert_eq!(snap.active_profile.as_deref(), Some("b"));
+}
+
+proptest! {
+    #[test]
+    fn prop_shutdown_info_roundtrip(
+        timestamp in 0u64..u64::MAX,
+        reason_idx in 0u8..3,
+    ) {
+        let reason = match reason_idx {
+            0 => ShutdownReason::Clean,
+            1 => ShutdownReason::Crash,
+            _ => ShutdownReason::Unknown,
+        };
+        let info = ShutdownInfo { timestamp, reason };
+        let json = serde_json::to_string(&info).unwrap();
+        let back: ShutdownInfo = serde_json::from_str(&json).unwrap();
+        prop_assert_eq!(back.timestamp, timestamp);
+        prop_assert_eq!(back.reason, info.reason);
+    }
+
+    #[test]
+    fn prop_device_configs_roundtrip(
+        count in 0..20usize,
+    ) {
+        let mut sp = StatePersistence::new("prop-dev", 5);
+        for i in 0..count {
+            sp.set_device_config(&format!("dev-{i}"), &format!("cfg-{i}"));
+        }
+        let json = sp.to_json();
+        let restored = StatePersistence::from_json(&json).unwrap();
+        prop_assert_eq!(restored.device_configs.len(), count);
+        for i in 0..count {
+            prop_assert_eq!(
+                restored.device_configs.get(&format!("dev-{i}")).unwrap(),
+                &format!("cfg-{i}")
+            );
+        }
+    }
+}
