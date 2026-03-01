@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-dcs-bios"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "DCS-BIOS binary protocol support for cockpit builders interfacing with DCS World."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "dcs", "dcs-bios", "cockpit"]
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
