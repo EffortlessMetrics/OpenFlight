@@ -20,9 +20,7 @@ pub async fn execute(
         ProfileAction::List { include_builtin } => {
             list_profiles(*include_builtin, output_format, verbose, client_manager).await
         }
-        ProfileAction::Active => {
-            active_profile(output_format, verbose, client_manager).await
-        }
+        ProfileAction::Active => active_profile(output_format, verbose, client_manager).await,
         ProfileAction::Apply {
             profile_path,
             validate_only,
@@ -268,13 +266,21 @@ async fn active_profile(
     _verbose: bool,
     _client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
-    // Stub: would use GetActiveProfile RPC when available
-    let result = json!({
-        "active_profile": null,
-        "source": null,
-        "message": "Active profile query requires GetActiveProfile RPC to be implemented in the service",
-    });
-    let output = output_format.success(result);
+    let output = match output_format {
+        OutputFormat::Human => {
+            let mut human = format_active_profile(None, None);
+            human.push_str("\n\nWarning: Profile detection not yet implemented");
+            human
+        }
+        OutputFormat::Json => {
+            let result = json!({
+                "active_profile": null,
+                "source": null,
+                "warning": "Profile detection not yet implemented",
+            });
+            output_format.success(result)
+        }
+    };
     Ok(Some(output))
 }
 
@@ -566,22 +572,22 @@ mod tests {
         let result = json!({
             "active_profile": null,
             "source": null,
-            "message": "Active profile query requires GetActiveProfile RPC to be implemented in the service",
+            "warning": "Profile detection not yet implemented",
         });
         let output = OutputFormat::Json.success(result);
         let parsed: Value = serde_json::from_str(&output).unwrap();
         assert_eq!(parsed["success"], true);
         assert!(parsed["data"]["active_profile"].is_null());
+        assert_eq!(
+            parsed["data"]["warning"],
+            "Profile detection not yet implemented"
+        );
     }
 
     #[test]
     fn active_profile_stub_human_format() {
-        let result = json!({
-            "active_profile": null,
-            "message": "Active profile query requires GetActiveProfile RPC",
-        });
-        let output = OutputFormat::Human.success(result);
-        assert!(output.contains("active_profile"));
+        let output = format_active_profile(None, None);
+        assert_eq!(output, "No active profile");
     }
 
     #[test]

@@ -20,23 +20,36 @@ pub async fn execute(
 }
 
 fn offline_status(output_format: OutputFormat, verbose: bool, err: &anyhow::Error) -> String {
-    let mut result = json!({
-        "service_status": "unreachable",
-        "service_version": null,
-        "uptime_seconds": null,
-        "connected_devices": null,
-        "total_devices": null,
-        "active_profile": null,
-        "active_sim": null,
-        "cli_version": env!("CARGO_PKG_VERSION"),
-        "message": "Flight Hub service is not running or unreachable",
-    });
+    match output_format {
+        OutputFormat::Human => {
+            let mut output = format_status_summary("unreachable", None, None, None, None);
+            output.push_str(&format!("\nCLI:     v{}", env!("CARGO_PKG_VERSION")));
+            output.push_str("\n\nFlight Hub service is not running or unreachable");
+            if verbose {
+                output.push_str(&format!("\nError:   {}", err));
+            }
+            output
+        }
+        OutputFormat::Json => {
+            let mut result = json!({
+                "service_status": "unreachable",
+                "service_version": null,
+                "uptime_seconds": null,
+                "connected_devices": null,
+                "total_devices": null,
+                "active_profile": null,
+                "active_sim": null,
+                "cli_version": env!("CARGO_PKG_VERSION"),
+                "message": "Flight Hub service is not running or unreachable",
+            });
 
-    if verbose {
-        result["connection_error"] = json!(err.to_string());
+            if verbose {
+                result["connection_error"] = json!(err.to_string());
+            }
+
+            output_format.success(result)
+        }
     }
-
-    output_format.success(result)
 }
 
 async fn execute_online(
@@ -59,46 +72,55 @@ async fn execute_online(
     let connected_devices = devices_response.devices.len();
     let total_devices = devices_response.total_count;
 
-    let mut result = json!({
-        "service_status": service_status_to_string(service_info.status()),
-        "service_version": service_info.version,
-        "uptime_seconds": service_info.uptime_seconds,
-        "connected_devices": connected_devices,
-        "total_devices": total_devices,
-        "active_profile": "default",
-        "active_sim": null,
-    });
+    let output = match output_format {
+        OutputFormat::Human => format_status_summary(
+            service_status_to_string(service_info.status()),
+            Some(service_info.uptime_seconds),
+            Some(connected_devices),
+            None,
+            None,
+        ),
+        OutputFormat::Json => {
+            let mut result = json!({
+                "service_status": service_status_to_string(service_info.status()),
+                "service_version": service_info.version,
+                "uptime_seconds": service_info.uptime_seconds,
+                "connected_devices": connected_devices,
+                "total_devices": total_devices,
+                "active_profile": null,
+                "active_sim": null,
+            });
 
-    if verbose {
-        // Add device breakdown
-        let mut device_breakdown = std::collections::HashMap::new();
-        for device in &devices_response.devices {
-            let device_type = device_type_to_string(device.r#type());
-            *device_breakdown.entry(device_type).or_insert(0) += 1;
+            if verbose {
+                let mut device_breakdown = std::collections::HashMap::new();
+                for device in &devices_response.devices {
+                    let device_type = device_type_to_string(device.r#type());
+                    *device_breakdown.entry(device_type).or_insert(0) += 1;
+                }
+
+                result["device_breakdown"] = json!(device_breakdown);
+                result["service_capabilities"] = json!(service_info.capabilities);
+
+                result["recent_health"] = json!({
+                    "errors_last_hour": 0,
+                    "warnings_last_hour": 2,
+                    "performance_alerts": 0,
+                    "last_fault": null
+                });
+
+                result["performance"] = json!({
+                    "axis_jitter_p99_ms": 0.23,
+                    "hid_latency_p99_us": 145.7,
+                    "cpu_usage_percent": 2.1,
+                    "memory_usage_mb": 127.3,
+                    "missed_ticks": 0
+                });
+            }
+
+            output_format.success(result)
         }
+    };
 
-        result["device_breakdown"] = json!(device_breakdown);
-        result["service_capabilities"] = json!(service_info.capabilities);
-
-        // Get recent health events (would require actual health subscription)
-        result["recent_health"] = json!({
-            "errors_last_hour": 0,
-            "warnings_last_hour": 2,
-            "performance_alerts": 0,
-            "last_fault": null
-        });
-
-        // System performance metrics (simulated)
-        result["performance"] = json!({
-            "axis_jitter_p99_ms": 0.23,
-            "hid_latency_p99_us": 145.7,
-            "cpu_usage_percent": 2.1,
-            "memory_usage_mb": 127.3,
-            "missed_ticks": 0
-        });
-    }
-
-    let output = output_format.success(result);
     Ok(Some(output))
 }
 
@@ -140,10 +162,7 @@ pub fn format_status_summary(
     if let Some(count) = connected_devices {
         lines.push(format!("Devices: {} connected", count));
     }
-    lines.push(format!(
-        "Profile: {}",
-        active_profile.unwrap_or("none")
-    ));
+    lines.push(format!("Profile: {}", active_profile.unwrap_or("none")));
     lines.push(format!("Sim:     {}", active_sim.unwrap_or("none")));
     lines.join("\n")
 }
@@ -199,7 +218,7 @@ mod tests {
         let err = anyhow::anyhow!("connection refused");
         let result = offline_status(OutputFormat::Human, false, &err);
         assert!(result.contains("unreachable"));
-        assert!(result.contains("cli_version"));
+        assert!(result.contains("CLI:"));
     }
 
     #[test]
@@ -220,13 +239,8 @@ mod tests {
 
     #[test]
     fn format_status_summary_running_service() {
-        let summary = format_status_summary(
-            "running",
-            Some(3661),
-            Some(3),
-            Some("combat"),
-            Some("msfs"),
-        );
+        let summary =
+            format_status_summary("running", Some(3661), Some(3), Some("combat"), Some("msfs"));
         assert!(summary.contains("Service: running"));
         assert!(summary.contains("Uptime:"));
         assert!(summary.contains("Devices: 3 connected"));

@@ -173,7 +173,10 @@ async fn list_devices(
         })
         .collect();
 
-    let output = output_format.list(devices, Some(response.total_count));
+    let output = match output_format {
+        OutputFormat::Human => format_device_table(&devices),
+        OutputFormat::Json => output_format.list(devices, Some(response.total_count)),
+    };
     Ok(Some(output))
 }
 

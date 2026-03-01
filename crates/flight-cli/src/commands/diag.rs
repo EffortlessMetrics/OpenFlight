@@ -224,7 +224,15 @@ async fn health_summary(
         result["device_details"] = json!(device_details);
     }
 
-    let output = output_format.success(result);
+    let output = match output_format {
+        OutputFormat::Human => format_health_summary(
+            overall_status,
+            connected_count,
+            devices_response.total_count,
+            faulted_count,
+        ),
+        OutputFormat::Json => output_format.success(result),
+    };
     Ok(Some(output))
 }
 
