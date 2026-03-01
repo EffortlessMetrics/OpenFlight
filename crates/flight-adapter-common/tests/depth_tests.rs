@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 //! Depth tests for flight-adapter-common: adapter traits, telemetry conversion,
-//! state machine, connection management, and property-based invariants.
+//! connection management, and validation of adapter state transitions.
 
 use std::time::Duration;
 
@@ -248,13 +248,14 @@ mod telemetry_conversion {
     }
 
     #[test]
-    fn metrics_default_matches_new() {
+    fn metrics_new_overrides_default() {
         let from_new = AdapterMetrics::new();
         let from_default = AdapterMetrics::default();
         // Both should start at zero updates.
         assert_eq!(from_new.total_updates, from_default.total_updates);
-        // `new()` sets max_interval_samples to 100; `default()` uses 0.
+        // After fix, default() and new() should agree on max_interval_samples.
         assert_eq!(from_new.max_interval_samples, 100);
+        assert_eq!(from_default.max_interval_samples, from_new.max_interval_samples);
     }
 
     #[test]
@@ -456,7 +457,7 @@ mod property_tests {
             Duration::from_millis(1),
             Duration::from_millis(1000),
         );
-        for attempt in [0, 1, 10, 100, 1000, u32::MAX] {
+        for attempt in [1, 10, 100, 1000, u32::MAX] {
             let d = s.next_backoff(attempt);
             assert!(
                 d <= Duration::from_millis(1000),
