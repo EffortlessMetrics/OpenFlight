@@ -11,18 +11,20 @@ use flight_hotas_honeycomb::alpha::ALPHA_REPORT_LEN;
 use flight_hotas_honeycomb::bravo::BRAVO_REPORT_LEN;
 use flight_hotas_honeycomb::bravo_leds::{BravoLedState, serialize_led_report};
 use flight_hotas_honeycomb::charlie::CHARLIE_REPORT_LEN;
+use flight_hotas_honeycomb::health::{HoneycombHealth, HoneycombHealthMonitor};
 use flight_hotas_honeycomb::presets;
 use flight_hotas_honeycomb::profiles::{
-    self, ALPHA_PROFILE, BRAVO_PROFILE, CHARLIE_PROFILE, profile_for_model,
+    ALPHA_PROFILE, BRAVO_PROFILE, CHARLIE_PROFILE, profile_for_model,
 };
 use flight_hotas_honeycomb::protocol::{
     EncoderTracker, GearIndicatorState, MagnetoPosition, ToggleSwitchState, WrappingEncoder,
     decode_all_toggle_switches, decode_magneto, decode_toggle_switch,
 };
 use flight_hotas_honeycomb::{
-    AlphaParseError, BravoParseError, CharlieParseError, HoneycombModel, HONEYCOMB_ALPHA_YOKE_PID,
-    HONEYCOMB_BRAVO_PID, HONEYCOMB_CHARLIE_PID, HONEYCOMB_VENDOR_ID, honeycomb_model,
-    is_honeycomb_device, parse_alpha_report, parse_bravo_report, parse_charlie_report,
+    AlphaParseError, BravoParseError, CharlieParseError, HONEYCOMB_ALPHA_YOKE_PID,
+    HONEYCOMB_BRAVO_PID, HONEYCOMB_CHARLIE_PID, HONEYCOMB_VENDOR_ID, HoneycombModel,
+    honeycomb_model, is_honeycomb_device, parse_alpha_report, parse_bravo_report,
+    parse_charlie_report,
 };
 
 // ── Report builders ──────────────────────────────────────────────────────────
@@ -67,9 +69,18 @@ fn charlie_report(rudder: u16, left: u16, right: u16) -> [u8; CHARLIE_REPORT_LEN
 
 #[test]
 fn device_id_recognises_all_three_products() {
-    assert!(is_honeycomb_device(HONEYCOMB_VENDOR_ID, HONEYCOMB_ALPHA_YOKE_PID));
-    assert!(is_honeycomb_device(HONEYCOMB_VENDOR_ID, HONEYCOMB_BRAVO_PID));
-    assert!(is_honeycomb_device(HONEYCOMB_VENDOR_ID, HONEYCOMB_CHARLIE_PID));
+    assert!(is_honeycomb_device(
+        HONEYCOMB_VENDOR_ID,
+        HONEYCOMB_ALPHA_YOKE_PID
+    ));
+    assert!(is_honeycomb_device(
+        HONEYCOMB_VENDOR_ID,
+        HONEYCOMB_BRAVO_PID
+    ));
+    assert!(is_honeycomb_device(
+        HONEYCOMB_VENDOR_ID,
+        HONEYCOMB_CHARLIE_PID
+    ));
 }
 
 #[test]
@@ -86,9 +97,18 @@ fn device_id_rejects_unknown_product() {
 
 #[test]
 fn model_lookup_returns_correct_variant() {
-    assert_eq!(honeycomb_model(HONEYCOMB_ALPHA_YOKE_PID), Some(HoneycombModel::AlphaYoke));
-    assert_eq!(honeycomb_model(HONEYCOMB_BRAVO_PID), Some(HoneycombModel::BravoThrottle));
-    assert_eq!(honeycomb_model(HONEYCOMB_CHARLIE_PID), Some(HoneycombModel::CharliePedals));
+    assert_eq!(
+        honeycomb_model(HONEYCOMB_ALPHA_YOKE_PID),
+        Some(HoneycombModel::AlphaYoke)
+    );
+    assert_eq!(
+        honeycomb_model(HONEYCOMB_BRAVO_PID),
+        Some(HoneycombModel::BravoThrottle)
+    );
+    assert_eq!(
+        honeycomb_model(HONEYCOMB_CHARLIE_PID),
+        Some(HoneycombModel::CharliePedals)
+    );
 }
 
 #[test]
@@ -219,7 +239,13 @@ fn alpha_single_button_isolation() {
 #[test]
 fn alpha_empty_report_error() {
     let err = parse_alpha_report(&[]).unwrap_err();
-    assert!(matches!(err, AlphaParseError::TooShort { expected: 11, got: 0 }));
+    assert!(matches!(
+        err,
+        AlphaParseError::TooShort {
+            expected: ALPHA_REPORT_LEN,
+            got: 0
+        }
+    ));
 }
 
 #[test]
@@ -249,7 +275,10 @@ fn alpha_longer_report_still_parses() {
 
 #[test]
 fn alpha_error_display_formatting() {
-    let err = AlphaParseError::TooShort { expected: 11, got: 3 };
+    let err = AlphaParseError::TooShort {
+        expected: ALPHA_REPORT_LEN,
+        got: 3,
+    };
     let msg = format!("{err}");
     assert!(msg.contains("11"), "should mention expected length");
     assert!(msg.contains("3"), "should mention actual length");
@@ -278,8 +307,7 @@ fn bravo_individual_throttle_isolation() {
 
 #[test]
 fn bravo_flap_and_spoiler_independent() {
-    let state =
-        parse_bravo_report(&bravo_report([0, 0, 0, 0, 0, 4095, 2048], 0)).unwrap();
+    let state = parse_bravo_report(&bravo_report([0, 0, 0, 0, 0, 4095, 2048], 0)).unwrap();
     assert!((state.axes.flap_lever - 1.0).abs() < 1e-4);
     let expected_spoiler = 2048.0 / 4095.0;
     assert!((state.axes.spoiler - expected_spoiler).abs() < 1e-3);
@@ -337,7 +365,13 @@ fn bravo_no_buttons_all_convenience_false() {
 #[test]
 fn bravo_empty_report_error() {
     let err = parse_bravo_report(&[]).unwrap_err();
-    assert!(matches!(err, BravoParseError::TooShort { expected: 23, got: 0 }));
+    assert!(matches!(
+        err,
+        BravoParseError::TooShort {
+            expected: BRAVO_REPORT_LEN,
+            got: 0
+        }
+    ));
 }
 
 #[test]
@@ -362,7 +396,10 @@ fn bravo_report_id_0xff_rejected() {
 
 #[test]
 fn bravo_error_display_formatting() {
-    let err = BravoParseError::TooShort { expected: 23, got: 5 };
+    let err = BravoParseError::TooShort {
+        expected: BRAVO_REPORT_LEN,
+        got: 5,
+    };
     let msg = format!("{err}");
     assert!(msg.contains("23"));
     assert!(msg.contains("5"));
@@ -411,7 +448,11 @@ fn led_gear_transit_shows_all_red() {
     // Verify red bits are on, green bits are off
     let report = serialize_led_report(&leds);
     assert_eq!(report[2] & 0b0001_0101, 0, "green bits should be off");
-    assert_eq!(report[2] & 0b0010_1010, 0b0010_1010, "red bits should be on");
+    assert_eq!(
+        report[2] & 0b0010_1010,
+        0b0010_1010,
+        "red bits should be on"
+    );
     // Confirm the led_colors helper returned expected values
     assert!(!green);
     assert!(red);
@@ -465,7 +506,13 @@ fn charlie_brake_mid_travel() {
 #[test]
 fn charlie_empty_report_error() {
     let err = parse_charlie_report(&[]).unwrap_err();
-    assert!(matches!(err, CharlieParseError::TooShort { expected: 7, got: 0 }));
+    assert!(matches!(
+        err,
+        CharlieParseError::TooShort {
+            expected: CHARLIE_REPORT_LEN,
+            got: 0
+        }
+    ));
 }
 
 #[test]
@@ -662,7 +709,11 @@ fn gear_led_colors_match_set_all_gear() {
             assert_ne!(report[2] & 0b0010_1010, 0, "red LEDs for {gear_state:?}");
         }
         if !green && !red {
-            assert_eq!(report[2] & 0b0011_1111, 0, "no gear LEDs for {gear_state:?}");
+            assert_eq!(
+                report[2] & 0b0011_1111,
+                0,
+                "no gear LEDs for {gear_state:?}"
+            );
         }
     }
 }
@@ -693,7 +744,12 @@ fn toggle_all_seven_down() {
     }
     let switches = decode_all_toggle_switches(mask);
     for (i, s) in switches.iter().enumerate() {
-        assert_eq!(*s, ToggleSwitchState::Down, "switch {} should be Down", i + 1);
+        assert_eq!(
+            *s,
+            ToggleSwitchState::Down,
+            "switch {} should be Down",
+            i + 1
+        );
     }
 }
 
@@ -720,8 +776,6 @@ fn toggle_switch_invalid_numbers_are_center() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // §16  Health monitor
 // ═══════════════════════════════════════════════════════════════════════════════
-
-use flight_hotas_honeycomb::health::{HoneycombHealth, HoneycombHealthMonitor};
 
 #[test]
 fn health_interleaved_success_error_recovery() {
@@ -768,7 +822,10 @@ fn preset_deadzones_are_positive_and_small() {
         presets::CHARLIE_RUDDER_DEADZONE,
         presets::CHARLIE_BRAKE_DEADZONE,
     ] {
-        assert!(dz >= 0.0 && dz <= 0.1, "deadzone {dz} out of expected range");
+        assert!(
+            dz >= 0.0 && dz <= 0.1,
+            "deadzone {dz} out of expected range"
+        );
     }
 }
 
@@ -784,15 +841,24 @@ fn preset_axis_names_are_unique_per_device() {
     use std::collections::HashSet;
     let mut alpha_names: HashSet<&str> = HashSet::new();
     for name in presets::ALPHA_AXIS_NAMES {
-        assert!(alpha_names.insert(name), "duplicate Alpha axis name: {name}");
+        assert!(
+            alpha_names.insert(name),
+            "duplicate Alpha axis name: {name}"
+        );
     }
     let mut bravo_names: HashSet<&str> = HashSet::new();
     for name in presets::BRAVO_AXIS_NAMES {
-        assert!(bravo_names.insert(name), "duplicate Bravo axis name: {name}");
+        assert!(
+            bravo_names.insert(name),
+            "duplicate Bravo axis name: {name}"
+        );
     }
     let mut charlie_names: HashSet<&str> = HashSet::new();
     for name in presets::CHARLIE_AXIS_NAMES {
-        assert!(charlie_names.insert(name), "duplicate Charlie axis name: {name}");
+        assert!(
+            charlie_names.insert(name),
+            "duplicate Charlie axis name: {name}"
+        );
     }
 }
 
@@ -843,7 +909,7 @@ fn profile_axis_names_match_presets() {
     for (i, axis) in ALPHA_PROFILE.axes.iter().enumerate() {
         assert_eq!(axis.name, presets::ALPHA_AXIS_NAMES[i]);
     }
-    for axis in CHARLIE_PROFILE.axes {
+    for axis in CHARLIE_PROFILE.axes.iter() {
         assert!(
             presets::CHARLIE_AXIS_NAMES.contains(&axis.name),
             "Charlie axis '{}' not in presets",
@@ -857,7 +923,7 @@ fn profile_no_duplicate_axis_indices() {
     use std::collections::HashSet;
     for profile in [&ALPHA_PROFILE, &BRAVO_PROFILE, &CHARLIE_PROFILE] {
         let mut indices: HashSet<u8> = HashSet::new();
-        for axis in profile.axes {
+        for axis in profile.axes.iter() {
             assert!(
                 indices.insert(axis.index),
                 "duplicate axis index {} in {}",
@@ -879,10 +945,18 @@ fn profile_bravo_has_led_and_encoder_support() {
 #[test]
 fn profile_button_numbers_within_device_range() {
     for btn in ALPHA_PROFILE.buttons {
-        assert!(btn.button_num >= 1 && btn.button_num <= 36, "Alpha button {} out of range", btn.button_num);
+        assert!(
+            btn.button_num >= 1 && btn.button_num <= 36,
+            "Alpha button {} out of range",
+            btn.button_num
+        );
     }
     for btn in BRAVO_PROFILE.buttons {
-        assert!(btn.button_num >= 1 && btn.button_num <= 64, "Bravo button {} out of range", btn.button_num);
+        assert!(
+            btn.button_num >= 1 && btn.button_num <= 64,
+            "Bravo button {} out of range",
+            btn.button_num
+        );
     }
     assert!(CHARLIE_PROFILE.buttons.is_empty());
 }
@@ -890,7 +964,7 @@ fn profile_button_numbers_within_device_range() {
 #[test]
 fn all_profiles_axis_mappings_have_sim_var_hints() {
     for profile in [&ALPHA_PROFILE, &BRAVO_PROFILE, &CHARLIE_PROFILE] {
-        for axis in profile.axes {
+        for axis in profile.axes.iter() {
             assert!(
                 !axis.sim_var_hint.is_empty(),
                 "missing sim_var_hint for {} in {}",
