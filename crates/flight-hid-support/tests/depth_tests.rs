@@ -3,11 +3,11 @@
 
 //! Depth tests for flight-hid-support: device enumeration, polling, report handling.
 
+use flight_hid_support::HidDeviceInfo;
 use flight_hid_support::device_support::*;
 use flight_hid_support::ghost_filter::*;
 use flight_hid_support::hid_descriptor::*;
 use flight_hid_support::saitek_hotas::*;
-use flight_hid_support::HidDeviceInfo;
 use std::time::Duration;
 
 // ---------------------------------------------------------------------------
@@ -88,8 +88,7 @@ fn descriptor_multiple_axes() {
     //   Usage(X), Usage(Y), Usage(Rz), Input
     // End Collection
     let desc: &[u8] = &[
-        0x05, 0x01, 0x09, 0x04, 0xA1, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x35, 0x81, 0x02,
-        0xC0,
+        0x05, 0x01, 0x09, 0x04, 0xA1, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x35, 0x81, 0x02, 0xC0,
     ];
     let usages = extract_usages(desc);
     assert_eq!(usages.len(), 3);
@@ -220,14 +219,18 @@ fn descriptor_large_usage_range_capped() {
 #[test]
 fn axis_mode_merged_descriptor() {
     // Merged: X, Y, Rz, no sliders
-    let desc = parse_hex_descriptor("05 01 09 04 A1 01 09 30 09 31 09 35 15 81 25 7F 75 08 95 03 81 02 C0");
+    let desc = parse_hex_descriptor(
+        "05 01 09 04 A1 01 09 30 09 31 09 35 15 81 25 7F 75 08 95 03 81 02 C0",
+    );
     assert_eq!(axis_mode_from_descriptor(&desc), AxisMode::Merged);
 }
 
 #[test]
 fn axis_mode_separate_descriptor() {
     // Separate: X, Y, Rz, 2 sliders
-    let desc = parse_hex_descriptor("05 01 09 04 A1 01 09 30 09 31 09 35 09 36 09 36 15 81 25 7F 75 08 95 05 81 02 C0");
+    let desc = parse_hex_descriptor(
+        "05 01 09 04 A1 01 09 30 09 31 09 35 09 36 09 36 15 81 25 7F 75 08 95 05 81 02 C0",
+    );
     assert_eq!(axis_mode_from_descriptor(&desc), AxisMode::Separate);
 }
 
@@ -244,8 +247,7 @@ fn axis_mode_unknown_missing_rz() {
 fn axis_mode_unknown_one_slider() {
     // X, Y, Rz, 1 slider — ambiguous
     let desc: &[u8] = &[
-        0x05, 0x01, 0xA1, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x35, 0x09, 0x36, 0x81, 0x02,
-        0xC0,
+        0x05, 0x01, 0xA1, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x35, 0x09, 0x36, 0x81, 0x02, 0xC0,
     ];
     assert_eq!(axis_mode_from_descriptor(desc), AxisMode::Unknown);
 }
@@ -258,7 +260,9 @@ fn axis_mode_from_device_info_no_descriptor() {
 
 #[test]
 fn axis_mode_from_device_info_with_descriptor() {
-    let desc = parse_hex_descriptor("05 01 09 04 A1 01 09 30 09 31 09 35 15 81 25 7F 75 08 95 03 81 02 C0");
+    let desc = parse_hex_descriptor(
+        "05 01 09 04 A1 01 09 30 09 31 09 35 15 81 25 7F 75 08 95 03 81 02 C0",
+    );
     let dev = make_device_with_descriptor(THRUSTMASTER_VENDOR_ID, TFLIGHT_HOTAS_4_PID, desc);
     assert_eq!(axis_mode_from_device_info(&dev), AxisMode::Merged);
 }
@@ -286,11 +290,26 @@ fn axis_usage_summary_empty() {
 #[test]
 fn axis_usage_summary_full_axes() {
     let usages = [
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_X },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_Y },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_RZ },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_SLIDER },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_DIAL },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_X,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_Y,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_RZ,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_SLIDER,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_DIAL,
+        },
     ];
     let summary = AxisUsageSummary::from_usages(&usages);
     assert!(summary.has_x);
@@ -301,7 +320,10 @@ fn axis_usage_summary_full_axes() {
 
 #[test]
 fn axis_usage_summary_ignores_non_generic_desktop() {
-    let usages = [HidUsage { usage_page: USAGE_PAGE_BUTTON, usage: USAGE_X }];
+    let usages = [HidUsage {
+        usage_page: USAGE_PAGE_BUTTON,
+        usage: USAGE_X,
+    }];
     let summary = AxisUsageSummary::from_usages(&usages);
     assert!(!summary.has_x);
 }
@@ -399,8 +421,14 @@ fn logitech_g_flight_yoke_detection() {
 
 #[test]
 fn logitech_g_flight_throttle_quadrant_detection() {
-    assert!(is_g_flight_throttle_quadrant(LOGITECH_VENDOR_ID, G_FLIGHT_THROTTLE_QUADRANT_PID));
-    assert!(!is_g_flight_throttle_quadrant(0x1234, G_FLIGHT_THROTTLE_QUADRANT_PID));
+    assert!(is_g_flight_throttle_quadrant(
+        LOGITECH_VENDOR_ID,
+        G_FLIGHT_THROTTLE_QUADRANT_PID
+    ));
+    assert!(!is_g_flight_throttle_quadrant(
+        0x1234,
+        G_FLIGHT_THROTTLE_QUADRANT_PID
+    ));
 }
 
 // ---------------------------------------------------------------------------
@@ -409,7 +437,10 @@ fn logitech_g_flight_throttle_quadrant_detection() {
 
 #[test]
 fn sidewinder_ffb_pro_detection() {
-    assert!(is_sidewinder_device(MICROSOFT_VENDOR_ID, SIDEWINDER_FFB_PRO_PID));
+    assert!(is_sidewinder_device(
+        MICROSOFT_VENDOR_ID,
+        SIDEWINDER_FFB_PRO_PID
+    ));
     assert_eq!(
         sidewinder_model(SIDEWINDER_FFB_PRO_PID),
         Some(SidewinderModel::FfbPro)
@@ -419,7 +450,10 @@ fn sidewinder_ffb_pro_detection() {
 
 #[test]
 fn sidewinder_ffb2_detection() {
-    assert!(is_sidewinder_device(MICROSOFT_VENDOR_ID, SIDEWINDER_FFB2_PID));
+    assert!(is_sidewinder_device(
+        MICROSOFT_VENDOR_ID,
+        SIDEWINDER_FFB2_PID
+    ));
     assert_eq!(
         sidewinder_model(SIDEWINDER_FFB2_PID),
         Some(SidewinderModel::Ffb2)
@@ -455,10 +489,22 @@ fn sidewinder_model_names_nonempty() {
 
 #[test]
 fn warthog_joystick_and_throttle() {
-    assert!(is_warthog_device(THRUSTMASTER_VENDOR_ID, WARTHOG_JOYSTICK_PID));
-    assert!(is_warthog_device(THRUSTMASTER_VENDOR_ID, WARTHOG_THROTTLE_PID));
-    assert_eq!(warthog_model(WARTHOG_JOYSTICK_PID), Some(WarthogModel::Joystick));
-    assert_eq!(warthog_model(WARTHOG_THROTTLE_PID), Some(WarthogModel::Throttle));
+    assert!(is_warthog_device(
+        THRUSTMASTER_VENDOR_ID,
+        WARTHOG_JOYSTICK_PID
+    ));
+    assert!(is_warthog_device(
+        THRUSTMASTER_VENDOR_ID,
+        WARTHOG_THROTTLE_PID
+    ));
+    assert_eq!(
+        warthog_model(WARTHOG_JOYSTICK_PID),
+        Some(WarthogModel::Joystick)
+    );
+    assert_eq!(
+        warthog_model(WARTHOG_THROTTLE_PID),
+        Some(WarthogModel::Throttle)
+    );
     assert!(warthog_model(0xFFFF).is_none());
 }
 
@@ -470,32 +516,59 @@ fn warthog_model_names() {
 
 #[test]
 fn t16000m_device_detection() {
-    assert!(is_t16000m_device(THRUSTMASTER_VENDOR_ID, T16000M_JOYSTICK_PID));
+    assert!(is_t16000m_device(
+        THRUSTMASTER_VENDOR_ID,
+        T16000M_JOYSTICK_PID
+    ));
     assert!(is_t16000m_device(THRUSTMASTER_VENDOR_ID, TWCS_THROTTLE_PID));
     assert!(!is_t16000m_device(THRUSTMASTER_VENDOR_ID, 0xFFFF));
-    assert_eq!(t16000m_model(T16000M_JOYSTICK_PID), Some(T16000mModel::Joystick));
-    assert_eq!(t16000m_model(TWCS_THROTTLE_PID), Some(T16000mModel::TwcsThrottle));
+    assert_eq!(
+        t16000m_model(T16000M_JOYSTICK_PID),
+        Some(T16000mModel::Joystick)
+    );
+    assert_eq!(
+        t16000m_model(TWCS_THROTTLE_PID),
+        Some(T16000mModel::TwcsThrottle)
+    );
 }
 
 #[test]
 fn cougar_hotas_detection() {
-    assert!(is_cougar_hotas_device(THRUSTMASTER_VENDOR_ID, COUGAR_HOTAS_STICK_PID));
+    assert!(is_cougar_hotas_device(
+        THRUSTMASTER_VENDOR_ID,
+        COUGAR_HOTAS_STICK_PID
+    ));
     assert!(!is_cougar_hotas_device(0x1234, COUGAR_HOTAS_STICK_PID));
-    assert_eq!(cougar_hotas_model(COUGAR_HOTAS_STICK_PID), Some(CougarHotasModel::Stick));
+    assert_eq!(
+        cougar_hotas_model(COUGAR_HOTAS_STICK_PID),
+        Some(CougarHotasModel::Stick)
+    );
     assert!(cougar_hotas_model(0xFFFF).is_none());
 }
 
 #[test]
 fn thrustmaster_usb_joystick_detection() {
-    assert!(is_thrustmaster_usb_joystick(THRUSTMASTER_VENDOR_ID, THRUSTMASTER_USB_JOYSTICK_PID));
-    assert!(!is_thrustmaster_usb_joystick(0x1234, THRUSTMASTER_USB_JOYSTICK_PID));
+    assert!(is_thrustmaster_usb_joystick(
+        THRUSTMASTER_VENDOR_ID,
+        THRUSTMASTER_USB_JOYSTICK_PID
+    ));
+    assert!(!is_thrustmaster_usb_joystick(
+        0x1234,
+        THRUSTMASTER_USB_JOYSTICK_PID
+    ));
 }
 
 #[test]
 fn tca_airbus_all_models() {
     let models = [
-        (TCA_SIDESTICK_AIRBUS_PILOT_PID, TcaAirbusModel::SidestickPilot),
-        (TCA_SIDESTICK_AIRBUS_COPILOT_PID, TcaAirbusModel::SidestickCopilot),
+        (
+            TCA_SIDESTICK_AIRBUS_PILOT_PID,
+            TcaAirbusModel::SidestickPilot,
+        ),
+        (
+            TCA_SIDESTICK_AIRBUS_COPILOT_PID,
+            TcaAirbusModel::SidestickCopilot,
+        ),
         (TCA_QUADRANT_AIRBUS_ENG12_PID, TcaAirbusModel::QuadrantEng12),
         (TCA_QUADRANT_AIRBUS_ENG34_PID, TcaAirbusModel::QuadrantEng34),
     ];
@@ -512,8 +585,14 @@ fn tca_airbus_all_models() {
 fn tca_boeing_all_models() {
     let models = [
         (TCA_YOKE_BOEING_PID, TcaBoeingModel::YokeBoeing),
-        (TCA_QUADRANT_BOEING_ENG12_PID, TcaBoeingModel::QuadrantBoeing12),
-        (TCA_QUADRANT_BOEING_ENG34_PID, TcaBoeingModel::QuadrantBoeing34),
+        (
+            TCA_QUADRANT_BOEING_ENG12_PID,
+            TcaBoeingModel::QuadrantBoeing12,
+        ),
+        (
+            TCA_QUADRANT_BOEING_ENG34_PID,
+            TcaBoeingModel::QuadrantBoeing34,
+        ),
     ];
     for (pid, expected) in models {
         assert!(is_tca_boeing_device(THRUSTMASTER_VENDOR_ID, pid));
@@ -537,9 +616,18 @@ fn virpil_all_models_detected() {
         (VIRPIL_PANEL1_PID, VirpilModel::ControlPanel1),
         (VIRPIL_PANEL2_PID, VirpilModel::ControlPanel2),
         (VIRPIL_SHARK_PANEL_PID, VirpilModel::SharkPanel),
-        (VIRPIL_CONSTELLATION_ALPHA_LEFT_PID, VirpilModel::ConstellationAlphaLeft),
-        (VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID, VirpilModel::ConstellationAlphaPrimeLeft),
-        (VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID, VirpilModel::ConstellationAlphaPrimeRight),
+        (
+            VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
+            VirpilModel::ConstellationAlphaLeft,
+        ),
+        (
+            VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID,
+            VirpilModel::ConstellationAlphaPrimeLeft,
+        ),
+        (
+            VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID,
+            VirpilModel::ConstellationAlphaPrimeRight,
+        ),
         (VIRPIL_WARBRD_PID, VirpilModel::WarBrd),
         (VIRPIL_WARBRD_D_PID, VirpilModel::WarBrdD),
         (VIRPIL_ACE_TORQ_PID, VirpilModel::AceTorq),
@@ -586,8 +674,14 @@ fn vpforce_rhino_detection() {
     assert!(is_vpforce_device(VPFORCE_VENDOR_ID, VPFORCE_RHINO_PID_V2));
     assert!(is_vpforce_device(VPFORCE_VENDOR_ID, VPFORCE_RHINO_PID_V3));
     assert!(!is_vpforce_device(VPFORCE_VENDOR_ID, 0xFFFF));
-    assert_eq!(vpforce_model(VPFORCE_RHINO_PID_V2), Some(VpforceModel::RhinoV2));
-    assert_eq!(vpforce_model(VPFORCE_RHINO_PID_V3), Some(VpforceModel::RhinoV3));
+    assert_eq!(
+        vpforce_model(VPFORCE_RHINO_PID_V2),
+        Some(VpforceModel::RhinoV2)
+    );
+    assert_eq!(
+        vpforce_model(VPFORCE_RHINO_PID_V3),
+        Some(VpforceModel::RhinoV3)
+    );
     assert!(!VpforceModel::RhinoV2.name().is_empty());
     assert!(!VpforceModel::RhinoV3.name().is_empty());
 }
@@ -721,8 +815,14 @@ fn saitek_family_names_nonempty() {
 fn vkb_gladiator_variant_detection() {
     let right = make_device(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID);
     let left = make_device(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_LEFT_PID);
-    assert_eq!(vkb_gladiator_variant(&right), Some(VkbGladiatorVariant::NxtEvoRight));
-    assert_eq!(vkb_gladiator_variant(&left), Some(VkbGladiatorVariant::NxtEvoLeft));
+    assert_eq!(
+        vkb_gladiator_variant(&right),
+        Some(VkbGladiatorVariant::NxtEvoRight)
+    );
+    assert_eq!(
+        vkb_gladiator_variant(&left),
+        Some(VkbGladiatorVariant::NxtEvoLeft)
+    );
     assert!(is_vkb_gladiator_device(&right));
     assert!(is_vkb_gladiator_device(&left));
     assert!(!VkbGladiatorVariant::NxtEvoRight.name().is_empty());
@@ -754,11 +854,26 @@ fn vkb_stecs_variant_detection() {
 #[test]
 fn descriptor_discovery_from_usages_basic() {
     let usages = vec![
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_X },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_Y },
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_HAT_SWITCH },
-        HidUsage { usage_page: USAGE_PAGE_BUTTON, usage: 1 },
-        HidUsage { usage_page: USAGE_PAGE_BUTTON, usage: 2 },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_X,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_Y,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+            usage: USAGE_HAT_SWITCH,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_BUTTON,
+            usage: 1,
+        },
+        HidUsage {
+            usage_page: USAGE_PAGE_BUTTON,
+            usage: 2,
+        },
     ];
     let disc = descriptor_discovery_from_usages(&usages);
     assert_eq!(disc.counts.axes, 2);
@@ -770,13 +885,17 @@ fn descriptor_discovery_from_usages_basic() {
 
 #[test]
 fn descriptor_discovery_axis_labels() {
-    let usages = vec![
-        HidUsage { usage_page: USAGE_PAGE_GENERIC_DESKTOP, usage: USAGE_SLIDER },
-    ];
+    let usages = vec![HidUsage {
+        usage_page: USAGE_PAGE_GENERIC_DESKTOP,
+        usage: USAGE_SLIDER,
+    }];
     let disc = descriptor_discovery_from_usages(&usages);
     assert_eq!(disc.axes.len(), 1);
     assert_eq!(disc.axes[0].label, "Slider");
-    assert_eq!(disc.axes[0].suggested_logical, Some("throttle_candidate".to_string()));
+    assert_eq!(
+        disc.axes[0].suggested_logical,
+        Some("throttle_candidate".to_string())
+    );
 }
 
 #[test]
@@ -1093,7 +1212,10 @@ fn wrong_vendor_rejects_all_families() {
     let bogus_vid: u16 = 0xDEAD;
     assert!(!is_warthog_device(bogus_vid, WARTHOG_JOYSTICK_PID));
     assert!(!is_t16000m_device(bogus_vid, T16000M_JOYSTICK_PID));
-    assert!(!is_tca_airbus_device(bogus_vid, TCA_SIDESTICK_AIRBUS_PILOT_PID));
+    assert!(!is_tca_airbus_device(
+        bogus_vid,
+        TCA_SIDESTICK_AIRBUS_PILOT_PID
+    ));
     assert!(!is_tca_boeing_device(bogus_vid, TCA_YOKE_BOEING_PID));
     assert!(!is_virpil_device(bogus_vid, VIRPIL_CM2_THROTTLE_PID));
     assert!(!is_ch_device(bogus_vid, CH_PRO_THROTTLE_PID));
@@ -1110,10 +1232,16 @@ fn wrong_vendor_rejects_all_families() {
 
 #[test]
 fn hid_usage_equality_and_clone() {
-    let u1 = HidUsage { usage_page: 0x01, usage: 0x30 };
+    let u1 = HidUsage {
+        usage_page: 0x01,
+        usage: 0x30,
+    };
     let u2 = u1;
     assert_eq!(u1, u2);
-    let u3 = HidUsage { usage_page: 0x01, usage: 0x31 };
+    let u3 = HidUsage {
+        usage_page: 0x01,
+        usage: 0x31,
+    };
     assert_ne!(u1, u3);
 }
 
@@ -1144,7 +1272,10 @@ fn ghost_filter_stats_equality() {
 #[test]
 fn ghost_filter_config_default() {
     let config = GhostFilterConfig::default();
-    assert_eq!(config.debounce_threshold, Duration::from_millis(DEFAULT_DEBOUNCE_MS));
+    assert_eq!(
+        config.debounce_threshold,
+        Duration::from_millis(DEFAULT_DEBOUNCE_MS)
+    );
     assert!(config.impossible_masks.is_empty());
 }
 
