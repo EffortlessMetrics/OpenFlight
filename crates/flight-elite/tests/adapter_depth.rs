@@ -251,7 +251,7 @@ fn convert_fuel_percentage_calculation() {
 #[test]
 fn convert_fuel_full_tank() {
     let adapter = test_adapter();
-    // 32 / (32 + 0.01) ≈ ~100%
+    // 32 / (32 + 0.01) ≈ 100%
     let status = StatusJson {
         fuel: Some(FuelStatus {
             fuel_main: 32.0,

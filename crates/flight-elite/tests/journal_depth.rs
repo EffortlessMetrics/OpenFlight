@@ -4,6 +4,7 @@
 //! Depth tests for Elite Dangerous journal file reader:
 //! file discovery, tailing, session switching, reset, edge cases.
 
+use filetime::{set_file_mtime, FileTime};
 use flight_elite::journal::JournalReader;
 use flight_elite::protocol::JournalEvent;
 use std::io::Write;
@@ -47,8 +48,9 @@ fn find_latest_single_file() {
 fn find_latest_among_many_sessions() {
     let dir = TempDir::new().unwrap();
     for i in 1..=5 {
-        write_journal(&dir, &format!("Journal.2025060{i}120000.01.log"), "");
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        let name = format!("Journal.2025060{i}120000.01.log");
+        write_journal(&dir, &name, "");
+        set_file_mtime(dir.path().join(&name), FileTime::from_unix_time(1_000_000 + i64::from(i), 0)).unwrap();
     }
     let latest = JournalReader::find_latest_journal(dir.path()).unwrap();
     assert!(latest.to_string_lossy().contains("20250605"));
@@ -56,9 +58,9 @@ fn find_latest_among_many_sessions() {
 
 #[test]
 fn find_latest_nonexistent_dir_returns_none() {
-    let result = JournalReader::find_latest_journal(std::path::Path::new(
-        "C:\\nonexistent\\path\\that\\should\\not\\exist",
-    ));
+    let dir = TempDir::new().unwrap();
+    let nonexistent = dir.path().join("a").join("b").join("c");
+    let result = JournalReader::find_latest_journal(&nonexistent);
     assert!(result.is_none());
 }
 
