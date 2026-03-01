@@ -118,8 +118,16 @@ proptest! {
         };
         if let (Ok(c1), Ok(c2)) = (schema.compile(), schema.compile()) {
             prop_assert_eq!(
-                format!("{:?}", c1.bytecode.instructions),
-                format!("{:?}", c2.bytecode.instructions),
+                &c1.bytecode.instructions,
+                &c2.bytecode.instructions,
+            );
+            prop_assert_eq!(
+                &c1.bytecode.actions,
+                &c2.bytecode.actions,
+            );
+            prop_assert_eq!(
+                c1.bytecode.stack_size,
+                c2.bytecode.stack_size,
             );
         }
     }
@@ -405,14 +413,29 @@ proptest! {
         let round_tripped: BytecodeProgram =
             serde_json::from_str(&json).expect("deserialize");
         prop_assert_eq!(
-            format!("{:?}", compiled.bytecode().instructions),
-            format!("{:?}", round_tripped.instructions),
+            &compiled.bytecode().instructions,
+            &round_tripped.instructions,
             "instructions must survive round-trip"
         );
         prop_assert_eq!(
-            compiled.bytecode().actions.len(),
-            round_tripped.actions.len(),
-            "action count must survive round-trip"
+            &compiled.bytecode().actions,
+            &round_tripped.actions,
+            "actions must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().variable_map,
+            &round_tripped.variable_map,
+            "variable_map must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().hysteresis_map,
+            &round_tripped.hysteresis_map,
+            "hysteresis_map must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().hysteresis_bands,
+            &round_tripped.hysteresis_bands,
+            "hysteresis_bands must survive round-trip"
         );
         prop_assert_eq!(
             compiled.bytecode().stack_size,

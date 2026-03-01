@@ -3,9 +3,25 @@
 
 //! Rules DSL for panel LED control
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use thiserror::Error;
+
+/// Serde adapter: serialize `usize` as `u32`, deserialize `u32` back to `usize`.
+/// Rejects values that exceed `u32::MAX` on serialization.
+mod stack_size_u32 {
+    use super::*;
+
+    pub fn serialize<S: Serializer>(value: &usize, ser: S) -> std::result::Result<S::Ok, S::Error> {
+        let v: u32 = u32::try_from(*value).map_err(serde::ser::Error::custom)?;
+        ser.serialize_u32(v)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(de: D) -> std::result::Result<usize, D::Error> {
+        let v = u32::deserialize(de)?;
+        Ok(v as usize)
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum RulesError {
@@ -64,7 +80,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,
@@ -75,7 +91,7 @@ pub enum CompareOp {
 }
 
 /// Rule action parsed from DSL string
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Action {
     /// Turn LED on
     LedOn { target: String },
@@ -93,7 +109,7 @@ pub struct RulesCompiler {
 }
 
 /// Bytecode instruction for rules evaluation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BytecodeOp {
     /// Load variable value onto stack: LOAD var_index
     LoadVar(u16),
@@ -120,7 +136,7 @@ pub enum BytecodeOp {
 }
 
 /// Compiled bytecode program
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BytecodeProgram {
     /// Bytecode instructions
     pub instructions: Vec<BytecodeOp>,
@@ -133,7 +149,8 @@ pub struct BytecodeProgram {
     /// Actions by index
     pub actions: Vec<Action>,
     /// Pre-allocated evaluation stack size
-    pub stack_size: u32,
+    #[serde(serialize_with = "stack_size_u32::serialize", deserialize_with = "stack_size_u32::deserialize")]
+    pub stack_size: usize,
 }
 
 /// Compiled rules bytecode
@@ -673,7 +690,7 @@ impl BytecodeCompiler {
             hysteresis_map: self.hysteresis_map,
             hysteresis_bands: self.hysteresis_bands,
             actions: self.actions,
-            stack_size: self.max_stack_depth.max(8) as u32, // Minimum stack size
+            stack_size: self.max_stack_depth.max(8), // Minimum stack size
         }
     }
 }
@@ -1595,7 +1612,7 @@ mod snapshot_tests {
         variable_map: BTreeMap<String, u16>,
         hysteresis_map: BTreeMap<String, u16>,
         actions: Vec<Action>,
-        stack_size: u32,
+        stack_size: usize,
     }
 
     impl From<&BytecodeProgram> for StableBytecode {
