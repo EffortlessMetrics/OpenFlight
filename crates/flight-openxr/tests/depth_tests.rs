@@ -40,6 +40,44 @@ fn make_running_adapter(poses: Vec<HeadPose>) -> OpenXrAdapter<MockRuntime> {
     a
 }
 
+/// Runtime that yields a pre-defined sequence of `Result<HeadPose, OpenXrError>`.
+/// After the sequence is exhausted the last entry is repeated.
+struct SequenceRuntime {
+    results: Vec<Result<HeadPose, OpenXrError>>,
+    index: usize,
+    initialized: bool,
+}
+
+impl SequenceRuntime {
+    fn new(results: Vec<Result<HeadPose, OpenXrError>>) -> Self {
+        Self {
+            results,
+            index: 0,
+            initialized: false,
+        }
+    }
+}
+
+impl OpenXrRuntime for SequenceRuntime {
+    fn initialize(&mut self) -> Result<(), OpenXrError> {
+        self.initialized = true;
+        Ok(())
+    }
+
+    fn poll_pose(&mut self) -> Result<HeadPose, OpenXrError> {
+        if self.results.is_empty() {
+            return Err(OpenXrError::PoseUnavailable);
+        }
+        let idx = self.index.min(self.results.len() - 1);
+        self.index += 1;
+        self.results[idx].clone()
+    }
+
+    fn shutdown(&mut self) {
+        self.initialized = false;
+    }
+}
+
 // ── 1. HeadPose construction & defaults ──────────────────────────────────────
 
 #[test]
@@ -72,53 +110,45 @@ fn custom_pose_preserves_all_fields() {
 // ── 2. HeadPose::is_finite – NaN / Inf injection per field ──────────────────
 
 #[test]
-fn nan_x_is_not_finite() {
-    assert!(!HeadPose { x: f32::NAN, ..HeadPose::zero() }.is_finite());
+fn any_nan_field_is_not_finite() {
+    let field_setters: &[(&str, fn(&mut HeadPose))] = &[
+        ("x", |p: &mut HeadPose| p.x = f32::NAN),
+        ("y", |p: &mut HeadPose| p.y = f32::NAN),
+        ("z", |p: &mut HeadPose| p.z = f32::NAN),
+        ("yaw", |p: &mut HeadPose| p.yaw = f32::NAN),
+        ("pitch", |p: &mut HeadPose| p.pitch = f32::NAN),
+        ("roll", |p: &mut HeadPose| p.roll = f32::NAN),
+    ];
+
+    for (name, setter) in field_setters {
+        let mut p = HeadPose::zero();
+        setter(&mut p);
+        assert!(
+            !p.is_finite(),
+            "HeadPose::is_finite should be false when `{name}` is NaN",
+        );
+    }
 }
 
 #[test]
-fn nan_y_is_not_finite() {
-    assert!(!HeadPose { y: f32::NAN, ..HeadPose::zero() }.is_finite());
-}
+fn any_inf_field_is_not_finite() {
+    let field_setters: &[(&str, fn(&mut HeadPose))] = &[
+        ("x +inf", |p: &mut HeadPose| p.x = f32::INFINITY),
+        ("y -inf", |p: &mut HeadPose| p.y = f32::NEG_INFINITY),
+        ("z +inf", |p: &mut HeadPose| p.z = f32::INFINITY),
+        ("yaw +inf", |p: &mut HeadPose| p.yaw = f32::INFINITY),
+        ("pitch -inf", |p: &mut HeadPose| p.pitch = f32::NEG_INFINITY),
+        ("roll +inf", |p: &mut HeadPose| p.roll = f32::INFINITY),
+    ];
 
-#[test]
-fn nan_z_is_not_finite() {
-    assert!(!HeadPose { z: f32::NAN, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn nan_yaw_is_not_finite() {
-    assert!(!HeadPose { yaw: f32::NAN, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn nan_pitch_is_not_finite() {
-    assert!(!HeadPose { pitch: f32::NAN, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn nan_roll_is_not_finite() {
-    assert!(!HeadPose { roll: f32::NAN, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn inf_x_is_not_finite() {
-    assert!(!HeadPose { x: f32::INFINITY, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn neg_inf_y_is_not_finite() {
-    assert!(!HeadPose { y: f32::NEG_INFINITY, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn inf_z_is_not_finite() {
-    assert!(!HeadPose { z: f32::INFINITY, ..HeadPose::zero() }.is_finite());
-}
-
-#[test]
-fn inf_yaw_is_not_finite() {
-    assert!(!HeadPose { yaw: f32::INFINITY, ..HeadPose::zero() }.is_finite());
+    for (name, setter) in field_setters {
+        let mut p = HeadPose::zero();
+        setter(&mut p);
+        assert!(
+            !p.is_finite(),
+            "HeadPose::is_finite should be false when `{name}` is Inf",
+        );
+    }
 }
 
 // ── 3. HeadPose equality & cloning ──────────────────────────────────────────
@@ -142,9 +172,19 @@ fn pose_inequality_on_any_field() {
 }
 
 #[test]
-fn pose_clone_is_independent() {
+fn pose_copy_is_independent() {
     let a = pose(1.0, 2.0, 3.0, 0.1, 0.2, 0.3);
     let mut b = a;
+    b.x = 99.0;
+    assert_relative_eq!(a.x, 1.0);
+    assert_relative_eq!(b.x, 99.0);
+}
+
+#[test]
+fn pose_clone_is_independent() {
+    let a = pose(1.0, 2.0, 3.0, 0.1, 0.2, 0.3);
+    #[allow(clippy::clone_on_copy)]
+    let mut b = a.clone();
     b.x = 99.0;
     assert_relative_eq!(a.x, 1.0);
     assert_relative_eq!(b.x, 99.0);
@@ -294,11 +334,21 @@ fn mock_runtime_wraps_around() {
 #[test]
 fn session_lost_preserves_last_good_pose() {
     let good = pose(1.5, 0.0, -0.3, 0.7, 0.0, 0.0);
-    let rt = MockRuntime::new(vec![good]);
+    let rt = SequenceRuntime::new(vec![
+        Ok(good),
+        Err(OpenXrError::SessionLost),
+    ]);
     let mut adapter = OpenXrAdapter::new(rt);
     adapter.initialize().unwrap();
-    let first = adapter.poll(); // primes last_pose to `good`
+
+    // First poll establishes last_pose as `good`.
+    let first = adapter.poll();
     assert_eq!(first, good);
+
+    // Second poll triggers SessionLost; adapter returns last good pose.
+    let second = adapter.poll();
+    assert_eq!(second, good);
+    assert_eq!(adapter.state(), SessionState::Error);
 }
 
 #[test]
@@ -431,31 +481,53 @@ fn negative_zero_is_finite() {
     assert!(p.is_finite());
 }
 
-// ── 9. Controller input mapping (axis → pose) ──────────────────────────────
+// ── 9. SequenceRuntime tests ────────────────────────────────────────────────
 
 #[test]
-fn controller_pitch_up_maps_to_negative_pitch() {
-    let p = pose(0.0, 0.0, 0.0, 0.0, -0.3, 0.0);
-    assert!(p.pitch < 0.0);
-    assert!(p.is_finite());
+fn sequence_runtime_good_then_error() {
+    let good = pose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    let mut rt = SequenceRuntime::new(vec![
+        Ok(good),
+        Err(OpenXrError::PoseUnavailable),
+    ]);
+    OpenXrRuntime::initialize(&mut rt).unwrap();
+    assert_eq!(rt.poll_pose().unwrap(), good);
+    assert!(rt.poll_pose().is_err());
 }
 
 #[test]
-fn controller_yaw_left_maps_to_positive_yaw() {
-    let p = pose(0.0, 0.0, 0.0, 0.5, 0.0, 0.0);
-    assert!(p.yaw > 0.0);
+fn sequence_runtime_repeats_last_entry() {
+    let p = HeadPose::zero();
+    let mut rt = SequenceRuntime::new(vec![Ok(p)]);
+    OpenXrRuntime::initialize(&mut rt).unwrap();
+    assert!(rt.poll_pose().is_ok());
+    assert!(rt.poll_pose().is_ok()); // repeats last
 }
 
 #[test]
-fn controller_roll_right_maps_to_positive_roll() {
-    let p = pose(0.0, 0.0, 0.0, 0.0, 0.0, 0.4);
-    assert!(p.roll > 0.0);
+fn sequence_runtime_empty_returns_pose_unavailable() {
+    let mut rt = SequenceRuntime::new(vec![]);
+    OpenXrRuntime::initialize(&mut rt).unwrap();
+    assert_eq!(rt.poll_pose().unwrap_err(), OpenXrError::PoseUnavailable);
 }
 
 #[test]
-fn mixed_controller_axes_all_finite() {
-    let p = pose(0.1, -0.2, 0.3, 1.5, -0.8, 0.6);
-    assert!(p.is_finite());
+fn adapter_error_preserves_state_across_multiple_polls() {
+    let good = pose(3.0, 0.0, -1.0, 0.5, 0.0, 0.0);
+    let rt = SequenceRuntime::new(vec![
+        Ok(good),
+        Err(OpenXrError::SessionLost),
+    ]);
+    let mut adapter = OpenXrAdapter::new(rt);
+    adapter.initialize().unwrap();
+    let _ = adapter.poll(); // good pose
+    let _ = adapter.poll(); // error → returns good
+    // Repeatedly polling in Error state always returns last good pose.
+    for _ in 0..5 {
+        let p = adapter.poll();
+        assert_eq!(p, good);
+        assert_eq!(adapter.state(), SessionState::Error);
+    }
 }
 
 // ── 10. Frame timing / prediction (simulated via poll cadence) ──────────────
@@ -526,7 +598,7 @@ fn session_state_clone() {
     assert_eq!(s, c);
 }
 
-// ── 12. Serialization round-trip (via Debug + PartialEq) ────────────────────
+// ── 12. Field reconstruction round-trip ──────────────────────────────────────
 
 #[test]
 fn pose_round_trip_through_fields() {
@@ -635,7 +707,8 @@ proptest! {
         roll in -PI..PI,
     ) {
         let original = pose(x, y, z, yaw, pitch, roll);
-        let cloned = original;
+        #[allow(clippy::clone_on_copy)]
+        let cloned = original.clone();
         prop_assert_eq!(original, cloned);
     }
 
