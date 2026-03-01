@@ -57,7 +57,7 @@ jobs:
       
     - name: Build security components
       run: |
-        cargo build -p flight-core --features security
+        cargo build -p flight-core
         cargo build -p flight-ipc
         
     - name: Run security unit tests
