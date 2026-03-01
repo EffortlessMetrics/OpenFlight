@@ -75,7 +75,11 @@ fn perform_uninstall(manifest: &InstallManifest, prefix: &Path) {
         .preserved_paths
         .iter()
         .map(|p| {
-            if p.is_relative() {
+            let s = p.to_string_lossy();
+            if s.starts_with('~') {
+                // Home-relative paths are not under the install prefix
+                p.clone()
+            } else if p.is_relative() {
                 prefix.join(p)
             } else {
                 p.clone()
@@ -154,12 +158,13 @@ fn file_layout_config_directory_structure() {
 fn file_layout_data_directory_in_cleanup() {
     let prefix = Path::new(r"C:\FlightHub");
     let m = manifest::windows_manifest(prefix);
-    // The log directory should be in cleanup_paths
-    let has_logs = m
-        .cleanup_paths
-        .iter()
-        .any(|p| p.to_string_lossy().contains("logs"));
-    assert!(has_logs, "logs directory should be in cleanup_paths");
+    // The install prefix itself should be in cleanup_paths for full removal
+    assert!(
+        m.cleanup_paths
+            .iter()
+            .any(|p| *p == prefix.to_path_buf()),
+        "install prefix must appear in cleanup_paths"
+    );
 }
 
 #[test]
@@ -318,18 +323,29 @@ fn upgrade_in_place_overwrites_binaries() {
     perform_install(&mut tx1, &staging, &manifest, &prefix);
     tx1.commit().unwrap();
 
-    let daemon = &manifest.files[0].destination;
+    let daemon_entry = manifest
+        .files
+        .iter()
+        .find(|entry| {
+            entry
+                .destination
+                .file_name()
+                .map(|name| name == "flightd.exe")
+                .unwrap_or(false)
+        })
+        .expect("daemon binary flightd.exe not found in manifest");
+    let daemon = &daemon_entry.destination;
     let original = fs::read_to_string(daemon).unwrap();
 
     // Update staging with new content
     let new_staging = tmp.path().join("staging_v2");
     stage_sources(&new_staging, &manifest);
-    let daemon_src = new_staging.join(&manifest.files[0].source);
+    let daemon_src = new_staging.join(&daemon_entry.source);
     fs::write(&daemon_src, "updated-binary-v2").unwrap();
 
     // In-place upgrade
     let mut tx2 = InstallTransaction::new();
-    let src = new_staging.join(&manifest.files[0].source);
+    let src = new_staging.join(&daemon_entry.source);
     tx2.install_file(&src, daemon).unwrap();
     tx2.commit().unwrap();
 
@@ -414,12 +430,23 @@ fn upgrade_rollback_on_failure() {
     perform_install(&mut tx1, &staging, &manifest, &prefix);
     tx1.commit().unwrap();
 
-    let daemon = &manifest.files[0].destination;
+    let daemon_entry = manifest
+        .files
+        .iter()
+        .find(|entry| {
+            entry
+                .destination
+                .file_name()
+                .map(|name| name == "flightd.exe")
+                .unwrap_or(false)
+        })
+        .expect("daemon binary flightd.exe not found in manifest");
+    let daemon = &daemon_entry.destination;
     fs::write(daemon, "ORIGINAL_V1").unwrap();
 
     // Start upgrade, install one file, then rollback
     let mut tx2 = InstallTransaction::new();
-    let src = staging.join(&manifest.files[0].source);
+    let src = staging.join(&daemon_entry.source);
     tx2.install_file(&src, daemon).unwrap();
     assert_ne!(fs::read_to_string(daemon).unwrap(), "ORIGINAL_V1");
 
@@ -432,16 +459,15 @@ fn upgrade_rollback_on_failure() {
 }
 
 #[test]
-fn upgrade_downgrade_prevention_via_manifest_verify() {
-    // Simulate downgrade detection: a manifest with version metadata
-    // cannot be validated if it has conflicting entries.
+fn manifest_rejects_duplicate_destinations() {
+    // A manifest with duplicate destination paths must be rejected by verify().
     let mut m = manifest::windows_manifest(Path::new(r"C:\FlightHub"));
-    // Inject a duplicate to simulate a corrupt downgrade manifest
+    // Inject a duplicate file entry with the same destination path.
     let dup = m.files[0].clone();
     m.files.push(dup);
     assert!(
         matches!(m.verify(), Err(ManifestError::DuplicateDestination(_))),
-        "corrupt manifest should be rejected"
+        "corrupt manifest with duplicate destinations should be rejected"
     );
 }
 
@@ -453,10 +479,10 @@ fn upgrade_version_tracking_via_service_info() {
     // Both manifests carry their service identity for version tracking
     assert!(!m1.service.name.is_empty());
     assert!(!m2.service.name.is_empty());
-    assert_ne!(
-        m1.service.name, m2.service.name,
-        "platform manifests should have distinct service names"
-    );
+
+    // Each platform has an expected service name
+    assert_eq!(m1.service.name, "FlightHub");
+    assert_eq!(m2.service.name, "flightd");
 
     // Service binary path is always present
     assert!(!m1.service.binary_path.as_os_str().is_empty());
@@ -629,11 +655,10 @@ fn sim_xplane_plugin_path_layout() {
 }
 
 #[test]
-fn sim_dcs_script_installation_path() {
-    // DCS integration uses Export.lua scripts; verify the manifest structure
-    // supports adding integration files beyond core binaries
+fn sim_manifest_validates_cleanly_with_service_metadata() {
+    // Verify the manifest structure supports sim integration files
+    // beyond core binaries, and validates cleanly.
     let m = manifest::linux_manifest(Path::new("/"));
-    // Manifest allows extension — verify it validates cleanly
     assert!(m.verify().is_ok());
     // Service description mentions flight simulation
     assert!(
