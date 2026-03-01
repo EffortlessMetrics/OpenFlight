@@ -303,6 +303,122 @@ pub static ACE_TORQ_PROFILE: DeviceProfile = DeviceProfile {
     rotary_encoders: 0,
 };
 
+// ─── WarBRD stick profile ────────────────────────────────────────────────────
+
+/// Axis descriptors for the VPC WarBRD / WarBRD-D stick base.
+///
+/// Same 5-axis layout as the MongoosT-50CM3 (shared VPC firmware).
+pub static WARBRD_AXES: &[AxisDescriptor] = &[
+    AxisDescriptor {
+        index: 0,
+        role: AxisRole::StickX,
+        label: "X (roll)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 1,
+        role: AxisRole::StickY,
+        label: "Y (pitch)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 2,
+        role: AxisRole::Twist,
+        label: "Z (twist)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 3,
+        role: AxisRole::SecondaryRotary,
+        label: "SZ (secondary rotary)",
+        centred: false,
+    },
+    AxisDescriptor {
+        index: 4,
+        role: AxisRole::SlewLever,
+        label: "SL (slew lever)",
+        centred: false,
+    },
+];
+
+static WARBRD_HATS: &[HatDescriptor] = &[HatDescriptor {
+    label: "Main hat",
+    hat_type: HatType::EightWay,
+}];
+
+/// Default profile for the VPC WarBRD stick (PID 0x40CC).
+pub static WARBRD_PROFILE: DeviceProfile = DeviceProfile {
+    name: "VPC WarBRD Stick",
+    pid: 0x40CC,
+    axes: WARBRD_AXES,
+    button_count: 28,
+    hats: WARBRD_HATS,
+    rotary_encoders: 0,
+};
+
+/// Default profile for the VPC WarBRD-D stick (PID 0x43F5).
+pub static WARBRD_D_PROFILE: DeviceProfile = DeviceProfile {
+    name: "VPC WarBRD-D Stick",
+    pid: 0x43F5,
+    axes: WARBRD_AXES,
+    button_count: 28,
+    hats: WARBRD_HATS,
+    rotary_encoders: 0,
+};
+
+// ─── MongoosT-50CM3 stick profile ────────────────────────────────────────────
+
+/// Axis descriptors for the VPC MongoosT-50CM3 stick.
+///
+/// Identical axis layout to WarBRD (shared VPC firmware).
+pub static MONGOOST_AXES: &[AxisDescriptor] = &[
+    AxisDescriptor {
+        index: 0,
+        role: AxisRole::StickX,
+        label: "X (roll)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 1,
+        role: AxisRole::StickY,
+        label: "Y (pitch)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 2,
+        role: AxisRole::Twist,
+        label: "Z (twist)",
+        centred: true,
+    },
+    AxisDescriptor {
+        index: 3,
+        role: AxisRole::SecondaryRotary,
+        label: "SZ (secondary rotary)",
+        centred: false,
+    },
+    AxisDescriptor {
+        index: 4,
+        role: AxisRole::SlewLever,
+        label: "SL (slew lever)",
+        centred: false,
+    },
+];
+
+static MONGOOST_HATS: &[HatDescriptor] = &[HatDescriptor {
+    label: "Main hat",
+    hat_type: HatType::EightWay,
+}];
+
+/// Default profile for the VPC MongoosT-50CM3 stick (PID 0x4130).
+pub static MONGOOST_PROFILE: DeviceProfile = DeviceProfile {
+    name: "VPC MongoosT-50CM3 Stick",
+    pid: 0x4130,
+    axes: MONGOOST_AXES,
+    button_count: 28,
+    hats: MONGOOST_HATS,
+    rotary_encoders: 0,
+};
+
 // ─── Lookup ───────────────────────────────────────────────────────────────────
 
 /// All built-in device profiles.
@@ -312,6 +428,9 @@ pub static ALL_PROFILES: &[&DeviceProfile] = &[
     &ACE_PEDALS_PROFILE,
     &ROTOR_TCS_PROFILE,
     &ACE_TORQ_PROFILE,
+    &WARBRD_PROFILE,
+    &WARBRD_D_PROFILE,
+    &MONGOOST_PROFILE,
 ];
 
 /// Look up a default device profile by USB Product ID.
@@ -449,5 +568,54 @@ mod tests {
                 profile.name
             );
         }
+    }
+
+    #[test]
+    fn warbrd_profile_has_five_axes() {
+        assert_eq!(WARBRD_PROFILE.axes.len(), 5);
+        assert_eq!(WARBRD_PROFILE.axes[0].role, AxisRole::StickX);
+        assert_eq!(WARBRD_PROFILE.axes[1].role, AxisRole::StickY);
+        assert_eq!(WARBRD_PROFILE.axes[2].role, AxisRole::Twist);
+        assert_eq!(WARBRD_PROFILE.button_count, 28);
+        assert_eq!(WARBRD_PROFILE.hats.len(), 1);
+    }
+
+    #[test]
+    fn warbrd_d_profile_distinct_pid() {
+        assert_ne!(WARBRD_PROFILE.pid, WARBRD_D_PROFILE.pid);
+        assert_eq!(WARBRD_D_PROFILE.axes.len(), 5);
+    }
+
+    #[test]
+    fn warbrd_stick_axes_are_centred() {
+        assert!(WARBRD_PROFILE.axes[0].centred); // X
+        assert!(WARBRD_PROFILE.axes[1].centred); // Y
+        assert!(WARBRD_PROFILE.axes[2].centred); // twist
+    }
+
+    #[test]
+    fn mongoost_profile_has_five_axes() {
+        assert_eq!(MONGOOST_PROFILE.axes.len(), 5);
+        assert_eq!(MONGOOST_PROFILE.axes[0].role, AxisRole::StickX);
+        assert_eq!(MONGOOST_PROFILE.button_count, 28);
+        assert_eq!(MONGOOST_PROFILE.hats.len(), 1);
+    }
+
+    #[test]
+    fn profile_lookup_warbrd() {
+        let p = profile_for_pid(0x40CC).unwrap();
+        assert_eq!(p.name, "VPC WarBRD Stick");
+    }
+
+    #[test]
+    fn profile_lookup_warbrd_d() {
+        let p = profile_for_pid(0x43F5).unwrap();
+        assert_eq!(p.name, "VPC WarBRD-D Stick");
+    }
+
+    #[test]
+    fn profile_lookup_mongoost() {
+        let p = profile_for_pid(0x4130).unwrap();
+        assert_eq!(p.name, "VPC MongoosT-50CM3 Stick");
     }
 }

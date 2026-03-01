@@ -13,6 +13,8 @@
 //! | Gladiator MCP | 0x0131 | Gladiator base + MCG Pro grip |
 //! | SEM THQ | 0x2214 | Side Extension Module throttle quadrant |
 //! | Gladiator Mk.II | 0x0121 | Legacy Gladiator (~2014–2017) |
+//! | T-Rudder | 0x0132 (est.) | Pedals: 3 axes, no buttons |
+//! | STECS Modern | 0x012B, 0x012E | Modern Throttle Mini/Max |
 //!
 //! # HID report conventions
 //!
@@ -31,8 +33,16 @@ use flight_hid_support::device_support::{
     VKB_GLADIATOR_MK2_PID, VKB_GLADIATOR_MODERN_COMBAT_PRO_PID, VKB_GLADIATOR_NXT_EVO_LEFT_PID,
     VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID,
     VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID,
-    VKB_SPACE_GUNFIGHTER_PID, VKB_VENDOR_ID,
+    VKB_SPACE_GUNFIGHTER_PID, VKB_STECS_MODERN_THROTTLE_MAX_PID,
+    VKB_STECS_MODERN_THROTTLE_MINI_PID, VKB_VENDOR_ID,
 };
+
+// ─── T-Rudder PIDs (not yet in flight-hid-support) ───────────────────────────
+
+/// Community-estimated PID for the VKB T-Rudder Mk.V pedals.
+///
+/// **UNCONFIRMED** — community estimate. Verify with `lsusb` or VKBDevCfg.
+pub const VKB_T_RUDDER_MK5_PID: u16 = 0x0132;
 
 // ─── Device family classification ─────────────────────────────────────────────
 
@@ -51,6 +61,10 @@ pub enum VkbDeviceFamily {
     GladiatorNxtEvoSem,
     /// Original Gladiator Mk.II (~2014–2017).
     GladiatorMk2,
+    /// T-Rudder pedals (Mk.IV / Mk.V).
+    TRudder,
+    /// STECS Modern Throttle (Mini / Max variants).
+    StecsModernThrottle,
 }
 
 impl VkbDeviceFamily {
@@ -67,6 +81,10 @@ impl VkbDeviceFamily {
             VKB_NXT_SEM_THQ_PID => Some(Self::SemThq),
             VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID => Some(Self::GladiatorNxtEvoSem),
             VKB_GLADIATOR_MK2_PID => Some(Self::GladiatorMk2),
+            VKB_T_RUDDER_MK5_PID => Some(Self::TRudder),
+            VKB_STECS_MODERN_THROTTLE_MINI_PID | VKB_STECS_MODERN_THROTTLE_MAX_PID => {
+                Some(Self::StecsModernThrottle)
+            }
             _ => None,
         }
     }
@@ -80,6 +98,8 @@ impl VkbDeviceFamily {
             Self::SemThq => "VKB SEM Throttle Quadrant",
             Self::GladiatorNxtEvoSem => "VKB Gladiator NXT EVO + SEM",
             Self::GladiatorMk2 => "VKB Gladiator Mk.II",
+            Self::TRudder => "VKB T-Rudder",
+            Self::StecsModernThrottle => "VKB STECS Modern Throttle",
         }
     }
 }
@@ -124,12 +144,163 @@ pub const VKB_SEM_THQ_LAYOUT: VkbJoystickReportLayout = VkbJoystickReportLayout 
     min_payload_bytes: 16,
 };
 
+/// Report layout for VKB T-Rudder pedals.
+///
+/// 3 axes (6 bytes), no buttons, no hats.
+pub const VKB_T_RUDDER_LAYOUT: VkbJoystickReportLayout = VkbJoystickReportLayout {
+    axis_count: 3,
+    button_word_count: 0,
+    has_hat_byte: false,
+    min_payload_bytes: 6,
+};
+
 /// Return the expected report layout for a given device family.
 pub fn report_layout_for_family(family: VkbDeviceFamily) -> VkbJoystickReportLayout {
     match family {
         VkbDeviceFamily::SemThq => VKB_SEM_THQ_LAYOUT,
+        VkbDeviceFamily::TRudder => VKB_T_RUDDER_LAYOUT,
         _ => VKB_JOYSTICK_STANDARD_LAYOUT,
     }
+}
+
+// ─── VKB Device Info Table ────────────────────────────────────────────────────
+
+/// Complete VID/PID entry for a VKB device.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct VkbDeviceInfo {
+    /// USB Product ID.
+    pub pid: u16,
+    /// Device family.
+    pub family: VkbDeviceFamily,
+    /// Human-readable product name.
+    pub name: &'static str,
+    /// Number of analogue axes.
+    pub axis_count: u8,
+    /// Maximum number of digital buttons.
+    pub max_buttons: u8,
+    /// Number of hat switches.
+    pub hat_count: u8,
+    /// Minimum HID report payload size in bytes (excluding report ID).
+    pub min_report_bytes: usize,
+}
+
+/// Table of all known VKB joystick-class devices with their parameters.
+pub const VKB_DEVICE_TABLE: &[VkbDeviceInfo] = &[
+    VkbDeviceInfo {
+        pid: VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+        family: VkbDeviceFamily::GladiatorNxtEvo,
+        name: "VKB Gladiator NXT EVO (Right)",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+        family: VkbDeviceFamily::GladiatorNxtEvo,
+        name: "VKB Gladiator NXT EVO (Left)",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID,
+        family: VkbDeviceFamily::Gunfighter,
+        name: "VKB Gunfighter Modern Combat Pro",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_SPACE_GUNFIGHTER_PID,
+        family: VkbDeviceFamily::Gunfighter,
+        name: "VKB Space Gunfighter",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_SPACE_GUNFIGHTER_LEFT_PID,
+        family: VkbDeviceFamily::Gunfighter,
+        name: "VKB Space Gunfighter (Left)",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_GLADIATOR_MODERN_COMBAT_PRO_PID,
+        family: VkbDeviceFamily::GladiatorMcp,
+        name: "VKB Gladiator Modern Combat Pro",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_NXT_SEM_THQ_PID,
+        family: VkbDeviceFamily::SemThq,
+        name: "VKB NXT SEM Throttle Quadrant",
+        axis_count: 4,
+        max_buttons: 64,
+        hat_count: 0,
+        min_report_bytes: 16,
+    },
+    VkbDeviceInfo {
+        pid: VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID,
+        family: VkbDeviceFamily::GladiatorNxtEvoSem,
+        name: "VKB Gladiator NXT EVO + SEM (Right)",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_GLADIATOR_MK2_PID,
+        family: VkbDeviceFamily::GladiatorMk2,
+        name: "VKB Gladiator Mk.II",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 2,
+        min_report_bytes: 21,
+    },
+    VkbDeviceInfo {
+        pid: VKB_T_RUDDER_MK5_PID,
+        family: VkbDeviceFamily::TRudder,
+        name: "VKB T-Rudder Mk.V",
+        axis_count: 3,
+        max_buttons: 0,
+        hat_count: 0,
+        min_report_bytes: 6,
+    },
+    VkbDeviceInfo {
+        pid: VKB_STECS_MODERN_THROTTLE_MINI_PID,
+        family: VkbDeviceFamily::StecsModernThrottle,
+        name: "VKB STECS Modern Throttle Mini",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 0,
+        min_report_bytes: 20,
+    },
+    VkbDeviceInfo {
+        pid: VKB_STECS_MODERN_THROTTLE_MAX_PID,
+        family: VkbDeviceFamily::StecsModernThrottle,
+        name: "VKB STECS Modern Throttle Max",
+        axis_count: 6,
+        max_buttons: 64,
+        hat_count: 0,
+        min_report_bytes: 20,
+    },
+];
+
+/// Look up a [`VkbDeviceInfo`] entry by USB Product ID.
+///
+/// Returns `None` for unknown PIDs.
+pub fn vkb_device_info(pid: u16) -> Option<&'static VkbDeviceInfo> {
+    VKB_DEVICE_TABLE.iter().find(|d| d.pid == pid)
 }
 
 // ─── Axis resolution ──────────────────────────────────────────────────────────
@@ -668,6 +839,26 @@ mod tests {
     }
 
     #[test]
+    fn family_from_pid_t_rudder() {
+        assert_eq!(
+            VkbDeviceFamily::from_pid(VKB_T_RUDDER_MK5_PID),
+            Some(VkbDeviceFamily::TRudder)
+        );
+    }
+
+    #[test]
+    fn family_from_pid_stecs_modern_throttle() {
+        assert_eq!(
+            VkbDeviceFamily::from_pid(VKB_STECS_MODERN_THROTTLE_MINI_PID),
+            Some(VkbDeviceFamily::StecsModernThrottle)
+        );
+        assert_eq!(
+            VkbDeviceFamily::from_pid(VKB_STECS_MODERN_THROTTLE_MAX_PID),
+            Some(VkbDeviceFamily::StecsModernThrottle)
+        );
+    }
+
+    #[test]
     fn family_from_pid_unknown() {
         assert_eq!(VkbDeviceFamily::from_pid(0x9999), None);
     }
@@ -728,6 +919,58 @@ mod tests {
             report_layout_for_family(VkbDeviceFamily::SemThq),
             VKB_SEM_THQ_LAYOUT
         );
+        assert_eq!(
+            report_layout_for_family(VkbDeviceFamily::TRudder),
+            VKB_T_RUDDER_LAYOUT
+        );
+    }
+
+    // ─── T-Rudder layout ──────────────────────────────────────────────────
+
+    #[test]
+    fn t_rudder_layout_dimensions() {
+        let layout = VKB_T_RUDDER_LAYOUT;
+        assert_eq!(layout.axis_count, 3);
+        assert_eq!(layout.button_word_count, 0);
+        assert!(!layout.has_hat_byte);
+        assert_eq!(layout.min_payload_bytes, 6);
+    }
+
+    // ─── VKB Device Info Table ────────────────────────────────────────────
+
+    #[test]
+    fn device_table_has_expected_entries() {
+        assert!(VKB_DEVICE_TABLE.len() >= 12, "expected ≥12 devices");
+    }
+
+    #[test]
+    fn device_info_lookup_gladiator_nxt_evo() {
+        let info = vkb_device_info(VKB_GLADIATOR_NXT_EVO_RIGHT_PID).unwrap();
+        assert_eq!(info.family, VkbDeviceFamily::GladiatorNxtEvo);
+        assert_eq!(info.axis_count, 6);
+        assert_eq!(info.hat_count, 2);
+    }
+
+    #[test]
+    fn device_info_lookup_t_rudder() {
+        let info = vkb_device_info(VKB_T_RUDDER_MK5_PID).unwrap();
+        assert_eq!(info.family, VkbDeviceFamily::TRudder);
+        assert_eq!(info.axis_count, 3);
+        assert_eq!(info.max_buttons, 0);
+        assert_eq!(info.hat_count, 0);
+    }
+
+    #[test]
+    fn device_info_unknown_pid_is_none() {
+        assert!(vkb_device_info(0x9999).is_none());
+    }
+
+    #[test]
+    fn all_table_entries_have_unique_pids() {
+        let mut pids: Vec<u16> = VKB_DEVICE_TABLE.iter().map(|d| d.pid).collect();
+        pids.sort();
+        pids.dedup();
+        assert_eq!(pids.len(), VKB_DEVICE_TABLE.len(), "duplicate PIDs in table");
     }
 
     // ─── Axis resolution ──────────────────────────────────────────────────

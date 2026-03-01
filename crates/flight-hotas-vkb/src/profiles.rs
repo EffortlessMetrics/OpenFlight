@@ -149,6 +149,7 @@ impl VkbDeviceProfile {
 // Gladiator NXT EVO profile
 // ═══════════════════════════════════════════════════════════════════════════════
 
+use crate::protocol::VKB_T_RUDDER_MK5_PID;
 use flight_hid_support::device_support::{
     VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
     VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID,
@@ -1056,9 +1057,7 @@ pub fn t_rudder_profile() -> VkbDeviceProfile {
     VkbDeviceProfile {
         device_name: "VKB T-Rudder Mk.IV",
         vid: VKB_VENDOR_ID,
-        // T-Rudder PID not in device_support.rs yet; leave empty for now.
-        // Users should match by descriptor discovery or explicit configuration.
-        pids: &[],
+        pids: &[VKB_T_RUDDER_MK5_PID],
         axes: &T_RUDDER_AXES,
         buttons: &T_RUDDER_BUTTONS,
         hats: &T_RUDDER_HATS,
