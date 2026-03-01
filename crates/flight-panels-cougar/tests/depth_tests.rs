@@ -16,8 +16,8 @@ use flight_panels_cougar::cougar::{
     CougarVerifyTestResult, MfdLedState,
 };
 use flight_panels_cougar::mfd::{
-    CougarMfdProtocol, MfdButton, MfdButtonState, MfdDisplay, MfdPage, OsbLabel, COUGAR_VID,
-    OSB_COUNT, OSB_NAMES, OSBS_PER_SIDE,
+    COUGAR_VID, CougarMfdProtocol, MfdButton, MfdButtonState, MfdDisplay, MfdPage, OSB_COUNT,
+    OSB_NAMES, OSBS_PER_SIDE, OsbLabel,
 };
 
 use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
@@ -403,8 +403,7 @@ fn display_next_prev_cycle_three_pages() {
 #[test]
 fn display_current_page_mut_allows_modification() {
     let mut d = MfdDisplay::new();
-    d.current_page_mut()
-        .set_label(MfdButton::Top1, "MOD", true);
+    d.current_page_mut().set_label(MfdButton::Top1, "MOD", true);
     let lbl = d.current_page().label(MfdButton::Top1);
     assert_eq!(lbl.text, "MOD");
 }
@@ -523,12 +522,16 @@ fn mfd_type_verify_pattern_ends_with_all_off() {
 fn mfd_type_verify_pattern_contains_led_on_and_delay() {
     for mfd in [CougarMfdType::MfdLeft, CougarMfdType::MfdCenter] {
         let pattern = mfd.verify_pattern();
-        assert!(pattern
-            .iter()
-            .any(|s| matches!(s, CougarVerifyStep::LedOn(_))));
-        assert!(pattern
-            .iter()
-            .any(|s| matches!(s, CougarVerifyStep::Delay(_))));
+        assert!(
+            pattern
+                .iter()
+                .any(|s| matches!(s, CougarVerifyStep::LedOn(_)))
+        );
+        assert!(
+            pattern
+                .iter()
+                .any(|s| matches!(s, CougarVerifyStep::Delay(_)))
+        );
     }
 }
 
@@ -688,10 +691,7 @@ fn verify_result_meets_latency_all_under_20ms() {
 #[test]
 fn verify_result_fails_latency_when_one_exceeds_20ms() {
     let r = make_test_result(
-        vec![
-            make_step_result(0, 5, true),
-            make_step_result(1, 21, false),
-        ],
+        vec![make_step_result(0, 5, true), make_step_result(1, 21, false)],
         false,
     );
     assert!(!r.meets_latency_requirement());
