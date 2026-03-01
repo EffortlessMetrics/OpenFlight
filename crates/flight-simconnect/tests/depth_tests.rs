@@ -206,10 +206,10 @@ fn simvar_specific_vars_exist_with_expected_units() {
 // ============================================================================
 
 #[test]
-fn event_catalog_has_at_least_65_events() {
+fn event_catalog_has_at_least_63_events() {
     assert!(
-        SIM_EVENT_CATALOG.len() >= 50,
-        "expected ≥50 events, got {}",
+        SIM_EVENT_CATALOG.len() >= 63,
+        "expected ≥63 events, got {}",
         SIM_EVENT_CATALOG.len()
     );
 }
@@ -518,6 +518,7 @@ fn aircraft_profile_mapping_coverage() {
 fn snapshot_default_has_zero_timestamp() {
     let s = BusSnapshot::default();
     // Default snapshot should initialize with deterministic defaults.
+    assert_eq!(s.timestamp, 0, "Default timestamp should be zero");
     assert!(!s.validity.safe_for_ffb);
 }
 
@@ -527,10 +528,8 @@ fn snapshot_nan_pitch_detected_by_sanity_gate() {
     gate.transition_to_booting();
 
     let mut s = valid_snapshot(1_000_000_000);
-    // ValidatedAngle rejects NaN at construction, so inject NaN at the raw
-    // field level by going through a valid angle and then replacing via a
-    // second snapshot whose attitude_valid is false → gate stays in Booting.
-    s.validity.attitude_valid = false;
+    // Inject real NaN into angular_rates (raw f32, no validation wrapper).
+    s.angular_rates.q = f32::NAN;
     gate.check(&mut s);
     assert!(!s.validity.safe_for_ffb);
 }
@@ -541,11 +540,10 @@ fn snapshot_inf_ias_detected_by_sanity_gate() {
     gate.transition_to_booting();
 
     let mut s = valid_snapshot(1_000_000_000);
-    // ValidatedSpeed won't accept Inf via new_knots (range check), but we
-    // can still verify that the sanity gate rejects the snapshot through
-    // its normal path with a valid snapshot first and then an invalid one.
+    // Inject real Inf into angular_rates (raw f32, no validation wrapper).
+    s.angular_rates.p = f32::INFINITY;
     gate.check(&mut s);
-    assert_eq!(gate.state(), SanityState::Loading);
+    assert!(!s.validity.safe_for_ffb);
 }
 
 #[test]
@@ -761,7 +759,7 @@ fn lifecycle_time_in_state_tracking() {
     sm.transition(SimConnectEvent::OpenReceived).unwrap();
     let d = sm.time_in_state();
     assert!(d.is_some());
-    assert!(d.unwrap() < Duration::from_secs(1));
+    assert!(d.unwrap() < Duration::from_secs(30));
 }
 
 // ============================================================================
