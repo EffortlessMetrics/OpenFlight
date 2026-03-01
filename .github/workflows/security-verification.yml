@@ -10,8 +10,8 @@ on:
     - cron: '0 2 * * *'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 env:
   CARGO_TERM_COLOR: always

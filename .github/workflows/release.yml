@@ -72,7 +72,7 @@ on:
       - "v*.*.*"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.version || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.ref_name || (startsWith(github.event.inputs.version, 'v') && github.event.inputs.version || format('v{0}', github.event.inputs.version)) }}
   cancel-in-progress: false
 
 env:
