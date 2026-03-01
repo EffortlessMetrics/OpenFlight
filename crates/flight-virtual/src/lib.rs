@@ -36,11 +36,14 @@ use std::{error::Error, fmt};
 
 pub mod backend;
 pub mod device;
+pub mod device_emulator;
 pub mod loopback;
 pub mod mapper;
 pub mod ofp1_emulator;
 pub mod perf_gate;
 pub mod uinput;
+pub mod virtual_controller;
+pub mod virtual_output;
 pub mod vjoy;
 
 pub use backend::{HatDirection, MockBackend, VirtualBackend, VirtualBackendError};
@@ -54,6 +57,10 @@ pub use ofp1_emulator::{EmulatorFaultType, EmulatorStatistics, Ofp1Emulator, Ofp
 pub use perf_gate::{PerfGate, PerfGateConfig, PerfResult};
 pub use uinput::{UInputCapabilities, UInputDevice};
 pub use vjoy::VJoyDevice;
+
+pub use device_emulator::{EmulatedDevice, EmulatedDeviceConfig};
+pub use virtual_controller::{ControllerSnapshot, VirtualController, VirtualControllerConfig};
+pub use virtual_output::{OutputFrame, VirtualOutput, VirtualOutputConfig};
 
 #[cfg(test)]
 mod integration_tests;
