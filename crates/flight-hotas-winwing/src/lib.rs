@@ -30,9 +30,11 @@
 //! let combined = state.axes.throttle_combined;
 //! ```
 
+pub mod detent_system;
 pub mod f16ex_stick;
 pub mod health;
 pub mod input;
+pub mod led_control;
 pub mod orion2_stick;
 pub mod orion2_throttle;
 pub mod orion_joystick;
@@ -53,6 +55,7 @@ pub enum WinWingError {
     UnknownReportId(u8),
 }
 
+pub use detent_system::{ActiveDetent, MagneticDetent, WinWingDetentConfig, detect_detent};
 pub use f16ex_stick::{
     BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
     F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN, parse_f16ex_stick_report,
@@ -64,6 +67,7 @@ pub use input::{
     ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
     parse_stick_report, parse_throttle_report,
 };
+pub use led_control::{DisplayCommand, LedCommand, build_display_report, build_led_report};
 pub use orion_joystick::{
     ORION_JOYSTICK_MIN_REPORT_BYTES, ORION_JOYSTICK_PID, OrionJoystickState, URSA_MINOR_L_PID,
     parse_orion_joystick,
@@ -89,11 +93,12 @@ pub use profiles::{
 };
 pub use protocol::{
     BacklightSubCommand, CommandCategory, DetentName, DetentPosition, DetentReport,
-    DetentSubCommand, DisplaySubCommand, FeatureReportFrame, ParsedFrame, ProtocolError,
-    build_backlight_all_command, build_backlight_all_rgb_command, build_backlight_single_command,
-    build_backlight_single_rgb_command, build_detent_query_command, build_detent_set_command,
-    build_display_brightness_command, build_display_clear_command, build_display_segment_command,
-    build_display_text_command, parse_detent_response, parse_feature_report,
+    DetentSubCommand, DeviceType, DisplaySubCommand, FeatureReportFrame, ParsedFrame,
+    ProtocolError, WinWingProtocol, build_backlight_all_command, build_backlight_all_rgb_command,
+    build_backlight_single_command, build_backlight_single_rgb_command, build_detent_query_command,
+    build_detent_set_command, build_display_brightness_command, build_display_clear_command,
+    build_display_segment_command, build_display_text_command, parse_detent_response,
+    parse_feature_report,
 };
 pub use skywalker_rudder::{
     MIN_REPORT_BYTES as SKYWALKER_RUDDER_REPORT_LEN, SKYWALKER_RUDDER_PID, SkywalkerAxes,

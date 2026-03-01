@@ -329,12 +329,17 @@ pub fn build_display_text_command(
     field_index: u8,
     text: &str,
 ) -> Result<FeatureReportFrame, ProtocolError> {
-    let truncated = if text.len() > 16 { &text[..16] } else { text };
+    let bytes = text.as_bytes();
+    let truncated = if bytes.len() > 16 {
+        &bytes[..16]
+    } else {
+        bytes
+    };
     // payload: panel_id(1) + field_index(1) + text bytes
     let mut payload = Vec::with_capacity(2 + truncated.len());
     payload.push(panel_id);
     payload.push(field_index);
-    payload.extend_from_slice(truncated.as_bytes());
+    payload.extend_from_slice(truncated);
     FeatureReportFrame::new(
         CommandCategory::Display,
         DisplaySubCommand::WriteText as u8,
@@ -516,6 +521,150 @@ pub fn parse_detent_response(payload: &[u8]) -> Result<DetentReport, ProtocolErr
     }
 
     Ok(DetentReport { positions })
+}
+
+// ── Device identification ─────────────────────────────────────────────────────
+
+/// Known WinWing device types identified by USB Product ID.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DeviceType {
+    /// Orion HOTAS stick (F/A-18 inspired, 3 axes, 20+ buttons, 2 HATs).
+    OrionStick,
+    /// Orion HOTAS throttle (dual throttle, 6 axes, 40+ buttons).
+    OrionThrottle,
+    /// Orion 2 stick with improved sensors.
+    Orion2Stick,
+    /// Orion 2 throttle with improved sensors.
+    Orion2Throttle,
+    /// Super Taurus / Libra throttle quadrant (6+ axes, 32 buttons).
+    SuperTaurus,
+    /// F-18 UFC / IFEI panel (button-only, display segments).
+    F18Panel,
+    /// F-16EX Grip (stick grip, buttons, HATs, 10-byte report).
+    F16ExGrip,
+    /// TFRP rudder pedals (3 axes).
+    TfrpRudder,
+    /// Skywalker metal rudder pedals.
+    SkywalkerRudder,
+}
+
+impl DeviceType {
+    /// Detect the device type from a USB Product ID.
+    ///
+    /// Returns `None` if the PID is not recognised.
+    pub fn from_pid(pid: u16) -> Option<Self> {
+        match pid {
+            0xBE60 => Some(Self::OrionStick),
+            0xBE61 => Some(Self::OrionThrottle),
+            0xBE63 => Some(Self::Orion2Stick),
+            0xBE62 => Some(Self::Orion2Throttle),
+            0xBD64 => Some(Self::SuperTaurus),
+            0xBEDE => Some(Self::F18Panel),
+            0xBEA8 => Some(Self::F16ExGrip),
+            0xBE64 => Some(Self::TfrpRudder),
+            0xBEF0 => Some(Self::SkywalkerRudder),
+            _ => None,
+        }
+    }
+
+    /// Returns the expected HID input report length for this device.
+    pub fn report_length(&self) -> usize {
+        match self {
+            Self::OrionStick | Self::Orion2Stick => 12,
+            Self::OrionThrottle | Self::Orion2Throttle => 24,
+            Self::SuperTaurus => 13,
+            Self::F18Panel => 6,
+            Self::F16ExGrip => 10,
+            Self::TfrpRudder => 8,
+            Self::SkywalkerRudder => 8,
+        }
+    }
+
+    /// Returns `true` if this device supports LED / backlight control.
+    pub fn has_leds(&self) -> bool {
+        matches!(
+            self,
+            Self::OrionThrottle | Self::Orion2Throttle | Self::SuperTaurus | Self::F18Panel
+        )
+    }
+
+    /// Returns `true` if this device has a display (UFC/IFEI/ICP).
+    pub fn has_display(&self) -> bool {
+        matches!(self, Self::F18Panel)
+    }
+
+    /// Returns `true` if this device supports throttle detent configuration.
+    pub fn has_detents(&self) -> bool {
+        matches!(
+            self,
+            Self::OrionThrottle | Self::Orion2Throttle | Self::SuperTaurus
+        )
+    }
+}
+
+impl std::fmt::Display for DeviceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::OrionStick => f.write_str("WinWing Orion Stick"),
+            Self::OrionThrottle => f.write_str("WinWing Orion Throttle"),
+            Self::Orion2Stick => f.write_str("WinWing Orion 2 Stick"),
+            Self::Orion2Throttle => f.write_str("WinWing Orion 2 Throttle"),
+            Self::SuperTaurus => f.write_str("WinWing Super Taurus"),
+            Self::F18Panel => f.write_str("WinWing F-18 Panel"),
+            Self::F16ExGrip => f.write_str("WinWing F-16EX Grip"),
+            Self::TfrpRudder => f.write_str("WinWing TFRP Rudder"),
+            Self::SkywalkerRudder => f.write_str("WinWing Skywalker Rudder"),
+        }
+    }
+}
+
+/// High-level protocol handler for a detected WinWing device.
+///
+/// Wraps device identification and provides convenience accessors
+/// for the device's capabilities.
+#[derive(Debug, Clone)]
+pub struct WinWingProtocol {
+    device: DeviceType,
+    pid: u16,
+}
+
+impl WinWingProtocol {
+    /// Create a protocol handler by detecting the device from its PID.
+    ///
+    /// Returns `None` if the PID is not a known WinWing device.
+    pub fn from_pid(pid: u16) -> Option<Self> {
+        DeviceType::from_pid(pid).map(|device| Self { device, pid })
+    }
+
+    /// The detected device type.
+    pub fn device_type(&self) -> DeviceType {
+        self.device
+    }
+
+    /// The USB Product ID.
+    pub fn pid(&self) -> u16 {
+        self.pid
+    }
+
+    /// Expected input report length for this device.
+    pub fn report_length(&self) -> usize {
+        self.device.report_length()
+    }
+
+    /// Whether this device supports LED control.
+    pub fn has_leds(&self) -> bool {
+        self.device.has_leds()
+    }
+
+    /// Whether this device has a display panel.
+    pub fn has_display(&self) -> bool {
+        self.device.has_display()
+    }
+
+    /// Whether this device supports detent configuration.
+    pub fn has_detents(&self) -> bool {
+        self.device.has_detents()
+    }
 }
 
 // ── Error type ────────────────────────────────────────────────────────────────
@@ -958,5 +1107,137 @@ mod tests {
         // Only give first 7 bytes (header + 1 byte of payload, missing rest + checksum)
         let err = parse_feature_report(&bytes[..7]).unwrap_err();
         assert!(matches!(err, ProtocolError::FrameTooShort { .. }));
+    }
+
+    // ── Device detection ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_device_type_from_pid_orion2_throttle() {
+        assert_eq!(
+            DeviceType::from_pid(0xBE62),
+            Some(DeviceType::Orion2Throttle)
+        );
+    }
+
+    #[test]
+    fn test_device_type_from_pid_orion2_stick() {
+        assert_eq!(DeviceType::from_pid(0xBE63), Some(DeviceType::Orion2Stick));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_super_taurus() {
+        assert_eq!(DeviceType::from_pid(0xBD64), Some(DeviceType::SuperTaurus));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_f18_panel() {
+        assert_eq!(DeviceType::from_pid(0xBEDE), Some(DeviceType::F18Panel));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_f16_grip() {
+        assert_eq!(DeviceType::from_pid(0xBEA8), Some(DeviceType::F16ExGrip));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_tfrp_rudder() {
+        assert_eq!(DeviceType::from_pid(0xBE64), Some(DeviceType::TfrpRudder));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_skywalker() {
+        assert_eq!(
+            DeviceType::from_pid(0xBEF0),
+            Some(DeviceType::SkywalkerRudder)
+        );
+    }
+
+    #[test]
+    fn test_device_type_from_pid_orion_stick() {
+        assert_eq!(DeviceType::from_pid(0xBE60), Some(DeviceType::OrionStick));
+    }
+
+    #[test]
+    fn test_device_type_from_pid_orion_throttle() {
+        assert_eq!(
+            DeviceType::from_pid(0xBE61),
+            Some(DeviceType::OrionThrottle)
+        );
+    }
+
+    #[test]
+    fn test_device_type_from_pid_unknown() {
+        assert_eq!(DeviceType::from_pid(0x0000), None);
+        assert_eq!(DeviceType::from_pid(0xFFFF), None);
+    }
+
+    #[test]
+    fn test_device_type_has_leds() {
+        assert!(DeviceType::Orion2Throttle.has_leds());
+        assert!(DeviceType::SuperTaurus.has_leds());
+        assert!(DeviceType::F18Panel.has_leds());
+        assert!(!DeviceType::Orion2Stick.has_leds());
+        assert!(!DeviceType::TfrpRudder.has_leds());
+    }
+
+    #[test]
+    fn test_device_type_has_display() {
+        assert!(DeviceType::F18Panel.has_display());
+        assert!(!DeviceType::F16ExGrip.has_display());
+        assert!(!DeviceType::Orion2Throttle.has_display());
+        assert!(!DeviceType::SuperTaurus.has_display());
+    }
+
+    #[test]
+    fn test_device_type_has_detents() {
+        assert!(DeviceType::OrionThrottle.has_detents());
+        assert!(DeviceType::Orion2Throttle.has_detents());
+        assert!(DeviceType::SuperTaurus.has_detents());
+        assert!(!DeviceType::Orion2Stick.has_detents());
+        assert!(!DeviceType::F18Panel.has_detents());
+    }
+
+    #[test]
+    fn test_device_type_report_length() {
+        assert_eq!(DeviceType::Orion2Stick.report_length(), 12);
+        assert_eq!(DeviceType::Orion2Throttle.report_length(), 24);
+        assert_eq!(DeviceType::SuperTaurus.report_length(), 13);
+        assert_eq!(DeviceType::F18Panel.report_length(), 6);
+        assert_eq!(DeviceType::F16ExGrip.report_length(), 10);
+    }
+
+    #[test]
+    fn test_device_type_display_names() {
+        assert_eq!(
+            DeviceType::Orion2Throttle.to_string(),
+            "WinWing Orion 2 Throttle"
+        );
+        assert_eq!(DeviceType::F18Panel.to_string(), "WinWing F-18 Panel");
+        assert_eq!(DeviceType::SuperTaurus.to_string(), "WinWing Super Taurus");
+    }
+
+    #[test]
+    fn test_winwing_protocol_from_pid() {
+        let proto = WinWingProtocol::from_pid(0xBE62).unwrap();
+        assert_eq!(proto.device_type(), DeviceType::Orion2Throttle);
+        assert_eq!(proto.pid(), 0xBE62);
+        assert!(proto.has_leds());
+        assert!(proto.has_detents());
+        assert!(!proto.has_display());
+    }
+
+    #[test]
+    fn test_winwing_protocol_from_pid_unknown() {
+        assert!(WinWingProtocol::from_pid(0x0000).is_none());
+    }
+
+    #[test]
+    fn test_winwing_protocol_f18_panel() {
+        let proto = WinWingProtocol::from_pid(0xBEDE).unwrap();
+        assert_eq!(proto.device_type(), DeviceType::F18Panel);
+        assert!(proto.has_leds());
+        assert!(proto.has_display());
+        assert!(!proto.has_detents());
+        assert_eq!(proto.report_length(), 6);
     }
 }
