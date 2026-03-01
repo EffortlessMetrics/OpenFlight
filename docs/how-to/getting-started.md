@@ -125,7 +125,7 @@ cargo run -p flight-cli -- devices list
 cargo run -p flight-cli -- profile show
 
 # Load a profile
-cargo run -p flight-cli -- profile load my-profile.toml
+cargo run -p flight-cli -- profile apply my-profile.json
 ```
 
 ## Configuring a Device
@@ -138,12 +138,12 @@ cargo run -p flight-cli -- devices list
 ```
 
 Each device is matched against the device manifests in
-`compat/manifests/devices/` by vendor/product ID. The manifest defines axis
+`compat/devices/` by vendor/product ID. The manifest defines axis
 counts, button maps, and FFB capabilities.
 
 ## Creating a Profile
 
-Profiles are TOML files that define axis curves, deadzones, button mappings,
+Profiles are JSON files that define axis curves, deadzones, button mappings,
 and panel LED rules. Profiles cascade in this order:
 
 1. **Global** — baseline settings
@@ -153,25 +153,30 @@ and panel LED rules. Profiles cascade in this order:
 
 Example minimal profile:
 
-```toml
-[metadata]
-name = "My First Profile"
-simulator = "msfs"
-
-[axes.roll]
-curve = "linear"
-deadzone = 0.03
-sensitivity = 1.0
-
-[axes.pitch]
-curve = "scurve"
-deadzone = 0.05
-sensitivity = 0.8
-curvature = 0.3
+```json
+{
+  "metadata": {
+    "name": "My First Profile",
+    "simulator": "msfs"
+  },
+  "axes": {
+    "roll": {
+      "curve": "linear",
+      "deadzone": 0.03,
+      "sensitivity": 1.0
+    },
+    "pitch": {
+      "curve": "scurve",
+      "deadzone": 0.05,
+      "sensitivity": 0.8,
+      "curvature": 0.3
+    }
+  }
+}
 ```
 
-Place profiles in the configured profile directory (see `FLIGHT_PROFILE_PATH`
-environment variable) and load them with `flightctl profile load`.
+Place profiles in the configured profile directory (see `FLIGHT_CONFIG_PATH`
+environment variable) and apply them with `flightctl profile apply`.
 
 ## Environment Variables
 
@@ -179,7 +184,6 @@ environment variable) and load them with `flightctl profile load`.
 |----------|---------|-------------|
 | `RUST_LOG` | `info` | Logging level (`trace`, `debug`, `info`, `warn`, `error`) |
 | `FLIGHT_CONFIG_PATH` | Platform default | Path to configuration directory |
-| `FLIGHT_PROFILE_PATH` | Platform default | Path to profile directory |
 
 ## Validating Your Setup
 

@@ -11,7 +11,7 @@ links:
 
 # Crate Index
 
-Complete reference for every workspace crate in OpenFlight, grouped by
+Reference index for the major workspace crates in OpenFlight, grouped by
 functional area. Each crate has its own `README.md` in `crates/<name>/`.
 
 ---

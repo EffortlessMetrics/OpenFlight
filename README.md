@@ -2,7 +2,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/EffortlessMetrics/OpenFlight/ci.yml?branch=main&label=CI&logo=github&style=flat-square)](https://github.com/EffortlessMetrics/OpenFlight/actions)
 [![MSRV](https://img.shields.io/badge/MSRV-1.92.0-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=flat-square)](LICENSE-MIT)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue?style=flat-square)](#license)
 [![Repo](https://img.shields.io/badge/repo-EffortlessMetrics%2FOpenFlight-blue?logo=github&style=flat-square)](https://github.com/EffortlessMetrics/OpenFlight)
 
 OpenFlight is a PC flight simulation input management system written in Rust. It provides a unified control plane for flight controls, panels, force feedback devices, and simulator adapters with a hard real-time **250 Hz** processing spine.
@@ -43,7 +43,7 @@ OpenFlight is a PC flight simulation input management system written in Rust. It
 
 ## Supported Hardware
 
-OpenFlight ships device manifests for **2 200+** controllers, sticks, yokes, pedals, throttles, and panels. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full device matrix with tier ratings and test coverage.
+OpenFlight ships device manifests for **2,200+** controllers, sticks, yokes, pedals, throttles, and panels. See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full device matrix with tier ratings and test coverage.
 
 Highlights include: Thrustmaster Warthog/Viper, VKB Gladiator/Gunfighter, VirPil, WinWing, Honeycomb Alpha/Bravo, CH Products, Saitek/Logitech panels, GoFlight modules, Brunner CLS, Simucube, Stream Deck, and many more.
 
