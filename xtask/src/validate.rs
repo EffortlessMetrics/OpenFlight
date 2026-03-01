@@ -464,14 +464,18 @@ fn validate_all_front_matter(
 /// If not installed, it logs a warning and returns Ok(false) to indicate the check
 /// was skipped (not a failure).
 ///
+/// If cargo-public-api fails due to a rustdoc JSON format mismatch (e.g.,
+/// "invalid type: integer" errors from nightly format changes), the error is
+/// treated as a warning rather than a hard failure.
+///
 /// For workspaces, this runs cargo public-api on each core crate individually.
 ///
 /// # Returns
 ///
 /// Returns:
 /// - `Ok(true)` if cargo-public-api is installed and verification passed
-/// - `Ok(false)` if cargo-public-api is not installed (skipped)
-/// - `Err` if cargo-public-api is installed but verification failed
+/// - `Ok(false)` if cargo-public-api is not installed or JSON format is incompatible (skipped)
+/// - `Err` if cargo-public-api is installed but verification failed for non-format reasons
 fn verify_public_api() -> Result<bool> {
     // Check if cargo-public-api is installed
     let check_installed = Command::new("cargo")
@@ -484,23 +488,39 @@ fn verify_public_api() -> Result<bool> {
 
             // Run public API verification on each core crate
             let mut all_passed = true;
+            let mut format_error = false;
             for crate_name in crate::config::CORE_CRATES {
                 println!("    Checking {}...", crate_name);
-                let status = Command::new("cargo")
+                let output = Command::new("cargo")
                     .args(["public-api", "-p", crate_name])
-                    .status()
+                    .output()
                     .context(format!(
                         "Failed to execute cargo public-api for {}",
                         crate_name
                     ))?;
 
-                if !status.success() {
-                    eprintln!("    ✗ Public API check failed for {}", crate_name);
-                    all_passed = false;
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    if stderr.contains("invalid type: integer")
+                        || stderr.contains("rustdoc JSON")
+                        || stderr.contains("format version")
+                    {
+                        eprintln!(
+                            "    ⚠ {} skipped: rustdoc JSON format incompatible with installed cargo-public-api",
+                            crate_name
+                        );
+                        format_error = true;
+                    } else {
+                        eprintln!("    ✗ Public API check failed for {}", crate_name);
+                        all_passed = false;
+                    }
                 }
             }
 
-            if all_passed {
+            if format_error && all_passed {
+                println!("  ⚠️  Rustdoc JSON format mismatch — upgrade cargo-public-api or pin a compatible nightly");
+                Ok(false)
+            } else if all_passed {
                 Ok(true)
             } else {
                 anyhow::bail!(
