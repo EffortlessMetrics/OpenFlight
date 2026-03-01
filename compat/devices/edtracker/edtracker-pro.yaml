@@ -3,8 +3,8 @@ device:
   vendor: "EDTracker"
   name: "EDTracker Pro"
   usb:
-    vid: "0x2341"
-    pid: "0x8042"
+    vendor_id: 0x2341
+    product_id: 0x8042
   type: "head_tracker"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "EDTracker Pro gyro-based head tracker."
   driver: "built-in HID"
 quirks:

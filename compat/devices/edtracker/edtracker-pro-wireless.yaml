@@ -3,8 +3,8 @@ device:
   vendor: "EDTracker"
   name: "EDTracker Pro Wireless"
   usb:
-    vid: "0x2341"
-    pid: "0x8043"
+    vendor_id: 0x2341
+    product_id: 0x8043
   type: "head_tracker"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "EDTracker Pro wireless Bluetooth head tracker."
   driver: "Bluetooth HID"
 quirks:

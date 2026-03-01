@@ -3,8 +3,8 @@ device:
   vendor: "Professional Flight Controls"
   name: "PFC Boeing 777 Throttle Quadrant"
   usb:
-    vid: "0x04D8"
-    pid: "0x0181"
+    vendor_id: 0x04D8
+    product_id: 0x0181
   type: "throttle"
 capabilities:
   axes: 6
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "PFC Boeing 777 twin-engine throttle quadrant."
   driver: "built-in HID"
 quirks: []

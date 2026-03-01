@@ -3,8 +3,8 @@ device:
   vendor: "John Googas"
   name: "SmoothTrack Phone Head Tracker"
   usb:
-    vid: "0x0000"
-    pid: "0x0000"
+    vendor_id: 0x0000
+    product_id: 0x0000
   type: "head_tracker"
 capabilities:
   axes: 6
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "SmoothTrack phone-based head tracking via UDP to opentrack."
   driver: "UDP protocol"
 quirks:

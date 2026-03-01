@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY A320 Electrical Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC0C"
+    vendor_id: 0x1209
+    product_id: 0xEC0C
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Airbus A320 electrical system overhead panel replica."
   driver: "built-in HID"
 quirks: []

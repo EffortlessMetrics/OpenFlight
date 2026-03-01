@@ -3,8 +3,8 @@ device:
   vendor: "PJ Rasmussen"
   name: "PJ Rasmussen Audio Panel 340"
   usb:
-    vid: "0x04D8"
-    pid: "0xE340"
+    vendor_id: 0x04D8
+    product_id: 0xE340
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "PJ Rasmussen Audio Panel 340 basic audio selector."
   driver: "built-in HID"
 quirks: []

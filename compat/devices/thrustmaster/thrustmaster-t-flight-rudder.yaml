@@ -3,8 +3,8 @@ device:
   vendor: "Thrustmaster"
   name: "Thrustmaster T.Flight Rudder Pedals"
   usb:
-    vid: "0x044F"
-    pid: "0xB6A5"
+    vendor_id: 0x044F
+    product_id: 0xB6A5
   type: "pedals"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Thrustmaster TFRP rudder pedals used with racing setups."
   driver: "built-in HID"
 quirks: []

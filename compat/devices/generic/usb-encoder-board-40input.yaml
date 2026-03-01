@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "USB Encoder Board 40-Input"
   usb:
-    vid: "0x0079"
-    pid: "0x0006"
+    vendor_id: 0x0079
+    product_id: 0x0006
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Generic USB encoder board with 40 inputs for button boxes."
   driver: "built-in HID"
 quirks:

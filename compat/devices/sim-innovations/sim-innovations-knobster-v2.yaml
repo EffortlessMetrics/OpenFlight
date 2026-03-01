@@ -3,8 +3,8 @@ device:
   vendor: "Sim Innovations"
   name: "Sim Innovations Knobster V2"
   usb:
-    vid: "0x04D8"
-    pid: "0xF701"
+    vendor_id: 0x04D8
+    product_id: 0xF701
   type: "panel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Sim Innovations Knobster V2 enhanced rotary encoder panel."
   driver: "built-in HID"
 quirks: []

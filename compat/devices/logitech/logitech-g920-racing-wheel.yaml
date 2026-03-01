@@ -3,8 +3,8 @@ device:
   vendor: "Logitech"
   name: "Logitech G920 Driving Force Racing Wheel"
   usb:
-    vid: "0x046D"
-    pid: "0xC262"
+    vendor_id: 0x046D
+    product_id: 0xC262
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Logitech G920 racing wheel for Xbox/PC flight sim use."
   driver: "built-in HID"
 quirks: []

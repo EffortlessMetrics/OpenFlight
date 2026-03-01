@@ -3,8 +3,8 @@ device:
   vendor: "Leo Bodnar"
   name: "Leo Bodnar GPS Reference Clock"
   usb:
-    vid: "0x1DD2"
-    pid: "0x0022"
+    vendor_id: 0x1DD2
+    product_id: 0x0022
   type: "accessory"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Leo Bodnar GPS reference clock for USB timing."
   driver: "built-in HID"
 quirks: []

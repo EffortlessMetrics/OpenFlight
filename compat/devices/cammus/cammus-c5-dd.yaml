@@ -3,8 +3,8 @@ device:
   vendor: "CAMMUS"
   name: "CAMMUS C5 Direct Drive"
   usb:
-    vid: "0x3416"
-    pid: "0x0001"
+    vendor_id: 0x3416
+    product_id: 0x0001
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "CAMMUS C5 budget direct drive wheel for flight sim."
   driver: "built-in HID"
 quirks: []

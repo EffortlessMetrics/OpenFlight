@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "OpenTrack Compatible IMU Tracker"
   usb:
-    vid: "0x2341"
-    pid: "0x8050"
+    vendor_id: 0x2341
+    product_id: 0x8050
   type: "head_tracker"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Generic IMU-based head tracker compatible with opentrack."
   driver: "built-in HID"
 quirks:

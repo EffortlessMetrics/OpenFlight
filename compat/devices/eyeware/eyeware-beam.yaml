@@ -3,8 +3,8 @@ device:
   vendor: "Eyeware Tech"
   name: "Eyeware Beam"
   usb:
-    vid: "0x0000"
-    pid: "0x0000"
+    vendor_id: 0x0000
+    product_id: 0x0000
   type: "eye_tracker"
 capabilities:
   axes: 6
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Eyeware Beam phone-based eye and head tracking app."
   driver: "software protocol"
 quirks:

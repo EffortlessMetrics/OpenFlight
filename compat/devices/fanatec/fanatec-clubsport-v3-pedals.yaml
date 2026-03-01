@@ -3,8 +3,8 @@ device:
   vendor: "Fanatec"
   name: "Fanatec ClubSport Pedals V3"
   usb:
-    vid: "0x0EB7"
-    pid: "0x1839"
+    vendor_id: 0x0EB7
+    product_id: 0x1839
   type: "pedals"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Fanatec ClubSport V3 load cell pedals for flight sim."
   driver: "built-in HID"
 quirks: []

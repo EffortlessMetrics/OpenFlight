@@ -3,8 +3,8 @@ device:
   vendor: "EDTracker"
   name: "EDTracker DIY"
   usb:
-    vid: "0x2341"
-    pid: "0x8044"
+    vendor_id: 0x2341
+    product_id: 0x8044
   type: "head_tracker"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "EDTracker DIY Arduino-based gyro head tracker."
   driver: "built-in HID"
 quirks:

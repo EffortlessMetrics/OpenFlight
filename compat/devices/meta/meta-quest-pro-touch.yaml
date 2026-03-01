@@ -3,8 +3,8 @@ device:
   vendor: "Meta Platforms"
   name: "Meta Quest Pro Touch Controller"
   usb:
-    vid: "0x2833"
-    pid: "0x0187"
+    vendor_id: 0x2833
+    product_id: 0x0187
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Meta Quest Pro Touch controller with pressure sensors."
   driver: "SteamVR/OpenXR"
 quirks:

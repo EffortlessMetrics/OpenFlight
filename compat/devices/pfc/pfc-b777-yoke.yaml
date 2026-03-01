@@ -3,8 +3,8 @@ device:
   vendor: "Professional Flight Controls"
   name: "PFC Boeing 777 Yoke"
   usb:
-    vid: "0x04D8"
-    pid: "0x0180"
+    vendor_id: 0x04D8
+    product_id: 0x0180
   type: "yoke"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "PFC Boeing 777 replica yoke for professional simulators."
   driver: "built-in HID"
 quirks: []

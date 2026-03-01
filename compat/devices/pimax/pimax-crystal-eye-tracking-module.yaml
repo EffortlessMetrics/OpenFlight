@@ -3,8 +3,8 @@ device:
   vendor: "Pimax Innovation"
   name: "Pimax Crystal Eye Tracking Module"
   usb:
-    vid: "0x0483"
-    pid: "0x0410"
+    vendor_id: 0x0483
+    product_id: 0x0410
   type: "eye_tracker"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Built-in eye tracking for Pimax Crystal headset."
   driver: "SteamVR/OpenXR"
 quirks:

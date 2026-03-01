@@ -3,8 +3,8 @@ device:
   vendor: "VRInsight"
   name: "VRInsight CDU II"
   usb:
-    vid: "0x14B8"
-    pid: "0x0062"
+    vendor_id: 0x14B8
+    product_id: 0x0062
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "VRInsight CDU II FMS control display unit."
   driver: "built-in HID"
 quirks: []

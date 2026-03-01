@@ -3,8 +3,8 @@ device:
   vendor: "Pimax Innovation"
   name: "Pimax Crystal Controller (Left)"
   usb:
-    vid: "0x0483"
-    pid: "0x0401"
+    vendor_id: 0x0483
+    product_id: 0x0401
   type: "vr_controller"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Pimax Crystal left hand controller."
   driver: "SteamVR/OpenXR"
 quirks:

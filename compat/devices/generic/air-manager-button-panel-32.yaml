@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Air Manager Compatible Button Panel 32"
   usb:
-    vid: "0x04D8"
-    pid: "0xF711"
+    vendor_id: 0x04D8
+    product_id: 0xF711
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "32-button panel compatible with Air Manager instrument suite."
   driver: "built-in HID"
 quirks: []

@@ -3,8 +3,8 @@ device:
   vendor: "Tobii AB"
   name: "Tobii Eye Tracker 4C (alt PID)"
   usb:
-    vid: "0x2104"
-    pid: "0x0119"
+    vendor_id: 0x2104
+    product_id: 0x0119
   type: "eye_tracker"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Tobii Eye Tracker 4C alternate product revision."
   driver: "Tobii SDK"
 quirks:

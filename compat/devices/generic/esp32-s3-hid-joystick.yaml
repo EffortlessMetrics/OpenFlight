@@ -3,8 +3,8 @@ device:
   vendor: "Espressif"
   name: "ESP32-S3 USB HID Joystick"
   usb:
-    vid: "0x303A"
-    pid: "0x1001"
+    vendor_id: 0x303A
+    product_id: 0x1001
   type: "joystick"
 capabilities:
   axes: 8
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "ESP32-S3 with native USB configured as HID joystick."
   driver: "built-in HID"
 quirks:

@@ -3,8 +3,8 @@ device:
   vendor: "Leo Bodnar"
   name: "Leo Bodnar BU0836A 24-bit"
   usb:
-    vid: "0x1DD2"
-    pid: "0x000E"
+    vendor_id: 0x1DD2
+    product_id: 0x000E
   type: "joystick"
 capabilities:
   axes: 12
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Leo Bodnar BU0836A 24-bit high-resolution axis interface."
   driver: "built-in HID"
 quirks: []

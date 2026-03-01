@@ -3,8 +3,8 @@ device:
   vendor: "Tobii AB"
   name: "Tobii Aware (Laptop Integrated)"
   usb:
-    vid: "0x2104"
-    pid: "0x0130"
+    vendor_id: 0x2104
+    product_id: 0x0130
   type: "eye_tracker"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Tobii Aware laptop-integrated eye tracking sensor."
   driver: "Tobii SDK"
 quirks:

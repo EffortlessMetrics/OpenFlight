@@ -3,8 +3,8 @@ device:
   vendor: "RealSimGear"
   name: "RealSimGear GMA Audio Panel"
   usb:
-    vid: "0x04D8"
-    pid: "0xF247"
+    vendor_id: 0x04D8
+    product_id: 0xF247
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "RealSimGear GMA series audio panel bezel."
   driver: "built-in HID"
 quirks: []

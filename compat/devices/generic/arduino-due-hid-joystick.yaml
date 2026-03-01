@@ -3,8 +3,8 @@ device:
   vendor: "Arduino"
   name: "Arduino Due USB HID Joystick"
   usb:
-    vid: "0x2341"
-    pid: "0x003E"
+    vendor_id: 0x2341
+    product_id: 0x003E
   type: "joystick"
 capabilities:
   axes: 8
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Arduino Due native USB HID joystick mode."
   driver: "built-in HID"
 quirks:

@@ -46,7 +46,7 @@ quirks:
       for basic flight controls when HOTAS hardware is unavailable.
 
 support:
-  tier: 4
+  tier: 3
   test_coverage:
     simulated: false
     hil: false

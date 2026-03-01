@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Generic USB Expression Pedal Dual"
   usb:
-    vid: "0x1209"
-    pid: "0x7E02"
+    vendor_id: 0x1209
+    product_id: 0x7E02
   type: "rudder"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Dual expression pedals adapted as USB toe brake axes."
   driver: "built-in HID"
 quirks: []

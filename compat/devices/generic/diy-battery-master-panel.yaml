@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY Battery Master Switch Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC0E"
+    vendor_id: 0x1209
+    product_id: 0xEC0E
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY battery and alternator master switch panel."
   driver: "built-in HID"
 quirks: []

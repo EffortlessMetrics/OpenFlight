@@ -1,0 +1,45 @@
+# MichelInput Collective
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# MichelInput helicopter collective lever. Custom USB HID device.
+# VID and PID unconfirmed — placeholders used until verified.
+schema_version: "1"
+
+device:
+  name: "MichelInput Collective"
+  vendor: "MichelInput"
+  usb:
+    vendor_id: 0x0000    # placeholder — VID unconfirmed
+    product_id: 0x0000   # placeholder — PID unconfirmed
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 3
+    names: [collective, throttle, mixture]
+    resolution_bits: 12
+  buttons: 8
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 4
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      VID and PID are placeholders. Confirm with lsusb on the actual
+      MichelInput collective hardware.
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
+  notes: >
+    MichelInput helicopter collective. VID/PID unconfirmed — placeholders.
+    Capabilities estimated from community reports. Last reviewed: 2026-07.

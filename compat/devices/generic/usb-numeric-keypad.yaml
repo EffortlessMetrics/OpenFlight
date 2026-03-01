@@ -57,7 +57,7 @@ quirks:
       autopilot target altitude/heading entry, or general macro button box.
 
 support:
-  tier: 5
+  tier: 3
   test_coverage:
     simulated: true
     hil: false

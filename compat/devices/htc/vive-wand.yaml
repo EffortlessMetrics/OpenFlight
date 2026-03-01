@@ -3,8 +3,8 @@ device:
   vendor: "HTC Corporation"
   name: "HTC Vive Wand Controller"
   usb:
-    vid: "0x0BB4"
-    pid: "0x2C87"
+    vendor_id: 0x0BB4
+    product_id: 0x2C87
   type: "vr_controller"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "HTC Vive Wand for SteamVR flight sim use."
   driver: "SteamVR"
 quirks:

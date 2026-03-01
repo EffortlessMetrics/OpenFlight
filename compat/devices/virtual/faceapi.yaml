@@ -13,8 +13,9 @@ device:
   name: "FaceAPI Head Tracker"
   vendor: "Seeing Machines"
   type: "other"
-  usb: ~
-
+  usb:
+    vendor_id: 0x0000  # virtual device - no physical USB
+    product_id: 0x0000  # virtual device - no physical USB
 capabilities:
   axes:
     count: 6

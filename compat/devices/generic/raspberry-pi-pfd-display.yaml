@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Raspberry Pi PFD Display Controller"
   usb:
-    vid: "0x2E8A"
-    pid: "0x010E"
+    vendor_id: 0x2E8A
+    product_id: 0x010E
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Raspberry Pi based PFD display with USB HID button inputs."
   driver: "built-in HID"
 quirks: []

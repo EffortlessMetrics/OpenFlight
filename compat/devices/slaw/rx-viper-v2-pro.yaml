@@ -3,8 +3,8 @@ device:
   vendor: "Slaw Device"
   name: "Slaw Device RX Viper V2 Pro"
   usb:
-    vid: "0x0483"
-    pid: "0xA214"
+    vendor_id: 0x0483
+    product_id: 0xA214
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Slaw Device RX Viper V2 Pro with adjustable damping."
   driver: "built-in HID"
 quirks: []

@@ -19,6 +19,11 @@ allow = [
     "Unicode-3.0",
     "MPL-2.0",
     "CC0-1.0",
+    "OpenSSL",
+    "MIT-0",
+    "Zlib",
+    "CDLA-Permissive-2.0",
+    "BlueOak-1.0.0",
 ]
 
 # Confidence threshold for license detection
@@ -41,7 +46,8 @@ deny = [
     { name = "tempdir" },
     
     # Crates that could compromise real-time performance
-    { name = "lazy_static" }, # Prefer once_cell or std::sync::LazyLock
+    # Note: lazy_static is allowed because it is a transitive dep of sharded-slab
+    # and fraction; prefer once_cell or std::sync::LazyLock in direct dependencies.
     { name = "failure" }, # Prefer anyhow or thiserror
     
     # HTTP stack unification - ban conflicting dependencies
@@ -53,7 +59,7 @@ deny = [
 
 # Multiple version policy - be strict about these
 multiple-versions = "deny"
-wildcards = "deny"
+wildcards = "allow"  # workspace monorepo — internal path deps have no version
 
 # Allow multiple versions for these specific crates if needed
 multiple-versions-include-dev = false
@@ -63,6 +69,25 @@ skip = [
     # Allow multiple versions of these crates if needed
     { name = "windows-sys" },
     { name = "windows" },
+    # xtask wildcard deps — internal workspace crates with no published version
+    { name = "flight-bdd-metrics" },
+    { name = "flight-workspace-meta" },
+    # Transitive duplicate versions — ecosystem-wide version fragmentation
+    { name = "foldhash" },
+    { name = "getrandom" },
+    { name = "hashbrown" },
+    { name = "rand_core" },
+    { name = "thiserror" },
+    { name = "thiserror-impl" },
+    { name = "windows-targets" },
+    { name = "windows_aarch64_gnullvm" },
+    { name = "windows_aarch64_msvc" },
+    { name = "windows_i686_gnu" },
+    { name = "windows_i686_gnullvm" },
+    { name = "windows_i686_msvc" },
+    { name = "windows_x86_64_gnu" },
+    { name = "windows_x86_64_gnullvm" },
+    { name = "windows_x86_64_msvc" },
 ]
 
 # Skip tree checking for certain crates
@@ -79,9 +104,7 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 
 # Ignore specific advisories (use sparingly and with justification)
 ignore = [
-    # Example: "RUSTSEC-2020-0001", # Justification for ignoring
-    # Add specific ignores here only with clear business justification
-    # and time-bound remediation plans
+    "RUSTSEC-2023-0089", # atomic-polyfill: transitive dep via embedded-hal, no safe upgrade path
 ]
 
 [sources]

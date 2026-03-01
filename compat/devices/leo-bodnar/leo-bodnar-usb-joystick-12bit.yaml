@@ -3,8 +3,8 @@ device:
   vendor: "Leo Bodnar"
   name: "Leo Bodnar USB Joystick 12-bit"
   usb:
-    vid: "0x1DD2"
-    pid: "0x0015"
+    vendor_id: 0x1DD2
+    product_id: 0x0015
   type: "joystick"
 capabilities:
   axes: 8
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Leo Bodnar USB joystick controller with 12-bit axis resolution."
   driver: "built-in HID"
 quirks: []

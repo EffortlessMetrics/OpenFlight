@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "Generic USB Expression Pedal Triple"
   usb:
-    vid: "0x1209"
-    pid: "0x7E03"
+    vendor_id: 0x1209
+    product_id: 0x7E03
   type: "rudder"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Triple expression pedal set adapted for rudder and toe brakes."
   driver: "built-in HID"
 quirks: []

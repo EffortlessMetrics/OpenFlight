@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY Generic Electrical Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xEC0D"
+    vendor_id: 0x1209
+    product_id: 0xEC0D
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY generic electrical system panel with battery and generator switches."
   driver: "built-in HID"
 quirks: []

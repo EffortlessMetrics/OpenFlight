@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "SPAD.neXt Serial Interface Panel"
   usb:
-    vid: "0x04D8"
-    pid: "0xF720"
+    vendor_id: 0x04D8
+    product_id: 0xF720
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "SPAD.neXt compatible serial interface panel for cockpit building."
   driver: "built-in HID"
 quirks: []

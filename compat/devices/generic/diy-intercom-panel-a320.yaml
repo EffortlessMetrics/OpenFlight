@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY A320 Intercom Panel Replica"
   usb:
-    vid: "0x1209"
-    pid: "0xAC07"
+    vendor_id: 0x1209
+    product_id: 0xAC07
   type: "panel"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY Airbus A320 intercom/radio management panel replica."
   driver: "built-in HID"
 quirks: []

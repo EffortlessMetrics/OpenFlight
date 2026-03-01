@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "USB Hall Sensor Axis Adapter"
   usb:
-    vid: "0x1B4F"
-    pid: "0x9321"
+    vendor_id: 0x1B4F
+    product_id: 0x9321
   type: "joystick"
 capabilities:
   axes: 4
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "USB adapter for Hall effect sensors to USB HID axes."
   driver: "built-in HID"
 quirks:

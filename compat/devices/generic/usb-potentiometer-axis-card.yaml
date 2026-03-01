@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "USB Potentiometer Axis Card"
   usb:
-    vid: "0x1B4F"
-    pid: "0x9320"
+    vendor_id: 0x1B4F
+    product_id: 0x9320
   type: "joystick"
 capabilities:
   axes: 8
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "USB adapter card converting analog potentiometers to USB axes."
   driver: "built-in HID"
 quirks:

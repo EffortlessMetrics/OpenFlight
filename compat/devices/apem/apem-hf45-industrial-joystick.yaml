@@ -3,8 +3,8 @@ device:
   vendor: "APEM"
   name: "APEM HF45 Industrial Joystick"
   usb:
-    vid: "0x1B67"
-    pid: "0x0001"
+    vendor_id: 0x1B67
+    product_id: 0x0001
   type: "joystick"
 capabilities:
   axes: 2
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "APEM HF45 industrial-grade joystick adapted for flight sim."
   driver: "built-in HID"
 quirks: []

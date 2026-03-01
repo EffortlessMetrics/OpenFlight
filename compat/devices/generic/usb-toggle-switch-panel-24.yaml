@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "USB Toggle Switch Panel 24-Position"
   usb:
-    vid: "0x1B4F"
-    pid: "0x9302"
+    vendor_id: 0x1B4F
+    product_id: 0x9302
   type: "button_box"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Generic 24-position USB toggle switch panel."
   driver: "built-in HID"
 quirks: []

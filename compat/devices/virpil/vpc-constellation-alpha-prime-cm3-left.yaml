@@ -3,8 +3,8 @@ device:
   vendor: "Virpil Controls"
   name: "Virpil VPC Constellation Alpha Prime CM3 Left"
   usb:
-    vid: "0x3344"
-    pid: "0x0282"
+    vendor_id: 0x3344
+    product_id: 0x0282
   type: "joystick"
 capabilities:
   axes: 5
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Virpil Constellation Alpha Prime left grip on CM3 base for space sim."
   driver: "built-in HID"
 quirks: []

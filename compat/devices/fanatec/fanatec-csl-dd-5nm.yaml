@@ -3,8 +3,8 @@ device:
   vendor: "Fanatec"
   name: "Fanatec CSL DD (5 Nm)"
   usb:
-    vid: "0x0EB7"
-    pid: "0x0E06"
+    vendor_id: 0x0EB7
+    product_id: 0x0E06
   type: "wheel"
 capabilities:
   axes: 3
@@ -13,6 +13,9 @@ capabilities:
   ffb: true
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "Fanatec CSL DD 5Nm direct drive base for flight sim."
   driver: "built-in HID"
 quirks: []

@@ -3,8 +3,8 @@ device:
   vendor: "Generic"
   name: "DIY 7-inch HDMI MFD Panel"
   usb:
-    vid: "0x1209"
-    pid: "0xAF01"
+    vendor_id: 0x1209
+    product_id: 0xAF01
   type: "panel"
 capabilities:
   axes: 0
@@ -13,6 +13,9 @@ capabilities:
   ffb: false
 support:
   tier: 2
+  test_coverage:
+    simulated: false
+    hil: false
   notes: "DIY 7-inch HDMI display with button bezel for MFD use."
   driver: "built-in HID"
 quirks: []
