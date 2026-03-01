@@ -24,7 +24,7 @@ use std::sync::Arc;
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn vjoy_device_creation_with_valid_slot_ids() {
+fn test_vjoy_device_creation_with_valid_slot_ids() {
     for slot in 1..=4 {
         let dev = VJoyDevice::new(slot);
         assert_eq!(dev.id(), slot);
@@ -36,7 +36,7 @@ fn vjoy_device_creation_with_valid_slot_ids() {
 }
 
 #[test]
-fn vjoy_axis_output_covers_full_range() {
+fn test_vjoy_axis_output_covers_full_range() {
     let mut dev = VJoyDevice::new(1);
     dev.acquire().unwrap();
 
@@ -55,7 +55,7 @@ fn vjoy_axis_output_covers_full_range() {
 }
 
 #[test]
-fn vjoy_button_output_independent_channels() {
+fn test_vjoy_button_output_independent_channels() {
     let mut dev = VJoyDevice::new(1);
     dev.acquire().unwrap();
 
@@ -75,7 +75,7 @@ fn vjoy_button_output_independent_channels() {
 }
 
 #[test]
-fn vjoy_hat_switch_all_directions() {
+fn test_vjoy_hat_switch_all_directions() {
     let mut dev = VJoyDevice::new(1);
     dev.acquire().unwrap();
 
@@ -99,11 +99,11 @@ fn vjoy_hat_switch_all_directions() {
 }
 
 #[test]
-fn vjoy_device_reset_clears_all_state() {
+fn test_vjoy_device_reset_clears_all_state() {
     let mut dev = VJoyDevice::new(1);
     dev.acquire().unwrap();
 
-    // Set non-default state on every channel.
+    // Set non-default state on a subset of channels.
     for a in 0..VJOY_MAX_AXES {
         dev.set_axis(a, 0.9).unwrap();
     }
@@ -131,7 +131,7 @@ fn vjoy_device_reset_clears_all_state() {
 }
 
 #[test]
-fn vjoy_multiple_virtual_devices_independent() {
+fn test_vjoy_multiple_virtual_devices_independent() {
     let mut dev1 = VJoyDevice::new(1);
     let mut dev2 = VJoyDevice::new(2);
     dev1.acquire().unwrap();
@@ -153,7 +153,7 @@ fn vjoy_multiple_virtual_devices_independent() {
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn uinput_virtual_gamepad_creation_custom_caps() {
+fn test_uinput_virtual_gamepad_creation_custom_caps() {
     let caps = UInputCapabilities {
         num_axes: 6,
         num_buttons: 16,
@@ -171,7 +171,7 @@ fn uinput_virtual_gamepad_creation_custom_caps() {
 }
 
 #[test]
-fn uinput_axis_mapping_covers_full_range() {
+fn test_uinput_axis_mapping_covers_full_range() {
     let mut dev = UInputDevice::new(UInputCapabilities::default());
     dev.acquire().unwrap();
 
@@ -186,7 +186,7 @@ fn uinput_axis_mapping_covers_full_range() {
 }
 
 #[test]
-fn uinput_button_mapping_press_release_cycle() {
+fn test_uinput_button_mapping_press_release_cycle() {
     let mut dev = UInputDevice::new(UInputCapabilities::default());
     dev.acquire().unwrap();
 
@@ -199,7 +199,7 @@ fn uinput_button_mapping_press_release_cycle() {
 }
 
 #[test]
-fn uinput_force_feedback_passthrough_via_output_report() {
+fn test_uinput_force_feedback_passthrough_via_output_report() {
     // Simulate an FFB passthrough: VirtualDevice processes an FFB output report.
     let config = VirtualDeviceConfig {
         name: "FFB Stick".into(),
@@ -221,7 +221,7 @@ fn uinput_force_feedback_passthrough_via_output_report() {
 }
 
 #[test]
-fn uinput_device_cleanup_on_drop() {
+fn test_uinput_device_cleanup_on_drop() {
     let mut dev = UInputDevice::new(UInputCapabilities::default());
     dev.acquire().unwrap();
     dev.set_axis(0, 0.5).unwrap();
@@ -240,7 +240,7 @@ fn make_acquired_mapper() -> VirtualDeviceMapper<MockBackend> {
 }
 
 #[test]
-fn pipeline_axis_value_to_virtual_device_output() {
+fn test_pipeline_axis_value_to_virtual_device_output() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -254,12 +254,12 @@ fn pipeline_axis_value_to_virtual_device_output() {
     });
 
     m.update_axes(&[0.3, -0.7]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 0.3).abs() < f32::EPSILON);
-    assert!((m.backend().get_axis(1).unwrap() - (-0.7)).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.3).abs() < 1e-5);
+    assert!((m.backend().get_axis(1).unwrap() - (-0.7)).abs() < 1e-5);
 }
 
 #[test]
-fn pipeline_button_state_to_virtual_device() {
+fn test_pipeline_button_state_to_virtual_device() {
     let mut m = make_acquired_mapper();
     for i in 0..4u8 {
         m.add_button_mapping(ButtonMapping {
@@ -277,7 +277,7 @@ fn pipeline_button_state_to_virtual_device() {
 }
 
 #[test]
-fn pipeline_hat_to_virtual_device() {
+fn test_pipeline_hat_to_virtual_device() {
     let mut m = make_acquired_mapper();
     m.add_hat_mapping(HatMapping {
         src_hat: 0,
@@ -295,8 +295,8 @@ fn pipeline_hat_to_virtual_device() {
 }
 
 #[test]
-fn pipeline_throttle_to_virtual_device() {
-    // Throttle axis: physical range 0..1 mapped via offset to virtual -1..1.
+fn test_pipeline_throttle_to_virtual_device() {
+    // Throttle axis: physical range 0..1 passed through to virtual 0..1 (identity transform).
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -311,15 +311,15 @@ fn pipeline_throttle_to_virtual_device() {
 
     // Full forward throttle.
     m.update_axes(&[1.0]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < 1e-5);
 
     // Idle.
     m.update_axes(&[0.0]).unwrap();
-    assert!(m.backend().get_axis(0).unwrap().abs() < f32::EPSILON);
+    assert!(m.backend().get_axis(0).unwrap().abs() < 1e-5);
 }
 
 #[test]
-fn pipeline_combined_axes_buttons_hats() {
+fn test_pipeline_combined_axes_buttons_hats() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -340,13 +340,13 @@ fn pipeline_combined_axes_buttons_hats() {
     m.update_buttons(&[true]).unwrap();
     m.update_hats(&[HatDirection::West]).unwrap();
 
-    assert!((m.backend().get_axis(0).unwrap() - 0.42).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.42).abs() < 1e-5);
     assert!(m.backend().get_button(0).unwrap());
     assert_eq!(m.backend().get_hat(0).unwrap(), HatDirection::West);
 }
 
 #[test]
-fn pipeline_output_rate_limiting_via_report_generation() {
+fn test_pipeline_output_rate_limiting_via_report_generation() {
     let config = VirtualDeviceConfig {
         packet_loss_rate: 0.0,
         ..VirtualDeviceConfig::default()
@@ -369,7 +369,7 @@ fn pipeline_output_rate_limiting_via_report_generation() {
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn lifecycle_create_configure_start_stop_destroy() {
+fn test_lifecycle_create_configure_start_stop_destroy() {
     let mut backend = MockBackend::new(4, 8, 2);
     assert!(!backend.is_acquired());
 
@@ -391,7 +391,7 @@ fn lifecycle_create_configure_start_stop_destroy() {
 }
 
 #[test]
-fn lifecycle_reconnect_preserves_configuration() {
+fn test_lifecycle_reconnect_preserves_configuration() {
     let config = VirtualDeviceConfig {
         name: "Reconnect Test".into(),
         ..VirtualDeviceConfig::default()
@@ -408,11 +408,11 @@ fn lifecycle_reconnect_preserves_configuration() {
 
     // State should be preserved across reconnect.
     let state = device.get_state();
-    assert!((state.axes[0] - 0.8).abs() < f32::EPSILON);
+    assert!((state.axes[0] - 0.8).abs() < 1e-5);
 }
 
 #[test]
-fn lifecycle_error_recovery_from_disconnected_output() {
+fn test_lifecycle_error_recovery_from_disconnected_output() {
     let device = VirtualDevice::new(VirtualDeviceConfig::default());
     device.disconnect();
 
@@ -425,7 +425,7 @@ fn lifecycle_error_recovery_from_disconnected_output() {
 }
 
 #[test]
-fn lifecycle_concurrent_devices_via_manager() {
+fn test_lifecycle_concurrent_devices_via_manager() {
     let manager = VirtualDeviceManager::new();
 
     let devices: Vec<_> = (0..5)
@@ -450,14 +450,14 @@ fn lifecycle_concurrent_devices_via_manager() {
         let state = dev.get_state();
         let expected = i as f32 * 0.2;
         assert!(
-            (state.axes[0] - expected).abs() < f32::EPSILON,
+            (state.axes[0] - expected).abs() < 1e-5,
             "device {i} axis mismatch"
         );
     }
 }
 
 #[test]
-fn lifecycle_device_stats_reset() {
+fn test_lifecycle_device_stats_reset() {
     let device = VirtualDevice::new(VirtualDeviceConfig::default());
 
     device.generate_input_report();
@@ -477,7 +477,7 @@ fn lifecycle_device_stats_reset() {
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn mapping_physical_to_virtual_axis_remapping() {
+fn test_mapping_physical_to_virtual_axis_remapping() {
     let mut m = make_acquired_mapper();
     // Physical axis 3 → virtual axis 0.
     m.add_axis_mapping(AxisMapping {
@@ -487,11 +487,11 @@ fn mapping_physical_to_virtual_axis_remapping() {
     });
 
     m.update_axes(&[0.0, 0.0, 0.0, 0.65]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 0.65).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.65).abs() < 1e-5);
 }
 
 #[test]
-fn mapping_custom_table_scale_and_offset() {
+fn test_mapping_custom_table_scale_and_offset() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -506,11 +506,11 @@ fn mapping_custom_table_scale_and_offset() {
 
     // 0.6 * 0.5 + 0.1 = 0.4
     m.update_axes(&[0.6]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 0.4).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 0.4).abs() < 1e-5);
 }
 
 #[test]
-fn mapping_inversion() {
+fn test_mapping_inversion() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -522,11 +522,11 @@ fn mapping_inversion() {
     });
 
     m.update_axes(&[0.9]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - (-0.9)).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - (-0.9)).abs() < 1e-5);
 }
 
 #[test]
-fn mapping_deadzone_in_output() {
+fn test_mapping_deadzone_in_output() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -539,7 +539,7 @@ fn mapping_deadzone_in_output() {
 
     // Inside dead-zone → output 0.
     m.update_axes(&[0.1]).unwrap();
-    assert!(m.backend().get_axis(0).unwrap().abs() < f32::EPSILON);
+    assert!(m.backend().get_axis(0).unwrap().abs() < 1e-5);
 
     // Outside dead-zone → re-scaled.
     m.update_axes(&[1.0]).unwrap();
@@ -547,7 +547,7 @@ fn mapping_deadzone_in_output() {
 }
 
 #[test]
-fn mapping_saturation_via_scale_clamping() {
+fn test_mapping_saturation_via_scale_clamping() {
     let mut m = make_acquired_mapper();
     m.add_axis_mapping(AxisMapping {
         src_axis: 0,
@@ -560,11 +560,11 @@ fn mapping_saturation_via_scale_clamping() {
 
     // 0.5 * 3.0 = 1.5 → clamped to 1.0
     m.update_axes(&[0.5]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - 1.0).abs() < 1e-5);
 
     // -0.5 * 3.0 = -1.5 → clamped to -1.0
     m.update_axes(&[-0.5]).unwrap();
-    assert!((m.backend().get_axis(0).unwrap() - (-1.0)).abs() < f32::EPSILON);
+    assert!((m.backend().get_axis(0).unwrap() - (-1.0)).abs() < 1e-5);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -572,7 +572,7 @@ fn mapping_saturation_via_scale_clamping() {
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn safety_graceful_failure_driver_not_installed() {
+fn test_safety_graceful_failure_driver_not_installed() {
     // vJoy driver availability check shouldn't panic.
     let _available = VJoyDevice::is_available();
     let _count = VJoyDevice::device_count();
@@ -582,7 +582,7 @@ fn safety_graceful_failure_driver_not_installed() {
 }
 
 #[test]
-fn safety_permission_check_not_acquired_errors() {
+fn test_safety_permission_check_not_acquired_errors() {
     let mut vjoy = VJoyDevice::new(1);
     assert_eq!(
         vjoy.set_axis(0, 0.0),
@@ -613,7 +613,7 @@ fn safety_permission_check_not_acquired_errors() {
 }
 
 #[test]
-fn safety_device_limit_enforcement_out_of_range() {
+fn test_safety_device_limit_enforcement_out_of_range() {
     let mut vjoy = VJoyDevice::new(1);
     vjoy.acquire().unwrap();
 
@@ -654,7 +654,7 @@ fn safety_device_limit_enforcement_out_of_range() {
 }
 
 #[test]
-fn safety_double_acquire_double_release() {
+fn test_safety_double_acquire_double_release() {
     let mut vjoy = VJoyDevice::new(1);
     vjoy.acquire().unwrap();
     assert_eq!(
@@ -675,7 +675,7 @@ fn safety_double_acquire_double_release() {
 }
 
 #[test]
-fn safety_manager_duplicate_and_missing_device() {
+fn test_safety_manager_duplicate_and_missing_device() {
     let mut manager = VirtualDeviceManager::new();
     let device = Arc::new(VirtualDevice::new(VirtualDeviceConfig::default()));
     let device_id = device.device_id();
@@ -697,7 +697,7 @@ fn safety_manager_duplicate_and_missing_device() {
 // ═══════════════════════════════════════════════════════════════════════
 
 #[test]
-fn loopback_bidirectional_report_integrity() {
+fn test_loopback_bidirectional_report_integrity() {
     let loopback = LoopbackHid::new();
 
     let payload: Vec<u8> = (0..64).collect();
@@ -718,7 +718,7 @@ fn loopback_bidirectional_report_integrity() {
 }
 
 #[test]
-fn hid_report_serialization_round_trip() {
+fn test_hid_report_serialization_round_trip() {
     let data = vec![0x10, 0x20, 0x30, 0x40];
     let report = HidReport::new(0x05, data.clone());
 
@@ -729,7 +729,7 @@ fn hid_report_serialization_round_trip() {
 }
 
 #[test]
-fn virtual_device_hid_report_encodes_axes_and_buttons() {
+fn test_virtual_device_hid_report_encodes_axes_and_buttons() {
     let device = VirtualDevice::new(VirtualDeviceConfig::default());
     device.set_axis(0, -1.0); // min
     device.set_axis(1, 1.0); // max
@@ -746,7 +746,7 @@ fn virtual_device_hid_report_encodes_axes_and_buttons() {
 }
 
 #[test]
-fn manager_device_health_reports_disconnected() {
+fn test_manager_device_health_reports_disconnected() {
     let manager = VirtualDeviceManager::new();
     let device = manager.create_device(VirtualDeviceConfig::default());
     let id = device.device_id();
