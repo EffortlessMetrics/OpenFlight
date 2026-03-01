@@ -261,27 +261,15 @@ fn validation_error_type_to_string(error_type: flight_ipc::ValidationErrorType) 
     }
 }
 
+/// Stub: requires a GetActiveProfile gRPC endpoint in flight-service.
 async fn active_profile(
-    output_format: OutputFormat,
+    _output_format: OutputFormat,
     _verbose: bool,
     _client_manager: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
-    let output = match output_format {
-        OutputFormat::Human => {
-            let mut human = format_active_profile(None, None);
-            human.push_str("\n\nWarning: Profile detection not yet implemented");
-            human
-        }
-        OutputFormat::Json => {
-            let result = json!({
-                "active_profile": null,
-                "source": null,
-                "warning": "Profile detection not yet implemented",
-            });
-            output_format.success(result)
-        }
-    };
-    Ok(Some(output))
+    Err(anyhow::anyhow!(
+        "Active profile query not yet available \u{2014} requires flight-service gRPC endpoint"
+    ))
 }
 
 /// Format active profile information for human-readable output
@@ -568,24 +556,9 @@ mod tests {
     }
 
     #[test]
-    fn active_profile_stub_json_format() {
-        let result = json!({
-            "active_profile": null,
-            "source": null,
-            "warning": "Profile detection not yet implemented",
-        });
-        let output = OutputFormat::Json.success(result);
-        let parsed: Value = serde_json::from_str(&output).unwrap();
-        assert_eq!(parsed["success"], true);
-        assert!(parsed["data"]["active_profile"].is_null());
-        assert_eq!(
-            parsed["data"]["warning"],
-            "Profile detection not yet implemented"
-        );
-    }
-
-    #[test]
-    fn active_profile_stub_human_format() {
+    fn active_profile_stub_returns_descriptive_error() {
+        // The active_profile function returns an error because the gRPC endpoint
+        // does not exist yet. Verify the helper still works for future use.
         let output = format_active_profile(None, None);
         assert_eq!(output, "No active profile");
     }
