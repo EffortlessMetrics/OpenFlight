@@ -85,7 +85,10 @@ fn stecs_aggregator_begin_poll_clears_previous_state() {
 
     agg.begin_poll();
     let snap = agg.snapshot();
-    assert!(snap.axes.is_none(), "axes should be cleared after begin_poll");
+    assert!(
+        snap.axes.is_none(),
+        "axes should be cleared after begin_poll"
+    );
     assert!(
         snap.pressed_buttons().is_empty(),
         "buttons should be cleared"
@@ -189,8 +192,8 @@ fn stecs_handler_report_id_strips_first_byte() {
 
 #[test]
 fn stecs_handler_report_id_with_empty_payload_fails() {
-    let handler = StecsInputHandler::new(VkbStecsVariant::LeftSpaceThrottleGripMini)
-        .with_report_id(true);
+    let handler =
+        StecsInputHandler::new(VkbStecsVariant::LeftSpaceThrottleGripMini).with_report_id(true);
     let report = [0x01]; // only report ID, no payload
     let err = handler.parse_interface_report(&report);
     assert!(matches!(
@@ -247,16 +250,14 @@ fn gladiator_full_negative_deflection() {
         (state.axes.pitch - (-1.0)).abs() < 0.01,
         "pitch should be -1.0"
     );
-    assert!(
-        (state.axes.yaw - (-1.0)).abs() < 0.01,
-        "yaw should be -1.0"
-    );
+    assert!((state.axes.yaw - (-1.0)).abs() < 0.01, "yaw should be -1.0");
 }
 
 #[test]
 fn gladiator_full_positive_deflection() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
-    let report = make_gladiator_report([0xFFFF, 0xFFFF, 0xFFFF, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
+    let report =
+        make_gladiator_report([0xFFFF, 0xFFFF, 0xFFFF, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - 1.0).abs() < 0.01);
     assert!((state.axes.pitch - 1.0).abs() < 0.01);
@@ -317,7 +318,9 @@ fn gladiator_both_hats_active() {
 fn gladiator_minimum_report_axes_only() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     // Exactly 12 bytes — axes only, no buttons or hats
-    let report = vec![0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00];
+    let report = vec![
+        0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00,
+    ];
     let state = handler.parse_report(&report).unwrap();
     assert!(state.axes.roll.abs() < 0.01);
     assert!(state.pressed_buttons().is_empty());
@@ -362,12 +365,8 @@ fn gunfighter_all_variants_parse_same_report() {
 #[test]
 fn gunfighter_full_deflection_all_axes() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
-    let report = make_gunfighter_report(
-        [0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF],
-        0,
-        0,
-        0xFF,
-    );
+    let report =
+        make_gunfighter_report([0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - 1.0).abs() < 0.01);
     assert!((state.axes.pitch - (-1.0)).abs() < 0.01);
@@ -398,7 +397,9 @@ fn gunfighter_all_64_buttons() {
 #[test]
 fn gunfighter_minimum_report_12_bytes() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
-    let report = vec![0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00];
+    let report = vec![
+        0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x00,
+    ];
     let state = handler.parse_report(&report).unwrap();
     assert!(state.axes.roll.abs() < 0.01);
     assert!(state.pressed_buttons().is_empty());
@@ -575,7 +576,10 @@ fn device_family_names_non_empty() {
         VkbDeviceFamily::GladiatorMk2,
     ];
     for family in families {
-        assert!(!family.name().is_empty(), "{family:?} name should not be empty");
+        assert!(
+            !family.name().is_empty(),
+            "{family:?} name should not be empty"
+        );
     }
 }
 
@@ -728,7 +732,10 @@ fn health_status_connected_with_failures_below_threshold() {
     monitor.record_failure();
     monitor.record_failure();
     let status = monitor.status(true, 3, 2);
-    assert!(status.is_healthy(), "2 failures < threshold should be healthy");
+    assert!(
+        status.is_healthy(),
+        "2 failures < threshold should be healthy"
+    );
 }
 
 #[test]
@@ -756,18 +763,30 @@ fn health_monitor_reset_allows_fresh_start() {
 
 #[test]
 fn gladiator_shift_logical_ge_physical() {
-    const { assert!(GLADIATOR_NXT_EVO_SHIFT.logical_button_count >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count) };
+    const {
+        assert!(
+            GLADIATOR_NXT_EVO_SHIFT.logical_button_count
+                >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count
+        )
+    };
 }
 
 #[test]
 fn gunfighter_shift_logical_ge_physical() {
-    const { assert!(GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count) };
+    const {
+        assert!(
+            GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count
+        )
+    };
 }
 
 #[test]
 fn axis_resolution_16bit_range() {
     assert_eq!(VKB_AXIS_16BIT.bits, 16);
-    assert_eq!(VKB_AXIS_16BIT.logical_max - VKB_AXIS_16BIT.logical_min, 0xFFFF);
+    assert_eq!(
+        VKB_AXIS_16BIT.logical_max - VKB_AXIS_16BIT.logical_min,
+        0xFFFF
+    );
 }
 
 #[test]
