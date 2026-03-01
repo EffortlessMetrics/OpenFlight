@@ -121,17 +121,26 @@ pub fn apply_calibration(raw: u16, cal: &AxisCalibration) -> f64 {
 /// Detect center drift from a set of resting-position samples.
 ///
 /// Returns the signed offset of the sample mean from `nominal_center`
-/// as a fraction of the full u16 range (0.0 = no drift, positive = drifted
-/// upward).
+/// as a fraction of the axis range (`raw_max - raw_min`).
+/// 0.0 = no drift, positive = drifted upward.
 ///
-/// Returns `0.0` if the sample slice is empty.
-pub fn detect_center_drift(samples: &[u16], nominal_center: u16) -> f64 {
+/// Returns `0.0` if the sample slice is empty or the range is zero.
+pub fn detect_center_drift(
+    samples: &[u16],
+    nominal_center: u16,
+    raw_min: u16,
+    raw_max: u16,
+) -> f64 {
     if samples.is_empty() {
+        return 0.0;
+    }
+    let range = (raw_max - raw_min) as f64;
+    if range == 0.0 {
         return 0.0;
     }
     let sum: f64 = samples.iter().map(|&s| s as f64).sum();
     let mean = sum / samples.len() as f64;
-    (mean - nominal_center as f64) / 65535.0
+    (mean - nominal_center as f64) / range
 }
 
 /// Derive an [`AxisCalibration`] from observed (min, max) sample pairs.
@@ -301,37 +310,48 @@ mod tests {
     #[test]
     fn no_drift_at_nominal_center() {
         let samples = vec![32768, 32768, 32768, 32768];
-        let drift = detect_center_drift(&samples, 32768);
+        let drift = detect_center_drift(&samples, 32768, 0, 65535);
         assert!(drift.abs() < 1e-6, "no drift expected, got {drift}");
     }
 
     #[test]
     fn positive_drift_detected() {
         let samples = vec![33000, 33000, 33000];
-        let drift = detect_center_drift(&samples, 32768);
+        let drift = detect_center_drift(&samples, 32768, 0, 65535);
         assert!(drift > 0.0, "expected positive drift, got {drift}");
     }
 
     #[test]
     fn negative_drift_detected() {
         let samples = vec![32000, 32000, 32000];
-        let drift = detect_center_drift(&samples, 32768);
+        let drift = detect_center_drift(&samples, 32768, 0, 65535);
         assert!(drift < 0.0, "expected negative drift, got {drift}");
     }
 
     #[test]
     fn drift_empty_samples_returns_zero() {
-        assert_eq!(detect_center_drift(&[], 32768), 0.0);
+        assert_eq!(detect_center_drift(&[], 32768, 0, 65535), 0.0);
     }
 
     #[test]
     fn drift_magnitude_is_reasonable() {
         // ~500 counts off center on a 65535 range ≈ 0.76%
         let samples = vec![33268; 100];
-        let drift = detect_center_drift(&samples, 32768);
+        let drift = detect_center_drift(&samples, 32768, 0, 65535);
         assert!(
             (drift - 500.0 / 65535.0).abs() < 1e-6,
             "drift should be ~0.0076, got {drift}"
+        );
+    }
+
+    #[test]
+    fn drift_14bit_axis_range() {
+        // 14-bit axis: 0..16383, center at 8192, drifted +100 counts
+        let samples = vec![8292; 50];
+        let drift = detect_center_drift(&samples, 8192, 0, 16383);
+        assert!(
+            (drift - 100.0 / 16383.0).abs() < 1e-6,
+            "14-bit drift should be ~0.0061, got {drift}"
         );
     }
 

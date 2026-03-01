@@ -553,7 +553,8 @@ pub fn parse_stick_report(
 ) -> Result<StickState, ThrustmasterProtocolError> {
     match device {
         ThrustmasterDevice::WarthogJoystick => {
-            let state = crate::warthog::parse_warthog_stick(data)
+            let payload = strip_report_id(data, crate::warthog::WARTHOG_STICK_MIN_REPORT_BYTES);
+            let state = crate::warthog::parse_warthog_stick(payload)
                 .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
             let mut buttons = Vec::with_capacity(19);
             for i in 1..=19 {
@@ -585,7 +586,8 @@ pub fn parse_stick_report(
             })
         }
         ThrustmasterDevice::HotasCougar => {
-            let state = crate::cougar::parse_cougar(data)
+            let payload = strip_report_id(data, crate::cougar::COUGAR_MIN_REPORT_BYTES);
+            let state = crate::cougar::parse_cougar(payload)
                 .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
             let mut buttons = Vec::with_capacity(16);
             for i in 0..16 {
@@ -614,7 +616,8 @@ pub fn parse_throttle_report(
 ) -> Result<ThrottleState, ThrustmasterProtocolError> {
     match device {
         ThrustmasterDevice::WarthogThrottle => {
-            let state = crate::warthog::parse_warthog_throttle(data)
+            let payload = strip_report_id(data, crate::warthog::WARTHOG_THROTTLE_MIN_REPORT_BYTES);
+            let state = crate::warthog::parse_warthog_throttle(payload)
                 .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
             let mut buttons = Vec::with_capacity(40);
             for i in 1..=40 {
@@ -653,6 +656,17 @@ pub fn parse_throttle_report(
             "{} is not a throttle device",
             device.name()
         ))),
+    }
+}
+
+/// Strip a leading report-ID byte when the buffer is exactly one byte
+/// longer than the expected payload. Returns the payload slice unchanged
+/// when its length already matches or exceeds `min_payload_len`.
+fn strip_report_id(data: &[u8], min_payload_len: usize) -> &[u8] {
+    if data.len() == min_payload_len + 1 {
+        &data[1..]
+    } else {
+        data
     }
 }
 
@@ -1142,6 +1156,41 @@ mod tests {
     fn parse_throttle_report_wrong_device_type() {
         let buf = vec![0u8; 32];
         assert!(parse_throttle_report(&buf, ThrustmasterDevice::WarthogJoystick).is_err());
+    }
+
+    #[test]
+    fn warthog_stick_report_id_stripped() {
+        // 11 bytes = 1 report-ID + 10 payload; report ID should be stripped
+        let mut buf = vec![0u8; 11];
+        buf[0] = 0x01; // report ID
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes()); // x
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes()); // y
+        buf[5..7].copy_from_slice(&32768u16.to_le_bytes()); // rz
+        buf[10] = 0xFF; // center hat
+        let state = parse_stick_report(&buf, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert_eq!(state.buttons.len(), 19);
+    }
+
+    #[test]
+    fn cougar_report_id_stripped() {
+        // 11 bytes = 1 report-ID + 10 payload
+        let mut buf = vec![0u8; 11];
+        buf[0] = 0x01;
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes());
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes());
+        let state = parse_stick_report(&buf, ThrustmasterDevice::HotasCougar).unwrap();
+        assert_eq!(state.buttons.len(), 16);
+    }
+
+    #[test]
+    fn warthog_throttle_report_id_stripped() {
+        // 19 bytes = 1 report-ID + 18 payload
+        let mut buf = vec![0u8; 19];
+        buf[0] = 0x01;
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes());
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes());
+        let state = parse_throttle_report(&buf, ThrustmasterDevice::WarthogThrottle).unwrap();
+        assert_eq!(state.buttons.len(), 40);
     }
 
     #[test]
