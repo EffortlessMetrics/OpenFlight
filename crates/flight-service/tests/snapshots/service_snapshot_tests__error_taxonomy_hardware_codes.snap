@@ -1,0 +1,9 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: output
+---
+DEVICE_DISCONNECT: Flight control device unexpectedly disconnected
+DEVICE_OVERCURRENT: Device reported over-current condition
+DEVICE_OVERTEMP: Device reported over-temperature condition
+HID_ENDPOINT_WEDGED: USB HID endpoint is wedged and unresponsive
+HID_OUT_STALL: USB HID output endpoint stalled for ≥3 frames
