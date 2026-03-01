@@ -61,10 +61,14 @@ pub const HONEYCOMB_VENDOR_ID_LEGACY: u16 = 0x04D8;
 
 /// USB Product ID for the Alpha Flight Controls XPC (Yoke).
 ///
-/// **Caution:** This PID (0x0102) is a community-reported value. It has not been
-/// confirmed with hardware. Use with care; verify with `lsusb` / USBView before
-/// relying on it for matching.
-pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x0102;
+/// Confirmed: VID 0x294B, PID 0x1900 — linux-hardware.org hardware probe data
+/// (8 probes reporting "Alpha Flight Controls"). See also
+/// `compat/devices/honeycomb/alpha-yoke.yaml`.
+pub const HONEYCOMB_ALPHA_YOKE_PID: u16 = 0x1900;
+
+/// Legacy PID alias (0x0102) — community-reported, never hardware-confirmed.
+/// Kept for backward compatibility; prefer [`HONEYCOMB_ALPHA_YOKE_PID`].
+pub const HONEYCOMB_ALPHA_YOKE_PID_LEGACY_COMMUNITY: u16 = 0x0102;
 
 /// Legacy PID for the Alpha Flight Controls under the Microchip VID.
 ///
@@ -112,6 +116,9 @@ pub enum HoneycombModel {
 pub fn honeycomb_model_from_vid_pid(vendor_id: u16, product_id: u16) -> Option<HoneycombModel> {
     match (vendor_id, product_id) {
         (HONEYCOMB_VENDOR_ID, HONEYCOMB_ALPHA_YOKE_PID) => Some(HoneycombModel::AlphaYoke),
+        (HONEYCOMB_VENDOR_ID, HONEYCOMB_ALPHA_YOKE_PID_LEGACY_COMMUNITY) => {
+            Some(HoneycombModel::AlphaYoke)
+        }
         (HONEYCOMB_VENDOR_ID, HONEYCOMB_BRAVO_PID) => Some(HoneycombModel::BravoThrottle),
         (HONEYCOMB_VENDOR_ID, HONEYCOMB_CHARLIE_PID) => Some(HoneycombModel::CharliePedals),
         (HONEYCOMB_VENDOR_ID_LEGACY, HONEYCOMB_ALPHA_YOKE_PID_LEGACY) => {
@@ -127,7 +134,9 @@ pub fn honeycomb_model_from_vid_pid(vendor_id: u16, product_id: u16) -> Option<H
 /// Returns the model for a known Honeycomb PID (current VID only), or `None`.
 pub fn honeycomb_model(product_id: u16) -> Option<HoneycombModel> {
     match product_id {
-        HONEYCOMB_ALPHA_YOKE_PID => Some(HoneycombModel::AlphaYoke),
+        HONEYCOMB_ALPHA_YOKE_PID | HONEYCOMB_ALPHA_YOKE_PID_LEGACY_COMMUNITY => {
+            Some(HoneycombModel::AlphaYoke)
+        }
         HONEYCOMB_BRAVO_PID => Some(HoneycombModel::BravoThrottle),
         HONEYCOMB_CHARLIE_PID => Some(HoneycombModel::CharliePedals),
         _ => None,

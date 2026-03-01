@@ -6,7 +6,7 @@ Honeycomb Aeronautical Alpha Yoke and Bravo Throttle Quadrant driver for OpenFli
 
 | Device | VID | PID | Legacy VID | Legacy PID | Status |
 |---|---|---|---|---|---|
-| Alpha Flight Controls XPC (Yoke) | 0x294B | 0x0102 | 0x04D8 | 0xE6D6 | Tier 2 — simulated tests only |
+| Alpha Flight Controls XPC (Yoke) | 0x294B | 0x1900 | 0x04D8 | 0xE6D6 | Tier 2 — simulated tests only |
 | Bravo Throttle Quadrant | 0x294B | 0x1901 | 0x04D8 | 0xE6D5 | Tier 2 — simulated tests only |
 
 **Note:** Early production Honeycomb units shipped with the Microchip default VID (0x04D8).

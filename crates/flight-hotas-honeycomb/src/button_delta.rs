@@ -58,7 +58,6 @@ impl ButtonDelta {
     pub fn pressed_buttons(&self) -> ButtonIter {
         ButtonIter {
             mask: self.pressed,
-            pos: 0,
         }
     }
 
@@ -66,7 +65,6 @@ impl ButtonDelta {
     pub fn released_buttons(&self) -> ButtonIter {
         ButtonIter {
             mask: self.released,
-            pos: 0,
         }
     }
 }
@@ -74,21 +72,18 @@ impl ButtonDelta {
 /// Iterator over set bits in a 64-bit mask, yielding 1-indexed button numbers.
 pub struct ButtonIter {
     mask: u64,
-    pos: u8,
 }
 
 impl Iterator for ButtonIter {
     type Item = u8;
 
     fn next(&mut self) -> Option<u8> {
-        while self.pos < 64 {
-            let bit = self.pos;
-            self.pos += 1;
-            if (self.mask >> bit) & 1 == 1 {
-                return Some(bit + 1); // 1-indexed
-            }
+        if self.mask == 0 {
+            return None;
         }
-        None
+        let bit = self.mask.trailing_zeros() as u8;
+        self.mask &= self.mask - 1;
+        Some(bit + 1) // 1-indexed
     }
 }
 
