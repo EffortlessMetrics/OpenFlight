@@ -469,11 +469,15 @@ impl FlapSwitchTracker {
 
     /// Create a flap tracker with a custom number of detents.
     pub fn with_detents(num_detents: u8) -> Self {
+        let max_position = match num_detents {
+            0 | 1 => 0,
+            n => (n.saturating_sub(1)).min(3),
+        };
         Self {
             position: 0,
             prev_down: false,
             prev_up: false,
-            max_position: num_detents.saturating_sub(1).max(1),
+            max_position,
         }
     }
 

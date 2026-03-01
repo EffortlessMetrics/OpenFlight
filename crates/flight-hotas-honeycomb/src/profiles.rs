@@ -114,21 +114,6 @@ pub static ALPHA_BUTTONS: &[ButtonMapping] = &[
         sim_event_hint: "VIEW_LEFT",
     },
     ButtonMapping {
-        name: "Magneto A (Right)",
-        button_num: 25,
-        sim_event_hint: "MAGNETO_RIGHT",
-    },
-    ButtonMapping {
-        name: "Magneto B (Left)",
-        button_num: 26,
-        sim_event_hint: "MAGNETO_LEFT",
-    },
-    ButtonMapping {
-        name: "Starter",
-        button_num: 27,
-        sim_event_hint: "MAGNETO_START",
-    },
-    ButtonMapping {
         name: "Rocker 1 Up",
         button_num: 7,
         sim_event_hint: "VIEW_ZOOM_IN",
@@ -147,6 +132,21 @@ pub static ALPHA_BUTTONS: &[ButtonMapping] = &[
         name: "Rocker 2 Down",
         button_num: 10,
         sim_event_hint: "ELEV_TRIM_DN",
+    },
+    ButtonMapping {
+        name: "Magneto A (Right)",
+        button_num: 25,
+        sim_event_hint: "MAGNETO_RIGHT",
+    },
+    ButtonMapping {
+        name: "Magneto B (Left)",
+        button_num: 26,
+        sim_event_hint: "MAGNETO_LEFT",
+    },
+    ButtonMapping {
+        name: "Starter",
+        button_num: 27,
+        sim_event_hint: "MAGNETO_START",
     },
 ];
 

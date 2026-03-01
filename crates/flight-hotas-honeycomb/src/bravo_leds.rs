@@ -213,10 +213,6 @@ pub fn serialize_led_report(leds: &BravoLedState) -> [u8; 5] {
 ///
 /// This is the inverse of [`serialize_led_report`], useful for diagnostics
 /// and round-trip testing. The report ID byte (`data[0]`) is ignored.
-///
-/// # Panics
-///
-/// Panics if `data.len() < 5`.
 pub fn deserialize_led_report(data: &[u8; 5]) -> BravoLedState {
     BravoLedState {
         hdg: data[1] & (1 << 0) != 0,
