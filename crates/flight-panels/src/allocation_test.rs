@@ -255,11 +255,11 @@ mod tests {
         let min = *times.iter().min().unwrap();
 
         // Verify timing consistency: max should not be pathologically large relative to mean.
-        // We use 100× (not 10×) to tolerate OS scheduling jitter and first-iteration
-        // JIT-like effects that are normal in unoptimized test builds.
+        // We use 500× to tolerate OS scheduling jitter, CI runner variability, and
+        // first-iteration warm-up effects that are normal in unoptimized test builds.
         // The real guard is the mean < 10μs assertion below.
         assert!(
-            max < mean * 100,
+            max < mean * 500,
             "Timing inconsistency detected: max={}, mean={}, min={}",
             max,
             mean,

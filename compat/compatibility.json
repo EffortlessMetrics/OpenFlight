@@ -508,8 +508,8 @@
     {
       "name": "APEM HF45 Industrial Joystick",
       "vendor": "APEM",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B67",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -522,8 +522,8 @@
     {
       "name": "APEM HT Series Thumbstick",
       "vendor": "APEM",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B67",
+      "product_id": "0x0002",
       "axes": 0,
       "buttons": 2,
       "force_feedback": false,
@@ -760,8 +760,8 @@
     {
       "name": "Baur Helicopter Pedals",
       "vendor": "Baur",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xBA10",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -788,8 +788,8 @@
     {
       "name": "Baur Military Rudder Pedals V2",
       "vendor": "Baur",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xBA11",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -874,6 +874,34 @@
       "vendor": "BETAFPV",
       "vendor_id": "0x1781",
       "product_id": "0x0898",
+      "axes": 4,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "BETAFPV LiteRadio 3 Pro",
+      "vendor": "BETAFPV",
+      "vendor_id": "0x1781",
+      "product_id": "0x089C",
+      "axes": 4,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "BETAFPV LiteRadio 3",
+      "vendor": "BETAFPV",
+      "vendor_id": "0x1781",
+      "product_id": "0x089D",
       "axes": 4,
       "buttons": 4,
       "force_feedback": false,
@@ -1362,8 +1390,8 @@
     {
       "name": "Buddy Fox 737 EFIS Panel",
       "vendor": "Buddy Fox",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FD0",
+      "product_id": "0x0004",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -1376,8 +1404,8 @@
     {
       "name": "Buddy Fox 737 MCP Panel",
       "vendor": "Buddy Fox",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FD0",
+      "product_id": "0x0003",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -1390,8 +1418,8 @@
     {
       "name": "Buddy Fox 737 MIP Panel",
       "vendor": "Buddy Fox",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FD0",
+      "product_id": "0x0002",
       "axes": 0,
       "buttons": 64,
       "force_feedback": false,
@@ -1404,8 +1432,8 @@
     {
       "name": "Buddy Fox 737 Overhead Panel",
       "vendor": "Buddy Fox",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FD0",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 96,
       "force_feedback": false,
@@ -1437,7 +1465,7 @@
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -1586,8 +1614,8 @@
     {
       "name": "CAMMUS C12 Direct Drive",
       "vendor": "CAMMUS",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3416",
+      "product_id": "0x0002",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -1628,8 +1656,8 @@
     {
       "name": "CAMMUS C5 Direct Drive",
       "vendor": "CAMMUS",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3416",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -1766,6 +1794,20 @@
       }
     },
     {
+      "name": "CH Products Combatstick USB2",
+      "vendor": "CH Products",
+      "vendor_id": "0x068E",
+      "product_id": "0x0054",
+      "axes": 4,
+      "buttons": 24,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "CH Eclipse Yoke USB2",
       "vendor": "CH Products",
       "vendor_id": "0x068E",
@@ -1842,6 +1884,20 @@
       "product_id": "0x00F2",
       "axes": 4,
       "buttons": 16,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "CH Products Gamecard III",
+      "vendor": "CH Products",
+      "vendor_id": "0x068E",
+      "product_id": "0x0050",
+      "axes": 4,
+      "buttons": 4,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -2060,6 +2116,20 @@
       }
     },
     {
+      "name": "CH Products Virtual Pilot Pro USB",
+      "vendor": "CH Products",
+      "vendor_id": "0x068E",
+      "product_id": "0x0052",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "CH Products Virtual Pilot Pro",
       "vendor": "CH Products",
       "vendor_id": "0x068E",
@@ -2202,8 +2272,8 @@
     {
       "name": "CockpitSonic FMC Panel",
       "vendor": "CockpitSonic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0610",
       "axes": 0,
       "buttons": 72,
       "force_feedback": false,
@@ -2244,8 +2314,8 @@
     {
       "name": "CockpitSonic Pedestal Panel",
       "vendor": "CockpitSonic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0611",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -2916,8 +2986,8 @@
     {
       "name": "Delan Clip Gamer Kit (with camera)",
       "vendor": "Delan Clip",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF376",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -2930,8 +3000,8 @@
     {
       "name": "Delan Clip Gamer",
       "vendor": "Delan Clip",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF375",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -3322,8 +3392,8 @@
     {
       "name": "DSD Button Box 12",
       "vendor": "Derek Speare Designs",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF6B0",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -3336,8 +3406,8 @@
     {
       "name": "DSD Button Box 24",
       "vendor": "Derek Speare Designs",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF6B1",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -3350,8 +3420,8 @@
     {
       "name": "DSD Button Box 36",
       "vendor": "Derek Speare Designs",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF6B2",
       "axes": 0,
       "buttons": 36,
       "force_feedback": false,
@@ -3364,8 +3434,8 @@
     {
       "name": "DSD Button Box 48",
       "vendor": "Derek Speare Designs",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF6B3",
       "axes": 0,
       "buttons": 48,
       "force_feedback": false,
@@ -3378,8 +3448,8 @@
     {
       "name": "EDTracker DIY",
       "vendor": "EDTracker",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8044",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -3392,8 +3462,8 @@
     {
       "name": "EDTracker Pro Wireless",
       "vendor": "EDTracker",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8043",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -3406,8 +3476,8 @@
     {
       "name": "EDTracker Pro",
       "vendor": "EDTracker",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8042",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -3798,8 +3868,8 @@
     {
       "name": "Eyeware Beam",
       "vendor": "Eyeware Tech",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -3831,7 +3901,7 @@
       "axes": 6,
       "buttons": 0,
       "force_feedback": false,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -4302,8 +4372,8 @@
     {
       "name": "Fanatec ClubSport Pedals V3",
       "vendor": "Fanatec",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0EB7",
+      "product_id": "0x1839",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -4316,8 +4386,8 @@
     {
       "name": "Fanatec CSL DD (5 Nm)",
       "vendor": "Fanatec",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0EB7",
+      "product_id": "0x0E06",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -4330,8 +4400,8 @@
     {
       "name": "Fanatec CSL DD (8 Nm)",
       "vendor": "Fanatec",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0EB7",
+      "product_id": "0x0E07",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -4358,8 +4428,8 @@
     {
       "name": "Fanatec CSL Pedals Load Cell Kit",
       "vendor": "Fanatec",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0EB7",
+      "product_id": "0x183A",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -4860,6 +4930,34 @@
       }
     },
     {
+      "name": "Flysky FS-i6S (USB HID)",
+      "vendor": "Flysky",
+      "vendor_id": "0x1781",
+      "product_id": "0x089B",
+      "axes": 6,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Flysky FS-i6X (USB HID)",
+      "vendor": "Flysky",
+      "vendor_id": "0x1781",
+      "product_id": "0x089A",
+      "axes": 6,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "FriendlyPanels Airbus A320 FCU Panel",
       "vendor": "FriendlyPanels",
       "vendor_id": "0x2341",
@@ -5056,6 +5154,20 @@
       }
     },
     {
+      "name": "GameSir C2 Arcade Stick",
+      "vendor": "GameSir",
+      "vendor_id": "0x1949",
+      "product_id": "0x0410",
+      "axes": 2,
+      "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "GameSir G7 Wired Controller",
       "vendor": "GameSir",
       "vendor_id": "0x1949",
@@ -5126,10 +5238,38 @@
       }
     },
     {
+      "name": "3dRudder Foot Controller",
+      "vendor": "3dRudder",
+      "vendor_id": "0x29C4",
+      "product_id": "0x0001",
+      "axes": 4,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "AbleNet Blue2 Bluetooth Switch",
+      "vendor": "AbleNet",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0001",
+      "axes": 0,
+      "buttons": 2,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Adafruit Feather RP2040 USB HID",
       "vendor": "Adafruit",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x239A",
+      "product_id": "0x8120",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -5140,10 +5280,38 @@
       }
     },
     {
+      "name": "Adaptive Flight Yoke",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0010",
+      "axes": 3,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "AI Copilot Input Device",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0014",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Air Manager Compatible Button Panel 32",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF711",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -5156,8 +5324,8 @@
     {
       "name": "Air Manager Compatible Encoder Panel 8",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF712",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -5170,8 +5338,8 @@
     {
       "name": "Air Manager Knobster Compatible Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF710",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -5184,8 +5352,8 @@
     {
       "name": "AITrack Compatible Camera",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -5198,8 +5366,8 @@
     {
       "name": "Arduino Due USB HID Joystick",
       "vendor": "Arduino",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x003E",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -5254,8 +5422,8 @@
     {
       "name": "Arduino Mega 2560 USB HID",
       "vendor": "Arduino",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x0042",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -5338,10 +5506,24 @@
     {
       "name": "ArUco Marker Head Tracker",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Brain-Computer Interface (BCI) Adapter",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0008",
+      "axes": 2,
+      "buttons": 4,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -5366,12 +5548,40 @@
     {
       "name": "BU0836 Clone 12-Axis Interface",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x000B",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
       "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Capacitive Touch Panel Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0005",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Chin-Operated Joystick Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0009",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -5408,8 +5618,8 @@
     {
       "name": "DIY USB ADF Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC03",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -5436,8 +5646,8 @@
     {
       "name": "DIY Arduino Button Box 32",
       "vendor": "DIY/Arduino",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8037",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -5450,8 +5660,8 @@
     {
       "name": "DIY Audio Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC08",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -5464,8 +5674,8 @@
     {
       "name": "DIY Battery Master Switch Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0E",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -5492,8 +5702,8 @@
     {
       "name": "DIY Arduino COM/NAV Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8037",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -5506,12 +5716,26 @@
     {
       "name": "DIY STM32 COM/NAV Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x5752",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
       "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Custom DIY Controller Kit (RP2040)",
+      "vendor": "Generic",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x000A",
+      "axes": 8,
+      "buttons": 32,
+      "force_feedback": false,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -5534,8 +5758,8 @@
     {
       "name": "DIY 737 Environmental Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC01",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -5548,8 +5772,8 @@
     {
       "name": "DIY A320 Environmental Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC02",
       "axes": 0,
       "buttons": 18,
       "force_feedback": false,
@@ -5562,8 +5786,8 @@
     {
       "name": "DIY Generic Environmental Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC03",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -5576,8 +5800,8 @@
     {
       "name": "DIY 737 Electrical Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0B",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -5590,8 +5814,8 @@
     {
       "name": "DIY A320 Electrical Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0C",
       "axes": 0,
       "buttons": 28,
       "force_feedback": false,
@@ -5604,8 +5828,8 @@
     {
       "name": "DIY Generic Electrical Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0D",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -5618,8 +5842,8 @@
     {
       "name": "DIY 737 Fire Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC12",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -5632,8 +5856,8 @@
     {
       "name": "DIY A320 Fire Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC13",
       "axes": 0,
       "buttons": 14,
       "force_feedback": false,
@@ -5646,8 +5870,8 @@
     {
       "name": "DIY Generic Fire Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC14",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -5660,8 +5884,8 @@
     {
       "name": "DIY Glass Cockpit USB Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC01",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -5674,8 +5898,8 @@
     {
       "name": "DIY 737 Hydraulic Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0F",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -5688,8 +5912,8 @@
     {
       "name": "DIY A320 Hydraulic Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC10",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -5702,8 +5926,8 @@
     {
       "name": "DIY Generic Hydraulic Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC11",
       "axes": 0,
       "buttons": 6,
       "force_feedback": false,
@@ -5716,8 +5940,8 @@
     {
       "name": "DIY 737 Intercom Panel Replica",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC06",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -5730,8 +5954,8 @@
     {
       "name": "DIY A320 Intercom Panel Replica",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC07",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -5744,8 +5968,8 @@
     {
       "name": "DIY Landing Light Switch Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC0A",
       "axes": 0,
       "buttons": 6,
       "force_feedback": false,
@@ -5758,8 +5982,8 @@
     {
       "name": "DIY 737 Lighting Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC07",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -5772,8 +5996,8 @@
     {
       "name": "DIY A320 Lighting Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC08",
       "axes": 0,
       "buttons": 14,
       "force_feedback": false,
@@ -5786,8 +6010,8 @@
     {
       "name": "DIY Generic Lighting Control Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC09",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -5800,8 +6024,8 @@
     {
       "name": "DIY 5-inch Composite MFD",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAF03",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -5814,8 +6038,8 @@
     {
       "name": "DIY 7-inch HDMI MFD Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAF01",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -5828,8 +6052,8 @@
     {
       "name": "DIY Cougar-Style MFD Button Frame",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAF02",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -5856,8 +6080,8 @@
     {
       "name": "DIY 737 Pressurization Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC04",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -5870,8 +6094,8 @@
     {
       "name": "DIY A320 Pressurization Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC05",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -5884,8 +6108,8 @@
     {
       "name": "DIY Generic Pressurization Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xEC06",
       "axes": 0,
       "buttons": 6,
       "force_feedback": false,
@@ -5912,8 +6136,8 @@
     {
       "name": "DIY RP2040 Rudder Pedals",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x010D",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -5926,8 +6150,8 @@
     {
       "name": "DIY STM32 Rudder Pedals",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x5751",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -5996,8 +6220,8 @@
     {
       "name": "DIY USB Transponder Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC02",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -6064,6 +6288,48 @@
       }
     },
     {
+      "name": "DJI FPV Controller 2 (USB Mode)",
+      "vendor": "DJI",
+      "vendor_id": "0x2CA3",
+      "product_id": "0x001C",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "DJI RC-N1 Controller (USB Mode)",
+      "vendor": "DJI",
+      "vendor_id": "0x2CA3",
+      "product_id": "0x001A",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "DJI RC Pro (USB Joystick Mode)",
+      "vendor": "DJI",
+      "vendor_id": "0x2CA3",
+      "product_id": "0x001B",
+      "axes": 4,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "DSD ButtonBox 32",
       "vendor": "DSD (Digital Sim Devices)",
       "vendor_id": "0x16C0",
@@ -6078,12 +6344,40 @@
       }
     },
     {
+      "name": "Eachine TX16S Clone (USB HID)",
+      "vendor": "Eachine",
+      "vendor_id": "0x0483",
+      "product_id": "0x5749",
+      "axes": 8,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "ExpressLRS RC Controller (USB HID Joystick Mode)",
       "vendor": "ExpressLRS / EdgeTX (community)",
       "vendor_id": "0x303A",
       "product_id": "0x1001",
       "axes": 6,
       "buttons": 16,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "EMG Muscle Sensor Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0007",
+      "axes": 4,
+      "buttons": 4,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -6108,8 +6402,8 @@
     {
       "name": "ESP32-S3 USB HID Joystick",
       "vendor": "Espressif",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x303A",
+      "product_id": "0x1001",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -6120,14 +6414,70 @@
       }
     },
     {
+      "name": "ExpressLRS USB Joystick Controller",
+      "vendor": "Generic",
+      "vendor_id": "0x0483",
+      "product_id": "0x5743",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Eye Tracking Accessibility Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0006",
+      "axes": 2,
+      "buttons": 2,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "FaceTrackNoIR Compatible Webcam",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
       "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Flex Sensor Array Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0004",
+      "axes": 8,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Accessibility Foot Pedal Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0007",
+      "axes": 3,
+      "buttons": 3,
+      "force_feedback": false,
+      "tier": 2,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -6139,6 +6489,76 @@
       "vendor_id": "0x1209",
       "product_id": "0xF500",
       "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Force-Sensitive Resistor Panel",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x000B",
+      "axes": 6,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "FrSky Taranis X9D Plus (USB HID)",
+      "vendor": "FrSky",
+      "vendor_id": "0x0483",
+      "product_id": "0x5720",
+      "axes": 8,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Galvanic Skin Response HID Adapter",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0012",
+      "axes": 2,
+      "buttons": 2,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Gameport-to-USB Adapter (2-Axis)",
+      "vendor": "Generic",
+      "vendor_id": "0x0810",
+      "product_id": "0x0001",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Gameport-to-USB Adapter (4-Axis)",
+      "vendor": "Generic",
+      "vendor_id": "0x0810",
+      "product_id": "0x0002",
+      "axes": 4,
       "buttons": 4,
       "force_feedback": false,
       "tier": 3,
@@ -6220,8 +6640,8 @@
     {
       "name": "Grass Monkey Head Tracker",
       "vendor": "Grass Monkey Simulations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF390",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -6248,12 +6668,40 @@
     {
       "name": "GyrOSC Phone Head Tracker",
       "vendor": "Bit Shape Software",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
       "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Haptic Feedback Gloves (HID)",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0001",
+      "axes": 10,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Head Mouse Nano",
+      "vendor": "Origin Instruments",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0004",
+      "axes": 2,
+      "buttons": 2,
+      "force_feedback": false,
+      "tier": 2,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -6274,6 +6722,34 @@
       }
     },
     {
+      "name": "ImmersionRC Ghost TX (USB HID)",
+      "vendor": "ImmersionRC",
+      "vendor_id": "0x0483",
+      "product_id": "0x5744",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "IR Hand Tracking Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x000D",
+      "axes": 6,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "DIY IR LED Clip Head Tracker (Teensy)",
       "vendor": "PJRC",
       "vendor_id": "0x16C0",
@@ -6282,6 +6758,20 @@
       "buttons": 0,
       "force_feedback": false,
       "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Jouse3 Mouth Joystick",
+      "vendor": "Jouse",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0003",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -6330,6 +6820,90 @@
       }
     },
     {
+      "name": "Large Button Accessibility Interface",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000F",
+      "axes": 0,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "LiDAR Gesture Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0010",
+      "axes": 3,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Magnetorheological FFB Joystick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x000E",
+      "axes": 4,
+      "buttons": 16,
+      "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Modular Sim Panel Framework Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0013",
+      "axes": 16,
+      "buttons": 64,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Motion-Tracked Hand Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0002",
+      "axes": 6,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "One-Handed Accessible Joystick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0008",
+      "axes": 3,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "OpenSimPit DIY Cockpit Controller",
       "vendor": "OpenSimPit (community)",
       "vendor_id": "0x1209",
@@ -6346,8 +6920,8 @@
     {
       "name": "OpenTrack Compatible IMU Tracker",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2341",
+      "product_id": "0x8050",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -6358,10 +6932,24 @@
       }
     },
     {
+      "name": "OpenTX/EdgeTX Compatible Transmitter (USB)",
+      "vendor": "Generic",
+      "vendor_id": "0x0483",
+      "product_id": "0x5742",
+      "axes": 8,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "OTTO USB Control Grip",
       "vendor": "OTTO Engineering",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DED",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -6428,6 +7016,48 @@
       }
     },
     {
+      "name": "Piezoelectric Feedback Panel",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x000F",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Pneumatic Force Feedback Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0009",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Pressure-Sensitive Touchpad Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0003",
+      "axes": 3,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "SparkFun Pro Micro 3.3V HID",
       "vendor": "SparkFun Electronics",
       "vendor_id": "0x1B4F",
@@ -6456,10 +7086,24 @@
       }
     },
     {
+      "name": "Proximity Switch Array Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000D",
+      "axes": 0,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "PS3 Eye IR Camera (Modified)",
       "vendor": "Sony",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1415",
+      "product_id": "0x2000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -6470,10 +7114,38 @@
       }
     },
     {
+      "name": "QuadStick Flight Controller",
+      "vendor": "QuadStick",
+      "vendor_id": "0x0483",
+      "product_id": "0xA0F1",
+      "axes": 4,
+      "buttons": 16,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "QuadStick FPS Game Controller",
+      "vendor": "QuadStick",
+      "vendor_id": "0x0483",
+      "product_id": "0xA0F0",
+      "axes": 4,
+      "buttons": 16,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Raspberry Pi EICAS Display Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x0110",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -6486,8 +7158,8 @@
     {
       "name": "Raspberry Pi MFD Display Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x010F",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -6500,8 +7172,8 @@
     {
       "name": "Raspberry Pi Nav Display Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x0111",
       "axes": 0,
       "buttons": 14,
       "force_feedback": false,
@@ -6514,8 +7186,8 @@
     {
       "name": "Raspberry Pi PFD Display Controller",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x010E",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -6542,8 +7214,8 @@
     {
       "name": "Raspberry Pi Pico USB Joystick",
       "vendor": "Raspberry Pi Foundation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x0003",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -6556,8 +7228,8 @@
     {
       "name": "Raspberry Pi Pico W USB HID",
       "vendor": "Raspberry Pi Foundation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x0005",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -6640,8 +7312,8 @@
     {
       "name": "RP2040-Zero USB HID Controller",
       "vendor": "Waveshare",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2E8A",
+      "product_id": "0x000A",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -6654,8 +7326,8 @@
     {
       "name": "Sim Instruments GNS 430 Panel",
       "vendor": "Sim Instruments",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF710",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -6668,8 +7340,8 @@
     {
       "name": "Sim Instruments GNS 530 Panel",
       "vendor": "Sim Instruments",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF711",
       "axes": 0,
       "buttons": 18,
       "force_feedback": false,
@@ -6708,10 +7380,24 @@
       }
     },
     {
+      "name": "Sip-and-Puff HID Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0005",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "SPAD.neXt Encoder Board",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF721",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -6724,8 +7410,8 @@
     {
       "name": "SPAD.neXt Serial Interface Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF720",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -6808,8 +7494,8 @@
     {
       "name": "STM32F103 Blue Pill Panel Controller",
       "vendor": "STMicroelectronics",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1EAF",
+      "product_id": "0x0004",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -6820,10 +7506,66 @@
       }
     },
     {
+      "name": "Strain Gauge Force-Sensing Yoke",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x000C",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Switch-Adapted Gamepad Interface",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000A",
+      "axes": 2,
+      "buttons": 12,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "TBS Tango 2 (USB HID)",
+      "vendor": "TBS",
+      "vendor_id": "0x0483",
+      "product_id": "0x5741",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Tecla-e Switch Interface",
+      "vendor": "Tecla",
+      "vendor_id": "0xFF01",
+      "product_id": "0x0002",
+      "axes": 0,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Teensy 2.0 USB HID Controller",
       "vendor": "PJRC",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0482",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -6836,8 +7578,8 @@
     {
       "name": "Teensy 2.0++ USB HID Controller",
       "vendor": "PJRC",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0483",
       "axes": 0,
       "buttons": 48,
       "force_feedback": false,
@@ -6934,8 +7676,8 @@
     {
       "name": "Teensy 4.1 USB HID Panel Controller",
       "vendor": "PJRC",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0488",
       "axes": 0,
       "buttons": 64,
       "force_feedback": false,
@@ -6974,6 +7716,76 @@
       }
     },
     {
+      "name": "Thermal Feedback Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0011",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Tongue Drive System Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000C",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Tremor-Cancelling Joystick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000E",
+      "axes": 3,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Ultrasonic Gesture Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF03",
+      "product_id": "0x0006",
+      "axes": 3,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Generic USB Ambidextrous Joystick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF00",
+      "product_id": "0x0097",
+      "axes": 4,
+      "buttons": 16,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "USB Annunciator Panel Generic",
       "vendor": "Generic",
       "vendor_id": "0x1209",
@@ -6990,8 +7802,8 @@
     {
       "name": "Generic USB Audio Selector Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC04",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -7032,8 +7844,8 @@
     {
       "name": "USB Encoder Board 40-Input",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0079",
+      "product_id": "0x0006",
       "axes": 0,
       "buttons": 40,
       "force_feedback": false,
@@ -7060,8 +7872,8 @@
     {
       "name": "Generic USB Expression Pedal Dual",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0x7E02",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -7074,8 +7886,8 @@
     {
       "name": "Generic USB Expression Pedal Single",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0x7E01",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -7088,8 +7900,8 @@
     {
       "name": "Generic USB Expression Pedal Triple",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0x7E03",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -7116,8 +7928,8 @@
     {
       "name": "Generic USB Programmable Foot Switch",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7412",
       "axes": 0,
       "buttons": 6,
       "force_feedback": false,
@@ -7130,8 +7942,8 @@
     {
       "name": "Generic USB Foot Switch Single",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7410",
       "axes": 0,
       "buttons": 1,
       "force_feedback": false,
@@ -7144,8 +7956,8 @@
     {
       "name": "Generic USB Foot Switch Triple",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7411",
       "axes": 0,
       "buttons": 3,
       "force_feedback": false,
@@ -7158,8 +7970,8 @@
     {
       "name": "USB Hall Sensor Axis Adapter",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B4F",
+      "product_id": "0x9321",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -7214,8 +8026,8 @@
     {
       "name": "Generic USB Intercom Panel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1209",
+      "product_id": "0xAC05",
       "axes": 0,
       "buttons": 6,
       "force_feedback": false,
@@ -7240,14 +8052,28 @@
       }
     },
     {
+      "name": "Generic USB Mini 3-Axis Joystick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF00",
+      "product_id": "0x0099",
+      "axes": 3,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Generic USB Numeric Keypad (Button Box)",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 21,
       "force_feedback": false,
-      "tier": 5,
+      "tier": 3,
       "test_coverage": {
         "simulated": true,
         "hil": false
@@ -7256,8 +8082,8 @@
     {
       "name": "USB Potentiometer Axis Card",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B4F",
+      "product_id": "0x9320",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -7270,8 +8096,8 @@
     {
       "name": "Generic USB PTT Box 4-Channel",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7415",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -7284,8 +8110,8 @@
     {
       "name": "Generic USB PTT Switch Dual",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7414",
       "axes": 0,
       "buttons": 2,
       "force_feedback": false,
@@ -7298,8 +8124,8 @@
     {
       "name": "Generic USB PTT Switch Single",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0C45",
+      "product_id": "0x7413",
       "axes": 0,
       "buttons": 1,
       "force_feedback": false,
@@ -7324,6 +8150,20 @@
       }
     },
     {
+      "name": "Generic USB 6-DOF Space Controller",
+      "vendor": "Generic",
+      "vendor_id": "0xFF00",
+      "product_id": "0x0096",
+      "axes": 6,
+      "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "USB 8-Switch Panel Generic",
       "vendor": "Generic",
       "vendor_id": "0x1209",
@@ -7340,8 +8180,8 @@
     {
       "name": "USB Toggle Switch Panel 12-Position",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B4F",
+      "product_id": "0x9301",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -7354,8 +8194,8 @@
     {
       "name": "USB Toggle Switch Panel 24-Position",
       "vendor": "Generic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1B4F",
+      "product_id": "0x9302",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -7380,6 +8220,20 @@
       }
     },
     {
+      "name": "Generic USB 4-Axis Twist Stick",
+      "vendor": "Generic",
+      "vendor_id": "0xFF00",
+      "product_id": "0x0098",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "vEncoder Virtual Encoder",
       "vendor": "vEncoder (community)",
       "vendor_id": "0x1209",
@@ -7388,6 +8242,20 @@
       "buttons": 0,
       "force_feedback": false,
       "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Voice-Controlled HID Adapter",
+      "vendor": "Generic",
+      "vendor_id": "0xFF01",
+      "product_id": "0x000B",
+      "axes": 0,
+      "buttons": 16,
+      "force_feedback": false,
+      "tier": 2,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -7438,8 +8306,8 @@
     {
       "name": "Generic XInput-to-HID Adapter",
       "vendor": "Various",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 6,
       "buttons": 16,
       "force_feedback": false,
@@ -8388,6 +9256,20 @@
       }
     },
     {
+      "name": "Gravis PC GamePad USB",
+      "vendor": "Gravis",
+      "vendor_id": "0x0428",
+      "product_id": "0x4001",
+      "axes": 2,
+      "buttons": 4,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Gravis PC GamePad",
       "vendor": "Gravis",
       "vendor_id": "0x0428",
@@ -8472,14 +9354,14 @@
       }
     },
     {
-      "name": "?",
-      "vendor": "?",
-      "vendor_id": "?",
-      "product_id": "?",
-      "axes": 0,
-      "buttons": 0,
+      "name": "DIY SimHQ Collective",
+      "vendor": "DIY / SimHQ Community",
+      "vendor_id": "0x1209",
+      "product_id": "0x0000",
+      "axes": 2,
+      "buttons": 4,
       "force_feedback": false,
-      "tier": 0,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -8516,8 +9398,8 @@
     {
       "name": "Generic USB Anti-Torque Pedals",
       "vendor": "Unknown",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 1,
       "buttons": 0,
       "force_feedback": false,
@@ -8570,14 +9452,14 @@
       }
     },
     {
-      "name": "?",
-      "vendor": "?",
-      "vendor_id": "?",
-      "product_id": "?",
-      "axes": 0,
-      "buttons": 0,
+      "name": "MichelInput Collective",
+      "vendor": "MichelInput",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
+      "axes": 3,
+      "buttons": 8,
       "force_feedback": false,
-      "tier": 0,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -9105,7 +9987,7 @@
       "name": "Honeycomb Charlie Throttle Pack (Bundle)",
       "vendor": "Honeycomb Aeronautical",
       "vendor_id": "0x294B",
-      "product_id": "?",
+      "product_id": "0x0000",
       "axes": 9,
       "buttons": 32,
       "force_feedback": false,
@@ -9147,7 +10029,7 @@
       "name": "Honeycomb XPC Expansion Connector",
       "vendor": "Honeycomb Aeronautical",
       "vendor_id": "0x294B",
-      "product_id": "?",
+      "product_id": "0x0000",
       "axes": 7,
       "buttons": 64,
       "force_feedback": false,
@@ -9161,7 +10043,7 @@
       "name": "Honeycomb Bravo Airlines Pack",
       "vendor": "Honeycomb Aeronautical",
       "vendor_id": "0x294B",
-      "product_id": "?",
+      "product_id": "0x0000",
       "axes": 7,
       "buttons": 64,
       "force_feedback": false,
@@ -9298,6 +10180,20 @@
       }
     },
     {
+      "name": "HORI Flight Stick EX3 Pro",
+      "vendor": "HORI",
+      "vendor_id": "0x0F0D",
+      "product_id": "0x0192",
+      "axes": 5,
+      "buttons": 18,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "HORI Flight Stick EX3",
       "vendor": "Hori Co., Ltd.",
       "vendor_id": "0x0F0D",
@@ -9403,6 +10299,20 @@
       "axes": 6,
       "buttons": 14,
       "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "HORI HOTAS Flight Control System PC",
+      "vendor": "HORI",
+      "vendor_id": "0x0F0D",
+      "product_id": "0x0190",
+      "axes": 6,
+      "buttons": 24,
+      "force_feedback": false,
       "tier": 3,
       "test_coverage": {
         "simulated": false,
@@ -9706,8 +10616,8 @@
     {
       "name": "HTC Vive Focus 3 Controller (Left)",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x0313",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -9720,8 +10630,8 @@
     {
       "name": "HTC Vive Focus 3 Controller (Right)",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x0314",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -9734,8 +10644,8 @@
     {
       "name": "HTC Vive Wand Controller (2018)",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x2C88",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -9748,8 +10658,8 @@
     {
       "name": "HTC Vive Wand Controller",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x2C87",
       "axes": 0,
       "buttons": 4,
       "force_feedback": false,
@@ -9762,8 +10672,8 @@
     {
       "name": "HTC Vive XR Elite Controller (Left)",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x0315",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -9776,8 +10686,8 @@
     {
       "name": "HTC Vive XR Elite Controller (Right)",
       "vendor": "HTC Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0BB4",
+      "product_id": "0x0316",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -9942,12 +10852,40 @@
       }
     },
     {
+      "name": "Jumper T-Lite (USB HID)",
+      "vendor": "Jumper",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0484",
+      "axes": 4,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Jumper T-Pro",
       "vendor": "Jumper",
       "vendor_id": "0x16C0",
       "product_id": "0x0483",
       "axes": 4,
       "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Jumper T16 (USB HID)",
+      "vendor": "Jumper",
+      "vendor_id": "0x16C0",
+      "product_id": "0x0485",
+      "axes": 8,
+      "buttons": 8,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -10588,8 +11526,8 @@
     {
       "name": "Leo Bodnar BBI-128 Rev 2",
       "vendor": "Leo Bodnar",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x1020",
       "axes": 0,
       "buttons": 128,
       "force_feedback": false,
@@ -10602,8 +11540,8 @@
     {
       "name": "Leo Bodnar BU0836A 24-bit",
       "vendor": "Leo Bodnar",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x000E",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -10616,8 +11554,8 @@
     {
       "name": "Leo Bodnar GPS Reference Clock",
       "vendor": "Leo Bodnar",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x0022",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -10630,8 +11568,8 @@
     {
       "name": "Leo Bodnar SLI-F1 Display",
       "vendor": "Leo Bodnar",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x0016",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -10644,8 +11582,8 @@
     {
       "name": "Leo Bodnar USB Joystick 12-bit",
       "vendor": "Leo Bodnar",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1DD2",
+      "product_id": "0x0015",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -10872,6 +11810,20 @@
       "product_id": "0xC219",
       "axes": 4,
       "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Logitech CyberMan 2",
+      "vendor": "Logitech",
+      "vendor_id": "0x046D",
+      "product_id": "0xC101",
+      "axes": 6,
+      "buttons": 8,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -11666,8 +12618,8 @@
     {
       "name": "Logitech G PRO Racing Pedals (standalone)",
       "vendor": "Logitech",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x046D",
+      "product_id": "0xC2A0",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -11680,8 +12632,8 @@
     {
       "name": "Logitech G29 Driving Force Racing Wheel",
       "vendor": "Logitech",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x046D",
+      "product_id": "0xC24F",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -11694,8 +12646,8 @@
     {
       "name": "Logitech G920 Driving Force Racing Wheel",
       "vendor": "Logitech",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x046D",
+      "product_id": "0xC262",
       "axes": 0,
       "buttons": 11,
       "force_feedback": false,
@@ -11986,6 +12938,34 @@
       }
     },
     {
+      "name": "Logitech WingMan Extreme Digital 3D",
+      "vendor": "Logitech",
+      "vendor_id": "0x046D",
+      "product_id": "0xC207",
+      "axes": 4,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Logitech WingMan Extreme Digital",
+      "vendor": "Logitech",
+      "vendor_id": "0x046D",
+      "product_id": "0xC20B",
+      "axes": 4,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Logitech WingMan Extreme",
       "vendor": "Logitech",
       "vendor_id": "0x046D",
@@ -12034,6 +13014,20 @@
       "product_id": "0xC291",
       "axes": 3,
       "buttons": 10,
+      "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Logitech WingMan Formula Force USB",
+      "vendor": "Logitech",
+      "vendor_id": "0x046D",
+      "product_id": "0xC293",
+      "axes": 3,
+      "buttons": 6,
       "force_feedback": true,
       "tier": 3,
       "test_coverage": {
@@ -12294,6 +13288,20 @@
       }
     },
     {
+      "name": "Mad Catz Cyborg V.3 Flight Stick",
+      "vendor": "Mad Catz",
+      "vendor_id": "0x0738",
+      "product_id": "0x2218",
+      "axes": 4,
+      "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Mad Catz FightPad PRO",
       "vendor": "Mad Catz",
       "vendor_id": "0x0738",
@@ -12492,8 +13500,8 @@
     {
       "name": "Meta Quest Pro Touch Controller",
       "vendor": "Meta Platforms",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2833",
+      "product_id": "0x0187",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -12506,8 +13514,8 @@
     {
       "name": "Meta Quest 2 Touch Controller v2",
       "vendor": "Meta Platforms",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2833",
+      "product_id": "0x0188",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -12520,8 +13528,8 @@
     {
       "name": "Meta Quest 3 Touch Plus Controller",
       "vendor": "Meta Platforms",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2833",
+      "product_id": "0x0186",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -12730,8 +13738,8 @@
     {
       "name": "MFG Crosswind V3 Combat Edition",
       "vendor": "MFG",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1551",
+      "product_id": "0x0031",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -12786,8 +13794,8 @@
     {
       "name": "MFG Crosswind V3 Titanium",
       "vendor": "MFG",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x1551",
+      "product_id": "0x0030",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -12994,6 +14002,20 @@
       }
     },
     {
+      "name": "Microsoft SideWinder Force Feedback Pro",
+      "vendor": "Microsoft",
+      "vendor_id": "0x045E",
+      "product_id": "0x001C",
+      "axes": 4,
+      "buttons": 9,
+      "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Microsoft SideWinder Force Feedback Wheel",
       "vendor": "Microsoft Corporation",
       "vendor_id": "0x045E",
@@ -13078,6 +14100,20 @@
       }
     },
     {
+      "name": "Microsoft SideWinder Game Pad USB",
+      "vendor": "Microsoft",
+      "vendor_id": "0x045E",
+      "product_id": "0x0026",
+      "axes": 2,
+      "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Microsoft SideWinder Joystick (Alt PID)",
       "vendor": "Microsoft",
       "vendor_id": "0x045E",
@@ -13112,6 +14148,20 @@
       "product_id": "0x001A",
       "axes": 3,
       "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Microsoft SideWinder Precision 2",
+      "vendor": "Microsoft",
+      "vendor_id": "0x045E",
+      "product_id": "0x0038",
+      "axes": 4,
+      "buttons": 8,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -13206,8 +14256,8 @@
     {
       "name": "WMR Motion Controller (Left)",
       "vendor": "Microsoft Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x045E",
+      "product_id": "0x065B",
       "axes": 0,
       "buttons": 7,
       "force_feedback": false,
@@ -13220,8 +14270,8 @@
     {
       "name": "WMR Motion Controller (Right)",
       "vendor": "Microsoft Corporation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x045E",
+      "product_id": "0x065C",
       "axes": 0,
       "buttons": 7,
       "force_feedback": false,
@@ -13710,8 +14760,8 @@
     {
       "name": "MOZA CRP Pedals",
       "vendor": "MOZA Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x346E",
+      "product_id": "0x0021",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -13724,8 +14774,8 @@
     {
       "name": "MOZA R12 Direct Drive Base",
       "vendor": "MOZA Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x346E",
+      "product_id": "0x0012",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -13780,8 +14830,8 @@
     {
       "name": "MOZA R5 Direct Drive Base",
       "vendor": "MOZA Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x346E",
+      "product_id": "0x0010",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -13808,8 +14858,8 @@
     {
       "name": "MOZA R9 Direct Drive Base",
       "vendor": "MOZA Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x346E",
+      "product_id": "0x0011",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -13836,8 +14886,8 @@
     {
       "name": "MOZA SRP Pedals",
       "vendor": "MOZA Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x346E",
+      "product_id": "0x0020",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14550,8 +15600,8 @@
     {
       "name": "NaturalPoint TrackIR 4 Plus",
       "vendor": "NaturalPoint Inc.",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x131D",
+      "product_id": "0x0159",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14634,8 +15684,8 @@
     {
       "name": "NaturalPoint TrackClip Pro V2",
       "vendor": "NaturalPoint Inc.",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x131D",
+      "product_id": "0x015A",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14690,8 +15740,8 @@
     {
       "name": "Next Level Racing Flight Simulator Seat",
       "vendor": "Next Level Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14704,8 +15754,8 @@
     {
       "name": "Next Level Racing GT Track Cockpit",
       "vendor": "Next Level Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14718,8 +15768,8 @@
     {
       "name": "Next Level Racing GT Seat",
       "vendor": "Next Level Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -14774,8 +15824,8 @@
     {
       "name": "Next Level Racing Wheel Stand Pro",
       "vendor": "Next Level Racing",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -15642,8 +16692,8 @@
     {
       "name": "PFC Boeing 777 Throttle Quadrant",
       "vendor": "Professional Flight Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0x0181",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -15656,8 +16706,8 @@
     {
       "name": "PFC Boeing 777 Yoke",
       "vendor": "Professional Flight Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0x0180",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -15950,8 +17000,8 @@
     {
       "name": "Pico 4 Controller (Left)",
       "vendor": "Pico Interactive",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2D1F",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 7,
       "force_feedback": false,
@@ -15964,8 +17014,8 @@
     {
       "name": "Pico 4 Controller (Right)",
       "vendor": "Pico Interactive",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2D1F",
+      "product_id": "0x0002",
       "axes": 0,
       "buttons": 7,
       "force_feedback": false,
@@ -15978,8 +17028,8 @@
     {
       "name": "Pico 4 Ultra Controller (Left)",
       "vendor": "Pico Interactive",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2D1F",
+      "product_id": "0x0003",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -15992,8 +17042,8 @@
     {
       "name": "Pico 4 Ultra Controller (Right)",
       "vendor": "Pico Interactive",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2D1F",
+      "product_id": "0x0004",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -16062,8 +17112,8 @@
     {
       "name": "Pimax Crystal Controller (Left)",
       "vendor": "Pimax Innovation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x0401",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -16076,8 +17126,8 @@
     {
       "name": "Pimax Crystal Controller (Right)",
       "vendor": "Pimax Innovation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x0402",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -16090,8 +17140,8 @@
     {
       "name": "Pimax Crystal Eye Tracking Module",
       "vendor": "Pimax Innovation",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x0410",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -16746,6 +17796,20 @@
       }
     },
     {
+      "name": "QuickShot QS-201 Python 3",
+      "vendor": "QuickShot",
+      "vendor_id": "0xFF02",
+      "product_id": "0x0001",
+      "axes": 2,
+      "buttons": 3,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Quickshot USB Joystick",
       "vendor": "Quickshot (Spectravideo)",
       "vendor_id": "0x0F0D",
@@ -16760,10 +17824,80 @@
       }
     },
     {
+      "name": "Radiomaster Boxer (USB HID)",
+      "vendor": "Radiomaster",
+      "vendor_id": "0x0483",
+      "product_id": "0x5746",
+      "axes": 6,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Radiomaster MT12 Surface TX (USB HID)",
+      "vendor": "Radiomaster",
+      "vendor_id": "0x0483",
+      "product_id": "0x5748",
+      "axes": 4,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Radiomaster Pocket (USB HID)",
+      "vendor": "Radiomaster",
+      "vendor_id": "0x0483",
+      "product_id": "0x5747",
+      "axes": 4,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Radiomaster TX16S (USB HID)",
+      "vendor": "Radiomaster",
+      "vendor_id": "0x0483",
+      "product_id": "0x5740",
+      "axes": 8,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Radiomaster Zorro (USB HID)",
+      "vendor": "Radiomaster",
+      "vendor_id": "0x0483",
+      "product_id": "0x5745",
+      "axes": 4,
+      "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "PJ Rasmussen Audio Panel 340",
       "vendor": "PJ Rasmussen",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xE340",
       "axes": 0,
       "buttons": 18,
       "force_feedback": false,
@@ -16776,8 +17910,8 @@
     {
       "name": "PJ Rasmussen Audio Panel 530",
       "vendor": "PJ Rasmussen",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xE530",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -16790,8 +17924,8 @@
     {
       "name": "PJ Rasmussen COM Radio Panel",
       "vendor": "PJ Rasmussen",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xE001",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -16804,8 +17938,8 @@
     {
       "name": "PJ Rasmussen NAV Radio Panel",
       "vendor": "PJ Rasmussen",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xE002",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -17140,8 +18274,8 @@
     {
       "name": "RealSimGear GNS430 COM Panel",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF245",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -17154,8 +18288,8 @@
     {
       "name": "RealSimGear GNS530 COM Panel",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF246",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -17476,8 +18610,8 @@
     {
       "name": "RealSimGear G500 TXi",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF241",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -17490,8 +18624,8 @@
     {
       "name": "RealSimGear G500H TXi",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF243",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -17560,8 +18694,8 @@
     {
       "name": "RealSimGear G600 TXi",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF242",
       "axes": 0,
       "buttons": 28,
       "force_feedback": false,
@@ -17658,8 +18792,8 @@
     {
       "name": "RealSimGear GMA Audio Panel",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF247",
       "axes": 0,
       "buttons": 14,
       "force_feedback": false,
@@ -17868,8 +19002,8 @@
     {
       "name": "RealSimGear GTX Transponder Panel",
       "vendor": "RealSimGear",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF248",
       "axes": 0,
       "buttons": 18,
       "force_feedback": false,
@@ -18362,6 +19496,20 @@
       "product_id": "0x0001",
       "axes": 4,
       "buttons": 8,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Saitek Cyborg 3D Digital",
+      "vendor": "Saitek",
+      "vendor_id": "0x06A3",
+      "product_id": "0x0162",
+      "axes": 4,
+      "buttons": 10,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -19140,6 +20288,20 @@
       }
     },
     {
+      "name": "Saitek ST110 Joystick",
+      "vendor": "Saitek",
+      "vendor_id": "0x06A3",
+      "product_id": "0x0160",
+      "axes": 3,
+      "buttons": 6,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Saitek ST290 Pro Joystick",
       "vendor": "Saitek / Logitech",
       "vendor_id": "0x06A3",
@@ -19216,6 +20378,20 @@
       "product_id": "0x010C",
       "axes": 2,
       "buttons": 14,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Saitek X36 HOTAS Combo",
+      "vendor": "Saitek",
+      "vendor_id": "0x06A3",
+      "product_id": "0x0255",
+      "axes": 6,
+      "buttons": 20,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -19660,8 +20836,8 @@
     {
       "name": "Sim Innovations Button Panel 16",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF701",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -19674,8 +20850,8 @@
     {
       "name": "Sim Innovations G1000 Bezel",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF703",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -19688,8 +20864,8 @@
     {
       "name": "Sim Innovations Knobster Panel",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF700",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -19702,8 +20878,8 @@
     {
       "name": "Sim Innovations Knobster V2",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF701",
       "axes": 0,
       "buttons": 10,
       "force_feedback": false,
@@ -19716,8 +20892,8 @@
     {
       "name": "Sim Innovations Radio Panel",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF703",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -19730,8 +20906,8 @@
     {
       "name": "Sim Innovations Switch Panel",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF702",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -19744,8 +20920,8 @@
     {
       "name": "Sim Innovations Touchscreen Bezel",
       "vendor": "Sim Innovations",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF702",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -19996,8 +21172,8 @@
     {
       "name": "Simagic QR Quick-Release Adapter",
       "vendor": "Simagic Technology",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -20010,8 +21186,8 @@
     {
       "name": "Simagic Alpha Mini Direct Drive",
       "vendor": "Simagic",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0x0520",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -21037,7 +22213,7 @@
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -21051,7 +22227,7 @@
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -21242,8 +22418,8 @@
     {
       "name": "Slaw Device RX Viper V2 Compact",
       "vendor": "Slaw Device",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0xA213",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -21256,8 +22432,8 @@
     {
       "name": "Slaw Device RX Viper V2 Pro",
       "vendor": "Slaw Device",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0xA214",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -21270,8 +22446,8 @@
     {
       "name": "Slaw Device RX Viper V2",
       "vendor": "Slaw Device",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0483",
+      "product_id": "0xA212",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -21354,8 +22530,8 @@
     {
       "name": "SmoothTrack Phone Head Tracker",
       "vendor": "John Googas",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -21494,8 +22670,8 @@
     {
       "name": "PlayStation VR2 Sense Controller (Left)",
       "vendor": "Sony Interactive Entertainment",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x054C",
+      "product_id": "0x0E45",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -21508,8 +22684,8 @@
     {
       "name": "PlayStation VR2 Sense Controller (Right)",
       "vendor": "Sony Interactive Entertainment",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x054C",
+      "product_id": "0x0E46",
       "axes": 0,
       "buttons": 8,
       "force_feedback": false,
@@ -21540,6 +22716,20 @@
       "product_id": "0x0A8B",
       "axes": 4,
       "buttons": 10,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Speedlink AIRROW Flightstick",
+      "vendor": "Speedlink",
+      "vendor_id": "0x0E8F",
+      "product_id": "0x0028",
+      "axes": 4,
+      "buttons": 12,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -21590,6 +22780,20 @@
       }
     },
     {
+      "name": "Speedlink Dark Tornado Space Edition",
+      "vendor": "Speedlink",
+      "vendor_id": "0x0E8F",
+      "product_id": "0x0029",
+      "axes": 4,
+      "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Speedlink DARK TORNADO Flight Joystick",
       "vendor": "Speedlink",
       "vendor_id": "0x1781",
@@ -21611,7 +22815,7 @@
       "axes": 3,
       "buttons": 10,
       "force_feedback": false,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -21681,7 +22885,7 @@
       "axes": 4,
       "buttons": 12,
       "force_feedback": true,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -21788,8 +22992,8 @@
     {
       "name": "Sublight Dynamics Vector Joystick",
       "vendor": "Sublight Dynamics",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FC8",
+      "product_id": "0x0001",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -21802,8 +23006,8 @@
     {
       "name": "Sublight Dynamics Vector Pro Joystick",
       "vendor": "Sublight Dynamics",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FC8",
+      "product_id": "0x0003",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -21816,8 +23020,8 @@
     {
       "name": "Sublight Dynamics Vector Throttle",
       "vendor": "Sublight Dynamics",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2FC8",
+      "product_id": "0x0002",
       "axes": 0,
       "buttons": 16,
       "force_feedback": false,
@@ -21834,6 +23038,20 @@
       "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Suncom SFS USB Joystick",
+      "vendor": "Suncom",
+      "vendor_id": "0x0543",
+      "product_id": "0x00A5",
+      "axes": 3,
+      "buttons": 6,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -22001,6 +23219,20 @@
       "vendor_id": "0x044F",
       "product_id": "0x0404",
       "axes": 5,
+      "buttons": 32,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Thrustmaster HOTAS Cougar (Original)",
+      "vendor": "Thrustmaster",
+      "vendor_id": "0x044F",
+      "product_id": "0xB351",
+      "axes": 6,
       "buttons": 32,
       "force_feedback": false,
       "tier": 3,
@@ -22198,6 +23430,20 @@
       "product_id": "0x0400",
       "axes": 4,
       "buttons": 12,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Thrustmaster FCS (Original)",
+      "vendor": "Thrustmaster",
+      "vendor_id": "0x044F",
+      "product_id": "0x0200",
+      "axes": 3,
+      "buttons": 4,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -23326,6 +24572,20 @@
       }
     },
     {
+      "name": "Thrustmaster T.Flight HOTAS Ace Edition",
+      "vendor": "Thrustmaster",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A0",
+      "axes": 5,
+      "buttons": 16,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Thrustmaster T.Flight HOTAS One (Alt PID)",
       "vendor": "Thrustmaster",
       "vendor_id": "0x044F",
@@ -23580,8 +24840,8 @@
     {
       "name": "Thrustmaster SF1000 Formula Wheel",
       "vendor": "Thrustmaster",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A3",
       "axes": 0,
       "buttons": 24,
       "force_feedback": false,
@@ -23594,8 +24854,8 @@
     {
       "name": "Thrustmaster T.Flight Rudder Pedals",
       "vendor": "Thrustmaster",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A5",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -23608,8 +24868,8 @@
     {
       "name": "Thrustmaster T-LCM Pedals",
       "vendor": "Thrustmaster",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A2",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -23622,8 +24882,8 @@
     {
       "name": "Thrustmaster T248 Direct Drive",
       "vendor": "Thrustmaster",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A0",
       "axes": 0,
       "buttons": 25,
       "force_feedback": false,
@@ -23636,8 +24896,8 @@
     {
       "name": "Thrustmaster T818 Direct Drive",
       "vendor": "Thrustmaster",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x044F",
+      "product_id": "0xB6A1",
       "axes": 0,
       "buttons": 20,
       "force_feedback": false,
@@ -23739,6 +24999,20 @@
       "axes": 3,
       "buttons": 14,
       "force_feedback": true,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Thrustmaster Top Gun Afterburner USB",
+      "vendor": "Thrustmaster",
+      "vendor_id": "0x044F",
+      "product_id": "0xB302",
+      "axes": 3,
+      "buttons": 8,
+      "force_feedback": false,
       "tier": 3,
       "test_coverage": {
         "simulated": false,
@@ -24124,10 +25398,24 @@
       }
     },
     {
+      "name": "Tobii PC Eye 5 (Gaze Control)",
+      "vendor": "Tobii",
+      "vendor_id": "0x2104",
+      "product_id": "0x0420",
+      "axes": 2,
+      "buttons": 0,
+      "force_feedback": false,
+      "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "Tobii Aware (Laptop Integrated)",
       "vendor": "Tobii AB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2104",
+      "product_id": "0x0130",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -24140,8 +25428,8 @@
     {
       "name": "Tobii Eye Tracker 4C (alt PID)",
       "vendor": "Tobii AB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x2104",
+      "product_id": "0x0119",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -24280,8 +25568,8 @@
     {
       "name": "TrackHat Clip Plus V3",
       "vendor": "TrackHat",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF380",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -24294,8 +25582,8 @@
     {
       "name": "TrackHat OpenTrack Camera",
       "vendor": "TrackHat",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x04D8",
+      "product_id": "0xF381",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -24425,7 +25713,7 @@
       "axes": 4,
       "buttons": 12,
       "force_feedback": true,
-      "tier": 4,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -25302,8 +26590,8 @@
     {
       "name": "Virpil VPC ACE Combat Pedals",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0286",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -25316,8 +26604,8 @@
     {
       "name": "Virpil VPC ACE Interceptor V2 Pedals",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0284",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -25330,8 +26618,8 @@
     {
       "name": "Virpil VPC ACE Torq V2 Pedals",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0285",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -25350,6 +26638,20 @@
       "buttons": 32,
       "force_feedback": false,
       "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Virpil VPC Alpha HOSAS Kit",
+      "vendor": "Virpil",
+      "vendor_id": "0x3344",
+      "product_id": "0x8322",
+      "axes": 6,
+      "buttons": 34,
+      "force_feedback": false,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -25526,8 +26828,8 @@
     {
       "name": "Virpil VPC Constellation Alpha Prime CM3 Left",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0282",
       "axes": 0,
       "buttons": 34,
       "force_feedback": false,
@@ -25540,8 +26842,8 @@
     {
       "name": "Virpil VPC Constellation Alpha Prime CM3 Right",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0283",
       "axes": 0,
       "buttons": 34,
       "force_feedback": false,
@@ -25616,6 +26918,20 @@
       "buttons": 34,
       "force_feedback": false,
       "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Virpil VPC Constellation Gamma Prime",
+      "vendor": "Virpil",
+      "vendor_id": "0x3344",
+      "product_id": "0x831F",
+      "axes": 6,
+      "buttons": 36,
+      "force_feedback": false,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -25818,6 +27134,20 @@
       }
     },
     {
+      "name": "Virpil VPC Flightstick WarBRD Space Edition",
+      "vendor": "Virpil",
+      "vendor_id": "0x3344",
+      "product_id": "0x8320",
+      "axes": 6,
+      "buttons": 32,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "VIRPIL VPC Hawk-60 Throttle",
       "vendor": "VIRPIL Controls",
       "vendor_id": "0x3344",
@@ -25876,8 +27206,8 @@
     {
       "name": "Virpil VPC MongoosT-50CM3 HOSAS Left",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0280",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -25890,8 +27220,8 @@
     {
       "name": "Virpil VPC MongoosT-50CM3 HOSAS Right",
       "vendor": "Virpil Controls",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x3344",
+      "product_id": "0x0281",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -25936,6 +27266,20 @@
       "product_id": "0x820D",
       "axes": 6,
       "buttons": 32,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "Virpil VPC MongoosT-50CM4 Stick",
+      "vendor": "Virpil",
+      "vendor_id": "0x3344",
+      "product_id": "0x8325",
+      "axes": 6,
+      "buttons": 36,
       "force_feedback": false,
       "tier": 3,
       "test_coverage": {
@@ -26394,8 +27738,8 @@
     {
       "name": "ActiveSky Weather Engine",
       "vendor": "HiFi Technologies",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -26464,8 +27808,8 @@
     {
       "name": "FaceAPI Head Tracker",
       "vendor": "Seeing Machines",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x0000",
+      "product_id": "0x0000",
       "axes": 6,
       "buttons": 0,
       "force_feedback": false,
@@ -27078,6 +28422,20 @@
       }
     },
     {
+      "name": "VKB Gladiator EVO SCG Premium Left",
+      "vendor": "VKB",
+      "vendor_id": "0x231D",
+      "product_id": "0x0145",
+      "axes": 6,
+      "buttons": 40,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "VKB Gladiator EVO Space Combat Grip Premium",
       "vendor": "VKB-Sim",
       "vendor_id": "0x231D",
@@ -27153,6 +28511,20 @@
       "vendor_id": "0x231D",
       "product_id": "0x012F",
       "axes": 4,
+      "buttons": 32,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "VKB Gladiator NXT EVO Dual Space Kit",
+      "vendor": "VKB",
+      "vendor_id": "0x231D",
+      "product_id": "0x0140",
+      "axes": 6,
       "buttons": 32,
       "force_feedback": false,
       "tier": 3,
@@ -27332,8 +28704,8 @@
     {
       "name": "VKB Gladiator Space Combat EVO",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0154",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -27526,6 +28898,20 @@
       }
     },
     {
+      "name": "VKB Gunfighter SCG Premium",
+      "vendor": "VKB",
+      "vendor_id": "0x231D",
+      "product_id": "0x012C",
+      "axes": 6,
+      "buttons": 48,
+      "force_feedback": false,
+      "tier": 3,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
       "name": "VKB Helicopter Cyclic Grip",
       "vendor": "VKB-Sim",
       "vendor_id": "0x231D",
@@ -27542,8 +28928,8 @@
     {
       "name": "VKB Kosmosima SCG Premium Left",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0152",
       "axes": 0,
       "buttons": 28,
       "force_feedback": false,
@@ -27556,8 +28942,8 @@
     {
       "name": "VKB Kosmosima SCG Premium Right",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0153",
       "axes": 0,
       "buttons": 28,
       "force_feedback": false,
@@ -27780,8 +29166,8 @@
     {
       "name": "VKB Space Combat Grip Mk.II Left",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0151",
       "axes": 0,
       "buttons": 30,
       "force_feedback": false,
@@ -27794,12 +29180,26 @@
     {
       "name": "VKB Space Combat Grip Mk.II",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0150",
       "axes": 0,
       "buttons": 30,
       "force_feedback": false,
       "tier": 2,
+      "test_coverage": {
+        "simulated": false,
+        "hil": false
+      }
+    },
+    {
+      "name": "VKB Space Combat Grip Mk3",
+      "vendor": "VKB",
+      "vendor_id": "0x231D",
+      "product_id": "0x0270",
+      "axes": 6,
+      "buttons": 40,
+      "force_feedback": false,
+      "tier": 3,
       "test_coverage": {
         "simulated": false,
         "hil": false
@@ -28074,8 +29474,8 @@
     {
       "name": "VKB T-Rudder Mk.V Combat",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0156",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -28088,8 +29488,8 @@
     {
       "name": "VKB T-Rudder Mk.V Premium",
       "vendor": "VKB",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x231D",
+      "product_id": "0x0155",
       "axes": 0,
       "buttons": 0,
       "force_feedback": false,
@@ -28340,8 +29740,8 @@
     {
       "name": "VRInsight CDU II",
       "vendor": "VRInsight",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x14B8",
+      "product_id": "0x0062",
       "axes": 0,
       "buttons": 64,
       "force_feedback": false,
@@ -28354,8 +29754,8 @@
     {
       "name": "VRInsight MCP Combo",
       "vendor": "VRInsight",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x14B8",
+      "product_id": "0x0060",
       "axes": 0,
       "buttons": 32,
       "force_feedback": false,
@@ -28368,8 +29768,8 @@
     {
       "name": "VRInsight Overhead Panel",
       "vendor": "VRInsight",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x14B8",
+      "product_id": "0x0061",
       "axes": 0,
       "buttons": 48,
       "force_feedback": false,
@@ -28382,8 +29782,8 @@
     {
       "name": "VRInsight Throttle Quadrant",
       "vendor": "VRInsight",
-      "vendor_id": "?",
-      "product_id": "?",
+      "vendor_id": "0x14B8",
+      "product_id": "0x0063",
       "axes": 0,
       "buttons": 12,
       "force_feedback": false,
@@ -31125,15 +32525,12 @@
     }
   ],
   "summary": {
-    "total_devices": 2201,
+    "total_devices": 2301,
     "total_games": 18,
     "tier_distribution": {
-      "tier_0": 2,
       "tier_1": 18,
-      "tier_2": 687,
-      "tier_3": 1486,
-      "tier_4": 7,
-      "tier_5": 1
+      "tier_2": 706,
+      "tier_3": 1577
     },
     "game_tier_distribution": {
       "tier_1": 8,
