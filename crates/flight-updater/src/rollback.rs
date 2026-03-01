@@ -877,6 +877,7 @@ pub struct VersionRetention {
 
 impl VersionRetention {
     pub fn new(max_versions: usize) -> Self {
+        assert!(max_versions > 0, "max_versions must be at least 1");
         Self {
             versions: Vec::new(),
             max_versions,

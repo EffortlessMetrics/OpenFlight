@@ -246,25 +246,27 @@ impl ReleaseManifest {
     ///
     /// Returns `Ok(())` when the manifest is well-formed, or an error
     /// string describing the first problem found.
-    pub fn validate(&self) -> std::result::Result<(), String> {
+    pub fn validate(&self) -> crate::Result<()> {
         if self.release_date.is_empty() {
-            return Err("release_date is required".into());
+            return Err(crate::UpdateError::VersionValidation(
+                "release_date is required".into(),
+            ));
         }
         if self.artifacts.is_empty() {
-            return Err("at least one artifact is required".into());
+            return Err(crate::UpdateError::VersionValidation(
+                "at least one artifact is required".into(),
+            ));
         }
         for (i, artifact) in self.artifacts.iter().enumerate() {
             if artifact.url.is_empty() {
-                return Err(format!("artifact[{i}]: url must not be empty"));
+                return Err(crate::UpdateError::VersionValidation(format!(
+                    "artifact[{i}]: url must not be empty"
+                )));
             }
-            if artifact.sha256.len() != 64 {
-                return Err(format!(
-                    "artifact[{i}]: sha256 must be 64 hex characters, got {}",
-                    artifact.sha256.len()
-                ));
-            }
-            if !artifact.sha256.chars().all(|c| c.is_ascii_hexdigit()) {
-                return Err(format!("artifact[{i}]: sha256 contains non-hex characters"));
+            if !crate::is_valid_sha256(&artifact.sha256) {
+                return Err(crate::UpdateError::VersionValidation(format!(
+                    "artifact[{i}]: sha256 must be 64 hex characters"
+                )));
             }
         }
         Ok(())
@@ -581,5 +583,31 @@ mod tests {
         let mut m = valid_release_manifest();
         m.release_notes = None;
         assert!(m.validate().is_ok());
+    }
+
+    #[test]
+    fn architecture_x64_serde_roundtrip() {
+        let arch = Architecture::X64;
+        let json = serde_json::to_string(&arch).unwrap();
+        assert_eq!(json, "\"x64\"");
+        let back: Architecture = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, Architecture::X64);
+    }
+
+    #[test]
+    fn architecture_arm64_serde_roundtrip() {
+        let arch = Architecture::Arm64;
+        let json = serde_json::to_string(&arch).unwrap();
+        assert_eq!(json, "\"arm64\"");
+        let back: Architecture = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, Architecture::Arm64);
+    }
+
+    #[test]
+    fn release_manifest_serde_roundtrip() {
+        let m = valid_release_manifest();
+        let json = serde_json::to_string(&m).unwrap();
+        let back: ReleaseManifest = serde_json::from_str(&json).unwrap();
+        assert_eq!(m, back);
     }
 }

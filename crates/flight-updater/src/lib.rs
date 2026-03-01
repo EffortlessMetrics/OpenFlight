@@ -88,3 +88,9 @@ pub enum UpdateError {
 
 pub type Result<T> = std::result::Result<T, UpdateError>;
 pub type Error = UpdateError;
+
+/// Returns `true` when `s` is a valid lowercase hex-encoded SHA-256 digest
+/// (exactly 64 ASCII hex characters).
+pub fn is_valid_sha256(s: &str) -> bool {
+    s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit())
+}
