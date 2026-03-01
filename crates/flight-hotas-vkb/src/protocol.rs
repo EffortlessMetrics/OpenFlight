@@ -363,8 +363,9 @@ impl VkbProtocol {
 
     /// Parse a raw HID report into a unified [`StickState`].
     ///
-    /// Works for Gladiator NXT EVO, Gunfighter, and related joystick families.
-    /// For SEM THQ or STECS, use the dedicated parsers instead.
+    /// The layout (axis count, button words, hat byte) is selected automatically
+    /// via [`report_layout_for_family`] so that non-stick families such as the
+    /// SEM THQ are parsed with the correct structure.
     pub fn parse_report(&self, report: &[u8]) -> Result<StickState, VkbProtocolParseError> {
         let payload = if self.has_report_id {
             report.get(1..).unwrap_or(&[])
@@ -372,41 +373,55 @@ impl VkbProtocol {
             report
         };
 
-        const MIN_LEN: usize = 12;
-        if payload.len() < MIN_LEN {
+        let layout = report_layout_for_family(self.family);
+        let min_len = (layout.axis_count as usize) * 2;
+        if payload.len() < min_len {
             return Err(VkbProtocolParseError::ReportTooShort {
-                expected: MIN_LEN,
+                expected: min_len,
                 actual: payload.len(),
             });
         }
 
-        let axes = StickAxes {
-            roll: normalize_signed(le_u16(payload, 0)),
-            pitch: normalize_signed(le_u16(payload, 2)),
-            yaw: normalize_signed(le_u16(payload, 4)),
-            mini_x: normalize_signed(le_u16(payload, 6)),
-            mini_y: normalize_signed(le_u16(payload, 8)),
-            throttle: normalize_u16(le_u16(payload, 10)),
+        let axis = |idx: usize| -> u16 {
+            if idx < layout.axis_count as usize {
+                le_u16(payload, idx * 2)
+            } else {
+                0x8000 // centred default for missing signed axes
+            }
         };
 
+        let axes = StickAxes {
+            roll: normalize_signed(axis(0)),
+            pitch: normalize_signed(axis(1)),
+            yaw: normalize_signed(axis(2)),
+            mini_x: normalize_signed(axis(3)),
+            mini_y: normalize_signed(axis(4)),
+            throttle: if layout.axis_count > 5 {
+                normalize_u16(le_u16(payload, 10))
+            } else {
+                0.0
+            },
+        };
+
+        let axis_bytes = layout.axis_count as usize * 2;
         let mut buttons = [false; 64];
-        if payload.len() >= 16 {
-            let btn_lo = le_u32(payload, 12);
-            for (bit, btn) in buttons[..32].iter_mut().enumerate() {
-                *btn = ((btn_lo >> bit) & 1) != 0;
-            }
-        }
-        if payload.len() >= 20 {
-            let btn_hi = le_u32(payload, 16);
-            for (bit, btn) in buttons[32..64].iter_mut().enumerate() {
-                *btn = ((btn_hi >> bit) & 1) != 0;
+        for word_idx in 0..layout.button_word_count as usize {
+            let offset = axis_bytes + word_idx * 4;
+            if payload.len() >= offset + 4 {
+                let word = le_u32(payload, offset);
+                for bit in 0..32usize {
+                    buttons[word_idx * 32 + bit] = ((word >> bit) & 1) != 0;
+                }
             }
         }
 
         let mut hat_switches = [None; 2];
-        if let Some(&hat_byte) = payload.get(20) {
-            hat_switches[0] = decode_hat_nibble(hat_byte & 0x0F);
-            hat_switches[1] = decode_hat_nibble((hat_byte >> 4) & 0x0F);
+        if layout.has_hat_byte {
+            let hat_offset = axis_bytes + (layout.button_word_count as usize) * 4;
+            if let Some(&hat_byte) = payload.get(hat_offset) {
+                hat_switches[0] = decode_hat_nibble(hat_byte & 0x0F);
+                hat_switches[1] = decode_hat_nibble((hat_byte >> 4) & 0x0F);
+            }
         }
 
         Ok(StickState {
