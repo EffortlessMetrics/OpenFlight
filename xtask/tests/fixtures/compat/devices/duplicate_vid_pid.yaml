@@ -1,0 +1,26 @@
+schema_version: "1"
+
+device:
+  name: "Duplicate Device"
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x1234
+    product_id: 0x5678
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 2
+    names: [x, y]
+    resolution_bits: 10
+  buttons: 4
+  hats: 0
+  force_feedback: false
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
