@@ -6,7 +6,9 @@
 //! Implements security controls, plugin signing verification, capability validation,
 //! and privacy-preserving telemetry collection according to SEC-01 requirements.
 
+pub mod artifact_trust;
 pub mod audit_log;
+pub mod capability_sandbox;
 pub mod fs_access;
 pub mod update_signature;
 pub mod verification;
@@ -23,6 +25,14 @@ pub use verification::{
     VerificationConfig, VerificationError, VerificationStatus,
 };
 
+pub use artifact_trust::{
+    ArtifactVerifier, ChecksumResult, ChecksumStatus, ReleaseChannel, TrustPolicy,
+};
+pub use audit_log::AuditFilter;
+pub use capability_sandbox::{
+    Capability, CapabilitySet, CapabilityViolation, SandboxPolicy, enforce as enforce_capabilities,
+    enforce_or_error as enforce_capabilities_or_error,
+};
 pub use fs_access::FsAccessPolicy;
 pub use update_signature::{SignedPayload, sha256_hex, verify_digest, verify_file_digest};
 

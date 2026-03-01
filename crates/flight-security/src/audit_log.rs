@@ -174,6 +174,11 @@ impl AuditLog {
         self.entries.is_empty()
     }
 
+    /// Return entries matching a composite [`AuditFilter`].
+    pub fn query(&self, filter: &AuditFilter) -> Vec<&AuditEntry> {
+        self.entries.iter().filter(|e| filter.matches(e)).collect()
+    }
+
     /// Serialize all entries to a JSON array string.
     pub fn export_json(&self) -> String {
         use std::fmt::Write;
@@ -221,6 +226,82 @@ impl AuditLog {
         }
         buf.push(']');
         buf
+    }
+}
+
+/// Composite filter for querying the audit log.
+///
+/// All specified criteria must match (logical AND). An `Option::None` field
+/// means "accept any value" for that criterion.
+#[derive(Debug, Clone, Default)]
+pub struct AuditFilter {
+    /// Minimum severity (inclusive).
+    pub min_severity: Option<AuditSeverity>,
+    /// Filter by category.
+    pub category: Option<AuditCategory>,
+    /// Filter by actor (source).
+    pub actor: Option<String>,
+    /// Only entries at or after this timestamp.
+    pub from: Option<SystemTime>,
+    /// Only entries at or before this timestamp.
+    pub until: Option<SystemTime>,
+}
+
+impl AuditFilter {
+    /// Build a new empty filter (matches everything).
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_min_severity(mut self, severity: AuditSeverity) -> Self {
+        self.min_severity = Some(severity);
+        self
+    }
+
+    pub fn with_category(mut self, category: AuditCategory) -> Self {
+        self.category = Some(category);
+        self
+    }
+
+    pub fn with_actor(mut self, actor: impl Into<String>) -> Self {
+        self.actor = Some(actor.into());
+        self
+    }
+
+    pub fn with_time_range(mut self, from: SystemTime, until: SystemTime) -> Self {
+        self.from = Some(from);
+        self.until = Some(until);
+        self
+    }
+
+    /// Check whether a single entry matches this filter.
+    pub fn matches(&self, entry: &AuditEntry) -> bool {
+        if let Some(min) = self.min_severity
+            && entry.severity < min
+        {
+            return false;
+        }
+        if let Some(cat) = self.category
+            && entry.category != cat
+        {
+            return false;
+        }
+        if let Some(ref actor) = self.actor
+            && entry.actor != *actor
+        {
+            return false;
+        }
+        if let Some(from) = self.from
+            && entry.timestamp < from
+        {
+            return false;
+        }
+        if let Some(until) = self.until
+            && entry.timestamp > until
+        {
+            return false;
+        }
+        true
     }
 }
 
@@ -519,5 +600,148 @@ mod tests {
         for cat in &categories {
             assert_eq!(log.entries_by_category(*cat).len(), 1);
         }
+    }
+
+    // --- AuditFilter / query tests ---
+
+    #[test]
+    fn test_query_empty_filter_returns_all() {
+        let mut log = AuditLog::new(10);
+        log.record(make_entry(
+            AuditCategory::Authentication,
+            AuditSeverity::Info,
+            "u",
+            AuditOutcome::Success,
+        ));
+        log.record(make_entry(
+            AuditCategory::PluginLoad,
+            AuditSeverity::Critical,
+            "v",
+            AuditOutcome::Failure,
+        ));
+        let filter = AuditFilter::new();
+        assert_eq!(log.query(&filter).len(), 2);
+    }
+
+    #[test]
+    fn test_query_filter_by_severity() {
+        let mut log = AuditLog::new(10);
+        log.record(make_entry(
+            AuditCategory::ConfigChange,
+            AuditSeverity::Info,
+            "a",
+            AuditOutcome::Success,
+        ));
+        log.record(make_entry(
+            AuditCategory::ConfigChange,
+            AuditSeverity::Alert,
+            "a",
+            AuditOutcome::Success,
+        ));
+        let filter = AuditFilter::new().with_min_severity(AuditSeverity::Alert);
+        let results = log.query(&filter);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].severity, AuditSeverity::Alert);
+    }
+
+    #[test]
+    fn test_query_filter_by_category() {
+        let mut log = AuditLog::new(10);
+        log.record(make_entry(
+            AuditCategory::PluginLoad,
+            AuditSeverity::Info,
+            "x",
+            AuditOutcome::Success,
+        ));
+        log.record(make_entry(
+            AuditCategory::FileAccess,
+            AuditSeverity::Info,
+            "x",
+            AuditOutcome::Success,
+        ));
+        let filter = AuditFilter::new().with_category(AuditCategory::FileAccess);
+        assert_eq!(log.query(&filter).len(), 1);
+    }
+
+    #[test]
+    fn test_query_filter_by_actor() {
+        let mut log = AuditLog::new(10);
+        log.record(make_entry(
+            AuditCategory::Authentication,
+            AuditSeverity::Info,
+            "alice",
+            AuditOutcome::Success,
+        ));
+        log.record(make_entry(
+            AuditCategory::Authentication,
+            AuditSeverity::Info,
+            "bob",
+            AuditOutcome::Success,
+        ));
+        let filter = AuditFilter::new().with_actor("bob");
+        let results = log.query(&filter);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].actor, "bob");
+    }
+
+    #[test]
+    fn test_query_combined_filters() {
+        let mut log = AuditLog::new(10);
+        log.record(make_entry(
+            AuditCategory::PluginLoad,
+            AuditSeverity::Info,
+            "sys",
+            AuditOutcome::Success,
+        ));
+        log.record(make_entry(
+            AuditCategory::PluginLoad,
+            AuditSeverity::Critical,
+            "sys",
+            AuditOutcome::Failure,
+        ));
+        log.record(make_entry(
+            AuditCategory::Authentication,
+            AuditSeverity::Critical,
+            "sys",
+            AuditOutcome::Denied,
+        ));
+        let filter = AuditFilter::new()
+            .with_category(AuditCategory::PluginLoad)
+            .with_min_severity(AuditSeverity::Critical);
+        let results = log.query(&filter);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].category, AuditCategory::PluginLoad);
+        assert_eq!(results[0].severity, AuditSeverity::Critical);
+    }
+
+    #[test]
+    fn test_query_filter_by_time_range() {
+        use std::time::Duration;
+
+        let mut log = AuditLog::new(10);
+        let now = SystemTime::now();
+        let past = now - Duration::from_secs(60);
+        let future = now + Duration::from_secs(60);
+
+        // Record an entry with known timestamp
+        log.record(AuditEntry {
+            timestamp: now,
+            category: AuditCategory::ServiceLifecycle,
+            severity: AuditSeverity::Info,
+            actor: "timer".to_string(),
+            action: "tick".to_string(),
+            resource: "clock".to_string(),
+            outcome: AuditOutcome::Success,
+            details: None,
+        });
+
+        // Filter that covers the entry
+        let filter = AuditFilter::new().with_time_range(past, future);
+        assert_eq!(log.query(&filter).len(), 1);
+
+        // Filter that excludes the entry (range in the past)
+        let far_past = past - Duration::from_secs(120);
+        let filter_old = AuditFilter::new().with_time_range(far_past, past);
+        assert_eq!(log.query(&filter_old).len(), 0);
     }
 }
