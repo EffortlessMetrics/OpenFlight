@@ -61,17 +61,31 @@ pub struct DcsModule {
 }
 
 impl DcsModule {
+    /// Return an iterator over all controls belonging to a given `category`.
+    pub fn controls_by_category_iter<'a>(
+        &'a self,
+        category: &'a str,
+    ) -> impl Iterator<Item = &'a DcsControl> + 'a {
+        self.controls.iter().filter(move |c| c.category == category)
+    }
+
     /// Return all controls belonging to a given `category`.
-    pub fn controls_by_category(&self, category: &str) -> Vec<&DcsControl> {
-        self.controls
-            .iter()
-            .filter(|c| c.category == category)
-            .collect()
+    ///
+    /// This is a convenience wrapper around [`DcsModule::controls_by_category_iter`]
+    /// that collects the results into a `Vec`. Callers that only need to iterate
+    /// can use the iterator-based variant to avoid this allocation.
+    pub fn controls_by_category<'a>(&'a self, category: &'a str) -> Vec<&'a DcsControl> {
+        self.controls_by_category_iter(category).collect()
     }
 
     /// Look up a single control by its unique `name`.
     pub fn find_control(&self, name: &str) -> Option<&DcsControl> {
         self.controls.iter().find(|c| c.name == name)
+    }
+
+    /// Returns `true` if any control in this module belongs to `category`.
+    pub fn has_category(&self, category: &str) -> bool {
+        self.controls.iter().any(|c| c.category == category)
     }
 
     /// Sorted, deduplicated list of all categories present in this module.
