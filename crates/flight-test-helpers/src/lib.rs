@@ -34,7 +34,7 @@ pub use fixture_builder::{
 pub use fixtures::{TestConfig, TestConfigBuilder, TestDeviceBuilder};
 pub use integration::TestHarness;
 pub use snapshot::{SnapshotResult, SnapshotStore};
-pub use trace_recorder::{TraceEntry, TraceRecorder, TraceReplayIter};
+pub use trace_recorder::{TraceEntry, TraceReplayIter};
 pub use trace_replay::{
     TimedEvent, TraceComparator, TraceDiff, TraceEvent, TraceEventType, TraceMismatch,
     TracePlayIterator, TracePlayer, TraceRecording, TraceSource,

@@ -155,6 +155,10 @@ pub struct FakeDeviceBackend {
 impl FakeDeviceBackend {
     /// Create a new backend with the given configuration.
     pub fn new(config: FakeDeviceBackendConfig) -> Self {
+        assert!(
+            config.polling_rate_hz > 0,
+            "polling_rate_hz must be > 0"
+        );
         Self {
             config,
             devices: HashMap::new(),
@@ -206,15 +210,20 @@ impl FakeDeviceBackend {
 
     /// Enumerate all currently registered device ids.
     pub fn enumerate(&self) -> Vec<&str> {
-        self.devices.keys().map(String::as_str).collect()
+        let mut ids: Vec<&str> = self.devices.keys().map(String::as_str).collect();
+        ids.sort();
+        ids
     }
 
     /// Enumerate devices as `(id, vid, pid)` tuples.
     pub fn enumerate_with_ids(&self) -> Vec<(&str, u16, u16)> {
-        self.devices
+        let mut entries: Vec<(&str, u16, u16)> = self
+            .devices
             .iter()
             .map(|(id, dev)| (id.as_str(), dev.vid, dev.pid))
-            .collect()
+            .collect();
+        entries.sort_by_key(|(id, _, _)| *id);
+        entries
     }
 
     /// Get a reference to a device by id.
@@ -255,7 +264,8 @@ impl FakeDeviceBackend {
     pub fn poll(&mut self) -> usize {
         self.poll_count += 1;
         let mut frames = 0;
-        let device_ids: Vec<String> = self.devices.keys().cloned().collect();
+        let mut device_ids: Vec<String> = self.devices.keys().cloned().collect();
+        device_ids.sort();
         for id in device_ids {
             if let Some(dev) = self.devices.get_mut(&id) {
                 if !dev.connected {
