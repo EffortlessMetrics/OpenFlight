@@ -183,9 +183,12 @@ pub const fn meters_to_feet_f64(meters: f64) -> f64 {
     meters / 0.3048
 }
 
-/// Feet → flight level (FL = feet / 100, rounded).
+/// Feet → flight level (FL = feet / 100, rounded to nearest).
+///
+/// Negative altitudes are clamped to FL 0.
 pub const fn feet_to_flight_level(feet: f64) -> u32 {
-    (feet / 100.0) as u32
+    let clamped = if feet < 0.0 { 0.0 } else { feet };
+    ((clamped + 50.0) / 100.0) as u32
 }
 
 /// Flight level → feet.
@@ -357,6 +360,19 @@ mod tests {
     fn flight_level_350() {
         assert_eq!(feet_to_flight_level(35_000.0), 350);
         assert!((flight_level_to_feet(350) - 35_000.0).abs() < EPS);
+    }
+
+    #[test]
+    fn flight_level_rounds_not_truncates() {
+        // 35_050 feet is closer to FL351 than FL350
+        assert_eq!(feet_to_flight_level(35_050.0), 351);
+        // 35_049 feet rounds to FL350
+        assert_eq!(feet_to_flight_level(35_049.0), 350);
+    }
+
+    #[test]
+    fn flight_level_negative_clamps_to_zero() {
+        assert_eq!(feet_to_flight_level(-500.0), 0);
     }
 
     #[test]
