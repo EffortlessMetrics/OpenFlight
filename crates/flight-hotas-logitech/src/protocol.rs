@@ -373,7 +373,7 @@ pub fn x52_mfd_clear_line(line: u8) -> Option<(u8, u8, u16, u16)> {
 ///
 /// Returns `None` if `line >= 3`.  The returned vec contains:
 ///   1. One clear-line command.
-///   2. Up to 8 write commands (2 characters per command).
+///   2. Exactly 8 write commands (2 characters per command).
 pub fn x52_mfd_write_line(line: u8, text: &str) -> Option<Vec<(u8, u8, u16, u16)>> {
     let idx = x52_mfd_line_index(line)?;
     let encoded = mfd_encode_text(text);
@@ -388,7 +388,11 @@ pub fn x52_mfd_write_line(line: u8, text: &str) -> Option<Vec<(u8, u8, u16, u16)
     // Write 2 characters at a time (LSB = char 0, MSB = char 1).
     for pair in encoded.chunks(2) {
         let lo = pair[0] as u16;
-        let hi = if pair.len() > 1 { pair[1] as u16 } else { b' ' as u16 };
+        let hi = if pair.len() > 1 {
+            pair[1] as u16
+        } else {
+            b' ' as u16
+        };
         let w_value = lo | (hi << 8);
         cmds.push((
             X52_VENDOR_REQUEST_TYPE,
@@ -427,7 +431,7 @@ pub fn x52_led_set_brightness(level: u8) -> (u8, u8, u16, u16) {
 /// Build a vendor command to set the X52 primary clock (Clock 1).
 ///
 /// `hour` (0–23), `minute` (0–59).  `h24` selects 24-hour format.
-pub fn x52_set_clock(hour: u8, minute: u8, h24: bool) -> (u8, u8, u16, u16) {
+pub fn x52_set_primary_clock(hour: u8, minute: u8, h24: bool) -> (u8, u8, u16, u16) {
     let h = (hour as u16).min(23);
     let m = (minute as u16).min(59);
     let w_value = m | (h << 8) | if h24 { 1 << 15 } else { 0 };
@@ -568,8 +572,8 @@ pub fn x52_led_color_code(color: X52LedColor) -> u8 {
     match color {
         X52LedColor::Off => 0,
         X52LedColor::Green => 1,
-        X52LedColor::Amber => 2,
-        X52LedColor::Red => 3,
+        X52LedColor::Red => 2,
+        X52LedColor::Amber => 3,
     }
 }
 
@@ -591,28 +595,22 @@ pub fn x52_led_command(led: X52LedId, color: X52LedColor) -> (u8, u8, u16, u16) 
     // The state for the red sub-LED: on if color is Red or Amber, off otherwise.
     let red_state: u16 = if color_code & 0x02 != 0 { 1 } else { 0 };
     let w_value = red_state | ((led_bit as u16) << 8);
-    (
-        LED_REQUEST_TYPE,
-        LED_REQUEST,
-        w_value,
-        X52_LED_CMD,
-    )
+    (LED_REQUEST_TYPE, LED_REQUEST, w_value, X52_LED_CMD)
 }
 
 /// Build the green sub-LED vendor command for a bicolor X52 LED.
 ///
-/// Not meaningful for single-color LEDs (Fire, Throttle).
-pub fn x52_led_command_green(led: X52LedId, color: X52LedColor) -> (u8, u8, u16, u16) {
+/// Returns `None` for single-color LEDs (Fire, Throttle) since they have no
+/// green sub-LED.
+pub fn x52_led_command_green(led: X52LedId, color: X52LedColor) -> Option<(u8, u8, u16, u16)> {
+    if matches!(led, X52LedId::Fire | X52LedId::Throttle) {
+        return None;
+    }
     let led_bit = x52_led_index(led) + 1;
     let color_code = x52_led_color_code(color);
     let green_state: u16 = if color_code & 0x01 != 0 { 1 } else { 0 };
     let w_value = green_state | ((led_bit as u16) << 8);
-    (
-        LED_REQUEST_TYPE,
-        LED_REQUEST,
-        w_value,
-        X52_LED_CMD,
-    )
+    Some((LED_REQUEST_TYPE, LED_REQUEST, w_value, X52_LED_CMD))
 }
 
 /// Blink pattern for X52 LEDs.
@@ -642,12 +640,19 @@ impl X52BlinkPattern {
         }
     }
 
-    /// Return the command for the current phase.
+    /// Return the commands for the current phase.
     ///
     /// `on == true` → on_color, `on == false` → off_color.
-    pub fn command_for_phase(&self, on: bool) -> (u8, u8, u16, u16) {
+    ///
+    /// For bicolor LEDs, returns both the red and green sub-LED commands.
+    /// For single-color LEDs (Fire, Throttle), returns only one command.
+    pub fn command_for_phase(&self, on: bool) -> Vec<(u8, u8, u16, u16)> {
         let color = if on { self.on_color } else { self.off_color };
-        x52_led_command(self.led, color)
+        let mut cmds = vec![x52_led_command(self.led, color)];
+        if let Some(green_cmd) = x52_led_command_green(self.led, color) {
+            cmds.push(green_cmd);
+        }
+        cmds
     }
 }
 
@@ -959,8 +964,8 @@ mod tests {
     fn led_color_code_mapping() {
         assert_eq!(x52_led_color_code(X52LedColor::Off), 0);
         assert_eq!(x52_led_color_code(X52LedColor::Green), 1);
-        assert_eq!(x52_led_color_code(X52LedColor::Amber), 2);
-        assert_eq!(x52_led_color_code(X52LedColor::Red), 3);
+        assert_eq!(x52_led_color_code(X52LedColor::Red), 2);
+        assert_eq!(x52_led_color_code(X52LedColor::Amber), 3);
     }
 
     #[test]
@@ -979,7 +984,7 @@ mod tests {
     fn led_command_green_sub() {
         // ButtonA Green: green sub-LED on (bit 3, state 1)
         let (_, _, wvalue, windex) =
-            x52_led_command_green(X52LedId::ButtonA, X52LedColor::Green);
+            x52_led_command_green(X52LedId::ButtonA, X52LedColor::Green).unwrap();
         // Green sub-LED: state=1, bit=3 → wValue = 1 | (3 << 8) = 0x0301
         assert_eq!(wvalue, 0x0301);
         assert_eq!(windex, X52_LED_CMD);
@@ -987,11 +992,17 @@ mod tests {
 
     #[test]
     fn led_command_fire_red() {
-        // Fire is single-color (bit 1). Red state=1 (color code 3 has bit 1 set).
+        // Fire is single-color (bit 1). Red state=1 (color code 2 has bit 1 set).
         let (_, _, wvalue, windex) = x52_led_command(X52LedId::Fire, X52LedColor::Red);
         // state = 1 (red bit set), bit = 1 → wValue = 1 | (1 << 8) = 0x0101
         assert_eq!(wvalue, 0x0101);
         assert_eq!(windex, X52_LED_CMD);
+    }
+
+    #[test]
+    fn led_command_green_single_color_returns_none() {
+        assert!(x52_led_command_green(X52LedId::Fire, X52LedColor::Red).is_none());
+        assert!(x52_led_command_green(X52LedId::Throttle, X52LedColor::Red).is_none());
     }
 
     #[test]
@@ -1015,16 +1026,20 @@ mod tests {
     #[test]
     fn blink_pattern_on_phase() {
         let pattern = X52BlinkPattern::new(X52LedId::ButtonA, X52LedColor::Green, 250);
-        let (_, _, _, windex) = pattern.command_for_phase(true);
-        // Now wIndex is always X52_LED_CMD (0xB8); color is encoded in wValue
-        assert_eq!(windex, X52_LED_CMD);
+        let cmds = pattern.command_for_phase(true);
+        assert_eq!(cmds.len(), 2); // bicolor: red + green sub-LED commands
+        // Both commands target X52_LED_CMD
+        assert_eq!(cmds[0].3, X52_LED_CMD);
+        assert_eq!(cmds[1].3, X52_LED_CMD);
     }
 
     #[test]
     fn blink_pattern_off_phase() {
         let pattern = X52BlinkPattern::new(X52LedId::ButtonA, X52LedColor::Green, 250);
-        let (_, _, _, windex) = pattern.command_for_phase(false);
-        assert_eq!(windex, X52_LED_CMD);
+        let cmds = pattern.command_for_phase(false);
+        assert_eq!(cmds.len(), 2); // bicolor: red + green sub-LED commands
+        assert_eq!(cmds[0].3, X52_LED_CMD);
+        assert_eq!(cmds[1].3, X52_LED_CMD);
     }
 
     // ── X56 RGB tests ──────────────────────────────────────────────────────
@@ -1245,7 +1260,7 @@ mod tests {
 
     #[test]
     fn x52_clock_24h() {
-        let (_, _, wval, widx) = x52_set_clock(14, 30, true);
+        let (_, _, wval, widx) = x52_set_primary_clock(14, 30, true);
         // wValue = 30 | (14 << 8) | (1 << 15)
         assert_eq!(wval, 30 | (14 << 8) | (1 << 15));
         assert_eq!(widx, X52_TIME_CLOCK1);
