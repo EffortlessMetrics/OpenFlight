@@ -23,8 +23,8 @@ mod tests {
     use crate::safety_depth::*;
     use crate::safety_envelope::*;
     use crate::safety_interlock::*;
-    use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
     use std::time::{Duration, Instant};
 
     // ── Helpers ──────────────────────────────────────────────────────────
@@ -71,9 +71,7 @@ mod tests {
             ramp_rate_limit: 1e9, // effectively unlimited ramp
             initial_max_force: 100.0,
         });
-        let extreme_forces = [
-            200.0, 500.0, 1000.0, 1e6, -200.0, -500.0, -1000.0, -1e6,
-        ];
+        let extreme_forces = [200.0, 500.0, 1000.0, 1e6, -200.0, -500.0, -1000.0, -1e6];
         for &force in &extreme_forces {
             let result = il.check_force(force);
             let output = match result {
@@ -281,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn emergency_stop_survives_concurrent_force_requests() {
+    fn emergency_stop_callable_from_another_thread() {
         let il = Arc::new(SafetyInterlock::new(SafetyConfig {
             soft_limit_percent: 80.0,
             hard_limit_percent: 100.0,
@@ -315,8 +313,11 @@ mod tests {
 
         // Cannot go directly to high torque from faulted
         assert!(
-            mgr.transition_to(SafetyState::HighTorque, TransitionReason::UserEnableHighTorque)
-                .is_err()
+            mgr.transition_to(
+                SafetyState::HighTorque,
+                TransitionReason::UserEnableHighTorque
+            )
+            .is_err()
         );
     }
 
@@ -361,16 +362,19 @@ mod tests {
     fn fault_injection_timing_violation_watchdog_trips() {
         let mut wd = WatchdogTimer::new(Duration::from_millis(10), Duration::from_millis(50));
 
-        // Simulate missed deadline
-        std::thread::sleep(Duration::from_millis(20));
-        let mult = wd.evaluate();
+        let base = Instant::now();
+        wd.feed_at(base);
+
+        // Simulate missed deadline with manual timestamp
+        let after_deadline = base + Duration::from_millis(20);
+        let mult = wd.evaluate_at(after_deadline);
         assert!(wd.is_tripped());
         // Force multiplier should be 1.0 on first ramp tick, then decrease
         assert!(mult <= 1.0);
 
-        // Wait for ramp to complete
-        std::thread::sleep(Duration::from_millis(60));
-        let mult = wd.evaluate();
+        // Advance past ramp completion
+        let after_ramp = after_deadline + Duration::from_millis(60);
+        let mult = wd.evaluate_at(after_ramp);
         assert!(
             mult.abs() < 0.01,
             "watchdog should force zero after timeout ramp, got {mult}"
@@ -444,7 +448,11 @@ mod tests {
             mgr.enter_faulted(*reason).unwrap();
 
             // clear_fault should fail for hardware-critical faults
-            assert!(mgr.clear_fault().is_err(), "{:?} should require power cycle", reason);
+            assert!(
+                mgr.clear_fault().is_err(),
+                "{:?} should require power cycle",
+                reason
+            );
             assert_eq!(mgr.current_state(), SafetyState::Faulted);
 
             // power cycle reset should work
@@ -468,7 +476,11 @@ mod tests {
         for reason in &transient {
             let mut mgr = SafetyStateManager::new();
             mgr.enter_faulted(*reason).unwrap();
-            assert!(mgr.clear_fault().is_ok(), "{:?} should be clearable", reason);
+            assert!(
+                mgr.clear_fault().is_ok(),
+                "{:?} should be clearable",
+                reason
+            );
             assert_eq!(mgr.current_state(), SafetyState::SafeTorque);
         }
     }
@@ -487,7 +499,7 @@ mod tests {
             let force = (i as f64 - 5000.0) * 0.02;
             let _ = il.check_force(force);
         }
-        // If we got here without OOM or panics, the hot path is allocation-free
+        // If we got here without panics, the hot path is verified under load
     }
 
     #[test]
@@ -552,9 +564,7 @@ mod tests {
                 _ => EffectPriority::Ambient,
             };
             mgr.load(
-                FfbEffect::ConstantForce(ConstantForceParams {
-                    magnitude: 0.05,
-                }),
+                FfbEffect::ConstantForce(ConstantForceParams { magnitude: 0.05 }),
                 prio,
                 0.5,
             );
@@ -791,10 +801,7 @@ mod tests {
 
         let mut sched = EffectScheduler::new();
         let f = sched.compute(&mgr, &input_at_rest());
-        assert!(
-            f.abs() < 0.01,
-            "opposing effects should cancel, got {f}"
-        );
+        assert!(f.abs() < 0.01, "opposing effects should cancel, got {f}");
     }
 
     #[test]
@@ -895,26 +902,25 @@ mod tests {
 
     #[test]
     fn watchdog_timer_ramp_down_monotonic() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(1),
-            Duration::from_millis(50),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(50));
 
-        // Let deadline expire
-        std::thread::sleep(Duration::from_millis(5));
+        let base = Instant::now();
+        wd.feed_at(base);
 
+        // Advance past deadline
+        let after_deadline = base + Duration::from_millis(5);
         let mut prev_mult = 2.0_f32; // start above 1.0 so first is always <=
         let mut samples = Vec::new();
 
-        for _ in 0..20 {
-            let mult = wd.evaluate();
+        for i in 0..20 {
+            let t = after_deadline + Duration::from_millis(i * 5);
+            let mult = wd.evaluate_at(t);
             samples.push(mult);
             assert!(
                 mult <= prev_mult + 0.01,
                 "watchdog ramp should be monotonically decreasing, got {mult} after {prev_mult}"
             );
             prev_mult = mult;
-            std::thread::sleep(Duration::from_millis(5));
         }
 
         // Should reach zero
@@ -927,22 +933,22 @@ mod tests {
 
     #[test]
     fn watchdog_feed_during_ramp_recovers() {
-        let mut wd = WatchdogTimer::new(
-            Duration::from_millis(1),
-            Duration::from_millis(100),
-        );
+        let mut wd = WatchdogTimer::new(Duration::from_millis(1), Duration::from_millis(100));
 
-        // Let deadline expire to start ramp
-        std::thread::sleep(Duration::from_millis(5));
-        let _ = wd.evaluate();
+        let base = Instant::now();
+        wd.feed_at(base);
+
+        // Advance past deadline to start ramp
+        let _ = wd.evaluate_at(base + Duration::from_millis(5));
         assert!(wd.is_tripped());
 
         // Feed during ramp should recover
-        wd.feed();
+        let recovery = base + Duration::from_millis(6);
+        wd.feed_at(recovery);
         assert!(!wd.is_tripped());
         assert_eq!(wd.state(), WatchdogState::Active);
 
-        let mult = wd.evaluate();
+        let mult = wd.evaluate_at(recovery + Duration::from_micros(100));
         assert!(
             (mult - 1.0).abs() < 0.01,
             "multiplier should be 1.0 after recovery, got {mult}"
@@ -1068,13 +1074,14 @@ mod tests {
         // Initialize rate limiter
         let _ = limiter.limit(0, 1.0, 0.004);
 
-        // Trip watchdog
-        std::thread::sleep(Duration::from_millis(15));
-        let _ = wd.evaluate();
-        std::thread::sleep(Duration::from_millis(15));
-        let _ = wd.evaluate();
+        // Trip watchdog using manual timestamps
+        let wd_base = Instant::now();
+        wd.feed_at(wd_base);
+        let _ = wd.evaluate_at(wd_base + Duration::from_millis(15));
+        let _ = wd.evaluate_at(wd_base + Duration::from_millis(30));
 
-        let report = SafetyReport::from_state(&tracker, &limiter, &wd, Instant::now());
+        let report =
+            SafetyReport::from_state(&tracker, &limiter, &wd, wd_base + Duration::from_millis(35));
 
         assert_eq!(report.violation_count, 2);
         assert_eq!(report.recent_violation_count, 2);
