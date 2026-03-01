@@ -90,6 +90,9 @@ required-features = ["tests-optin"]
 name = "snapshot_tests"
 required-features = ["tests-optin"]
 
+[[test]]
+name = "depth_tests"
+
 [[example]]
 name = "basic_usage"
 required-features = ["examples-optin"]
