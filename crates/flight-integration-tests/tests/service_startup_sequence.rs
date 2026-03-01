@@ -9,8 +9,7 @@
 //! graceful shutdown.
 
 use flight_service::{
-    AdapterEvent, BootSequence, DeviceEvent,
-    ServiceConfig, ServiceOrchestrator, SubsystemHealth,
+    AdapterEvent, BootSequence, DeviceEvent, ServiceConfig, ServiceOrchestrator, SubsystemHealth,
 };
 
 // Subsystem name constants (matching orchestrator module)
@@ -62,8 +61,16 @@ fn startup_all_subsystems_healthy_after_boot() {
     assert_eq!(status.overall_health, SubsystemHealth::Healthy);
 
     // Verify all expected subsystems are running
-    for name in [SUBSYSTEM_BUS, SUBSYSTEM_SCHEDULER, SUBSYSTEM_ADAPTERS, SUBSYSTEM_WATCHDOG] {
-        let sub = status.subsystems.get(name).expect(&format!("'{name}' must exist"));
+    for name in [
+        SUBSYSTEM_BUS,
+        SUBSYSTEM_SCHEDULER,
+        SUBSYSTEM_ADAPTERS,
+        SUBSYSTEM_WATCHDOG,
+    ] {
+        let sub = status
+            .subsystems
+            .get(name)
+            .expect(&format!("'{name}' must exist"));
         assert!(sub.running, "'{name}' must be running");
         assert_eq!(sub.health, SubsystemHealth::Healthy);
         assert_eq!(sub.error_count, 0);

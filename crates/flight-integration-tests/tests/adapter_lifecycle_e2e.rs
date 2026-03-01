@@ -15,9 +15,7 @@ use flight_service::{
 };
 
 const SUBSYSTEM_ADAPTERS: &str = "adapters";
-use flight_test_helpers::{
-    FakeDevice, FakeInput, FakeSim, FakeSnapshot, assert_approx_eq,
-};
+use flight_test_helpers::{FakeDevice, FakeInput, FakeSim, FakeSnapshot, assert_approx_eq};
 use std::time::Duration;
 
 // ---------------------------------------------------------------------------
@@ -129,7 +127,9 @@ fn adapter_disconnect_reconnect_resumes_bus_flow() {
     let mut bus_snap2 = BusSnapshot::new(SimId::Dcs, AircraftId::new("F16C"));
     bus_snap2.environment.altitude = snap2.altitude as f32;
     tick();
-    publisher.publish(bus_snap2).expect("publish after reconnect");
+    publisher
+        .publish(bus_snap2)
+        .expect("publish after reconnect");
 
     let r2 = sub.try_recv().unwrap().expect("receive after reconnect");
     assert_approx_eq(r2.environment.altitude as f64, 21000.0, 0.1);
@@ -260,7 +260,9 @@ fn adapter_fake_device_input_published_to_bus() {
     device.connect();
     device.enqueue_input(FakeInput {
         axes: vec![0.5, -0.3, 0.0, 0.8],
-        buttons: vec![true, false, false, false, false, false, false, false, false, false, false, false],
+        buttons: vec![
+            true, false, false, false, false, false, false, false, false, false, false, false,
+        ],
         delay_ms: 4,
     });
 

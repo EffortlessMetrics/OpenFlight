@@ -151,7 +151,10 @@ fn profile_cascade_merged_deadzone_applied_to_engine() {
     // 0.03 is inside 5% global dz but outside 2% merged dz → non-zero
     let mut frame_out_dz = AxisFrame::new(0.1, 0);
     engine.process(&mut frame_out_dz).expect("process");
-    assert!(frame_out_dz.out > 0.0, "0.1 outside 2% dz must produce output");
+    assert!(
+        frame_out_dz.out > 0.0,
+        "0.1 outside 2% dz must produce output"
+    );
 }
 
 // ===========================================================================

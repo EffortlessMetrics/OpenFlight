@@ -174,10 +174,7 @@ fn config_reload_full_cycle_detect_validate_apply() {
     // Simulate file edit (hash changes)
     let actions = tracker.check_changes(&[file_state("combat.json", 2)], 100);
     assert_eq!(actions.len(), 1, "must detect hash change");
-    assert_eq!(
-        actions[0],
-        ReloadAction::Reload("combat.json".to_string())
-    );
+    assert_eq!(actions[0], ReloadAction::Reload("combat.json".to_string()));
 
     // Simulate loading and validating the new profile
     let new_profile = test_profile(0.08);
@@ -214,7 +211,10 @@ fn config_watcher_disabled_returns_no_changes() {
 
     // Even with a file present, disabled watcher returns nothing
     let changes = watcher.check_for_changes();
-    assert!(changes.is_empty(), "disabled watcher must return no changes");
+    assert!(
+        changes.is_empty(),
+        "disabled watcher must return no changes"
+    );
 
     // Re-enable
     watcher.enable();
@@ -241,8 +241,8 @@ fn hot_reload_multiple_files_tracked() {
     let actions = tracker.check_changes(
         &[
             file_state("global.json", 10), // unchanged
-            file_state("msfs.json", 99),    // changed
-            file_state("c172.json", 30),    // unchanged
+            file_state("msfs.json", 99),   // changed
+            file_state("c172.json", 30),   // unchanged
         ],
         100,
     );
