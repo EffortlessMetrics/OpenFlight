@@ -74,6 +74,9 @@ enum Commands {
     /// Generate COMPATIBILITY.md and compatibility.json from compat/ manifests
     GenerateCompat,
 
+    /// Generate compatibility matrix (COMPATIBILITY.md + JSON) from device/game manifests
+    CompatMatrix,
+
     /// Run code coverage report on core crates using cargo-llvm-cov
     Coverage {
         /// Generate an HTML report in target/coverage/
@@ -164,6 +167,7 @@ fn main() -> Result<()> {
         Commands::Hotas { command } => hotas::run(command),
         Commands::GenCompat => compat::run_gen_compat(),
         Commands::GenerateCompat => compat::run_gen_compat(),
+        Commands::CompatMatrix => compat::run_gen_compat(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),
