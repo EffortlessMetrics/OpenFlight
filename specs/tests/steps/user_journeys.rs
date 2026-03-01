@@ -242,9 +242,10 @@ async fn then_global_profile_with_axis_mappings(world: &mut FlightWorld) {
     assert!(state.default_profile_created);
 }
 
-#[then("the profile SHALL use conservative deadzone of 5% and linear response curves")]
+#[then("the profile SHALL use conservative deadzones (3% pitch/roll, 5% yaw) and expo response curves")]
 async fn then_profile_conservative_defaults(_world: &mut FlightWorld) {
-    // Validated via profile schema; 5% deadzone and linear are the defaults.
+    // Validated via profile schema; see crates/flight-service/src/first_run.rs
+    // for actual defaults: pitch/roll 3% + 0.2 expo, yaw 5%.
 }
 
 #[then("the profile SHALL be saved to the configuration directory")]
@@ -847,7 +848,7 @@ async fn then_axes_use_default_profile(world: &mut FlightWorld) {
 
 #[then("the default profile SHALL apply a 3% deadzone and 20% expo curve")]
 async fn then_default_deadzone_expo(_world: &mut FlightWorld) {
-    // Known-good defaults: 3% deadzone, 20% expo (ADR safe-mode spec).
+    // Known-good defaults: 3% deadzone, 20% expo (see crates/flight-service/src/safe_mode.rs).
 }
 
 #[then("axis output SHALL continue at 250 Hz without interruption")]

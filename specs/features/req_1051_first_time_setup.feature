@@ -26,7 +26,7 @@ Feature: First-time setup experience
     Given the first-time device discovery has found a joystick with 3 axes and 12 buttons
     When the default profile generator runs
     Then a global profile SHALL be created with axis mappings for all discovered axes
-    And the profile SHALL use conservative deadzone of 5% and linear response curves
+    And the profile SHALL use conservative deadzones (3% pitch/roll, 5% yaw) and expo response curves
     And the profile SHALL be saved to the configuration directory
 
   @AC-1051.4
