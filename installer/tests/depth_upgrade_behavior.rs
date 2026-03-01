@@ -69,7 +69,12 @@ fn inplace_upgrade_preserves_user_config() {
     tx.commit().unwrap();
 
     // User edits config.
-    let user_config = prefix.join("config/config.toml");
+    let config_entry = m
+        .files
+        .iter()
+        .find(|e| e.source.to_string_lossy().contains("config.toml"))
+        .expect("config.toml not found in manifest");
+    let user_config = config_entry.destination.clone();
     let custom = "# v1 user config\nmy_key = 42\n";
     fs::write(&user_config, custom).unwrap();
 
@@ -114,12 +119,20 @@ fn rollback_restores_original_on_upgrade_failure() {
     tx1.commit().unwrap();
 
     // Tag original binary content.
-    let daemon = &m.files[0].destination;
+    let daemon_index = m
+        .files
+        .iter()
+        .position(|entry| {
+            let dest = entry.destination.to_string_lossy().replace('\\', "/");
+            dest.ends_with("bin/flightd.exe") || dest.ends_with("usr/bin/flightd")
+        })
+        .expect("daemon binary not found in manifest");
+    let daemon = &m.files[daemon_index].destination;
     fs::write(daemon, "v1-daemon-binary").unwrap();
 
     // Begin upgrade.
     let mut tx2 = InstallTransaction::new();
-    let src = staging.join(&m.files[0].source);
+    let src = staging.join(&m.files[daemon_index].source);
     tx2.install_file(&src, daemon).unwrap();
     // Content is now v2.
     assert_ne!(fs::read_to_string(daemon).unwrap(), "v1-daemon-binary");

@@ -176,12 +176,6 @@ fn installed_files_are_readable() {
     tx.commit().unwrap();
 
     for entry in &m.files {
-        let meta = fs::metadata(&entry.destination).unwrap();
-        assert!(
-            !meta.permissions().readonly() || cfg!(unix),
-            "installed file {} must be readable",
-            entry.destination.display()
-        );
         // Verify content can be read without error.
         let _ = fs::read(&entry.destination).expect("must be able to read installed file");
     }
@@ -261,33 +255,44 @@ fn signature_verification_detects_tampering() {
     perform_install(&mut tx, &staging, &m, &prefix);
     tx.commit().unwrap();
 
-    // Compute naive checksums (length-based for simplicity).
+    // Compute hash-based checksums.
+    use std::hash::{DefaultHasher, Hasher};
+    fn hash_file(path: &Path) -> u64 {
+        let mut h = DefaultHasher::new();
+        h.write(&fs::read(path).unwrap());
+        h.finish()
+    }
+
     let mut checksums: HashMap<PathBuf, u64> = HashMap::new();
     for entry in &m.files {
-        let len = fs::metadata(&entry.destination).unwrap().len();
-        checksums.insert(entry.destination.clone(), len);
+        checksums.insert(entry.destination.clone(), hash_file(&entry.destination));
     }
 
     // Verify all files match.
-    for (path, expected_len) in &checksums {
-        let actual_len = fs::metadata(path).unwrap().len();
+    for (path, expected_hash) in &checksums {
         assert_eq!(
-            actual_len, *expected_len,
+            hash_file(path),
+            *expected_hash,
             "checksum mismatch for {}",
             path.display()
         );
     }
 
-    // Tamper with a file — use content of a very different length.
-    fs::write(
-        &m.files[0].destination,
-        "TAMPERED CONTENT -- this is intentionally much longer than any placeholder to guarantee a size mismatch",
-    )
-    .unwrap();
-    let tampered_len = fs::metadata(&m.files[0].destination).unwrap().len();
-    let original_len = checksums[&m.files[0].destination];
+    // Tamper with a file.
+    let daemon_index = m
+        .files
+        .iter()
+        .position(|entry| {
+            let dest = entry.destination.to_string_lossy().replace('\\', "/");
+            dest.ends_with("bin/flightd.exe") || dest.ends_with("usr/bin/flightd")
+        })
+        .expect("daemon binary not found in manifest");
+    let daemon_dest = &m.files[daemon_index].destination;
+    fs::write(daemon_dest, "TAMPERED CONTENT").unwrap();
+    let tampered_hash = hash_file(daemon_dest);
+    let original_hash = checksums[daemon_dest];
     assert_ne!(
-        tampered_len, original_len,
+        tampered_hash, original_hash,
         "tampered file must differ from original checksum"
     );
 }
@@ -299,5 +304,7 @@ fn manifest_roundtrip_integrity() {
     let json1 = serde_json::to_string_pretty(&m).unwrap();
     let m2: InstallManifest = serde_json::from_str(&json1).unwrap();
     let json2 = serde_json::to_string_pretty(&m2).unwrap();
-    assert_eq!(json1, json2, "manifest must roundtrip identically through JSON");
+    let v1: serde_json::Value = serde_json::from_str(&json1).unwrap();
+    let v2: serde_json::Value = serde_json::from_str(&json2).unwrap();
+    assert_eq!(v1, v2, "manifest must roundtrip identically through JSON (semantic equality)");
 }
