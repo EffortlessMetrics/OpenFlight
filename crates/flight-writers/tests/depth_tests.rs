@@ -623,9 +623,10 @@ async fn ini_diff_adds_new_section_and_keys() {
     applier.apply_diff(&diff, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("[NEW_SEC]"));
-    assert!(content.contains("key1=val1"));
-    assert!(content.contains("key2=val2"));
+    let lines: Vec<_> = content.lines().map(str::trim).collect();
+    assert!(lines.contains(&"[NEW_SEC]"));
+    assert!(lines.contains(&"key1=val1"));
+    assert!(lines.contains(&"key2=val2"));
 }
 
 #[tokio::test]
@@ -671,7 +672,8 @@ async fn line_replace_regex_works() {
     applier.apply_diff(&diff, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();
-    assert_eq!(content, "value=0\nvalue=0");
+    let lines: Vec<_> = content.lines().collect();
+    assert_eq!(lines, vec!["value=0", "value=0"]);
 }
 
 #[tokio::test]
