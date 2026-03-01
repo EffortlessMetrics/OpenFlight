@@ -5,7 +5,8 @@
 //!
 //! Provides:
 //! - [`HealthProbe`]: deadline-based heartbeat monitoring for a subsystem.
-//! - [`DeadlockDetector`]: fixed-size, zero-heap progress-token tracker.
+//! - [`DeadlockDetector`]: fixed-size progress-token tracker (no heap on the happy path;
+//!   detection/reporting may allocate).
 //! - [`RecoveryAction`] / [`WatchdogPolicy`]: failure → action mapping.
 //! - [`WatchdogReport`]: aggregated snapshot of all probe states.
 
@@ -145,7 +146,9 @@ impl ProbeSlot {
 
 /// Monitors subsystems for deadlock / stall by tracking progress tokens.
 ///
-/// Fixed-size array — **no heap allocations in progress tracking**.
+/// Fixed-size array — **no heap allocations on the happy path** (progress
+/// recording). Detection ([`detect_stuck`](Self::detect_stuck)) allocates to
+/// build the result list.
 pub struct DeadlockDetector {
     slots: [ProbeSlot; MAX_PROBE_SLOTS],
     count: usize,
@@ -301,11 +304,18 @@ impl WatchdogPolicy {
     ///
     /// When the number of simultaneous failures reaches `cascade_threshold`,
     /// the policy returns [`ProbeRecoveryAction::Shutdown`].
-    /// A `cascade_threshold` of `0` is treated as `1` (minimum).
+    ///
+    /// # Panics
+    ///
+    /// Panics if `cascade_threshold` is `0`.
     pub fn new(cascade_threshold: usize) -> Self {
+        assert!(
+            cascade_threshold > 0,
+            "cascade_threshold must be at least 1"
+        );
         Self {
             rules: Vec::new(),
-            cascade_threshold: cascade_threshold.max(1),
+            cascade_threshold,
         }
     }
 
