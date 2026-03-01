@@ -9,21 +9,21 @@
 //! tests confined to a single module would miss.
 
 use flight_hotas_ch::devices::{
-    all_devices, identify_device, ChDevice, DEVICE_TABLE, CH_COMBAT_STICK_PID,
-    CH_ECLIPSE_YOKE_PID, CH_FIGHTERSTICK_PID, CH_FLIGHT_YOKE_PID, CH_PRO_PEDALS_PID,
-    CH_PRO_THROTTLE_PID, CH_VENDOR_ID,
+    CH_COMBAT_STICK_PID, CH_ECLIPSE_YOKE_PID, CH_FIGHTERSTICK_PID, CH_FLIGHT_YOKE_PID,
+    CH_PRO_PEDALS_PID, CH_PRO_THROTTLE_PID, CH_VENDOR_ID, ChDevice, DEVICE_TABLE, all_devices,
+    identify_device,
 };
 use flight_hotas_ch::health::{ChHealthMonitor, ChHealthStatus};
-use flight_hotas_ch::profiles::{device_profile, profiled_devices, AxisNormalization};
+use flight_hotas_ch::profiles::{AxisNormalization, device_profile, profiled_devices};
 use flight_hotas_ch::protocol::{
-    extract_buttons, normalize_bipolar, normalize_unipolar, read_axis_u16, validate_report_id,
-    FourWayHat, PovDirection, AXIS_CENTER, AXIS_MAX, REPORT_ID,
+    AXIS_CENTER, AXIS_MAX, FourWayHat, PovDirection, REPORT_ID, extract_buttons, normalize_bipolar,
+    normalize_unipolar, read_axis_u16, validate_report_id,
 };
+use flight_hotas_ch::{ChError, ChModel, normalize_axis, normalize_pedal, normalize_throttle};
 use flight_hotas_ch::{
-    parse_combatstick, parse_eclipse_yoke, parse_fighterstick, parse_flight_yoke,
-    parse_pro_pedals, parse_pro_throttle,
+    parse_combatstick, parse_eclipse_yoke, parse_fighterstick, parse_flight_yoke, parse_pro_pedals,
+    parse_pro_throttle,
 };
-use flight_hotas_ch::{normalize_axis, normalize_pedal, normalize_throttle, ChError, ChModel};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Report builders
@@ -231,14 +231,22 @@ fn pov_direction_round_trips_through_nibble() {
 #[test]
 fn pov_direction_degrees_are_multiples_of_45() {
     for nibble in 1u8..=8 {
-        let deg = PovDirection::from_nibble(nibble).unwrap().to_degrees().unwrap();
-        assert_eq!(deg % 45, 0, "direction {nibble} angle {deg} not multiple of 45");
+        let deg = PovDirection::from_nibble(nibble)
+            .unwrap()
+            .to_degrees()
+            .unwrap();
+        assert_eq!(
+            deg % 45,
+            0,
+            "direction {nibble} angle {deg} not multiple of 45"
+        );
     }
 }
 
 #[test]
 fn four_way_hat_is_subset_of_pov() {
-    // 4-way hats encode N/E/S/W at nibbles 1–4, which are also valid PovDirection values.
+    // 4-way hats encode neutral at nibble 0 and N/E/S/W at nibbles 1–4,
+    // which are also valid PovDirection values.
     for nibble in 0u8..=4 {
         assert!(FourWayHat::from_nibble(nibble).is_some());
         assert!(PovDirection::from_nibble(nibble).is_some());
@@ -388,7 +396,10 @@ fn pro_throttle_hat_sweep() {
 fn pro_pedals_left_right_symmetry() {
     let r = pp_report(32768, 50000, 50000);
     let s = parse_pro_pedals(&r).unwrap();
-    assert_eq!(s.left_toe, s.right_toe, "symmetric inputs must produce equal values");
+    assert_eq!(
+        s.left_toe, s.right_toe,
+        "symmetric inputs must produce equal values"
+    );
 }
 
 #[test]
@@ -499,21 +510,24 @@ fn flight_yoke_axes_at_extremes() {
 #[test]
 fn normalize_axis_symmetry() {
     let lo = normalize_axis(1000);
-    let hi = normalize_axis(65535 - 1000);
+    let hi = normalize_axis(AXIS_MAX - 1000);
     assert!((lo + hi).abs() < 0.01, "normalize_axis should be symmetric");
 }
 
 #[test]
 fn normalize_throttle_is_strictly_unipolar() {
-    for raw in (0..=65535u16).step_by(1024) {
+    for raw in (0..=AXIS_MAX).step_by(1024) {
         let v = normalize_throttle(raw);
-        assert!((0.0..=1.0).contains(&v), "throttle({raw}) = {v} out of [0,1]");
+        assert!(
+            (0.0..=1.0).contains(&v),
+            "throttle({raw}) = {v} out of [0,1]"
+        );
     }
 }
 
 #[test]
 fn normalize_pedal_full_range_sweep() {
-    for raw in (0..=65535u16).step_by(1024) {
+    for raw in (0..=AXIS_MAX).step_by(1024) {
         let v = normalize_pedal(raw);
         assert!(
             (-1.0..=1.0).contains(&v),
@@ -547,7 +561,8 @@ fn identify_device_returns_correct_variant_for_every_pid() {
 
 #[test]
 fn identify_device_none_for_neighbouring_pids() {
-    let known: Vec<u16> = DEVICE_TABLE.iter().map(|e| e.pid).collect();
+    use std::collections::HashSet;
+    let known: HashSet<u16> = DEVICE_TABLE.iter().map(|e| e.pid).collect();
     for &pid in &known {
         if pid > 0 && !known.contains(&(pid - 1)) {
             assert_eq!(identify_device(CH_VENDOR_ID, pid - 1), None);
@@ -583,7 +598,7 @@ fn all_devices_returns_full_table() {
 
 #[test]
 fn device_name_and_pid_consistency() {
-    for entry in DEVICE_TABLE {
+    for entry in DEVICE_TABLE.iter() {
         assert_eq!(entry.device.pid(), entry.pid);
         assert!(!entry.device.name().is_empty());
     }
@@ -670,11 +685,18 @@ fn stick_axes_use_bipolar_normalization() {
 
 #[test]
 fn throttle_axes_use_unipolar_normalization() {
-    for dev in [ChDevice::ProThrottle, ChDevice::EclipseYoke, ChDevice::FlightYoke] {
+    for dev in [
+        ChDevice::ProThrottle,
+        ChDevice::EclipseYoke,
+        ChDevice::FlightYoke,
+    ] {
         let p = device_profile(dev).unwrap();
         let throttle_ax = p.axes.iter().find(|a| a.id == "throttle").unwrap();
         assert!(
-            matches!(throttle_ax.normalization, AxisNormalization::Unipolar { .. }),
+            matches!(
+                throttle_ax.normalization,
+                AxisNormalization::Unipolar { .. }
+            ),
             "{dev:?} throttle should be unipolar"
         );
     }
@@ -745,7 +767,10 @@ fn ch_error_too_short_display() {
 fn ch_error_invalid_report_id_display() {
     let err = ChError::InvalidReportId(0xAB);
     let msg = err.to_string();
-    assert!(msg.contains("0xab") || msg.contains("0xAB"), "should show hex ID");
+    assert!(
+        msg.contains("0xab") || msg.contains("0xAB"),
+        "should show hex ID"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
