@@ -93,10 +93,13 @@ impl CoreAffinity {
         }
     }
 
-    /// Pin to a single core.
+    /// Pin to a single core. Returns `any()` if `core >= 64`.
     pub const fn single(core: u8) -> Self {
+        if core as u64 >= 64 {
+            return Self::any();
+        }
         Self {
-            mask: 1u64 << (core as u64),
+            mask: 1u64 << core as u64,
             fallback_to_any: false,
         }
     }
@@ -133,13 +136,19 @@ impl CoreAffinity {
         self.mask.count_ones()
     }
 
-    /// Check whether a specific core is included.
+    /// Check whether a specific core is included. Returns `false` if `core >= 64`.
     pub const fn has_core(&self, core: u8) -> bool {
+        if core as u64 >= 64 {
+            return false;
+        }
         (self.mask >> (core as u64)) & 1 == 1
     }
 
-    /// Add a core to the mask.
+    /// Add a core to the mask. Returns `self` unchanged if `core >= 64`.
     pub const fn with_core(self, core: u8) -> Self {
+        if core as u64 >= 64 {
+            return self;
+        }
         Self {
             mask: self.mask | (1u64 << (core as u64)),
             fallback_to_any: self.fallback_to_any,
@@ -189,9 +198,11 @@ pub struct TimerDiscipline {
 
 impl TimerDiscipline {
     /// Create a new discipline targeting the given tick rate.
+    /// A `tick_rate_hz` of 0 is clamped to 1.
     pub const fn new(tick_rate_hz: u32) -> Self {
+        let hz = if tick_rate_hz == 0 { 1 } else { tick_rate_hz };
         Self {
-            target_period_ns: 1_000_000_000 / tick_rate_hz as u64,
+            target_period_ns: 1_000_000_000 / hz as u64,
             ring: [0u64; DISCIPLINE_RING_SIZE],
             ring_idx: 0,
             count: 0,
@@ -213,27 +224,33 @@ impl TimerDiscipline {
     }
 
     /// Record the actual duration of one tick (**hot path — zero allocation**).
+    ///
+    /// Stores the absolute jitter (deviation from target period) for
+    /// percentile reporting.
     #[inline]
     pub fn record_tick(&mut self, actual_duration: Duration) {
         let ns = actual_duration.as_nanos() as u64;
+        let jitter = ns.abs_diff(self.target_period_ns);
         self.count += 1;
-        self.sum_ns += ns;
-        self.sum_sq_ns += ns as u128 * ns as u128;
-        if ns < self.min_ns {
-            self.min_ns = ns;
+        self.sum_ns += jitter;
+        self.sum_sq_ns += jitter as u128 * jitter as u128;
+        if jitter < self.min_ns {
+            self.min_ns = jitter;
         }
-        if ns > self.max_ns {
-            self.max_ns = ns;
+        if jitter > self.max_ns {
+            self.max_ns = jitter;
         }
         let idx = self.ring_idx as usize % DISCIPLINE_RING_SIZE;
-        self.ring[idx] = ns;
+        self.ring[idx] = jitter;
         self.ring_idx = self.ring_idx.wrapping_add(1);
     }
 
     /// Produce a snapshot report of current jitter statistics.
     ///
-    /// Sorts a **stack-local copy** of the ring for exact percentiles.
-    pub fn jitter_report(&self) -> TimerReport {
+    /// Jitter is the absolute deviation of each tick duration from the
+    /// target period. Sorts a **stack-local copy** of the ring for exact
+    /// percentiles.
+    pub fn tick_report(&self) -> TimerReport {
         if self.count == 0 {
             return TimerReport::EMPTY;
         }
@@ -337,10 +354,7 @@ pub enum ConfigError {
     /// Tick rate must be between 1 and 10 000 Hz.
     InvalidTickRate(u32),
     /// Max allowed jitter must be positive and ≤ half the tick period.
-    InvalidMaxJitter {
-        jitter_ns: u64,
-        half_period_ns: u64,
-    },
+    InvalidMaxJitter { jitter_ns: u64, half_period_ns: u64 },
     /// PLL gain must be in (0.0, 1.0).
     InvalidPllGain(String),
 }
@@ -456,10 +470,7 @@ mod tests {
         assert_eq!(PriorityClass::RealTime.to_mmcss_task_name(), "Pro Audio");
         assert_eq!(PriorityClass::High.to_mmcss_task_name(), "Games");
         assert_eq!(PriorityClass::AboveNormal.to_mmcss_task_name(), "Playback");
-        assert_eq!(
-            PriorityClass::Normal.to_mmcss_task_name(),
-            "Window Manager"
-        );
+        assert_eq!(PriorityClass::Normal.to_mmcss_task_name(), "Window Manager");
         assert_eq!(
             PriorityClass::BelowNormal.to_mmcss_task_name(),
             "Low Latency"
@@ -534,7 +545,7 @@ mod tests {
     #[test]
     fn timer_discipline_empty_report() {
         let td = TimerDiscipline::new(250);
-        let report = td.jitter_report();
+        let report = td.tick_report();
         assert_eq!(report, TimerReport::EMPTY);
         assert_eq!(td.count(), 0);
     }
@@ -548,60 +559,62 @@ mod tests {
     #[test]
     fn timer_discipline_single_tick() {
         let mut td = TimerDiscipline::new(250);
-        td.record_tick(Duration::from_micros(4000)); // exact 4ms
-        let report = td.jitter_report();
+        td.record_tick(Duration::from_micros(4000)); // exact 4ms → jitter = 0
+        let report = td.tick_report();
         assert_eq!(report.sample_count, 1);
-        assert_eq!(report.min_ns, 4_000_000);
-        assert_eq!(report.max_ns, 4_000_000);
-        assert_eq!(report.mean_ns, 4_000_000);
+        assert_eq!(report.min_ns, 0);
+        assert_eq!(report.max_ns, 0);
+        assert_eq!(report.mean_ns, 0);
     }
 
     #[test]
     fn timer_discipline_known_statistics() {
         let mut td = TimerDiscipline::new(250);
-        // Record ticks with known durations
+        // Record ticks with known durations (target = 4000µs)
+        // Jitters: 100µs, 50µs, 0, 50µs, 100µs
         for us in [3900, 3950, 4000, 4050, 4100] {
             td.record_tick(Duration::from_micros(us));
         }
-        let report = td.jitter_report();
+        let report = td.tick_report();
         assert_eq!(report.sample_count, 5);
-        assert_eq!(report.min_ns, 3_900_000);
-        assert_eq!(report.max_ns, 4_100_000);
-        assert_eq!(report.mean_ns, 4_000_000);
+        assert_eq!(report.min_ns, 0);
+        assert_eq!(report.max_ns, 100_000);
+        assert_eq!(report.mean_ns, 60_000);
         assert_eq!(report.target_period_ns, 4_000_000);
     }
 
     #[test]
     fn timer_discipline_p99_with_outlier() {
         let mut td = TimerDiscipline::new(250);
-        // 99 ticks at 4ms, 1 outlier at 8ms
+        // 99 ticks at 4ms (jitter=0), 1 outlier at 8ms (jitter=4ms)
         for _ in 0..99 {
             td.record_tick(Duration::from_micros(4000));
         }
         td.record_tick(Duration::from_micros(8000));
 
-        let report = td.jitter_report();
+        let report = td.tick_report();
         assert_eq!(report.sample_count, 100);
-        // p99 index = (100*99)/100 = 99, which is the outlier
-        assert_eq!(report.p99_ns, 8_000_000);
-        // p50 should be 4ms
-        assert_eq!(report.p50_ns, 4_000_000);
+        // p99 index = (100*99)/100 = 99, which is the outlier jitter
+        assert_eq!(report.p99_ns, 4_000_000);
+        // p50 should be 0 (on-target ticks)
+        assert_eq!(report.p50_ns, 0);
     }
 
     #[test]
     fn timer_discipline_circular_buffer_wraps() {
         let mut td = TimerDiscipline::new(250);
-        // Fill with low values then overwrite with high values
+        // Fill with 1ms ticks (jitter = |1ms - 4ms| = 3ms)
         for _ in 0..DISCIPLINE_RING_SIZE {
             td.record_tick(Duration::from_micros(1000));
         }
+        // Overwrite with 5ms ticks (jitter = |5ms - 4ms| = 1ms)
         for _ in 0..DISCIPLINE_RING_SIZE {
             td.record_tick(Duration::from_micros(5000));
         }
-        let report = td.jitter_report();
-        // Ring should now contain only the 5ms values
-        assert_eq!(report.p99_ns, 5_000_000);
-        assert_eq!(report.p50_ns, 5_000_000);
+        let report = td.tick_report();
+        // Ring should now contain only the 1ms jitter values
+        assert_eq!(report.p99_ns, 1_000_000);
+        assert_eq!(report.p50_ns, 1_000_000);
     }
 
     #[test]
@@ -613,7 +626,7 @@ mod tests {
         assert_eq!(td.count(), 100);
         td.reset();
         assert_eq!(td.count(), 0);
-        assert_eq!(td.jitter_report(), TimerReport::EMPTY);
+        assert_eq!(td.tick_report(), TimerReport::EMPTY);
         // Target period preserved
         assert_eq!(td.target_period_ns(), 4_000_000);
     }
@@ -658,10 +671,7 @@ mod tests {
 
     #[test]
     fn core_affinity_with_core_builder() {
-        let ca = CoreAffinity::any()
-            .with_core(0)
-            .with_core(2)
-            .with_core(4);
+        let ca = CoreAffinity::any().with_core(0).with_core(2).with_core(4);
         assert_eq!(ca.core_count(), 3);
         assert!(ca.has_core(0));
         assert!(ca.has_core(2));
@@ -734,10 +744,7 @@ mod tests {
             65,
             0.001,
         );
-        assert!(matches!(
-            result,
-            Err(ConfigError::InvalidMaxJitter { .. })
-        ));
+        assert!(matches!(result, Err(ConfigError::InvalidMaxJitter { .. })));
     }
 
     #[test]
@@ -776,5 +783,48 @@ mod tests {
 
         let e = ConfigError::InvalidPllGain("0.0".into());
         assert!(format!("{e}").contains("PLL gain"));
+    }
+
+    // --- Edge-case tests (review feedback) ---
+
+    #[test]
+    fn test_core_affinity_out_of_range() {
+        // core 64 should fall back to any()
+        let ca = CoreAffinity::single(64);
+        assert!(ca.is_any());
+        assert!(ca.fallback_to_any());
+
+        // core 255 should also be safe
+        let ca = CoreAffinity::single(255);
+        assert!(ca.is_any());
+
+        // has_core with out-of-range core returns false
+        let ca = CoreAffinity::from_mask(0xFF);
+        assert!(!ca.has_core(64));
+        assert!(!ca.has_core(128));
+        assert!(!ca.has_core(255));
+
+        // with_core with out-of-range core is a no-op
+        let ca = CoreAffinity::single(0);
+        let ca2 = ca.with_core(64);
+        assert_eq!(ca.mask(), ca2.mask());
+        let ca3 = ca.with_core(255);
+        assert_eq!(ca.mask(), ca3.mask());
+    }
+
+    #[test]
+    fn test_timer_zero_tick_rate() {
+        // Must not panic — clamped to 1 Hz
+        let td = TimerDiscipline::new(0);
+        assert_eq!(td.target_period_ns(), 1_000_000_000); // 1 second
+        assert_eq!(td.count(), 0);
+    }
+
+    #[test]
+    fn test_timer_high_tick_rate() {
+        // Must not panic at high rates (period may round to 0 via integer division)
+        let td = TimerDiscipline::new(u32::MAX);
+        let _ = td.target_period_ns();
+        assert_eq!(td.count(), 0);
     }
 }
