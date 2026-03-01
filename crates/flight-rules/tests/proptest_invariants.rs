@@ -7,7 +7,7 @@
 //! compiled bytecode, checking that key safety and correctness invariants
 //! hold across the entire input space.
 
-use flight_rules::{BytecodeOp, Rule, RulesSchema};
+use flight_rules::{BytecodeOp, BytecodeProgram, Rule, RulesSchema};
 use proptest::prelude::*;
 
 // Helper: build a minimal one-rule schema and validate it.
@@ -118,8 +118,16 @@ proptest! {
         };
         if let (Ok(c1), Ok(c2)) = (schema.compile(), schema.compile()) {
             prop_assert_eq!(
-                format!("{:?}", c1.bytecode.instructions),
-                format!("{:?}", c2.bytecode.instructions),
+                &c1.bytecode.instructions,
+                &c2.bytecode.instructions,
+            );
+            prop_assert_eq!(
+                &c1.bytecode.actions,
+                &c2.bytecode.actions,
+            );
+            prop_assert_eq!(
+                c1.bytecode.stack_size,
+                c2.bytecode.stack_size,
             );
         }
     }
@@ -377,5 +385,68 @@ fn wrong_schema_versions_always_fail_validation() {
             "version {:?} should fail validation",
             version
         );
+    }
+}
+
+// ── Bytecode round-trip invariants ────────────────────────────────────────
+
+proptest! {
+    /// Compiled bytecode survives a JSON serialize → deserialize round-trip,
+    /// proving the `Serialize`/`Deserialize` impls are consistent.
+    #[test]
+    fn bytecode_json_round_trip(
+        var in "[a-zA-Z_][a-zA-Z0-9_]{0,15}",
+        threshold in -9999.0f32..=9999.0f32,
+        target in "[A-Z][A-Z0-9_]{0,10}",
+    ) {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: format!("{} > {}", var, threshold),
+                do_action: format!("led.panel('{}').on()", target),
+                action: format!("led.panel('{}').on()", target),
+            }],
+            defaults: None,
+        };
+        let compiled = schema.compile().expect("valid rule must compile");
+        let json = serde_json::to_string(compiled.bytecode()).expect("serialize");
+        let round_tripped: BytecodeProgram =
+            serde_json::from_str(&json).expect("deserialize");
+        prop_assert_eq!(
+            &compiled.bytecode().instructions,
+            &round_tripped.instructions,
+            "instructions must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().actions,
+            &round_tripped.actions,
+            "actions must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().variable_map,
+            &round_tripped.variable_map,
+            "variable_map must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().hysteresis_map,
+            &round_tripped.hysteresis_map,
+            "hysteresis_map must survive round-trip"
+        );
+        prop_assert_eq!(
+            &compiled.bytecode().hysteresis_bands,
+            &round_tripped.hysteresis_bands,
+            "hysteresis_bands must survive round-trip"
+        );
+        prop_assert_eq!(
+            compiled.bytecode().stack_size,
+            round_tripped.stack_size,
+            "stack_size must survive round-trip"
+        );
+    }
+
+    /// Arbitrary JSON fed to the bytecode deserializer must never panic.
+    #[test]
+    fn bytecode_deserialize_is_total(data in r"\PC{0,200}") {
+        let _ = serde_json::from_str::<BytecodeProgram>(&data);
     }
 }

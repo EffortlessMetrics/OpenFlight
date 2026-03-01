@@ -3,9 +3,25 @@
 
 //! Rules DSL for panel LED control
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use thiserror::Error;
+
+/// Serde adapter: serialize `usize` as `u32`, deserialize `u32` back to `usize`.
+/// Rejects values that exceed `u32::MAX` on serialization.
+mod stack_size_u32 {
+    use super::*;
+
+    pub fn serialize<S: Serializer>(value: &usize, ser: S) -> std::result::Result<S::Ok, S::Error> {
+        let v: u32 = u32::try_from(*value).map_err(serde::ser::Error::custom)?;
+        ser.serialize_u32(v)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(de: D) -> std::result::Result<usize, D::Error> {
+        let v = u32::deserialize(de)?;
+        Ok(v as usize)
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum RulesError {
@@ -64,7 +80,7 @@ pub enum Condition {
 }
 
 /// Comparison operators
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CompareOp {
     Equal,
     NotEqual,
@@ -75,7 +91,7 @@ pub enum CompareOp {
 }
 
 /// Rule action parsed from DSL string
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Action {
     /// Turn LED on
     LedOn { target: String },
@@ -93,7 +109,7 @@ pub struct RulesCompiler {
 }
 
 /// Bytecode instruction for rules evaluation
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BytecodeOp {
     /// Load variable value onto stack: LOAD var_index
     LoadVar(u16),
@@ -120,7 +136,7 @@ pub enum BytecodeOp {
 }
 
 /// Compiled bytecode program
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BytecodeProgram {
     /// Bytecode instructions
     pub instructions: Vec<BytecodeOp>,
@@ -132,7 +148,13 @@ pub struct BytecodeProgram {
     pub hysteresis_bands: Vec<f32>,
     /// Actions by index
     pub actions: Vec<Action>,
-    /// Pre-allocated evaluation stack size
+    /// Pre-allocated evaluation stack size.
+    ///
+    /// Kept as `usize` internally for zero-cost indexing.  Serialized as
+    /// `u32` via the `stack_size_u32` serde adapter so the wire format is
+    /// architecture-independent (values >u32::MAX are rejected on
+    /// serialization).
+    #[serde(serialize_with = "stack_size_u32::serialize", deserialize_with = "stack_size_u32::deserialize")]
     pub stack_size: usize,
 }
 
@@ -164,11 +186,11 @@ impl RulesSchema {
     }
 
     fn validate_rule(&self, rule: &Rule) -> std::result::Result<(), String> {
-        if rule.when.is_empty() {
+        if rule.when.trim().is_empty() {
             return Err("Rule condition cannot be empty".to_string());
         }
 
-        if rule.action.is_empty() {
+        if rule.action.trim().is_empty() {
             return Err("Rule action cannot be empty".to_string());
         }
 
@@ -267,10 +289,22 @@ impl RulesCompiler {
         // Handle negated boolean variables
         if condition_str.starts_with('!') && !condition_str.contains(['>', '<', '=']) {
             let variable = condition_str[1..].trim().to_string();
+            if variable.is_empty() {
+                return Err(RulesError::Validation(
+                    "Invalid condition syntax: negation requires a variable name".to_string(),
+                ));
+            }
             return Ok(Condition::Boolean {
                 variable,
                 negate: true,
             });
+        }
+
+        // Reject empty or whitespace-only condition strings
+        if condition_str.is_empty() {
+            return Err(RulesError::Validation(
+                "Invalid condition syntax: condition cannot be empty".to_string(),
+            ));
         }
 
         // Handle boolean variables (no operators)
@@ -1070,7 +1104,7 @@ mod tests {
             }
         }
 
-        // Prop: bytecode compilation is deterministic — same input always yields identical instructions
+        // Prop: bytecode compilation is deterministic — same input always yields identical output
         #[test]
         fn prop_compilation_is_deterministic(
             var_name in "[a-zA-Z_][a-zA-Z0-9_]*",
@@ -1087,10 +1121,9 @@ mod tests {
             };
             let compiled1 = schema.compile().unwrap();
             let compiled2 = schema.compile().unwrap();
-            // Use Debug representation of the instructions Vec (deterministic for ordered collections)
-            let instructions1 = format!("{:?}", compiled1.bytecode.instructions);
-            let instructions2 = format!("{:?}", compiled2.bytecode.instructions);
-            prop_assert_eq!(instructions1, instructions2);
+            let val1 = serde_json::to_value(&compiled1.bytecode).unwrap();
+            let val2 = serde_json::to_value(&compiled2.bytecode).unwrap();
+            prop_assert_eq!(val1, val2);
         }
     }
 
@@ -1439,12 +1472,12 @@ mod tests {
 
     #[test]
     fn validate_whitespace_only_condition_fails() {
-        // Whitespace-only is not empty but also not a valid identifier
-        // The parser trims and then treats it as a boolean var with empty name
-        let result = validate_one("   ", "led.indexer.on()");
-        // Either the parser rejects the whitespace or treats "" as invalid
-        // after trimming — both are acceptable as long as it doesn't panic.
-        let _ = result;
+        let err = validate_one("   ", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("empty") || msg.contains("condition"),
+            "error should describe invalid condition, got: {msg}"
+        );
     }
 
     #[test]
@@ -1577,6 +1610,49 @@ mod tests {
                 "compile should also fail for: {:?} → {:?}",
                 cond,
                 act
+            );
+        }
+    }
+
+    // ── Negation edge cases ─────────────────────────────────────────────
+
+    #[test]
+    fn validate_bare_negation_operator_fails() {
+        let err = validate_one("!", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("negation") || msg.contains("variable"),
+            "error should mention negation problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_negation_with_whitespace_only_fails() {
+        let err = validate_one("!   ", "led.indexer.on()").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("negation") || msg.contains("variable"),
+            "error should mention negation problem, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn validate_compile_agreement_on_whitespace_variants() {
+        let whitespace_cases = ["   ", "\t", "\n", "  \t  "];
+        for ws in &whitespace_cases {
+            let schema = RulesSchema {
+                schema: "flight.ledmap/1".to_string(),
+                rules: vec![Rule {
+                    when: ws.to_string(),
+                    do_action: "led.indexer.on()".to_string(),
+                    action: "led.indexer.on()".to_string(),
+                }],
+                defaults: None,
+            };
+            assert!(
+                schema.validate().is_err(),
+                "validate should reject whitespace-only condition: {:?}",
+                ws
             );
         }
     }
@@ -1850,5 +1926,37 @@ mod snapshot_tests {
         };
         let err = schema.validate().unwrap_err();
         insta::assert_debug_snapshot!("error_invalid_action", err);
+    }
+
+    /// Snapshot the validation error for whitespace-only condition.
+    #[test]
+    fn snapshot_error_whitespace_only_condition() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "   ".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_whitespace_only_condition", err);
+    }
+
+    /// Snapshot the validation error for bare negation operator.
+    #[test]
+    fn snapshot_error_bare_negation() {
+        let schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "!".to_string(),
+                do_action: "led.indexer.on()".to_string(),
+                action: "led.indexer.on()".to_string(),
+            }],
+            defaults: None,
+        };
+        let err = schema.validate().unwrap_err();
+        insta::assert_debug_snapshot!("error_bare_negation", err);
     }
 }
