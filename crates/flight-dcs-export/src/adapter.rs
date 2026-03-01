@@ -756,6 +756,24 @@ impl DcsAdapter {
         self.active_connection.as_ref()
     }
 
+    /// Poll the active connection for the current aircraft identifier.
+    ///
+    /// Returns `Ok(Some(id))` when an aircraft is detected on the active
+    /// connection, `Ok(None)` when no connection or no aircraft is known yet,
+    /// and `Err` if the connection has timed out.
+    pub async fn poll_aircraft(&self) -> std::result::Result<Option<AircraftId>, DcsAdapterError> {
+        match &self.active_connection {
+            Some(conn) => {
+                let now = Instant::now();
+                if now.duration_since(conn.last_telemetry) > self.config.connection_timeout {
+                    return Err(DcsAdapterError::ConnectionTimeout);
+                }
+                Ok(conn.aircraft.clone())
+            }
+            None => Ok(None),
+        }
+    }
+
     /// Get MP session info
     pub fn mp_session_info(&self) -> Option<String> {
         self.mp_detector.mp_banner_message()

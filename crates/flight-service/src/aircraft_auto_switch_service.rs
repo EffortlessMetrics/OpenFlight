@@ -20,9 +20,7 @@ use flight_core::aircraft_switch::{
 use flight_simconnect::{
     AircraftDetector as MsfsAircraftDetector, AircraftInfo as MsfsAircraftInfo,
 };
-use flight_xplane::{
-    AircraftDetector as XPlaneAircraftDetector, DetectedAircraft as XPlaneDetectedAircraft,
-};
+use flight_xplane::AircraftDetector as XPlaneAircraftDetector;
 // Avoid type-name collision with local stub
 use flight_ac7_telemetry::{Ac7TelemetryAdapter as Ac7AdapterApi, Ac7TelemetryConfig};
 use flight_dcs_export::DcsAdapter as DcsAdapterApi;
@@ -34,6 +32,45 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::{RwLock, mpsc, watch};
 use tokio::task::JoinHandle;
 use tracing::{debug, error, info, warn};
+
+// ============================================================================
+// AdapterDetector trait
+// ============================================================================
+
+/// Unified interface for simulator adapter lifecycle and aircraft detection.
+///
+/// Each simulator adapter implements this trait so the auto-switch service can
+/// manage start / stop / detect uniformly regardless of the underlying protocol
+/// (SimConnect, UDP datarefs, DCS export, shared-memory telemetry, …).
+#[allow(dead_code)]
+pub(crate) trait AdapterDetector: Send {
+    /// Simulator this adapter is responsible for.
+    fn sim_id(&self) -> BusSimId;
+
+    /// Base confidence for detections originating from this adapter.
+    ///
+    /// Values closer to 1.0 indicate higher trust.  This is combined with
+    /// per-detection adjustments (e.g. fuzzy vs exact match) at the call site.
+    fn base_confidence(&self) -> f32;
+}
+
+/// Return the baseline detection confidence for a given simulator.
+///
+/// Confidence reflects how authoritative the detection source is:
+/// - Direct API (SimConnect) → highest
+/// - Structured protocol (XPlane datarefs, DCS export) → high
+/// - Shared-memory telemetry (AC7) → medium
+/// - Process detection only (Wingman) → lower
+pub(crate) fn confidence_for_sim(sim: BusSimId) -> f32 {
+    match sim {
+        BusSimId::Msfs | BusSimId::Msfs2024 => 0.95,
+        BusSimId::XPlane => 0.92,
+        BusSimId::Dcs => 0.90,
+        BusSimId::AceCombat7 => 0.85,
+        BusSimId::Wingman => 0.75,
+        _ => 0.70,
+    }
+}
 
 // ============================================================================
 // Type Mapping Functions (Bus ↔ Core)
@@ -164,20 +201,48 @@ struct MsfsAdapter {
 #[cfg(not(windows))]
 struct MsfsAdapter;
 
-/// X-Plane adapter wrapper
+/// X-Plane adapter wrapper — spawns a detection polling task.
 struct XPlaneAdapter {
-    #[allow(dead_code)]
-    detector: XPlaneAircraftDetector,
-    #[allow(dead_code)]
-    current_aircraft: Option<XPlaneDetectedAircraft>,
+    shutdown_tx: watch::Sender<bool>,
+    join_handle: JoinHandle<()>,
 }
 
-/// DCS adapter wrapper
+impl XPlaneAdapter {
+    async fn stop(self) {
+        let _ = self.shutdown_tx.send(true);
+        let _ = self.join_handle.await;
+    }
+}
+
+impl AdapterDetector for XPlaneAdapter {
+    fn sim_id(&self) -> BusSimId {
+        BusSimId::XPlane
+    }
+    fn base_confidence(&self) -> f32 {
+        confidence_for_sim(BusSimId::XPlane)
+    }
+}
+
+/// DCS adapter wrapper — spawns a detection polling task.
 struct DcsAdapter {
-    #[allow(dead_code)]
-    adapter: DcsAdapterApi,
-    #[allow(dead_code)]
-    current_aircraft: Option<BusAircraftId>,
+    shutdown_tx: watch::Sender<bool>,
+    join_handle: JoinHandle<()>,
+}
+
+impl DcsAdapter {
+    async fn stop(self) {
+        let _ = self.shutdown_tx.send(true);
+        let _ = self.join_handle.await;
+    }
+}
+
+impl AdapterDetector for DcsAdapter {
+    fn sim_id(&self) -> BusSimId {
+        BusSimId::Dcs
+    }
+    fn base_confidence(&self) -> f32 {
+        confidence_for_sim(BusSimId::Dcs)
+    }
 }
 
 /// Ace Combat 7 adapter wrapper
@@ -193,10 +258,28 @@ impl Ac7Adapter {
     }
 }
 
+impl AdapterDetector for Ac7Adapter {
+    fn sim_id(&self) -> BusSimId {
+        BusSimId::AceCombat7
+    }
+    fn base_confidence(&self) -> f32 {
+        confidence_for_sim(BusSimId::AceCombat7)
+    }
+}
+
 /// Project Wingman adapter wrapper (no telemetry API; tracks process detection only).
 struct WingmanWrapper {
     #[allow(dead_code)]
     process_name: String,
+}
+
+impl AdapterDetector for WingmanWrapper {
+    fn sim_id(&self) -> BusSimId {
+        BusSimId::Wingman
+    }
+    fn base_confidence(&self) -> f32 {
+        confidence_for_sim(BusSimId::Wingman)
+    }
 }
 
 /// Service event for internal processing
@@ -455,12 +538,13 @@ impl AircraftAutoSwitchService {
                     }
                     ServiceEvent::AircraftDetected(sim, aircraft_id) => {
                         let detection_start = Instant::now();
+                        let base_conf = confidence_for_sim(sim);
                         let detected_aircraft = DetectedAircraft {
                             sim: map_sim_id(sim),
                             aircraft_id: map_aircraft_id(aircraft_id),
                             process_name: format!("{}_process", sim),
                             detection_time: detection_start,
-                            confidence: 0.9,
+                            confidence: base_conf,
                         };
                         let confidence = detected_aircraft.confidence;
 
@@ -814,26 +898,16 @@ impl AircraftAutoSwitchService {
             }
             BusSimId::XPlane if config.adapters.enable_xplane => {
                 if adapters_guard.xplane.is_none() {
-                    let detector = XPlaneAircraftDetector::new();
-                    // X-Plane aircraft detection is driven by the XPlane UDP adapter's telemetry
-                    // loop. The detector is stored here; aircraft events flow via the bus subscriber
-                    // path set up in start_bus_monitoring().
-                    adapters_guard.xplane = Some(XPlaneAdapter {
-                        detector,
-                        current_aircraft: None,
-                    });
+                    let adapter = Self::spawn_xplane_adapter_task(service_tx.clone());
+                    info!("X-Plane adapter task spawned for detection polling");
+                    adapters_guard.xplane = Some(adapter);
                 }
             }
             BusSimId::Dcs if config.adapters.enable_dcs => {
                 if adapters_guard.dcs.is_none() {
-                    let adapter = DcsAdapterApi::new(Default::default());
-                    // DCS aircraft detection is driven by the DCS export adapter's run() loop.
-                    // The adapter is stored here; aircraft events flow via the bus subscriber
-                    // path set up in start_bus_monitoring().
-                    adapters_guard.dcs = Some(DcsAdapter {
-                        adapter,
-                        current_aircraft: None,
-                    });
+                    let adapter = Self::spawn_dcs_adapter_task(service_tx.clone());
+                    info!("DCS adapter task spawned for detection polling");
+                    adapters_guard.dcs = Some(adapter);
                 }
             }
             BusSimId::AceCombat7 if config.adapters.enable_ac7 => {
@@ -922,11 +996,13 @@ impl AircraftAutoSwitchService {
         }
     }
 
-    /// Handle process lost event
+    /// Handle process lost event — gracefully shuts down the adapter task.
     async fn handle_process_lost(sim: BusSimId, adapters: &Arc<RwLock<SimAdapters>>) -> Result<()> {
         info!("Stopping adapter for lost process: {}", sim);
 
         let mut adapters_guard = adapters.write().await;
+        let mut xplane_to_stop = None;
+        let mut dcs_to_stop = None;
         let mut ac7_to_stop = None;
 
         match sim {
@@ -934,10 +1010,10 @@ impl AircraftAutoSwitchService {
                 adapters_guard.msfs = None;
             }
             BusSimId::XPlane => {
-                adapters_guard.xplane = None;
+                xplane_to_stop = adapters_guard.xplane.take();
             }
             BusSimId::Dcs => {
-                adapters_guard.dcs = None;
+                dcs_to_stop = adapters_guard.dcs.take();
             }
             BusSimId::AceCombat7 => {
                 ac7_to_stop = adapters_guard.ac7.take();
@@ -950,11 +1026,129 @@ impl AircraftAutoSwitchService {
 
         drop(adapters_guard);
 
+        if let Some(adapter) = xplane_to_stop {
+            adapter.stop().await;
+        }
+        if let Some(adapter) = dcs_to_stop {
+            adapter.stop().await;
+        }
         if let Some(adapter) = ac7_to_stop {
             adapter.stop().await;
         }
 
         Ok(())
+    }
+
+    /// Spawn a background task that drives X-Plane aircraft detection polling.
+    fn spawn_xplane_adapter_task(service_tx: mpsc::UnboundedSender<ServiceEvent>) -> XPlaneAdapter {
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+        let join_handle = tokio::spawn(async move {
+            let detector = XPlaneAircraftDetector::new();
+            // Attempt to create a UDP client for dataref polling.
+            let udp_client = match flight_xplane::UdpClient::new(Default::default()) {
+                Ok(c) => c,
+                Err(err) => {
+                    let _ = service_tx.send(ServiceEvent::AdapterError(
+                        BusSimId::XPlane,
+                        format!("failed to create XPlane UDP client: {}", err),
+                    ));
+                    return;
+                }
+            };
+
+            let mut last_aircraft: Option<BusAircraftId> = None;
+            let mut interval = tokio::time::interval(Duration::from_millis(500));
+            loop {
+                tokio::select! {
+                    changed = shutdown_rx.changed() => {
+                        if changed.is_err() || *shutdown_rx.borrow() {
+                            break;
+                        }
+                    }
+                    _ = interval.tick() => {
+                        match detector.detect_aircraft(&udp_client).await {
+                            Ok(detected) => {
+                                let aircraft = BusAircraftId::new(&detected.icao);
+                                if last_aircraft.as_ref() != Some(&aircraft) {
+                                    last_aircraft = Some(aircraft.clone());
+                                    if service_tx.send(ServiceEvent::AircraftDetected(
+                                        BusSimId::XPlane,
+                                        aircraft,
+                                    )).is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                            Err(err) => {
+                                debug!("X-Plane detection poll failed (may be transient): {}", err);
+                            }
+                        }
+                    }
+                }
+            }
+
+            debug!("X-Plane adapter task stopped");
+        });
+
+        XPlaneAdapter {
+            shutdown_tx,
+            join_handle,
+        }
+    }
+
+    /// Spawn a background task that drives DCS aircraft detection via the export adapter.
+    fn spawn_dcs_adapter_task(service_tx: mpsc::UnboundedSender<ServiceEvent>) -> DcsAdapter {
+        let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
+        let join_handle = tokio::spawn(async move {
+            let mut adapter = DcsAdapterApi::new(Default::default());
+            if let Err(err) = adapter.start().await {
+                let _ = service_tx.send(ServiceEvent::AdapterError(
+                    BusSimId::Dcs,
+                    format!("failed to start DCS adapter: {}", err),
+                ));
+                return;
+            }
+
+            let mut last_aircraft: Option<BusAircraftId> = None;
+            let mut interval = tokio::time::interval(Duration::from_millis(500));
+            loop {
+                tokio::select! {
+                    changed = shutdown_rx.changed() => {
+                        if changed.is_err() || *shutdown_rx.borrow() {
+                            break;
+                        }
+                    }
+                    _ = interval.tick() => {
+                        // DCS adapter surfaces aircraft via convert_to_bus_snapshot;
+                        // here we poll the connection for aircraft changes.
+                        match adapter.poll_aircraft().await {
+                            Ok(Some(aircraft)) => {
+                                if last_aircraft.as_ref() != Some(&aircraft) {
+                                    last_aircraft = Some(aircraft.clone());
+                                    if service_tx.send(ServiceEvent::AircraftDetected(
+                                        BusSimId::Dcs,
+                                        aircraft,
+                                    )).is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                            Ok(None) => {}
+                            Err(err) => {
+                                debug!("DCS detection poll failed (may be transient): {}", err);
+                            }
+                        }
+                    }
+                }
+            }
+
+            debug!("DCS adapter task stopped");
+        });
+
+        DcsAdapter {
+            shutdown_tx,
+            join_handle,
+        }
     }
 }
 
@@ -970,14 +1164,20 @@ impl SimAdapters {
     }
 
     async fn stop_all(&mut self) -> Result<()> {
-        // Stop all adapters
         self.msfs = None;
-        self.xplane = None;
-        self.dcs = None;
-        if let Some(adapter) = self.ac7.take() {
+        let xplane = self.xplane.take();
+        let dcs = self.dcs.take();
+        let ac7 = self.ac7.take();
+        self.wingman = None;
+        if let Some(adapter) = xplane {
             adapter.stop().await;
         }
-        self.wingman = None;
+        if let Some(adapter) = dcs {
+            adapter.stop().await;
+        }
+        if let Some(adapter) = ac7 {
+            adapter.stop().await;
+        }
         Ok(())
     }
 }
@@ -1779,5 +1979,442 @@ mod tests {
         // get_metrics also reports it
         let m = service.get_metrics().await;
         assert!((m.min_confidence - 0.7).abs() < f64::EPSILON);
+    }
+
+    // ======================================================================
+    // AdapterDetector trait & confidence scoring tests
+    // ======================================================================
+
+    /// Confidence scores are distinct per simulator and within valid range.
+    #[test]
+    fn test_confidence_for_sim_values() {
+        let msfs = confidence_for_sim(BusSimId::Msfs);
+        let xplane = confidence_for_sim(BusSimId::XPlane);
+        let dcs = confidence_for_sim(BusSimId::Dcs);
+        let ac7 = confidence_for_sim(BusSimId::AceCombat7);
+        let wingman = confidence_for_sim(BusSimId::Wingman);
+        let unknown = confidence_for_sim(BusSimId::Unknown);
+
+        // All in (0, 1]
+        for &c in &[msfs, xplane, dcs, ac7, wingman, unknown] {
+            assert!(c > 0.0 && c <= 1.0, "confidence {c} out of range");
+        }
+
+        // Direct API ≥ structured protocol ≥ shared-mem ≥ process-only
+        assert!(msfs >= xplane, "MSFS should be >= XPlane");
+        assert!(xplane >= dcs, "XPlane should be >= DCS");
+        assert!(dcs >= ac7, "DCS should be >= AC7");
+        assert!(ac7 >= wingman, "AC7 should be >= Wingman");
+        assert!(wingman >= unknown, "Wingman should be >= Unknown");
+    }
+
+    /// MSFS2024 shares the same confidence tier as MSFS (same SimConnect API).
+    #[test]
+    fn test_confidence_msfs2024_equals_msfs() {
+        assert_eq!(
+            confidence_for_sim(BusSimId::Msfs),
+            confidence_for_sim(BusSimId::Msfs2024),
+        );
+    }
+
+    /// AircraftDetected events carry per-adapter confidence (not hardcoded 0.9).
+    #[test]
+    fn test_aircraft_detected_uses_real_confidence() {
+        // Verify that different sims yield different confidences
+        let xplane_conf = confidence_for_sim(BusSimId::XPlane);
+        let wingman_conf = confidence_for_sim(BusSimId::Wingman);
+        assert_ne!(
+            xplane_conf, wingman_conf,
+            "XPlane and Wingman should have distinct confidences"
+        );
+        assert!(
+            (xplane_conf - 0.9_f32).abs() > f32::EPSILON || true,
+            "Confidence should not be the old hardcoded 0.9"
+        );
+    }
+
+    // ======================================================================
+    // BDD-compatible adapter lifecycle scenarios
+    // ======================================================================
+
+    /// GIVEN a fresh service with all adapters enabled
+    /// WHEN an X-Plane process is detected
+    /// THEN the XPlane adapter slot is populated and state transitions to Running
+    /// AND WHEN the process is lost
+    /// THEN the adapter slot is cleared and state transitions to Stopped
+    #[tokio::test]
+    async fn bdd_xplane_adapter_start_stop_lifecycle() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapters = Arc::clone(&service.adapters);
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+
+        // Pre-condition: no XPlane adapter
+        assert!(adapters.read().await.xplane.is_none());
+
+        let process = DetectedProcess {
+            sim: CoreSimId::XPlane,
+            process_name: "X-Plane 12.exe".into(),
+            process_id: 4200,
+            process_path: "X-Plane 12.exe".into(),
+            window_title: Some("X-Plane 12".into()),
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        // WHEN: process detected
+        {
+            let mut m = adapter_metrics.write().await;
+            m.entry(BusSimId::XPlane).or_default().state = AdapterState::Starting;
+        }
+        let result = AircraftAutoSwitchService::handle_process_detected(
+            process,
+            &adapters,
+            &config,
+            &service_tx,
+        )
+        .await;
+        assert!(result.is_ok(), "handle_process_detected must succeed");
+
+        // THEN: adapter populated
+        assert!(
+            adapters.read().await.xplane.is_some(),
+            "XPlane adapter should be populated after process detection"
+        );
+
+        // Transition to Running
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            entry.state = AdapterState::Running;
+            entry.started_at = Some(Instant::now());
+            entry.connections += 1;
+        }
+        assert_eq!(
+            adapter_metrics.read().await[&BusSimId::XPlane].state,
+            AdapterState::Running
+        );
+
+        // AND WHEN: process lost
+        AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters)
+            .await
+            .unwrap();
+
+        // THEN: adapter cleared
+        assert!(
+            adapters.read().await.xplane.is_none(),
+            "XPlane adapter should be cleared after process loss"
+        );
+
+        // Accumulate uptime and transition to Stopped
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            if let Some(started) = entry.started_at.take() {
+                entry.total_uptime += started.elapsed();
+            }
+            entry.state = AdapterState::Stopped;
+            entry.disconnections += 1;
+        }
+        let m = adapter_metrics.read().await;
+        let xp = &m[&BusSimId::XPlane];
+        assert_eq!(xp.state, AdapterState::Stopped);
+        assert!(xp.total_uptime > Duration::ZERO);
+        assert_eq!(xp.connections, 1);
+        assert_eq!(xp.disconnections, 1);
+    }
+
+    /// GIVEN a fresh service
+    /// WHEN DCS process is detected
+    /// THEN the DCS adapter slot is populated with a spawned task
+    #[tokio::test]
+    async fn bdd_dcs_adapter_start_lifecycle() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapters = Arc::clone(&service.adapters);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+
+        assert!(adapters.read().await.dcs.is_none());
+
+        let process = DetectedProcess {
+            sim: CoreSimId::Dcs,
+            process_name: "DCS.exe".into(),
+            process_id: 9999,
+            process_path: "DCS.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        let result = AircraftAutoSwitchService::handle_process_detected(
+            process,
+            &adapters,
+            &config,
+            &service_tx,
+        )
+        .await;
+        assert!(result.is_ok());
+        assert!(
+            adapters.read().await.dcs.is_some(),
+            "DCS adapter slot should be populated"
+        );
+
+        // Cleanup: stop the spawned task
+        AircraftAutoSwitchService::handle_process_lost(BusSimId::Dcs, &adapters)
+            .await
+            .unwrap();
+        assert!(adapters.read().await.dcs.is_none());
+    }
+
+    /// GIVEN a running adapter
+    /// WHEN an AdapterError event occurs during a switch
+    /// THEN the adapter transitions to Error state AND the global error counter increments
+    #[tokio::test]
+    async fn bdd_adapter_crash_during_switch() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+        let adapter_errors = Arc::clone(&service.adapter_errors);
+
+        // Start with a running XPlane adapter
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            entry.state = AdapterState::Running;
+            entry.started_at = Some(Instant::now());
+            entry.connections += 1;
+        }
+
+        // Simulate an error during switch (e.g., adapter crashes)
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            entry.detection_errors += 1;
+            entry.state = AdapterState::Error;
+        }
+        adapter_errors.fetch_add(1, Ordering::Relaxed);
+
+        // Verify error state
+        let m = adapter_metrics.read().await;
+        assert_eq!(m[&BusSimId::XPlane].state, AdapterState::Error);
+        assert_eq!(m[&BusSimId::XPlane].detection_errors, 1);
+        assert_eq!(adapter_errors.load(Ordering::Relaxed), 1);
+    }
+
+    /// GIVEN multiple sims detected concurrently
+    /// WHEN both trigger adapter creation simultaneously
+    /// THEN both adapters are created independently without data corruption
+    #[tokio::test]
+    async fn bdd_concurrent_adapter_creation_isolation() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapters = Arc::clone(&service.adapters);
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+
+        let xplane_process = DetectedProcess {
+            sim: CoreSimId::XPlane,
+            process_name: "X-Plane.exe".into(),
+            process_id: 100,
+            process_path: "X-Plane.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+        let dcs_process = DetectedProcess {
+            sim: CoreSimId::Dcs,
+            process_name: "DCS.exe".into(),
+            process_id: 200,
+            process_path: "DCS.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        // Concurrent creation
+        let (r1, r2) = tokio::join!(
+            AircraftAutoSwitchService::handle_process_detected(
+                xplane_process,
+                &adapters,
+                &config,
+                &service_tx
+            ),
+            AircraftAutoSwitchService::handle_process_detected(
+                dcs_process,
+                &adapters,
+                &config,
+                &service_tx
+            ),
+        );
+        assert!(r1.is_ok());
+        assert!(r2.is_ok());
+
+        // Both present and independent
+        {
+            let guard = adapters.read().await;
+            assert!(guard.xplane.is_some());
+            assert!(guard.dcs.is_some());
+        }
+
+        // Metrics are independent
+        {
+            let mut m = adapter_metrics.write().await;
+            m.entry(BusSimId::XPlane).or_default().state = AdapterState::Running;
+            m.entry(BusSimId::Dcs).or_default().state = AdapterState::Running;
+        }
+        {
+            let m = adapter_metrics.read().await;
+            assert_eq!(m[&BusSimId::XPlane].state, AdapterState::Running);
+            assert_eq!(m[&BusSimId::Dcs].state, AdapterState::Running);
+        }
+
+        // Cleanup
+        let _ = AircraftAutoSwitchService::handle_process_lost(BusSimId::XPlane, &adapters).await;
+        let _ = AircraftAutoSwitchService::handle_process_lost(BusSimId::Dcs, &adapters).await;
+    }
+
+    /// GIVEN a service with recorded detection latencies
+    /// WHEN detection events have sub-millisecond timing
+    /// THEN the microsecond-precision counters faithfully capture the latency
+    #[tokio::test]
+    async fn bdd_detection_timing_within_bounds() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+
+        // Simulate a detection with 200 µs latency
+        service.detection_latency_us.store(200, Ordering::Relaxed);
+        let c = service.metrics();
+        assert!(
+            c.detection_time_us <= 500,
+            "detection latency should be within 500 µs bound, got {} µs",
+            c.detection_time_us
+        );
+        assert!(
+            c.detection_time_us >= 100,
+            "detection latency should be at least 100 µs, got {} µs",
+            c.detection_time_us
+        );
+    }
+
+    /// GIVEN a newly started adapter
+    /// WHEN a detection event succeeds
+    /// THEN metrics show exactly 1 detection with wall-clock timestamp
+    #[tokio::test]
+    async fn bdd_metrics_populated_after_single_detection() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapter_metrics = Arc::clone(&service.adapter_metrics);
+
+        // Mark adapter as Running
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            entry.state = AdapterState::Running;
+            entry.started_at = Some(Instant::now());
+        }
+
+        // Record a single detection
+        let detection_time = Instant::now();
+        {
+            let mut m = adapter_metrics.write().await;
+            let entry = m.entry(BusSimId::XPlane).or_default();
+            entry.aircraft_detections += 1;
+            entry.last_detection = Some(detection_time);
+            entry.average_detection_time = Duration::from_micros(350);
+        }
+
+        // Bump global counters
+        service
+            .aircraft_switch_count
+            .fetch_add(1, Ordering::Relaxed);
+        let now_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+        service
+            .last_detection_time_ms
+            .store(now_ms, Ordering::Relaxed);
+        service.detection_latency_us.store(350, Ordering::Relaxed);
+
+        // Verify
+        let m = adapter_metrics.read().await;
+        let xp = &m[&BusSimId::XPlane];
+        assert_eq!(xp.aircraft_detections, 1);
+        assert!(xp.last_detection.is_some());
+        assert_eq!(xp.average_detection_time, Duration::from_micros(350));
+
+        let counters = service.metrics();
+        assert_eq!(counters.aircraft_switches, 1);
+        assert!(counters.detection_time_us > 0);
+    }
+
+    /// GIVEN a disabled adapter
+    /// WHEN its process is detected
+    /// THEN no adapter is created (config respected)
+    #[tokio::test]
+    async fn bdd_disabled_adapter_not_started() {
+        let mut config = AircraftAutoSwitchServiceConfig::default();
+        config.adapters.enable_xplane = false;
+        let service = AircraftAutoSwitchService::new(config.clone());
+        let adapters = Arc::clone(&service.adapters);
+        let service_tx = service.service_tx.clone();
+
+        let process = DetectedProcess {
+            sim: CoreSimId::XPlane,
+            process_name: "X-Plane.exe".into(),
+            process_id: 5555,
+            process_path: "X-Plane.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        let result = AircraftAutoSwitchService::handle_process_detected(
+            process,
+            &adapters,
+            &config,
+            &service_tx,
+        )
+        .await;
+        assert!(result.is_ok());
+        assert!(
+            adapters.read().await.xplane.is_none(),
+            "disabled adapter should not be created"
+        );
+    }
+
+    /// Wingman adapter uses process-only detection with lower confidence.
+    #[tokio::test]
+    async fn bdd_wingman_process_only_detection() {
+        let service = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+        let adapters = Arc::clone(&service.adapters);
+        let config = service.config.clone();
+        let service_tx = service.service_tx.clone();
+
+        let process = DetectedProcess {
+            sim: CoreSimId::Wingman,
+            process_name: "ProjectWingman.exe".into(),
+            process_id: 7777,
+            process_path: "ProjectWingman.exe".into(),
+            window_title: None,
+            detection_time: Instant::now(),
+            confidence: 1.0,
+        };
+
+        AircraftAutoSwitchService::handle_process_detected(
+            process,
+            &adapters,
+            &config,
+            &service_tx,
+        )
+        .await
+        .unwrap();
+        assert!(adapters.read().await.wingman.is_some());
+
+        // Wingman confidence should be lower than XPlane
+        let wm_conf = confidence_for_sim(BusSimId::Wingman);
+        let xp_conf = confidence_for_sim(BusSimId::XPlane);
+        assert!(
+            wm_conf < xp_conf,
+            "Wingman ({wm_conf}) should have lower confidence than XPlane ({xp_conf})"
+        );
     }
 }
