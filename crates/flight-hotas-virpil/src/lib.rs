@@ -32,6 +32,7 @@ pub mod stick_warbrd;
 pub mod throttle_cm3;
 
 pub mod collective_tcs;
+pub mod multi_device;
 pub mod pedals_ace;
 pub mod profiles;
 pub mod protocol;
@@ -98,4 +99,8 @@ pub use collective_tcs::{
 pub use throttle_ace_torq::{
     ACE_TORQ_BUTTON_COUNT, VPC_ACE_TORQ_MIN_REPORT_BYTES, VpcAceTorqAxis, VpcAceTorqButtons,
     VpcAceTorqInputState, VpcAceTorqParseError, parse_ace_torq_report,
+};
+
+pub use multi_device::{
+    DetectedDevice, DeviceCategory, SetupSummary, detect_setup, pids_for_category,
 };

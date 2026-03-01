@@ -149,6 +149,7 @@ impl VkbDeviceProfile {
 // Gladiator NXT EVO profile
 // ═══════════════════════════════════════════════════════════════════════════════
 
+use crate::protocol::VKB_T_RUDDER_MK5_PID;
 use flight_hid_support::device_support::{
     VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
     VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID,
@@ -1043,22 +1044,20 @@ static T_RUDDER_BUTTONS: [ButtonMapping; 0] = [];
 static T_RUDDER_HATS: [HatMapping; 0] = [];
 
 static T_RUDDER_NOTES: [&str; 2] = [
-    "Factory default for VKB T-Rudder Mk.IV pedals.",
+    "Factory default for VKB T-Rudder Mk.IV/V pedals.",
     "Three axes: two toe brakes (unidirectional) and one rudder (bidirectional).",
 ];
 
-/// Factory-default profile for VKB T-Rudder Mk.IV pedals.
+/// Factory-default profile for VKB T-Rudder Mk.IV/V pedals.
 ///
 /// The T-Rudder has 3 axes and no buttons or hats.
 /// Note: The Mk.V PID is not yet confirmed; this profile uses the Mk.IV layout
 /// which is expected to be identical.
 pub fn t_rudder_profile() -> VkbDeviceProfile {
     VkbDeviceProfile {
-        device_name: "VKB T-Rudder Mk.IV",
+        device_name: "VKB T-Rudder Mk.IV/V",
         vid: VKB_VENDOR_ID,
-        // T-Rudder PID not in device_support.rs yet; leave empty for now.
-        // Users should match by descriptor discovery or explicit configuration.
-        pids: &[],
+        pids: &[VKB_T_RUDDER_MK5_PID],
         axes: &T_RUDDER_AXES,
         buttons: &T_RUDDER_BUTTONS,
         hats: &T_RUDDER_HATS,
