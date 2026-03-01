@@ -16,9 +16,16 @@ categories = ["development-tools", "development-tools::testing"]
 
 [dependencies]
 anyhow = { workspace = true }
+regex = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 walkdir.workspace = true
+
+# OpenFlight crates for BDD step definitions
+flight-axis = { path = "../flight-axis" }
+flight-bus = { path = "../flight-bus" }
+flight-profile = { path = "../flight-profile" }
+flight-hid-types = { path = "../flight-hid-types" }
 
 [dev-dependencies]
 proptest = { workspace = true }
