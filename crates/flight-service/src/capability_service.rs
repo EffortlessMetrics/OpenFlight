@@ -298,10 +298,16 @@ pub struct AxisClampStats {
 /// Summary report of all capability clamp activity.
 #[derive(Debug, Clone)]
 pub struct CapabilityReport {
-    /// Clamp events from engine-level counters.
+    /// Clamp events from engine-level counters only.
     pub engine_clamp_events: u64,
-    /// Clamp events from service-level metrics.
+    /// Clamp events from service-level metrics only.
     pub service_clamp_events: u64,
+    /// Combined total: `engine_clamp_events + service_clamp_events`.
+    ///
+    /// Note: engine and service counters may track the same underlying clamp
+    /// from different vantage points, so this value can exceed the number of
+    /// unique physical clamp events.
+    pub total_clamp_events: u64,
     /// Maximum pre-clamp value across all axes (from engine counters).
     pub max_original_value_before_clamp: f32,
     /// Per-axis clamp statistics (merged from engine and service-level metrics).
@@ -713,6 +719,7 @@ impl CapabilityService {
         Ok(CapabilityReport {
             engine_clamp_events,
             service_clamp_events,
+            total_clamp_events: engine_clamp_events + service_clamp_events,
             max_original_value_before_clamp: max_before_clamp,
             axes,
         })
@@ -1343,6 +1350,7 @@ mod tests {
         // 1 from engine, 1 from service-level — now tracked separately
         assert_eq!(report.engine_clamp_events, 1);
         assert_eq!(report.service_clamp_events, 1);
+        assert_eq!(report.total_clamp_events, 2);
         assert_eq!(report.axes.len(), 1);
         assert_eq!(report.axes[0].axis_id, "roll");
         assert_eq!(report.axes[0].clamp_events, 1);
@@ -1369,6 +1377,7 @@ mod tests {
         let report = service.get_capability_report().unwrap();
         assert_eq!(report.engine_clamp_events, 1);
         assert_eq!(report.service_clamp_events, 1);
+        assert_eq!(report.total_clamp_events, 2);
         assert_eq!(report.axes[0].axis_id, "throttle");
     }
 
@@ -1381,6 +1390,7 @@ mod tests {
         let report = service.get_capability_report().unwrap();
         assert_eq!(report.engine_clamp_events, 0);
         assert_eq!(report.service_clamp_events, 0);
+        assert_eq!(report.total_clamp_events, 0);
         assert_eq!(report.max_original_value_before_clamp, 0.0);
         assert!(report.axes.is_empty());
     }
@@ -1469,6 +1479,7 @@ mod tests {
         let report = service.get_capability_report().unwrap();
         assert_eq!(report.engine_clamp_events, 1);
         assert_eq!(report.service_clamp_events, 0);
+        assert_eq!(report.total_clamp_events, 1);
         // The axes section must still contain the engine-sourced clamp data
         assert_eq!(report.axes.len(), 1);
         assert_eq!(report.axes[0].axis_id, "pitch");
