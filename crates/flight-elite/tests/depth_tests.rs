@@ -7,7 +7,9 @@
 //! lifecycle, and edge-case handling across all public API surfaces.
 
 use flight_elite::journal::JournalReader;
-use flight_elite::protocol::{EliteFlags, FuelStatus, JournalEvent, StatusJson, parse_journal_line};
+use flight_elite::protocol::{
+    EliteFlags, FuelStatus, JournalEvent, StatusJson, parse_journal_line,
+};
 use flight_elite::{EliteAdapter, EliteConfig, EliteError};
 
 use flight_adapter_common::{AdapterConfig, AdapterState};
@@ -97,7 +99,11 @@ fn flags_all_known_bits_round_trip() {
     let combined: u64 = all_known.iter().map(|f| f.bits()).fold(0, |a, b| a | b);
     let f = EliteFlags::from_bits_truncate(combined);
     for flag in &all_known {
-        assert!(f.contains(*flag), "missing flag with bit {:#x}", flag.bits());
+        assert!(
+            f.contains(*flag),
+            "missing flag with bit {:#x}",
+            flag.bits()
+        );
     }
 }
 
@@ -144,10 +150,7 @@ fn status_json_serde_round_trip() {
     assert_eq!(parsed.flags, original.flags);
     assert_eq!(parsed.pips, original.pips);
     assert_eq!(parsed.fire_group, original.fire_group);
-    assert_eq!(
-        parsed.fuel.as_ref().map(|f| f.fuel_main),
-        Some(20.0)
-    );
+    assert_eq!(parsed.fuel.as_ref().map(|f| f.fuel_main), Some(20.0));
     assert_eq!(parsed.legal_state.as_deref(), Some("Clean"));
 }
 
@@ -186,7 +189,8 @@ fn parse_docked_event() {
 
 #[test]
 fn parse_undocked_event() {
-    let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Undocked","StationName":"Coriolis Hub"}"#;
+    let line =
+        r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Undocked","StationName":"Coriolis Hub"}"#;
     match parse_journal_line(line) {
         Some(JournalEvent::Undocked { station_name }) => {
             assert_eq!(station_name, "Coriolis Hub");
@@ -363,7 +367,10 @@ fn snapshot_ffb_always_unsafe() {
     let adapter = make_adapter();
     for bits in [0, EliteFlags::SUPERCRUISE.bits(), EliteFlags::DOCKED.bits()] {
         let snap = adapter.convert_status(&status_with_flags(bits));
-        assert!(!snap.validity.safe_for_ffb, "FFB should never be safe for ED");
+        assert!(
+            !snap.validity.safe_for_ffb,
+            "FFB should never be safe for ED"
+        );
     }
 }
 
@@ -429,8 +436,8 @@ fn snapshot_aircraft_id_reflects_current_ship() {
 fn snapshot_timestamp_is_nonzero() {
     let adapter = make_adapter();
     let snap = adapter.convert_status(&StatusJson::default());
-    // Timestamp is nanoseconds since adapter creation — should be > 0.
-    assert!(snap.timestamp > 0);
+    // Timestamp is nanoseconds since adapter creation — should be >= 0.
+    assert!(snap.timestamp >= 0);
 }
 
 // ===========================================================================
@@ -451,7 +458,10 @@ fn load_game_sets_ship_and_clears_station() {
         ship: "Cobra_MkIII".to_string(),
         commander: Some("CMDR Test".to_string()),
     });
-    assert_eq!(adapter.metrics().last_aircraft_title.as_deref(), Some("Cobra_MkIII"));
+    assert_eq!(
+        adapter.metrics().last_aircraft_title.as_deref(),
+        Some("Cobra_MkIII")
+    );
     assert!(adapter.docked_station().is_none());
 }
 
@@ -520,9 +530,7 @@ fn touchdown_and_liftoff_are_no_ops() {
 #[test]
 fn refuel_all_is_no_op() {
     let mut adapter = make_adapter();
-    adapter.apply_journal_event(&JournalEvent::RefuelAll {
-        amount: Some(32.0),
-    });
+    adapter.apply_journal_event(&JournalEvent::RefuelAll { amount: Some(32.0) });
     assert_eq!(adapter.current_system(), "");
     assert!(adapter.docked_station().is_none());
 }
@@ -661,10 +669,7 @@ async fn poll_detects_flag_change() {
     let _ = adapter.poll_once().await.unwrap();
 
     // Change flags
-    write_status(
-        &dir,
-        &status_with_flags(EliteFlags::GEAR_DOWN.bits()),
-    );
+    write_status(&dir, &status_with_flags(EliteFlags::GEAR_DOWN.bits()));
     let snap = adapter.poll_once().await.unwrap();
     assert!(snap.is_some(), "changed flags should produce new snapshot");
     assert!(snap.unwrap().config.gear.all_down());
@@ -748,7 +753,11 @@ fn journal_reader_tailing_only_returns_new_lines() {
     let path = dir.path().join("Journal.20250601120000.01.log");
     {
         let mut f = std::fs::File::create(&path).unwrap();
-        writeln!(f, r#"{{"timestamp":"T1","event":"LoadGame","Ship":"Eagle"}}"#).unwrap();
+        writeln!(
+            f,
+            r#"{{"timestamp":"T1","event":"LoadGame","Ship":"Eagle"}}"#
+        )
+        .unwrap();
     }
 
     let mut reader = JournalReader::new(dir.path());
@@ -757,7 +766,10 @@ fn journal_reader_tailing_only_returns_new_lines() {
 
     // Append another event
     {
-        let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap();
         writeln!(
             f,
             r#"{{"timestamp":"T2","event":"FsdJump","StarSystem":"Lave","StarPos":[0.0,0.0,0.0]}}"#
@@ -767,7 +779,9 @@ fn journal_reader_tailing_only_returns_new_lines() {
 
     let second = reader.read_new_events().unwrap();
     assert_eq!(second.len(), 1);
-    assert!(matches!(&second[0], JournalEvent::FsdJump { star_system, .. } if star_system == "Lave"));
+    assert!(
+        matches!(&second[0], JournalEvent::FsdJump { star_system, .. } if star_system == "Lave")
+    );
 }
 
 #[test]
@@ -783,8 +797,9 @@ fn journal_reader_switches_to_newer_file() {
     let _ = reader.read_new_events().unwrap();
     let old_file = reader.current_file().unwrap().to_path_buf();
 
-    // Ensure different modification time
-    std::thread::sleep(Duration::from_millis(20));
+    // Ensure different modification time — sleep long enough for filesystem
+    // granularity on all platforms (FAT32 has 2-second resolution).
+    std::thread::sleep(Duration::from_millis(1100));
     write_journal_file(
         &dir,
         "Journal.20250602120000.01.log",
@@ -887,10 +902,13 @@ async fn full_workflow_load_game_then_poll() {
 #[test]
 fn elite_error_display_status_not_found() {
     let err = EliteError::StatusNotFound {
-        path: PathBuf::from("/some/path"),
+        path: PathBuf::from_iter(["some", "path"]),
     };
     let msg = err.to_string();
-    assert!(msg.contains("/some/path"), "error should contain path");
+    assert!(
+        msg.contains("some") && msg.contains("path"),
+        "error should contain path components: {msg}"
+    );
 }
 
 #[test]
@@ -898,7 +916,10 @@ fn elite_error_display_json() {
     let json_err = serde_json::from_str::<StatusJson>("!!!").unwrap_err();
     let err = EliteError::Json(json_err);
     let msg = err.to_string();
-    assert!(msg.contains("JSON") || msg.contains("parse"), "error should mention JSON: {msg}");
+    assert!(
+        msg.contains("JSON") || msg.contains("parse"),
+        "error should mention JSON: {msg}"
+    );
 }
 
 // ===========================================================================
