@@ -544,6 +544,9 @@ impl MessageDispatcher {
     /// Returns [`FrameError::NoHandler`] if no handler is registered for the type.
     pub fn dispatch(&self, msg: &PanelMessage) -> Result<(), FrameError> {
         let idx = msg.message_type_id() as usize;
+        if idx >= MAX_MESSAGE_TYPES {
+            return Err(FrameError::InvalidMessageType(msg.message_type_id()));
+        }
         match self.handlers[idx] {
             Some(handler) => {
                 handler(msg);
