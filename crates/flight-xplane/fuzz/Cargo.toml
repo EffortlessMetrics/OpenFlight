@@ -54,9 +54,3 @@ name = "fuzz_plugin_protocol"
 path = "fuzz_targets/fuzz_plugin_protocol.rs"
 test = false
 doc = false
-
-[[bin]]
-name = "fuzz_xplane_udp"
-path = "fuzz_targets/fuzz_xplane_udp.rs"
-test = false
-doc = false
