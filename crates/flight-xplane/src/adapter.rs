@@ -472,18 +472,18 @@ impl XPlaneAdapter {
                                         AdapterEvent::TelemetryReceived,
                                     );
 
-                                    // Update last packet time after successful conversion
-                                    {
-                                        let mut last_packet = last_packet_time.write().unwrap();
-                                        *last_packet = Some(Instant::now());
-                                    }
-
                                     // Publish snapshot to bus subscribers
                                     if let Ok(mut publisher) = bus_publisher.lock() {
                                         if let Err(e) = publisher.publish(snapshot) {
                                             warn!("Failed to publish X-Plane snapshot: {}", e);
                                             metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                                         }
+                                    }
+
+                                    // Update last packet time after successful conversion and publish
+                                    {
+                                        let mut last_packet = last_packet_time.write().unwrap();
+                                        *last_packet = Some(Instant::now());
                                     }
                                 }
                                 Err(e) => {
