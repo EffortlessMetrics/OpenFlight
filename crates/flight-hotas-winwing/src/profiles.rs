@@ -742,6 +742,181 @@ pub fn efis_panel_profile() -> DeviceProfile {
     }
 }
 
+// ── Super Taurus F-15EX Throttle ─────────────────────────────────────────────
+
+/// Profile for the WinWing Super Taurus F-15EX Dual Throttle.
+///
+/// Premium dual throttle with Hall-effect axes, encoders, and a detachable
+/// mouse stick.  PID 0xBD64 is confirmed via linux-hardware.org (USB string
+/// "SuperTaurus F-15EX Throttle").
+pub fn super_taurus_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing Super Taurus F-15EX Throttle",
+        vid: 0x4098,
+        pid: 0xBD64, // confirmed
+        axes: vec![
+            RecommendedAxisConfig {
+                name: "throttle_left",
+                deadzone: 0.01,
+                filter_alpha: None,
+                slew_rate: None,
+                notes: "Left throttle lever — Hall-effect",
+            },
+            RecommendedAxisConfig {
+                name: "throttle_right",
+                deadzone: 0.01,
+                filter_alpha: None,
+                slew_rate: None,
+                notes: "Right throttle lever — Hall-effect",
+            },
+            RecommendedAxisConfig {
+                name: "friction",
+                deadzone: 0.03,
+                filter_alpha: Some(0.10),
+                slew_rate: None,
+                notes: "Friction slider — resistive",
+            },
+            RecommendedAxisConfig {
+                name: "mouse_x",
+                deadzone: 0.08,
+                filter_alpha: Some(0.20),
+                slew_rate: None,
+                notes: "Mouse/slew X — spring return",
+            },
+            RecommendedAxisConfig {
+                name: "mouse_y",
+                deadzone: 0.08,
+                filter_alpha: Some(0.20),
+                slew_rate: None,
+                notes: "Mouse/slew Y — spring return",
+            },
+        ],
+        button_count: 58,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "left_panel",
+                count: 20,
+            },
+            ButtonGroupDescriptor {
+                name: "right_panel",
+                count: 20,
+            },
+            ButtonGroupDescriptor {
+                name: "centre",
+                count: 10,
+            },
+            ButtonGroupDescriptor {
+                name: "encoder_push",
+                count: 8,
+            },
+        ],
+        hats: vec![HatDescriptor {
+            name: "Slew HAT",
+            positions: 8,
+        }],
+        encoders: vec![
+            EncoderDescriptor {
+                name: "ENC1",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC2",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC3",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC4",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC5",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC6",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC7",
+                has_push: true,
+            },
+            EncoderDescriptor {
+                name: "ENC8",
+                has_push: true,
+            },
+        ],
+        detents: vec![
+            DetentDescriptor {
+                name: "idle",
+                typical_position: 0.02,
+            },
+            DetentDescriptor {
+                name: "afterburner",
+                typical_position: 0.95,
+            },
+        ],
+        displays: vec![],
+        backlight_led_count: 0,
+    }
+}
+
+// ── Super Libra Joystick Base ────────────────────────────────────────────────
+
+/// Profile for the WinWing Super Libra centre-mount joystick base.
+///
+/// High-end Hall-effect gimbal (roll/pitch).  Grip buttons are reported
+/// through the same USB composite device.  PID 0xBD70 is a community
+/// estimate.
+pub fn super_libra_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing Super Libra Joystick Base",
+        vid: 0x4098,
+        pid: 0xBD70, // community estimate
+        axes: vec![
+            RecommendedAxisConfig {
+                name: "roll",
+                deadzone: 0.01,
+                filter_alpha: None,
+                slew_rate: None,
+                notes: "Roll axis — Hall-effect centre-mount gimbal",
+            },
+            RecommendedAxisConfig {
+                name: "pitch",
+                deadzone: 0.01,
+                filter_alpha: None,
+                slew_rate: None,
+                notes: "Pitch axis — Hall-effect centre-mount gimbal",
+            },
+        ],
+        button_count: 24,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "trigger",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "grip",
+                count: 14,
+            },
+            ButtonGroupDescriptor {
+                name: "base",
+                count: 8,
+            },
+        ],
+        hats: vec![HatDescriptor {
+            name: "Main HAT",
+            positions: 8,
+        }],
+        encoders: vec![],
+        detents: vec![],
+        displays: vec![],
+        backlight_led_count: 0,
+    }
+}
+
 // ── Lookup ────────────────────────────────────────────────────────────────────
 
 /// Look up a device profile by USB Product ID.
@@ -753,8 +928,10 @@ pub fn profile_by_pid(pid: u16) -> Option<DeviceProfile> {
         0xBE62 => Some(orion2_throttle_profile()),
         0xBEA8 => Some(f16ex_grip_profile()),
         0xBEB0 => Some(a10_grip_profile()),
-        0xBEE0 => Some(take_off_panel_profile()),
-        0xBEE2 => Some(combat_ready_panel_profile()),
+        0xBD64 => Some(super_taurus_profile()),
+        0xBD70 => Some(super_libra_profile()),
+        0xBE04 => Some(take_off_panel_profile()),
+        0xBE05 => Some(combat_ready_panel_profile()),
         0xBEE4 => Some(fcu_panel_profile()),
         0xBEE6 => Some(efis_panel_profile()),
         _ => None,
@@ -769,6 +946,8 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
         f16ex_grip_profile(),
         f18_grip_profile(),
         a10_grip_profile(),
+        super_taurus_profile(),
+        super_libra_profile(),
         take_off_panel_profile(),
         combat_ready_panel_profile(),
         fcu_panel_profile(),
@@ -807,7 +986,7 @@ mod tests {
 
     #[test]
     fn test_all_profiles_count() {
-        assert_eq!(all_profiles().len(), 9);
+        assert_eq!(all_profiles().len(), 11);
     }
 
     #[test]
@@ -965,6 +1144,85 @@ mod tests {
     fn test_a10_grip_two_hats() {
         let p = a10_grip_profile();
         assert_eq!(p.hats.len(), 2);
+    }
+
+    // ── Super Taurus F-15EX ──────────────────────────────────────────────
+
+    #[test]
+    fn test_super_taurus_axes() {
+        let p = super_taurus_profile();
+        assert_eq!(p.axes.len(), 5, "Super Taurus should have 5 axes");
+        let names: Vec<_> = p.axes.iter().map(|a| a.name).collect();
+        assert!(names.contains(&"throttle_left"));
+        assert!(names.contains(&"throttle_right"));
+    }
+
+    #[test]
+    fn test_super_taurus_buttons() {
+        let p = super_taurus_profile();
+        assert_eq!(p.button_count, 58);
+    }
+
+    #[test]
+    fn test_super_taurus_confirmed_pid() {
+        let p = super_taurus_profile();
+        assert_eq!(p.pid, 0xBD64);
+    }
+
+    #[test]
+    fn test_super_taurus_encoders() {
+        let p = super_taurus_profile();
+        assert_eq!(p.encoders.len(), 8);
+        assert!(p.encoders.iter().all(|e| e.has_push));
+    }
+
+    #[test]
+    fn test_super_taurus_detents() {
+        let p = super_taurus_profile();
+        assert_eq!(p.detents.len(), 2);
+        assert_eq!(p.detents[0].name, "idle");
+        assert_eq!(p.detents[1].name, "afterburner");
+    }
+
+    // ── Super Libra ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_super_libra_axes() {
+        let p = super_libra_profile();
+        assert_eq!(p.axes.len(), 2);
+        assert_eq!(p.axes[0].name, "roll");
+        assert_eq!(p.axes[1].name, "pitch");
+    }
+
+    #[test]
+    fn test_super_libra_buttons() {
+        let p = super_libra_profile();
+        assert_eq!(p.button_count, 24);
+    }
+
+    #[test]
+    fn test_super_libra_has_hat() {
+        let p = super_libra_profile();
+        assert_eq!(p.hats.len(), 1);
+        assert_eq!(p.hats[0].positions, 8);
+    }
+
+    #[test]
+    fn test_super_libra_no_detents() {
+        assert!(super_libra_profile().detents.is_empty());
+    }
+
+    #[test]
+    fn test_super_libra_hall_effect_deadzones() {
+        let p = super_libra_profile();
+        for ax in &p.axes {
+            assert!(
+                ax.deadzone < 0.02,
+                "Hall-effect axis {} has deadzone {} (expected < 0.02)",
+                ax.name,
+                ax.deadzone
+            );
+        }
     }
 
     // ── Take Off Panel (TOP) ──────────────────────────────────────────────
@@ -1133,6 +1391,10 @@ mod tests {
         assert!(profile_by_pid(0xBE62).is_some());
         assert!(profile_by_pid(0xBE63).is_some());
         assert!(profile_by_pid(0xBEA8).is_some());
+        assert!(profile_by_pid(0xBD64).is_some());
+        assert!(profile_by_pid(0xBD70).is_some());
+        assert!(profile_by_pid(0xBE04).is_some());
+        assert!(profile_by_pid(0xBE05).is_some());
     }
 
     #[test]
@@ -1147,6 +1409,12 @@ mod tests {
         assert!(p.name.contains("Throttle"));
         let p = profile_by_pid(0xBEA8).unwrap();
         assert!(p.name.contains("F-16"));
+        let p = profile_by_pid(0xBD64).unwrap();
+        assert!(p.name.contains("Super Taurus"));
+        let p = profile_by_pid(0xBD70).unwrap();
+        assert!(p.name.contains("Super Libra"));
+        let p = profile_by_pid(0xBE05).unwrap();
+        assert!(p.name.contains("Combat Ready"));
     }
 
     // ── Cross-profile consistency ─────────────────────────────────────────
@@ -1170,6 +1438,7 @@ mod tests {
             f16ex_grip_profile(),
             f18_grip_profile(),
             a10_grip_profile(),
+            super_libra_profile(),
         ] {
             assert!(!p.axes.is_empty(), "{} should have axes", p.name);
         }
@@ -1192,7 +1461,11 @@ mod tests {
 
     #[test]
     fn test_hall_effect_stick_axes_have_small_deadzones() {
-        for p in [orion2_base_profile(), f16ex_grip_profile()] {
+        for p in [
+            orion2_base_profile(),
+            f16ex_grip_profile(),
+            super_libra_profile(),
+        ] {
             for ax in &p.axes {
                 assert!(
                     ax.deadzone < 0.02,

@@ -1,0 +1,14 @@
+---
+source: crates/flight-hotas-winwing/tests/snapshot_tests.rs
+expression: state
+---
+SuperLibraInputState {
+    axes: SuperLibraAxes {
+        roll: 0.0,
+        pitch: 0.0,
+    },
+    buttons: SuperLibraButtons {
+        mask: 0,
+        hat: 15,
+    },
+}

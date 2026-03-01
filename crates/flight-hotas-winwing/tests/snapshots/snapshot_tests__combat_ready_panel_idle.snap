@@ -1,0 +1,9 @@
+---
+source: crates/flight-hotas-winwing/tests/snapshot_tests.rs
+expression: state
+---
+CombatReadyPanelInputState {
+    buttons: CombatReadyButtons {
+        mask: 0,
+    },
+}

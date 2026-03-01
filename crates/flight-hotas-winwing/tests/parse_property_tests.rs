@@ -7,6 +7,10 @@ use flight_hotas_winwing::input::{
     RUDDER_REPORT_LEN, STICK_REPORT_LEN, THROTTLE_REPORT_LEN, WINWING_VENDOR_ID,
     parse_rudder_report, parse_stick_report, parse_throttle_report,
 };
+use flight_hotas_winwing::{
+    COMBAT_READY_REPORT_LEN, SUPER_LIBRA_REPORT_LEN, TAKE_OFF_PANEL_REPORT_LEN,
+    parse_combat_ready_panel_report, parse_super_libra_report, parse_take_off_panel_report,
+};
 use proptest::prelude::*;
 
 // ─── Throttle ────────────────────────────────────────────────────────────────
@@ -192,4 +196,129 @@ fn wrong_rudder_id_errors() {
     let mut r = make_rudder_report(0, 0, 0);
     r[0] = 0x05;
     assert!(parse_rudder_report(&r).is_err());
+}
+
+// ─── Combat Ready Panel ──────────────────────────────────────────────────────
+
+fn make_crp_report(buttons: u32) -> [u8; COMBAT_READY_REPORT_LEN] {
+    let mut r = [0u8; COMBAT_READY_REPORT_LEN];
+    r[0] = 0x08;
+    r[1..5].copy_from_slice(&buttons.to_le_bytes());
+    r
+}
+
+proptest! {
+    /// Short Combat Ready Panel reports always error.
+    #[test]
+    fn prop_crp_short_errors(len in 0usize..COMBAT_READY_REPORT_LEN) {
+        let data = vec![0x08u8; len];
+        prop_assert!(parse_combat_ready_panel_report(&data).is_err());
+    }
+
+    /// CRP button query matches mask bits (buttons 1–30).
+    #[test]
+    fn prop_crp_button_query_matches(mask in 0u32..(1u32 << 30)) {
+        let r = make_crp_report(mask);
+        let s = parse_combat_ready_panel_report(&r).unwrap();
+        for n in 1u8..=30 {
+            let expected = (mask >> (n - 1)) & 1 == 1;
+            prop_assert_eq!(
+                s.buttons.is_pressed(n),
+                expected,
+                "button {} mismatch mask=0x{:08X}", n, mask
+            );
+        }
+    }
+}
+
+// ─── Take Off Panel ──────────────────────────────────────────────────────────
+
+fn make_top_report(buttons: u32, enc: [i8; 3]) -> [u8; TAKE_OFF_PANEL_REPORT_LEN] {
+    let mut r = [0u8; TAKE_OFF_PANEL_REPORT_LEN];
+    r[0] = 0x09;
+    r[1..5].copy_from_slice(&buttons.to_le_bytes());
+    r[5] = enc[0] as u8;
+    r[6] = enc[1] as u8;
+    r[7] = enc[2] as u8;
+    r
+}
+
+proptest! {
+    /// Short Take Off Panel reports always error.
+    #[test]
+    fn prop_top_short_errors(len in 0usize..TAKE_OFF_PANEL_REPORT_LEN) {
+        let data = vec![0x09u8; len];
+        prop_assert!(parse_take_off_panel_report(&data).is_err());
+    }
+}
+
+#[test]
+fn wrong_crp_id_errors() {
+    let mut r = make_crp_report(0);
+    r[0] = 0xAA;
+    assert!(parse_combat_ready_panel_report(&r).is_err());
+}
+
+#[test]
+fn wrong_top_id_errors() {
+    let mut r = make_top_report(0, [0; 3]);
+    r[0] = 0xAA;
+    assert!(parse_take_off_panel_report(&r).is_err());
+}
+
+// ─── Super Libra ─────────────────────────────────────────────────────────────
+
+fn make_libra_report(roll: i16, pitch: i16, buttons: u32) -> [u8; SUPER_LIBRA_REPORT_LEN] {
+    let mut r = [0u8; SUPER_LIBRA_REPORT_LEN];
+    r[0] = 0x0A;
+    r[1..3].copy_from_slice(&roll.to_le_bytes());
+    r[3..5].copy_from_slice(&pitch.to_le_bytes());
+    r[5..9].copy_from_slice(&buttons.to_le_bytes());
+    r[9] = 0x0F; // HAT neutral
+    r
+}
+
+proptest! {
+    /// Super Libra axes always in [-1, 1].
+    #[test]
+    fn prop_super_libra_axes_in_range(
+        roll in i16::MIN..=i16::MAX,
+        pitch in i16::MIN..=i16::MAX,
+    ) {
+        let r = make_libra_report(roll, pitch, 0);
+        let s = parse_super_libra_report(&r).unwrap();
+        prop_assert!((-1.001..=1.001).contains(&s.axes.roll),
+            "roll out of range: {}", s.axes.roll);
+        prop_assert!((-1.001..=1.001).contains(&s.axes.pitch),
+            "pitch out of range: {}", s.axes.pitch);
+    }
+
+    /// Super Libra buttons 1–24 match the mask bits.
+    #[test]
+    fn prop_super_libra_button_query_matches(mask in 0u32..(1u32 << 24)) {
+        let r = make_libra_report(0, 0, mask);
+        let s = parse_super_libra_report(&r).unwrap();
+        for n in 1u8..=24 {
+            let expected = (mask >> (n - 1)) & 1 == 1;
+            prop_assert_eq!(
+                s.buttons.is_pressed(n),
+                expected,
+                "button {} mismatch mask=0x{:06X}", n, mask
+            );
+        }
+    }
+
+    /// Short Super Libra reports always error.
+    #[test]
+    fn prop_super_libra_short_errors(len in 0usize..SUPER_LIBRA_REPORT_LEN) {
+        let data = vec![0x0Au8; len];
+        prop_assert!(parse_super_libra_report(&data).is_err());
+    }
+}
+
+#[test]
+fn wrong_super_libra_id_errors() {
+    let mut r = make_libra_report(0, 0, 0);
+    r[0] = 0xBB;
+    assert!(parse_super_libra_report(&r).is_err());
 }

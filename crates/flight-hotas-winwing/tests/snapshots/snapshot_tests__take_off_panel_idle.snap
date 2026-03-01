@@ -1,0 +1,14 @@
+---
+source: crates/flight-hotas-winwing/tests/snapshot_tests.rs
+expression: state
+---
+TakeOffPanelInputState {
+    buttons: TakeOffPanelButtons {
+        mask: 0,
+        encoders: [
+            0,
+            0,
+            0,
+        ],
+    },
+}

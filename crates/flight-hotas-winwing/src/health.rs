@@ -11,6 +11,13 @@ pub enum WinWingDevice {
     Orion2Throttle,
     Orion2Stick,
     TfrpRudder,
+    SuperTaurus,
+    SuperLibra,
+    F16ExStick,
+    CombatReadyPanel,
+    TakeOffPanel,
+    UfcPanel,
+    SkywalkerRudder,
 }
 
 impl std::fmt::Display for WinWingDevice {
@@ -19,6 +26,13 @@ impl std::fmt::Display for WinWingDevice {
             Self::Orion2Throttle => f.write_str("WinWing Orion 2 Throttle"),
             Self::Orion2Stick => f.write_str("WinWing Orion 2 Stick"),
             Self::TfrpRudder => f.write_str("WinWing TFRP Rudder Pedals"),
+            Self::SuperTaurus => f.write_str("WinWing Super Taurus F-15EX Throttle"),
+            Self::SuperLibra => f.write_str("WinWing Super Libra Joystick Base"),
+            Self::F16ExStick => f.write_str("WinWing F-16EX Stick"),
+            Self::CombatReadyPanel => f.write_str("WinWing F/A-18 Combat Ready Panel"),
+            Self::TakeOffPanel => f.write_str("WinWing F/A-18 Take Off Panel"),
+            Self::UfcPanel => f.write_str("WinWing UFC1 + HUD1 Panel"),
+            Self::SkywalkerRudder => f.write_str("WinWing Skywalker Metal Rudder Pedals"),
         }
     }
 }

@@ -48,7 +48,8 @@ quirks:
       1 on the left handle and continues on the right handle.
 
 support:
-  tier: 3
+  tier: 2
+  parser: super_taurus
   test_coverage:
     simulated: true
     hil: false
@@ -57,3 +58,4 @@ support:
     Identical base hardware to the F/A-18C variant (PID 0xBE62) but
     different grip assemblies and higher button count.
     Typically paired with the Orion 2 F-16EX or F/A-18C stick.
+    Profile: super_taurus_profile (58 buttons, 5 axes, 8 encoders).

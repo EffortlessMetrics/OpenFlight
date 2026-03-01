@@ -4,20 +4,29 @@
 //! WinWing HOTAS driver for Flight Hub.
 //!
 //! Supports the **Orion 2 Throttle**, **Orion 2 F/A-18C Stick**,
-//! **TFRP Rudder Pedals**, **F-16EX Grip**, and **SuperTaurus Dual Throttle**
-//! via USB HID.
+//! **TFRP Rudder Pedals**, **F-16EX Grip**, **SuperTaurus Dual Throttle**,
+//! **Super Libra Joystick Base**, **F/A-18 Combat Ready Panel**,
+//! **F/A-18 Take Off Panel**, and **UFC1 + HUD1 Panel** via USB HID.
 //!
 //! # USB Identifiers
 //!
-//! | Product | VID    | PID    |
-//! |---------|--------|--------|
-//! | Orion 2 Throttle      | 0x4098 | 0xBE62 |
-//! | Orion 2 F/A-18C Stick | 0x4098 | 0xBE63 |
-//! | TFRP Rudder Pedals    | 0x4098 | 0xBE64 |
-//! | F-16EX Grip           | 0x4098 | 0xBEA8 |
-//! | SuperTaurus Dual Throttle | 0x4098 | 0xBD64 |
-//! | UFC1 + HUD1 Panel     | 0x4098 | 0xBEDE |
-//! | Skywalker Metal Rudder Pedals | 0x4098 | 0xBEF0 |
+//! | Product | VID    | PID    | Status |
+//! |---------|--------|--------|--------|
+//! | Orion 2 Throttle              | 0x4098 | 0xBE62 | Confirmed |
+//! | Orion 2 F/A-18C Stick         | 0x4098 | 0xBE63 | Confirmed |
+//! | TFRP Rudder Pedals            | 0x4098 | 0xBE64 | Confirmed |
+//! | F-16EX Grip                   | 0x4098 | 0xBEA8 | Confirmed |
+//! | SuperTaurus F-15EX Throttle   | 0x4098 | 0xBD64 | Confirmed |
+//! | Super Libra Joystick Base     | 0x4098 | 0xBD70 | Estimated |
+//! | F/A-18 Combat Ready Panel     | 0x4098 | 0xBE05 | Confirmed |
+//! | F/A-18 Take Off Panel         | 0x4098 | 0xBE04 | Confirmed |
+//! | UFC1 + HUD1 Panel             | 0x4098 | 0xBEDE | Confirmed |
+//! | Skywalker Metal Rudder Pedals | 0x4098 | 0xBEF0 | Confirmed |
+//! | Orion 1 F-18 Stick            | 0x4098 | 0xBE11 | Confirmed |
+//! | Orion 2 F-16 Throttle         | 0x4098 | 0xBE68 | Confirmed |
+//! | ICP Panel                     | 0x4098 | 0xBF06 | Confirmed |
+//! | SimAppPro FCU                 | 0x4098 | 0xBB10 | Confirmed |
+//! | SimAppPro FCU+EFIS Combo      | 0x4098 | 0xBA01 | Confirmed |
 //!
 //! # Quick start
 //!
@@ -30,9 +39,11 @@
 //! let combined = state.axes.throttle_combined;
 //! ```
 
+pub mod combat_ready_panel;
 pub mod f16ex_stick;
 pub mod health;
 pub mod input;
+pub mod led;
 pub mod orion2_stick;
 pub mod orion2_throttle;
 pub mod orion_joystick;
@@ -40,7 +51,9 @@ pub mod presets;
 pub mod profiles;
 pub mod protocol;
 pub mod skywalker_rudder;
+pub mod super_libra;
 pub mod super_taurus;
+pub mod take_off_panel;
 pub mod tfrp;
 pub mod ufc_panel;
 
@@ -53,6 +66,11 @@ pub enum WinWingError {
     UnknownReportId(u8),
 }
 
+pub use combat_ready_panel::{
+    BUTTON_COUNT as COMBAT_READY_BUTTON_COUNT, COMBAT_READY_PANEL_PID, CombatReadyButtons,
+    CombatReadyPanelInputState, CombatReadyParseError, MIN_REPORT_BYTES as COMBAT_READY_REPORT_LEN,
+    parse_combat_ready_panel_report,
+};
 pub use f16ex_stick::{
     BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
     F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN, parse_f16ex_stick_report,
@@ -64,6 +82,7 @@ pub use input::{
     ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
     parse_stick_report, parse_throttle_report,
 };
+pub use led::{COMBAT_READY_PANEL_LEDS, LedZone, LedZoneMap, find_zone_by_name};
 pub use orion_joystick::{
     ORION_JOYSTICK_MIN_REPORT_BYTES, ORION_JOYSTICK_PID, OrionJoystickState, URSA_MINOR_L_PID,
     parse_orion_joystick,
@@ -80,12 +99,16 @@ pub use orion2_throttle::{
     Orion2ThrottleState, normalize_axis_16bit, normalize_throttle_16bit, parse_orion2_throttle,
     parse_orion2_throttle_report,
 };
-pub use presets::{orion2_stick_config, orion2_throttle_config, tfrp_rudder_config};
+pub use presets::{
+    orion2_stick_config, orion2_throttle_config, super_libra_config, super_taurus_config,
+    tfrp_rudder_config,
+};
 pub use profiles::{
     ButtonGroupDescriptor, DetentDescriptor, DeviceProfile, DisplayFieldDescriptor,
     EncoderDescriptor, HatDescriptor, a10_grip_profile, all_profiles, combat_ready_panel_profile,
     efis_panel_profile, f16ex_grip_profile, f18_grip_profile, fcu_panel_profile,
-    orion2_base_profile, orion2_throttle_profile, profile_by_pid, take_off_panel_profile,
+    orion2_base_profile, orion2_throttle_profile, profile_by_pid, super_libra_profile,
+    super_taurus_profile, take_off_panel_profile,
 };
 pub use protocol::{
     BacklightSubCommand, CommandCategory, DetentName, DetentPosition, DetentReport,
@@ -99,10 +122,20 @@ pub use skywalker_rudder::{
     MIN_REPORT_BYTES as SKYWALKER_RUDDER_REPORT_LEN, SKYWALKER_RUDDER_PID, SkywalkerAxes,
     SkywalkerParseError, SkywalkerRudderInputState, parse_skywalker_rudder_report,
 };
+pub use super_libra::{
+    BUTTON_COUNT as SUPER_LIBRA_BUTTON_COUNT, MIN_REPORT_BYTES as SUPER_LIBRA_REPORT_LEN,
+    SUPER_LIBRA_PID, SuperLibraAxes, SuperLibraButtons, SuperLibraInputState, SuperLibraParseError,
+    parse_super_libra_report,
+};
 pub use super_taurus::{
     BUTTON_COUNT as SUPER_TAURUS_BUTTON_COUNT, MIN_REPORT_BYTES as SUPER_TAURUS_REPORT_LEN,
     SUPER_TAURUS_PID, SuperTaurusAxes, SuperTaurusButtons, SuperTaurusInputState,
     SuperTaurusParseError, parse_super_taurus_report,
+};
+pub use take_off_panel::{
+    BUTTON_COUNT as TAKE_OFF_PANEL_BUTTON_COUNT, MIN_REPORT_BYTES as TAKE_OFF_PANEL_REPORT_LEN,
+    TAKE_OFF_PANEL_PID, TakeOffPanelButtons, TakeOffPanelInputState, TakeOffPanelParseError,
+    parse_take_off_panel_report,
 };
 pub use tfrp::{
     MIN_REPORT_BYTES as TFRP_REPORT_BYTES, TfrpAxes, TfrpInputState, TfrpParseError,
@@ -117,13 +150,26 @@ pub use ufc_panel::{
 /// WinWing USB Vendor ID.
 pub const WINWING_VID: u16 = 0x4098;
 
-/// All known WinWing PIDs covered by this crate.
+/// All known WinWing PIDs covered by this crate (with parsers or profiles).
 pub const WINWING_PIDS: &[u16] = &[
     ORION2_THROTTLE_PID,
     ORION2_F18_STICK_PID,
     TFRP_RUDDER_PID,
     F16EX_STICK_PID,
     SUPER_TAURUS_PID,
+    SUPER_LIBRA_PID,
+    COMBAT_READY_PANEL_PID,
+    TAKE_OFF_PANEL_PID,
     UFC_PANEL_PID,
     SKYWALKER_RUDDER_PID,
+];
+
+/// Additional confirmed WinWing PIDs observed in the wild but without full
+/// parser support yet.  Listed here for device enumeration / identification.
+pub const WINWING_KNOWN_PIDS: &[u16] = &[
+    0xBE11, // Orion 1 F-18 Stick
+    0xBE68, // Orion 2 F-16 Throttle
+    0xBF06, // ICP Panel
+    0xBB10, // SimAppPro FCU
+    0xBA01, // SimAppPro FCU+EFIS Combo
 ];
