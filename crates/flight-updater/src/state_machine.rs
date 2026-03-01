@@ -7,17 +7,19 @@
 //!
 //! ```text
 //! Idle → Checking → Downloading → Verifying → Applying → Complete
-//!   ↑                                  ↓          ↓          │
-//!   └──────────── RolledBack ←─────────┘──────────┘          │
-//!   └────────────────────────────────────────────────────────-┘
+//!   ↑                    │             │          │          │
+//!   ├── RolledBack ◄─ Failed ◄────────┴──────────┘          │
+//!   └───────────────────────────────────────────────────────-┘
 //! ```
 //!
 //! The state machine enforces valid transitions and prevents updates
 //! while a flight simulation is active (mid-flight protection).
+//! Transition history stores `(from, to)` state pairs, capped at 1000 entries.
 
 use crate::channels::Channel;
 use crate::manifest::SemVer;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use std::fmt;
 
 // ---------------------------------------------------------------------------
@@ -53,13 +55,18 @@ pub enum UpdateState {
     /// Update failed and the previous version was restored.
     RolledBack {
         failed_version: String,
+        failed_channel: Channel,
         restored_version: String,
         reason: String,
     },
     /// Update was blocked because a sim is currently running.
     BlockedMidFlight,
     /// A recoverable error occurred; the machine can return to Idle.
-    Failed { reason: String },
+    Failed {
+        reason: String,
+        failed_version: String,
+        failed_channel: Channel,
+    },
 }
 
 impl fmt::Display for UpdateState {
@@ -75,7 +82,7 @@ impl fmt::Display for UpdateState {
                 restored_version, ..
             } => write!(f, "RolledBack to {restored_version}"),
             Self::BlockedMidFlight => write!(f, "Blocked (mid-flight)"),
-            Self::Failed { reason } => write!(f, "Failed: {reason}"),
+            Self::Failed { reason, .. } => write!(f, "Failed: {reason}"),
         }
     }
 }
@@ -153,6 +160,9 @@ impl std::error::Error for InvalidTransition {}
 // UpdateStateMachine
 // ---------------------------------------------------------------------------
 
+/// Maximum number of transition history entries to retain.
+const MAX_TRANSITION_HISTORY: usize = 1000;
+
 /// Drives the update lifecycle, enforcing valid transitions and mid-flight
 /// protection.
 #[derive(Debug)]
@@ -160,7 +170,7 @@ pub struct UpdateStateMachine {
     state: UpdateState,
     sim_running: bool,
     current_version: SemVer,
-    transition_history: Vec<(UpdateState, UpdateState)>,
+    transition_history: VecDeque<(UpdateState, UpdateState)>,
 }
 
 impl UpdateStateMachine {
@@ -170,7 +180,7 @@ impl UpdateStateMachine {
             state: UpdateState::Idle,
             sim_running: false,
             current_version,
-            transition_history: Vec::new(),
+            transition_history: VecDeque::new(),
         }
     }
 
@@ -190,23 +200,28 @@ impl UpdateStateMachine {
     }
 
     /// Full transition history (from, to) pairs.
-    pub fn transition_history(&self) -> &[(UpdateState, UpdateState)] {
+    pub fn transition_history(&self) -> &VecDeque<(UpdateState, UpdateState)> {
         &self.transition_history
     }
 
     /// Apply an event, returning the new state or an error.
     pub fn handle_event(&mut self, event: UpdateEvent) -> Result<&UpdateState, InvalidTransition> {
-        let new_state = self.next_state(&event)?;
-        let old_state = std::mem::replace(&mut self.state, new_state);
-        self.transition_history
-            .push((old_state, self.state.clone()));
-
-        // Side-effects for sim events
+        // Update sim_running BEFORE computing the next state so that
+        // mid-flight guards inside next_state see the current flag.
         match &event {
             UpdateEvent::SimStarted => self.sim_running = true,
             UpdateEvent::SimStopped => self.sim_running = false,
             _ => {}
         }
+
+        let new_state = self.next_state(&event)?;
+        let old_state = std::mem::replace(&mut self.state, new_state);
+
+        if self.transition_history.len() >= MAX_TRANSITION_HISTORY {
+            self.transition_history.pop_front();
+        }
+        self.transition_history
+            .push_back((old_state, self.state.clone()));
 
         Ok(&self.state)
     }
@@ -247,21 +262,27 @@ impl UpdateStateMachine {
             (UpdateState::Checking, UpdateEvent::NoUpdateAvailable) => Ok(UpdateState::Idle),
             (UpdateState::Checking, UpdateEvent::CheckFailed(reason)) => Ok(UpdateState::Failed {
                 reason: reason.clone(),
+                failed_version: String::new(),
+                failed_channel: Channel::Stable,
             }),
+
+            // Sim events during Checking
+            (UpdateState::Checking, UpdateEvent::SimStarted) => Ok(UpdateState::BlockedMidFlight),
+            (UpdateState::Checking, UpdateEvent::SimStopped) => Ok(UpdateState::Checking),
 
             // ── Downloading ─────────────────────────────────────────
             (
                 UpdateState::Downloading {
                     version,
                     channel,
+                    bytes_downloaded: prev_downloaded,
                     bytes_total,
-                    ..
                 },
                 UpdateEvent::DownloadProgress { bytes_downloaded },
             ) => Ok(UpdateState::Downloading {
                 version: version.clone(),
                 channel: *channel,
-                bytes_downloaded: *bytes_downloaded,
+                bytes_downloaded: (*bytes_downloaded).max(*prev_downloaded).min(*bytes_total),
                 bytes_total: *bytes_total,
             }),
             (
@@ -273,11 +294,16 @@ impl UpdateStateMachine {
                 version: version.clone(),
                 channel: *channel,
             }),
-            (UpdateState::Downloading { .. }, UpdateEvent::DownloadFailed(reason)) => {
-                Ok(UpdateState::Failed {
-                    reason: reason.clone(),
-                })
-            }
+            (
+                UpdateState::Downloading {
+                    version, channel, ..
+                },
+                UpdateEvent::DownloadFailed(reason),
+            ) => Ok(UpdateState::Failed {
+                reason: reason.clone(),
+                failed_version: version.clone(),
+                failed_channel: *channel,
+            }),
             // Mid-flight guard during download
             (UpdateState::Downloading { .. }, UpdateEvent::SimStarted) => {
                 Ok(UpdateState::BlockedMidFlight)
@@ -285,14 +311,34 @@ impl UpdateStateMachine {
 
             // ── Verifying ───────────────────────────────────────────
             (UpdateState::Verifying { version, channel }, UpdateEvent::VerificationPassed) => {
-                Ok(UpdateState::Applying {
+                if self.sim_running {
+                    Ok(UpdateState::BlockedMidFlight)
+                } else {
+                    Ok(UpdateState::Applying {
+                        version: version.clone(),
+                        channel: *channel,
+                    })
+                }
+            }
+            (
+                UpdateState::Verifying {
+                    version, channel, ..
+                },
+                UpdateEvent::VerificationFailed(reason),
+            ) => Ok(UpdateState::Failed {
+                reason: reason.clone(),
+                failed_version: version.clone(),
+                failed_channel: *channel,
+            }),
+
+            // Sim events during Verifying
+            (UpdateState::Verifying { .. }, UpdateEvent::SimStarted) => {
+                Ok(UpdateState::BlockedMidFlight)
+            }
+            (UpdateState::Verifying { version, channel }, UpdateEvent::SimStopped) => {
+                Ok(UpdateState::Verifying {
                     version: version.clone(),
                     channel: *channel,
-                })
-            }
-            (UpdateState::Verifying { .. }, UpdateEvent::VerificationFailed(reason)) => {
-                Ok(UpdateState::Failed {
-                    reason: reason.clone(),
                 })
             }
 
@@ -305,11 +351,27 @@ impl UpdateStateMachine {
                 channel: *channel,
                 previous_version: previous_version.clone(),
             }),
-            (UpdateState::Applying { .. }, UpdateEvent::ApplyFailed(reason)) => {
+            (UpdateState::Applying { version, channel }, UpdateEvent::ApplyFailed(reason)) => {
                 // ApplyFailed triggers automatic rollback path —
                 // caller should send RollbackComplete next.
                 Ok(UpdateState::Failed {
                     reason: reason.clone(),
+                    failed_version: version.clone(),
+                    failed_channel: *channel,
+                })
+            }
+
+            // Sim events during Applying — too late to abort, just track flag
+            (UpdateState::Applying { version, channel }, UpdateEvent::SimStarted) => {
+                Ok(UpdateState::Applying {
+                    version: version.clone(),
+                    channel: *channel,
+                })
+            }
+            (UpdateState::Applying { version, channel }, UpdateEvent::SimStopped) => {
+                Ok(UpdateState::Applying {
+                    version: version.clone(),
+                    channel: *channel,
                 })
             }
 
@@ -322,13 +384,18 @@ impl UpdateStateMachine {
 
             // ── Failed → RollbackComplete ───────────────────────────
             (
-                UpdateState::Failed { .. },
+                UpdateState::Failed {
+                    failed_version,
+                    failed_channel,
+                    ..
+                },
                 UpdateEvent::RollbackComplete {
                     restored_version,
                     reason,
                 },
             ) => Ok(UpdateState::RolledBack {
-                failed_version: "unknown".to_string(),
+                failed_version: failed_version.clone(),
+                failed_channel: *failed_channel,
                 restored_version: restored_version.clone(),
                 reason: reason.clone(),
             }),
@@ -512,11 +579,13 @@ mod tests {
         .unwrap();
         assert!(matches!(sm.state(), UpdateState::RolledBack { .. }));
         if let UpdateState::RolledBack {
+            failed_version,
             restored_version,
             reason,
             ..
         } = sm.state()
         {
+            assert_eq!(failed_version, "2.0.0");
             assert_eq!(restored_version, "1.0.0");
             assert_eq!(reason, "permission denied");
         }
@@ -751,5 +820,226 @@ mod tests {
         };
         assert!(err.to_string().contains("Idle"));
         assert!(err.to_string().contains("DownloadComplete"));
+    }
+
+    // ── Failed version preserved through rollback ───────────────────────
+
+    #[test]
+    fn failed_version_preserved_through_rollback() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "3.0.0".into(),
+            channel: Channel::Beta,
+            size: 2048,
+        })
+        .unwrap();
+        sm.handle_event(UpdateEvent::DownloadComplete).unwrap();
+        sm.handle_event(UpdateEvent::VerificationPassed).unwrap();
+        sm.handle_event(UpdateEvent::ApplyFailed("disk full".into()))
+            .unwrap();
+
+        if let UpdateState::Failed {
+            failed_version,
+            failed_channel,
+            ..
+        } = sm.state()
+        {
+            assert_eq!(failed_version, "3.0.0");
+            assert_eq!(*failed_channel, Channel::Beta);
+        } else {
+            panic!("expected Failed");
+        }
+
+        sm.handle_event(UpdateEvent::RollbackComplete {
+            restored_version: "1.0.0".into(),
+            reason: "disk full".into(),
+        })
+        .unwrap();
+
+        if let UpdateState::RolledBack {
+            failed_version,
+            failed_channel,
+            restored_version,
+            ..
+        } = sm.state()
+        {
+            assert_eq!(failed_version, "3.0.0");
+            assert_eq!(*failed_channel, Channel::Beta);
+            assert_eq!(restored_version, "1.0.0");
+        } else {
+            panic!("expected RolledBack");
+        }
+    }
+
+    // ── Download progress clamping ──────────────────────────────────────
+
+    #[test]
+    fn download_progress_does_not_go_backwards() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1000,
+        })
+        .unwrap();
+
+        sm.handle_event(UpdateEvent::DownloadProgress {
+            bytes_downloaded: 500,
+        })
+        .unwrap();
+
+        // Attempt to go backwards — should clamp to previous value
+        sm.handle_event(UpdateEvent::DownloadProgress {
+            bytes_downloaded: 200,
+        })
+        .unwrap();
+        if let UpdateState::Downloading {
+            bytes_downloaded, ..
+        } = sm.state()
+        {
+            assert_eq!(*bytes_downloaded, 500);
+        } else {
+            panic!("expected Downloading");
+        }
+    }
+
+    #[test]
+    fn download_progress_clamped_to_total() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1000,
+        })
+        .unwrap();
+
+        // Exceeds total — should clamp to bytes_total
+        sm.handle_event(UpdateEvent::DownloadProgress {
+            bytes_downloaded: 2000,
+        })
+        .unwrap();
+        if let UpdateState::Downloading {
+            bytes_downloaded, ..
+        } = sm.state()
+        {
+            assert_eq!(*bytes_downloaded, 1000);
+        } else {
+            panic!("expected Downloading");
+        }
+    }
+
+    // ── Transition history cap ──────────────────────────────────────────
+
+    #[test]
+    fn transition_history_capped_at_max() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        // Generate more than MAX_TRANSITION_HISTORY transitions
+        for _ in 0..1100 {
+            sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+            sm.handle_event(UpdateEvent::NoUpdateAvailable).unwrap();
+        }
+        assert!(sm.transition_history().len() <= MAX_TRANSITION_HISTORY);
+    }
+
+    // ── Sim events in Checking, Verifying, Applying states ──────────────
+
+    #[test]
+    fn sim_started_during_checking_blocks() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        assert_eq!(*sm.state(), UpdateState::Checking);
+
+        sm.handle_event(UpdateEvent::SimStarted).unwrap();
+        assert_eq!(*sm.state(), UpdateState::BlockedMidFlight);
+        assert!(sm.is_sim_running());
+    }
+
+    #[test]
+    fn sim_stopped_during_checking_stays() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+
+        sm.handle_event(UpdateEvent::SimStopped).unwrap();
+        assert_eq!(*sm.state(), UpdateState::Checking);
+        assert!(!sm.is_sim_running());
+    }
+
+    #[test]
+    fn sim_started_during_verifying_blocks() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1024,
+        })
+        .unwrap();
+        sm.handle_event(UpdateEvent::DownloadComplete).unwrap();
+        assert!(matches!(sm.state(), UpdateState::Verifying { .. }));
+
+        sm.handle_event(UpdateEvent::SimStarted).unwrap();
+        assert_eq!(*sm.state(), UpdateState::BlockedMidFlight);
+        assert!(sm.is_sim_running());
+    }
+
+    #[test]
+    fn sim_stopped_during_verifying_stays() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1024,
+        })
+        .unwrap();
+        sm.handle_event(UpdateEvent::DownloadComplete).unwrap();
+
+        sm.handle_event(UpdateEvent::SimStopped).unwrap();
+        assert!(matches!(sm.state(), UpdateState::Verifying { .. }));
+    }
+
+    #[test]
+    fn verification_passed_while_sim_running_blocks() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1024,
+        })
+        .unwrap();
+        sm.handle_event(UpdateEvent::DownloadComplete).unwrap();
+
+        // Sim starts during verifying — flag is set but we block on transition
+        sm.handle_event(UpdateEvent::SimStarted).unwrap();
+        assert_eq!(*sm.state(), UpdateState::BlockedMidFlight);
+    }
+
+    #[test]
+    fn sim_events_during_applying_stay() {
+        let mut sm = UpdateStateMachine::new(v(1, 0, 0));
+        sm.handle_event(UpdateEvent::CheckForUpdate).unwrap();
+        sm.handle_event(UpdateEvent::UpdateAvailable {
+            version: "2.0.0".into(),
+            channel: Channel::Stable,
+            size: 1024,
+        })
+        .unwrap();
+        sm.handle_event(UpdateEvent::DownloadComplete).unwrap();
+        sm.handle_event(UpdateEvent::VerificationPassed).unwrap();
+        assert!(matches!(sm.state(), UpdateState::Applying { .. }));
+
+        // SimStarted during Applying — too late to abort, stay in Applying
+        sm.handle_event(UpdateEvent::SimStarted).unwrap();
+        assert!(matches!(sm.state(), UpdateState::Applying { .. }));
+        assert!(sm.is_sim_running());
+
+        // SimStopped during Applying — stay in Applying
+        sm.handle_event(UpdateEvent::SimStopped).unwrap();
+        assert!(matches!(sm.state(), UpdateState::Applying { .. }));
+        assert!(!sm.is_sim_running());
     }
 }
