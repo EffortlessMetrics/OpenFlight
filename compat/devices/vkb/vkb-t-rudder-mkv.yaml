@@ -11,7 +11,7 @@ device:
   vendor: "VKB"
   usb:
     vendor_id: 0x231D
-    product_id: 0x0000   # PID not yet confirmed
+    product_id: 0xFFFF   # Placeholder — PID not yet confirmed
   hid:
     usage_page: 0x01      # Generic Desktop
     usage: 0x04           # Joystick

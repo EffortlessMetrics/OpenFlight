@@ -24,7 +24,7 @@ pub fn detect_button_changes(previous: &[bool], current: &[bool]) -> Vec<ButtonE
     for i in 0..len {
         if previous[i] != current[i] {
             events.push(ButtonEvent {
-                button: (i + 1) as u16,
+                button: u16::try_from(i + 1).expect("button index exceeds u16"),
                 pressed: current[i],
             });
         }
@@ -41,18 +41,18 @@ pub fn detect_button_word_changes(
     current: u32,
     base_button: u16,
 ) -> Vec<ButtonEvent> {
-    let diff = previous ^ current;
+    let mut diff = previous ^ current;
     if diff == 0 {
         return Vec::new();
     }
     let mut events = Vec::new();
-    for bit in 0..32u16 {
-        if (diff >> bit) & 1 != 0 {
-            events.push(ButtonEvent {
-                button: base_button + bit,
-                pressed: (current >> bit) & 1 != 0,
-            });
-        }
+    while diff != 0 {
+        let bit_pos = diff.trailing_zeros() as u16;
+        events.push(ButtonEvent {
+            button: base_button.saturating_add(bit_pos),
+            pressed: (current >> bit_pos) & 1 != 0,
+        });
+        diff &= diff - 1; // clear lowest set bit
     }
     events
 }
