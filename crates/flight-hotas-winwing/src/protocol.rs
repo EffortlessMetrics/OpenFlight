@@ -329,12 +329,13 @@ pub fn build_display_text_command(
     field_index: u8,
     text: &str,
 ) -> Result<FeatureReportFrame, ProtocolError> {
-    let truncated = if text.len() > 16 { &text[..16] } else { text };
+    let bytes = text.as_bytes();
+    let truncated = if bytes.len() > 16 { &bytes[..16] } else { bytes };
     // payload: panel_id(1) + field_index(1) + text bytes
     let mut payload = Vec::with_capacity(2 + truncated.len());
     payload.push(panel_id);
     payload.push(field_index);
-    payload.extend_from_slice(truncated.as_bytes());
+    payload.extend_from_slice(truncated);
     FeatureReportFrame::new(
         CommandCategory::Display,
         DisplaySubCommand::WriteText as u8,
@@ -520,9 +521,6 @@ pub fn parse_detent_response(payload: &[u8]) -> Result<DetentReport, ProtocolErr
 
 // ── Device identification ─────────────────────────────────────────────────────
 
-/// WinWing USB Vendor ID (shared across all products).
-pub const WINWING_VID: u16 = 0x4098;
-
 /// Known WinWing device types identified by USB Product ID.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DeviceType {
@@ -538,8 +536,8 @@ pub enum DeviceType {
     SuperTaurus,
     /// F-18 UFC / IFEI panel (button-only, display segments).
     F18Panel,
-    /// F-16EX ICP panel (buttons, switches, 2 axes).
-    F16Panel,
+    /// F-16EX Grip (stick grip, buttons, HATs, 10-byte report).
+    F16ExGrip,
     /// TFRP rudder pedals (3 axes).
     TfrpRudder,
     /// Skywalker metal rudder pedals.
@@ -558,7 +556,7 @@ impl DeviceType {
             0xBE62 => Some(Self::Orion2Throttle),
             0xBD64 => Some(Self::SuperTaurus),
             0xBEDE => Some(Self::F18Panel),
-            0xBEA8 => Some(Self::F16Panel),
+            0xBEA8 => Some(Self::F16ExGrip),
             0xBE64 => Some(Self::TfrpRudder),
             0xBEF0 => Some(Self::SkywalkerRudder),
             _ => None,
@@ -572,7 +570,7 @@ impl DeviceType {
             Self::OrionThrottle | Self::Orion2Throttle => 24,
             Self::SuperTaurus => 13,
             Self::F18Panel => 6,
-            Self::F16Panel => 10,
+            Self::F16ExGrip => 10,
             Self::TfrpRudder => 8,
             Self::SkywalkerRudder => 8,
         }
@@ -586,13 +584,12 @@ impl DeviceType {
                 | Self::Orion2Throttle
                 | Self::SuperTaurus
                 | Self::F18Panel
-                | Self::F16Panel
         )
     }
 
     /// Returns `true` if this device has a display (UFC/IFEI/ICP).
     pub fn has_display(&self) -> bool {
-        matches!(self, Self::F18Panel | Self::F16Panel)
+        matches!(self, Self::F18Panel)
     }
 
     /// Returns `true` if this device supports throttle detent configuration.
@@ -613,7 +610,7 @@ impl std::fmt::Display for DeviceType {
             Self::Orion2Throttle => f.write_str("WinWing Orion 2 Throttle"),
             Self::SuperTaurus => f.write_str("WinWing Super Taurus"),
             Self::F18Panel => f.write_str("WinWing F-18 Panel"),
-            Self::F16Panel => f.write_str("WinWing F-16EX Panel"),
+            Self::F16ExGrip => f.write_str("WinWing F-16EX Grip"),
             Self::TfrpRudder => f.write_str("WinWing TFRP Rudder"),
             Self::SkywalkerRudder => f.write_str("WinWing Skywalker Rudder"),
         }
@@ -625,12 +622,12 @@ impl std::fmt::Display for DeviceType {
 /// Wraps device identification and provides convenience accessors
 /// for the device's capabilities.
 #[derive(Debug, Clone)]
-pub struct WinwingProtocol {
+pub struct WinWingProtocol {
     device: DeviceType,
     pid: u16,
 }
 
-impl WinwingProtocol {
+impl WinWingProtocol {
     /// Create a protocol handler by detecting the device from its PID.
     ///
     /// Returns `None` if the PID is not a known WinWing device.
@@ -1137,8 +1134,8 @@ mod tests {
     }
 
     #[test]
-    fn test_device_type_from_pid_f16_panel() {
-        assert_eq!(DeviceType::from_pid(0xBEA8), Some(DeviceType::F16Panel));
+    fn test_device_type_from_pid_f16_grip() {
+        assert_eq!(DeviceType::from_pid(0xBEA8), Some(DeviceType::F16ExGrip));
     }
 
     #[test]
@@ -1185,7 +1182,7 @@ mod tests {
     #[test]
     fn test_device_type_has_display() {
         assert!(DeviceType::F18Panel.has_display());
-        assert!(DeviceType::F16Panel.has_display());
+        assert!(!DeviceType::F16ExGrip.has_display());
         assert!(!DeviceType::Orion2Throttle.has_display());
         assert!(!DeviceType::SuperTaurus.has_display());
     }
@@ -1205,7 +1202,7 @@ mod tests {
         assert_eq!(DeviceType::Orion2Throttle.report_length(), 24);
         assert_eq!(DeviceType::SuperTaurus.report_length(), 13);
         assert_eq!(DeviceType::F18Panel.report_length(), 6);
-        assert_eq!(DeviceType::F16Panel.report_length(), 10);
+        assert_eq!(DeviceType::F16ExGrip.report_length(), 10);
     }
 
     #[test]
@@ -1220,7 +1217,7 @@ mod tests {
 
     #[test]
     fn test_winwing_protocol_from_pid() {
-        let proto = WinwingProtocol::from_pid(0xBE62).unwrap();
+        let proto = WinWingProtocol::from_pid(0xBE62).unwrap();
         assert_eq!(proto.device_type(), DeviceType::Orion2Throttle);
         assert_eq!(proto.pid(), 0xBE62);
         assert!(proto.has_leds());
@@ -1230,12 +1227,12 @@ mod tests {
 
     #[test]
     fn test_winwing_protocol_from_pid_unknown() {
-        assert!(WinwingProtocol::from_pid(0x0000).is_none());
+        assert!(WinWingProtocol::from_pid(0x0000).is_none());
     }
 
     #[test]
     fn test_winwing_protocol_f18_panel() {
-        let proto = WinwingProtocol::from_pid(0xBEDE).unwrap();
+        let proto = WinWingProtocol::from_pid(0xBEDE).unwrap();
         assert_eq!(proto.device_type(), DeviceType::F18Panel);
         assert!(proto.has_leds());
         assert!(proto.has_display());

@@ -6,7 +6,7 @@
 //! WinWing throttles feature configurable magnetic detent positions
 //! (Idle, Afterburner, and custom positions).  This module provides:
 //!
-//! - [`WinwingDetentConfig`] — per-lever detent configuration with
+//! - [`WinWingDetentConfig`] — per-lever detent configuration with
 //!   magnetic strength and snap zones.
 //! - [`detect_detent`] — determine which detent zone (if any) an axis
 //!   value falls within, based on the current configuration.
@@ -42,19 +42,22 @@ pub struct MagneticDetent {
 impl MagneticDetent {
     /// Returns `true` if `value` is within the snap zone of this detent.
     pub fn contains(&self, value: f32) -> bool {
-        (value - self.centre).abs() <= self.snap_radius
+        let v = value.clamp(0.0, 1.0);
+        (v - self.centre).abs() <= self.snap_radius
     }
 
     /// Apply the magnetic detent effect to `value`.
     ///
     /// If `value` is within the snap zone, it is pulled toward `centre`
     /// by `strength`.  If outside the zone, `value` is returned unchanged.
+    /// Both input and output are clamped to \[0.0, 1.0\].
     pub fn apply(&self, value: f32) -> f32 {
-        if !self.contains(value) {
-            return value;
+        let v = value.clamp(0.0, 1.0);
+        if !self.contains(v) {
+            return v;
         }
-        let delta = self.centre - value;
-        value + delta * self.strength
+        let delta = self.centre - v;
+        (v + delta * self.strength).clamp(0.0, 1.0)
     }
 }
 
@@ -79,11 +82,11 @@ pub struct ActiveDetent {
 /// not overlap; behaviour is undefined if they do (the first match
 /// wins).
 #[derive(Debug, Clone)]
-pub struct WinwingDetentConfig {
+pub struct WinWingDetentConfig {
     detents: Vec<MagneticDetent>,
 }
 
-impl WinwingDetentConfig {
+impl WinWingDetentConfig {
     /// Create a new configuration with no detents.
     pub fn new() -> Self {
         Self {
@@ -156,7 +159,7 @@ impl WinwingDetentConfig {
     }
 }
 
-impl Default for WinwingDetentConfig {
+impl Default for WinWingDetentConfig {
     fn default() -> Self {
         Self::new()
     }
@@ -165,7 +168,7 @@ impl Default for WinwingDetentConfig {
 /// Detect which detent (if any) a normalised axis value falls within.
 ///
 /// Returns `None` if the value is not within any detent zone.
-pub fn detect_detent(config: &WinwingDetentConfig, value: f32) -> Option<ActiveDetent> {
+pub fn detect_detent(config: &WinWingDetentConfig, value: f32) -> Option<ActiveDetent> {
     for detent in &config.detents {
         if detent.contains(value) {
             return Some(ActiveDetent {
@@ -278,24 +281,24 @@ mod tests {
         );
     }
 
-    // ── WinwingDetentConfig ───────────────────────────────────────────────
+    // ── WinWingDetentConfig ───────────────────────────────────────────────
 
     #[test]
     fn test_config_new_is_empty() {
-        let c = WinwingDetentConfig::new();
+        let c = WinWingDetentConfig::new();
         assert!(c.is_empty());
         assert_eq!(c.len(), 0);
     }
 
     #[test]
     fn test_config_default_is_empty() {
-        let c = WinwingDetentConfig::default();
+        let c = WinWingDetentConfig::default();
         assert!(c.is_empty());
     }
 
     #[test]
     fn test_config_add_detent() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(idle_detent());
         assert_eq!(c.len(), 1);
         assert!(!c.is_empty());
@@ -303,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_config_military_default() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         assert_eq!(c.len(), 2);
         assert_eq!(c.detents()[0].name, DetentName::Idle);
         assert_eq!(c.detents()[1].name, DetentName::Afterburner);
@@ -311,7 +314,7 @@ mod tests {
 
     #[test]
     fn test_config_civilian_default() {
-        let c = WinwingDetentConfig::civilian_default();
+        let c = WinWingDetentConfig::civilian_default();
         assert_eq!(c.len(), 2);
         assert_eq!(c.detents()[0].name, DetentName::Idle);
         assert_eq!(c.detents()[1].name, DetentName::Custom(2));
@@ -319,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_config_military_default_positions() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         assert!((c.detents()[0].centre - 0.0).abs() < 1e-6);
         assert!((c.detents()[1].centre - 1.0).abs() < 1e-6);
     }
@@ -328,7 +331,7 @@ mod tests {
 
     #[test]
     fn test_detect_detent_idle() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         let result = detect_detent(&c, 0.01).unwrap();
         assert_eq!(result.name, DetentName::Idle);
         assert!((result.raw_value - 0.01).abs() < 1e-6);
@@ -336,26 +339,26 @@ mod tests {
 
     #[test]
     fn test_detect_detent_afterburner() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         let result = detect_detent(&c, 0.99).unwrap();
         assert_eq!(result.name, DetentName::Afterburner);
     }
 
     #[test]
     fn test_detect_detent_none_midrange() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         assert!(detect_detent(&c, 0.5).is_none());
     }
 
     #[test]
     fn test_detect_detent_none_empty_config() {
-        let c = WinwingDetentConfig::new();
+        let c = WinWingDetentConfig::new();
         assert!(detect_detent(&c, 0.5).is_none());
     }
 
     #[test]
     fn test_detect_detent_snapped_value() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(MagneticDetent {
             name: DetentName::Idle,
             centre: 0.0,
@@ -368,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_detect_detent_partial_snap() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(MagneticDetent {
             name: DetentName::Afterburner,
             centre: 1.0,
@@ -382,7 +385,7 @@ mod tests {
 
     #[test]
     fn test_detect_detent_custom_position() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(MagneticDetent {
             name: DetentName::Custom(5),
             centre: 0.5,
@@ -395,7 +398,7 @@ mod tests {
 
     #[test]
     fn test_detect_detent_just_outside_zone() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(MagneticDetent {
             name: DetentName::Idle,
             centre: 0.0,
@@ -408,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_detect_detent_at_exact_boundary() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(MagneticDetent {
             name: DetentName::Idle,
             centre: 0.0,
@@ -422,7 +425,7 @@ mod tests {
 
     #[test]
     fn test_multiple_detents_first_match_wins() {
-        let mut c = WinwingDetentConfig::new();
+        let mut c = WinWingDetentConfig::new();
         c.add_detent(idle_detent());
         c.add_detent(afterburner_detent());
 
@@ -437,7 +440,7 @@ mod tests {
 
     #[test]
     fn test_detent_config_detents_accessor() {
-        let c = WinwingDetentConfig::military_default();
+        let c = WinWingDetentConfig::military_default();
         let detents = c.detents();
         assert_eq!(detents.len(), 2);
         assert!(detents[0].strength > 0.0);

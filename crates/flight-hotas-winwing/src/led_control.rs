@@ -11,7 +11,9 @@
 //! byte buffers that should be sent to the device.
 
 use crate::protocol::{
-    BacklightSubCommand, CommandCategory, DisplaySubCommand, FeatureReportFrame, ProtocolError,
+    CommandCategory, DisplaySubCommand, FeatureReportFrame, ProtocolError,
+    build_backlight_all_command, build_backlight_all_rgb_command, build_backlight_single_command,
+    build_backlight_single_rgb_command,
 };
 
 // ── LED command ───────────────────────────────────────────────────────────────
@@ -54,35 +56,21 @@ pub fn build_led_report(commands: &[LedCommand]) -> Result<Vec<Vec<u8>>, Protoco
                 panel_id,
                 button_index,
                 intensity,
-            } => FeatureReportFrame::new(
-                CommandCategory::Backlight,
-                BacklightSubCommand::SetSingle as u8,
-                &[*panel_id, *button_index, *intensity],
-            )?,
+            } => build_backlight_single_command(*panel_id, *button_index, *intensity)?,
             LedCommand::SetRgb {
                 panel_id,
                 button_index,
                 r,
                 g,
                 b,
-            } => FeatureReportFrame::new(
-                CommandCategory::Backlight,
-                BacklightSubCommand::SetSingleRgb as u8,
-                &[*panel_id, *button_index, *r, *g, *b],
-            )?,
+            } => build_backlight_single_rgb_command(*panel_id, *button_index, *r, *g, *b)?,
             LedCommand::SetAllIntensity {
                 panel_id,
                 intensity,
-            } => FeatureReportFrame::new(
-                CommandCategory::Backlight,
-                BacklightSubCommand::SetAll as u8,
-                &[*panel_id, *intensity],
-            )?,
-            LedCommand::SetAllRgb { panel_id, r, g, b } => FeatureReportFrame::new(
-                CommandCategory::Backlight,
-                BacklightSubCommand::SetAllRgb as u8,
-                &[*panel_id, *r, *g, *b],
-            )?,
+            } => build_backlight_all_command(*panel_id, *intensity)?,
+            LedCommand::SetAllRgb { panel_id, r, g, b } => {
+                build_backlight_all_rgb_command(*panel_id, *r, *g, *b)?
+            }
         };
         reports.push(frame.as_bytes().to_vec());
     }
@@ -128,15 +116,16 @@ pub fn build_display_report(commands: &[DisplayCommand]) -> Result<Vec<Vec<u8>>,
                 field_index,
                 text,
             } => {
-                let truncated = if text.len() > 16 {
-                    &text[..16]
+                let bytes = text.as_bytes();
+                let truncated = if bytes.len() > 16 {
+                    &bytes[..16]
                 } else {
-                    text.as_str()
+                    bytes
                 };
                 let mut payload = Vec::with_capacity(2 + truncated.len());
                 payload.push(*panel_id);
                 payload.push(*field_index);
-                payload.extend_from_slice(truncated.as_bytes());
+                payload.extend_from_slice(truncated);
                 FeatureReportFrame::new(
                     CommandCategory::Display,
                     DisplaySubCommand::WriteText as u8,
@@ -182,7 +171,9 @@ pub fn build_display_report(commands: &[DisplayCommand]) -> Result<Vec<Vec<u8>>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::protocol::{FEATURE_REPORT_ID, MIN_FRAME_LEN, parse_feature_report};
+    use crate::protocol::{
+        BacklightSubCommand, FEATURE_REPORT_ID, MIN_FRAME_LEN, parse_feature_report,
+    };
 
     // ── LED commands ──────────────────────────────────────────────────────
 

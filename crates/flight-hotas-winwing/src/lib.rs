@@ -55,7 +55,7 @@ pub enum WinWingError {
     UnknownReportId(u8),
 }
 
-pub use detent_system::{ActiveDetent, MagneticDetent, WinwingDetentConfig, detect_detent};
+pub use detent_system::{ActiveDetent, MagneticDetent, WinWingDetentConfig, detect_detent};
 pub use f16ex_stick::{
     BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
     F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN, parse_f16ex_stick_report,
@@ -94,7 +94,7 @@ pub use profiles::{
 pub use protocol::{
     BacklightSubCommand, CommandCategory, DetentName, DetentPosition, DetentReport,
     DetentSubCommand, DeviceType, DisplaySubCommand, FeatureReportFrame, ParsedFrame,
-    ProtocolError, WinwingProtocol, build_backlight_all_command, build_backlight_all_rgb_command,
+    ProtocolError, WinWingProtocol, build_backlight_all_command, build_backlight_all_rgb_command,
     build_backlight_single_command, build_backlight_single_rgb_command, build_detent_query_command,
     build_detent_set_command, build_display_brightness_command, build_display_clear_command,
     build_display_segment_command, build_display_text_command, parse_detent_response,
