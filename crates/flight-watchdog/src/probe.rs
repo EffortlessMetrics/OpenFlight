@@ -78,7 +78,9 @@ impl HealthProbe {
     /// Returns `true` if the last heartbeat is within the deadline relative to `now`.
     pub fn is_healthy_at(&self, now: Instant) -> bool {
         match self.last_heartbeat {
-            Some(last) => now.duration_since(last) <= self.deadline,
+            Some(last) => {
+                now.checked_duration_since(last).unwrap_or(Duration::ZERO) <= self.deadline
+            }
             None => false,
         }
     }
@@ -101,14 +103,17 @@ impl InlineName {
 
     fn from_str(s: &str) -> Self {
         let mut buf = [0u8; MAX_NAME_LEN];
-        let len = s.len().min(MAX_NAME_LEN);
+        let mut len = s.len().min(MAX_NAME_LEN);
+        // Avoid splitting a multi-byte UTF-8 codepoint.
+        while len > 0 && !s.is_char_boundary(len) {
+            len -= 1;
+        }
         buf[..len].copy_from_slice(&s.as_bytes()[..len]);
         Self { buf, len }
     }
 
     fn as_str(&self) -> &str {
-        // SAFETY: we only ever copy valid UTF-8 bytes in `from_str`.
-        unsafe { std::str::from_utf8_unchecked(&self.buf[..self.len]) }
+        core::str::from_utf8(&self.buf[..self.len]).unwrap_or("")
     }
 }
 
@@ -140,7 +145,7 @@ impl ProbeSlot {
 
 /// Monitors subsystems for deadlock / stall by tracking progress tokens.
 ///
-/// Fixed-size array — **no heap allocations**.
+/// Fixed-size array — **no heap allocations in progress tracking**.
 pub struct DeadlockDetector {
     slots: [ProbeSlot; MAX_PROBE_SLOTS],
     count: usize,
@@ -155,9 +160,10 @@ impl DeadlockDetector {
         }
     }
 
-    /// Register a subsystem. Returns `false` if the table is full.
+    /// Register a subsystem. Returns `false` if the table is full or the name
+    /// exceeds [`MAX_NAME_LEN`] bytes (64).
     pub fn register(&mut self, name: &str, deadline: Duration) -> bool {
-        if self.count >= MAX_PROBE_SLOTS {
+        if self.count >= MAX_PROBE_SLOTS || name.len() > MAX_NAME_LEN {
             return false;
         }
         let slot = &mut self.slots[self.count];
@@ -203,7 +209,7 @@ impl DeadlockDetector {
                 continue;
             }
             let is_stuck = match slot.last_progress {
-                Some(t) => now.duration_since(t) > slot.deadline,
+                Some(t) => now.checked_duration_since(t).unwrap_or(Duration::ZERO) > slot.deadline,
                 None => false, // never reported — not stuck yet
             };
             if is_stuck {
@@ -295,10 +301,11 @@ impl WatchdogPolicy {
     ///
     /// When the number of simultaneous failures reaches `cascade_threshold`,
     /// the policy returns [`ProbeRecoveryAction::Shutdown`].
+    /// A `cascade_threshold` of `0` is treated as `1` (minimum).
     pub fn new(cascade_threshold: usize) -> Self {
         Self {
             rules: Vec::new(),
-            cascade_threshold,
+            cascade_threshold: cascade_threshold.max(1),
         }
     }
 
@@ -407,11 +414,7 @@ impl WatchdogReport {
     }
 
     /// Build a report relative to a specific instant.
-    pub fn build_at(
-        probes: &[HealthProbe],
-        detector: &DeadlockDetector,
-        now: Instant,
-    ) -> Self {
+    pub fn build_at(probes: &[HealthProbe], detector: &DeadlockDetector, now: Instant) -> Self {
         let mut statuses = Vec::with_capacity(probes.len());
         let mut healthy_count = 0usize;
         let mut unhealthy_count = 0usize;
@@ -426,7 +429,9 @@ impl WatchdogReport {
             statuses.push(ProbeStatus {
                 name: p.name().to_string(),
                 healthy,
-                time_since_heartbeat: p.last_heartbeat().map(|t| now.duration_since(t)),
+                time_since_heartbeat: p
+                    .last_heartbeat()
+                    .and_then(|t| now.checked_duration_since(t)),
             });
         }
 
@@ -485,8 +490,11 @@ mod tests {
 
     #[test]
     fn probe_accessors() {
-        let probe =
-            HealthProbe::new("scheduler", Duration::from_secs(2), Duration::from_millis(4));
+        let probe = HealthProbe::new(
+            "scheduler",
+            Duration::from_secs(2),
+            Duration::from_millis(4),
+        );
         assert_eq!(probe.name(), "scheduler");
         assert_eq!(probe.deadline(), Duration::from_secs(2));
         assert_eq!(probe.expected_interval(), Duration::from_millis(4));
@@ -494,7 +502,8 @@ mod tests {
 
     #[test]
     fn probe_healthy_at_explicit_time() {
-        let mut probe = HealthProbe::new("bus", Duration::from_millis(100), Duration::from_millis(4));
+        let mut probe =
+            HealthProbe::new("bus", Duration::from_millis(100), Duration::from_millis(4));
         let t0 = Instant::now();
         probe.record_heartbeat_at(t0);
         // 50 ms later → still healthy
@@ -680,9 +689,11 @@ mod tests {
 
     #[test]
     fn report_with_stuck_subsystem() {
-        let mut probes = vec![
-            HealthProbe::new("axis", Duration::from_secs(5), Duration::from_millis(4)),
-        ];
+        let mut probes = vec![HealthProbe::new(
+            "axis",
+            Duration::from_secs(5),
+            Duration::from_millis(4),
+        )];
         probes[0].record_heartbeat();
 
         let mut det = DeadlockDetector::new();
