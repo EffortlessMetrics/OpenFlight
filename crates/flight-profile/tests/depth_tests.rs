@@ -188,7 +188,7 @@ mod hot_reload_lifecycle {
     }
 
     #[test]
-    fn rapid_changes_debounce_coalesces_to_single_reload() {
+    fn debounce_suppresses_checks_during_window() {
         let mut tracker = HotReloadTracker::new(100);
         tracker.track("profile.json".into(), file_state("profile.json", 1));
 
@@ -608,12 +608,28 @@ mod cascade_merge {
                 hysteresis: None,
             },
         );
+        // Add a conflicting key: overlay's "takeoff" should override base's "takeoff"
+        let mut overlay_hyst = HashMap::new();
+        overlay_hyst.insert("delay".to_string(), HashMap::from([("value".to_string(), 5.0)]));
+        pof2.insert(
+            "takeoff".to_string(),
+            PofOverrides {
+                axes: None,
+                hysteresis: Some(overlay_hyst),
+            },
+        );
         over.pof_overrides = Some(pof2);
 
         let merged = base.merge_with(&over).unwrap();
         let pof = merged.pof_overrides.as_ref().unwrap();
         assert!(pof.contains_key("takeoff"));
         assert!(pof.contains_key("landing"));
+        // Overlay wins for the conflicting "takeoff" key
+        let takeoff = &pof["takeoff"];
+        assert!(
+            takeoff.hysteresis.is_some(),
+            "overlay's takeoff should override base (last writer wins)"
+        );
     }
 }
 
@@ -878,15 +894,11 @@ mod round_trip {
             "future_field": "should be ignored",
             "another_future": 42
         }"#;
-        // serde default behavior: unknown fields cause errors.
-        // If the Profile derives Deserialize without deny_unknown_fields,
-        // this should succeed. Otherwise, we document the behavior.
-        let result: std::result::Result<Profile, _> = serde_json::from_str(json_str);
-        // The crate doesn't use deny_unknown_fields, so this should work:
-        if let Ok(p) = result {
-            assert_eq!(p.schema, PROFILE_SCHEMA_VERSION);
-        }
-        // If it fails, that's also a valid design choice — just document it.
+        // serde ignores unknown fields by default (unless deny_unknown_fields is set).
+        // Profile does not use deny_unknown_fields, so this should succeed.
+        let p: Profile = serde_json::from_str(json_str)
+            .expect("Profile should deserialize with unknown fields");
+        assert_eq!(p.schema, PROFILE_SCHEMA_VERSION);
     }
 
     #[test]
