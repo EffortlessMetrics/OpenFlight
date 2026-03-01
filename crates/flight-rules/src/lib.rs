@@ -133,7 +133,7 @@ pub struct BytecodeProgram {
     /// Actions by index
     pub actions: Vec<Action>,
     /// Pre-allocated evaluation stack size
-    pub stack_size: usize,
+    pub stack_size: u32,
 }
 
 /// Compiled rules bytecode
@@ -673,7 +673,7 @@ impl BytecodeCompiler {
             hysteresis_map: self.hysteresis_map,
             hysteresis_bands: self.hysteresis_bands,
             actions: self.actions,
-            stack_size: self.max_stack_depth.max(8), // Minimum stack size
+            stack_size: self.max_stack_depth.max(8) as u32, // Minimum stack size
         }
     }
 }
@@ -1595,7 +1595,7 @@ mod snapshot_tests {
         variable_map: BTreeMap<String, u16>,
         hysteresis_map: BTreeMap<String, u16>,
         actions: Vec<Action>,
-        stack_size: usize,
+        stack_size: u32,
     }
 
     impl From<&BytecodeProgram> for StableBytecode {
