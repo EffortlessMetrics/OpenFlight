@@ -31,3 +31,9 @@ name = "fuzz_version_parse"
 path = "fuzz_targets/fuzz_version_parse.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_message_decode"
+path = "fuzz_targets/fuzz_message_decode.rs"
+test = false
+doc = false
