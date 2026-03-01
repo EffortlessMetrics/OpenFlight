@@ -344,10 +344,7 @@ impl SubscriptionManager {
 
     /// Broadcast with backpressure: slow subscribers whose pending count has
     /// reached their capacity will have the event dropped (and counted).
-    pub fn broadcast_with_backpressure(
-        &mut self,
-        message: &BroadcastMessage,
-    ) -> BackpressureStats {
+    pub fn broadcast_with_backpressure(&mut self, message: &BroadcastMessage) -> BackpressureStats {
         self.gc();
 
         let now = Instant::now();
@@ -407,9 +404,7 @@ impl SubscriptionManager {
     /// Return the cumulative number of events dropped for `id` due to
     /// backpressure.
     pub fn dropped_count(&self, id: SubscriptionId) -> u64 {
-        self.subscriptions
-            .get(&id)
-            .map_or(0, |rec| rec.dropped)
+        self.subscriptions.get(&id).map_or(0, |rec| rec.dropped)
     }
 
     /// Number of active subscriptions (after garbage collection).

@@ -466,8 +466,7 @@ impl ClientConnectionPool {
             .map(|c| c.id)
             .collect();
         let count = evicted.len() as u64;
-        self.connections
-            .retain(|c| c.state != ConnState::Unhealthy);
+        self.connections.retain(|c| c.state != ConnState::Unhealthy);
         self.metrics
             .active_connections
             .fetch_sub(count, Ordering::Relaxed);
@@ -844,7 +843,10 @@ mod tests {
 
         // Second check: still only id1 → id0 gets 2 misses → Unhealthy
         pool.health_check(200, &[id1]);
-        assert_eq!(pool.get_connection(id0).unwrap().state, ConnState::Unhealthy);
+        assert_eq!(
+            pool.get_connection(id0).unwrap().state,
+            ConnState::Unhealthy
+        );
         assert_eq!(pool.get_connection(id1).unwrap().state, ConnState::Idle);
 
         // Evict
