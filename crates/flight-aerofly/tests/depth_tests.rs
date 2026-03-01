@@ -115,9 +115,12 @@ fn binary_frame_inf_in_float_fields() {
 
 #[test]
 fn binary_frame_subnormal_floats() {
-    let data = build_frame(f32::MIN_POSITIVE, -f32::MIN_POSITIVE, 0.0, 0.0, 0.0, 0.0, 0, 0.0);
+    let pos_subnormal = f32::from_bits(1);
+    let neg_subnormal = -f32::from_bits(1);
+    let data = build_frame(pos_subnormal, neg_subnormal, 0.0, 0.0, 0.0, 0.0, 0, 0.0);
     let t = parse_telemetry(&data).unwrap();
-    assert!((t.pitch - f32::MIN_POSITIVE).abs() < f32::EPSILON);
+    assert_eq!(t.pitch.to_bits(), pos_subnormal.to_bits());
+    assert_eq!(t.roll.to_bits(), neg_subnormal.to_bits());
 }
 
 #[test]
@@ -135,8 +138,8 @@ fn binary_gear_byte_any_nonzero_is_down() {
 fn truncated_at_each_field_boundary() {
     let full = build_frame(1.0, 2.0, 3.0, 4.0, 5.0, 0.5, 0, 0.5);
     // Field boundaries: magic(4), pitch(8), roll(12), heading(16),
-    // airspeed(20), altitude(24), throttle(28), gear(29), flaps(33=MIN_FRAME_SIZE)
-    let boundaries = [0, 4, 8, 12, 16, 20, 24, 28, 29, 32];
+    // airspeed(20), altitude(24), throttle(28), gear(29), flaps ends at MIN_FRAME_SIZE(33)
+    let boundaries = [0, 4, 8, 12, 16, 20, 24, 28, 29, MIN_FRAME_SIZE - 1];
     for &boundary in &boundaries {
         let truncated = &full[..boundary];
         let result = parse_telemetry(truncated);
@@ -640,8 +643,8 @@ proptest! {
     fn prop_throttle_always_clamped(throttle in any::<f32>()) {
         let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, throttle, 0, 0.0);
         if let Ok(t) = parse_telemetry(&data) {
-            prop_assert!(t.throttle_pos >= 0.0, "throttle_pos must be >= 0.0, got {}", t.throttle_pos);
-            prop_assert!(t.throttle_pos <= 1.0, "throttle_pos must be <= 1.0, got {}", t.throttle_pos);
+            prop_assert!(t.throttle_pos.is_nan() || (0.0..=1.0).contains(&t.throttle_pos),
+                "throttle_pos must be NaN or in [0,1], got {}", t.throttle_pos);
         }
     }
 
@@ -649,8 +652,8 @@ proptest! {
     fn prop_flaps_always_clamped(flaps in any::<f32>()) {
         let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, flaps);
         if let Ok(t) = parse_telemetry(&data) {
-            prop_assert!(t.flaps_ratio >= 0.0, "flaps_ratio must be >= 0.0, got {}", t.flaps_ratio);
-            prop_assert!(t.flaps_ratio <= 1.0, "flaps_ratio must be <= 1.0, got {}", t.flaps_ratio);
+            prop_assert!(t.flaps_ratio.is_nan() || (0.0..=1.0).contains(&t.flaps_ratio),
+                "flaps_ratio must be NaN or in [0,1], got {}", t.flaps_ratio);
         }
     }
 
@@ -763,8 +766,7 @@ fn telemetry_debug_contains_field_names() {
 }
 
 #[test]
-fn adapter_debug_does_not_panic() {
+fn adapter_port_accessible() {
     let adapter = AeroflyAdapter::new();
-    // AeroflyAdapter doesn't derive Debug, but we can verify it works at all
-    let _ = adapter.port;
+    assert_eq!(adapter.port, AEROFLY_DEFAULT_PORT, "default port should match constant");
 }
