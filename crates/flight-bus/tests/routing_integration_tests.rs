@@ -7,11 +7,11 @@
 //! that span both the allocation-free `EventRouter` and the `BusPublisher`.
 
 use flight_bus::routing::{
-    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType, SubscriberStatus, Topic,
+    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter,
+    MAX_BUS_EVENT_BYTES, RoutePattern, SourceType, SubscriberStatus, Topic,
 };
-use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_bus::types::SimId;
+use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use std::time::Duration;
 
 // ── RT Router: multi-destination scenarios ───────────────────────────────────
@@ -49,9 +49,15 @@ fn multi_topic_routing() {
 
     // Axis update (Commands topic) → destinations 1 and 2.
     let axis = BusEvent::new(
-        SourceType::Device, 1, EventKind::AxisUpdate,
-        EventPriority::Normal, 1_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        EventPriority::Normal,
+        1_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
     let m = router.route_event(&axis);
     assert_eq!(m.len(), 2);
@@ -60,9 +66,15 @@ fn multi_topic_routing() {
 
     // Telemetry frame → destination 2 only.
     let telem = BusEvent::new(
-        SourceType::Simulator, 1, EventKind::TelemetryFrame,
-        EventPriority::Normal, 2_000_000,
-        EventPayload::Telemetry { field_id: 0, value: 42.0 },
+        SourceType::Simulator,
+        1,
+        EventKind::TelemetryFrame,
+        EventPriority::Normal,
+        2_000_000,
+        EventPayload::Telemetry {
+            field_id: 0,
+            value: 42.0,
+        },
     );
     let m = router.route_event(&telem);
     assert_eq!(m.len(), 1);
@@ -70,8 +82,11 @@ fn multi_topic_routing() {
 
     // System status (Diagnostics topic) → destination 3 only.
     let sys = BusEvent::new(
-        SourceType::Internal, 0, EventKind::SystemStatus,
-        EventPriority::Normal, 3_000_000,
+        SourceType::Internal,
+        0,
+        EventKind::SystemStatus,
+        EventPriority::Normal,
+        3_000_000,
         EventPayload::System { code: 1 },
     );
     let m = router.route_event(&sys);
@@ -125,11 +140,18 @@ fn sim_adapter_to_engines_flow() {
             EventKind::AxisUpdate,
             EventPriority::Normal,
             (i as u64) * 4_000, // 4ms = 4000us apart
-            EventPayload::Axis { axis_id: 0, value: (i as f64) / 250.0 },
+            EventPayload::Axis {
+                axis_id: 0,
+                value: (i as f64) / 250.0,
+            },
         );
         let m = router.route_event(&event);
-        if m.contains(1) { total_axis_engine += 1; }
-        if m.contains(2) { total_ffb_engine += 1; }
+        if m.contains(1) {
+            total_axis_engine += 1;
+        }
+        if m.contains(2) {
+            total_ffb_engine += 1;
+        }
     }
 
     assert_eq!(total_axis_engine, 250);
@@ -144,9 +166,15 @@ fn subscriber_crash_and_recovery() {
     router.register_route(RoutePattern::any(), EventFilter::pass_all(), 1);
 
     let event = BusEvent::new(
-        SourceType::Device, 1, EventKind::AxisUpdate,
-        EventPriority::Normal, 1_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        EventPriority::Normal,
+        1_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
 
     // Initially active.
@@ -189,17 +217,31 @@ fn backpressure_with_topics() {
 
     // Background Command event → dropped (backpressure >= 25%).
     let bg_cmd = BusEvent::with_topic(
-        SourceType::Device, 1, EventKind::AxisUpdate, Topic::Commands,
-        EventPriority::Background, 1_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        Topic::Commands,
+        EventPriority::Background,
+        1_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
     assert!(router.route_event(&bg_cmd).is_empty());
 
     // High-priority Command → not dropped.
     let hi_cmd = BusEvent::with_topic(
-        SourceType::Device, 1, EventKind::AxisUpdate, Topic::Commands,
-        EventPriority::High, 2_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        Topic::Commands,
+        EventPriority::High,
+        2_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
     let m = router.route_event(&hi_cmd);
     assert_eq!(m.len(), 1);
@@ -274,11 +316,17 @@ fn drop_tail_backpressure() {
     while fast_sub.try_recv().unwrap().is_some() {
         fast_count += 1;
     }
-    assert!(fast_count >= 5, "fast subscriber should have received many messages, got {fast_count}");
+    assert!(
+        fast_count >= 5,
+        "fast subscriber should have received many messages, got {fast_count}"
+    );
 
     // Publisher never panicked or blocked — that's the key assertion.
     // The slow subscriber's buffer overflowed gracefully (drop-tail).
-    assert!(publisher.drop_count() > 0, "expected some drops from slow subscriber");
+    assert!(
+        publisher.drop_count() > 0,
+        "expected some drops from slow subscriber"
+    );
 }
 
 /// Unsubscribe + re-subscribe cycle works cleanly.
@@ -306,9 +354,15 @@ fn route_event_returns_fixed_size_result() {
     }
 
     let event = BusEvent::new(
-        SourceType::Device, 1, EventKind::AxisUpdate,
-        EventPriority::Normal, 1_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        EventPriority::Normal,
+        1_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
 
     // RouteMatches uses [u32; MAX_MATCHES] — fully stack-allocated.
@@ -325,20 +379,26 @@ fn route_event_returns_fixed_size_result() {
 #[test]
 fn bus_event_is_copy_and_small() {
     let event = BusEvent::new(
-        SourceType::Device, 1, EventKind::AxisUpdate,
-        EventPriority::Normal, 1_000_000,
-        EventPayload::Axis { axis_id: 0, value: 0.5 },
+        SourceType::Device,
+        1,
+        EventKind::AxisUpdate,
+        EventPriority::Normal,
+        1_000_000,
+        EventPayload::Axis {
+            axis_id: 0,
+            value: 0.5,
+        },
     );
 
     // Copy semantics — no heap allocation.
     let _copy = event;
     let _another = event; // Still valid after copy.
 
-    // Should fit in a cache line or two.
+    // Should fit within the documented cache-efficiency limit.
     let size = std::mem::size_of::<BusEvent>();
     assert!(
-        size <= 128,
-        "BusEvent should be ≤128 bytes for cache efficiency, got {size}"
+        size <= MAX_BUS_EVENT_BYTES,
+        "BusEvent should be ≤{MAX_BUS_EVENT_BYTES} bytes for cache efficiency, got {size}"
     );
 }
 

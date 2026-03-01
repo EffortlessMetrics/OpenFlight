@@ -19,6 +19,12 @@ pub const MAX_ROUTES: usize = 64;
 /// Maximum number of matched destinations returned by a single `route_event`.
 pub const MAX_MATCHES: usize = 16;
 
+/// Maximum expected size of `BusEvent` in bytes (two cache lines).
+///
+/// If the struct grows beyond this, consider boxing large payloads or
+/// splitting hot/cold fields to preserve cache efficiency.
+pub const MAX_BUS_EVENT_BYTES: usize = 128;
+
 /// Tolerance for floating-point comparison in `changed_only` filtering.
 const CHANGED_EPSILON: f64 = 1e-9;
 
@@ -139,7 +145,13 @@ impl RoutePattern {
 
     /// Check whether this pattern matches the given event attributes.
     #[inline]
-    fn matches(&self, source_type: SourceType, source_id: u32, kind: EventKind, topic: Topic) -> bool {
+    fn matches(
+        &self,
+        source_type: SourceType,
+        source_id: u32,
+        kind: EventKind,
+        topic: Topic,
+    ) -> bool {
         // Source type: Any matches everything, otherwise exact match.
         if self.source_type != SourceType::Any && self.source_type != source_type {
             return false;
@@ -298,6 +310,7 @@ impl BusEvent {
         timestamp_us: u64,
         payload: EventPayload,
     ) -> Self {
+        debug_assert!(topic != Topic::Any, "Topic::Any is for route patterns only");
         Self {
             id: NEXT_EVENT_ID.fetch_add(1, Ordering::Relaxed),
             source_type,
@@ -545,11 +558,12 @@ impl EventRouter {
 
     /// Remove a route by its [`RouteId`]. Returns `true` if found and removed.
     pub fn remove_route(&mut self, id: RouteId) -> bool {
-        for slot in &mut self.routes {
-            if let Some(route) = slot
+        for i in 0..MAX_ROUTES {
+            if let Some(route) = &self.routes[i]
                 && route.id == id
             {
-                *slot = None;
+                self.routes[i] = None;
+                self.states[i] = RouteState::EMPTY;
                 self.route_count -= 1;
                 return true;
             }
@@ -600,16 +614,17 @@ impl EventRouter {
     ///
     /// Returns `true` if registered, `false` if at capacity.
     pub fn register_subscriber(&mut self, destination: u32) -> bool {
-        // Check for existing registration.
-        for sub in &self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                return true; // Already registered.
+        let mut empty_slot = None;
+        for (i, sub) in self.subscribers.iter().enumerate() {
+            if let Some(s) = sub {
+                if s.destination == destination {
+                    return true; // Already registered.
+                }
+            } else if empty_slot.is_none() {
+                empty_slot = Some(i);
             }
         }
-        let slot = self.subscribers.iter().position(|s| s.is_none());
-        match slot {
+        match empty_slot {
             Some(i) => {
                 self.subscribers[i] = Some(SubscriberInfo {
                     destination,
@@ -633,12 +648,13 @@ impl EventRouter {
                 break;
             }
         }
-        // Remove routes targeting this destination.
-        for slot in &mut self.routes {
-            if let Some(route) = slot
+        // Remove routes targeting this destination and clear state.
+        for i in 0..MAX_ROUTES {
+            if let Some(route) = &self.routes[i]
                 && route.destination == destination
             {
-                *slot = None;
+                self.routes[i] = None;
+                self.states[i] = RouteState::EMPTY;
                 self.route_count -= 1;
             }
         }
@@ -649,38 +665,35 @@ impl EventRouter {
     /// Crashed subscribers are skipped during routing but their routes
     /// remain registered so they can be resumed.
     pub fn mark_subscriber_crashed(&mut self, destination: u32) {
-        for sub in &mut self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                s.status = SubscriberStatus::Crashed;
-                break;
-            }
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Crashed;
         }
     }
 
     /// Resume a previously crashed or suspended subscriber.
     pub fn resume_subscriber(&mut self, destination: u32) {
-        for sub in &mut self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                s.status = SubscriberStatus::Active;
-                s.consecutive_failures = 0;
-                break;
-            }
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Active;
+            s.consecutive_failures = 0;
         }
     }
 
     /// Suspend a subscriber (temporarily stop routing to it).
     pub fn suspend_subscriber(&mut self, destination: u32) {
-        for sub in &mut self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                s.status = SubscriberStatus::Suspended;
-                break;
-            }
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Suspended;
         }
     }
 
@@ -705,31 +718,29 @@ impl EventRouter {
     /// When consecutive failures exceed [`CRASH_THRESHOLD`], the subscriber
     /// is automatically marked as crashed.
     pub fn record_delivery_failure(&mut self, destination: u32) {
-        for sub in &mut self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                s.consecutive_failures = s.consecutive_failures.saturating_add(1);
-                s.total_dropped += 1;
-                if s.consecutive_failures >= CRASH_THRESHOLD {
-                    s.status = SubscriberStatus::Crashed;
-                }
-                break;
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.consecutive_failures = s.consecutive_failures.saturating_add(1);
+            s.total_dropped += 1;
+            if s.consecutive_failures >= CRASH_THRESHOLD {
+                s.status = SubscriberStatus::Crashed;
             }
         }
     }
 
     /// Report a successful delivery for a subscriber.
     pub fn record_delivery_success(&mut self, destination: u32, timestamp_us: u64) {
-        for sub in &mut self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                s.consecutive_failures = 0;
-                s.last_delivery_us = timestamp_us;
-                s.total_routed += 1;
-                break;
-            }
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.consecutive_failures = 0;
+            s.last_delivery_us = timestamp_us;
+            s.total_routed += 1;
         }
     }
 
@@ -816,14 +827,13 @@ impl EventRouter {
     /// (untracked destinations are always routed to).
     #[inline]
     fn is_subscriber_inactive(&self, destination: u32) -> bool {
-        for sub in &self.subscribers {
-            if let Some(s) = sub
-                && s.destination == destination
-            {
-                return s.status != SubscriberStatus::Active;
-            }
+        if self.subscriber_count == 0 {
+            return false;
         }
-        false // Untracked destinations are treated as active.
+        self.subscribers
+            .iter()
+            .find_map(|sub| sub.as_ref().filter(|s| s.destination == destination))
+            .is_some_and(|s| s.status != SubscriberStatus::Active)
     }
 
     #[inline]
@@ -1945,7 +1955,10 @@ mod tests {
             Topic::Lifecycle,
             EventPriority::Normal,
             1000,
-            EventPayload::Axis { axis_id: 0, value: 0.5 },
+            EventPayload::Axis {
+                axis_id: 0,
+                value: 0.5,
+            },
         );
         assert_eq!(e.topic, Topic::Lifecycle);
     }

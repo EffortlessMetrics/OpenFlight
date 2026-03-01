@@ -97,25 +97,44 @@ fn bench_event_router_route_event_64_routes(c: &mut Criterion) {
 fn bench_topic_filtered_routing(c: &mut Criterion) {
     let mut router = EventRouter::new();
     // 4 topic-specific routes + 4 wildcard routes.
-    router.register_route(RoutePattern::for_topic(Topic::Commands), EventFilter::pass_all(), 1);
-    router.register_route(RoutePattern::for_topic(Topic::Telemetry), EventFilter::pass_all(), 2);
-    router.register_route(RoutePattern::for_topic(Topic::Lifecycle), EventFilter::pass_all(), 3);
-    router.register_route(RoutePattern::for_topic(Topic::Diagnostics), EventFilter::pass_all(), 4);
+    router.register_route(
+        RoutePattern::for_topic(Topic::Commands),
+        EventFilter::pass_all(),
+        1,
+    );
+    router.register_route(
+        RoutePattern::for_topic(Topic::Telemetry),
+        EventFilter::pass_all(),
+        2,
+    );
+    router.register_route(
+        RoutePattern::for_topic(Topic::Lifecycle),
+        EventFilter::pass_all(),
+        3,
+    );
+    router.register_route(
+        RoutePattern::for_topic(Topic::Diagnostics),
+        EventFilter::pass_all(),
+        4,
+    );
     for i in 5..9 {
         router.register_route(RoutePattern::any(), EventFilter::pass_all(), i);
     }
 
     c.bench_function("topic_filtered_routing_8_routes", |b| {
+        let event = BusEvent::new(
+            SourceType::Device,
+            1,
+            EventKind::AxisUpdate,
+            EventPriority::Normal,
+            1_000_000,
+            EventPayload::Axis {
+                axis_id: 0,
+                value: 0.5,
+            },
+        );
         b.iter(|| {
-            let event = BusEvent::new(
-                SourceType::Device,
-                1,
-                EventKind::AxisUpdate,
-                EventPriority::Normal,
-                std::hint::black_box(1_000_000),
-                EventPayload::Axis { axis_id: 0, value: 0.5 },
-            );
-            let matches = router.route_event(&event);
+            let matches = router.route_event(std::hint::black_box(&event));
             std::hint::black_box(matches.len())
         })
     });
@@ -159,7 +178,10 @@ fn bench_throughput_250hz(c: &mut Criterion) {
                 EventKind::AxisUpdate,
                 EventPriority::Normal,
                 std::hint::black_box(ts),
-                EventPayload::Axis { axis_id: 0, value: 0.5 },
+                EventPayload::Axis {
+                    axis_id: 0,
+                    value: 0.5,
+                },
             );
             let matches = router.route_event(&event);
             std::hint::black_box(matches.len())

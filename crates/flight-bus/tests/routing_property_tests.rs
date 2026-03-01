@@ -16,8 +16,8 @@
 //! whose topic pattern matches.
 
 use flight_bus::routing::{
-    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType, Topic, MAX_ROUTES,
+    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, MAX_ROUTES,
+    RoutePattern, SourceType, Topic,
 };
 use proptest::prelude::*;
 
@@ -69,7 +69,10 @@ fn bus_event_strategy() -> impl Strategy<Value = BusEvent> {
         priority_strategy(),
         1_000_000u64..10_000_000u64,
         prop_oneof![
-            (-1.0f64..=1.0f64).prop_map(|v| EventPayload::Axis { axis_id: 0, value: v }),
+            (-1.0f64..=1.0f64).prop_map(|v| EventPayload::Axis {
+                axis_id: 0,
+                value: v
+            }),
             any::<bool>().prop_map(|p| EventPayload::Button {
                 button_id: 0,
                 pressed: p
@@ -94,7 +97,7 @@ proptest! {
         let mut router = EventRouter::new();
         router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
 
-        let mut delivered_ids = Vec::new();
+        let mut delivered_order = Vec::new();
         for i in 0..n {
             let event = BusEvent::new(
                 SourceType::Device,
@@ -106,17 +109,22 @@ proptest! {
             );
             let matches = router.route_event(&event);
             if matches.contains(10) {
-                delivered_ids.push(event.id);
+                delivered_order.push(i);
             }
         }
 
-        // IDs are monotonically increasing (assigned by atomic counter).
-        for window in delivered_ids.windows(2) {
-            prop_assert!(
-                window[0] < window[1],
-                "ordering violated: id {} >= {}",
-                window[0],
-                window[1]
+        // All events should be delivered (no backpressure).
+        prop_assert_eq!(
+            delivered_order.len(), n,
+            "expected all {} events to be delivered", n
+        );
+
+        // Delivery order matches submission order.
+        for (seq, &delivered_idx) in delivered_order.iter().enumerate() {
+            prop_assert_eq!(
+                delivered_idx, seq,
+                "delivery order mismatch at position {}: expected {}, got {}",
+                seq, seq, delivered_idx
             );
         }
     }
