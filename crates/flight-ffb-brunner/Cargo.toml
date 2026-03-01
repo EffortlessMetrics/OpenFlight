@@ -1,0 +1,26 @@
+[package]
+homepage.workspace = true
+name = "flight-ffb-brunner"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Brunner Elektronik AG CLS-E Force Feedback driver for OpenFlight — protocol, effects, safety envelope, and profiles."
+readme = "README.md"
+keywords = ["flight-sim", "openflight", "brunner", "cls-e", "ffb"]
+categories = ["hardware-support"]
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json.workspace = true
