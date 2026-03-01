@@ -29,6 +29,15 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const STANDARD_DEADZONE: f64 = 0.05;
+const AGGRESSIVE_DEADZONE: f64 = 0.15;
+const STANDARD_EXPO: f64 = 0.3;
+const AGGRESSIVE_EXPO: f64 = 0.5;
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -45,36 +54,30 @@ fn load_trace(name: &str) -> TraceRecording {
     })
 }
 
-fn standard_pipeline() -> AxisPipeline {
+fn create_pipeline(inner_deadzone: f64, expo: f64) -> AxisPipeline {
     let mut pipeline = AxisPipeline::new();
     pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
+        inner: inner_deadzone,
         outer: 1.0,
     }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
+    pipeline.add_stage(Box::new(CurveStage { expo }));
     pipeline.add_stage(Box::new(ClampStage {
         min: -1.0,
         max: 1.0,
     }));
     pipeline
+}
+
+fn standard_pipeline() -> AxisPipeline {
+    create_pipeline(STANDARD_DEADZONE, STANDARD_EXPO)
 }
 
 fn aggressive_deadzone_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.15,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.5 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
+    create_pipeline(AGGRESSIVE_DEADZONE, AGGRESSIVE_EXPO)
 }
 
 fn make_publisher() -> BusPublisher {
-    BusPublisher::new(60.0)
+    BusPublisher::new(250.0)
 }
 
 /// Compute the expected output of a deadzone+curve+clamp pipeline.
@@ -90,11 +93,11 @@ fn expected_pipeline_output(raw: f64, dz_inner: f64, dz_outer: f64, expo: f64) -
 }
 
 fn expected_standard_output(raw: f64) -> f64 {
-    expected_pipeline_output(raw, 0.05, 1.0, 0.3)
+    expected_pipeline_output(raw, STANDARD_DEADZONE, 1.0, STANDARD_EXPO)
 }
 
 fn expected_aggressive_output(raw: f64) -> f64 {
-    expected_pipeline_output(raw, 0.15, 1.0, 0.5)
+    expected_pipeline_output(raw, AGGRESSIVE_DEADZONE, 1.0, AGGRESSIVE_EXPO)
 }
 
 // ===========================================================================
@@ -109,7 +112,6 @@ fn trace_replay_single_axis_ramp_through_pipeline() {
     let pipeline = standard_pipeline();
     let axis_events = trace.events_of_type(TraceEventType::AxisInput);
 
-    let mut actual_recording = TraceRecording::new("single_axis_output");
     let mut clock = DeterministicClock::new(0);
 
     for event in &axis_events {
@@ -119,23 +121,13 @@ fn trace_replay_single_axis_ramp_through_pipeline() {
 
         assert_approx_eq(processed, expected, 1e-6);
         assert_in_range(processed, -1.0, 1.0);
-        assert!(processed.is_finite(), "output must be finite for input {raw}");
-
-        actual_recording.add_event(TraceEvent {
-            timestamp_us: event.timestamp_us,
-            event_type: TraceEventType::AxisInput,
-            source: TraceSource::Device,
-            data: vec![processed],
-        });
+        assert!(
+            processed.is_finite(),
+            "output must be finite for input {raw}"
+        );
 
         clock.advance_ticks(1);
     }
-
-    assert_eq!(
-        actual_recording.event_count(),
-        axis_events.len(),
-        "output must have same event count as input"
-    );
 }
 
 #[test]
@@ -147,7 +139,7 @@ fn trace_replay_single_axis_deadzone_zeroes_small_inputs() {
         let raw = event.data[0];
         let processed = pipeline.process(raw, 0.004);
 
-        if raw.abs() <= 0.05 {
+        if raw.abs() <= STANDARD_DEADZONE {
             assert!(
                 processed.abs() < f64::EPSILON,
                 "input {raw} within deadzone must produce 0, got {processed}"
@@ -211,7 +203,7 @@ fn trace_replay_multi_axis_independent_processing() {
 }
 
 #[test]
-fn trace_replay_multi_axis_yaw_deadzone_at_0_02() {
+fn trace_replay_multi_axis_yaw_deadzone_at_0_05() {
     let trace = load_trace("multi_axis_simultaneous.json");
     let pipeline = standard_pipeline();
 
@@ -219,7 +211,7 @@ fn trace_replay_multi_axis_yaw_deadzone_at_0_02() {
         if event.data.len() >= 3 {
             let yaw_raw = event.data[2];
             let yaw_out = pipeline.process(yaw_raw, 0.004);
-            if yaw_raw.abs() <= 0.05 {
+            if yaw_raw.abs() <= STANDARD_DEADZONE {
                 assert!(
                     yaw_out.abs() < f64::EPSILON,
                     "yaw {yaw_raw} in deadzone must produce 0, got {yaw_out}"
@@ -238,7 +230,11 @@ fn trace_replay_multi_axis_snapshot_comparison() {
     let mut actual_recording = TraceRecording::new("actual_output");
 
     for event in trace.events_of_type(TraceEventType::AxisInput) {
-        let expected_data: Vec<f64> = event.data.iter().map(|&v| expected_standard_output(v)).collect();
+        let expected_data: Vec<f64> = event
+            .data
+            .iter()
+            .map(|&v| expected_standard_output(v))
+            .collect();
         let actual_data: Vec<f64> = event
             .data
             .iter()
@@ -319,8 +315,8 @@ fn trace_replay_profile_switch_with_engine() {
 
     // Start with standard profile
     let pipeline1 = PipelineBuilder::new()
-        .deadzone(0.05)
-        .curve(0.3)
+        .deadzone(STANDARD_DEADZONE as f32)
+        .curve(STANDARD_EXPO as f32)
         .unwrap()
         .compile()
         .expect("compile standard");
@@ -332,15 +328,17 @@ fn trace_replay_profile_switch_with_engine() {
 
     // Switch to aggressive profile
     let pipeline2 = PipelineBuilder::new()
-        .deadzone(0.15)
-        .curve(0.5)
+        .deadzone(AGGRESSIVE_DEADZONE as f32)
+        .curve(AGGRESSIVE_EXPO as f32)
         .unwrap()
         .compile()
         .expect("compile aggressive");
     engine.update_pipeline(pipeline2);
 
     let mut frame2 = AxisFrame::new(0.6, 4_000_000);
-    engine.process(&mut frame2).expect("process with aggressive");
+    engine
+        .process(&mut frame2)
+        .expect("process with aggressive");
     let out_aggressive = frame2.out;
 
     assert!(
@@ -360,14 +358,14 @@ fn trace_replay_deadzone_boundary_exact() {
     let pipeline = standard_pipeline();
 
     // Exactly at deadzone edge
-    let at_edge = pipeline.process(0.05, 0.004);
+    let at_edge = pipeline.process(STANDARD_DEADZONE, 0.004);
     assert!(
         at_edge.abs() < f64::EPSILON,
-        "value at dz edge (0.05) must be 0, got {at_edge}"
+        "value at dz edge ({STANDARD_DEADZONE}) must be 0, got {at_edge}"
     );
 
     // Just outside deadzone
-    let just_outside = pipeline.process(0.06, 0.004);
+    let just_outside = pipeline.process(STANDARD_DEADZONE + 0.01, 0.004);
     assert!(
         just_outside > 0.0,
         "value just outside dz (0.06) must be > 0, got {just_outside}"
@@ -382,7 +380,7 @@ fn trace_replay_deadzone_boundary_exact() {
 fn trace_replay_curve_expo_reduces_low_values() {
     let mut linear_pipeline = AxisPipeline::new();
     linear_pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
+        inner: STANDARD_DEADZONE,
         outer: 1.0,
     }));
     linear_pipeline.add_stage(Box::new(ClampStage {
@@ -447,9 +445,6 @@ fn trace_replay_pipeline_output_delivered_through_bus() {
         let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
         snapshot.control_inputs.pitch = processed as f32;
         publisher.publish(snapshot).expect("publish must succeed");
-
-        // Rate limiter may drop some; sleep to satisfy it
-        std::thread::sleep(Duration::from_millis(20));
 
         if let Some(received) = subscriber.try_recv().unwrap() {
             assert_in_range(received.control_inputs.pitch as f64, -1.0, 1.0);
@@ -542,32 +537,29 @@ fn trace_replay_adapter_bus_subscriber_flow() {
     let mut player = TracePlayer::new(trace);
     let mut published_count = 0;
 
-    player.with_callback(|event, _delay_us| {
-        match event.event_type {
-            TraceEventType::AxisInput => {
-                let processed = pipeline.process(event.data[0], 0.004);
-                let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
-                snapshot.control_inputs.pitch = processed as f32;
-                if publisher.publish(snapshot).is_ok() {
-                    published_count += 1;
-                }
+    player.with_callback(|event, _delay_us| match event.event_type {
+        TraceEventType::AxisInput => {
+            let processed = pipeline.process(event.data[0], 0.004);
+            let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
+            snapshot.control_inputs.pitch = processed as f32;
+            if publisher.publish(snapshot).is_ok() {
+                published_count += 1;
             }
-            TraceEventType::TelemetryUpdate => {
-                if event.data.len() >= 3 {
-                    sim.push_snapshot(flight_test_helpers::FakeSnapshot {
-                        altitude: event.data[0],
-                        airspeed: event.data[1],
-                        heading: event.data[2],
-                        pitch: 0.0,
-                        roll: 0.0,
-                        yaw: 0.0,
-                        on_ground: false,
-                    });
-                }
-            }
-            _ => {}
         }
-        std::thread::sleep(Duration::from_millis(20));
+        TraceEventType::TelemetryUpdate => {
+            if event.data.len() >= 3 {
+                sim.push_snapshot(flight_test_helpers::FakeSnapshot {
+                    altitude: event.data[0],
+                    airspeed: event.data[1],
+                    heading: event.data[2],
+                    pitch: 0.0,
+                    roll: 0.0,
+                    yaw: 0.0,
+                    on_ground: false,
+                });
+            }
+        }
+        _ => {}
     });
 
     assert!(published_count > 0, "must publish axis events through bus");
@@ -579,14 +571,20 @@ fn trace_replay_adapter_bus_subscriber_flow() {
         assert_in_range(snap.control_inputs.pitch as f64, -1.0, 1.0);
         received += 1;
     }
-    assert!(received > 0, "subscriber must receive at least one snapshot");
+    assert!(
+        received > 0,
+        "subscriber must receive at least one snapshot"
+    );
 
     // Sim should have received telemetry snapshots
     let mut telem_count = 0;
     while sim.next_snapshot().is_some() {
         telem_count += 1;
     }
-    assert!(telem_count > 0, "sim must have received telemetry snapshots");
+    assert!(
+        telem_count > 0,
+        "sim must have received telemetry snapshots"
+    );
 }
 
 #[test]
@@ -605,7 +603,10 @@ fn trace_replay_adapter_disconnect_reconnect_resumes() {
     snap1.control_inputs.pitch = processed1 as f32;
     publisher.publish(snap1).expect("publish pre-disconnect");
 
-    let r1 = subscriber.try_recv().unwrap().expect("receive pre-disconnect");
+    let r1 = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("receive pre-disconnect");
     assert_approx_eq(r1.control_inputs.pitch as f64, processed1, 1e-5);
 
     // Phase 2: disconnect
@@ -677,11 +678,19 @@ fn trace_replay_player_advance_produces_correct_events() {
 
     // Advance to 16ms — should get first 5 events (0, 4000, 8000, 12000, 16000)
     let events = player.advance_to(16000);
-    assert!(events.len() >= 4, "should get events up to 16ms, got {}", events.len());
+    assert_eq!(
+        events.len(),
+        5,
+        "should get exactly 5 events up to 16ms, got {}",
+        events.len()
+    );
 
-    for event in &events {
-        assert!(event.timestamp_us <= 16000, "no events past 16ms");
-    }
+    let expected_timestamps: Vec<u64> = vec![0, 4000, 8000, 12000, 16000];
+    let actual_timestamps: Vec<u64> = events.iter().map(|e| e.timestamp_us).collect();
+    assert_eq!(
+        actual_timestamps, expected_timestamps,
+        "event timestamps must match expected"
+    );
 
     // Advance to end
     let remaining = player.advance_to(100_000);
@@ -699,8 +708,8 @@ fn trace_replay_engine_compiled_pipeline_full_trace() {
     let engine = AxisEngine::new_for_axis("pitch".to_string());
 
     let pipeline = PipelineBuilder::new()
-        .deadzone(0.05)
-        .curve(0.3)
+        .deadzone(STANDARD_DEADZONE as f32)
+        .curve(STANDARD_EXPO as f32)
         .unwrap()
         .compile()
         .expect("compile");
@@ -723,7 +732,7 @@ fn trace_replay_engine_compiled_pipeline_full_trace() {
         );
 
         // Deadzone check
-        if raw.abs() <= 0.05 {
+        if raw.abs() <= STANDARD_DEADZONE as f32 {
             assert_eq!(frame.out, 0.0, "input {raw} in deadzone must produce 0");
         }
 
@@ -737,8 +746,8 @@ fn trace_replay_engine_250hz_timing_consistency() {
     let engine = AxisEngine::new_for_axis("roll".to_string());
 
     let pipeline = PipelineBuilder::new()
-        .deadzone(0.05)
-        .curve(0.3)
+        .deadzone(STANDARD_DEADZONE as f32)
+        .curve(STANDARD_EXPO as f32)
         .unwrap()
         .compile()
         .expect("compile");
