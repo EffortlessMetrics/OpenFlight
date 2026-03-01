@@ -36,7 +36,7 @@ impl DcsBiosCommand {
     /// ```
     #[must_use]
     pub fn set_state(control: &str, value: u16) -> Self {
-        debug_assert!(
+        assert!(
             !contains_line_break(control),
             "control name must not contain newlines"
         );
@@ -59,7 +59,7 @@ impl DcsBiosCommand {
     /// ```
     #[must_use]
     pub fn fixed_step(control: &str, delta: i32) -> Option<Self> {
-        debug_assert!(
+        assert!(
             !contains_line_break(control),
             "control name must not contain newlines"
         );
@@ -86,7 +86,7 @@ impl DcsBiosCommand {
     /// ```
     #[must_use]
     pub fn action(control: &str) -> Self {
-        debug_assert!(
+        assert!(
             !contains_line_break(control),
             "control name must not contain newlines"
         );

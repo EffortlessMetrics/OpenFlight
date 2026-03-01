@@ -72,7 +72,7 @@ impl DcsBiosAddress {
     /// `shift` must be in the range `0..=15` (bit position within a 16-bit word).
     #[must_use]
     pub fn new(address: u16, mask: u16, shift: u8) -> Self {
-        debug_assert!(shift < 16, "shift must be 0..=15");
+        assert!(shift < 16, "shift must be 0..=15");
         let max_value = mask >> shift;
         Self {
             address,
@@ -87,7 +87,7 @@ impl DcsBiosAddress {
     /// `shift` must be in the range `0..=15` (bit position within a 16-bit word).
     #[must_use]
     pub fn decode(&self, word: u16) -> u16 {
-        debug_assert!(self.shift < 16, "shift must be 0..=15");
+        assert!(self.shift < 16, "shift must be 0..=15");
         (word & self.mask) >> self.shift
     }
 }
