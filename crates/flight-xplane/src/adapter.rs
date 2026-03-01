@@ -1241,6 +1241,37 @@ impl XPlaneAdapter {
         self.publish_stale_snapshot()
     }
 
+    /// Notify the state machine that the UDP socket was successfully bound.
+    ///
+    /// Drives Disconnected → Connecting → Connected progression.
+    pub fn handle_socket_bound(&self) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketBound,
+        )
+    }
+
+    /// Notify the state machine of a socket-level error.
+    ///
+    /// Transitions to Error from any state and increments the error counter.
+    pub fn handle_socket_error(&self, reason: &str) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketError(reason.to_string()),
+        )
+    }
+
+    /// Notify the state machine of a graceful shutdown.
+    pub fn handle_shutdown(&self) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::Shutdown,
+        )
+    }
+
     /// Drive the state machine with an event and synchronize the common AdapterState.
     fn apply_event(
         state_machine: &Mutex<AdapterStateMachine>,
