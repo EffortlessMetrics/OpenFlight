@@ -7,12 +7,11 @@
 //! error paths, device detection, and cross-module invariants.
 
 use flight_hotas_vpforce::rhino::{
-    RHINO_MIN_REPORT_BYTES, RhinoAxes, RhinoButtons, RhinoParseError,
-    parse_rhino_report,
+    RHINO_MIN_REPORT_BYTES, RhinoAxes, RhinoButtons, RhinoParseError, parse_rhino_report,
 };
 use flight_hotas_vpforce::{
-    VPFORCE_RHINO_PID_V2, VPFORCE_RHINO_PID_V3, VPFORCE_VENDOR_ID, VpforceModel,
-    is_vpforce_device, vpforce_model,
+    VPFORCE_RHINO_PID_V2, VPFORCE_RHINO_PID_V3, VPFORCE_VENDOR_ID, VpforceModel, is_vpforce_device,
+    vpforce_model,
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -173,10 +172,18 @@ fn button_isolation_each_bit() {
         assert!(s.buttons.is_pressed(n), "button {n} should be pressed");
         // Adjacent buttons should NOT be pressed
         if n > 1 {
-            assert!(!s.buttons.is_pressed(n - 1), "button {} false positive", n - 1);
+            assert!(
+                !s.buttons.is_pressed(n - 1),
+                "button {} false positive",
+                n - 1
+            );
         }
         if n < 32 {
-            assert!(!s.buttons.is_pressed(n + 1), "button {} false positive", n + 1);
+            assert!(
+                !s.buttons.is_pressed(n + 1),
+                "button {} false positive",
+                n + 1
+            );
         }
     }
 }
@@ -249,7 +256,10 @@ fn hat_centred_distinct_from_north() {
 fn error_empty_slice() {
     assert!(matches!(
         parse_rhino_report(&[]),
-        Err(RhinoParseError::TooShort { expected: 20, got: 0 })
+        Err(RhinoParseError::TooShort {
+            expected: RHINO_MIN_REPORT_BYTES,
+            got: 0
+        })
     ));
 }
 
@@ -258,7 +268,10 @@ fn error_empty_slice() {
 fn error_19_bytes() {
     assert!(matches!(
         parse_rhino_report(&[0x01; 19]),
-        Err(RhinoParseError::TooShort { expected: 20, got: 19 })
+        Err(RhinoParseError::TooShort {
+            expected: RHINO_MIN_REPORT_BYTES,
+            got: 19
+        })
     ));
 }
 
@@ -290,7 +303,7 @@ fn error_display_contains_context() {
     let err_short = parse_rhino_report(&[0x01; 5]).unwrap_err();
     let msg = err_short.to_string();
     assert!(msg.contains("20"), "should mention expected length");
-    assert!(msg.contains('5'), "should mention actual length");
+    assert!(msg.contains("got 5"), "should mention actual length");
 
     let mut r = [0u8; RHINO_MIN_REPORT_BYTES];
     r[0] = 0xAB;
@@ -348,8 +361,14 @@ fn detection_rejects_unknown_pid() {
 /// vpforce_model identifies v2 and v3 correctly.
 #[test]
 fn model_identification() {
-    assert_eq!(vpforce_model(VPFORCE_RHINO_PID_V2), Some(VpforceModel::RhinoV2));
-    assert_eq!(vpforce_model(VPFORCE_RHINO_PID_V3), Some(VpforceModel::RhinoV3));
+    assert_eq!(
+        vpforce_model(VPFORCE_RHINO_PID_V2),
+        Some(VpforceModel::RhinoV2)
+    );
+    assert_eq!(
+        vpforce_model(VPFORCE_RHINO_PID_V3),
+        Some(VpforceModel::RhinoV3)
+    );
     assert_eq!(vpforce_model(0x0000), None);
 }
 
@@ -393,7 +412,14 @@ fn buttons_default() {
 /// RhinoAxes implements Clone and Copy.
 #[test]
 fn axes_clone_copy() {
-    let a = RhinoAxes { roll: 0.5, pitch: -0.3, throttle: 0.8, rocker: 0.0, twist: 0.1, ry: 0.0 };
+    let a = RhinoAxes {
+        roll: 0.5,
+        pitch: -0.3,
+        throttle: 0.8,
+        rocker: 0.0,
+        twist: 0.1,
+        ry: 0.0,
+    };
     let b = a; // Copy
     #[allow(clippy::clone_on_copy)]
     let c = a.clone(); // Clone
@@ -404,7 +430,10 @@ fn axes_clone_copy() {
 /// RhinoButtons implements Clone and Copy.
 #[test]
 fn buttons_clone_copy() {
-    let a = RhinoButtons { mask: 0xDEAD_BEEF, hat: 3 };
+    let a = RhinoButtons {
+        mask: 0xDEAD_BEEF,
+        hat: 3,
+    };
     let b = a;
     #[allow(clippy::clone_on_copy)]
     let c = a.clone();
@@ -426,7 +455,10 @@ fn input_state_clone_copy() {
 /// RhinoParseError implements Clone and PartialEq.
 #[test]
 fn parse_error_clone_eq() {
-    let e1 = RhinoParseError::TooShort { expected: 20, got: 5 };
+    let e1 = RhinoParseError::TooShort {
+        expected: RHINO_MIN_REPORT_BYTES,
+        got: 5,
+    };
     let e2 = e1.clone();
     assert_eq!(e1, e2);
 }

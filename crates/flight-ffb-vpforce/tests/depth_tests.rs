@@ -6,17 +6,19 @@
 //! Covers FFB effect serialisation, input report parsing, health monitoring,
 //! preset configuration, and cross-module integration for the VPforce Rhino.
 
+use flight_ffb_vpforce::RHINO_PIDS;
 use flight_ffb_vpforce::effects::{
     FFB_REPORT_LEN, FfbEffect, REPORT_CONSTANT_FORCE, REPORT_SPRING, is_magnitude_safe,
     serialize_effect,
 };
 use flight_ffb_vpforce::health::RhinoHealthMonitor;
 use flight_ffb_vpforce::input::{
-    RHINO_PID_V2, RHINO_PID_V3, RHINO_REPORT_LEN, RhinoParseError, VPFORCE_VENDOR_ID,
-    parse_report,
+    RHINO_PID_V2, RHINO_PID_V3, RHINO_REPORT_LEN, RhinoParseError, VPFORCE_VENDOR_ID, parse_report,
 };
 use flight_ffb_vpforce::presets::recommended_axis_config;
-use flight_ffb_vpforce::RHINO_PIDS;
+
+/// Report ID used by the VPforce Rhino for the StopAll FFB command.
+const REPORT_STOP_ALL: u8 = 0xFF;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -28,7 +30,13 @@ fn centred_report() -> [u8; RHINO_REPORT_LEN] {
     r
 }
 
-fn report_with_axes(roll: i16, pitch: i16, throttle: i16, rocker: i16, twist: i16) -> [u8; RHINO_REPORT_LEN] {
+fn report_with_axes(
+    roll: i16,
+    pitch: i16,
+    throttle: i16,
+    rocker: i16,
+    twist: i16,
+) -> [u8; RHINO_REPORT_LEN] {
     let mut r = centred_report();
     r[1..3].copy_from_slice(&roll.to_le_bytes());
     r[3..5].copy_from_slice(&pitch.to_le_bytes());
@@ -173,9 +181,7 @@ fn spring_over_one_clamped() {
 /// Damper coefficient <0.0 is clamped to 0.0.
 #[test]
 fn damper_negative_coefficient_clamped() {
-    let b = serialize_effect(FfbEffect::Damper {
-        coefficient: -1.0,
-    });
+    let b = serialize_effect(FfbEffect::Damper { coefficient: -1.0 });
     let raw = u16::from_le_bytes([b[2], b[3]]);
     assert_eq!(raw, 0);
 }
@@ -266,7 +272,7 @@ fn sine_trailing_bytes_zero() {
 #[test]
 fn stop_all_payload_is_zero_padded() {
     let b = serialize_effect(FfbEffect::StopAll);
-    assert_eq!(b[0], 0xFF);
+    assert_eq!(b[0], REPORT_STOP_ALL);
     for (i, &byte) in b.iter().enumerate().skip(1) {
         assert_eq!(byte, 0, "StopAll byte {i} should be 0");
     }
@@ -280,10 +286,16 @@ fn stop_all_payload_is_zero_padded() {
 #[test]
 fn all_effects_produce_correct_length_reports() {
     let effects = [
-        FfbEffect::ConstantForce { direction_deg: 0.0, magnitude: 1.0 },
+        FfbEffect::ConstantForce {
+            direction_deg: 0.0,
+            magnitude: 1.0,
+        },
         FfbEffect::Spring { coefficient: 0.5 },
         FfbEffect::Damper { coefficient: 0.5 },
-        FfbEffect::Sine { frequency_hz: 50.0, magnitude: 0.5 },
+        FfbEffect::Sine {
+            frequency_hz: 50.0,
+            magnitude: 0.5,
+        },
         FfbEffect::StopAll,
     ];
     for effect in &effects {
@@ -362,7 +374,11 @@ fn twist_full_positive() {
 fn rocker_full_negative() {
     let r = report_with_axes(0, 0, 0, i16::MIN, 0);
     let s = parse_report(&r).unwrap();
-    assert!((s.axes.rocker + 1.0).abs() < 1e-3, "rocker={}", s.axes.rocker);
+    assert!(
+        (s.axes.rocker + 1.0).abs() < 1e-3,
+        "rocker={}",
+        s.axes.rocker
+    );
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -456,7 +472,10 @@ fn all_invalid_report_ids_rejected() {
         let mut r = [0u8; RHINO_REPORT_LEN];
         r[0] = id;
         assert!(
-            matches!(parse_report(&r), Err(RhinoParseError::UnknownReportId { .. })),
+            matches!(
+                parse_report(&r),
+                Err(RhinoParseError::UnknownReportId { .. })
+            ),
             "id=0x{id:02X} should fail"
         );
     }
@@ -493,7 +512,10 @@ fn health_default_matches_new() {
     let d = RhinoHealthMonitor::default();
     let n = RhinoHealthMonitor::new();
     assert_eq!(d.is_offline(), n.is_offline());
-    assert_eq!(d.status().consecutive_failures, n.status().consecutive_failures);
+    assert_eq!(
+        d.status().consecutive_failures,
+        n.status().consecutive_failures
+    );
 }
 
 /// Exactly threshold failures → offline.
@@ -570,7 +592,11 @@ fn health_mixed_ghost_rate() {
         m.record_success(i < 3);
     }
     let s = m.status();
-    assert!((s.ghost_rate - 0.3).abs() < 1e-6, "ghost_rate={}", s.ghost_rate);
+    assert!(
+        (s.ghost_rate - 0.3).abs() < 1e-6,
+        "ghost_rate={}",
+        s.ghost_rate
+    );
 }
 
 /// Failures count toward total_reports for ghost rate denominator.
@@ -578,7 +604,7 @@ fn health_mixed_ghost_rate() {
 fn health_failures_in_ghost_rate_denominator() {
     let mut m = RhinoHealthMonitor::new();
     m.record_success(true); // 1 ghost
-    m.record_failure();     // 1 failure
+    m.record_failure(); // 1 failure
     // total_reports = 2, ghost_reports = 1, rate = 0.5
     let s = m.status();
     assert!((s.ghost_rate - 0.5).abs() < 1e-6);
@@ -647,7 +673,12 @@ fn preset_names_unique() {
 fn preset_deadzones_in_sane_range() {
     for c in &recommended_axis_config() {
         assert!(c.deadzone > 0.0, "{}: deadzone must be positive", c.name);
-        assert!(c.deadzone < 0.1, "{}: deadzone too large ({})", c.name, c.deadzone);
+        assert!(
+            c.deadzone < 0.1,
+            "{}: deadzone too large ({})",
+            c.name,
+            c.deadzone
+        );
     }
 }
 
@@ -657,7 +688,10 @@ fn preset_hall_effect_smaller_deadzone_than_resistive() {
     let cfg = recommended_axis_config();
     let roll_dz = cfg.iter().find(|c| c.name == "roll").unwrap().deadzone;
     let throttle_dz = cfg.iter().find(|c| c.name == "throttle").unwrap().deadzone;
-    assert!(roll_dz < throttle_dz, "Hall-effect roll ({roll_dz}) should have smaller deadzone than resistive throttle ({throttle_dz})");
+    assert!(
+        roll_dz < throttle_dz,
+        "Hall-effect roll ({roll_dz}) should have smaller deadzone than resistive throttle ({throttle_dz})"
+    );
 }
 
 /// Filter alpha values are between 0.0 and 1.0 when present.
@@ -665,7 +699,12 @@ fn preset_hall_effect_smaller_deadzone_than_resistive() {
 fn preset_filter_alpha_in_range() {
     for c in &recommended_axis_config() {
         if let Some(alpha) = c.filter_alpha {
-            assert!(alpha > 0.0 && alpha < 1.0, "{}: alpha out of range ({})", c.name, alpha);
+            assert!(
+                alpha > 0.0 && alpha < 1.0,
+                "{}: alpha out of range ({})",
+                c.name,
+                alpha
+            );
         }
     }
 }
@@ -686,7 +725,10 @@ fn preset_hall_effect_no_filter() {
     let cfg = recommended_axis_config();
     for name in &["roll", "pitch"] {
         let c = cfg.iter().find(|c| c.name == *name).unwrap();
-        assert!(c.filter_alpha.is_none(), "{name} should not have filter_alpha");
+        assert!(
+            c.filter_alpha.is_none(),
+            "{name} should not have filter_alpha"
+        );
     }
 }
 
@@ -745,7 +787,7 @@ fn end_to_end_parse_health_ffb() {
 fn health_failure_recovery_cycle() {
     let mut m = RhinoHealthMonitor::new();
     // Drive offline
-    for _ in 0..3 {
+    for _ in 0..RhinoHealthMonitor::DEFAULT_FAILURE_THRESHOLD {
         m.record_failure();
     }
     assert!(m.is_offline());
@@ -760,10 +802,10 @@ fn health_failure_recovery_cycle() {
 #[test]
 fn stop_all_on_device_offline() {
     let mut m = RhinoHealthMonitor::new();
-    for _ in 0..3 {
+    for _ in 0..RhinoHealthMonitor::DEFAULT_FAILURE_THRESHOLD {
         m.record_failure();
     }
     assert!(m.is_offline());
     let report = serialize_effect(FfbEffect::StopAll);
-    assert_eq!(report[0], 0xFF, "must send StopAll when offline");
+    assert_eq!(report[0], REPORT_STOP_ALL, "must send StopAll when offline");
 }
