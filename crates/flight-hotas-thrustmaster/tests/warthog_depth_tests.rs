@@ -21,8 +21,8 @@ use flight_hotas_thrustmaster::{
 
 // ─── Report builders ────────────────────────────────────────────────────────
 
-fn stick_report(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: u8) -> [u8; 10] {
-    let mut r = [0u8; 10];
+fn stick_report(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: u8) -> [u8; WARTHOG_STICK_MIN_REPORT_BYTES] {
+    let mut r = [0u8; WARTHOG_STICK_MIN_REPORT_BYTES];
     r[0..2].copy_from_slice(&x.to_le_bytes());
     r[2..4].copy_from_slice(&y.to_le_bytes());
     r[4..6].copy_from_slice(&rz.to_le_bytes());
@@ -42,11 +42,11 @@ fn throttle_report(
     btn_low: u16,
     btn_mid: u16,
     btn_high: u8,
-    toggles: u8,
+    toggle_bits: u8,
     hat_dms: u8,
     hat_csl: u8,
 ) -> Vec<u8> {
-    let mut r = vec![0u8; 20];
+    let mut r = vec![0u8; WARTHOG_THROTTLE_MIN_REPORT_BYTES];
     r[0..2].copy_from_slice(&scx.to_le_bytes());
     r[2..4].copy_from_slice(&scy.to_le_bytes());
     r[4..6].copy_from_slice(&tl.to_le_bytes());
@@ -55,7 +55,7 @@ fn throttle_report(
     r[10..12].copy_from_slice(&btn_low.to_le_bytes());
     r[12..14].copy_from_slice(&btn_mid.to_le_bytes());
     r[14] = btn_high;
-    r[15] = toggles;
+    r[15] = toggle_bits;
     r[16] = hat_dms;
     r[17] = hat_csl;
     r
@@ -204,8 +204,8 @@ fn grip_buttons_pinky_switch() {
     assert!(is_pinkie_held(&b_set));
 
     let b_clear = WarthogStickButtons {
-        buttons_low: 0xFFFD,
-        buttons_high: 0x07,
+        buttons_low: 0x0000,
+        buttons_high: 0,
         hat: WarthogHat::Center,
     };
     assert!(!is_pinkie_held(&b_clear));
