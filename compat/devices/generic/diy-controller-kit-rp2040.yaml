@@ -10,7 +10,7 @@ device:
   vendor: "Generic"
   usb:
     vendor_id: 0x2E8A       # Confirmed
-    product_id: 0x000A      # Community estimate — verify with lsusb
+    product_id: 0x000A      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x2E8A confirmed (Raspberry Pi Foundation — RP2040). PID 0x000A estimated for DIY kit firmware. Verify with lsusb.
+      VID 0x2E8A confirmed (Raspberry Pi Foundation - RP2040). PID 0x000A estimated for DIY kit firmware. Verify with lsusb.
 
 support:
   tier: 3
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Custom DIY controller kit based on RP2040 — configurable axes and buttons for building custom flight sim controllers.
+    Custom DIY controller kit based on RP2040 - configurable axes and buttons for building custom flight sim controllers.
     Wave-100 addition. Last reviewed: 2026-07.

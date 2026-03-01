@@ -10,7 +10,7 @@ device:
   vendor: "Logitech"
   usb:
     vendor_id: 0x046D       # Confirmed
-    product_id: 0xC101      # Community estimate — verify with lsusb
+    product_id: 0xC101      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x8             # Multi-axis Controller
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Logitech CyberMan 2 — 6-DOF controller from 1994. Rare vintage device with full 3D movement axes for space sims.
+    Logitech CyberMan 2 - 6-DOF controller from 1994. Rare vintage device with full 3D movement axes for space sims.
     Wave-99 addition. Last reviewed: 2026-07.

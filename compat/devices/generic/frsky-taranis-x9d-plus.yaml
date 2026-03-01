@@ -10,7 +10,7 @@ device:
   vendor: "FrSky"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0x5720      # Community estimate — verify with lsusb
+    product_id: 0x5720      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x0483 (STMicroelectronics — used by OpenTX/EdgeTX firmware). PID 0x5720 estimated for Taranis X9D Plus. Verify with lsusb.
+      VID 0x0483 (STMicroelectronics - used by OpenTX/EdgeTX firmware). PID 0x5720 estimated for Taranis X9D Plus. Verify with lsusb.
 
 support:
   tier: 3
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    FrSky Taranis X9D Plus — 16-channel RC transmitter in USB joystick mode via OpenTX firmware. 8 primary axes mapped.
+    FrSky Taranis X9D Plus - 16-channel RC transmitter in USB joystick mode via OpenTX firmware. 8 primary axes mapped.
     Wave-97 addition. Last reviewed: 2026-07.

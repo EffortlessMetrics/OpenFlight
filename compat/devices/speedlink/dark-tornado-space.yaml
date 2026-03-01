@@ -10,7 +10,7 @@ device:
   vendor: "Speedlink"
   usb:
     vendor_id: 0x0E8F       # Confirmed
-    product_id: 0x0029      # Community estimate — verify with lsusb
+    product_id: 0x0029      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Speedlink Dark Tornado Space Edition — budget joystick with enhanced centering spring for space sims.
+    Speedlink Dark Tornado Space Edition - budget joystick with enhanced centering spring for space sims.
     Wave-96 addition. Last reviewed: 2026-07.

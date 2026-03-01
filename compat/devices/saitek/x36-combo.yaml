@@ -10,7 +10,7 @@ device:
   vendor: "Saitek"
   usb:
     vendor_id: 0x06A3       # Confirmed
-    product_id: 0x0255      # Community estimate — verify with lsusb
+    product_id: 0x0255      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Saitek X36 HOTAS combo — early 2000s USB HOTAS with programmable shift states. Pioneering consumer HOTAS design.
+    Saitek X36 HOTAS combo - early 2000s USB HOTAS with programmable shift states. Pioneering consumer HOTAS design.
     Wave-99 addition. Last reviewed: 2026-07.

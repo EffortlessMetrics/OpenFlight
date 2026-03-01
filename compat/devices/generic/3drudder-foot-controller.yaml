@@ -10,7 +10,7 @@ device:
   vendor: "3dRudder"
   usb:
     vendor_id: 0x29C4       # Confirmed
-    product_id: 0x0001      # Community estimate — verify with lsusb
+    product_id: 0x0001      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x8             # Multi-axis Controller
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    3dRudder foot controller — tilt-based 4-axis foot input for hands-free navigation and rudder/throttle control.
+    3dRudder foot controller - tilt-based 4-axis foot input for hands-free navigation and rudder/throttle control.
     Wave-98 addition. Last reviewed: 2026-07.

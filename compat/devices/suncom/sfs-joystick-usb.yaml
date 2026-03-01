@@ -10,7 +10,7 @@ device:
   vendor: "Suncom"
   usb:
     vendor_id: 0x0543       # Confirmed
-    product_id: 0x00A5      # Community estimate — verify with lsusb
+    product_id: 0x00A5      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Suncom SFS USB Joystick — Suncom branded stick from the late 1990s. Simple 3-axis design with hat switch.
+    Suncom SFS USB Joystick - Suncom branded stick from the late 1990s. Simple 3-axis design with hat switch.
     Wave-99 addition. Last reviewed: 2026-07.

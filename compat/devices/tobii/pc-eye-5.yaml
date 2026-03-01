@@ -10,7 +10,7 @@ device:
   vendor: "Tobii"
   usb:
     vendor_id: 0x2104       # Confirmed
-    product_id: 0x0420      # Community estimate — verify with lsusb
+    product_id: 0x0420      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x8             # Multi-axis Controller
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Tobii PC Eye 5 — gaze-tracking accessibility device. Maps eye position to virtual axes for hands-free view control.
+    Tobii PC Eye 5 - gaze-tracking accessibility device. Maps eye position to virtual axes for hands-free view control.
     Wave-98 addition. Last reviewed: 2026-07.

@@ -10,7 +10,7 @@ device:
   vendor: "Radiomaster"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0x5748      # Community estimate — verify with lsusb
+    product_id: 0x5748      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x0483 (STMicroelectronics — used by EdgeTX). PID 0x5748 estimated for MT12. Verify with lsusb.
+      VID 0x0483 (STMicroelectronics - used by EdgeTX). PID 0x5748 estimated for MT12. Verify with lsusb.
 
 support:
   tier: 3
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Radiomaster MT12 — surface RC transmitter with EdgeTX USB joystick mode. Wheel + trigger layout.
+    Radiomaster MT12 - surface RC transmitter with EdgeTX USB joystick mode. Wheel + trigger layout.
     Wave-97 addition. Last reviewed: 2026-07.

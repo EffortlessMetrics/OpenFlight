@@ -10,7 +10,7 @@ device:
   vendor: "QuadStick"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0xA0F1      # Community estimate — verify with lsusb
+    product_id: 0xA0F1      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    QuadStick Flight Controller — mouth-operated joystick configured for flight sim. Extended axis mapping for throttle/rudder.
+    QuadStick Flight Controller - mouth-operated joystick configured for flight sim. Extended axis mapping for throttle/rudder.
     Wave-98 addition. Last reviewed: 2026-07.

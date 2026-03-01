@@ -10,7 +10,7 @@ device:
   vendor: "Gravis"
   usb:
     vendor_id: 0x0428       # Confirmed
-    product_id: 0x4001      # Community estimate — verify with lsusb
+    product_id: 0x4001      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x5             # Game Pad
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Gravis PC GamePad USB — USB-adapted version of the classic Gravis gamepad. Limited axes but iconic design.
+    Gravis PC GamePad USB - USB-adapted version of the classic Gravis gamepad. Limited axes but iconic design.
     Wave-99 addition. Last reviewed: 2026-07.

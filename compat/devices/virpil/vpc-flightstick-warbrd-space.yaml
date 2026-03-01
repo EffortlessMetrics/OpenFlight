@@ -10,7 +10,7 @@ device:
   vendor: "Virpil"
   usb:
     vendor_id: 0x3344       # Confirmed
-    product_id: 0x8320      # Community estimate — verify with lsusb
+    product_id: 0x8320      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Virpil VPC WarBRD Space Edition — base with extended throw and space sim-specific cam profiles.
+    Virpil VPC WarBRD Space Edition - base with extended throw and space sim-specific cam profiles.
     Wave-96 addition. Last reviewed: 2026-07.

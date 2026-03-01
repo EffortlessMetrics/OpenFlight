@@ -10,7 +10,7 @@ device:
   vendor: "Flysky"
   usb:
     vendor_id: 0x1781       # Confirmed
-    product_id: 0x089B      # Community estimate — verify with lsusb
+    product_id: 0x089B      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Flysky FS-i6S — touchscreen 10-channel RC transmitter with USB joystick output.
+    Flysky FS-i6S - touchscreen 10-channel RC transmitter with USB joystick output.
     Wave-97 addition. Last reviewed: 2026-07.

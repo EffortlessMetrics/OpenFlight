@@ -10,7 +10,7 @@ device:
   vendor: "Eachine"
   usb:
     vendor_id: 0x0483       # Confirmed
-    product_id: 0x5749      # Community estimate — verify with lsusb
+    product_id: 0x5749      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -31,7 +31,7 @@ polling:
 quirks:
   - id: PID_UNCONFIRMED
     description: >
-      VID 0x0483 (STMicroelectronics — EdgeTX firmware). PID 0x5749 estimated for Eachine clone. Verify with lsusb.
+      VID 0x0483 (STMicroelectronics - EdgeTX firmware). PID 0x5749 estimated for Eachine clone. Verify with lsusb.
 
 support:
   tier: 3

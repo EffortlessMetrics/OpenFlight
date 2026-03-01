@@ -10,7 +10,7 @@ device:
   vendor: "CH Products"
   usb:
     vendor_id: 0x068E       # Confirmed
-    product_id: 0x0050      # Community estimate — verify with lsusb
+    product_id: 0x0050      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    CH Products Gamecard III — gameport-to-USB adapter for legacy joysticks. Reports 4 analog axes and 4 buttons.
+    CH Products Gamecard III - gameport-to-USB adapter for legacy joysticks. Reports 4 analog axes and 4 buttons.
     Wave-99 addition. Last reviewed: 2026-07.

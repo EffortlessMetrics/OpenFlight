@@ -10,7 +10,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F       # Confirmed
-    product_id: 0xB351      # Community estimate — verify with lsusb
+    product_id: 0xB351      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Thrustmaster HOTAS Cougar (original) — metal-bodied F-16 replica HOTAS from 2002. Full-metal construction with programmable firmware.
+    Thrustmaster HOTAS Cougar (original) - metal-bodied F-16 replica HOTAS from 2002. Full-metal construction with programmable firmware.
     Wave-99 addition. Last reviewed: 2026-07.

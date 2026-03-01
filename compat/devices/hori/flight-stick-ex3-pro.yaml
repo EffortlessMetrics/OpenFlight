@@ -10,7 +10,7 @@ device:
   vendor: "HORI"
   usb:
     vendor_id: 0x0F0D       # Confirmed
-    product_id: 0x0192      # Community estimate — verify with lsusb
+    product_id: 0x0192      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    HORI Flight Stick EX3 Pro — enhanced version of EX3 with additional hat and throttle slider.
+    HORI Flight Stick EX3 Pro - enhanced version of EX3 with additional hat and throttle slider.
     Wave-96 addition. Last reviewed: 2026-07.

@@ -10,7 +10,7 @@ device:
   vendor: "Microsoft"
   usb:
     vendor_id: 0x045E       # Confirmed
-    product_id: 0x0038      # Community estimate — verify with lsusb
+    product_id: 0x0038      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Microsoft SideWinder Precision 2 — classic USB joystick with 8 buttons and hat switch. Reliable mid-2000s stick.
+    Microsoft SideWinder Precision 2 - classic USB joystick with 8 buttons and hat switch. Reliable mid-2000s stick.
     Wave-99 addition. Last reviewed: 2026-07.

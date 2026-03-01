@@ -10,7 +10,7 @@ device:
   vendor: "Thrustmaster"
   usb:
     vendor_id: 0x044F       # Confirmed
-    product_id: 0xB6A0      # Community estimate — verify with lsusb
+    product_id: 0xB6A0      # Community estimate - verify with lsusb
   hid:
     usage_page: 0x01     # Generic Desktop
     usage: 0x4             # Joystick
@@ -39,5 +39,5 @@ support:
     simulated: false
     hil: false
   notes: >
-    Thrustmaster T.Flight HOTAS Ace Edition — branded variant with custom livery and slightly adjusted spring tension.
+    Thrustmaster T.Flight HOTAS Ace Edition - branded variant with custom livery and slightly adjusted spring tension.
     Wave-96 addition. Last reviewed: 2026-07.
