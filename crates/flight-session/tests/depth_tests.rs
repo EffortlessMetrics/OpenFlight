@@ -112,9 +112,12 @@ fn session_restore_latest_returns_most_recent() {
     sp.set_profile("new");
     sp.snapshot();
 
+    // Two snapshots should exist before restore.
+    assert_eq!(sp.snapshot_count(), 2);
     let latest = sp.restore_latest().unwrap();
     assert_eq!(latest.active_profile.as_deref(), Some("new"));
-    assert_eq!(sp.snapshot_count(), 1); // one snapshot remains
+    // restore_latest() consumes one snapshot.
+    assert_eq!(sp.snapshot_count(), 1);
 }
 
 #[test]

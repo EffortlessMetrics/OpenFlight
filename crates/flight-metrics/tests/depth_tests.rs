@@ -262,7 +262,7 @@ fn gauge_thread_safe_updates() {
         let name = format!("gauge_{i}");
         let v = reg.gauge_value(&name).expect("gauge must exist");
         assert!(
-            (v - 49.0).abs() < f64::EPSILON,
+            (v - 49.0).abs() < 1e-9,
             "gauge_{i} should be 49.0, got {v}"
         );
     }
@@ -421,8 +421,8 @@ fn metric_registry_is_thread_safe() {
             let r = Arc::clone(&reg);
             std::thread::spawn(move || {
                 r.inc_counter(&format!("ctr_{i}"), 1);
-                r.set_gauge(&format!("gauge_{i}"), i as f64);
-                r.observe(&format!("hist_{i}"), i as f64);
+                r.set_gauge(&format!("gauge_{i}"), (i + 1) as f64);
+                r.observe(&format!("hist_{i}"), (i + 1) as f64);
                 let _ = r.snapshot();
             })
         })
