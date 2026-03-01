@@ -3,7 +3,7 @@
 
 //! Shared types and parsing helpers for `compat/` YAML manifests.
 //!
-//! Used by `compat_matrix` to generate COMPATIBILITY.md and compat/matrix.json.
+//! Used by `compat_matrix` to generate COMPATIBILITY-MATRIX.md and compat/matrix.json.
 
 use anyhow::Result;
 use serde::Serialize;

@@ -69,10 +69,10 @@ enum Commands {
         command: hotas::HotasCommand,
     },
 
-    /// Generate COMPATIBILITY.md and compat/matrix.json from compat/ manifests
+    /// Generate COMPATIBILITY-MATRIX.md and compat/matrix.json from compat/ manifests
     GenCompat,
 
-    /// Generate COMPATIBILITY.md and compat/matrix.json from compat/ manifests
+    /// Generate COMPATIBILITY-MATRIX.md and compat/matrix.json from compat/ manifests
     GenerateCompat,
 
     /// Run code coverage report on core crates using cargo-llvm-cov

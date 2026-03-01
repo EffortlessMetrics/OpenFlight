@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Generate COMPATIBILITY.md and compat/matrix.json from `compat/` YAML manifests.
+//! Generate COMPATIBILITY-MATRIX.md and compat/matrix.json from `compat/` YAML manifests.
 //!
 //! Produces:
 //! - A vendor-grouped summary table with per-vendor device counts
 //! - Capability coverage statistics (axes, buttons, FFB)
-//! - Per-vendor device lists in COMPATIBILITY.md
+//! - Per-vendor device lists in COMPATIBILITY-MATRIX.md
 //! - A machine-readable `compat/matrix.json` export
 //!
 //! Run with: `cargo xtask gen-compat` or `cargo xtask generate-compat`
@@ -155,15 +155,9 @@ pub fn run_compat_matrix() -> Result<()> {
         capability_coverage,
     };
 
-    // ---- Generate COMPATIBILITY.md ----
-    let md = generate_markdown(
-        &games,
-        &vendors,
-        &devices_by_tier,
-        &games_by_tier,
-        &vendor_map,
-    )?;
-    let md_path = "COMPATIBILITY.md";
+    // ---- Generate COMPATIBILITY-MATRIX.md ----
+    let md = generate_markdown(&games, &vendor_map)?;
+    let md_path = "COMPATIBILITY-MATRIX.md";
     fs::write(md_path, &md).with_context(|| format!("Failed to write {md_path}"))?;
 
     // ---- Generate compat/matrix.json ----
@@ -199,9 +193,6 @@ pub fn run_compat_matrix() -> Result<()> {
 
 fn generate_markdown(
     games: &[GameEntry],
-    vendors: &[VendorSummary],
-    devices_by_tier: &BTreeMap<String, usize>,
-    games_by_tier: &BTreeMap<String, usize>,
     vendor_map: &BTreeMap<String, Vec<DeviceEntry>>,
 ) -> Result<String> {
     let mut out = String::new();
@@ -215,6 +206,35 @@ fn generate_markdown(
 
     // Compute summary counts from vendor_map
     let all_devices: Vec<&DeviceEntry> = vendor_map.values().flatten().collect();
+
+    // Compute tier distributions
+    let mut devices_by_tier: BTreeMap<String, usize> = BTreeMap::new();
+    for d in &all_devices {
+        *devices_by_tier
+            .entry(format!("tier_{}", d.tier))
+            .or_insert(0) += 1;
+    }
+    let mut games_by_tier: BTreeMap<String, usize> = BTreeMap::new();
+    for g in games {
+        *games_by_tier.entry(format!("tier_{}", g.tier)).or_insert(0) += 1;
+    }
+
+    // Compute vendor summaries
+    let vendors: Vec<VendorSummary> = vendor_map
+        .iter()
+        .map(|(name, devs)| {
+            let mut tiers = BTreeMap::new();
+            for d in devs {
+                *tiers.entry(d.tier).or_insert(0) += 1;
+            }
+            VendorSummary {
+                name: name.clone(),
+                device_count: devs.len(),
+                tiers,
+                ffb_devices: devs.iter().filter(|d| d.force_feedback).count(),
+            }
+        })
+        .collect();
 
     // Summary
     writeln!(out, "## Summary")?;
