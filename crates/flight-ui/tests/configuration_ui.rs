@@ -65,11 +65,12 @@ async fn profile_activate_multiple_times_last_wins() {
     let state = test_api_state();
     let srv = server(state.clone());
 
-    srv.post("/api/v1/profiles/combat/activate").await;
-    srv.post("/api/v1/profiles/landing/activate").await;
-    srv.post("/api/v1/profiles/cruise/activate").await;
+    srv.post("/api/v1/profiles/combat/activate").await.assert_status_ok();
+    srv.post("/api/v1/profiles/landing/activate").await.assert_status_ok();
+    srv.post("/api/v1/profiles/cruise/activate").await.assert_status_ok();
 
     let resp = srv.get("/api/v1/profiles").await;
+    resp.assert_status_ok();
     let profiles: Vec<ProfileEntry> = resp.json();
     assert_eq!(profiles[0].name, "cruise");
 }
@@ -80,7 +81,8 @@ async fn profile_activate_sends_broadcast() {
     let mut rx = state.broadcast.subscribe();
     let srv = server(state.clone());
 
-    srv.post("/api/v1/profiles/night/activate").await;
+    let resp = srv.post("/api/v1/profiles/night/activate").await;
+    resp.assert_status_ok();
 
     // Broadcast should have sent an AdapterEvent for the profile change
     let msg = rx.try_recv().unwrap();

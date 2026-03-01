@@ -77,7 +77,14 @@ fn axis_update_ws_message_zero_value() {
         value: 0.0,
     };
     let json = serde_json::to_string(&msg).unwrap();
-    assert!(json.contains("\"value\":0.0") || json.contains("\"value\":0"));
+    let restored: WsMessage = serde_json::from_str(&json).unwrap();
+    match restored {
+        WsMessage::AxisUpdate { axis, value } => {
+            assert_eq!(axis, "brake_left");
+            assert!((value - 0.0).abs() < f64::EPSILON);
+        }
+        _ => panic!("wrong variant after round-trip"),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -101,9 +108,9 @@ fn device_status_multiple_devices_distinct_ids() {
     let restored: Vec<DeviceStatus> = serde_json::from_str(&json).unwrap();
     assert_eq!(restored.len(), 5);
 
-    let ids: Vec<&str> = restored.iter().map(|d| d.id.as_str()).collect();
     for i in 0..5 {
-        assert!(ids.contains(&format!("dev-{i}").as_str()));
+        let expected_id = format!("dev-{i}");
+        assert!(restored.iter().any(|d| d.id == expected_id));
     }
 }
 
