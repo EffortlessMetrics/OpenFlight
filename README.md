@@ -39,7 +39,28 @@ Architecture Decision Records are under `docs/explanation/adr/`.
 - `010-schema-versioning-strategy.md`
 - `011-observability-architecture.md`
 
-## Build And Validate
+## Quick Start
+
+**Prerequisites:** Rust 1.92+, Windows SDK (Windows) or `libudev-dev` (Linux).
+
+```bash
+git clone https://github.com/EffortlessMetrics/OpenFlight.git
+cd OpenFlight
+cargo build --workspace
+cargo xtask check          # fmt + clippy + core tests
+```
+
+Try the virtual device harness (no hardware needed):
+
+```bash
+cargo run -p flight-virtual
+```
+
+For the full walkthrough — connecting a device, applying a profile,
+and running with a simulator — see the
+[Getting Started Guide](docs/how-to/getting-started.md).
+
+## Build and Validate
 
 ```bash
 cargo build --workspace
@@ -51,18 +72,31 @@ cargo clippy --workspace -- -D warnings
 Workspace helpers:
 
 ```bash
-cargo xtask check
-cargo xtask validate
-make quick
-make all
+cargo xtask check      # Fast smoke test (fmt, clippy, core tests)
+cargo xtask validate   # Full validation (tests, benches, API checks)
+make quick             # Clippy + pattern verification
+make all               # Full regression prevention
 ```
 
 ## Performance Constraints
 
-- 250Hz real-time processing loop
-- Axis processing latency target: <=5ms p99
-- Jitter target: <=0.5ms p99
+- 250 Hz real-time processing loop
+- Axis processing latency target: ≤ 5 ms p99
+- Jitter target: ≤ 0.5 ms p99
 - Zero allocations on RT hot paths
+
+## Documentation
+
+Documentation follows the [Diataxis](https://diataxis.fr/) framework:
+
+| Category | Path | Description |
+|----------|------|-------------|
+| **How-To Guides** | [`docs/how-to/`](docs/how-to/) | [Getting Started](docs/how-to/getting-started.md) · [Adding a Device](docs/how-to/adding-a-device.md) · [Adding a Simulator](docs/how-to/adding-a-simulator.md) |
+| **Reference** | [`docs/reference/`](docs/reference/) | [Configuration](docs/reference/configuration.md) · [Architecture Overview](docs/reference/architecture-overview.md) · [Supported Hardware](docs/reference/supported-hardware.md) |
+| **Explanation** | [`docs/explanation/`](docs/explanation/) | ADRs, crate deep-dives, integration notes |
+| **Tutorials** | [`docs/tutorials/`](docs/tutorials/) | Step-by-step learning guides |
+
+See [`docs/README.md`](docs/README.md) for the full documentation index.
 
 ## License
 
