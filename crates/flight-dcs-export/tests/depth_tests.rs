@@ -61,7 +61,7 @@ mod protocol_parsing {
 
         let pkt = parse_telemetry_batch(&batch).unwrap();
         assert_eq!(pkt.aircraft_name, "F-16C_50");
-        assert!((pkt.flight_data.altitude_m - 8000.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m - 8000.0).abs() < 1e-9);
         assert!((pkt.flight_data.mach - 0.75).abs() < 1e-10);
         assert_eq!(pkt.flight_data.engine_rpm_percent.len(), 2);
         assert_eq!(pkt.flight_data.gear_position.len(), 3);
@@ -77,7 +77,7 @@ mod protocol_parsing {
         ]
         .join("\n");
         let pkt = parse_telemetry_batch(&batch).unwrap();
-        assert!((pkt.flight_data.altitude_m - 500.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m - 500.0).abs() < 1e-9);
         assert!((pkt.flight_data.mach - 0.5).abs() < 1e-10);
     }
 
@@ -141,8 +141,8 @@ mod protocol_parsing {
         ]
         .join("\n");
         let pkt = parse_telemetry_batch(&batch).unwrap();
-        assert!((pkt.flight_data.altitude_m - 1000.0).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.heading_deg - 90.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m - 1000.0).abs() < 1e-9);
+        assert!((pkt.flight_data.heading_deg - 90.0).abs() < 1e-9);
     }
 
     // --- Device argument block parsing ---
@@ -268,9 +268,9 @@ mod protocol_parsing {
     #[test]
     fn dcs_to_ned_conversion() {
         let (n, e, d) = dcs_to_ned(100.0, 50.0, 200.0);
-        assert!((n - 100.0).abs() < f64::EPSILON);
-        assert!((e - 200.0).abs() < f64::EPSILON);
-        assert!((d - (-50.0)).abs() < f64::EPSILON);
+        assert!((n - 100.0).abs() < 1e-9);
+        assert!((e - 200.0).abs() < 1e-9);
+        assert!((d - (-50.0)).abs() < 1e-9);
     }
 
     // --- Unit conversion helpers ---
@@ -319,9 +319,9 @@ mod protocol_parsing {
     #[test]
     fn indicator_value_roundtrip_special_cases() {
         // Empty → 0.0
-        assert!((parse_indicator_value("").unwrap()).abs() < f64::EPSILON);
+        assert!((parse_indicator_value("").unwrap()).abs() < 1e-9);
         // Dash → 0.0
-        assert!((parse_indicator_value("-").unwrap()).abs() < f64::EPSILON);
+        assert!((parse_indicator_value("-").unwrap()).abs() < 1e-9);
         // Lua fractions
         assert!(parse_indicator_value("1/0").unwrap().is_infinite());
         assert!(parse_indicator_value("0/0").unwrap().is_nan());
@@ -338,11 +338,8 @@ mod aircraft_database {
 
     #[test]
     fn database_has_at_least_30_aircraft() {
-        assert!(
-            aircraft_db::all_aircraft().len() >= 30,
-            "DB has {} entries, expected ≥ 30",
-            aircraft_db::all_aircraft().len()
-        );
+        let count = aircraft_db::all_aircraft().len();
+        assert!(count >= 30, "DB has {} entries, expected ≥ 30", count);
     }
 
     #[test]
@@ -953,25 +950,25 @@ mod control_injection_depth {
     #[test]
     fn axis_clamps_above_one() {
         let cmd = DcsControlCommand::axis(0, 1, 5.0);
-        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+        assert!((cmd.value - 1.0).abs() < 1e-9);
     }
 
     #[test]
     fn axis_clamps_below_negative_one() {
         let cmd = DcsControlCommand::axis(0, 1, -5.0);
-        assert!((cmd.value - (-1.0)).abs() < f64::EPSILON);
+        assert!((cmd.value - (-1.0)).abs() < 1e-9);
     }
 
     #[test]
     fn axis_preserves_value_in_range() {
         let cmd = DcsControlCommand::axis(0, 1, 0.75);
-        assert!((cmd.value - 0.75).abs() < f64::EPSILON);
+        assert!((cmd.value - 0.75).abs() < 1e-9);
     }
 
     #[test]
     fn axis_clamps_negative_boundary() {
         let cmd = DcsControlCommand::axis(0, 1, -1.0);
-        assert!((cmd.value - (-1.0)).abs() < f64::EPSILON);
+        assert!((cmd.value - (-1.0)).abs() < 1e-9);
     }
 
     // --- Wire command round-trip (encode → decode) ---
@@ -1239,10 +1236,12 @@ mod control_injection_depth {
         let press = sw.press();
         assert_eq!(press.device_id, 12);
         assert_eq!(press.command_id, 3200);
-        assert!((press.value - 1.0).abs() < f64::EPSILON);
+        assert!((press.value - 1.0).abs() < 1e-9);
+        assert_eq!(press.action_type, DcsActionType::Axis);
 
         let release = sw.release();
-        assert!(release.value.abs() < f64::EPSILON);
+        assert!(release.value.abs() < 1e-9);
+        assert_eq!(release.action_type, DcsActionType::Axis);
     }
 
     #[test]
@@ -1258,10 +1257,10 @@ mod control_injection_depth {
         };
 
         let cmd = knob.command(1.5);
-        assert!((cmd.value - 1.0).abs() < f64::EPSILON);
+        assert!((cmd.value - 1.0).abs() < 1e-9);
 
         let cmd2 = knob.command(-0.5);
-        assert!(cmd2.value.abs() < f64::EPSILON);
+        assert!(cmd2.value.abs() < 1e-9);
     }
 }
 
@@ -1308,15 +1307,15 @@ mod telemetry_conversion {
     fn coordinate_conversion_all_quadrants() {
         // NE quadrant: x=north, z=east, y=up
         let (n, e, d) = dcs_to_ned(1000.0, 500.0, 2000.0);
-        assert!((n - 1000.0).abs() < f64::EPSILON);
-        assert!((e - 2000.0).abs() < f64::EPSILON);
-        assert!((d - (-500.0)).abs() < f64::EPSILON);
+        assert!((n - 1000.0).abs() < 1e-9);
+        assert!((e - 2000.0).abs() < 1e-9);
+        assert!((d - (-500.0)).abs() < 1e-9);
 
         // Negative values
         let (n, e, d) = dcs_to_ned(-1000.0, -500.0, -2000.0);
-        assert!((n - (-1000.0)).abs() < f64::EPSILON);
-        assert!((e - (-2000.0)).abs() < f64::EPSILON);
-        assert!((d - 500.0).abs() < f64::EPSILON);
+        assert!((n - (-1000.0)).abs() < 1e-9);
+        assert!((e - (-2000.0)).abs() < 1e-9);
+        assert!((d - 500.0).abs() < 1e-9);
     }
 
     // --- Missing telemetry fields → safe defaults ---
@@ -1324,18 +1323,18 @@ mod telemetry_conversion {
     #[test]
     fn default_flight_data_has_safe_values() {
         let fd = DcsFlightData::default();
-        assert!((fd.altitude_m).abs() < f64::EPSILON);
-        assert!((fd.airspeed_ms).abs() < f64::EPSILON);
-        assert!((fd.heading_deg).abs() < f64::EPSILON);
-        assert!((fd.pitch_deg).abs() < f64::EPSILON);
-        assert!((fd.roll_deg).abs() < f64::EPSILON);
-        assert!((fd.aoa_deg).abs() < f64::EPSILON);
+        assert!((fd.altitude_m).abs() < 1e-9);
+        assert!((fd.airspeed_ms).abs() < 1e-9);
+        assert!((fd.heading_deg).abs() < 1e-9);
+        assert!((fd.pitch_deg).abs() < 1e-9);
+        assert!((fd.roll_deg).abs() < 1e-9);
+        assert!((fd.aoa_deg).abs() < 1e-9);
         // g_load defaults to 1.0 (1G = sitting on the ground)
-        assert!((fd.g_load - 1.0).abs() < f64::EPSILON);
-        assert!((fd.mach).abs() < f64::EPSILON);
-        assert!((fd.vertical_speed_ms).abs() < f64::EPSILON);
+        assert!((fd.g_load - 1.0).abs() < 1e-9);
+        assert!((fd.mach).abs() < 1e-9);
+        assert!((fd.vertical_speed_ms).abs() < 1e-9);
         assert!(fd.engine_rpm_percent.is_empty());
-        assert!((fd.fuel_total_kg).abs() < f64::EPSILON);
+        assert!((fd.fuel_total_kg).abs() < 1e-9);
         assert!(fd.gear_position.is_empty());
     }
 
@@ -1343,8 +1342,8 @@ mod telemetry_conversion {
     fn batch_with_only_header_returns_defaults() {
         let data = "HEADER:timestamp=0.0,model_time=0.0,aircraft=T\n";
         let pkt = parse_telemetry_batch(data).unwrap();
-        assert!((pkt.flight_data.altitude_m).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.g_load - 1.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m).abs() < 1e-9);
+        assert!((pkt.flight_data.g_load - 1.0).abs() < 1e-9);
     }
 
     // --- Partial telemetry populates only provided fields ---
@@ -1358,11 +1357,11 @@ mod telemetry_conversion {
         ]
         .join("\n");
         let pkt = parse_telemetry_batch(&batch).unwrap();
-        assert!((pkt.flight_data.altitude_m - 5000.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m - 5000.0).abs() < 1e-9);
         assert!((pkt.flight_data.mach - 0.9).abs() < 1e-10);
         // Unprovided fields are default
-        assert!((pkt.flight_data.heading_deg).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.g_load - 1.0).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.heading_deg).abs() < 1e-9);
+        assert!((pkt.flight_data.g_load - 1.0).abs() < 1e-9);
     }
 }
 
@@ -1406,12 +1405,19 @@ mod integration_scenarios {
         assert_eq!(pkt.aircraft_name, "FA-18C_hornet");
 
         // Verify flight data
-        assert!((pkt.flight_data.altitude_m - 10000.0).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.airspeed_ms - 300.0).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.heading_deg - 90.0).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.aoa_deg - 6.5).abs() < f64::EPSILON);
-        assert!((pkt.flight_data.g_load - 1.8).abs() < f64::EPSILON);
+        assert!((pkt.flight_data.altitude_m - 10000.0).abs() < 1e-9);
+        assert!((pkt.flight_data.airspeed_ms - 300.0).abs() < 1e-9);
+        assert!((pkt.flight_data.heading_deg - 90.0).abs() < 1e-9);
+        assert!((pkt.flight_data.aoa_deg - 6.5).abs() < 1e-9);
+        assert!((pkt.flight_data.g_load - 1.8).abs() < 1e-9);
         assert!((pkt.flight_data.mach - 0.92).abs() < 1e-10);
+
+        // Verify engine RPM and gear position
+        assert_eq!(pkt.flight_data.engine_rpm_percent.len(), 2);
+        assert!((pkt.flight_data.engine_rpm_percent[0] - 94.5).abs() < 1e-9);
+        assert!((pkt.flight_data.engine_rpm_percent[1] - 95.0).abs() < 1e-9);
+        assert_eq!(pkt.flight_data.gear_position.len(), 3);
+        assert!(pkt.flight_data.gear_position.iter().all(|&p| p.abs() < 1e-9));
 
         // Verify aircraft DB lookup
         let aircraft = aircraft_db::lookup(&pkt.aircraft_name).unwrap();
