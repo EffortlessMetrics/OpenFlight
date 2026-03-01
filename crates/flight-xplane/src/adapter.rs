@@ -438,12 +438,6 @@ impl XPlaneAdapter {
                     .await
                     {
                         Ok(raw_data) => {
-                            // Update last packet time on successful data collection
-                            {
-                                let mut last_packet = last_packet_time.write().unwrap();
-                                *last_packet = Some(Instant::now());
-                            }
-
                             // Convert to bus snapshot
                             match Self::convert_raw_to_snapshot(raw_data, adapter_start) {
                                 Ok(snapshot) => {
@@ -477,6 +471,12 @@ impl XPlaneAdapter {
                                         &state,
                                         AdapterEvent::TelemetryReceived,
                                     );
+
+                                    // Update last packet time after successful conversion
+                                    {
+                                        let mut last_packet = last_packet_time.write().unwrap();
+                                        *last_packet = Some(Instant::now());
+                                    }
 
                                     // Publish snapshot to bus subscribers
                                     if let Ok(mut publisher) = bus_publisher.lock() {
@@ -822,27 +822,56 @@ impl XPlaneAdapter {
 
     /// Compute validity flags based on which DataRefs are present in the raw data.
     fn compute_validity_flags(datarefs: &HashMap<String, DataRefValue>) -> ValidityFlags {
-        let attitude_valid = datarefs.contains_key("sim/flightmodel/position/theta")
-            && datarefs.contains_key("sim/flightmodel/position/phi")
-            && datarefs.contains_key("sim/flightmodel/position/psi");
+        let attitude_valid = matches!(
+            datarefs.get("sim/flightmodel/position/theta"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/phi"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/psi"),
+            Some(DataRefValue::Float(_))
+        );
 
-        let angular_rates_valid = datarefs.contains_key("sim/flightmodel/position/P")
-            && datarefs.contains_key("sim/flightmodel/position/Q")
-            && datarefs.contains_key("sim/flightmodel/position/R");
+        let angular_rates_valid = matches!(
+            datarefs.get("sim/flightmodel/position/P"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/Q"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/R"),
+            Some(DataRefValue::Float(_))
+        );
 
-        let velocities_valid =
-            datarefs.contains_key("sim/flightmodel/position/indicated_airspeed");
+        let velocities_valid = matches!(
+            datarefs.get("sim/flightmodel/position/indicated_airspeed"),
+            Some(DataRefValue::Float(_))
+        );
 
-        let kinematics_valid = datarefs.contains_key("sim/flightmodel/forces/g_nrml");
+        let kinematics_valid = matches!(
+            datarefs.get("sim/flightmodel/forces/g_nrml"),
+            Some(DataRefValue::Float(_))
+        );
 
-        let aero_valid = datarefs.contains_key("sim/flightmodel/position/alpha")
-            && datarefs.contains_key("sim/flightmodel/position/beta");
+        let aero_valid = matches!(
+            datarefs.get("sim/flightmodel/position/alpha"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/beta"),
+            Some(DataRefValue::Float(_))
+        );
 
-        let position_valid = datarefs.contains_key("sim/flightmodel/position/latitude")
-            && datarefs.contains_key("sim/flightmodel/position/longitude");
+        let position_valid = matches!(
+            datarefs.get("sim/flightmodel/position/latitude"),
+            Some(DataRefValue::Double(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/longitude"),
+            Some(DataRefValue::Double(_))
+        );
 
-        // Safe for FFB requires at minimum valid attitude and angular rate data
-        let safe_for_ffb = attitude_valid && angular_rates_valid;
+        // Safe for FFB requires valid attitude, angular rates, and airspeed
+        let safe_for_ffb = attitude_valid && angular_rates_valid && velocities_valid;
 
         ValidityFlags {
             safe_for_ffb,
