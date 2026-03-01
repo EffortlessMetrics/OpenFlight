@@ -54,7 +54,7 @@ fn warbrd_axis_calibration_high_resolution() {
 
 /// WarBRD midpoint axes produce ~0.5 (centring check).
 #[test]
-fn warbrd_mode_switching_midpoint() {
+fn warbrd_midpoint_centring() {
     let mid = VIRPIL_AXIS_MAX / 2;
     let report = make_warbrd_report([mid; 5], [0u8; 4]);
     let state = parse_warbrd_report(&report, WarBrdVariant::Original).unwrap();
@@ -239,7 +239,8 @@ fn button_matrix_modifier_keys_ace_pedals() {
 /// All VIRPIL axis values for any raw input stay in [0.0, 1.0].
 #[test]
 fn prop_axis_range_bounds() {
-    for raw in [0u16, 1, VIRPIL_AXIS_MAX / 2, VIRPIL_AXIS_MAX, u16::MAX] {
+    // Values within the valid Virpil axis range must normalise to [0.0, 1.0].
+    for raw in [0u16, 1, VIRPIL_AXIS_MAX / 2, VIRPIL_AXIS_MAX] {
         let report = make_warbrd_report([raw; 5], [0u8; 4]);
         let state = parse_warbrd_report(&report, WarBrdVariant::D).unwrap();
         assert!(
@@ -253,6 +254,27 @@ fn prop_axis_range_bounds() {
         assert!(
             (0.0..=1.0).contains(&state.inner.axes.z),
             "z out of [0,1] for raw={raw}"
+        );
+    }
+
+    // u16::MAX exceeds VIRPIL_AXIS_MAX — verify normalisation clamps to 1.0.
+    {
+        let report = make_warbrd_report([u16::MAX; 5], [0u8; 4]);
+        let state = parse_warbrd_report(&report, WarBrdVariant::D).unwrap();
+        assert!(
+            state.inner.axes.x <= 1.0,
+            "x must be clamped to <=1.0 for u16::MAX, got {}",
+            state.inner.axes.x
+        );
+        assert!(
+            state.inner.axes.y <= 1.0,
+            "y must be clamped to <=1.0 for u16::MAX, got {}",
+            state.inner.axes.y
+        );
+        assert!(
+            state.inner.axes.z <= 1.0,
+            "z must be clamped to <=1.0 for u16::MAX, got {}",
+            state.inner.axes.z
         );
     }
 }

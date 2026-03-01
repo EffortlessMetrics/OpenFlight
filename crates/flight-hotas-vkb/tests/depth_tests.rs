@@ -55,10 +55,11 @@ fn gladiator_nxt_button_matrix_all_36_buttons() {
         0xFF,
     );
     let state = handler.parse_report(&report).unwrap();
+    assert_eq!(state.buttons.len(), 36, "expected exactly 36 buttons in Gladiator NXT EVO state");
     for i in 0..36 {
         assert!(state.buttons[i], "button {} should be pressed", i + 1);
     }
-    assert!(!state.buttons[36], "button 37 should NOT be pressed");
+    assert!(state.buttons.get(36).map_or(true, |b| !*b), "button 37 should NOT be pressed");
 }
 
 /// Hat directions resolve to all 8 compass points.
@@ -311,7 +312,7 @@ fn prop_button_count_consistency() {
     }
 }
 
-/// All profiles have unique VID for VKB.
+/// All profiles use the VKB vendor ID.
 #[test]
 fn prop_all_profiles_vid_is_vkb() {
     for p in &all_profiles() {
@@ -322,6 +323,6 @@ fn prop_all_profiles_vid_is_vkb() {
 /// Shift mode logical button count >= physical button count.
 #[test]
 fn prop_shift_mode_logical_gte_physical() {
-    const { assert!(GLADIATOR_NXT_EVO_SHIFT.logical_button_count >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count) };
-    const { assert!(GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count) };
+    assert!(GLADIATOR_NXT_EVO_SHIFT.logical_button_count >= GLADIATOR_NXT_EVO_SHIFT.physical_button_count);
+    assert!(GUNFIGHTER_MCG_SHIFT.logical_button_count >= GUNFIGHTER_MCG_SHIFT.physical_button_count);
 }
