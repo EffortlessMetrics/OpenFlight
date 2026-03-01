@@ -13,6 +13,9 @@ use bytemuck::{bytes_of, try_from_bytes, Zeroable};
 use flight_falcon_bms::FlightData;
 use proptest::prelude::*;
 
+#[repr(align(4))]
+struct Aligned<const N: usize>([u8; N]);
+
 // ── Strategies ──────────────────────────────────────────────────────────────
 
 /// Generate a finite (non-NaN, non-Inf) f32 in a wide range.
@@ -190,17 +193,19 @@ proptest! {
 // ── Arbitrary bytes → FlightData acceptance ─────────────────────────────────
 
 proptest! {
-    /// Any 768-byte slice should be parseable as FlightData (bytemuck Pod).
+    /// Any correctly-sized byte slice should be parseable as FlightData (bytemuck Pod).
     #[test]
-    fn any_exact_size_bytes_parse(bytes in prop::collection::vec(any::<u8>(), 768)) {
-        let result = try_from_bytes::<FlightData>(&bytes);
-        prop_assert!(result.is_ok(), "any 768-byte slice must parse as FlightData");
+    fn any_exact_size_bytes_parse(bytes in prop::collection::vec(any::<u8>(), std::mem::size_of::<FlightData>())) {
+        let mut buf = Aligned([0u8; std::mem::size_of::<FlightData>()]);
+        buf.0.copy_from_slice(&bytes);
+        let result = try_from_bytes::<FlightData>(&buf.0);
+        prop_assert!(result.is_ok(), "any {}-byte slice must parse as FlightData", std::mem::size_of::<FlightData>());
     }
 
     /// Wrong-size slices must be rejected.
     #[test]
     fn wrong_size_bytes_rejected(len in 0usize..2000) {
-        prop_assume!(len != 768);
+        prop_assume!(len != std::mem::size_of::<FlightData>());
         let bytes = vec![0u8; len];
         let result = try_from_bytes::<FlightData>(&bytes);
         prop_assert!(result.is_err(), "size {len} must be rejected");

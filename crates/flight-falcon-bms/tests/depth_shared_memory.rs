@@ -14,6 +14,9 @@ use bytemuck::{bytes_of, try_from_bytes, Zeroable};
 use flight_falcon_bms::FlightData;
 use std::f32::consts;
 
+#[repr(align(4))]
+struct Aligned<const N: usize>([u8; N]);
+
 // ── Layout constants ────────────────────────────────────────────────────────
 
 /// Expected size: 17 × f32 (68 bytes) + 700-byte pad = 768 bytes.
@@ -155,16 +158,16 @@ fn reject_one_byte() {
 
 #[test]
 fn accept_exact_size_all_zero() {
-    let bytes = vec![0u8; EXPECTED_SIZE];
-    let result = try_from_bytes::<FlightData>(&bytes);
+    let buf = Aligned([0u8; EXPECTED_SIZE]);
+    let result = try_from_bytes::<FlightData>(&buf.0);
     assert!(result.is_ok(), "exact-size zeroed slice must be accepted");
 }
 
 #[test]
 fn accept_exact_size_all_ones() {
-    let bytes = vec![0xFFu8; EXPECTED_SIZE];
+    let buf = Aligned([0xFFu8; EXPECTED_SIZE]);
     // All 0xFF bytes are valid for f32 (NaN) — bytemuck allows it
-    let result = try_from_bytes::<FlightData>(&bytes);
+    let result = try_from_bytes::<FlightData>(&buf.0);
     assert!(result.is_ok(), "exact-size 0xFF slice must be accepted");
 }
 

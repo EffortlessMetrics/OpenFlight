@@ -13,12 +13,15 @@ use approx::assert_relative_eq;
 use bytemuck::{try_from_bytes, Zeroable};
 use flight_falcon_bms::{BmsError, FalconBmsAdapter, FlightData, SharedMemoryReader};
 
+#[repr(align(4))]
+struct Aligned<const N: usize>([u8; N]);
+
 // ── Malformed byte parsing ──────────────────────────────────────────────────
 
 #[test]
 fn all_0xff_bytes_parse_as_nan_fields() {
-    let bytes = vec![0xFFu8; std::mem::size_of::<FlightData>()];
-    let fd: &FlightData = try_from_bytes(&bytes).expect("all-0xFF must parse");
+    let buf = Aligned([0xFFu8; std::mem::size_of::<FlightData>()]);
+    let fd: &FlightData = try_from_bytes(&buf.0).expect("all-0xFF must parse");
     // 0xFFFFFFFF is a NaN for f32
     assert!(fd.pitch.is_nan());
     assert!(fd.roll.is_nan());
@@ -28,8 +31,8 @@ fn all_0xff_bytes_parse_as_nan_fields() {
 
 #[test]
 fn all_0xff_normalisations_are_nan() {
-    let bytes = vec![0xFFu8; std::mem::size_of::<FlightData>()];
-    let fd: &FlightData = try_from_bytes(&bytes).unwrap();
+    let buf = Aligned([0xFFu8; std::mem::size_of::<FlightData>()]);
+    let fd: &FlightData = try_from_bytes(&buf.0).unwrap();
     assert!(fd.pitch_normalized().is_nan());
     assert!(fd.roll_normalized().is_nan());
     assert!(fd.yaw_normalized().is_nan());
@@ -39,13 +42,13 @@ fn all_0xff_normalisations_are_nan() {
 #[test]
 fn known_bit_pattern_for_one_float() {
     // IEEE 754: 1.0f32 = 0x3F800000
-    let mut bytes = vec![0u8; std::mem::size_of::<FlightData>()];
+    let mut buf = Aligned([0u8; std::mem::size_of::<FlightData>()]);
     let one_bits = 1.0f32.to_ne_bytes();
     // Write 1.0 into the pitch field (byte offset 36)
     let pitch_offset = 9 * 4;
-    bytes[pitch_offset..pitch_offset + 4].copy_from_slice(&one_bits);
+    buf.0[pitch_offset..pitch_offset + 4].copy_from_slice(&one_bits);
 
-    let fd: &FlightData = try_from_bytes(&bytes).unwrap();
+    let fd: &FlightData = try_from_bytes(&buf.0).unwrap();
     assert_eq!(fd.pitch, 1.0);
     // pitch=1.0, normalized = 1.0/π ≈ 0.3183
     assert_relative_eq!(fd.pitch_normalized(), 1.0 / std::f32::consts::PI, epsilon = 1e-6);

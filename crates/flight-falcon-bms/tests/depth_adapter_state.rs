@@ -147,12 +147,16 @@ impl SucceedThenFail {
 
 impl SharedMemoryReader for SucceedThenFail {
     fn read_flight_data(&self) -> Result<FlightData, BmsError> {
-        let prev = self.remaining.fetch_sub(1, Ordering::Relaxed);
+        let prev = self
+            .remaining
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |x| {
+                if x == 0 { None } else { Some(x - 1) }
+            })
+            .unwrap_or(0);
+
         if prev > 0 {
             Ok(self.data)
         } else {
-            // Reset to 0 to avoid underflow accumulation
-            self.remaining.store(0, Ordering::Relaxed);
             Err(BmsError::NotAvailable)
         }
     }
