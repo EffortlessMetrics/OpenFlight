@@ -10,8 +10,11 @@
 //! - Size target <30MB/3min
 
 pub mod analysis;
+pub mod codec;
 pub mod export;
 pub mod recorder;
+pub mod replay;
+pub mod ring_buffer;
 mod time;
 
 pub use time::to_ns_from_ms;
