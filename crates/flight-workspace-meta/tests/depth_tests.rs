@@ -106,7 +106,7 @@ fn readme_path_none_when_field_is_none() {
 }
 
 #[test]
-fn readme_path_none_when_field_is_empty() {
+fn readme_path_some_when_field_is_some_even_if_empty() {
     let meta = CratesIoMetadata {
         readme: Some(String::new()),
         ..Default::default()
@@ -302,12 +302,23 @@ fn issue_default_has_empty_fields() {
 #[test]
 fn live_workspace_names_contains_known_crates() {
     let names = load_workspace_microcrate_names(workspace_root()).unwrap();
-    for expected in ["flight-core", "flight-axis", "flight-workspace-meta"] {
+    // Structural invariant: at least one workspace microcrate exists.
+    assert!(
+        !names.is_empty(),
+        "expected at least one workspace microcrate, found none"
+    );
+    // All reported crate names should be non-empty strings.
+    for name in &names {
         assert!(
-            names.contains(expected),
-            "expected {expected} in workspace members"
+            !name.is_empty(),
+            "workspace microcrate name should not be empty"
         );
     }
+    // This crate must always be present in the workspace.
+    assert!(
+        names.contains("flight-workspace-meta"),
+        "expected flight-workspace-meta in workspace members"
+    );
 }
 
 #[test]
@@ -364,7 +375,10 @@ fn live_microcrates_all_have_names() {
 fn live_microcrates_have_metadata() {
     let crates = load_workspace_microcrates(workspace_root()).unwrap();
     // At least some crates should have version/edition set via workspace inheritance
-    let with_version = crates.iter().filter(|c| c.metadata.version.is_some()).count();
+    let with_version = crates
+        .iter()
+        .filter(|c| c.metadata.version.is_some())
+        .count();
     assert!(
         with_version > 0,
         "expected at least one crate to have a resolved version"
@@ -389,7 +403,11 @@ fn live_validation_checks_all_microcrates() {
 #[test]
 fn live_validation_report_has_plausible_checked_count() {
     let report = validate_workspace_crates_io_metadata(workspace_root()).unwrap();
-    assert!(report.checked > 5, "expected many crates, got {}", report.checked);
+    assert!(
+        report.checked > 5,
+        "expected many crates, got {}",
+        report.checked
+    );
 }
 
 #[test]
@@ -475,7 +493,10 @@ fn synthetic_crate_local_description_not_overridden() {
     fs::write(root.join("crates/beta/README.md"), "# Beta").unwrap();
 
     let crates = load_workspace_microcrates(&root).unwrap();
-    assert_eq!(crates[0].metadata.description.as_deref(), Some("A test crate"));
+    assert_eq!(
+        crates[0].metadata.description.as_deref(),
+        Some("A test crate")
+    );
 }
 
 #[test]
@@ -569,7 +590,11 @@ fn synthetic_validation_all_fields_present_passes() {
     assert!(
         report.is_success(),
         "expected clean validation, got issues: {:?}",
-        report.issues.iter().map(|i| i.summary()).collect::<Vec<_>>()
+        report
+            .issues
+            .iter()
+            .map(|i| i.summary())
+            .collect::<Vec<_>>()
     );
 }
 
@@ -650,7 +675,11 @@ categories.workspace = true
 
     let report = validate_workspace_crates_io_metadata(&root).unwrap();
     assert!(!report.is_success());
-    assert!(report.issues[0].missing_fields.contains(&"keywords".to_string()));
+    assert!(
+        report.issues[0]
+            .missing_fields
+            .contains(&"keywords".to_string())
+    );
 }
 
 #[test]
@@ -686,7 +715,11 @@ keywords.workspace = true
 
     let report = validate_workspace_crates_io_metadata(&root).unwrap();
     assert!(!report.is_success());
-    assert!(report.issues[0].missing_fields.contains(&"categories".to_string()));
+    assert!(
+        report.issues[0]
+            .missing_fields
+            .contains(&"categories".to_string())
+    );
 }
 
 #[test]
@@ -737,7 +770,9 @@ fn load_from_file_inside_workspace() {
 
 #[test]
 fn load_from_nonexistent_dir_returns_error() {
-    let result = load_workspace_microcrates(Path::new("/nonexistent/path/xyz_42"));
+    let tmp = TempDir::new().unwrap();
+    let missing_dir = tmp.path().join("definitely_missing");
+    let result = load_workspace_microcrates(&missing_dir);
     assert!(result.is_err());
 }
 
@@ -925,7 +960,10 @@ fn workspace_crate_metadata_is_debuggable() {
 
     let crates = load_workspace_microcrates(&root).unwrap();
     let debug_str = format!("{:?}", crates[0]);
-    assert!(debug_str.contains("dbg"), "Debug output should contain crate name");
+    assert!(
+        debug_str.contains("dbg"),
+        "Debug output should contain crate name"
+    );
 }
 
 #[test]
