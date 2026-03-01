@@ -642,7 +642,9 @@ mod tests {
     #[test]
     fn configure_endpoint_invalid_addr_returns_error() {
         let cfg = TransportConfig::default();
-        let ep = cfg.configure_endpoint("not-a-url");
+        // tonic accepts many strings that look invalid, so use one with
+        // an embedded NUL byte which is always rejected by hyper/http.
+        let ep = cfg.configure_endpoint("http://\0invalid");
         assert!(ep.is_err());
     }
 
