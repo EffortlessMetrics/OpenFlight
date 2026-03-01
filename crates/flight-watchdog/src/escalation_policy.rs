@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Escalation policy that maps consecutive heartbeat misses to recovery actions.
+//! Count-based escalation policy that maps consecutive heartbeat misses to
+//! recovery actions.
+//!
+//! Escalation is driven purely by consecutive miss counts — no wall-clock
+//! timestamps are used.
 //!
 //! Default policy:
+//!  - below alert threshold → no action
 //!  - 1 miss   → Alert (warn)
 //!  - 3 misses → RestartComponent
 //!  - 5 misses → DegradeMode
@@ -86,8 +91,10 @@ impl EscalationPolicy {
         );
     }
 
-    /// Record a miss for a component and return the escalation action.
-    pub fn record_miss(&mut self, component: &str) -> RecoveryStrategy {
+    /// Record a miss for a component and return the escalation action, if any.
+    ///
+    /// Returns `None` when the consecutive miss count is below `alert_threshold`.
+    pub fn record_miss(&mut self, component: &str) -> Option<RecoveryStrategy> {
         let state = self
             .components
             .entry(component.to_string())
@@ -100,26 +107,24 @@ impl EscalationPolicy {
         let misses = state.consecutive_misses;
 
         let action = if misses >= self.config.shutdown_threshold {
-            RecoveryStrategy::Shutdown {
+            Some(RecoveryStrategy::Shutdown {
                 reason: format!("{component}: {misses} consecutive misses — irrecoverable"),
-            }
+            })
         } else if misses >= self.config.degrade_threshold {
-            RecoveryStrategy::DegradeMode
+            Some(RecoveryStrategy::DegradeMode)
         } else if misses >= self.config.restart_threshold {
-            RecoveryStrategy::RestartComponent {
+            Some(RecoveryStrategy::RestartComponent {
                 component: component.to_string(),
-            }
+            })
         } else if misses >= self.config.alert_threshold {
-            RecoveryStrategy::Alert {
+            Some(RecoveryStrategy::Alert {
                 message: format!("{component}: {misses} consecutive miss(es)"),
-            }
+            })
         } else {
-            RecoveryStrategy::Alert {
-                message: format!("{component}: miss below threshold"),
-            }
+            None
         };
 
-        state.last_action = Some(action.clone());
+        state.last_action = action.clone();
         action
     }
 
@@ -165,7 +170,7 @@ mod tests {
     fn first_miss_triggers_alert() {
         let mut policy = default_policy();
         let action = policy.record_miss("axis");
-        assert!(matches!(action, RecoveryStrategy::Alert { .. }));
+        assert!(matches!(action, Some(RecoveryStrategy::Alert { .. })));
     }
 
     #[test]
@@ -228,33 +233,33 @@ mod tests {
 
         // 1 → Alert
         let a = policy.record_miss("x");
-        assert!(matches!(a, RecoveryStrategy::Alert { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Alert { .. })));
 
         // 2 → Alert
         let a = policy.record_miss("x");
-        assert!(matches!(a, RecoveryStrategy::Alert { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Alert { .. })));
 
         // 3 → Restart
         let a = policy.record_miss("x");
-        assert!(matches!(a, RecoveryStrategy::RestartComponent { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::RestartComponent { .. })));
 
         // 4 → Restart
         let a = policy.record_miss("x");
-        assert!(matches!(a, RecoveryStrategy::RestartComponent { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::RestartComponent { .. })));
 
         // 5 → Degrade
         let a = policy.record_miss("x");
-        assert_eq!(a, RecoveryStrategy::DegradeMode);
+        assert_eq!(a, Some(RecoveryStrategy::DegradeMode));
 
         // 6..9 → Degrade
         for _ in 6..10 {
             let a = policy.record_miss("x");
-            assert_eq!(a, RecoveryStrategy::DegradeMode);
+            assert_eq!(a, Some(RecoveryStrategy::DegradeMode));
         }
 
         // 10 → Shutdown
         let a = policy.record_miss("x");
-        assert!(matches!(a, RecoveryStrategy::Shutdown { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Shutdown { .. })));
     }
 
     #[test]
@@ -271,7 +276,7 @@ mod tests {
         policy.record_recovery("y");
         let a = policy.record_miss("y");
         assert!(
-            matches!(a, RecoveryStrategy::Alert { .. }),
+            matches!(a, Some(RecoveryStrategy::Alert { .. })),
             "after recovery, first miss should be Alert again"
         );
     }
@@ -303,35 +308,35 @@ mod tests {
             shutdown_threshold: 8,
         });
 
-        // 1 miss — below alert_threshold=2
+        // 1 miss — below alert_threshold=2, no action
         let a = policy.record_miss("c");
-        assert!(matches!(a, RecoveryStrategy::Alert { .. }));
+        assert!(a.is_none(), "miss below alert_threshold should return None");
 
         // 2 misses — at alert_threshold
         let a = policy.record_miss("c");
-        assert!(matches!(a, RecoveryStrategy::Alert { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Alert { .. })));
 
         // 4 misses
         policy.record_miss("c");
         let a = policy.record_miss("c");
-        assert!(matches!(a, RecoveryStrategy::RestartComponent { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::RestartComponent { .. })));
 
         // 6 misses
         policy.record_miss("c");
         let a = policy.record_miss("c");
-        assert_eq!(a, RecoveryStrategy::DegradeMode);
+        assert_eq!(a, Some(RecoveryStrategy::DegradeMode));
 
         // 8 misses
         policy.record_miss("c");
         let a = policy.record_miss("c");
-        assert!(matches!(a, RecoveryStrategy::Shutdown { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Shutdown { .. })));
     }
 
     #[test]
     fn unregistered_component_auto_creates() {
         let mut policy = default_policy();
         let a = policy.record_miss("new_component");
-        assert!(matches!(a, RecoveryStrategy::Alert { .. }));
+        assert!(matches!(a, Some(RecoveryStrategy::Alert { .. })));
         assert_eq!(policy.miss_count("new_component"), 1);
     }
 }

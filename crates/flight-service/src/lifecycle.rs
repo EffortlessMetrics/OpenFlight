@@ -159,7 +159,7 @@ impl std::error::Error for LifecycleError {}
 /// Callback that executes a startup step. Return the outcome.
 pub type StepHandler = Box<dyn Fn(StartupStep) -> StepOutcome + Send + Sync>;
 
-/// Callback that executes a shutdown step for a named component.
+/// Callback that executes a shutdown step. Return the outcome.
 pub type ShutdownStepHandler = Box<dyn Fn(StartupStep) -> StepOutcome + Send + Sync>;
 
 /// The service lifecycle manager.
@@ -245,7 +245,7 @@ impl LifecycleManager {
         if self.warnings.is_empty() {
             self.state = LifecycleState::Running;
         } else {
-            self.state = LifecycleState::Running;
+            self.state = LifecycleState::Degraded;
         }
 
         Ok(())
@@ -261,9 +261,8 @@ impl LifecycleManager {
         self.state = LifecycleState::ShuttingDown;
 
         let mut shutdown_records = Vec::new();
-        let reverse_steps: Vec<StartupStep> = StartupStep::ORDERED.iter().rev().copied().collect();
 
-        for step in reverse_steps {
+        for step in StartupStep::ORDERED.iter().rev().copied() {
             let outcome = if let Some(ref handler) = self.shutdown_handler {
                 handler(step)
             } else {
@@ -402,7 +401,7 @@ mod tests {
         }));
 
         lm.start().unwrap();
-        assert_eq!(lm.state(), LifecycleState::Running);
+        assert_eq!(lm.state(), LifecycleState::Degraded);
         assert_eq!(lm.warnings().len(), 1);
         assert!(lm.warnings()[0].contains("watchdog"));
     }

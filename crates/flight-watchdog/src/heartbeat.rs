@@ -231,20 +231,18 @@ fn update_health(entry: &mut HeartbeatEntry, now: Instant) {
         return;
     };
 
-    let elapsed = now.duration_since(last);
+    let elapsed = now.saturating_duration_since(last);
     let interval_ns = entry.config.expected_interval.as_nanos().max(1);
-    let missed = (elapsed.as_nanos() / interval_ns) as u32;
+    let missed = (elapsed.as_nanos() / interval_ns).min(u128::from(u32::MAX)) as u32;
 
     if missed >= entry.config.stale_threshold {
-        if entry.health != HeartbeatHealth::Stale {
-            entry.total_misses += u64::from(missed.saturating_sub(entry.consecutive_misses));
-        }
+        let delta = missed.saturating_sub(entry.consecutive_misses);
+        entry.total_misses += u64::from(delta);
         entry.consecutive_misses = missed;
         entry.health = HeartbeatHealth::Stale;
     } else if missed >= entry.config.late_threshold {
-        if entry.health == HeartbeatHealth::Alive {
-            entry.total_misses += u64::from(missed);
-        }
+        let delta = missed.saturating_sub(entry.consecutive_misses);
+        entry.total_misses += u64::from(delta);
         entry.consecutive_misses = missed;
         entry.health = HeartbeatHealth::Late;
     } else {
