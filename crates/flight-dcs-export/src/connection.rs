@@ -167,17 +167,16 @@ impl DcsConnectionPolicy {
     /// Current backoff delay based on attempt count.
     pub fn current_delay(&self) -> Duration {
         if self.attempt == 0 {
-            return self.base_delay;
+            return self.base_delay.min(self.max_delay);
         }
-        let factor = 1u64
-            .checked_shl(self.attempt.min(31))
-            .unwrap_or(u64::MAX);
-        let delay_ms = self
+        // Use checked_mul to prevent overflow, operating on Duration directly
+        // to avoid truncating sub-millisecond precision.
+        let multiplier = 2u32.checked_pow(self.attempt.min(30)).unwrap_or(u32::MAX);
+        let delay = self
             .base_delay
-            .as_millis()
-            .saturating_mul(factor as u128)
-            .min(self.max_delay.as_millis());
-        Duration::from_millis(delay_ms as u64)
+            .checked_mul(multiplier)
+            .unwrap_or(self.max_delay);
+        delay.min(self.max_delay)
     }
 
     /// Whether more retries are allowed.
@@ -198,11 +197,7 @@ impl DcsConnectionPolicy {
 
 impl Default for DcsConnectionPolicy {
     fn default() -> Self {
-        Self::new(
-            5,
-            Duration::from_secs(1),
-            Duration::from_secs(30),
-        )
+        Self::new(5, Duration::from_secs(1), Duration::from_secs(30))
     }
 }
 
@@ -283,7 +278,8 @@ impl DcsSessionHealth {
         let newest = *times.last().unwrap();
         let span = newest.duration_since(oldest);
         if span.is_zero() {
-            return None;
+            // All packets arrived within the same clock tick — report capped rate
+            return Some(times.len() as f64 * 1000.0);
         }
         Some((times.len() - 1) as f64 / span.as_secs_f64())
     }
@@ -457,11 +453,8 @@ mod tests {
 
     #[test]
     fn policy_backoff_increases() {
-        let mut p = DcsConnectionPolicy::new(
-            10,
-            Duration::from_millis(100),
-            Duration::from_secs(60),
-        );
+        let mut p =
+            DcsConnectionPolicy::new(10, Duration::from_millis(100), Duration::from_secs(60));
         let d0 = p.current_delay();
         let d1 = p.record_failure();
         let d2 = p.record_failure();
@@ -471,11 +464,7 @@ mod tests {
 
     #[test]
     fn policy_backoff_capped() {
-        let mut p = DcsConnectionPolicy::new(
-            100,
-            Duration::from_secs(1),
-            Duration::from_secs(10),
-        );
+        let mut p = DcsConnectionPolicy::new(100, Duration::from_secs(1), Duration::from_secs(10));
         for _ in 0..50 {
             p.record_failure();
         }
@@ -494,11 +483,7 @@ mod tests {
 
     #[test]
     fn policy_retries_exhausted() {
-        let mut p = DcsConnectionPolicy::new(
-            2,
-            Duration::from_millis(10),
-            Duration::from_secs(1),
-        );
+        let mut p = DcsConnectionPolicy::new(2, Duration::from_millis(10), Duration::from_secs(1));
         p.record_failure();
         assert!(p.retries_remaining());
         p.record_failure();
@@ -652,5 +637,54 @@ mod tests {
         h.record_packet(None);
         h.record_packet(None);
         assert_eq!(h.gap_count(), 0);
+    }
+
+    // ── Regression tests for review fixes ────────────────────────────
+
+    #[test]
+    fn test_backoff_sub_ms_no_tight_loop() {
+        let p = DcsConnectionPolicy::new(
+            5,
+            Duration::from_micros(500), // 0.5ms — truncates to 0ms via as_millis
+            Duration::from_secs(10),
+        );
+        // After one failure, delay must be > 0 to avoid tight-loop retries
+        let mut p = p;
+        let delay = p.record_failure();
+        assert!(
+            !delay.is_zero(),
+            "sub-ms base_delay must not produce zero delay: {delay:?}"
+        );
+    }
+
+    #[test]
+    fn test_backoff_clamps_attempt_zero() {
+        let p = DcsConnectionPolicy::new(
+            5,
+            Duration::from_secs(60), // base > max
+            Duration::from_secs(10),
+        );
+        let delay = p.current_delay();
+        assert!(
+            delay <= Duration::from_secs(10),
+            "attempt 0 must respect max_delay cap: {delay:?}"
+        );
+    }
+
+    #[test]
+    fn test_packet_rate_zero_span() {
+        let mut h = DcsSessionHealth::new();
+        // Record multiple packets instantly — all get the same Instant
+        // (within the same clock tick)
+        for _ in 0..10 {
+            h.record_packet(None);
+        }
+        // With zero span, packet_rate should return Some (capped), not None
+        let rate = h.packet_rate();
+        assert!(
+            rate.is_some(),
+            "zero-span packet_rate should return Some, not None"
+        );
+        assert!(rate.unwrap() > 0.0, "rate must be positive");
     }
 }
