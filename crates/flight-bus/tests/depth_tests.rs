@@ -69,7 +69,7 @@ fn status_event(code: u16, timestamp_us: u64) -> BusEvent {
 }
 
 fn make_publisher() -> BusPublisher {
-    BusPublisher::new(60.0)
+    BusPublisher::new(10_000.0)
 }
 
 fn valid_snapshot() -> BusSnapshot {
@@ -554,10 +554,7 @@ mod lifecycle {
         // Drain any remaining buffered messages first.
         while sub.try_recv().is_ok_and(|m| m.is_some()) {}
         let result = sub.try_recv();
-        assert!(
-            result.is_err() || result.unwrap().is_none(),
-            "should detect publisher gone"
-        );
+        assert!(result.is_err(), "should detect publisher gone");
     }
 
     /// Late subscriber sees only new messages (no replay of old data).
@@ -615,9 +612,9 @@ mod lifecycle {
         assert!(m2.contains(300));
     }
 
-    /// Publisher/route IDs are unique.
+    /// Route IDs are unique.
     #[test]
-    fn publisher_ids_are_unique() {
+    fn route_ids_are_unique() {
         let mut router = EventRouter::new();
         let mut ids = HashSet::new();
         for i in 0..20 {
