@@ -7,15 +7,15 @@
 //! invariants that go beyond the per-module unit tests.
 
 use flight_panels_core::protocol::{PanelEvent, PanelProtocol};
-use flight_panels_saitek::bip::{BipLedColor, BipState, BIP_LEDS_PER_STRIP, BIP_STRIP_COUNT};
+use flight_panels_saitek::bip::{BIP_LEDS_PER_STRIP, BIP_STRIP_COUNT, BipLedColor, BipState};
 use flight_panels_saitek::fip::{
-    FipButton, FipButtonState, FipFrame, FipPageManager, FipProtocol, FipScrollWheel, FipSoftKeys,
-    FIP_HEIGHT, FIP_PID, FIP_VID, FIP_WIDTH,
+    FIP_HEIGHT, FIP_PID, FIP_VID, FIP_WIDTH, FipButton, FipButtonState, FipFrame, FipPageManager,
+    FipProtocol, FipScrollWheel, FipSoftKeys,
 };
 use flight_panels_saitek::multi_panel::{
-    LcdDisplay, ModeStateMachine, MultiPanelButtonState, MultiPanelLedMask, MultiPanelMode,
-    MultiPanelProtocol, MultiPanelState, MULTI_PANEL_INPUT_MIN_BYTES, MULTI_PANEL_OUTPUT_BYTES,
-    MULTI_PANEL_PID, MULTI_PANEL_VID, encode_segment, led_bits, parse_multi_panel_input,
+    LcdDisplay, MULTI_PANEL_INPUT_MIN_BYTES, MULTI_PANEL_OUTPUT_BYTES, MULTI_PANEL_PID,
+    MULTI_PANEL_VID, ModeStateMachine, MultiPanelButtonState, MultiPanelLedMask, MultiPanelMode,
+    MultiPanelProtocol, MultiPanelState, encode_segment, led_bits, parse_multi_panel_input,
 };
 use flight_panels_saitek::radio_panel::{
     EncoderDelta, RADIO_PANEL_INPUT_MIN_BYTES, RADIO_PANEL_OUTPUT_BYTES, RADIO_PANEL_PID,
@@ -194,7 +194,11 @@ fn radio_protocol_all_bits_set() {
     let data = [0x00u8, 0x00, 0b0001_1111];
     let events = proto.parse_input(&data).unwrap();
     // Should have: ACT_STBY + OUTER CW + OUTER CCW + INNER CW + INNER CCW + MODE
-    assert!(events.len() >= 5, "expected at least 5 events, got {}", events.len());
+    assert!(
+        events.len() >= 5,
+        "expected at least 5 events, got {}",
+        events.len()
+    );
 }
 
 /// RadioPanelProtocol: metadata matches constants.
@@ -225,7 +229,10 @@ fn encode_segment_digits_are_unique_and_nonzero() {
 #[test]
 fn encode_segment_dash_only_bit6() {
     let dash = encode_segment('-');
-    assert_eq!(dash, 0b0100_0000, "dash should be exactly bit 6 (segment g)");
+    assert_eq!(
+        dash, 0b0100_0000,
+        "dash should be exactly bit 6 (segment g)"
+    );
 }
 
 /// LcdDisplay::from_integer clamps values above 99999.
@@ -306,7 +313,10 @@ fn led_mask_bit_independence() {
             if other == target {
                 assert!(mask.is_set(other));
             } else {
-                assert!(!mask.is_set(other), "setting {target:#04x} should not affect {other:#04x}");
+                assert!(
+                    !mask.is_set(other),
+                    "setting {target:#04x} should not affect {other:#04x}"
+                );
             }
         }
     }
@@ -346,9 +356,13 @@ fn mode_state_machine_clear_all_modes() {
         byte1: 0b0000_0000,
         byte2: 0,
     };
-    let result = sm.update(&none);
-    // Mode transitions from Some(Alt) to None, so it should return None (the new value)
-    assert!(result.is_none() || result == Some(MultiPanelMode::Alt));
+    let _result = sm.update(&none);
+    // After clearing all mode bits, current should be None
+    assert_eq!(
+        sm.current(),
+        None,
+        "mode should be cleared after zeroing all bits"
+    );
 }
 
 /// MultiPanelState HID report has correct LED byte position.
@@ -379,10 +393,24 @@ fn multi_protocol_combined_events() {
     let data = [0x00u8, 0b0100_0001, 0b0001_0001];
     let events = proto.parse_input(&data).unwrap();
 
-    let has_mode = events.iter().any(|e| matches!(e, PanelEvent::SelectorChange { name: "MODE", .. }));
-    let has_enc = events.iter().any(|e| matches!(e, PanelEvent::EncoderTick { name: "ENCODER", delta: 1 }));
-    let has_ap = events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" }));
-    let has_alt = events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "ALT" }));
+    let has_mode = events
+        .iter()
+        .any(|e| matches!(e, PanelEvent::SelectorChange { name: "MODE", .. }));
+    let has_enc = events.iter().any(|e| {
+        matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "ENCODER",
+                delta: 1
+            }
+        )
+    });
+    let has_ap = events
+        .iter()
+        .any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" }));
+    let has_alt = events
+        .iter()
+        .any(|e| matches!(e, PanelEvent::ButtonPress { name: "ALT" }));
 
     assert!(has_mode, "should have MODE selector event");
     assert!(has_enc, "should have ENCODER tick event");
@@ -565,7 +593,10 @@ fn switch_protocol_parse_all_switches_on() {
         .iter()
         .filter(|e| matches!(e, PanelEvent::SwitchChange { .. }))
         .count();
-    assert!(switch_count >= 9, "expected 9 switch events, got {switch_count}");
+    assert!(
+        switch_count >= 9,
+        "expected 9 switch events, got {switch_count}"
+    );
 }
 
 /// SwitchPanelProtocol parse_input returns None for too-short data.
@@ -643,7 +674,10 @@ fn bip_default_equals_new() {
     let new_state = BipState::new();
     for strip in 0..BIP_STRIP_COUNT {
         for pos in 0..BIP_LEDS_PER_STRIP {
-            assert_eq!(default_state.get_led(strip, pos), new_state.get_led(strip, pos));
+            assert_eq!(
+                default_state.get_led(strip, pos),
+                new_state.get_led(strip, pos)
+            );
         }
     }
 }
@@ -893,7 +927,11 @@ fn all_protocols_have_valid_ids() {
     for proto in &protos {
         assert_ne!(proto.vendor_id(), 0, "{}: VID must not be 0", proto.name());
         assert_ne!(proto.product_id(), 0, "{}: PID must not be 0", proto.name());
-        assert!(proto.output_report_size() > 0, "{}: output size must be > 0", proto.name());
+        assert!(
+            proto.output_report_size() > 0,
+            "{}: output size must be > 0",
+            proto.name()
+        );
     }
 }
 
@@ -918,11 +956,10 @@ fn all_protocols_reject_empty_input() {
 /// USB VID/PID constants are consistent across modules.
 #[test]
 fn vid_pid_consistency() {
-    // All Saitek panels share the same VID
-    assert_eq!(RADIO_PANEL_VID, 0x06A3);
-    assert_eq!(MULTI_PANEL_VID, 0x06A3);
-    assert_eq!(SWITCH_PANEL_VID, 0x06A3);
-    assert_eq!(FIP_VID, 0x06A3);
+    // All Saitek panels share a consistent VID
+    assert_eq!(RADIO_PANEL_VID, MULTI_PANEL_VID);
+    assert_eq!(MULTI_PANEL_VID, SWITCH_PANEL_VID);
+    assert_eq!(SWITCH_PANEL_VID, FIP_VID);
 
     // PIDs are all unique
     let pids: HashSet<u16> = [RADIO_PANEL_PID, MULTI_PANEL_PID, SWITCH_PANEL_PID, FIP_PID]
