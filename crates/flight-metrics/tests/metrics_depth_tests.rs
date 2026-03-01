@@ -772,6 +772,463 @@ fn metric_enum_clone_and_eq() {
     assert_ne!(c, g);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  7. Histogram quantile / HistogramHandle edge cases (5 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// HistogramHandle::quantile on empty returns 0.0.
+#[test]
+fn export_histogram_quantile_empty_returns_zero() {
+    let collector = MetricsCollector::new();
+    let h = collector.register_histogram("empty", "empty", &[]);
+    assert_eq!(h.quantile(0.5), 0.0);
+}
+
+/// HistogramHandle::quantile p0 yields min, p1 yields max.
+#[test]
+fn export_histogram_quantile_extremes() {
+    let collector = MetricsCollector::new();
+    let h = collector.register_histogram("q", "q", &[]);
+    h.observe(10.0);
+    h.observe(20.0);
+    h.observe(30.0);
+    assert!((h.quantile(0.0) - 10.0).abs() < f64::EPSILON);
+    assert!((h.quantile(1.0) - 30.0).abs() < f64::EPSILON);
+}
+
+/// HistogramHandle clamps out-of-range quantile values.
+#[test]
+fn export_histogram_quantile_clamped() {
+    let collector = MetricsCollector::new();
+    let h = collector.register_histogram("clamp", "clamp", &[]);
+    h.observe(5.0);
+    h.observe(15.0);
+    // Negative quantile should clamp to 0.0 → min
+    assert!((h.quantile(-1.0) - 5.0).abs() < f64::EPSILON);
+    // Quantile > 1.0 should clamp to 1.0 → max
+    assert!((h.quantile(2.0) - 15.0).abs() < f64::EPSILON);
+}
+
+/// HistogramHandle ignores non-finite observations.
+#[test]
+fn export_histogram_ignores_non_finite() {
+    let collector = MetricsCollector::new();
+    let h = collector.register_histogram("hf", "hf", &[1.0]);
+    h.observe(f64::NAN);
+    h.observe(f64::INFINITY);
+    h.observe(f64::NEG_INFINITY);
+    h.observe(0.5);
+    assert_eq!(h.count(), 1);
+    assert!((h.sum() - 0.5).abs() < f64::EPSILON);
+}
+
+/// HistogramHandle sum is exact for known inputs.
+#[test]
+fn export_histogram_sum_exact() {
+    let collector = MetricsCollector::new();
+    let h = collector.register_histogram("sums", "sums", &[]);
+    let values = [1.0, 2.0, 3.0, 4.0, 5.0];
+    for &v in &values {
+        h.observe(v);
+    }
+    assert!((h.sum() - 15.0).abs() < f64::EPSILON);
+    assert_eq!(h.count(), 5);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  8. MetricsSnapshot len/is_empty (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Empty collector produces empty snapshot.
+#[test]
+fn snapshot_empty_collector_is_empty() {
+    let collector = MetricsCollector::new();
+    let snap = collector.snapshot();
+    assert!(snap.is_empty());
+    assert_eq!(snap.len(), 0);
+}
+
+/// Snapshot len matches number of registered metrics.
+#[test]
+fn snapshot_len_matches_registration_count() {
+    let collector = MetricsCollector::new();
+    collector.register_counter("c1", "c");
+    collector.register_counter("c2", "c");
+    collector.register_gauge("g1", "g");
+    collector.register_histogram("h1", "h", &[]);
+    let snap = collector.snapshot();
+    assert_eq!(snap.len(), 4);
+    assert!(!snap.is_empty());
+}
+
+/// Snapshot is_empty returns false when metrics exist.
+#[test]
+fn snapshot_is_empty_false_with_metrics() {
+    let collector = MetricsCollector::new();
+    collector.register_counter("x", "x");
+    assert!(!collector.snapshot().is_empty());
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  9. Common metric constants validation (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// DeviceMetricNames structs have distinct fields per layer.
+#[test]
+fn device_metric_names_distinct_per_layer() {
+    use flight_metrics::common::{
+        DEVICE_METRICS_SHARED, FFB_DEVICE_METRICS, HID_DEVICE_METRICS, PANEL_DEVICE_METRICS,
+    };
+    let all = [
+        DEVICE_METRICS_SHARED,
+        HID_DEVICE_METRICS,
+        PANEL_DEVICE_METRICS,
+        FFB_DEVICE_METRICS,
+    ];
+    // Each layer should have a unique operations_total name
+    let ops: Vec<_> = all.iter().map(|m| m.operations_total).collect();
+    let unique: std::collections::HashSet<_> = ops.iter().collect();
+    assert_eq!(ops.len(), unique.len(), "operations_total names must be unique per layer");
+}
+
+/// Common metric name constants are non-empty.
+#[test]
+fn common_metric_names_non_empty() {
+    use flight_metrics::common::*;
+    let names = [
+        SIM_FRAMES_TOTAL, SIM_ERRORS_TOTAL, SIM_CONNECTION_STATE, SIM_DATA_RATE_HZ,
+        SIM_LAST_PACKET_AGE_MS, SIM_FRAME_LATENCY_MS, SIM_PROFILE_SWITCHES_TOTAL,
+        FFB_EFFECTS_APPLIED_TOTAL, FFB_FAULT_COUNT_TOTAL, FFB_ENVELOPE_CLAMP_TOTAL,
+        FFB_EMERGENCY_STOP_TOTAL, FFB_MAX_TORQUE_NM, FFB_CURRENT_TORQUE_NM,
+        FFB_EFFECT_LATENCY_MS, RT_TICKS_TOTAL, RT_MISSED_DEADLINES_TOTAL, RT_JITTER_US,
+        AXIS_PROCESSING_LATENCY_US, BUS_EVENTS_PER_SECOND, BUS_EVENTS_TOTAL,
+        DEVICES_CONNECTED_COUNT, WATCHDOG_DMS_TRIGGERS_TOTAL, WATCHDOG_HW_TIMEOUTS_TOTAL,
+    ];
+    for name in &names {
+        assert!(!name.is_empty(), "metric name must not be empty");
+    }
+}
+
+/// DeviceMetricNames fields are consistent with naming convention.
+#[test]
+fn device_metric_names_contain_expected_suffixes() {
+    use flight_metrics::common::HID_DEVICE_METRICS;
+    assert!(HID_DEVICE_METRICS.operations_total.ends_with("_total"));
+    assert!(HID_DEVICE_METRICS.errors_total.ends_with("_total"));
+    assert!(HID_DEVICE_METRICS.operation_latency_ms.ends_with("_ms"));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  10. Export format edge cases (4 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// JSON export with special characters in description is escaped.
+#[test]
+fn json_export_escapes_special_characters() {
+    let collector = MetricsCollector::new();
+    let c = collector.register_counter("esc", "desc with \"quotes\" and \\backslash");
+    c.increment();
+    let json = collector.snapshot().to_json();
+    assert!(json.contains("\\\"quotes\\\""));
+    assert!(json.contains("\\\\backslash"));
+}
+
+/// Prometheus export of histogram with no observations still shows count/sum.
+#[test]
+fn prometheus_histogram_no_observations() {
+    let collector = MetricsCollector::new();
+    collector.register_histogram("noop", "no observations", &[1.0, 5.0]);
+    let text = collector.snapshot().to_prometheus_text();
+    assert!(text.contains("noop_count 0"));
+    assert!(text.contains("noop_sum 0.0"));
+    assert!(text.contains("noop_bucket{le=\"+Inf\"} 0"));
+}
+
+/// Prometheus text format for gauge with fractional value.
+#[test]
+fn prometheus_gauge_fractional_value() {
+    let collector = MetricsCollector::new();
+    let g = collector.register_gauge("frac", "fractional gauge");
+    g.set(3.14159);
+    let text = collector.snapshot().to_prometheus_text();
+    assert!(text.contains("frac 3.14159"));
+}
+
+/// PrometheusRegistry JSON export is valid and parseable.
+#[test]
+fn prometheus_registry_json_parseable() {
+    let mut reg = PrometheusRegistry::new();
+    reg.register_counter("a", "A metric", BTreeMap::new(), 1.0);
+    reg.register_gauge("b", "B metric", BTreeMap::new(), 2.5);
+    let json = reg.export_json();
+    let parsed: serde_json::Value = serde_json::from_str(&json).expect("JSON must be valid");
+    let arr = parsed.as_array().expect("must be an array");
+    assert_eq!(arr.len(), 2);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  11. Thread safety: concurrent reads + writes (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Concurrent snapshot reads while counters are being incremented.
+#[test]
+fn concurrent_snapshot_during_writes() {
+    let reg = Arc::new(MetricsRegistry::new());
+    let writers: Vec<_> = (0..4)
+        .map(|_| {
+            let r = Arc::clone(&reg);
+            std::thread::spawn(move || {
+                for _ in 0..500 {
+                    r.inc_counter("live", 1);
+                }
+            })
+        })
+        .collect();
+    let readers: Vec<_> = (0..4)
+        .map(|_| {
+            let r = Arc::clone(&reg);
+            std::thread::spawn(move || {
+                let mut snapshots = Vec::new();
+                for _ in 0..100 {
+                    snapshots.push(r.snapshot());
+                }
+                snapshots
+            })
+        })
+        .collect();
+    for w in writers {
+        w.join().unwrap();
+    }
+    for r in readers {
+        let snaps = r.join().unwrap();
+        // All snapshots must be valid (no panics or corrupt data)
+        for snap in &snaps {
+            for m in snap {
+                match m {
+                    Metric::Counter { value, .. } => {
+                        assert!(*value <= 2000);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+    // Final value must be exactly 2000
+    assert_eq!(counter_value(&reg, "live"), 2000);
+}
+
+/// Concurrent histogram observations produce valid summary.
+#[test]
+fn concurrent_histogram_observations() {
+    let reg = Arc::new(MetricsRegistry::new());
+    let threads = 8;
+    let per_thread = 100;
+    let handles: Vec<_> = (0..threads)
+        .map(|i| {
+            let r = Arc::clone(&reg);
+            std::thread::spawn(move || {
+                for j in 0..per_thread {
+                    r.observe("conc_h", (i * per_thread + j) as f64);
+                }
+            })
+        })
+        .collect();
+    for h in handles {
+        h.join().unwrap();
+    }
+    let snap = reg.snapshot();
+    let s = find_histogram(&snap, "conc_h").unwrap();
+    assert_eq!(s.count, threads * per_thread);
+    assert!(s.min >= 0.0);
+    assert!(s.max <= ((threads * per_thread) as f64));
+    assert!(s.p50 <= s.p95);
+    assert!(s.p95 <= s.p99);
+}
+
+/// Concurrent FlightMetrics usage across threads.
+#[test]
+fn concurrent_flight_metrics_usage() {
+    let collector = Arc::new(MetricsCollector::new());
+    let fm = FlightMetrics::register(&collector);
+    let bus_handle = fm.bus_events_total.clone();
+    let device_handle = fm.device_count.clone();
+    let latency_handle = fm.axis_processing_latency_us.clone();
+
+    let threads = 4;
+    let per_thread = 250u64;
+    let handles: Vec<_> = (0..threads)
+        .map(|_| {
+            let b = bus_handle.clone();
+            let d = device_handle.clone();
+            let l = latency_handle.clone();
+            std::thread::spawn(move || {
+                for i in 0..per_thread {
+                    b.increment();
+                    d.set(i as f64);
+                    l.observe(i as f64);
+                }
+            })
+        })
+        .collect();
+    for h in handles {
+        h.join().unwrap();
+    }
+    assert_eq!(fm.bus_events_total.value(), threads * per_thread);
+    assert_eq!(fm.axis_processing_latency_us.count(), threads * per_thread);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  12. Dashboard integration edge cases (3 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Dashboard from_snapshot with all metric types populated.
+#[test]
+fn dashboard_full_population() {
+    use flight_metrics::common::*;
+    let reg = MetricsRegistry::new();
+
+    // Counters
+    reg.inc_counter(SIM_FRAMES_TOTAL, 5000);
+    reg.inc_counter(SIM_ERRORS_TOTAL, 10);
+    reg.inc_counter(SIM_PROFILE_SWITCHES_TOTAL, 3);
+    reg.inc_counter(FFB_EFFECTS_APPLIED_TOTAL, 2000);
+    reg.inc_counter(FFB_FAULT_COUNT_TOTAL, 1);
+    reg.inc_counter(FFB_ENVELOPE_CLAMP_TOTAL, 50);
+    reg.inc_counter(FFB_EMERGENCY_STOP_TOTAL, 0);
+    reg.inc_counter(RT_TICKS_TOTAL, 750_000);
+    reg.inc_counter(RT_MISSED_DEADLINES_TOTAL, 5);
+    reg.inc_counter(BUS_EVENTS_TOTAL, 100_000);
+    reg.inc_counter(WATCHDOG_DMS_TRIGGERS_TOTAL, 2);
+    reg.inc_counter(WATCHDOG_HW_TIMEOUTS_TOTAL, 0);
+
+    // Gauges
+    reg.set_gauge(SIM_CONNECTION_STATE, 1.0);
+    reg.set_gauge(SIM_DATA_RATE_HZ, 60.0);
+    reg.set_gauge(SIM_LAST_PACKET_AGE_MS, 3.5);
+    reg.set_gauge(FFB_MAX_TORQUE_NM, 5.0);
+    reg.set_gauge(FFB_CURRENT_TORQUE_NM, 2.0);
+    reg.set_gauge(BUS_EVENTS_PER_SECOND, 300.0);
+    reg.set_gauge(DEVICES_CONNECTED_COUNT, 3.0);
+
+    // Histograms
+    for &v in &[1.5, 2.0, 3.0, 4.5] {
+        reg.observe(SIM_FRAME_LATENCY_MS, v);
+        reg.observe(FFB_EFFECT_LATENCY_MS, v * 0.5);
+        reg.observe(RT_JITTER_US, v * 100.0);
+        reg.observe(AXIS_PROCESSING_LATENCY_US, v * 50.0);
+    }
+
+    let dash = MetricsDashboard::from_snapshot(&reg.snapshot());
+
+    assert_eq!(dash.sim.frames_total, 5000);
+    assert_eq!(dash.sim.errors_total, 10);
+    assert!(dash.sim.connected);
+    assert_eq!(dash.rt.ticks_total, 750_000);
+    assert_eq!(dash.rt.missed_deadlines_total, 5);
+    assert_eq!(dash.bus.events_total, 100_000);
+    assert_eq!(dash.watchdog.dms_triggers_total, 2);
+    assert!(dash.sim.frame_latency_ms.is_some());
+    assert!(dash.ffb.effect_latency_ms.is_some());
+    assert!(dash.rt.jitter_us.is_some());
+    assert!(dash.axis.processing_latency_us.is_some());
+}
+
+/// Dashboard watchdog metrics populate correctly.
+#[test]
+fn dashboard_watchdog_metrics() {
+    use flight_metrics::common::*;
+    let reg = MetricsRegistry::new();
+    reg.inc_counter(WATCHDOG_DMS_TRIGGERS_TOTAL, 7);
+    reg.inc_counter(WATCHDOG_HW_TIMEOUTS_TOTAL, 3);
+    let dash = MetricsDashboard::from_snapshot(&reg.snapshot());
+    assert_eq!(dash.watchdog.dms_triggers_total, 7);
+    assert_eq!(dash.watchdog.hw_timeouts_total, 3);
+}
+
+/// Dashboard axis metrics populate from histogram observations.
+#[test]
+fn dashboard_axis_latency_histogram() {
+    use flight_metrics::common::*;
+    let reg = MetricsRegistry::new();
+    for i in 1..=20 {
+        reg.observe(AXIS_PROCESSING_LATENCY_US, i as f64 * 10.0);
+    }
+    let dash = MetricsDashboard::from_snapshot(&reg.snapshot());
+    let lat = dash.axis.processing_latency_us.expect("axis latency must exist");
+    assert_eq!(lat.count, 20);
+    assert_eq!(lat.min, 10.0);
+    assert_eq!(lat.max, 200.0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  13. Property-based tests (4 tests)
+// ═══════════════════════════════════════════════════════════════════════════
+
+use proptest::prelude::*;
+
+proptest! {
+    /// Histogram min ≤ mean ≤ max for any set of positive finite samples.
+    #[test]
+    fn prop_histogram_mean_bounded(
+        samples in proptest::collection::vec(0.0f64..1e6, 1..50)
+    ) {
+        let reg = MetricsRegistry::new();
+        for &s in &samples {
+            reg.observe("prop_h", s);
+        }
+        let snap = reg.snapshot();
+        let h = find_histogram(&snap, "prop_h").unwrap();
+        prop_assert!(h.min <= h.mean, "min {} > mean {}", h.min, h.mean);
+        prop_assert!(h.mean <= h.max, "mean {} > max {}", h.mean, h.max);
+    }
+
+    /// Histogram percentile ordering: p50 ≤ p95 ≤ p99 ≤ max.
+    #[test]
+    fn prop_histogram_percentile_ordering(
+        samples in proptest::collection::vec(0.0f64..1e4, 2..100)
+    ) {
+        let reg = MetricsRegistry::new();
+        for &s in &samples {
+            reg.observe("prop_pct", s);
+        }
+        let snap = reg.snapshot();
+        let h = find_histogram(&snap, "prop_pct").unwrap();
+        prop_assert!(h.p50 <= h.p95, "p50 {} > p95 {}", h.p50, h.p95);
+        prop_assert!(h.p95 <= h.p99, "p95 {} > p99 {}", h.p95, h.p99);
+        prop_assert!(h.p99 <= h.max, "p99 {} > max {}", h.p99, h.max);
+    }
+
+    /// Gauge set/get round-trip is bit-exact for arbitrary finite f64.
+    #[test]
+    fn prop_gauge_roundtrip(v in proptest::num::f64::NORMAL) {
+        let reg = MetricsRegistry::new();
+        reg.set_gauge("prop_g", v);
+        let got = reg.gauge_value("prop_g").unwrap();
+        prop_assert_eq!(got.to_bits(), v.to_bits());
+    }
+
+    /// Snapshot size equals the number of distinct metric names registered.
+    #[test]
+    fn prop_snapshot_size_matches_registrations(
+        n_counters in 0usize..5,
+        n_gauges in 0usize..5,
+        n_histograms in 0usize..5,
+    ) {
+        let reg = MetricsRegistry::new();
+        for i in 0..n_counters {
+            reg.inc_counter(&format!("c_{i}"), 1);
+        }
+        for i in 0..n_gauges {
+            reg.set_gauge(&format!("g_{i}"), i as f64);
+        }
+        for i in 0..n_histograms {
+            reg.observe(&format!("h_{i}"), i as f64);
+        }
+        let snap = reg.snapshot();
+        prop_assert_eq!(snap.len(), n_counters + n_gauges + n_histograms);
+    }
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 fn counter_value(reg: &MetricsRegistry, name: &str) -> u64 {
