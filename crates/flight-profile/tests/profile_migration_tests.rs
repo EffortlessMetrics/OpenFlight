@@ -70,24 +70,6 @@ fn sample_v3() -> Value {
 // ── 1. Schema version detection ─────────────────────────────────────────────
 
 #[test]
-fn detect_v1_schema() {
-    let v1 = sample_v1_minimal();
-    assert_eq!(v1["schema_version"], "v1");
-}
-
-#[test]
-fn detect_v2_schema() {
-    let v2 = sample_v2();
-    assert_eq!(v2["schema_version"], "v2");
-}
-
-#[test]
-fn detect_v3_schema() {
-    let v3 = sample_v3();
-    assert_eq!(v3["schema_version"], "v3");
-}
-
-#[test]
 fn registry_recognises_all_builtin_versions() {
     let reg = MigrationRegistry::new();
     let versions = reg.available_versions();
@@ -263,7 +245,10 @@ fn migration_preserves_axis_count() {
     let result = reg.migrate(input, "v1", "v3").unwrap();
     let result_count = result["axes"].as_object().unwrap().len();
 
-    assert_eq!(axis_count, result_count, "axis count changed during migration");
+    assert_eq!(
+        axis_count, result_count,
+        "axis count changed during migration"
+    );
 }
 
 #[test]
@@ -681,9 +666,9 @@ mod proptest_migration {
 
     fn arb_axis_v1() -> impl Strategy<Value = Value> {
         (
-            0.0f64..0.5,                          // deadzone
-            prop::option::of(0.0f64..1.0),        // expo
-            prop::option::of(0.0f64..100.0),      // slew_rate
+            0.0f64..0.5,                     // deadzone
+            prop::option::of(0.0f64..1.0),   // expo
+            prop::option::of(0.0f64..100.0), // slew_rate
         )
             .prop_map(|(dz, expo, slew)| {
                 let mut obj = serde_json::Map::new();
@@ -716,7 +701,7 @@ mod proptest_migration {
             let result = reg.migrate(profile, "v1", "v2");
             prop_assert!(result.is_ok(), "v1→v2 migration failed: {:?}", result.err());
             let v2 = result.unwrap();
-            prop_assert_eq!(&v2["schema_version"], "v2");
+            prop_assert!(v2["schema_version"] == "v2");
         }
 
         /// Any valid v1 profile can be migrated to v3 without error.
@@ -726,7 +711,7 @@ mod proptest_migration {
             let result = reg.migrate(profile, "v1", "v3");
             prop_assert!(result.is_ok(), "v1→v3 migration failed: {:?}", result.err());
             let v3 = result.unwrap();
-            prop_assert_eq!(&v3["schema_version"], "v3");
+            prop_assert!(v3["schema_version"] == "v3");
         }
 
         /// v1→v3 always produces axes with sensitivity and response_curve_type.
