@@ -1318,6 +1318,11 @@ mod fault_detection_blackbox_tests;
 #[path = "tests/dinput_device_tests.rs"]
 mod dinput_device_tests;
 
+// Weather-to-FFB bridge depth tests
+#[cfg(test)]
+#[path = "tests/weather_ffb_depth_tests.rs"]
+mod weather_ffb_depth_tests;
+
 /// Tests for emergency stop and fault detection wiring (Task P2.4)
 #[cfg(test)]
 mod emergency_stop_tests {
