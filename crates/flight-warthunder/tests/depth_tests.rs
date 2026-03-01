@@ -731,3 +731,206 @@ fn gear_boundary_values() {
         assert_eq!(snap.config.gear.right, expected);
     }
 }
+
+// ============================================================================
+// 6. Extended depth — conversion accuracy, validity combos, edge cases
+// ============================================================================
+
+/// IAS zero km/h converts to zero m/s without error.
+#[test]
+fn ias_zero_converts_to_zero_mps() {
+    let a = adapter();
+    let ind = WtIndicators {
+        ias_kmh: Some(0.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.kinematics.ias.to_mps().abs() < 0.01,
+        "0 km/h IAS should be 0 m/s, got {}",
+        snap.kinematics.ias.to_mps()
+    );
+}
+
+/// TAS zero km/h converts to zero m/s without error.
+#[test]
+fn tas_zero_converts_to_zero_mps() {
+    let a = adapter();
+    let ind = WtIndicators {
+        tas_kmh: Some(0.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.kinematics.tas.to_mps().abs() < 0.01,
+        "0 km/h TAS should be 0 m/s, got {}",
+        snap.kinematics.tas.to_mps()
+    );
+}
+
+/// Heading 270° normalizes to -90° via signed normalization.
+#[test]
+fn heading_270_normalises_to_negative_90() {
+    let a = adapter();
+    let ind = WtIndicators {
+        heading: Some(270.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    let hdg = snap.kinematics.heading.to_degrees();
+    assert!(
+        (hdg - (-90.0)).abs() < 0.01,
+        "270° should normalise to -90°, got {hdg}"
+    );
+}
+
+/// velocities_valid is true with only IAS (no TAS).
+#[test]
+fn velocities_valid_with_ias_only() {
+    let a = adapter();
+    let ind = WtIndicators {
+        ias_kmh: Some(300.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.validity.velocities_valid,
+        "IAS alone should set velocities_valid"
+    );
+}
+
+/// velocities_valid is true with only TAS (no IAS).
+#[test]
+fn velocities_valid_with_tas_only() {
+    let a = adapter();
+    let ind = WtIndicators {
+        tas_kmh: Some(350.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.validity.velocities_valid,
+        "TAS alone should set velocities_valid"
+    );
+}
+
+/// attitude_valid requires BOTH pitch AND roll to be present.
+#[test]
+fn attitude_valid_requires_both_pitch_and_roll() {
+    let a = adapter();
+
+    // Pitch only → not valid
+    let pitch_only = WtIndicators {
+        pitch: Some(5.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&pitch_only).unwrap();
+    assert!(
+        !snap.validity.attitude_valid,
+        "pitch alone should NOT set attitude_valid"
+    );
+
+    // Roll only → not valid
+    let roll_only = WtIndicators {
+        roll: Some(-10.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&roll_only).unwrap();
+    assert!(
+        !snap.validity.attitude_valid,
+        "roll alone should NOT set attitude_valid"
+    );
+
+    // Both → valid
+    let both = WtIndicators {
+        pitch: Some(5.0),
+        roll: Some(-10.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&both).unwrap();
+    assert!(
+        snap.validity.attitude_valid,
+        "both pitch+roll should set attitude_valid"
+    );
+}
+
+/// Negative altitude (below sea level, e.g. Dead Sea) is handled.
+#[test]
+fn negative_altitude_below_sea_level() {
+    let a = adapter();
+    let ind = WtIndicators {
+        altitude: Some(-50.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.environment.altitude < 0.0,
+        "negative metres should give negative feet, got {}",
+        snap.environment.altitude
+    );
+    assert!(snap.validity.position_valid);
+}
+
+/// G-force of exactly zero is accepted.
+#[test]
+fn zero_g_force_accepted() {
+    let a = adapter();
+    let ind = WtIndicators {
+        g_load: Some(0.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        snap.kinematics.g_force.value().abs() < 0.01,
+        "0 g should be stored as ~0, got {}",
+        snap.kinematics.g_force.value()
+    );
+    assert!(snap.validity.kinematics_valid);
+}
+
+/// Multiple start/stop cycles do not cause errors.
+#[test]
+fn multiple_start_stop_cycles() {
+    let mut a = adapter();
+    for _ in 0..5 {
+        a.start().unwrap();
+        assert_eq!(a.state(), AdapterState::Connected);
+        a.stop();
+        assert_eq!(a.state(), AdapterState::Disconnected);
+    }
+}
+
+/// apply_state with all fields populated sets every augmented field.
+#[test]
+fn apply_state_all_fields_populated() {
+    let a = adapter();
+    let mut snap = a.convert_indicators(&full_indicators()).unwrap();
+    a.apply_state(&full_state(), &mut snap).unwrap();
+
+    assert!((snap.kinematics.aoa.to_degrees() - 3.5).abs() < 0.01);
+    assert!((snap.kinematics.sideslip.to_degrees() - 0.5).abs() < 0.01);
+    assert!((snap.kinematics.tas.to_mps() - 95.0).abs() < 0.1);
+    assert!((snap.kinematics.mach.value() - 0.28).abs() < 0.01);
+    assert!((snap.kinematics.g_force.value() - 1.1).abs() < 0.01);
+    assert!((snap.kinematics.g_longitudinal.value() - 0.05).abs() < 0.01);
+    assert!(snap.kinematics.g_lateral.value().abs() < 0.01);
+    assert!(snap.validity.aero_valid);
+    assert!(snap.validity.velocities_valid);
+    assert!(snap.validity.kinematics_valid);
+}
+
+/// Vertical speed: exact reference 10 m/s → ~1968.5 ft/min.
+#[test]
+fn vertical_speed_10_mps_to_fpm() {
+    let a = adapter();
+    let ind = WtIndicators {
+        vert_speed: Some(10.0),
+        ..Default::default()
+    };
+    let snap = a.convert_indicators(&ind).unwrap();
+    assert!(
+        (snap.kinematics.vertical_speed - 1968.5).abs() < 1.0,
+        "10 m/s should be ~1968.5 ft/min, got {}",
+        snap.kinematics.vertical_speed
+    );
+}
