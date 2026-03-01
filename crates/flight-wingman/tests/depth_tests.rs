@@ -138,19 +138,16 @@ fn snapshot_validity_flags_all_false() {
 #[test]
 fn snapshot_timestamp_is_nonzero() {
     let mut a = started_adapter();
-    // A tiny sleep so elapsed time is non-zero.
-    std::thread::sleep(Duration::from_millis(1));
     let snap = a.poll_once().unwrap().unwrap();
-    assert!(snap.timestamp > 0, "timestamp should be > 0");
+    assert_ne!(snap.timestamp, 0, "timestamp should be non-zero");
 }
 
 #[test]
 fn successive_snapshots_have_increasing_timestamps() {
     let mut a = started_adapter();
     let s1 = a.poll_once().unwrap().unwrap();
-    std::thread::sleep(Duration::from_millis(1));
     let s2 = a.poll_once().unwrap().unwrap();
-    assert!(s2.timestamp >= s1.timestamp);
+    assert!(s2.timestamp >= s1.timestamp, "timestamps must be non-decreasing");
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -301,7 +298,8 @@ fn stub_axis_readback_out_of_range_returns_none() {
 fn stub_axis_nan_clamped() {
     let mut c = StubVirtualController::new();
     // f32::NAN.clamp(-1.0, 1.0) is implementation-defined but should not panic.
-    let _ = c.send_axis(0, f32::NAN);
+    let res = c.send_axis(0, f32::NAN);
+    assert!(res.is_ok(), "send_axis with NAN should not return an error");
 }
 
 #[test]
@@ -469,7 +467,7 @@ fn custom_config_is_respected() {
 fn poll_interval_default_rate() {
     let a = default_adapter();
     let interval = a.poll_interval();
-    let expected_ms = 100u64; // 1000 / 10
+    let expected_ms = (1000.0 / WingmanConfig::default().poll_rate_hz) as u64;
     let actual_ms = interval.as_millis() as u64;
     assert!(
         (actual_ms as i64 - expected_ms as i64).abs() <= 2,
