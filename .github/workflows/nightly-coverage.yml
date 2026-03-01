@@ -1,9 +1,12 @@
 name: Nightly Coverage
 
+# This workflow can be called from ci.yml via workflow_call to avoid
+# duplicating coverage logic. It also runs nightly on a schedule.
 on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -32,7 +35,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: coverage-${{ hashFiles('**/Cargo.lock') }}
+          key: coverage-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             coverage-
 

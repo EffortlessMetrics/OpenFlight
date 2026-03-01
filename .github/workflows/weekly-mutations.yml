@@ -43,7 +43,6 @@ jobs:
             --package flight-axis \
             --package flight-bus \
             --package flight-units \
-            --timeout-multiplier 2.0 \
             --output mutants-results
         continue-on-error: true
 
