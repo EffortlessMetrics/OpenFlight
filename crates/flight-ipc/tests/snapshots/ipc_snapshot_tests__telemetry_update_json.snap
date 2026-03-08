@@ -1,0 +1,5 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: msg.to_json()
+---
+{"type":"TelemetryUpdate","altitude":35000.0,"airspeed":250.0,"heading":90.0}
