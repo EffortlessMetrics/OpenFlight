@@ -75,7 +75,8 @@ pub use aircraft_auto_switch_service::{
     AircraftAutoSwitchServiceConfig, BusSubscriptionConfig, ServiceMetrics,
 };
 pub use capability_service::{
-    AxisCapabilityStatus, CapabilityService, CapabilityServiceConfig, SetCapabilityResult,
+    AxisCapabilityStatus, AxisClampStats, CapabilityMetrics, CapabilityReport, CapabilityService,
+    CapabilityServiceConfig, ClampCounter, SetCapabilityResult,
 };
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy, StableError};
