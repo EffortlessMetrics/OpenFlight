@@ -16,3 +16,6 @@ keywords = ["flight-sim", "openflight", "workspace", "metadata"]
 anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
 toml.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
