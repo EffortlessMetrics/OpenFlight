@@ -30,6 +30,7 @@ pub mod replay;
 pub mod routing;
 pub mod snapshot;
 pub mod telemetry_aggregator;
+pub mod topic_routing;
 pub mod types;
 
 // Re-export main types for convenience
@@ -61,6 +62,10 @@ pub use snapshot::{
     Navigation,
 };
 pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};
+pub use topic_routing::{
+    BackpressurePolicy, BusStatistics, BusStatisticsSnapshot, DispatchSummary, EnqueueResult,
+    EventDomain, FilteredSubscriber, FilteredSubscriberSet, TopicFilter,
+};
 pub use types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearPosition, GearState, Mach, Percentage,
     SimId, ValidatedAngle, ValidatedSpeed,
