@@ -5,7 +5,9 @@
 
 use flight_hotas_logitech::{
     EXTREME_3D_PRO_MIN_REPORT_BYTES, Extreme3DProHat, G27_MIN_REPORT_BYTES, G29_MIN_REPORT_BYTES,
-    parse_extreme_3d_pro, parse_g27, parse_g29,
+    RUDDER_PEDALS_MIN_REPORT_BYTES, X56_STICK_MIN_REPORT_BYTES, X56_THROTTLE_MIN_REPORT_BYTES,
+    parse_extreme_3d_pro, parse_g27, parse_g29, parse_rudder_pedals, parse_x56_stick,
+    parse_x56_throttle,
 };
 use proptest::prelude::*;
 
@@ -178,5 +180,100 @@ proptest! {
             "expected Err for {} bytes, got Ok",
             len
         );
+    }
+}
+
+// ── X56 stick integration property tests ─────────────────────────────────────
+
+proptest! {
+    /// X56 stick: all axes always in [-1, 1].
+    #[test]
+    fn x56_stick_axes_always_bounded(
+        data in prop::collection::vec(any::<u8>(), 13..=18),
+    ) {
+        let s = parse_x56_stick(&data).unwrap();
+        prop_assert!(s.axes.x >= -1.0 && s.axes.x <= 1.0);
+        prop_assert!(s.axes.y >= -1.0 && s.axes.y <= 1.0);
+        prop_assert!(s.axes.rz >= -1.0 && s.axes.rz <= 1.0);
+        prop_assert!(s.axes.rx >= -1.0 && s.axes.rx <= 1.0);
+        prop_assert!(s.axes.ry >= -1.0 && s.axes.ry <= 1.0);
+    }
+
+    /// X56 stick: all axes are finite.
+    #[test]
+    fn x56_stick_axes_never_nan_or_inf(
+        data in prop::collection::vec(any::<u8>(), 13..=18),
+    ) {
+        let s = parse_x56_stick(&data).unwrap();
+        prop_assert!(s.axes.x.is_finite());
+        prop_assert!(s.axes.y.is_finite());
+        prop_assert!(s.axes.rz.is_finite());
+        prop_assert!(s.axes.rx.is_finite());
+        prop_assert!(s.axes.ry.is_finite());
+    }
+
+    /// Reports shorter than X56_STICK_MIN_REPORT_BYTES always return Err.
+    #[test]
+    fn x56_stick_short_report_returns_error(len in 0usize..X56_STICK_MIN_REPORT_BYTES) {
+        let data = vec![0u8; len];
+        prop_assert!(parse_x56_stick(&data).is_err());
+    }
+}
+
+// ── X56 throttle integration property tests ──────────────────────────────────
+
+proptest! {
+    /// X56 throttle: all axes always in [0, 1].
+    #[test]
+    fn x56_throttle_axes_always_bounded(
+        data in prop::collection::vec(any::<u8>(), 14..=20),
+    ) {
+        let s = parse_x56_throttle(&data).unwrap();
+        prop_assert!(s.axes.throttle_left >= 0.0 && s.axes.throttle_left <= 1.0);
+        prop_assert!(s.axes.throttle_right >= 0.0 && s.axes.throttle_right <= 1.0);
+        prop_assert!(s.axes.rotary_left >= 0.0 && s.axes.rotary_left <= 1.0);
+        prop_assert!(s.axes.rotary_right >= 0.0 && s.axes.rotary_right <= 1.0);
+        prop_assert!(s.axes.slider_left >= 0.0 && s.axes.slider_left <= 1.0);
+        prop_assert!(s.axes.slider_right >= 0.0 && s.axes.slider_right <= 1.0);
+    }
+
+    /// Reports shorter than X56_THROTTLE_MIN_REPORT_BYTES always return Err.
+    #[test]
+    fn x56_throttle_short_report_returns_error(len in 0usize..X56_THROTTLE_MIN_REPORT_BYTES) {
+        let data = vec![0u8; len];
+        prop_assert!(parse_x56_throttle(&data).is_err());
+    }
+}
+
+// ── Rudder pedals integration property tests ─────────────────────────────────
+
+proptest! {
+    /// Rudder is always in [-1, 1]; brakes are always in [0, 1].
+    #[test]
+    fn rudder_pedals_axes_always_bounded(
+        data in prop::collection::vec(any::<u8>(), 5..=10),
+    ) {
+        let s = parse_rudder_pedals(&data).unwrap();
+        prop_assert!(s.axes.rudder >= -1.0 && s.axes.rudder <= 1.0);
+        prop_assert!(s.axes.left_brake >= 0.0 && s.axes.left_brake <= 1.0);
+        prop_assert!(s.axes.right_brake >= 0.0 && s.axes.right_brake <= 1.0);
+    }
+
+    /// All rudder pedal axes are finite.
+    #[test]
+    fn rudder_pedals_axes_never_nan_or_inf(
+        data in prop::collection::vec(any::<u8>(), 5..=10),
+    ) {
+        let s = parse_rudder_pedals(&data).unwrap();
+        prop_assert!(s.axes.rudder.is_finite());
+        prop_assert!(s.axes.left_brake.is_finite());
+        prop_assert!(s.axes.right_brake.is_finite());
+    }
+
+    /// Reports shorter than RUDDER_PEDALS_MIN_REPORT_BYTES always return Err.
+    #[test]
+    fn rudder_pedals_short_report_returns_error(len in 0usize..RUDDER_PEDALS_MIN_REPORT_BYTES) {
+        let data = vec![0u8; len];
+        prop_assert!(parse_rudder_pedals(&data).is_err());
     }
 }

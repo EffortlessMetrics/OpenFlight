@@ -65,6 +65,10 @@ pub enum DeviceId {
     GFlightThrottle,
     /// Logitech Flight Rudder Pedals.
     FlightRudderPedals,
+    /// Logitech X56 RGB — stick unit.
+    X56LogitechStick,
+    /// Logitech X56 RGB — throttle unit.
+    X56LogitechThrottle,
 }
 
 /// A device identification table entry.
@@ -159,6 +163,18 @@ pub const DEVICE_TABLE: &[DeviceInfo] = &[
         pid: 0xC264,
         id: DeviceId::FlightRudderPedals,
         name: "Logitech Flight Rudder Pedals",
+    },
+    DeviceInfo {
+        vid: SAITEK_VID,
+        pid: 0x0C59,
+        id: DeviceId::X56LogitechStick,
+        name: "Logitech X56 RGB Stick",
+    },
+    DeviceInfo {
+        vid: SAITEK_VID,
+        pid: 0x0C5B,
+        id: DeviceId::X56LogitechThrottle,
+        name: "Logitech X56 RGB Throttle",
     },
 ];
 
@@ -553,6 +569,20 @@ mod tests {
     #[test]
     fn identify_unknown_device_returns_none() {
         assert!(identify_device(0xDEAD, 0xBEEF).is_none());
+    }
+
+    #[test]
+    fn identify_x56_logitech_stick() {
+        let info = identify_device(SAITEK_VID, 0x0C59).unwrap();
+        assert_eq!(info.id, DeviceId::X56LogitechStick);
+        assert!(info.name.contains("X56"));
+    }
+
+    #[test]
+    fn identify_x56_logitech_throttle() {
+        let info = identify_device(SAITEK_VID, 0x0C5B).unwrap();
+        assert_eq!(info.id, DeviceId::X56LogitechThrottle);
+        assert!(info.name.contains("X56"));
     }
 
     #[test]

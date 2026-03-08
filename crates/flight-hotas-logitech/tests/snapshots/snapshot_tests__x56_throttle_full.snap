@@ -1,0 +1,19 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+X56ThrottleInputState {
+    axes: X56ThrottleAxes {
+        throttle_left: 1.0,
+        throttle_right: 1.0,
+        rotary_left: 1.0,
+        rotary_right: 1.0,
+        slider_left: 1.0,
+        slider_right: 1.0,
+    },
+    buttons: X56ThrottleButtons {
+        buttons: 268435455,
+        hat1: North,
+        hat2: North,
+    },
+}
