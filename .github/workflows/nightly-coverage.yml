@@ -1,0 +1,77 @@
+name: Nightly Coverage
+
+# This workflow can be called from ci.yml via workflow_call to avoid
+# duplicating coverage logic. It also runs nightly on a schedule.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: Code coverage (core crates)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        run: rustup update stable
+
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: coverage-${{ hashFiles('rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            coverage-
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --locked
+
+      - name: Generate coverage report
+        run: |
+          cargo llvm-cov \
+            --package flight-core \
+            --package flight-axis \
+            --package flight-bus \
+            --package flight-units \
+            --lcov --output-path lcov.info
+
+      - name: Generate HTML report
+        run: |
+          cargo llvm-cov \
+            --package flight-core \
+            --package flight-axis \
+            --package flight-bus \
+            --package flight-units \
+            --html --output-dir coverage-html
+
+      - name: Upload coverage (lcov)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: lcov.info
+          retention-days: 30
+
+      - name: Upload coverage (HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage-html/
+          retention-days: 30
