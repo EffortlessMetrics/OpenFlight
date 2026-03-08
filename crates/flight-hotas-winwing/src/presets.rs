@@ -106,6 +106,58 @@ pub fn tfrp_rudder_config() -> [RecommendedAxisConfig; 3] {
     ]
 }
 
+/// Get recommended axis configurations for the Super Taurus F-15EX Throttle.
+///
+/// The Super Taurus uses the same Hall-effect sensors as the Orion 2 with
+/// dual throttle levers plus friction and slew axes.
+pub fn super_taurus_config() -> [RecommendedAxisConfig; 3] {
+    [
+        RecommendedAxisConfig {
+            name: "throttle_left",
+            deadzone: 0.01,
+            filter_alpha: None,
+            slew_rate: None,
+            notes: "Left throttle lever — Hall-effect, very low noise",
+        },
+        RecommendedAxisConfig {
+            name: "throttle_right",
+            deadzone: 0.01,
+            filter_alpha: None,
+            slew_rate: None,
+            notes: "Right throttle lever — Hall-effect, very low noise",
+        },
+        RecommendedAxisConfig {
+            name: "trim",
+            deadzone: 0.03,
+            filter_alpha: Some(0.10),
+            slew_rate: None,
+            notes: "Trim wheel — signed axis",
+        },
+    ]
+}
+
+/// Get recommended axis configurations for the Super Libra Joystick Base.
+///
+/// The Super Libra uses high-precision Hall-effect sensors on both axes.
+pub fn super_libra_config() -> [RecommendedAxisConfig; 2] {
+    [
+        RecommendedAxisConfig {
+            name: "roll",
+            deadzone: 0.01,
+            filter_alpha: None,
+            slew_rate: None,
+            notes: "Roll axis — Hall-effect, centre-mount gimbal",
+        },
+        RecommendedAxisConfig {
+            name: "pitch",
+            deadzone: 0.01,
+            filter_alpha: None,
+            slew_rate: None,
+            notes: "Pitch axis — Hall-effect, centre-mount gimbal",
+        },
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -123,6 +175,16 @@ mod tests {
     #[test]
     fn test_rudder_preset_count() {
         assert_eq!(tfrp_rudder_config().len(), 3);
+    }
+
+    #[test]
+    fn test_super_taurus_preset_count() {
+        assert_eq!(super_taurus_config().len(), 3);
+    }
+
+    #[test]
+    fn test_super_libra_preset_count() {
+        assert_eq!(super_libra_config().len(), 2);
     }
 
     #[test]

@@ -30,11 +30,13 @@ polling:
   max_jitter_ms: 5
 
 support:
-  tier: 3
+  tier: 2
+  parser: take_off_panel
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     F/A-18 replica takeoff panel covering pre-takeoff switches: flaps, speed
     brake, launch bar, and catapult controls. PID 0xBE04 confirmed from
     linux-hardware.org (1 probe). A second-generation variant is PID 0xBF05.
+    Parser: take_off_panel (report ID 0x09, ASSUMED layout).

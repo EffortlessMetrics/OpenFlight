@@ -7,6 +7,9 @@ use flight_hotas_winwing::{
     WinWingError, normalize_axis_16bit, normalize_throttle_16bit, parse_orion_joystick,
     parse_orion2_throttle,
 };
+use flight_hotas_winwing::{
+    parse_combat_ready_panel_report, parse_super_libra_report, parse_take_off_panel_report,
+};
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -157,4 +160,67 @@ fn test_normalize_axis_16bit_center() {
 fn test_normalize_throttle_16bit_max() {
     let v = normalize_throttle_16bit(65535);
     assert!((v - 1.0).abs() < 1e-6, "max should map to 1.0, got {v}");
+}
+
+// ── Combat Ready Panel ────────────────────────────────────────────────────────
+
+#[test]
+fn test_combat_ready_panel_all_buttons_off() {
+    let mut r = [0u8; 6];
+    r[0] = 0x08;
+    let state = parse_combat_ready_panel_report(&r).unwrap();
+    for n in 1..=30 {
+        assert!(!state.buttons.is_pressed(n), "button {n} should be off");
+    }
+}
+
+#[test]
+fn test_combat_ready_panel_some_buttons_on() {
+    let mut r = [0u8; 6];
+    r[0] = 0x08;
+    r[1..5].copy_from_slice(&0x0000_0005u32.to_le_bytes());
+    let state = parse_combat_ready_panel_report(&r).unwrap();
+    assert!(state.buttons.is_pressed(1));
+    assert!(state.buttons.is_pressed(3));
+    assert!(!state.buttons.is_pressed(2));
+}
+
+// ── Take Off Panel ────────────────────────────────────────────────────────────
+
+#[test]
+fn test_take_off_panel_encoders() {
+    let mut r = [0u8; 8];
+    r[0] = 0x09;
+    r[5] = 2; // encoder 0 = +2
+    r[6] = 0xFE_u8; // encoder 1 = -2 (i8)
+    r[7] = 0; // encoder 2 = 0
+    let state = parse_take_off_panel_report(&r).unwrap();
+    assert_eq!(state.buttons.encoders[0], 2);
+    assert_eq!(state.buttons.encoders[1], -2);
+    assert_eq!(state.buttons.encoders[2], 0);
+}
+
+// ── Super Libra ───────────────────────────────────────────────────────────────
+
+#[test]
+fn test_super_libra_centered() {
+    let mut r = [0u8; 12];
+    r[0] = 0x0A;
+    r[9] = 0x0F; // HAT neutral
+    let state = parse_super_libra_report(&r).unwrap();
+    assert!(state.axes.roll.abs() < 1e-4);
+    assert!(state.axes.pitch.abs() < 1e-4);
+    assert!(state.buttons.hat_neutral());
+}
+
+#[test]
+fn test_super_libra_full_deflection() {
+    let mut r = [0u8; 12];
+    r[0] = 0x0A;
+    r[1..3].copy_from_slice(&32767i16.to_le_bytes());
+    r[3..5].copy_from_slice(&(-32768i16).to_le_bytes());
+    r[9] = 0x0F;
+    let state = parse_super_libra_report(&r).unwrap();
+    assert!((state.axes.roll - 1.0).abs() < 1e-4);
+    assert!((state.axes.pitch + 1.0).abs() < 1e-2);
 }

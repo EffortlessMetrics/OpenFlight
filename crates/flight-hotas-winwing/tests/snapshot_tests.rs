@@ -7,7 +7,10 @@
 //! known input values.  Any change to the struct layout, normalization formula,
 //! or enum variant naming will surface as a diff before it reaches users.
 
-use flight_hotas_winwing::{parse_orion2_stick_report, parse_orion2_throttle_report};
+use flight_hotas_winwing::{
+    parse_combat_ready_panel_report, parse_orion2_stick_report, parse_orion2_throttle_report,
+    parse_super_libra_report, parse_take_off_panel_report,
+};
 
 // ── report builders ───────────────────────────────────────────────────────────
 
@@ -73,4 +76,38 @@ fn test_orion2_throttle_idle_snapshot() {
     let report = orion2_throttle_report(0, 0, 0, 32768, 32768, 0, [0; 5]);
     let state = parse_orion2_throttle_report(&report).expect("valid report");
     insta::assert_debug_snapshot!("orion2_throttle_idle", state);
+}
+
+// ── Combat Ready Panel snapshots ──────────────────────────────────────────────
+
+/// Pin the parsed state of the Combat Ready Panel with no buttons pressed.
+#[test]
+fn test_combat_ready_panel_idle_snapshot() {
+    let mut report = [0u8; 6];
+    report[0] = 0x08;
+    let state = parse_combat_ready_panel_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("combat_ready_panel_idle", state);
+}
+
+// ── Take Off Panel snapshots ──────────────────────────────────────────────────
+
+/// Pin the parsed state of the Take Off Panel with no buttons or encoders.
+#[test]
+fn test_take_off_panel_idle_snapshot() {
+    let mut report = [0u8; 8];
+    report[0] = 0x09;
+    let state = parse_take_off_panel_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("take_off_panel_idle", state);
+}
+
+// ── Super Libra snapshots ─────────────────────────────────────────────────────
+
+/// Pin the parsed state of the Super Libra at center position.
+#[test]
+fn test_super_libra_center_snapshot() {
+    let mut report = [0u8; 12];
+    report[0] = 0x0A;
+    report[9] = 0x0F; // HAT neutral
+    let state = parse_super_libra_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("super_libra_center", state);
 }
