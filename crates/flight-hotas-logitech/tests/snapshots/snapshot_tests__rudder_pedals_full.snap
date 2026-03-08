@@ -1,0 +1,11 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+RudderPedalsInputState {
+    axes: RudderPedalsAxes {
+        rudder: 1.0,
+        left_brake: 1.0,
+        right_brake: 1.0,
+    },
+}

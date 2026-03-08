@@ -7,11 +7,16 @@
 //! and system components with automatic quarantine of failed components.
 //! Provides synthetic fault injection for testing and validation.
 
+pub mod diagnostic_bundle;
 pub mod escalation;
+pub mod escalation_policy;
 pub mod health_aggregator;
 pub mod health_check;
+pub mod heartbeat;
 pub mod monitor;
+pub mod probe;
 pub mod recovery;
+pub mod resource_monitor;
 pub mod supervisor;
 
 use std::collections::{HashMap, VecDeque};

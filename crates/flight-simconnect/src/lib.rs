@@ -83,8 +83,9 @@ pub use aircraft_detection::{
     AircraftDetectionEngine, AircraftEntry, DetectionResult, MatchConfidence, SimAircraftData,
 };
 pub use connection::{
-    ConnectionConfig, ConnectionEvent, ConnectionState, ConnectionTransitionError,
-    ExponentialBackoff, HealthMonitor, SimConnectConnection,
+    ConnectionConfig, ConnectionEvent, ConnectionHealth, ConnectionState,
+    ConnectionTransitionError, ExponentialBackoff, HealthMonitor, ReconnectPolicy,
+    SimConnectConnection,
 };
 pub use control_injection::{
     AxisId, ControlInjectorConfig, InjectionCommand, RateLimiter, SimControlInjector,

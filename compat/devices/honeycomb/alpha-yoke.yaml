@@ -33,6 +33,11 @@ quirks:
       The Alpha Yoke PID (0x1900) is confirmed by linux-hardware.org hardware probe
       data (8 independent system probes, device string "Alpha Flight Controls").
       Previously community-reported as 0x0102; updated based on hardware evidence.
+  - id: LEGACY_MICROCHIP_VID
+    description: >
+      Early production Alpha Yokes shipped with the Microchip default VID 0x04D8
+      and PID 0xE6D6 before Honeycomb obtained their own vendor ID (0x294B).
+      OpenFlight matches both VID/PID combinations for backwards compatibility.
   - id: MAGNETO_AS_BUTTONS
     description: >
       Magneto switch positions are reported as discrete buttons (not an axis).

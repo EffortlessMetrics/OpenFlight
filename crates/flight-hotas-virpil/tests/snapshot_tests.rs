@@ -8,7 +8,9 @@
 //! or enum variant naming will surface as a diff before it reaches users.
 
 use flight_hotas_virpil::{
-    WarBrdVariant, parse_alpha_report, parse_mongoost_stick_report, parse_warbrd_report,
+    WarBrdVariant, parse_ace_pedals_report, parse_ace_torq_report, parse_alpha_report,
+    parse_cm3_throttle_report, parse_mongoost_stick_report, parse_panel1_report,
+    parse_panel2_report, parse_rotor_tcs_report, parse_warbrd_report,
 };
 
 // ── report builder ────────────────────────────────────────────────────────────
@@ -70,4 +72,122 @@ fn test_warbrd_center_snapshot() {
     let report = virpil_report([8192; 5], [0x00, 0x00, 0x00, 0xF0]);
     let state = parse_warbrd_report(&report, WarBrdVariant::Original).expect("valid report");
     insta::assert_debug_snapshot!("warbrd_center", state);
+}
+
+// ── CM3 Throttle snapshots ────────────────────────────────────────────────────
+
+/// CM3 throttle report builder (report_id=0x01, 6×u16-LE axes, 10 button bytes).
+fn cm3_report(axes: [u16; 6], buttons: [u8; 10]) -> Vec<u8> {
+    let mut data = vec![0x01u8];
+    for ax in &axes {
+        data.extend_from_slice(&ax.to_le_bytes());
+    }
+    data.extend_from_slice(&buttons);
+    data
+}
+
+/// Pin the parsed state of the VPC Throttle CM3 at idle position.
+#[test]
+fn test_cm3_throttle_idle_snapshot() {
+    let report = cm3_report([0; 6], [0u8; 10]);
+    let state = parse_cm3_throttle_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("cm3_throttle_idle", state);
+}
+
+/// Pin the parsed state of the VPC Throttle CM3 at full throttle.
+#[test]
+fn test_cm3_throttle_full_snapshot() {
+    let report = cm3_report([16384; 6], [0u8; 10]);
+    let state = parse_cm3_throttle_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("cm3_throttle_full", state);
+}
+
+// ── ACE Pedals snapshots ──────────────────────────────────────────────────────
+
+/// Pedals report builder (report_id=0x01, 3×u16-LE axes, 2 button bytes).
+fn pedals_report(axes: [u16; 3], buttons: [u8; 2]) -> Vec<u8> {
+    let mut data = vec![0x01u8];
+    for ax in &axes {
+        data.extend_from_slice(&ax.to_le_bytes());
+    }
+    data.extend_from_slice(&buttons);
+    data
+}
+
+/// Pin the parsed state of the VPC ACE Pedals at centered rudder with brakes released.
+#[test]
+fn test_ace_pedals_center_snapshot() {
+    let report = pedals_report([8192, 0, 0], [0u8; 2]);
+    let state = parse_ace_pedals_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("ace_pedals_center", state);
+}
+
+// ── ACE Torq snapshots ───────────────────────────────────────────────────────
+
+/// ACE Torq report builder (report_id=0x01, 1×u16-LE axis, 2 button bytes).
+fn torq_report(throttle: u16, buttons: [u8; 2]) -> Vec<u8> {
+    let mut data = vec![0x01u8];
+    data.extend_from_slice(&throttle.to_le_bytes());
+    data.extend_from_slice(&buttons);
+    data
+}
+
+/// Pin the parsed state of the VPC ACE Torq at idle.
+#[test]
+fn test_ace_torq_idle_snapshot() {
+    let report = torq_report(0, [0u8; 2]);
+    let state = parse_ace_torq_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("ace_torq_idle", state);
+}
+
+/// Pin the parsed state of the VPC ACE Torq at full throttle.
+#[test]
+fn test_ace_torq_full_snapshot() {
+    let report = torq_report(16384, [0u8; 2]);
+    let state = parse_ace_torq_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("ace_torq_full", state);
+}
+
+// ── Rotor TCS Plus snapshots ─────────────────────────────────────────────────
+
+/// Rotor TCS report builder (report_id=0x01, 3×u16-LE axes, 4 button bytes).
+fn rotor_tcs_report(axes: [u16; 3], buttons: [u8; 4]) -> Vec<u8> {
+    let mut data = vec![0x01u8];
+    for ax in &axes {
+        data.extend_from_slice(&ax.to_le_bytes());
+    }
+    data.extend_from_slice(&buttons);
+    data
+}
+
+/// Pin the parsed state of the VPC Rotor TCS Plus at collective midpoint.
+#[test]
+fn test_rotor_tcs_midpoint_snapshot() {
+    let report = rotor_tcs_report([8192, 0, 0], [0u8; 4]);
+    let state = parse_rotor_tcs_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("rotor_tcs_midpoint", state);
+}
+
+// ── Panel 1 snapshot ──────────────────────────────────────────────────────────
+
+/// Pin the parsed state of the VPC Control Panel 1 with all buttons off.
+#[test]
+fn test_panel1_idle_snapshot() {
+    let mut report = vec![0x01u8];
+    report.extend_from_slice(&[0u8; 6]);
+    let state = parse_panel1_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("panel1_idle", state);
+}
+
+// ── Panel 2 snapshot ──────────────────────────────────────────────────────────
+
+/// Pin the parsed state of the VPC Control Panel 2 at midpoint axes with no buttons.
+#[test]
+fn test_panel2_center_snapshot() {
+    let mut report = vec![0x01u8];
+    report.extend_from_slice(&8192u16.to_le_bytes());
+    report.extend_from_slice(&8192u16.to_le_bytes());
+    report.extend_from_slice(&[0u8; 6]);
+    let state = parse_panel2_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("panel2_center", state);
 }

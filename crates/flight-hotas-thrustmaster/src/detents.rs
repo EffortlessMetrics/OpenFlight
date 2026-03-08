@@ -201,6 +201,88 @@ impl ThrottleDetentTracker {
     }
 }
 
+// ─── Typed detent detection with snap ───────────────────────────────────────
+
+/// Classification of a throttle detent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DetentType {
+    /// Engine idle gate (typically near 0% throttle).
+    Idle,
+    /// Military / afterburner gate (typically near 100% throttle).
+    Afterburner,
+    /// Reverse thrust gate (below idle, if supported).
+    Reverse,
+}
+
+/// Configuration for a single typed detent with snap behavior.
+///
+/// The detent fires when the axis position is within `snap_range` of
+/// `position_threshold`. [`snap_to_detent`] will pull the value to
+/// exactly `position_threshold` when it is within `snap_range`.
+#[derive(Debug, Clone, Copy)]
+pub struct DetentConfig {
+    /// The type of this detent.
+    pub detent_type: DetentType,
+    /// Normalised axis position of the detent center (0.0 – 1.0).
+    pub position_threshold: f64,
+    /// One-sided snap range: values within ±`snap_range` of the threshold
+    /// are considered inside the detent.
+    pub snap_range: f64,
+}
+
+impl DetentConfig {
+    /// Create a default idle detent at 5% throttle with ±2% snap range.
+    pub const fn idle_default() -> Self {
+        Self {
+            detent_type: DetentType::Idle,
+            position_threshold: 0.05,
+            snap_range: 0.02,
+        }
+    }
+
+    /// Create a default afterburner detent at 95% throttle with ±2% snap range.
+    pub const fn afterburner_default() -> Self {
+        Self {
+            detent_type: DetentType::Afterburner,
+            position_threshold: 0.95,
+            snap_range: 0.02,
+        }
+    }
+
+    /// Create a default reverse-thrust detent at 2% throttle with ±1.5% snap range.
+    pub const fn reverse_default() -> Self {
+        Self {
+            detent_type: DetentType::Reverse,
+            position_threshold: 0.02,
+            snap_range: 0.015,
+        }
+    }
+}
+
+/// Detect whether the given position falls within a detent zone.
+///
+/// Returns `Some(detent_type)` if `position` is within ±`snap_range` of
+/// `position_threshold`, otherwise `None`.
+pub fn detect_detent(position: f64, config: &DetentConfig) -> Option<DetentType> {
+    if (position - config.position_threshold).abs() <= config.snap_range {
+        Some(config.detent_type)
+    } else {
+        None
+    }
+}
+
+/// Snap an axis value to the detent center if it is within the snap zone.
+///
+/// If `position` is within ±`snap_range` of the threshold, returns the
+/// threshold value exactly. Otherwise returns `position` unchanged.
+pub fn snap_to_detent(position: f64, config: &DetentConfig) -> f64 {
+    if (position - config.position_threshold).abs() <= config.snap_range {
+        config.position_threshold
+    } else {
+        position
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -389,5 +471,116 @@ mod tests {
         } else {
             panic!("expected Entered event");
         }
+    }
+
+    // ── DetentConfig / DetentType ───────────────────────────────────────────
+
+    #[test]
+    fn detect_detent_idle_at_threshold() {
+        let cfg = DetentConfig::idle_default();
+        assert_eq!(detect_detent(0.05, &cfg), Some(DetentType::Idle));
+    }
+
+    #[test]
+    fn detect_detent_idle_within_snap() {
+        let cfg = DetentConfig::idle_default();
+        assert_eq!(detect_detent(0.04, &cfg), Some(DetentType::Idle));
+        assert_eq!(detect_detent(0.06, &cfg), Some(DetentType::Idle));
+    }
+
+    #[test]
+    fn detect_detent_idle_outside_snap() {
+        let cfg = DetentConfig::idle_default();
+        assert_eq!(detect_detent(0.0, &cfg), None);
+        assert_eq!(detect_detent(0.10, &cfg), None);
+    }
+
+    #[test]
+    fn detect_detent_afterburner() {
+        let cfg = DetentConfig::afterburner_default();
+        assert_eq!(detect_detent(0.95, &cfg), Some(DetentType::Afterburner));
+        assert_eq!(detect_detent(0.94, &cfg), Some(DetentType::Afterburner));
+        assert_eq!(detect_detent(0.80, &cfg), None);
+    }
+
+    #[test]
+    fn detect_detent_reverse() {
+        let cfg = DetentConfig::reverse_default();
+        assert_eq!(detect_detent(0.02, &cfg), Some(DetentType::Reverse));
+        assert_eq!(detect_detent(0.50, &cfg), None);
+    }
+
+    #[test]
+    fn snap_to_detent_within_range() {
+        let cfg = DetentConfig::idle_default();
+        let snapped = snap_to_detent(0.04, &cfg);
+        assert!(
+            (snapped - 0.05).abs() < 1e-9,
+            "should snap to 0.05, got {snapped}"
+        );
+    }
+
+    #[test]
+    fn snap_to_detent_at_threshold() {
+        let cfg = DetentConfig::idle_default();
+        let snapped = snap_to_detent(0.05, &cfg);
+        assert!((snapped - 0.05).abs() < 1e-9);
+    }
+
+    #[test]
+    fn snap_to_detent_outside_range() {
+        let cfg = DetentConfig::idle_default();
+        let snapped = snap_to_detent(0.20, &cfg);
+        assert!(
+            (snapped - 0.20).abs() < 1e-9,
+            "should not snap, got {snapped}"
+        );
+    }
+
+    #[test]
+    fn snap_boundary_just_inside() {
+        let cfg = DetentConfig::idle_default();
+        // Clearly within boundary: 0.05 + 0.019 = 0.069
+        let snapped = snap_to_detent(0.069, &cfg);
+        assert!(
+            (snapped - 0.05).abs() < 1e-9,
+            "boundary should snap, got {snapped}"
+        );
+    }
+
+    #[test]
+    fn snap_boundary_just_outside() {
+        let cfg = DetentConfig::idle_default();
+        // Just beyond: 0.05 + 0.021
+        let snapped = snap_to_detent(0.071, &cfg);
+        assert!(
+            (snapped - 0.071).abs() < 1e-9,
+            "outside should not snap, got {snapped}"
+        );
+    }
+
+    #[test]
+    fn snap_afterburner_hysteresis() {
+        let cfg = DetentConfig::afterburner_default();
+        let within = snap_to_detent(0.96, &cfg);
+        assert!((within - 0.95).abs() < 1e-9, "should snap to AB detent");
+        let outside = snap_to_detent(0.90, &cfg);
+        assert!((outside - 0.90).abs() < 1e-9, "outside AB snap range");
+    }
+
+    #[test]
+    fn detent_type_equality() {
+        assert_eq!(DetentType::Idle, DetentType::Idle);
+        assert_ne!(DetentType::Idle, DetentType::Afterburner);
+        assert_ne!(DetentType::Afterburner, DetentType::Reverse);
+    }
+
+    #[test]
+    fn detent_config_defaults_consistent() {
+        let idle = DetentConfig::idle_default();
+        let ab = DetentConfig::afterburner_default();
+        let rev = DetentConfig::reverse_default();
+        assert!(idle.position_threshold < ab.position_threshold);
+        assert!(rev.position_threshold < idle.position_threshold);
     }
 }

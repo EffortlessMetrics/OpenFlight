@@ -24,3 +24,4 @@ flight-hid-support = { path = "../flight-hid-support" }
 
 [dev-dependencies]
 proptest = { workspace = true }
+flight-ffb = { path = "../flight-ffb" }

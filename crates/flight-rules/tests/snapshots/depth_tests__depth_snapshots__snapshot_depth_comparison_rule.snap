@@ -1,0 +1,17 @@
+---
+source: crates/flight-rules/tests/depth_tests.rs
+expression: snap
+---
+instructions:
+  - LoadVar: 0
+  - LoadConst: 35000
+  - Compare: Greater
+  - JumpFalse: 5
+  - Action: 0
+variable_map:
+  altitude: 0
+actions:
+  - LedBlink:
+      target: ALT
+      rate_hz: 2
+stack_size: 8

@@ -6,11 +6,13 @@
 //! This crate provides support for VKB STECS throttle variants, VKB Gladiator
 //! NXT EVO sticks, and VKB virtual-interface metadata utilities.
 
+pub mod change_detect;
 pub mod health;
 pub mod input;
 pub mod profiles;
 pub mod protocol;
 pub mod stecs_modern;
+pub mod t_rudder;
 
 pub use flight_hid_support::device_support::{
     VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VKB_STECS_LEFT_SPACE_MINI_PID,
@@ -24,6 +26,7 @@ pub use flight_hid_support::device_support::{
     vkb_stecs_interface_metadata, vkb_stecs_physical_id, vkb_stecs_variant,
 };
 
+pub use change_detect::{ButtonEvent, detect_button_changes, detect_button_word_changes};
 pub use health::{StecsHealthMonitor, StecsHealthStatus};
 pub use input::{
     GLADIATOR_MAX_BUTTONS, GLADIATOR_MAX_HATS, GladiatorAxes, GladiatorInputHandler,
@@ -47,4 +50,8 @@ pub use protocol::{
 pub use stecs_modern::{
     StecsMtParseError, StecsMtVariant, VKC_STECS_MT_MAX_BUTTONS, VKC_STECS_MT_MIN_REPORT_BYTES,
     VkcStecsMtAxes, VkcStecsMtButtons, VkcStecsMtInputState, parse_stecs_mt_report,
+};
+pub use t_rudder::{
+    T_RUDDER_MIN_PAYLOAD_BYTES, TRudderAxes, TRudderInputHandler, TRudderInputState,
+    TRudderParseError, TRudderVariant,
 };

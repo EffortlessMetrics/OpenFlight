@@ -1,0 +1,20 @@
+---
+source: crates/flight-cli/src/scripting.rs
+expression: "format!(\"{:#?}\", result)"
+---
+ScriptResult {
+    exit_code: 2,
+    batch_result: None,
+    parse_errors: [
+        ParseError {
+            line: 1,
+            text: "not-a-command foo",
+            reason: "unknown command: not-a-command",
+        },
+        ParseError {
+            line: 2,
+            text: "set-deadzone roll bad_number",
+            reason: "invalid number: bad_number",
+        },
+    ],
+}

@@ -1,0 +1,142 @@
+{
+  "sim": "xplane",
+  "version": "12",
+  "description": "X-Plane 12 dataref table — axis write paths, command refs",
+  "variables": {
+    "aileron": {
+      "sim_var_name": "sim/joystick/yoke_roll_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Yoke roll ratio, -1 full left to +1 full right"
+    },
+    "elevator": {
+      "sim_var_name": "sim/joystick/yoke_pitch_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Yoke pitch ratio, -1 full down to +1 full up"
+    },
+    "rudder": {
+      "sim_var_name": "sim/joystick/yoke_heading_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Yoke heading (rudder) ratio"
+    },
+    "throttle": {
+      "sim_var_name": "sim/cockpit2/engine/actuators/throttle_ratio[0]",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Engine 1 throttle ratio"
+    },
+    "propeller": {
+      "sim_var_name": "sim/cockpit2/engine/actuators/prop_rotation_speed_rad_sec[0]",
+      "unit": "radians per second",
+      "data_type": "float32",
+      "settable": false,
+      "min": 0.0,
+      "max": 500.0,
+      "description": "Propeller rotation speed (read-only)"
+    },
+    "mixture": {
+      "sim_var_name": "sim/cockpit2/engine/actuators/mixture_ratio[0]",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Engine 1 mixture ratio"
+    },
+    "flaps": {
+      "sim_var_name": "sim/cockpit2/controls/flap_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Flap deployment ratio"
+    },
+    "gear": {
+      "sim_var_name": "sim/cockpit/switches/gear_handle_status",
+      "unit": "bool",
+      "data_type": "int32",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Gear handle status (0=up, 1=down)"
+    },
+    "spoilers": {
+      "sim_var_name": "sim/cockpit2/controls/speedbrake_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": -0.5,
+      "max": 1.0,
+      "description": "Speedbrake ratio (-0.5=armed, 0=retracted, 1=deployed)"
+    },
+    "parking_brake": {
+      "sim_var_name": "sim/cockpit2/controls/parking_brake_ratio",
+      "unit": "ratio",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Parking brake ratio"
+    },
+    "ap_master": {
+      "sim_var_name": "sim/cockpit/autopilot/autopilot_mode",
+      "unit": "enum",
+      "data_type": "int32",
+      "settable": false,
+      "min": 0.0,
+      "max": 2.0,
+      "description": "Autopilot mode (0=off, 1=FD, 2=on)"
+    },
+    "ap_heading": {
+      "sim_var_name": "sim/cockpit/autopilot/heading_mag",
+      "unit": "degrees",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 360.0,
+      "description": "Autopilot heading bug magnetic"
+    },
+    "ap_altitude": {
+      "sim_var_name": "sim/cockpit/autopilot/altitude",
+      "unit": "feet",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 50000.0,
+      "description": "Autopilot altitude target"
+    },
+    "ap_vs": {
+      "sim_var_name": "sim/cockpit/autopilot/vertical_velocity",
+      "unit": "feet per minute",
+      "data_type": "float32",
+      "settable": true,
+      "min": -6000.0,
+      "max": 6000.0,
+      "description": "Autopilot vertical speed target"
+    },
+    "nav_obs": {
+      "sim_var_name": "sim/cockpit/radios/nav1_obs_degm",
+      "unit": "degrees",
+      "data_type": "float32",
+      "settable": true,
+      "min": 0.0,
+      "max": 360.0,
+      "description": "NAV1 OBS setting"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: output
+---
+FFB fault: envelope limit exceeded on channel 0
+HID enumeration failure: 044F:B10A not found on any USB bus
+Adapter disconnect: MSFS SimConnect connection lost
+Config error: profile merge conflict on pitch axis
+Plugin fault: plugin 'nav-helper' exceeded 100μs budget
+Scheduler failure: MMCSS task priority elevation failed
+Unknown: unclassified startup error

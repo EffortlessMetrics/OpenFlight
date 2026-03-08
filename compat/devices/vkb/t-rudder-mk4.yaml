@@ -43,11 +43,14 @@ quirks:
       the brake axes if resting position drifts.
 
 support:
-  tier: 3
+  tier: 2
+  crate: flight-pedals
+  parser: parse_vkb_trudder_report
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     PID 0x0126 community-reported for the T-Rudder Mk.IV.
     Three-axis rudder pedal unit: rudder yaw axis plus independent
     left and right toe-brake axes. Brake axes are not mechanically linked.
+    Unified parser in flight-pedals crate with calibration support.
