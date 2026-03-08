@@ -4,13 +4,12 @@
 
 ## Summary
 
-- **Total devices:** 2201
+- **Total devices:** 2301
 - **Total games:** 18
 - **Tier distribution (devices):**
-  - tier_0: 2
   - tier_1: 18
-  - tier_2: 687
-  - tier_3: 1486
+  - tier_2: 706
+  - tier_3: 1567
   - tier_4: 7
   - tier_5: 1
 - **Tier distribution (games):**

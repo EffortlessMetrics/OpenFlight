@@ -1,0 +1,18 @@
+[package]
+homepage.workspace = true
+name = "flight-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Comprehensive mock/fake infrastructure for OpenFlight integration testing."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "test", "mock"]
+
+[dependencies]
+flight-bus = { path = "../flight-bus" }
+serde = { workspace = true }
+serde_json = { workspace = true }

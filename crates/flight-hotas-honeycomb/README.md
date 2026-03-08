@@ -4,13 +4,13 @@ Honeycomb Aeronautical Alpha Yoke and Bravo Throttle Quadrant driver for OpenFli
 
 ## Devices
 
-| Device | VID | PID | Status |
-|---|---|---|---|
-| Alpha Flight Controls XPC (Yoke) | 0x294B | 0x0102 | Tier 2 — simulated tests only |
-| Bravo Throttle Quadrant | 0x294B | 0x1901 | Tier 2 — simulated tests only |
+| Device | VID | PID | Legacy VID | Legacy PID | Status |
+|---|---|---|---|---|---|
+| Alpha Flight Controls XPC (Yoke) | 0x294B | 0x1900 | 0x04D8 | 0xE6D6 | Tier 2 — simulated tests only |
+| Bravo Throttle Quadrant | 0x294B | 0x1901 | 0x04D8 | 0xE6D5 | Tier 2 — simulated tests only |
 
-**Note:** The Alpha Yoke PID (0x0102) is a community-reported value that has not been
-hardware-validated. The Bravo PID (0x1901) is confirmed from multiple independent sources.
+**Note:** Early production Honeycomb units shipped with the Microchip default VID (0x04D8).
+Current production uses the Honeycomb VID (0x294B). Both are recognised automatically.
 
 ## Features
 
@@ -49,3 +49,31 @@ before use in production. See `compat/devices/honeycomb/` for compat manifests.
 
 **LED protocol (confirmed):** Verified from BetterBravoLights (RoystonS, GitHub),
 which is a production-tested tool that controls Bravo LEDs using the same protocol.
+
+## Named Button Enums
+
+`AlphaButton` and `BravoButton` enums provide named variants for known button
+assignments, avoiding magic numbers:
+
+```rust
+use flight_hotas_honeycomb::{parse_alpha_report, AlphaButton};
+
+let state = parse_alpha_report(&report).unwrap();
+if AlphaButton::Ptt.is_active(&state.buttons) {
+    // push-to-talk pressed
+}
+```
+
+## Button State Change Detection
+
+`ButtonDelta` computes which buttons were newly pressed or released between
+consecutive reports:
+
+```rust
+use flight_hotas_honeycomb::ButtonDelta;
+
+let delta = ButtonDelta::compute(prev_mask, current_mask);
+for btn in delta.pressed_buttons() {
+    println!("Button {btn} just pressed");
+}
+```

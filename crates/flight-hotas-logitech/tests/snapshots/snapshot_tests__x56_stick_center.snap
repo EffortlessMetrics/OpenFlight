@@ -1,0 +1,18 @@
+---
+source: crates/flight-hotas-logitech/tests/snapshot_tests.rs
+expression: state
+---
+X56StickInputState {
+    axes: X56StickAxes {
+        x: 0.00024420026,
+        y: 0.00024420026,
+        rz: 0.00024420026,
+        rx: 0.003921569,
+        ry: 0.003921569,
+    },
+    buttons: X56StickButtons {
+        buttons: 0,
+        hat1: Center,
+        hat2: Center,
+    },
+}

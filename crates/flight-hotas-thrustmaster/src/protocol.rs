@@ -422,6 +422,286 @@ TARGET button numbers are 1-indexed and match OpenFlight's button(n) convention.
 The Warthog pinkie-shift layer produces logical buttons 20-37, matching TARGET defaults. \
 Axis IDs (JOYX, JOYY, THR_LEFT, etc.) map directly to parsed struct fields.";
 
+// ─── Unified stick / throttle state ─────────────────────────────────────────
+
+/// Unified stick input state across all Thrustmaster stick devices.
+///
+/// Axes are normalized to f64:
+///   - Centered axes: −1.0 (full left / forward) to 1.0 (full right / back)
+///   - Unipolar axes: 0.0 (idle) to 1.0 (full)
+#[derive(Debug, Clone)]
+pub struct StickState {
+    /// Roll axis (−1.0 = left, 1.0 = right).
+    pub roll: f64,
+    /// Pitch axis (−1.0 = forward/up, 1.0 = back/down).
+    pub pitch: f64,
+    /// Twist / rudder axis (−1.0 = left, 1.0 = right). `0.0` if the stick has no twist.
+    pub twist: f64,
+    /// Throttle slider (0.0 = idle, 1.0 = full). `0.0` if no slider present.
+    pub throttle_slider: f64,
+    /// Button states, indexed 0..N (button 1 = index 0).
+    pub buttons: Vec<bool>,
+    /// Hat switch position: 0 = center, 1 = N, 2 = NE, 3 = E, … 8 = NW.
+    pub hat: u8,
+}
+
+/// Unified throttle input state across all Thrustmaster throttle devices.
+#[derive(Debug, Clone)]
+pub struct ThrottleState {
+    /// Primary / left throttle lever (0.0 = idle, 1.0 = full).
+    pub throttle_left: f64,
+    /// Right throttle lever (0.0 = idle, 1.0 = full). Same as `throttle_left` for single-lever devices.
+    pub throttle_right: f64,
+    /// Combined / interlock throttle (0.0 = idle, 1.0 = full).
+    pub throttle_combined: f64,
+    /// Mini-stick / slew X (−1.0 … 1.0). `0.0` if not present.
+    pub slew_x: f64,
+    /// Mini-stick / slew Y (−1.0 … 1.0). `0.0` if not present.
+    pub slew_y: f64,
+    /// Rocker axis (−1.0 … 1.0). `0.0` if not present.
+    pub rocker: f64,
+    /// Button states, indexed 0..N (button 1 = index 0).
+    pub buttons: Vec<bool>,
+    /// Engine detent indicators (idle, afterburner, reverse), if detectable.
+    pub detent_positions: Vec<f64>,
+}
+
+/// Errors from the unified protocol parser.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ThrustmasterProtocolError {
+    /// The device has not been identified yet.
+    UnknownDevice,
+    /// Report too short for the expected device.
+    ReportTooShort { expected: usize, actual: usize },
+    /// Parsing the underlying device report failed.
+    ParseError(String),
+}
+
+impl std::fmt::Display for ThrustmasterProtocolError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownDevice => write!(f, "unknown Thrustmaster device"),
+            Self::ReportTooShort { expected, actual } => {
+                write!(f, "report too short: expected {expected}, got {actual}")
+            }
+            Self::ParseError(msg) => write!(f, "parse error: {msg}"),
+        }
+    }
+}
+
+impl std::error::Error for ThrustmasterProtocolError {}
+
+/// Device-aware Thrustmaster HID protocol handler.
+///
+/// Wraps device identification and dispatches raw HID reports to the
+/// appropriate device-specific parser, returning a unified [`StickState`]
+/// or [`ThrottleState`].
+///
+/// # Example
+///
+/// ```
+/// use flight_hotas_thrustmaster::protocol::ThrustmasterProtocol;
+///
+/// let proto = ThrustmasterProtocol::new(0x044F, 0x0402); // Warthog stick
+/// assert!(proto.device().is_some());
+/// ```
+pub struct ThrustmasterProtocol {
+    device: Option<ThrustmasterDevice>,
+}
+
+impl ThrustmasterProtocol {
+    /// Create a protocol handler for the given VID/PID.
+    pub fn new(vendor_id: u16, product_id: u16) -> Self {
+        Self {
+            device: identify_device(vendor_id, product_id),
+        }
+    }
+
+    /// The identified device, if any.
+    pub fn device(&self) -> Option<ThrustmasterDevice> {
+        self.device
+    }
+
+    /// Parse a raw HID report as a stick report.
+    ///
+    /// Dispatches to the correct parser based on the identified device.
+    pub fn parse_stick_report(&self, data: &[u8]) -> Result<StickState, ThrustmasterProtocolError> {
+        let device = self
+            .device
+            .ok_or(ThrustmasterProtocolError::UnknownDevice)?;
+        parse_stick_report(data, device)
+    }
+
+    /// Parse a raw HID report as a throttle report.
+    ///
+    /// Dispatches to the correct parser based on the identified device.
+    pub fn parse_throttle_report(
+        &self,
+        data: &[u8],
+    ) -> Result<ThrottleState, ThrustmasterProtocolError> {
+        let device = self
+            .device
+            .ok_or(ThrustmasterProtocolError::UnknownDevice)?;
+        parse_throttle_report(data, device)
+    }
+}
+
+/// Parse a stick HID report for a known device into a unified [`StickState`].
+pub fn parse_stick_report(
+    data: &[u8],
+    device: ThrustmasterDevice,
+) -> Result<StickState, ThrustmasterProtocolError> {
+    match device {
+        ThrustmasterDevice::WarthogJoystick => {
+            let payload = strip_report_id(data, crate::warthog::WARTHOG_STICK_MIN_REPORT_BYTES);
+            let state = crate::warthog::parse_warthog_stick(payload)
+                .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
+            let mut buttons = Vec::with_capacity(19);
+            for i in 1..=19 {
+                buttons.push(state.buttons.button(i));
+            }
+            Ok(StickState {
+                roll: state.axes.x as f64,
+                pitch: state.axes.y as f64,
+                twist: state.axes.rz as f64,
+                throttle_slider: 0.0,
+                buttons,
+                hat: warthog_hat_to_u8(state.buttons.hat),
+            })
+        }
+        ThrustmasterDevice::T16000mJoystick => {
+            let state = crate::t16000m::parse_t16000m_report(data)
+                .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
+            let mut buttons = Vec::with_capacity(16);
+            for i in 0..16 {
+                buttons.push((state.buttons.buttons >> i) & 1 != 0);
+            }
+            Ok(StickState {
+                roll: state.axes.x as f64,
+                pitch: state.axes.y as f64,
+                twist: state.axes.twist as f64,
+                throttle_slider: state.axes.throttle as f64,
+                buttons,
+                hat: state.buttons.hat,
+            })
+        }
+        ThrustmasterDevice::HotasCougar => {
+            let payload = strip_report_id(data, crate::cougar::COUGAR_MIN_REPORT_BYTES);
+            let state = crate::cougar::parse_cougar(payload)
+                .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
+            let mut buttons = Vec::with_capacity(16);
+            for i in 0..16 {
+                buttons.push(state.buttons.button(i + 1));
+            }
+            Ok(StickState {
+                roll: state.axes.x as f64,
+                pitch: state.axes.y as f64,
+                twist: 0.0,
+                throttle_slider: state.axes.throttle as f64,
+                buttons,
+                hat: cougar_hat_to_u8(state.buttons.tms_hat),
+            })
+        }
+        _ => Err(ThrustmasterProtocolError::ParseError(format!(
+            "{} is not a stick device",
+            device.name()
+        ))),
+    }
+}
+
+/// Parse a throttle HID report for a known device into a unified [`ThrottleState`].
+pub fn parse_throttle_report(
+    data: &[u8],
+    device: ThrustmasterDevice,
+) -> Result<ThrottleState, ThrustmasterProtocolError> {
+    match device {
+        ThrustmasterDevice::WarthogThrottle => {
+            let payload = strip_report_id(data, crate::warthog::WARTHOG_THROTTLE_MIN_REPORT_BYTES);
+            let state = crate::warthog::parse_warthog_throttle(payload)
+                .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
+            let mut buttons = Vec::with_capacity(40);
+            for i in 1..=40 {
+                buttons.push(state.buttons.button(i));
+            }
+            Ok(ThrottleState {
+                throttle_left: state.axes.throttle_left as f64,
+                throttle_right: state.axes.throttle_right as f64,
+                throttle_combined: state.axes.throttle_combined as f64,
+                slew_x: state.axes.slew_x as f64,
+                slew_y: state.axes.slew_y as f64,
+                rocker: 0.0,
+                buttons,
+                detent_positions: Vec::new(),
+            })
+        }
+        ThrustmasterDevice::TwcsThrottle => {
+            let state = crate::t16000m::parse_twcs_report(data)
+                .map_err(|e| ThrustmasterProtocolError::ParseError(e.to_string()))?;
+            let mut buttons = Vec::with_capacity(14);
+            for i in 0..14 {
+                buttons.push((state.buttons.buttons >> i) & 1 != 0);
+            }
+            Ok(ThrottleState {
+                throttle_left: state.axes.throttle as f64,
+                throttle_right: state.axes.throttle as f64,
+                throttle_combined: state.axes.throttle as f64,
+                slew_x: state.axes.mini_stick_x as f64,
+                slew_y: state.axes.mini_stick_y as f64,
+                rocker: state.axes.rocker as f64,
+                buttons,
+                detent_positions: Vec::new(),
+            })
+        }
+        _ => Err(ThrustmasterProtocolError::ParseError(format!(
+            "{} is not a throttle device",
+            device.name()
+        ))),
+    }
+}
+
+/// Strip a leading report-ID byte when the buffer is exactly one byte
+/// longer than the expected payload. Returns the payload slice unchanged
+/// when its length already matches or exceeds `min_payload_len`.
+fn strip_report_id(data: &[u8], min_payload_len: usize) -> &[u8] {
+    if data.len() == min_payload_len + 1 {
+        &data[1..]
+    } else {
+        data
+    }
+}
+
+/// Convert a [`WarthogHat`] to the standard 0–8 encoding.
+fn warthog_hat_to_u8(hat: crate::warthog::WarthogHat) -> u8 {
+    use crate::warthog::WarthogHat;
+    match hat {
+        WarthogHat::Center => 0,
+        WarthogHat::North => 1,
+        WarthogHat::NorthEast => 2,
+        WarthogHat::East => 3,
+        WarthogHat::SouthEast => 4,
+        WarthogHat::South => 5,
+        WarthogHat::SouthWest => 6,
+        WarthogHat::West => 7,
+        WarthogHat::NorthWest => 8,
+    }
+}
+
+/// Convert a [`CougarHat`] to the standard 0–8 encoding.
+fn cougar_hat_to_u8(hat: crate::cougar::CougarHat) -> u8 {
+    use crate::cougar::CougarHat;
+    match hat {
+        CougarHat::Center => 0,
+        CougarHat::North => 1,
+        CougarHat::NorthEast => 2,
+        CougarHat::East => 3,
+        CougarHat::SouthEast => 4,
+        CougarHat::South => 5,
+        CougarHat::SouthWest => 6,
+        CougarHat::West => 7,
+        CougarHat::NorthWest => 8,
+    }
+}
+
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -743,5 +1023,204 @@ mod tests {
     #[test]
     fn target_compat_notes_not_empty() {
         assert!(!TARGET_COMPAT_NOTES.is_empty());
+    }
+
+    // ── ThrustmasterProtocol ─────────────────────────────────────────────
+
+    #[test]
+    fn protocol_identifies_warthog_stick() {
+        let p = ThrustmasterProtocol::new(0x044F, 0x0402);
+        assert_eq!(p.device(), Some(ThrustmasterDevice::WarthogJoystick));
+    }
+
+    #[test]
+    fn protocol_identifies_warthog_throttle() {
+        let p = ThrustmasterProtocol::new(0x044F, 0x0404);
+        assert_eq!(p.device(), Some(ThrustmasterDevice::WarthogThrottle));
+    }
+
+    #[test]
+    fn protocol_unknown_device() {
+        let p = ThrustmasterProtocol::new(0x1234, 0x5678);
+        assert_eq!(p.device(), None);
+    }
+
+    #[test]
+    fn protocol_unknown_device_stick_parse_fails() {
+        let p = ThrustmasterProtocol::new(0x1234, 0x5678);
+        assert!(matches!(
+            p.parse_stick_report(&[0; 32]),
+            Err(ThrustmasterProtocolError::UnknownDevice)
+        ));
+    }
+
+    #[test]
+    fn protocol_unknown_device_throttle_parse_fails() {
+        let p = ThrustmasterProtocol::new(0x1234, 0x5678);
+        assert!(matches!(
+            p.parse_throttle_report(&[0; 32]),
+            Err(ThrustmasterProtocolError::UnknownDevice)
+        ));
+    }
+
+    // ── Unified StickState parsing ───────────────────────────────────────
+
+    #[test]
+    fn parse_warthog_stick_centered() {
+        fn stick_report(x: u16, y: u16, rz: u16) -> Vec<u8> {
+            let mut buf = vec![0u8; 10];
+            buf[0..2].copy_from_slice(&x.to_le_bytes());
+            buf[2..4].copy_from_slice(&y.to_le_bytes());
+            buf[4..6].copy_from_slice(&rz.to_le_bytes());
+            buf[9] = 0xFF; // center hat
+            buf
+        }
+        let data = stick_report(32768, 32768, 32768);
+        let state = parse_stick_report(&data, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert!(state.roll.abs() < 0.01);
+        assert!(state.pitch.abs() < 0.01);
+        assert!(state.twist.abs() < 0.01);
+        assert_eq!(state.buttons.len(), 19);
+        assert_eq!(state.hat, 0); // center
+    }
+
+    #[test]
+    fn parse_t16000m_stick_centered() {
+        fn joystick_report(x: u16, y: u16, rz: u16) -> Vec<u8> {
+            let mut buf = vec![0u8; 11];
+            buf[0..2].copy_from_slice(&x.to_le_bytes());
+            buf[2..4].copy_from_slice(&y.to_le_bytes());
+            buf[4..6].copy_from_slice(&rz.to_le_bytes());
+            buf[10] = 0x0F; // center hat
+            buf
+        }
+        let data = joystick_report(8192, 8192, 8192);
+        let state = parse_stick_report(&data, ThrustmasterDevice::T16000mJoystick).unwrap();
+        assert!(state.roll.abs() < 0.01);
+        assert!(state.pitch.abs() < 0.01);
+        assert!(state.twist.abs() < 0.01);
+        assert_eq!(state.buttons.len(), 16);
+        assert_eq!(state.hat, 0); // center
+    }
+
+    #[test]
+    fn parse_warthog_stick_buttons_decoded() {
+        let mut buf = vec![0u8; 10];
+        buf[0..2].copy_from_slice(&32768u16.to_le_bytes());
+        buf[2..4].copy_from_slice(&32768u16.to_le_bytes());
+        buf[4..6].copy_from_slice(&32768u16.to_le_bytes());
+        buf[6..8].copy_from_slice(&0x0003u16.to_le_bytes()); // buttons 1 & 2
+        buf[9] = 0xFF;
+        let state = parse_stick_report(&buf, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert!(state.buttons[0], "button 1");
+        assert!(state.buttons[1], "button 2");
+        assert!(!state.buttons[2], "button 3 not pressed");
+    }
+
+    // ── Unified ThrottleState parsing ────────────────────────────────────
+
+    #[test]
+    fn parse_warthog_throttle_idle() {
+        let mut buf = vec![0u8; 20];
+        // Slew centered
+        buf[0..2].copy_from_slice(&32768u16.to_le_bytes());
+        buf[2..4].copy_from_slice(&32768u16.to_le_bytes());
+        // Throttles at 0
+        buf[16] = 0xFF; // hat center
+        buf[17] = 0xFF;
+        let state = parse_throttle_report(&buf, ThrustmasterDevice::WarthogThrottle).unwrap();
+        assert!(state.throttle_left < 0.001);
+        assert!(state.throttle_right < 0.001);
+        assert_eq!(state.buttons.len(), 40);
+    }
+
+    #[test]
+    fn parse_twcs_throttle_idle() {
+        let mut buf = vec![0u8; 10];
+        buf[2..4].copy_from_slice(&32768u16.to_le_bytes()); // mini-stick X centered
+        buf[4..6].copy_from_slice(&32768u16.to_le_bytes()); // mini-stick Y centered
+        buf[6..8].copy_from_slice(&32768u16.to_le_bytes()); // rocker centered
+        let state = parse_throttle_report(&buf, ThrustmasterDevice::TwcsThrottle).unwrap();
+        assert!(state.throttle_left < 0.001);
+        assert!(state.slew_x.abs() < 0.01);
+        assert_eq!(state.buttons.len(), 14);
+    }
+
+    #[test]
+    fn parse_stick_report_wrong_device_type() {
+        let buf = vec![0u8; 32];
+        assert!(parse_stick_report(&buf, ThrustmasterDevice::WarthogThrottle).is_err());
+    }
+
+    #[test]
+    fn parse_throttle_report_wrong_device_type() {
+        let buf = vec![0u8; 32];
+        assert!(parse_throttle_report(&buf, ThrustmasterDevice::WarthogJoystick).is_err());
+    }
+
+    #[test]
+    fn warthog_stick_report_id_stripped() {
+        // 11 bytes = 1 report-ID + 10 payload; report ID should be stripped
+        let mut buf = vec![0u8; 11];
+        buf[0] = 0x01; // report ID
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes()); // x
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes()); // y
+        buf[5..7].copy_from_slice(&32768u16.to_le_bytes()); // rz
+        buf[10] = 0xFF; // center hat
+        let state = parse_stick_report(&buf, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert_eq!(state.buttons.len(), 19);
+    }
+
+    #[test]
+    fn cougar_report_id_stripped() {
+        // 11 bytes = 1 report-ID + 10 payload
+        let mut buf = vec![0u8; 11];
+        buf[0] = 0x01;
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes());
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes());
+        let state = parse_stick_report(&buf, ThrustmasterDevice::HotasCougar).unwrap();
+        assert_eq!(state.buttons.len(), 16);
+    }
+
+    #[test]
+    fn warthog_throttle_report_id_stripped() {
+        // 19 bytes = 1 report-ID + 18 payload
+        let mut buf = vec![0u8; 19];
+        buf[0] = 0x01;
+        buf[1..3].copy_from_slice(&32768u16.to_le_bytes());
+        buf[3..5].copy_from_slice(&32768u16.to_le_bytes());
+        let state = parse_throttle_report(&buf, ThrustmasterDevice::WarthogThrottle).unwrap();
+        assert_eq!(state.buttons.len(), 40);
+    }
+
+    #[test]
+    fn stick_state_hat_directions() {
+        // Warthog hat: upper nibble at byte 9
+        let mut buf = vec![0u8; 10];
+        buf[0..2].copy_from_slice(&32768u16.to_le_bytes());
+        buf[2..4].copy_from_slice(&32768u16.to_le_bytes());
+        buf[4..6].copy_from_slice(&32768u16.to_le_bytes());
+
+        // North: upper nibble = 0
+        buf[9] = 0x00;
+        let state = parse_stick_report(&buf, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert_eq!(state.hat, 1, "North");
+
+        // East: upper nibble = 2
+        buf[9] = 0x20;
+        let state = parse_stick_report(&buf, ThrustmasterDevice::WarthogJoystick).unwrap();
+        assert_eq!(state.hat, 3, "East");
+    }
+
+    #[test]
+    fn protocol_error_display() {
+        let e = ThrustmasterProtocolError::UnknownDevice;
+        assert_eq!(format!("{e}"), "unknown Thrustmaster device");
+
+        let e = ThrustmasterProtocolError::ReportTooShort {
+            expected: 10,
+            actual: 5,
+        };
+        assert!(format!("{e}").contains("too short"));
     }
 }

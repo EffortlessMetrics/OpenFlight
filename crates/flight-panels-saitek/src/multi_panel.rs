@@ -1009,4 +1009,121 @@ mod tests {
         let proto = MultiPanelProtocol;
         assert!(proto.parse_input(&[0x00]).is_none());
     }
+
+    // ── LED encoding round-trip / depth ──────────────────────────────────────
+
+    #[test]
+    fn test_led_mask_roundtrip_all_single_bits() {
+        let bits = [
+            led_bits::ALT,
+            led_bits::VS,
+            led_bits::IAS,
+            led_bits::HDG,
+            led_bits::CRS,
+            led_bits::AUTO_THROTTLE,
+            led_bits::FLAPS,
+            led_bits::PITCH_TRIM,
+        ];
+        for &bit in &bits {
+            let mask = MultiPanelLedMask::NONE.set(bit, true);
+            assert!(mask.is_set(bit));
+            // Clearing should return to NONE
+            let cleared = mask.set(bit, false);
+            assert_eq!(cleared, MultiPanelLedMask::NONE);
+        }
+    }
+
+    #[test]
+    fn test_led_mask_roundtrip_all_byte_values() {
+        // Every possible u8 should survive From<u8> → raw() round-trip
+        for v in 0..=255u8 {
+            let mask = MultiPanelLedMask::from(v);
+            assert_eq!(mask.raw(), v, "round-trip failed for {v:#04x}");
+        }
+    }
+
+    #[test]
+    fn test_led_mask_set_idempotent() {
+        let mask = MultiPanelLedMask::NONE.set(led_bits::ALT, true);
+        let mask2 = mask.set(led_bits::ALT, true); // set again
+        assert_eq!(mask, mask2, "setting same bit twice should be idempotent");
+    }
+
+    #[test]
+    fn test_lcd_display_integer_overflow_clamp() {
+        let lcd = LcdDisplay::from_integer(i32::MAX);
+        assert_eq!(lcd.raw(0), encode_segment('9'));
+        assert_eq!(lcd.raw(4), encode_segment('9'));
+
+        let lcd = LcdDisplay::from_integer(i32::MIN);
+        assert_eq!(lcd.raw(0), encode_segment('-'));
+    }
+
+    #[test]
+    fn test_lcd_display_all_blank_positions() {
+        let lcd = LcdDisplay::encode_str("     ");
+        for i in 0..5 {
+            assert_eq!(lcd.raw(i), 0x00, "position {i} should be blank");
+        }
+    }
+
+    #[test]
+    fn test_lcd_display_all_dashes() {
+        let lcd = LcdDisplay::encode_str("-----");
+        for i in 0..5 {
+            assert_eq!(lcd.raw(i), 0x40, "position {i} should be dash");
+        }
+    }
+
+    #[test]
+    fn test_lcd_display_hid_report_display_led_independence() {
+        // Changing LEDs should not affect display bytes and vice versa
+        let display = LcdDisplay::encode_str("12345");
+        let report_no_led = display.to_hid_report(MultiPanelLedMask::NONE);
+        let report_all_led = display.to_hid_report(MultiPanelLedMask::ALL);
+
+        // Display bytes (1-5) should be identical
+        assert_eq!(report_no_led[1..6], report_all_led[1..6]);
+        // LED byte (11) should differ
+        assert_ne!(report_no_led[11], report_all_led[11]);
+    }
+
+    #[test]
+    fn test_hid_report_segment_encoding_invariant() {
+        // Every digit 0-9 should produce non-zero segment encoding
+        for digit in '0'..='9' {
+            let encoded = encode_segment(digit);
+            assert_ne!(
+                encoded, 0x00,
+                "digit '{digit}' should not encode to blank"
+            );
+        }
+    }
+
+    #[test]
+    fn test_multi_panel_protocol_parse_all_events_combined() {
+        let proto = MultiPanelProtocol;
+        // Mode=ALT + ENC_CW + AP + HDG + NAV buttons
+        let data = [0x00u8, 0b0100_0001, 0b0000_0111];
+        let events = proto.parse_input(&data).unwrap();
+
+        // Should have: SelectorChange(ALT) + EncoderTick(CW) + ButtonPress(AP, HDG, NAV)
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::SelectorChange {
+                name: "MODE",
+                position: 0
+            }
+        )));
+        assert!(events.iter().any(|e| matches!(
+            e,
+            PanelEvent::EncoderTick {
+                name: "ENCODER",
+                delta: 1
+            }
+        )));
+        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" })));
+        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "HDG" })));
+        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "NAV" })));
+    }
 }

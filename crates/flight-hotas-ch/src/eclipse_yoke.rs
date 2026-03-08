@@ -23,6 +23,8 @@
 //! The Eclipse Yoke is a yoke form factor with X/Y for roll/pitch and a
 //! throttle knob on the base. It has 32 buttons and 1 hat.
 
+use std::fmt;
+
 use crate::ChError;
 
 pub use flight_hid_support::device_support::CH_ECLIPSE_YOKE_PID as ECLIPSE_YOKE_PID;
@@ -32,6 +34,7 @@ pub const ECLIPSE_YOKE_MIN_REPORT_BYTES: usize = 11;
 
 /// Parsed input state from one CH Eclipse Yoke HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EclipseYokeState {
     /// Roll axis (left-right yoke), 0–65535.
     pub roll: u16,
@@ -78,6 +81,16 @@ pub fn parse_eclipse_yoke(report: &[u8]) -> Result<EclipseYokeState, ChError> {
         hat,
         buttons,
     })
+}
+
+impl fmt::Display for EclipseYokeState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "EclipseYoke roll={} pitch={} throttle={} hat={} buttons={:#010x}",
+            self.roll, self.pitch, self.throttle, self.hat, self.buttons
+        )
+    }
 }
 
 #[cfg(test)]

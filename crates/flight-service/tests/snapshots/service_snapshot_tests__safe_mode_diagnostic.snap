@@ -1,0 +1,21 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: diag
+---
+reason: FFB subsystem fault detected during startup
+failed_components:
+  - ffb-engine
+  - hid-manager
+recommended_actions:
+  - Disconnect and reconnect force feedback device
+  - Check device firmware version
+  - "Run 'flightctl diag' and share the output with support"
+validation_snapshot:
+  - component: axis-engine
+    success: true
+    message: Axis processing pipeline initialized
+    execution_time_ms: 12
+  - component: ffb-engine
+    success: false
+    message: FFB device handshake timeout after 5000ms
+    execution_time_ms: 5001

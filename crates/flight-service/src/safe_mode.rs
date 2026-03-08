@@ -11,7 +11,7 @@ use crate::service::build_pipeline_for_axis;
 use flight_axis::AxisEngine;
 use flight_core::{
     Result,
-    profile::{AxisConfig, Profile},
+    profile::{Profile, defaults},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -80,6 +80,23 @@ pub struct ValidationResult {
     pub execution_time_ms: u64,
 }
 
+/// Reason the service degraded into safe mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum DegradationReason {
+    /// Profile JSON was missing or could not be parsed.
+    ConfigCorrupt,
+    /// A connected HID device reported errors or disappeared.
+    HardwareFault,
+    /// A simulator adapter (SimConnect, X-Plane, DCS) failed to initialise.
+    AdapterFailure,
+    /// RT scheduling privileges could not be acquired.
+    RtPrivilegeUnavailable,
+    /// The system power configuration is critical (e.g. battery saver).
+    PowerCritical,
+    /// An operator explicitly requested safe mode.
+    OperatorRequest,
+}
+
 /// Diagnostic bundle produced when safe mode activates.
 ///
 /// Captures *why* the service degraded and what the operator should look at.
@@ -87,6 +104,8 @@ pub struct ValidationResult {
 pub struct SafeModeDiagnostic {
     /// Human-readable explanation of why safe mode was entered.
     pub reason: String,
+    /// Structured degradation reasons derived from validation failures.
+    pub degradation_reasons: Vec<DegradationReason>,
     /// Specific subsystems that triggered degradation.
     pub failed_components: Vec<String>,
     /// Recommended operator actions.
@@ -612,46 +631,12 @@ impl SafeModeManager {
         Ok(())
     }
 
-    /// Create a basic, safe profile for troubleshooting
+    /// Create a basic, safe profile for troubleshooting.
+    ///
+    /// Delegates to [`defaults::safe_mode_profile`] so that axis constants
+    /// are defined in exactly one place.
     fn create_basic_profile(&self) -> Profile {
-        use std::collections::HashMap;
-        let mut axes = HashMap::new();
-
-        // Pitch, roll, yaw: 3% deadzone + mild expo for precision near centre.
-        // Uniform across all flight axes so behaviour is predictable.
-        for name in &["pitch", "roll", "yaw"] {
-            axes.insert(
-                name.to_string(),
-                AxisConfig {
-                    deadzone: Some(0.03),
-                    expo: Some(0.2),
-                    slew_rate: None,
-                    detents: vec![],
-                    curve: None,
-                    filter: None,
-                },
-            );
-        }
-        // Throttle: tiny deadzone, linear response (no expo)
-        axes.insert(
-            "throttle".to_string(),
-            AxisConfig {
-                deadzone: Some(0.01),
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            },
-        );
-
-        Profile {
-            schema: "flight.profile/1".to_string(),
-            sim: None,
-            aircraft: None,
-            axes,
-            pof_overrides: None,
-        }
+        defaults::safe_mode_profile()
     }
 
     /// Get current safe mode status.
@@ -715,32 +700,42 @@ impl SafeModeManager {
             )
         };
 
+        let mut degradation_reasons: Vec<DegradationReason> = Vec::new();
         let mut recommended_actions: Vec<String> = Vec::new();
         for r in results.iter().filter(|r| !r.success) {
             match r.component.as_str() {
                 "Power Configuration" => {
+                    degradation_reasons.push(DegradationReason::PowerCritical);
                     recommended_actions
                         .push("Check power plan — switch to High Performance.".into());
                 }
                 "RT Privileges" => {
+                    degradation_reasons.push(DegradationReason::RtPrivilegeUnavailable);
                     recommended_actions.push(
                         "Ensure RT privileges are available (run as admin or install rtkit)."
                             .into(),
                     );
                 }
                 "Axis Engine" => {
+                    degradation_reasons.push(DegradationReason::HardwareFault);
                     recommended_actions
                         .push("Check HID device connectivity and driver health.".into());
                 }
                 "Basic Profile" => {
+                    degradation_reasons.push(DegradationReason::ConfigCorrupt);
                     recommended_actions.push(
                         "Profile validation failed — inspect profile JSON for errors.".into(),
                     );
                 }
                 other => {
+                    degradation_reasons.push(DegradationReason::AdapterFailure);
                     recommended_actions.push(format!("Investigate {other} failure."));
                 }
             }
+        }
+
+        if degradation_reasons.is_empty() {
+            degradation_reasons.push(DegradationReason::OperatorRequest);
         }
 
         if recommended_actions.is_empty() {
@@ -751,6 +746,7 @@ impl SafeModeManager {
 
         SafeModeDiagnostic {
             reason,
+            degradation_reasons,
             failed_components: failed,
             recommended_actions,
             validation_snapshot: results.to_vec(),
@@ -850,6 +846,7 @@ mod tests {
         let diag = manager.build_diagnostic(&results);
         assert!(diag.failed_components.is_empty());
         assert!(diag.reason.contains("operator request"));
+        assert_eq!(diag.degradation_reasons, vec![DegradationReason::OperatorRequest]);
     }
 
     #[test]
@@ -873,6 +870,10 @@ mod tests {
         assert_eq!(diag.failed_components, vec!["RT Privileges"]);
         assert!(diag.reason.contains("RT Privileges"));
         assert!(!diag.recommended_actions.is_empty());
+        assert_eq!(
+            diag.degradation_reasons,
+            vec![DegradationReason::RtPrivilegeUnavailable]
+        );
     }
 
     #[test]
@@ -939,6 +940,10 @@ mod tests {
         assert!(diag.reason.contains("Basic Profile"));
         assert!(diag.recommended_actions.len() >= 2);
         assert_eq!(diag.validation_snapshot.len(), 2);
+        assert_eq!(
+            diag.degradation_reasons,
+            vec![DegradationReason::PowerCritical, DegradationReason::ConfigCorrupt]
+        );
     }
 
     #[tokio::test]
@@ -983,5 +988,244 @@ mod tests {
         assert!(status.active);
         assert_eq!(status.rt_privileges.details, "Status not checked");
         assert!(status.validation_results.is_empty());
+    }
+
+    // ── Degradation reason tests ────────────────────────────────────────
+
+    #[test]
+    fn test_degradation_reason_hardware_fault() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![ValidationResult {
+            component: "Axis Engine".to_string(),
+            success: false,
+            message: "HID device missing".to_string(),
+            execution_time_ms: 3,
+        }];
+        let diag = manager.build_diagnostic(&results);
+        assert!(diag.degradation_reasons.contains(&DegradationReason::HardwareFault));
+    }
+
+    #[test]
+    fn test_degradation_reason_adapter_failure() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let results = vec![ValidationResult {
+            component: "SimConnect Adapter".to_string(),
+            success: false,
+            message: "SimConnect DLL not found".to_string(),
+            execution_time_ms: 5,
+        }];
+        let diag = manager.build_diagnostic(&results);
+        assert!(diag.degradation_reasons.contains(&DegradationReason::AdapterFailure));
+    }
+
+    #[test]
+    fn test_degradation_reason_serializes() {
+        let reason = DegradationReason::ConfigCorrupt;
+        let json = serde_json::to_string(&reason).unwrap();
+        let back: DegradationReason = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, reason);
+    }
+
+    // ── Category default profile pipeline compilation ───────────────────
+
+    #[test]
+    fn test_ga_default_profile_pipelines_compile() {
+        use crate::service::build_pipeline_for_axis;
+        let profile = defaults::ga_profile();
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "GA pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_jet_default_profile_pipelines_compile() {
+        use crate::service::build_pipeline_for_axis;
+        let profile = defaults::jet_profile();
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "Jet pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_helicopter_default_profile_pipelines_compile() {
+        use crate::service::build_pipeline_for_axis;
+        let profile = defaults::helicopter_profile();
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "Helicopter pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    #[test]
+    fn test_safe_mode_profile_matches_defaults_module() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let from_manager = manager.create_basic_profile();
+        let from_defaults = defaults::safe_mode_profile();
+        assert_eq!(from_manager, from_defaults);
+    }
+}
+
+/// Depth tests for the safe mode basic profile and pipeline compilation.
+///
+/// These live in-crate because they exercise private methods
+/// (`create_basic_profile`, `build_pipeline_for_axis`).
+#[cfg(test)]
+mod depth_tests {
+    use super::*;
+    use crate::service::build_pipeline_for_axis;
+
+    // =====================================================================
+    // BASIC PROFILE depth tests (8)
+    // =====================================================================
+
+    /// Safe profile sets reasonable deadzones for all axes.
+    #[test]
+    fn basic_profile_has_reasonable_deadzones() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let dz = axis
+                .deadzone
+                .unwrap_or_else(|| panic!("{name} must have a deadzone"));
+            assert!(dz > 0.0, "{name} deadzone must be positive");
+            assert!(dz <= 0.1, "{name} deadzone must be ≤ 10%");
+        }
+    }
+
+    /// Safe profile limits axis range — no inversion or extreme transforms.
+    #[test]
+    fn basic_profile_limits_axis_range() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(axis.curve.is_none(), "{name} must not have a custom curve");
+            assert!(axis.detents.is_empty(), "{name} must have no detents");
+            assert!(axis.slew_rate.is_none(), "{name} must have no slew limit");
+        }
+    }
+
+    /// Safe profile disables FFB: axis-only mode, no sim bindings.
+    #[test]
+    fn basic_profile_disables_ffb() {
+        let config = SafeModeConfig {
+            axis_only: true,
+            use_basic_profile: true,
+            skip_power_checks: true,
+            minimal_mode: true,
+        };
+        assert!(config.axis_only);
+        assert!(config.minimal_mode);
+
+        let manager = SafeModeManager::new(config);
+        let profile = manager.create_basic_profile();
+        assert!(profile.sim.is_none());
+        assert!(profile.pof_overrides.is_none());
+    }
+
+    /// Safe profile uses linear or near-linear curves (expo ≤ 0.5).
+    #[test]
+    fn basic_profile_uses_linear_or_near_linear_curves() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(
+                axis.curve.is_none(),
+                "{name} must not have custom curve points"
+            );
+            if let Some(expo) = axis.expo {
+                assert!(
+                    expo <= 0.5,
+                    "{name} expo ({expo}) should be mild (≤ 0.5) for safe mode"
+                );
+            }
+        }
+    }
+
+    /// Each axis type has sane defaults: pitch, roll, yaw, throttle.
+    #[test]
+    fn basic_profile_each_axis_type_has_sane_defaults() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for name in &["pitch", "roll", "yaw", "throttle"] {
+            assert!(profile.axes.contains_key(*name), "missing axis: {name}");
+        }
+
+        // Flight axes share the same deadzone for predictability
+        let pitch_dz = profile.axes["pitch"].deadzone;
+        let roll_dz = profile.axes["roll"].deadzone;
+        let yaw_dz = profile.axes["yaw"].deadzone;
+        assert_eq!(pitch_dz, roll_dz, "pitch and roll deadzones should match");
+        assert_eq!(roll_dz, yaw_dz, "roll and yaw deadzones should match");
+
+        // Throttle has a smaller deadzone (absolute axis)
+        let throttle_dz = profile.axes["throttle"].deadzone.unwrap();
+        let flight_dz = pitch_dz.unwrap();
+        assert!(
+            throttle_dz < flight_dz,
+            "throttle deadzone should be smaller than flight axes"
+        );
+
+        // Throttle is linear (no expo) for precise power control
+        assert!(
+            profile.axes["throttle"].expo.is_none(),
+            "throttle should have no expo for linear response"
+        );
+    }
+
+    /// Profile compiles without errors.
+    #[test]
+    fn basic_profile_compiles_without_errors() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+        profile.validate().expect("safe mode profile must validate");
+    }
+
+    /// Profile is usable immediately — pipelines compile for all axes.
+    #[test]
+    fn basic_profile_is_usable_immediately() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            let pipeline = build_pipeline_for_axis(name, axis);
+            assert!(
+                pipeline.is_ok(),
+                "pipeline for '{name}' must compile: {:?}",
+                pipeline.err()
+            );
+        }
+    }
+
+    /// Safe profile has no filter configuration (no noise smoothing that
+    /// could mask inputs during troubleshooting).
+    #[test]
+    fn basic_profile_has_no_filter() {
+        let manager = SafeModeManager::new(SafeModeConfig::default());
+        let profile = manager.create_basic_profile();
+
+        for (name, axis) in &profile.axes {
+            assert!(
+                axis.filter.is_none(),
+                "{name} must have no filter in safe mode"
+            );
+        }
     }
 }

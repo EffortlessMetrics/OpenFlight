@@ -1,0 +1,9 @@
+---
+source: crates/flight-cli/src/batch.rs
+expression: output
+---
+set-deadzone pitch 0.03
+set-expo roll 0.25
+set-curve throttle linear
+enable-axis rudder
+disable-axis toe-brake-left

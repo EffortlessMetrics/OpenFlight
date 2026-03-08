@@ -982,6 +982,9 @@ impl Clone for DetectionMetrics {
 }
 
 #[cfg(test)]
+mod depth_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

@@ -1,0 +1,22 @@
+---
+source: crates/flight-rules/tests/depth_tests.rs
+expression: snap
+---
+instructions:
+  - LoadVar: 0
+  - LoadConst: 0
+  - Compare: NotEqual
+  - JumpFalse: 8
+  - LoadVar: 1
+  - LoadConst: 150
+  - Compare: Less
+  - And
+  - JumpFalse: 10
+  - Action: 0
+variable_map:
+  gear_down: 0
+  speed: 1
+actions:
+  - LedOn:
+      target: APPROACH
+stack_size: 8

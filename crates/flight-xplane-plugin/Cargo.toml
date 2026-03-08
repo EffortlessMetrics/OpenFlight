@@ -12,7 +12,10 @@ keywords = ["flight-sim", "openflight", "xplane", "plugin", "xplm"]
 readme = "README.md"
 categories.workspace = true
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
+
+[features]
+test-support = []
 
 [dependencies]
 serde = { workspace = true }
@@ -21,3 +24,5 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
+proptest = { workspace = true }
+flight-xplane-plugin = { path = ".", features = ["test-support"] }
