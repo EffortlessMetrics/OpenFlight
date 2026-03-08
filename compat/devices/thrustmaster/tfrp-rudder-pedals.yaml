@@ -39,7 +39,9 @@ quirks:
 
 support:
   tier: 2
+  crate: flight-pedals
+  parser: parse_tfrp_report
   test_coverage:
     simulated: true
     hil: false
-  notes: "VID/PID from the-sz.com. Report layout from SDL2 gamecontrollerdb + Linux evtest captures. Parser tests passing."
+  notes: "VID/PID from the-sz.com. Report layout from SDL2 gamecontrollerdb + Linux evtest captures. Unified parser in flight-pedals crate with calibration support."
