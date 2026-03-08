@@ -686,4 +686,127 @@ mod tests {
         let proto = RadioPanelProtocol;
         assert!(proto.parse_input(&[0x00]).is_none());
     }
+
+    // ── Display encoding round-trip / depth ──────────────────────────────────
+
+    #[test]
+    fn test_radio_display_frequency_encoding_roundtrip() {
+        // Encode a COM frequency into the display, read back the HID report,
+        // and verify bytes 1–5 match the expected 7-segment encoding.
+        let freq_str = display::format_com_freq(123_500); // "12350"
+        let lcd = LcdDisplay::encode_str(&freq_str);
+        let disp = RadioDisplay {
+            active: lcd.clone(),
+            standby: LcdDisplay::blank(),
+        };
+        let report = disp.to_hid_report();
+
+        // Verify each active display digit
+        for (i, expected_char) in "12350".chars().enumerate() {
+            assert_eq!(
+                report[1 + i],
+                encode_segment(expected_char),
+                "active digit {i} mismatch"
+            );
+        }
+
+        // Standby should be all blanks
+        for i in 6..11 {
+            assert_eq!(report[i], 0x00, "standby byte {i} should be blank");
+        }
+    }
+
+    #[test]
+    fn test_radio_display_dual_frequencies() {
+        let active_str = display::format_com_freq(118_000); // "11800"
+        let standby_str = display::format_com_freq(136_975); // "13697"
+        let disp = RadioDisplay {
+            active: LcdDisplay::encode_str(&active_str),
+            standby: LcdDisplay::encode_str(&standby_str),
+        };
+        let report = disp.to_hid_report();
+
+        // Active: "11800"
+        assert_eq!(report[1], encode_segment('1'));
+        assert_eq!(report[2], encode_segment('1'));
+        assert_eq!(report[3], encode_segment('8'));
+        assert_eq!(report[4], encode_segment('0'));
+        assert_eq!(report[5], encode_segment('0'));
+
+        // Standby: "13697"
+        assert_eq!(report[6], encode_segment('1'));
+        assert_eq!(report[7], encode_segment('3'));
+        assert_eq!(report[8], encode_segment('6'));
+        assert_eq!(report[9], encode_segment('9'));
+        assert_eq!(report[10], encode_segment('7'));
+    }
+
+    #[test]
+    fn test_encoder_delta_simultaneous_cw_ccw() {
+        // Both CW and CCW bits set in same report (hardware glitch)
+        let mut delta = EncoderDelta::default();
+        let state = RadioPanelButtonState {
+            mode: Some(RadioMode::Com1),
+            buttons: 0b0000_0110, // outer CW + outer CCW
+        };
+        delta.update(&state);
+        // Net should be zero (both cancel out)
+        assert_eq!(delta.outer, 0);
+    }
+
+    #[test]
+    fn test_encoder_delta_large_accumulation() {
+        let mut delta = EncoderDelta::default();
+        let cw = RadioPanelButtonState {
+            mode: None,
+            buttons: 0b0000_0010, // outer CW
+        };
+        for _ in 0..1000 {
+            delta.update(&cw);
+        }
+        assert_eq!(delta.outer, 1000);
+        let (outer, inner) = delta.drain();
+        assert_eq!(outer, 1000);
+        assert_eq!(inner, 0);
+        assert_eq!(delta.outer, 0);
+    }
+
+    #[test]
+    fn test_all_radio_modes_sequential_scan() {
+        let proto = RadioPanelProtocol;
+        let modes: [(u8, &str); 7] = [
+            (0, "COM1"),
+            (1, "COM2"),
+            (2, "NAV1"),
+            (3, "NAV2"),
+            (4, "ADF"),
+            (5, "DME"),
+            (6, "XPDR"),
+        ];
+        for (mode_byte, label) in modes {
+            let data = [0x00u8, mode_byte, 0x00];
+            let events = proto.parse_input(&data).unwrap();
+            assert!(
+                events.iter().any(|e| matches!(
+                    e,
+                    PanelEvent::SelectorChange { name: "MODE", position }
+                    if *position == mode_byte
+                )),
+                "mode byte {mode_byte} ({label}) should produce selector event"
+            );
+        }
+    }
+
+    #[test]
+    fn test_radio_panel_hid_report_reserved_bytes_always_zero() {
+        // Regardless of display content, bytes 11-22 must be zero
+        let disp = RadioDisplay {
+            active: LcdDisplay::encode_str("99999"),
+            standby: LcdDisplay::encode_str("88888"),
+        };
+        let report = disp.to_hid_report();
+        for i in 11..RADIO_PANEL_OUTPUT_BYTES {
+            assert_eq!(report[i], 0x00, "reserved byte {i} must be zero");
+        }
+    }
 }

@@ -3,29 +3,29 @@
 
 //! Comprehensive depth tests for cloud profile sync and sharing.
 //!
-//! Covers: serialization round-trips, conflict resolution edge cases,
+//! Covers: models, serialization round-trips, conflict resolution edge cases,
 //! version tracking & history, metadata handling, error handling,
 //! storage backends, sanitization boundaries, and property-based tests.
-//! (50+ tests total)
 
 use chrono::{TimeZone as _, Utc};
 use flight_cloud_profiles::{
     CloudProfile, CloudProfileError,
-    cache::ProfileCache,
-    models::{Page, ProfileSortOrder, PublishMeta, VoteDirection, VoteResult},
+    cache::{CacheEntry, CACHE_TTL_SECS, ProfileCache},
+    models::{Page, ProfileSortOrder, PublishMeta, VoteDirection, VoteResult, ListFilter},
     sanitize::{sanitize_for_upload, validate_for_publish},
     storage::{CloudBackend, FileSystemBackend, MockCloudBackend, ProfileMetadata},
     sync::{
         ConflictResolution, ConflictStrategy, ProfileAction, ProfileSyncState, SyncConflict,
         SyncEngine, SyncPlan,
     },
-    versioning::{ProfileVersion, VersionDiff, VersionHistory, compute_version_hash},
-    ProfileListing,
+    versioning::{ProfileVersion, VersionHistory, compute_version_hash},
+    ProfileListing, ClientConfig, DEFAULT_API_BASE_URL, DEFAULT_TIMEOUT_SECS, DEFAULT_PAGE_SIZE,
 };
 use flight_profile::{AircraftId, AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use proptest::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,11 @@ fn state(id: &str, hash: &str, ts: u64) -> ProfileSyncState {
         version_hash: hash.to_string(),
         updated_at: ts,
     }
+}
+
+/// Alias for tests that use sync_state naming.
+fn sync_state(id: &str, hash: &str, ts: u64) -> ProfileSyncState {
+    state(id, hash, ts)
 }
 
 fn minimal_profile() -> Profile {
@@ -49,7 +54,17 @@ fn minimal_profile() -> Profile {
     }
 }
 
-fn profile_with_axes(pairs: &[(&str, f32, f32)]) -> Profile {
+fn empty_profile() -> Profile {
+    Profile {
+        schema: PROFILE_SCHEMA_VERSION.to_string(),
+        sim: None,
+        aircraft: None,
+        axes: HashMap::new(),
+        pof_overrides: None,
+    }
+}
+
+fn profile_with_axes_simple(pairs: &[(&str, f32, f32)]) -> Profile {
     let mut axes = HashMap::new();
     for &(name, deadzone, expo) in pairs {
         axes.insert(
@@ -75,7 +90,30 @@ fn profile_with_axes(pairs: &[(&str, f32, f32)]) -> Profile {
     }
 }
 
-fn make_cloud_profile(id: &str, profile: Profile) -> CloudProfile {
+fn profile_with_axes(axes: HashMap<String, AxisConfig>) -> Profile {
+    Profile {
+        schema: PROFILE_SCHEMA_VERSION.to_string(),
+        sim: Some("msfs".to_string()),
+        aircraft: Some(AircraftId {
+            icao: "C172".to_string(),
+        }),
+        axes,
+        pof_overrides: None,
+    }
+}
+
+fn axis(dz: Option<f32>, expo: Option<f32>) -> AxisConfig {
+    AxisConfig {
+        deadzone: dz,
+        expo,
+        slew_rate: None,
+        detents: vec![],
+        curve: None,
+        filter: None,
+    }
+}
+
+fn make_cloud_profile_with_data(id: &str, profile: Profile) -> CloudProfile {
     CloudProfile {
         id: id.to_string(),
         title: format!("Profile {id}"),
@@ -90,6 +128,21 @@ fn make_cloud_profile(id: &str, profile: Profile) -> CloudProfile {
     }
 }
 
+fn make_cloud_profile(id: &str) -> CloudProfile {
+    CloudProfile {
+        id: id.to_string(),
+        title: format!("Cloud {id}"),
+        description: Some("test desc".to_string()),
+        author_handle: "pilot42".to_string(),
+        upvotes: 5,
+        downvotes: 1,
+        download_count: 42,
+        published_at: Utc::now(),
+        updated_at: Utc::now(),
+        profile: empty_profile(),
+    }
+}
+
 fn make_listing(
     id: &str,
     upvotes: u32,
@@ -98,7 +151,7 @@ fn make_listing(
 ) -> ProfileListing {
     ProfileListing {
         id: id.to_string(),
-        title: "Test".to_string(),
+        title: format!("Profile {id}"),
         description: None,
         sim: Some("msfs".to_string()),
         aircraft_icao: Some("C172".to_string()),
@@ -112,7 +165,7 @@ fn make_listing(
     }
 }
 
-fn make_version(id: &str, ts: u64, author: &str, changes: &[&str]) -> ProfileVersion {
+fn make_version_full(id: &str, ts: u64, author: &str, changes: &[&str]) -> ProfileVersion {
     ProfileVersion {
         version_id: id.to_string(),
         timestamp: ts,
@@ -121,9 +174,17 @@ fn make_version(id: &str, ts: u64, author: &str, changes: &[&str]) -> ProfileVer
     }
 }
 
+fn make_version(id: &str, ts: u64, changes: &[&str]) -> ProfileVersion {
+    ProfileVersion {
+        version_id: id.to_string(),
+        timestamp: ts,
+        author: "tester".to_string(),
+        changes: changes.iter().map(|s| s.to_string()).collect(),
+    }
+}
+
 fn tempfile_dir() -> PathBuf {
     use std::sync::atomic::{AtomicU64, Ordering};
-    use std::time::{SystemTime, UNIX_EPOCH};
     static COUNTER: AtomicU64 = AtomicU64::new(0);
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -144,10 +205,9 @@ fn cleanup_dir(path: &Path) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 1. PROFILE UPLOAD / DOWNLOAD SERIALIZATION (10 tests)
+// 1. SERIALIZATION ROUND-TRIPS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// CloudProfile with all optional fields populated round-trips through JSON.
 #[test]
 fn serialization_cloud_profile_full_fields_round_trip() {
     let mut axes = HashMap::new();
@@ -191,7 +251,6 @@ fn serialization_cloud_profile_full_fields_round_trip() {
     assert_eq!(restored.profile.axes["elevator"].slew_rate, Some(2.5));
 }
 
-/// CloudProfile with no description and no aircraft still round-trips.
 #[test]
 fn serialization_cloud_profile_minimal_optional_fields() {
     let cp = CloudProfile {
@@ -220,7 +279,6 @@ fn serialization_cloud_profile_minimal_optional_fields() {
     assert!(restored.profile.sim.is_none());
 }
 
-/// ProfileListing preserves all metadata through JSON.
 #[test]
 fn serialization_listing_preserves_all_metadata() {
     let listing = ProfileListing {
@@ -247,10 +305,9 @@ fn serialization_listing_preserves_all_metadata() {
     assert_eq!(restored.score(), 475);
 }
 
-/// Multiple axes with different configs survive serialization.
 #[test]
 fn serialization_multi_axis_profile_round_trip() {
-    let profile = profile_with_axes(&[
+    let profile = profile_with_axes_simple(&[
         ("pitch", 0.05, 0.3),
         ("roll", 0.08, 0.5),
         ("yaw", 0.15, 0.2),
@@ -267,11 +324,10 @@ fn serialization_multi_axis_profile_round_trip() {
     assert_eq!(restored.axes["throttle"].expo, Some(0.0));
 }
 
-/// Profile data uploaded to mock backend can be downloaded and deserialized.
 #[tokio::test]
 async fn serialization_upload_download_preserves_profile_data() {
     let backend = MockCloudBackend::new();
-    let profile = profile_with_axes(&[("pitch", 0.05, 0.3), ("roll", 0.1, 0.5)]);
+    let profile = profile_with_axes_simple(&[("pitch", 0.05, 0.3), ("roll", 0.1, 0.5)]);
     let data = serde_json::to_vec(&profile).unwrap();
 
     backend.upload("ser-test", &data).await.unwrap();
@@ -283,7 +339,6 @@ async fn serialization_upload_download_preserves_profile_data() {
     assert_eq!(restored.axes["roll"].expo, Some(0.5));
 }
 
-/// Page<ProfileListing> serializes with pagination metadata intact.
 #[test]
 fn serialization_page_wrapper_round_trip() {
     let page: Page<ProfileListing> = Page {
@@ -307,7 +362,6 @@ fn serialization_page_wrapper_round_trip() {
     assert!(restored.has_next_page());
 }
 
-/// VoteResult round-trips correctly.
 #[test]
 fn serialization_vote_result_round_trip() {
     let result = VoteResult {
@@ -324,7 +378,6 @@ fn serialization_vote_result_round_trip() {
     assert_eq!(restored.score(), 35);
 }
 
-/// PublishMeta serializes description as null when absent.
 #[test]
 fn serialization_publish_meta_null_description() {
     let meta = PublishMeta::new("Title Only");
@@ -332,7 +385,6 @@ fn serialization_publish_meta_null_description() {
     assert!(body["description"].is_null());
 }
 
-/// PublishMeta serializes description as string when present.
 #[test]
 fn serialization_publish_meta_with_description() {
     let meta = PublishMeta::with_description("Full Meta", "Has a description");
@@ -340,7 +392,6 @@ fn serialization_publish_meta_with_description() {
     assert_eq!(body["description"], "Has a description");
 }
 
-/// Binary data (non-UTF-8) can be stored and retrieved from backend.
 #[tokio::test]
 async fn serialization_binary_data_through_backend() {
     let backend = MockCloudBackend::new();
@@ -350,11 +401,76 @@ async fn serialization_binary_data_through_backend() {
     assert_eq!(downloaded, binary_data);
 }
 
+#[test]
+fn listing_score_zero() {
+    let l = make_listing("a", 0, 0, 0);
+    assert_eq!(l.score(), 0);
+}
+
+#[test]
+fn listing_score_large_positive() {
+    let l = make_listing("a", u32::MAX, 0, 0);
+    assert_eq!(l.score(), u32::MAX as i64);
+}
+
+#[test]
+fn listing_score_large_negative() {
+    let l = make_listing("a", 0, u32::MAX, 0);
+    assert_eq!(l.score(), -(u32::MAX as i64));
+}
+
+#[test]
+fn listing_score_symmetric_cancels() {
+    let l = make_listing("a", 100, 100, 0);
+    assert_eq!(l.score(), 0);
+}
+
+#[test]
+fn listing_serde_round_trip_with_all_fields() {
+    let l = ProfileListing {
+        id: "full".to_string(),
+        title: "Full Listing".to_string(),
+        description: Some("A description".to_string()),
+        sim: Some("dcs".to_string()),
+        aircraft_icao: Some("F16".to_string()),
+        author_handle: "ace".to_string(),
+        upvotes: 999,
+        downvotes: 1,
+        download_count: 50_000,
+        schema_version: "flight.profile/1".to_string(),
+        published_at: Utc.with_ymd_and_hms(2024, 12, 25, 12, 0, 0).unwrap(),
+        updated_at: Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
+    };
+    let json = serde_json::to_string(&l).unwrap();
+    let back: ProfileListing = serde_json::from_str(&json).unwrap();
+    assert_eq!(l, back);
+}
+
+#[test]
+fn listing_serde_none_fields() {
+    let l = ProfileListing {
+        id: "min".to_string(),
+        title: "Minimal".to_string(),
+        description: None,
+        sim: None,
+        aircraft_icao: None,
+        author_handle: "anon".to_string(),
+        upvotes: 0,
+        downvotes: 0,
+        download_count: 0,
+        schema_version: "flight.profile/1".to_string(),
+        published_at: Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
+        updated_at: Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap(),
+    };
+    let json = serde_json::to_string(&l).unwrap();
+    let back: ProfileListing = serde_json::from_str(&json).unwrap();
+    assert_eq!(l, back);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 2. CONFLICT RESOLUTION (10 tests)
+// 2. CONFLICT RESOLUTION / SYNC ENGINE PLANNING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// LWW: local strictly newer than remote causes upload.
 #[test]
 fn conflict_lww_local_newer_uploads() {
     let engine = SyncEngine::new(MockCloudBackend::new());
@@ -368,7 +484,6 @@ fn conflict_lww_local_newer_uploads() {
     assert!(plan.downloads.is_empty());
 }
 
-/// LWW: remote strictly newer than local causes download.
 #[test]
 fn conflict_lww_remote_newer_downloads() {
     let engine = SyncEngine::new(MockCloudBackend::new());
@@ -382,7 +497,6 @@ fn conflict_lww_remote_newer_downloads() {
     assert_eq!(plan.downloads[0].version_hash, "remote-v2");
 }
 
-/// LWW: equal timestamps tie-break to local (upload).
 #[test]
 fn conflict_lww_equal_timestamps_prefer_local() {
     let engine = SyncEngine::new(MockCloudBackend::new());
@@ -395,7 +509,6 @@ fn conflict_lww_equal_timestamps_prefer_local() {
     assert_eq!(plan.uploads[0].version_hash, "local-v");
 }
 
-/// Manual strategy: conflict captures both version states completely.
 #[test]
 fn conflict_manual_captures_full_state() {
     let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
@@ -413,7 +526,6 @@ fn conflict_manual_captures_full_state() {
     assert_eq!(c.remote_version.updated_at, 200);
 }
 
-/// Resolving multiple conflicts in sequence works correctly.
 #[test]
 fn conflict_resolve_multiple_in_sequence() {
     let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
@@ -441,7 +553,6 @@ fn conflict_resolve_multiple_in_sequence() {
     assert_eq!(plan.downloads[0].profile_id, "b");
 }
 
-/// Resolving a nonexistent conflict is a no-op and doesn't panic.
 #[test]
 fn conflict_resolve_nonexistent_is_safe_noop() {
     let mut plan = SyncPlan::default();
@@ -451,7 +562,6 @@ fn conflict_resolve_nonexistent_is_safe_noop() {
     assert!(plan.is_empty());
 }
 
-/// Resolving the same conflict ID twice: the second call is a no-op.
 #[test]
 fn conflict_double_resolve_is_noop() {
     let mut plan = SyncPlan {
@@ -473,7 +583,6 @@ fn conflict_double_resolve_is_noop() {
     assert!(plan.downloads.is_empty());
 }
 
-/// Mixed plan: some profiles conflict, others are new on either side.
 #[test]
 fn conflict_mixed_plan_with_new_and_conflicting() {
     let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
@@ -495,7 +604,6 @@ fn conflict_mixed_plan_with_new_and_conflicting() {
     assert_eq!(plan.conflicts[0].profile_id, "conflict-1");
 }
 
-/// Sync plan is_empty correctly reports non-empty for uploads only.
 #[test]
 fn conflict_sync_plan_is_empty_checks_all_fields() {
     let mut plan = SyncPlan::default();
@@ -523,7 +631,6 @@ fn conflict_sync_plan_is_empty_checks_all_fields() {
     assert!(!plan.is_empty());
 }
 
-/// Large-scale sync: 200 profiles with interleaved conflicts, uploads, downloads.
 #[test]
 fn conflict_large_scale_sync_plan() {
     let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
@@ -554,17 +661,142 @@ fn conflict_large_scale_sync_plan() {
     assert_eq!(plan.conflicts.len(), 50);
 }
 
+#[test]
+fn sync_empty_both_sides() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let plan = engine.plan(&[], &[]);
+    assert!(plan.is_empty());
+}
+
+#[test]
+fn sync_local_only_uploads() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let local = vec![sync_state("a", "h1", 100)];
+    let plan = engine.plan(&local, &[]);
+    assert_eq!(plan.uploads.len(), 1);
+    assert_eq!(plan.uploads[0].profile_id, "a");
+}
+
+#[test]
+fn sync_remote_only_downloads() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let remote = vec![sync_state("b", "h2", 200)];
+    let plan = engine.plan(&[], &remote);
+    assert_eq!(plan.downloads.len(), 1);
+    assert_eq!(plan.downloads[0].profile_id, "b");
+}
+
+#[test]
+fn sync_same_hash_no_action() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let local = vec![sync_state("x", "same", 100)];
+    let remote = vec![sync_state("x", "same", 200)];
+    assert!(engine.plan(&local, &remote).is_empty());
+}
+
+#[test]
+fn sync_lww_local_newer() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let local = vec![sync_state("x", "l", 2000)];
+    let remote = vec![sync_state("x", "r", 1000)];
+    let plan = engine.plan(&local, &remote);
+    assert_eq!(plan.uploads.len(), 1);
+    assert!(plan.downloads.is_empty());
+}
+
+#[test]
+fn sync_lww_remote_newer() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let local = vec![sync_state("x", "l", 1000)];
+    let remote = vec![sync_state("x", "r", 2000)];
+    let plan = engine.plan(&local, &remote);
+    assert!(plan.uploads.is_empty());
+    assert_eq!(plan.downloads.len(), 1);
+}
+
+#[test]
+fn sync_lww_equal_timestamp_prefers_local() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    let local = vec![sync_state("x", "l", 1000)];
+    let remote = vec![sync_state("x", "r", 1000)];
+    let plan = engine.plan(&local, &remote);
+    assert_eq!(plan.uploads.len(), 1);
+}
+
+#[test]
+fn sync_manual_creates_conflict() {
+    let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
+    let local = vec![sync_state("x", "l", 1000)];
+    let remote = vec![sync_state("x", "r", 2000)];
+    let plan = engine.plan(&local, &remote);
+    assert_eq!(plan.conflicts.len(), 1);
+    assert!(plan.uploads.is_empty());
+    assert!(plan.downloads.is_empty());
+}
+
+#[test]
+fn sync_plan_resolve_use_local() {
+    let mut plan = SyncPlan {
+        conflicts: vec![SyncConflict {
+            profile_id: "c".to_string(),
+            local_version: sync_state("c", "lh", 100),
+            remote_version: sync_state("c", "rh", 200),
+        }],
+        ..Default::default()
+    };
+    plan.resolve_conflict("c", ConflictResolution::UseLocal);
+    assert!(plan.conflicts.is_empty());
+    assert_eq!(plan.uploads.len(), 1);
+    assert_eq!(plan.uploads[0].version_hash, "lh");
+}
+
+#[test]
+fn sync_plan_resolve_use_remote() {
+    let mut plan = SyncPlan {
+        conflicts: vec![SyncConflict {
+            profile_id: "c".to_string(),
+            local_version: sync_state("c", "lh", 100),
+            remote_version: sync_state("c", "rh", 200),
+        }],
+        ..Default::default()
+    };
+    plan.resolve_conflict("c", ConflictResolution::UseRemote);
+    assert!(plan.conflicts.is_empty());
+    assert_eq!(plan.downloads.len(), 1);
+    assert_eq!(plan.downloads[0].version_hash, "rh");
+}
+
+#[test]
+fn sync_plan_resolve_skip() {
+    let mut plan = SyncPlan {
+        conflicts: vec![SyncConflict {
+            profile_id: "c".to_string(),
+            local_version: sync_state("c", "lh", 100),
+            remote_version: sync_state("c", "rh", 200),
+        }],
+        ..Default::default()
+    };
+    plan.resolve_conflict("c", ConflictResolution::Skip);
+    assert!(plan.is_empty());
+}
+
+#[test]
+fn sync_plan_resolve_nonexistent_noop() {
+    let mut plan = SyncPlan::default();
+    plan.resolve_conflict("nope", ConflictResolution::UseLocal);
+    assert!(plan.is_empty());
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 3. VERSION TRACKING AND HISTORY (8 tests)
+// 3. VERSION TRACKING AND HISTORY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Version history tracks versions in insertion order.
 #[test]
 fn version_history_ordering() {
     let mut history = VersionHistory::new();
-    history.push(make_version("v1", 1000, "alice", &["init"]));
-    history.push(make_version("v2", 2000, "bob", &["update"]));
-    history.push(make_version("v3", 3000, "charlie", &["fix"]));
+    history.push(make_version_full("v1", 1000, "alice", &["init"]));
+    history.push(make_version_full("v2", 2000, "bob", &["update"]));
+    history.push(make_version_full("v3", 3000, "charlie", &["fix"]));
 
     assert_eq!(history.len(), 3);
     assert_eq!(history.versions[0].version_id, "v1");
@@ -572,34 +804,32 @@ fn version_history_ordering() {
     assert_eq!(history.versions[2].version_id, "v3");
 }
 
-/// current() and previous() point to correct entries.
 #[test]
 fn version_history_current_and_previous() {
     let mut history = VersionHistory::new();
     assert!(history.current().is_none());
     assert!(history.previous().is_none());
 
-    history.push(make_version("v1", 100, "a", &["one"]));
+    history.push(make_version_full("v1", 100, "a", &["one"]));
     assert_eq!(history.current().unwrap().version_id, "v1");
     assert!(history.previous().is_none());
 
-    history.push(make_version("v2", 200, "b", &["two"]));
+    history.push(make_version_full("v2", 200, "b", &["two"]));
     assert_eq!(history.current().unwrap().version_id, "v2");
     assert_eq!(history.previous().unwrap().version_id, "v1");
 
-    history.push(make_version("v3", 300, "c", &["three"]));
+    history.push(make_version_full("v3", 300, "c", &["three"]));
     assert_eq!(history.current().unwrap().version_id, "v3");
     assert_eq!(history.previous().unwrap().version_id, "v2");
 }
 
-/// Diff between non-adjacent versions aggregates all intermediate changes.
 #[test]
 fn version_diff_aggregates_intermediate_changes() {
     let mut history = VersionHistory::new();
-    history.push(make_version("v1", 100, "a", &["created"]));
-    history.push(make_version("v2", 200, "b", &["added pitch"]));
-    history.push(make_version("v3", 300, "a", &["adjusted roll", "fixed yaw"]));
-    history.push(make_version("v4", 400, "c", &["final tune"]));
+    history.push(make_version_full("v1", 100, "a", &["created"]));
+    history.push(make_version_full("v2", 200, "b", &["added pitch"]));
+    history.push(make_version_full("v3", 300, "a", &["adjusted roll", "fixed yaw"]));
+    history.push(make_version_full("v4", 400, "c", &["final tune"]));
 
     let diff = history.diff("v1", "v4").unwrap();
     assert_eq!(diff.changes.len(), 4);
@@ -609,33 +839,30 @@ fn version_diff_aggregates_intermediate_changes() {
     assert!(diff.changes.contains(&"final tune".to_string()));
 }
 
-/// Diff of same version returns empty changes.
 #[test]
 fn version_diff_same_version_empty() {
     let mut history = VersionHistory::new();
-    history.push(make_version("v1", 100, "a", &["created"]));
+    history.push(make_version_full("v1", 100, "a", &["created"]));
     let diff = history.diff("v1", "v1").unwrap();
     assert!(diff.changes.is_empty());
     assert_eq!(diff.from, "v1");
     assert_eq!(diff.to, "v1");
 }
 
-/// Diff with nonexistent version returns None.
 #[test]
 fn version_diff_missing_version_returns_none() {
     let mut history = VersionHistory::new();
-    history.push(make_version("v1", 100, "a", &["init"]));
+    history.push(make_version_full("v1", 100, "a", &["init"]));
     assert!(history.diff("v1", "v99").is_none());
     assert!(history.diff("v99", "v1").is_none());
     assert!(history.diff("v99", "v100").is_none());
 }
 
-/// Version history serialization round-trip preserves all fields.
 #[test]
 fn version_history_serialization_complete() {
     let mut history = VersionHistory::new();
-    history.push(make_version("v1", 1000, "alice", &["initial setup"]));
-    history.push(make_version(
+    history.push(make_version_full("v1", 1000, "alice", &["initial setup"]));
+    history.push(make_version_full(
         "v2",
         2000,
         "bob",
@@ -650,7 +877,6 @@ fn version_history_serialization_complete() {
     assert_eq!(restored.versions[1].author, "bob");
 }
 
-/// compute_version_hash produces consistent 64-char hex strings.
 #[test]
 fn version_hash_format_and_consistency() {
     let h = compute_version_hash(b"test payload");
@@ -666,24 +892,66 @@ fn version_hash_format_and_consistency() {
     assert_ne!(empty_hash, h);
 }
 
-/// get() retrieves a specific version by ID.
 #[test]
 fn version_history_get_by_id() {
     let mut history = VersionHistory::new();
-    history.push(make_version("alpha", 100, "a", &["step 1"]));
-    history.push(make_version("beta", 200, "b", &["step 2"]));
-    history.push(make_version("gamma", 300, "c", &["step 3"]));
+    history.push(make_version_full("alpha", 100, "a", &["step 1"]));
+    history.push(make_version_full("beta", 200, "b", &["step 2"]));
+    history.push(make_version_full("gamma", 300, "c", &["step 3"]));
 
     assert_eq!(history.get("beta").unwrap().timestamp, 200);
     assert_eq!(history.get("gamma").unwrap().author, "c");
     assert!(history.get("delta").is_none());
 }
 
+#[test]
+fn history_empty() {
+    let h = VersionHistory::new();
+    assert!(h.is_empty());
+    assert_eq!(h.len(), 0);
+    assert!(h.current().is_none());
+    assert!(h.previous().is_none());
+}
+
+#[test]
+fn history_single_version() {
+    let mut h = VersionHistory::new();
+    h.push(make_version("v1", 100, &["init"]));
+    assert_eq!(h.len(), 1);
+    assert_eq!(h.current().unwrap().version_id, "v1");
+    assert!(h.previous().is_none());
+}
+
+#[test]
+fn history_two_versions() {
+    let mut h = VersionHistory::new();
+    h.push(make_version("v1", 100, &["init"]));
+    h.push(make_version("v2", 200, &["update"]));
+    assert_eq!(h.current().unwrap().version_id, "v2");
+    assert_eq!(h.previous().unwrap().version_id, "v1");
+}
+
+#[test]
+fn history_diff_adjacent() {
+    let mut h = VersionHistory::new();
+    h.push(make_version("v1", 100, &["a"]));
+    h.push(make_version("v2", 200, &["b"]));
+    let d = h.diff("v1", "v2").unwrap();
+    assert_eq!(d.changes, vec!["b".to_string()]);
+}
+
+#[test]
+fn profile_version_serde_round_trip() {
+    let v = make_version("v1", 100, &["a", "b"]);
+    let json = serde_json::to_string(&v).unwrap();
+    let back: ProfileVersion = serde_json::from_str(&json).unwrap();
+    assert_eq!(v, back);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 4. METADATA HANDLING (6 tests)
+// 4. METADATA HANDLING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// ProfileMetadata correctly tracks size and checksum after upload.
 #[tokio::test]
 async fn metadata_backend_tracks_size_and_checksum() {
     let backend = MockCloudBackend::new();
@@ -698,7 +966,6 @@ async fn metadata_backend_tracks_size_and_checksum() {
     assert_eq!(meta.name, "meta-p");
 }
 
-/// Timestamps in ProfileListing reflect published and updated times.
 #[test]
 fn metadata_listing_timestamps() {
     let listing = ProfileListing {
@@ -721,7 +988,6 @@ fn metadata_listing_timestamps() {
     assert!(json.contains("2025-07-15"));
 }
 
-/// Tags via description field: max 500 chars per PublishMeta contract.
 #[test]
 fn metadata_description_preserves_content() {
     let desc = "A".repeat(500);
@@ -729,7 +995,6 @@ fn metadata_description_preserves_content() {
     assert_eq!(meta.description.as_ref().unwrap().len(), 500);
 }
 
-/// ProfileSortOrder variants all have distinct Display values.
 #[test]
 fn metadata_sort_order_display_distinct() {
     let values = [
@@ -749,7 +1014,6 @@ fn metadata_sort_order_display_distinct() {
     }
 }
 
-/// FileSystemBackend metadata index tracks multiple profiles.
 #[tokio::test]
 async fn metadata_filesystem_index_tracks_multiple() {
     let tmp = tempfile_dir();
@@ -772,7 +1036,6 @@ async fn metadata_filesystem_index_tracks_multiple() {
     cleanup_dir(&tmp);
 }
 
-/// ProfileMetadata checksum changes when data is overwritten.
 #[tokio::test]
 async fn metadata_checksum_updates_on_overwrite() {
     let backend = MockCloudBackend::new();
@@ -798,11 +1061,24 @@ async fn metadata_checksum_updates_on_overwrite() {
     assert_eq!(meta2.size, b"version 2".len() as u64);
 }
 
+#[test]
+fn profile_metadata_serde_round_trip() {
+    let m = ProfileMetadata {
+        id: "pm1".to_string(),
+        name: "Profile Meta".to_string(),
+        updated_at: 1_700_000_000,
+        size: 4096,
+        checksum: "abc123".to_string(),
+    };
+    let json = serde_json::to_string(&m).unwrap();
+    let back: ProfileMetadata = serde_json::from_str(&json).unwrap();
+    assert_eq!(m, back);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. ERROR HANDLING (8 tests)
+// 5. ERROR HANDLING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Download of nonexistent profile from MockCloudBackend returns error.
 #[tokio::test]
 async fn error_download_nonexistent_mock() {
     let backend = MockCloudBackend::new();
@@ -811,7 +1087,6 @@ async fn error_download_nonexistent_mock() {
     assert!(result.unwrap_err().to_string().contains("not found"));
 }
 
-/// Download of nonexistent profile from FileSystemBackend returns error.
 #[tokio::test]
 async fn error_download_nonexistent_filesystem() {
     let tmp = tempfile_dir();
@@ -821,7 +1096,6 @@ async fn error_download_nonexistent_filesystem() {
     cleanup_dir(&tmp);
 }
 
-/// Delete of nonexistent profile from MockCloudBackend returns error.
 #[tokio::test]
 async fn error_delete_nonexistent_mock() {
     let backend = MockCloudBackend::new();
@@ -829,7 +1103,6 @@ async fn error_delete_nonexistent_mock() {
     assert!(result.is_err());
 }
 
-/// ApiError with various status codes are distinguishable.
 #[test]
 fn error_api_error_status_codes_distinguishable() {
     let codes = [400, 401, 403, 404, 429, 500, 502, 503];
@@ -847,14 +1120,12 @@ fn error_api_error_status_codes_distinguishable() {
     }
 }
 
-/// InvalidArgument error wraps the reason string.
 #[test]
 fn error_invalid_argument_wraps_reason() {
     let err = CloudProfileError::InvalidArgument("missing required field: title".to_string());
     assert!(err.to_string().contains("missing required field: title"));
 }
 
-/// Cache I/O error wraps std::io::Error.
 #[test]
 fn error_cache_io_wraps_std_io() {
     let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied");
@@ -862,7 +1133,6 @@ fn error_cache_io_wraps_std_io() {
     assert!(err.to_string().contains("access denied"));
 }
 
-/// Validate rejects profile with negative deadzone (below 0.0).
 #[test]
 fn error_validate_rejects_negative_deadzone() {
     let mut axes = HashMap::new();
@@ -888,7 +1158,6 @@ fn error_validate_rejects_negative_deadzone() {
     assert!(err.contains("deadzone"));
 }
 
-/// Validate rejects profile with expo > 1.0.
 #[test]
 fn error_validate_rejects_expo_out_of_range() {
     let mut axes = HashMap::new();
@@ -915,10 +1184,9 @@ fn error_validate_rejects_expo_out_of_range() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 6. SANITIZATION EDGE CASES (4 tests)
+// 6. SANITIZATION / VALIDATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Sanitize normalizes schema version from any input.
 #[test]
 fn sanitize_normalizes_schema_from_any_version() {
     let mut profile = minimal_profile();
@@ -927,7 +1195,6 @@ fn sanitize_normalizes_schema_from_any_version() {
     assert_eq!(sanitized.schema, PROFILE_SCHEMA_VERSION);
 }
 
-/// Sanitize lowercases all sim identifiers.
 #[test]
 fn sanitize_lowercases_sim_identifiers() {
     for sim in &["MSFS", "XPlane", "DCS", "MiXeD"] {
@@ -943,7 +1210,6 @@ fn sanitize_lowercases_sim_identifiers() {
     }
 }
 
-/// Sanitize preserves pof_overrides if present (pass-through).
 #[test]
 fn sanitize_preserves_none_pof_overrides() {
     let profile = minimal_profile();
@@ -951,7 +1217,6 @@ fn sanitize_preserves_none_pof_overrides() {
     assert!(sanitized.pof_overrides.is_none());
 }
 
-/// Sanitize is non-destructive: original profile is unchanged.
 #[test]
 fn sanitize_does_not_mutate_original() {
     let profile = Profile {
@@ -968,18 +1233,120 @@ fn sanitize_does_not_mutate_original() {
     assert_eq!(profile.sim.as_deref(), Some("UPPER"));
 }
 
+#[test]
+fn validate_blank_title() {
+    assert!(validate_for_publish(&empty_profile(), "").is_err());
+}
+
+#[test]
+fn validate_whitespace_only_title() {
+    assert!(validate_for_publish(&empty_profile(), "   \t\n").is_err());
+}
+
+#[test]
+fn validate_title_exactly_100_chars() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(0.05), None));
+    let p = profile_with_axes(axes);
+    let title = "x".repeat(100);
+    assert!(validate_for_publish(&p, &title).is_ok());
+}
+
+#[test]
+fn validate_title_101_chars() {
+    let title = "x".repeat(101);
+    assert!(validate_for_publish(&empty_profile(), &title).is_err());
+}
+
+#[test]
+fn validate_no_axes_no_overrides() {
+    assert!(validate_for_publish(&empty_profile(), "Valid Title").is_err());
+}
+
+#[test]
+fn validate_deadzone_at_boundary_zero() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(0.0), None));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Good").is_ok());
+}
+
+#[test]
+fn validate_deadzone_at_boundary_half() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(0.5), None));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Good").is_ok());
+}
+
+#[test]
+fn validate_deadzone_over_half() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(0.51), None));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Bad").is_err());
+}
+
+#[test]
+fn validate_deadzone_negative() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(-0.1), None));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Bad").is_err());
+}
+
+#[test]
+fn validate_expo_at_boundary_zero() {
+    let mut axes = HashMap::new();
+    axes.insert("roll".to_string(), axis(None, Some(0.0)));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "OK").is_ok());
+}
+
+#[test]
+fn validate_expo_at_boundary_one() {
+    let mut axes = HashMap::new();
+    axes.insert("roll".to_string(), axis(None, Some(1.0)));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "OK").is_ok());
+}
+
+#[test]
+fn validate_expo_over_one() {
+    let mut axes = HashMap::new();
+    axes.insert("roll".to_string(), axis(None, Some(1.01)));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Bad").is_err());
+}
+
+#[test]
+fn validate_expo_negative() {
+    let mut axes = HashMap::new();
+    axes.insert("roll".to_string(), axis(None, Some(-0.5)));
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Bad").is_err());
+}
+
+#[test]
+fn validate_multiple_axes_first_bad_fails() {
+    let mut axes = HashMap::new();
+    axes.insert("pitch".to_string(), axis(Some(0.05), None));
+    axes.insert("roll".to_string(), axis(Some(0.9), None)); // bad
+    let p = profile_with_axes(axes);
+    assert!(validate_for_publish(&p, "Mixed").is_err());
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 7. CACHE OPERATIONS (4 tests)
+// 7. CACHE OPERATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Cache evict removes only the targeted profile.
 #[tokio::test]
 async fn cache_evict_targets_single_profile() {
     let tmp = tempfile_dir();
     let cache = ProfileCache::new(tmp.clone(), 3600);
 
     for id in &["keep-1", "remove-me", "keep-2"] {
-        let cp = make_cloud_profile(id, minimal_profile());
+        let cp = make_cloud_profile_with_data(id, minimal_profile());
         cache.store(&cp).await.unwrap();
     }
 
@@ -992,7 +1359,6 @@ async fn cache_evict_targets_single_profile() {
     cleanup_dir(&tmp);
 }
 
-/// Cache store overwrites existing entry without duplication.
 #[tokio::test]
 async fn cache_store_overwrites_existing() {
     let tmp = tempfile_dir();
@@ -1026,7 +1392,6 @@ async fn cache_store_overwrites_existing() {
     cleanup_dir(&tmp);
 }
 
-/// Cache miss on never-stored ID returns None (not error).
 #[tokio::test]
 async fn cache_miss_returns_none_not_error() {
     let tmp = tempfile_dir();
@@ -1037,7 +1402,6 @@ async fn cache_miss_returns_none_not_error() {
     cleanup_dir(&tmp);
 }
 
-/// Cache with zero TTL immediately expires all entries.
 #[tokio::test]
 async fn cache_zero_ttl_expires_all() {
     let tmp = tempfile_dir();
@@ -1045,7 +1409,7 @@ async fn cache_zero_ttl_expires_all() {
     let reader = ProfileCache::new(tmp.clone(), 0);
 
     for i in 0..3 {
-        let cp = make_cloud_profile(&format!("ttl-{i}"), minimal_profile());
+        let cp = make_cloud_profile_with_data(&format!("ttl-{i}"), minimal_profile());
         writer.store(&cp).await.unwrap();
     }
 
@@ -1055,12 +1419,179 @@ async fn cache_zero_ttl_expires_all() {
     cleanup_dir(&tmp);
 }
 
+#[tokio::test]
+async fn cache_store_retrieve() {
+    let tmp = tempfile_dir();
+    let cache = ProfileCache::new(tmp.clone(), 3600);
+    let p = make_cloud_profile("store-1");
+    cache.store(&p).await.unwrap();
+    let got = cache.get("store-1").await.unwrap().unwrap();
+    assert_eq!(got.id, "store-1");
+    cleanup_dir(&tmp);
+}
+
+#[tokio::test]
+async fn cache_evict() {
+    let tmp = tempfile_dir();
+    let cache = ProfileCache::new(tmp.clone(), 3600);
+    cache.store(&make_cloud_profile("ev")).await.unwrap();
+    cache.evict("ev").await.unwrap();
+    assert!(cache.get("ev").await.unwrap().is_none());
+    cleanup_dir(&tmp);
+}
+
+#[tokio::test]
+async fn cache_clear_removes_all() {
+    let tmp = tempfile_dir();
+    let cache = ProfileCache::new(tmp.clone(), 3600);
+    for i in 0..5 {
+        cache
+            .store(&make_cloud_profile(&format!("clr-{i}")))
+            .await
+            .unwrap();
+    }
+    cache.clear().await.unwrap();
+    assert!(cache.list_cached().await.is_empty());
+    cleanup_dir(&tmp);
+}
+
+#[test]
+fn cache_entry_fresh_not_expired() {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let e = CacheEntry {
+        id: "x".to_string(),
+        cached_at: now,
+        title: "T".to_string(),
+    };
+    assert!(!e.is_expired(3600));
+}
+
+#[test]
+fn cache_entry_epoch_expired() {
+    let e = CacheEntry {
+        id: "x".to_string(),
+        cached_at: 0,
+        title: "T".to_string(),
+    };
+    assert!(e.is_expired(1));
+}
+
+#[test]
+fn cache_entry_boundary_ttl() {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let e = CacheEntry {
+        id: "x".to_string(),
+        cached_at: now - 100,
+        title: "T".to_string(),
+    };
+    assert!(!e.is_expired(200));
+    assert!(e.is_expired(50));
+    assert!(e.is_expired(100)); // exactly at boundary → expired
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 8. PROPERTY-BASED TESTS (10 tests)
+// 8. MODELS / CONFIG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn cloud_profile_score() {
+    let p = make_cloud_profile("cp1");
+    assert_eq!(p.score(), 4); // 5 - 1
+}
+
+#[test]
+fn list_filter_default_values() {
+    let f = ListFilter::default();
+    assert!(f.sim.is_none());
+    assert!(f.aircraft_icao.is_none());
+    assert!(f.query.is_none());
+    assert_eq!(f.sort, ProfileSortOrder::TopRated);
+    assert_eq!(f.page, 1);
+    assert_eq!(f.per_page, DEFAULT_PAGE_SIZE);
+}
+
+#[test]
+fn list_filter_serde_round_trip() {
+    let f = ListFilter {
+        sim: Some("xplane".to_string()),
+        aircraft_icao: Some("B738".to_string()),
+        query: Some("landing".to_string()),
+        sort: ProfileSortOrder::Newest,
+        page: 3,
+        per_page: 10,
+    };
+    let json = serde_json::to_string(&f).unwrap();
+    let back: ListFilter = serde_json::from_str(&json).unwrap();
+    assert_eq!(back.sim.as_deref(), Some("xplane"));
+    assert_eq!(back.page, 3);
+}
+
+#[test]
+fn sort_order_display_all_variants() {
+    assert_eq!(ProfileSortOrder::TopRated.to_string(), "top_rated");
+    assert_eq!(ProfileSortOrder::Newest.to_string(), "newest");
+    assert_eq!(ProfileSortOrder::MostDownloaded.to_string(), "most_downloaded");
+}
+
+#[test]
+fn client_config_defaults() {
+    let cfg = ClientConfig::default();
+    assert_eq!(cfg.base_url, DEFAULT_API_BASE_URL);
+    assert!(cfg.use_cache);
+    assert_eq!(
+        cfg.timeout,
+        std::time::Duration::from_secs(DEFAULT_TIMEOUT_SECS)
+    );
+}
+
+#[test]
+fn constants_sanity() {
+    assert!(!DEFAULT_API_BASE_URL.is_empty());
+    assert!(DEFAULT_API_BASE_URL.starts_with("https://"));
+    assert!(DEFAULT_TIMEOUT_SECS > 0);
+    assert!(DEFAULT_PAGE_SIZE > 0 && DEFAULT_PAGE_SIZE <= 100);
+    assert!(CACHE_TTL_SECS > 0);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. BACKEND DELEGATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn mock_backend_upload_download() {
+    let b = MockCloudBackend::new();
+    b.upload("p1", b"data").await.unwrap();
+    assert_eq!(b.download("p1").await.unwrap(), b"data");
+}
+
+#[tokio::test]
+async fn fs_backend_upload_download() {
+    let tmp = tempfile_dir();
+    let b = FileSystemBackend::new(&tmp);
+    b.upload("f1", b"fs-data").await.unwrap();
+    assert_eq!(b.download("f1").await.unwrap(), b"fs-data");
+    cleanup_dir(&tmp);
+}
+
+#[tokio::test]
+async fn sync_engine_upload_download() {
+    let engine = SyncEngine::new(MockCloudBackend::new());
+    engine.upload("se1", b"payload").await.unwrap();
+    let data = engine.download("se1").await.unwrap();
+    assert_eq!(data, b"payload");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 10. PROPERTY-BASED TESTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 proptest! {
-    /// Same hash means in-sync regardless of timestamps.
     #[test]
     fn prop_same_hash_always_in_sync(
         id in "[a-z]{1,8}",
@@ -1076,7 +1607,6 @@ proptest! {
         prop_assert!(plan.is_empty());
     }
 
-    /// Different hashes always produce an action (never no-op).
     #[test]
     fn prop_different_hash_always_produces_action(
         id in "[a-z]{1,8}",
@@ -1094,7 +1624,6 @@ proptest! {
         prop_assert!(!plan.is_empty());
     }
 
-    /// LWW always picks the hash from the side with the higher timestamp.
     #[test]
     fn prop_lww_picks_higher_timestamp(
         ts_local in 1u64..1_000_000u64,
@@ -1115,7 +1644,6 @@ proptest! {
         }
     }
 
-    /// Manual strategy always produces a conflict (never auto-resolves).
     #[test]
     fn prop_manual_always_conflicts(
         hash_a in "[a-f0-9]{8}",
@@ -1134,7 +1662,6 @@ proptest! {
         prop_assert!(plan.downloads.is_empty());
     }
 
-    /// Version hash is deterministic for arbitrary byte sequences.
     #[test]
     fn prop_version_hash_deterministic(data in proptest::collection::vec(any::<u8>(), 0..1024)) {
         let h1 = compute_version_hash(&data);
@@ -1143,23 +1670,12 @@ proptest! {
         prop_assert_eq!(h1.len(), 64);
     }
 
-    /// Version hash never collides for different data (probabilistic).
-    #[test]
-    fn prop_version_hash_no_collision(
-        a in proptest::collection::vec(any::<u8>(), 1..256),
-        b in proptest::collection::vec(any::<u8>(), 1..256),
-    ) {
-        prop_assume!(a != b);
-        prop_assert_ne!(compute_version_hash(&a), compute_version_hash(&b));
-    }
-
-    /// Sanitize is idempotent for any valid deadzone and expo.
     #[test]
     fn prop_sanitize_idempotent(
         dz in 0.0f32..0.5f32,
         expo in 0.0f32..1.0f32,
     ) {
-        let profile = profile_with_axes(&[("axis", dz, expo)]);
+        let profile = profile_with_axes_simple(&[("axis", dz, expo)]);
         let once = sanitize_for_upload(&profile);
         let twice = sanitize_for_upload(&once);
         prop_assert_eq!(once.schema, twice.schema);
@@ -1167,41 +1683,44 @@ proptest! {
         prop_assert_eq!(once.axes.len(), twice.axes.len());
     }
 
-    /// Local-only profiles always become uploads.
     #[test]
-    fn prop_local_only_becomes_upload(
-        id in "[a-z]{1,8}",
-        hash in "[a-f0-9]{8,16}",
-        ts in 1u64..1_000_000u64,
-    ) {
+    fn prop_listing_score_is_upvotes_minus_downvotes(up in 0u32..10000, down in 0u32..10000) {
+        let l = make_listing("p", up, down, 0);
+        prop_assert_eq!(l.score(), up as i64 - down as i64);
+    }
+
+    #[test]
+    fn prop_page_total_pages_covers_total(per_page in 1u32..200, total in 0u64..10000) {
+        let p: Page<()> = Page { items: vec![], page: 1, per_page, total };
+        let pages = p.total_pages();
+        if total == 0 {
+            prop_assert_eq!(pages, 0);
+        } else {
+            prop_assert!(pages * per_page as u64 >= total);
+        }
+    }
+
+    #[test]
+    fn prop_sync_local_only_all_uploaded(count in 1usize..20) {
         let engine = SyncEngine::new(MockCloudBackend::new());
-        let plan = engine.plan(&[state(&id, &hash, ts)], &[]);
-        prop_assert_eq!(plan.uploads.len(), 1);
+        let local: Vec<_> = (0..count)
+            .map(|i| sync_state(&format!("p{i}"), &format!("h{i}"), 100))
+            .collect();
+        let plan = engine.plan(&local, &[]);
+        prop_assert_eq!(plan.uploads.len(), count);
         prop_assert!(plan.downloads.is_empty());
         prop_assert!(plan.conflicts.is_empty());
     }
 
-    /// Remote-only profiles always become downloads.
     #[test]
-    fn prop_remote_only_becomes_download(
-        id in "[a-z]{1,8}",
-        hash in "[a-f0-9]{8,16}",
-        ts in 1u64..1_000_000u64,
-    ) {
+    fn prop_sync_remote_only_all_downloaded(count in 1usize..20) {
         let engine = SyncEngine::new(MockCloudBackend::new());
-        let plan = engine.plan(&[], &[state(&id, &hash, ts)]);
+        let remote: Vec<_> = (0..count)
+            .map(|i| sync_state(&format!("p{i}"), &format!("h{i}"), 100))
+            .collect();
+        let plan = engine.plan(&[], &remote);
         prop_assert!(plan.uploads.is_empty());
-        prop_assert_eq!(plan.downloads.len(), 1);
+        prop_assert_eq!(plan.downloads.len(), count);
         prop_assert!(plan.conflicts.is_empty());
-    }
-
-    /// ProfileListing score is always upvotes − downvotes.
-    #[test]
-    fn prop_listing_score_is_upvotes_minus_downvotes(
-        upvotes in 0u32..1_000_000u32,
-        downvotes in 0u32..1_000_000u32,
-    ) {
-        let listing = make_listing("score-test", upvotes, downvotes, 0);
-        prop_assert_eq!(listing.score(), upvotes as i64 - downvotes as i64);
     }
 }

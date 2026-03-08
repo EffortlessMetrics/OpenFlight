@@ -2,41 +2,43 @@
 
 This document tracks the immediate focus, near-term goals, and long-term vision for the OpenFlight ecosystem.
 
-**Last Updated:** 2026-02-25
+**Last Updated:** 2026-03-01
 
 ## 🟢 Now (Current Sprint & Immediate Focus)
-**Focus:** Production Readiness, Runtime Reliability, and Packaging Prep.
+**Focus:** Hardening, Documentation, and Community Readiness.
 
-*   **Production Readiness (M7)**
-    *   [x] **Service Wiring**: Finalize `flight-service` orchestration for app/use-cases layer.
-    *   [x] **Safe Mode**: Complete `--safe` implementation with power checks and privilege detection.
-    *   [x] **CLI Parity**: Ensure all service functionality is accessible via `flight-cli --json`.
+*   **Quality & Coverage**
+    *   [ ] **Test stabilization**: Reach 10,000 unit/integration tests across the workspace (currently 9,200+).
+    *   [ ] **Fuzz hardening**: Expand fuzz targets beyond the current 92 to cover all parser and protocol crates.
+    *   [ ] **COMPATIBILITY.md refresh**: Regenerate from the 2,301 device manifests (up from 2,201).
 
-*   **Runtime & Timing (Phase 4)**
-    *   [x] **Windows RT**: Implement `MMCSS` registration and high-res timer loop.
-    *   [x] **Linux RT**: Integrate `rtkit` for unprivileged real-time scheduling.
-    *   [x] **Jitter Validation**: Harden CI gates for p99 jitter < 0.5ms on hardware runners.
-
-*   **Documentation Refinement**
+*   **Documentation**
     *   [x] **Tutorials**: Add "Creating your first Profile" tutorial.
     *   [x] **API Docs**: Complete `docs.rs` coverage for `flight-core` and `flight-ipc`.
+    *   [ ] **Architecture guide**: Publish end-to-end data flow walkthrough for new contributors.
+
+*   **CI & Automation**
+    *   [ ] **Hardware CI gates**: Enable QG-RT-JITTER and QG-HID-LATENCY on dedicated runners.
+    *   [ ] **Nightly fuzzing**: Automated nightly fuzz runs with corpus persistence.
 
 ## 🟡 Next (Upcoming ~4-8 Weeks)
-**Focus:** Distribution, User Experience, and Telemetry.
+**Focus:** Ecosystem Expansion and Plugin System.
 
-*   **Packaging & Distribution (Phase 5)**
-    *   [x] **Windows Installer**: Build signed MSI with WiX (per-machine scope with auto-start Windows service; `installer/wix/`).
-    *   [x] **Linux Packaging**: `.deb` package with udev rules, systemd user unit, and automated `installer/debian/build.sh`.
-    *   [x] **Auto-Update**: `flightctl update check|channel|channels` with Stable/Beta/Canary channels and persisted channel preference (`flight-updater` crate).
+*   **Plugin System (ADR-003)**
+    *   [ ] **WASM sandbox**: Finalize plugin host with capability declarations and 20–120 Hz tick budget.
+    *   [ ] **Native fast-path**: Shared-memory SPSC channel for latency-critical plugins.
+    *   [ ] **Plugin marketplace**: Basic catalog and discovery mechanism.
 
-*   **Telemetry & Observability (Phase 6)**
-    *   [x] **Metrics System**: Implement system-wide counters (`sim.*`, `ffb.*`) and `flight-dashboard`.
-    *   [x] **Remote Diagnostics**: Allow users to export sanitized blackbox logs for support.
+*   **Vendor Driver Expansion**
+    *   [ ] **Brunner CLS-E**: Complete force feedback integration via `flight-hotas-brunner`.
+    *   [ ] **SimuCube / VPforce**: Production-ready FFB profiles for direct-drive wheels.
+    *   [ ] **GoFlight panels**: Full MCP/EFIS panel coverage via `flight-panels-goflight`.
 
-*   **Sim Integration Polish**
-    *   [x] **DCS**: Finalize MP-safe enforcement, blocked feature UI warnings (`dcs mp-policy`), and full telemetry (gear/flaps/AoA/angular rates/navigation) with correct unit conversions.
+*   **Sim Integration Depth**
+    *   [x] **DCS**: Finalize MP-safe enforcement, blocked feature UI warnings, and full telemetry with unit conversions.
     *   [x] **X-Plane**: Add more comprehensive data refs for complex aircraft.
     *   [x] **Elite: Dangerous**: Journal/Status file-watcher adapter (`flight-elite`) with gear, lights, fuel, star-system tracking.
+    *   [ ] **IL-2 / Falcon BMS**: Shared-memory telemetry adapters.
 
 ## 🔴 Later (Long-Term Vision & Ideas)
 **Focus:** Ecosystem Growth, Advanced Hardware, and Community.
@@ -44,7 +46,7 @@ This document tracks the immediate focus, near-term goals, and long-term vision 
 *   **Hardware Ecosystem**
     *   [x] **Open Hardware**: Reference design for an OpenFlight-native FFB stick (firmware + PCB).
     *   [x] **Vendor Partnerships**: Official support for Moza, WinWing, VPforce devices.
-    *   [x] **T.Flight HOTAS Gap Fill**: PC mode detection (`PcModeDetector`), throttle detent tracking (`ThrottleDetentTracker`), and HID receipt fixtures for the Thrustmaster T.Flight HOTAS 4/One.
+    *   [x] **T.Flight HOTAS Gap Fill**: PC mode detection, throttle detent tracking, and HID receipt fixtures.
 
 *   **Advanced Features**
     *   [x] **Cloud Profiles**: Community-shared profile repository with voting/rating.

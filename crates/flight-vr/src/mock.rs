@@ -40,6 +40,9 @@ impl MockVrBackend {
 
 impl VrBackend for MockVrBackend {
     fn poll(&mut self) -> Result<VrSnapshot, VrError> {
+        if !self.connected {
+            return Err(VrError::NotConnected);
+        }
         if self.sequence.is_empty() {
             return Err(VrError::PollFailed("empty sequence".to_owned()));
         }

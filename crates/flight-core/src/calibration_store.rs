@@ -227,4 +227,32 @@ mod tests {
         let store = CalibrationStore::load_from_file(&path).expect("should return empty store");
         assert_eq!(store.device_count(), 0);
     }
+
+    #[test]
+    fn test_normalize_below_center_nonzero_min() {
+        // raw_min=1000, raw_center=5000, raw_max=9000
+        // This catches the mutation that replaces (raw_center - raw_min) with (raw_center + raw_min)
+        let cal = AxisCalibration::new(0, 1000, 9000, 5000);
+
+        // At raw_min the result should be -1.0
+        let at_min = cal.normalize(1000);
+        assert!(
+            (at_min + 1.0).abs() < 1e-4,
+            "raw_min should normalize to -1.0, got {at_min}"
+        );
+
+        // Midpoint between min and center: raw=3000, expected -0.5
+        let mid = cal.normalize(3000);
+        assert!(
+            (mid + 0.5).abs() < 1e-4,
+            "midpoint below center should normalize to -0.5, got {mid}"
+        );
+
+        // Above center still works
+        let at_max = cal.normalize(9000);
+        assert!(
+            (at_max - 1.0).abs() < 1e-4,
+            "raw_max should normalize to 1.0, got {at_max}"
+        );
+    }
 }

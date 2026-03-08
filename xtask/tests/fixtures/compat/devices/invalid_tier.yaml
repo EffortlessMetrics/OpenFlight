@@ -1,0 +1,20 @@
+schema_version: "1"
+
+device:
+  name: "Bad Tier Device"
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x3333
+    product_id: 0x4444
+
+capabilities:
+  axes:
+    count: 2
+  buttons: 4
+  force_feedback: false
+
+support:
+  tier: 5
+  test_coverage:
+    simulated: false
+    hil: false

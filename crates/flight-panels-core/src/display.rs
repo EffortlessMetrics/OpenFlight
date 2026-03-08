@@ -322,4 +322,118 @@ mod tests {
         assert_eq!(format_xpdr(1200).len(), 5);
         assert_eq!(format_adf(340).len(), 5);
     }
+
+    // ── Blanking / overflow / edge-case depth ────────────────────────────────
+
+    #[test]
+    fn test_heading_large_wraparound() {
+        // Multiples of 360 always wrap to 0
+        assert_eq!(format_heading(720), "    0");
+        assert_eq!(format_heading(1080), "    0");
+        // Non-multiples wrap correctly
+        assert_eq!(format_heading(450), "   90");
+        assert_eq!(format_heading(u16::MAX), format!("{:>5}", u16::MAX % 360));
+    }
+
+    #[test]
+    fn test_altitude_five_digit_positive_boundary() {
+        assert_eq!(format_altitude(99999), "99999");
+        assert_eq!(format_altitude(10000), "10000");
+        assert_eq!(format_altitude(9999), " 9999");
+    }
+
+    #[test]
+    fn test_altitude_negative_boundary() {
+        assert_eq!(format_altitude(-1), "   -1");
+        assert_eq!(format_altitude(-9999), "-9999");
+        // Beyond clamp
+        assert_eq!(format_altitude(-10000), "-9999");
+    }
+
+    #[test]
+    fn test_vs_boundary_values() {
+        assert_eq!(format_vs(9999), " 9999");
+        assert_eq!(format_vs(-9999), "-9999");
+        assert_eq!(format_vs(1), "    1");
+        assert_eq!(format_vs(-1), "   -1");
+    }
+
+    #[test]
+    fn test_com_freq_clamp_below_range() {
+        // Below 118 000 kHz should clamp to lower bound
+        assert_eq!(format_com_freq(100_000), "11800");
+        assert_eq!(format_com_freq(0), "11800");
+    }
+
+    #[test]
+    fn test_com_freq_clamp_above_range() {
+        assert_eq!(format_com_freq(200_000), "13697");
+        assert_eq!(format_com_freq(u32::MAX), "13697");
+    }
+
+    #[test]
+    fn test_com_freq_8_33khz_spacing() {
+        // 8.33 kHz channel spacing: 118.000, 118.008, 118.017...
+        // Our display shows 10 kHz resolution, so both 118_000 and 118_008 → "11800"
+        assert_eq!(format_com_freq(118_000), "11800");
+        assert_eq!(format_com_freq(118_008), "11800");
+        assert_eq!(format_com_freq(118_010), "11801");
+    }
+
+    #[test]
+    fn test_nav_freq_clamp_boundaries() {
+        assert_eq!(format_nav_freq(0), "10800");
+        assert_eq!(format_nav_freq(200_000), "11795");
+    }
+
+    #[test]
+    fn test_nav_freq_50khz_spacing() {
+        // NAV frequencies use 50 kHz spacing
+        assert_eq!(format_nav_freq(108_050), "10805");
+        assert_eq!(format_nav_freq(109_900), "10990");
+    }
+
+    #[test]
+    fn test_xpdr_clamp_above_max() {
+        assert_eq!(format_xpdr(7778), " 7777");
+        assert_eq!(format_xpdr(u16::MAX), " 7777");
+    }
+
+    #[test]
+    fn test_xpdr_common_squawk_codes() {
+        assert_eq!(format_xpdr(7500), " 7500"); // hijack
+        assert_eq!(format_xpdr(7600), " 7600"); // comm failure
+        assert_eq!(format_xpdr(7700), " 7700"); // emergency
+    }
+
+    #[test]
+    fn test_adf_clamp_boundaries() {
+        assert_eq!(format_adf(0), "  190");
+        assert_eq!(format_adf(189), "  190");
+        assert_eq!(format_adf(1751), " 1750");
+        assert_eq!(format_adf(u16::MAX), " 1750");
+    }
+
+    #[test]
+    fn test_all_formatters_only_contain_digits_spaces_minus() {
+        let outputs = [
+            format_heading(0),
+            format_heading(359),
+            format_altitude(-500),
+            format_altitude(35000),
+            format_vs(-1800),
+            format_vs(1800),
+            format_com_freq(121_500),
+            format_nav_freq(110_300),
+            format_xpdr(1200),
+            format_adf(340),
+        ];
+        for (i, s) in outputs.iter().enumerate() {
+            assert!(
+                s.chars().all(|c| c.is_ascii_digit() || c == ' ' || c == '-'),
+                "output[{i}] = {:?} contains unexpected characters",
+                s
+            );
+        }
+    }
 }

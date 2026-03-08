@@ -457,6 +457,7 @@ mod tests {
 
     // ── Flight report helpers ────────────────────────────────────────────
 
+    #[allow(clippy::too_many_arguments)]
     fn make_flight_report(
         roll: u16,
         pitch: u16,

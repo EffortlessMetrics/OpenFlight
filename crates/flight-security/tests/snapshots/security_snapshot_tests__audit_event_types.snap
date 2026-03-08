@@ -1,0 +1,24 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: events
+---
+- timestamp: 1700000000
+  event_type: IpcConnection
+  component: grpc-server
+  description: Client connected from PID 12345
+  metadata:
+    pid: "12345"
+  severity: Info
+- timestamp: 1700000001
+  event_type: PluginLoad
+  component: plugin-registry
+  description: "Loaded WASM plugin 'traffic-overlay' v1.2.0"
+  metadata: {}
+  severity: Low
+- timestamp: 1700000002
+  event_type: SecurityViolation
+  component: capability-enforcer
+  description: "Plugin 'rogue-plugin' attempted unauthorized network access"
+  metadata:
+    target_host: "example.com:443"
+  severity: Critical

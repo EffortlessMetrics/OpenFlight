@@ -9,18 +9,24 @@
 pub mod curve_conflict;
 pub mod diff;
 pub mod golden;
+pub mod golden_tests;
 pub mod repair;
 pub mod rollback;
 pub mod types;
+pub mod variable_table;
 pub mod verify;
+pub mod writer_engine;
 
 pub use curve_conflict::*;
 pub use diff::*;
 pub use golden::*;
+pub use golden_tests::*;
 pub use repair::*;
 pub use rollback::*;
 pub use types::*;
+pub use variable_table::*;
 pub use verify::*;
+pub use writer_engine::*;
 
 use anyhow::Result as AnyResult;
 use std::path::Path;

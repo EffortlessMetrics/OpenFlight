@@ -23,6 +23,7 @@ use flight_bus::{
     adapters::{SimAdapter, xplane::XPlaneConverter},
     snapshot::{
         AngularRates, BusSnapshot, EngineData, Environment, Kinematics, Navigation, TrimState,
+        ValidityFlags,
     },
     types::{AircraftId, AutopilotState, Percentage, SimId},
 };
@@ -222,14 +223,30 @@ impl XPlaneAdapter {
 
         // Set running flag
         *self.running.write().unwrap() = true;
-        *self.state.write().unwrap() = AdapterState::Connecting;
+
+        // Drive state machine: Disconnected → Connecting
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketBound,
+        );
 
         // Test connection to X-Plane
         if let Err(err) = self.test_connection_with_retries().await {
-            *self.state.write().unwrap() = AdapterState::Error;
+            Self::apply_event(
+                &self.state_machine,
+                &self.state,
+                AdapterEvent::SocketError(err.to_string()),
+            );
             return Err(err);
         }
-        *self.state.write().unwrap() = AdapterState::Connected;
+
+        // Drive state machine: Connecting → Connected
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketBound,
+        );
 
         // Start telemetry publishing task
         let publish_handle = self.start_telemetry_publisher().await?;
@@ -272,7 +289,7 @@ impl XPlaneAdapter {
     pub async fn stop(&self) -> Result<()> {
         info!("Stopping X-Plane adapter");
         *self.running.write().unwrap() = false;
-        *self.state.write().unwrap() = AdapterState::Disconnected;
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::Shutdown);
         Ok(())
     }
 
@@ -347,6 +364,7 @@ impl XPlaneAdapter {
         let latency_tracker = self.latency_tracker.clone();
         let bus_publisher = self.bus_publisher.clone();
         let state = self.state.clone();
+        let state_machine = self.state_machine.clone();
         let metrics = self.metrics.clone();
         let metrics_registry = self.metrics_registry.clone();
         let current_aircraft = self.current_aircraft.clone();
@@ -379,7 +397,11 @@ impl XPlaneAdapter {
                         connection_timeout.as_secs()
                     );
                     metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-                    *state.write().unwrap() = AdapterState::Error;
+                    Self::apply_event(
+                        &state_machine,
+                        &state,
+                        AdapterEvent::TelemetryTimeout,
+                    );
                     // Publish a stale/invalid snapshot so subscribers know data is no longer valid.
                     // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
                     let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
@@ -416,12 +438,6 @@ impl XPlaneAdapter {
                     .await
                     {
                         Ok(raw_data) => {
-                            // Update last packet time on successful data collection
-                            {
-                                let mut last_packet = last_packet_time.write().unwrap();
-                                *last_packet = Some(Instant::now());
-                            }
-
                             // Convert to bus snapshot
                             match Self::convert_raw_to_snapshot(raw_data, adapter_start) {
                                 Ok(snapshot) => {
@@ -450,7 +466,11 @@ impl XPlaneAdapter {
                                         metrics_guard
                                             .record_aircraft_change(aircraft.title.clone());
                                     }
-                                    *state.write().unwrap() = AdapterState::Active;
+                                    Self::apply_event(
+                                        &state_machine,
+                                        &state,
+                                        AdapterEvent::TelemetryReceived,
+                                    );
 
                                     // Publish snapshot to bus subscribers
                                     if let Ok(mut publisher) = bus_publisher.lock() {
@@ -458,6 +478,12 @@ impl XPlaneAdapter {
                                             warn!("Failed to publish X-Plane snapshot: {}", e);
                                             metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
                                         }
+                                    }
+
+                                    // Update last packet time after successful conversion and publish
+                                    {
+                                        let mut last_packet = last_packet_time.write().unwrap();
+                                        *last_packet = Some(Instant::now());
                                     }
                                 }
                                 Err(e) => {
@@ -644,6 +670,9 @@ impl XPlaneAdapter {
         // Convert trim state (elevator/aileron/rudder)
         snapshot.trim_state = Self::convert_trim_state(&raw_data.dataref_values);
 
+        // Set validity flags based on which datarefs were available
+        snapshot.validity = Self::compute_validity_flags(&raw_data.dataref_values);
+
         // Validate the snapshot
         snapshot
             .validate()
@@ -790,6 +819,71 @@ impl XPlaneAdapter {
 
         trim
     }
+
+    /// Compute validity flags based on which DataRefs are present in the raw data.
+    fn compute_validity_flags(datarefs: &HashMap<String, DataRefValue>) -> ValidityFlags {
+        let attitude_valid = matches!(
+            datarefs.get("sim/flightmodel/position/theta"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/phi"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/psi"),
+            Some(DataRefValue::Float(_))
+        );
+
+        let angular_rates_valid = matches!(
+            datarefs.get("sim/flightmodel/position/P"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/Q"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/R"),
+            Some(DataRefValue::Float(_))
+        );
+
+        let velocities_valid = matches!(
+            datarefs.get("sim/flightmodel/position/indicated_airspeed"),
+            Some(DataRefValue::Float(_))
+        );
+
+        let kinematics_valid = matches!(
+            datarefs.get("sim/flightmodel/forces/g_nrml"),
+            Some(DataRefValue::Float(_))
+        );
+
+        let aero_valid = matches!(
+            datarefs.get("sim/flightmodel/position/alpha"),
+            Some(DataRefValue::Float(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/beta"),
+            Some(DataRefValue::Float(_))
+        );
+
+        let position_valid = matches!(
+            datarefs.get("sim/flightmodel/position/latitude"),
+            Some(DataRefValue::Double(_))
+        ) && matches!(
+            datarefs.get("sim/flightmodel/position/longitude"),
+            Some(DataRefValue::Double(_))
+        );
+
+        // Safe for FFB requires valid attitude, angular rates, and airspeed
+        let safe_for_ffb = attitude_valid && angular_rates_valid && velocities_valid;
+
+        ValidityFlags {
+            safe_for_ffb,
+            attitude_valid,
+            angular_rates_valid,
+            velocities_valid,
+            kinematics_valid,
+            aero_valid,
+            position_valid,
+        }
+    }
+
     fn convert_aircraft_config(
         datarefs: &HashMap<String, DataRefValue>,
     ) -> Result<flight_bus::snapshot::AircraftConfig> {
@@ -1147,6 +1241,37 @@ impl XPlaneAdapter {
         self.publish_stale_snapshot()
     }
 
+    /// Notify the state machine that the UDP socket was successfully bound.
+    ///
+    /// Drives Disconnected → Connecting → Connected progression.
+    pub fn handle_socket_bound(&self) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketBound,
+        )
+    }
+
+    /// Notify the state machine of a socket-level error.
+    ///
+    /// Transitions to Error from any state and increments the error counter.
+    pub fn handle_socket_error(&self, reason: &str) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::SocketError(reason.to_string()),
+        )
+    }
+
+    /// Notify the state machine of a graceful shutdown.
+    pub fn handle_shutdown(&self) -> Option<XPlaneAdapterState> {
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::Shutdown,
+        )
+    }
+
     /// Drive the state machine with an event and synchronize the common AdapterState.
     fn apply_event(
         state_machine: &Mutex<AdapterStateMachine>,
@@ -1182,6 +1307,18 @@ impl XPlaneAdapter {
     fn advance_to_connected(&self) {
         Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
         Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
+    }
+
+    /// Advance the state machine to Active without publishing to the bus.
+    /// Useful in tests that need the adapter in Active state before subscribing.
+    #[cfg(test)]
+    fn advance_to_active(&self) {
+        self.advance_to_connected();
+        Self::apply_event(
+            &self.state_machine,
+            &self.state,
+            AdapterEvent::TelemetryReceived,
+        );
     }
 }
 
@@ -1835,6 +1972,216 @@ mod tests {
         assert!(
             !received.validity.safe_for_ffb,
             "stale snapshot should not be safe for FFB"
+        );
+    }
+
+    /// State machine integration: process_telemetry transitions to Active and publishes.
+    #[tokio::test]
+    async fn test_process_telemetry_drives_state_machine() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe");
+
+        let config = XPlaneAdapterConfig::default();
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Advance to Connected via state machine
+        adapter.advance_to_connected();
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Connected);
+
+        // process_telemetry should transition to Active and publish
+        let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("C172"));
+        adapter
+            .process_telemetry(snapshot)
+            .expect("should succeed");
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+
+        let received = subscriber.try_recv().expect("recv");
+        assert!(
+            received.is_some(),
+            "subscriber should receive the published snapshot"
+        );
+    }
+
+    /// State machine integration: handle_telemetry_timeout transitions to Stale.
+    #[tokio::test]
+    async fn test_handle_timeout_drives_state_machine_to_stale() {
+        use flight_bus::{BusPublisher, SubscriptionConfig};
+
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+
+        let config = XPlaneAdapterConfig::default();
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Drive to Active via state machine only (no bus publish)
+        adapter.advance_to_active();
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+
+        // Subscribe now — the next publish will be the first one the rate limiter sees
+        let mut subscriber = bus_publisher
+            .lock()
+            .unwrap()
+            .subscribe(SubscriptionConfig::default())
+            .expect("subscribe");
+
+        // Trigger timeout — should transition Active → Stale
+        adapter
+            .handle_telemetry_timeout()
+            .expect("should succeed");
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
+
+        // Subscriber should receive a stale (invalid) snapshot
+        let received = subscriber.try_recv().expect("recv");
+        assert!(received.is_some(), "should receive stale snapshot");
+        let received = received.unwrap();
+        assert!(
+            !received.validity.safe_for_ffb,
+            "stale snapshot must not be safe for FFB"
+        );
+    }
+
+    /// State machine integration: Stale → Active recovery when telemetry resumes.
+    #[tokio::test]
+    async fn test_state_machine_recovery_from_stale() {
+        let bus_publisher = Arc::new(Mutex::new(BusPublisher::new(60.0)));
+
+        let config = XPlaneAdapterConfig::default();
+        let adapter = XPlaneAdapter::new(config, Arc::clone(&bus_publisher)).unwrap();
+
+        // Drive to Active → Stale (no bus publish — state machine only)
+        adapter.advance_to_active();
+        adapter.handle_telemetry_timeout().unwrap();
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
+
+        // Receiving telemetry again should recover to Active
+        let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("C172"));
+        adapter.process_telemetry(snapshot).unwrap();
+        assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+    }
+
+    /// Validity flags are correctly set when all datarefs are present.
+    #[test]
+    fn test_validity_flags_set_on_complete_data() {
+        let mut datarefs = HashMap::new();
+        // Attitude
+        datarefs.insert(
+            "sim/flightmodel/position/theta".to_string(),
+            DataRefValue::Float(5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/phi".to_string(),
+            DataRefValue::Float(10.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/psi".to_string(),
+            DataRefValue::Float(90.0),
+        );
+        // Angular rates
+        datarefs.insert(
+            "sim/flightmodel/position/P".to_string(),
+            DataRefValue::Float(1.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/Q".to_string(),
+            DataRefValue::Float(0.5),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/R".to_string(),
+            DataRefValue::Float(0.2),
+        );
+        // Velocities
+        datarefs.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(77.0),
+        );
+        // Kinematics
+        datarefs.insert(
+            "sim/flightmodel/forces/g_nrml".to_string(),
+            DataRefValue::Float(1.0),
+        );
+        // Aero
+        datarefs.insert(
+            "sim/flightmodel/position/alpha".to_string(),
+            DataRefValue::Float(5.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/beta".to_string(),
+            DataRefValue::Float(-1.0),
+        );
+        // Position
+        datarefs.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(37.77),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-122.41),
+        );
+
+        let raw = XPlaneRawData {
+            timestamp: Instant::now(),
+            aircraft_info: DetectedAircraft {
+                icao: "C172".to_string(),
+                title: "Cessna 172".to_string(),
+                author: "Laminar".to_string(),
+            },
+            dataref_values: datarefs,
+        };
+
+        let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now()).unwrap();
+        assert!(snapshot.validity.attitude_valid);
+        assert!(snapshot.validity.angular_rates_valid);
+        assert!(snapshot.validity.velocities_valid);
+        assert!(snapshot.validity.kinematics_valid);
+        assert!(snapshot.validity.aero_valid);
+        assert!(snapshot.validity.position_valid);
+        assert!(
+            snapshot.validity.safe_for_ffb,
+            "FFB should be safe when attitude + angular rates are present"
+        );
+    }
+
+    /// Validity flags reflect partial data: FFB unsafe without attitude+rates.
+    #[test]
+    fn test_validity_flags_partial_data() {
+        let mut datarefs = HashMap::new();
+        // Only IAS and position — no attitude or rates
+        datarefs.insert(
+            "sim/flightmodel/position/indicated_airspeed".to_string(),
+            DataRefValue::Float(77.0),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/latitude".to_string(),
+            DataRefValue::Double(37.77),
+        );
+        datarefs.insert(
+            "sim/flightmodel/position/longitude".to_string(),
+            DataRefValue::Double(-122.41),
+        );
+
+        let raw = XPlaneRawData {
+            timestamp: Instant::now(),
+            aircraft_info: DetectedAircraft {
+                icao: "C172".to_string(),
+                title: "Cessna 172".to_string(),
+                author: "Laminar".to_string(),
+            },
+            dataref_values: datarefs,
+        };
+
+        let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now()).unwrap();
+        assert!(!snapshot.validity.attitude_valid);
+        assert!(!snapshot.validity.angular_rates_valid);
+        assert!(snapshot.validity.velocities_valid);
+        assert!(snapshot.validity.position_valid);
+        assert!(
+            !snapshot.validity.safe_for_ffb,
+            "FFB must be unsafe without attitude + angular rates"
         );
     }
 }

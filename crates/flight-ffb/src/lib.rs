@@ -41,6 +41,8 @@ pub mod dinput_com;
 pub mod dinput_device;
 #[cfg(windows)]
 pub mod dinput_window;
+pub mod effect_library;
+pub mod effect_mixer;
 pub mod effects;
 pub mod engine_vibration;
 pub mod fault;
@@ -57,6 +59,9 @@ pub mod ofp1_integration;
 pub mod performance_validation;
 pub mod ramp;
 pub mod safety;
+pub mod safety_depth;
+#[cfg(test)]
+pub mod safety_depth_tests;
 pub mod safety_envelope;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
@@ -70,6 +75,7 @@ pub mod telemetry_synth;
 pub mod trim;
 #[cfg(test)]
 pub mod trim_hil_tests;
+pub mod trim_system;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
@@ -87,6 +93,11 @@ pub use device::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;
+pub use effect_library::{
+    ConstantForce, DamperForce, FrictionForce, PeriodicForce, SpringForce, SynthEffect,
+    SynthWaveform,
+};
+pub use effect_mixer::EffectMixer;
 pub use effects::*;
 pub use engine_vibration::*;
 pub use fault::*;
@@ -101,6 +112,7 @@ pub use ofp1_integration::*;
 pub use performance_validation::*;
 pub use ramp::*;
 pub use safety::*;
+pub use safety_depth::*;
 pub use safety_envelope::*;
 pub use safety_interlock::*;
 pub use soft_stop::*;
@@ -108,6 +120,7 @@ pub use telemetry_synth::*;
 pub use trim::*;
 #[cfg(test)]
 pub use trim_hil_tests::*;
+pub use trim_system::SynthTrimState;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;

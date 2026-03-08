@@ -1,0 +1,20 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcPanel2InputState {
+    axes: VpcPanel2Axes {
+        a1_raw: 8192,
+        a2_raw: 8192,
+    },
+    buttons: VpcPanel2Buttons {
+        raw: [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+    },
+}
