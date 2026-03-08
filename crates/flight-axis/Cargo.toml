@@ -91,6 +91,10 @@ name = "snapshot_tests"
 required-features = ["tests-optin"]
 
 [[test]]
+name = "depth_tests"
+required-features = ["tests-optin"]
+
+[[test]]
 name = "axis_engine_depth"
 required-features = ["tests-optin"]
 
