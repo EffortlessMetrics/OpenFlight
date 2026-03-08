@@ -36,6 +36,7 @@ pub mod health_http;
 pub mod health_report;
 pub mod input_runtime;
 pub mod instance_lock;
+pub mod lifecycle;
 pub mod metrics_server;
 pub mod one_click_resolver;
 pub mod orchestrator;
