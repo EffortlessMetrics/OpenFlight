@@ -53,7 +53,8 @@ pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, Subs
 pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
 pub use routing::{
     BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
-    EventRouter as RoutingEventRouter, RouteId, RouteInfo, RouteMatches, RoutePattern, SourceType,
+    EventRouter as RoutingEventRouter, MAX_SUBSCRIBERS, RouteId, RouteInfo, RouteMatches,
+    RoutePattern, SourceType, SubscriberInfo, SubscriberStatus, Topic,
 };
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
