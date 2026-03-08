@@ -35,6 +35,7 @@ flight-hotas-honeycomb = { path = "../flight-hotas-honeycomb" }
 flight-hotas-ch = { path = "../flight-hotas-ch" }
 flight-hid-support = { path = "../flight-hid-support" }
 flight-watchdog = { path = "../flight-watchdog" }
+flight-metrics = { path = "../flight-metrics" }
 tokio.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
