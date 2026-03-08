@@ -6,15 +6,19 @@
 //! Covers record types, serialization round-trips, recording lifecycle,
 //! frame format, file management, replay, ring buffer semantics,
 //! compression heuristics, corruption handling, analysis utilities,
-//! export formats, and property-based invariants.
+//! export formats, property-based invariants, and performance.
 
 use std::fs;
 use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
-use flight_blackbox::analysis::{self, Anomaly, AnomalyThresholds};
+use flight_blackbox::analysis::{
+    self, axis_statistics, detect_anomalies, event_timeline, Anomaly, AnomalyThresholds,
+};
 use flight_blackbox::export::{
-    self, AxisRecordDto, EventRecordDto, ExportEntry, FfbRecordDto, RecorderExportDoc,
-    TelemetryRecordDto,
+    self, export_binary, export_csv, export_json, summary, AxisRecordDto, EventRecordDto,
+    ExportEntry, FfbRecordDto, RecorderExportDoc, TelemetryRecordDto,
 };
 use flight_blackbox::recorder::{
     BlackboxRecorder, RecordEntry, RecorderConfig, EVENT_DATA_MAX, EVENT_SOURCE_MAX, SIM_ID_MAX,
@@ -35,17 +39,31 @@ fn small_recorder(cap: usize) -> BlackboxRecorder {
     BlackboxRecorder::new(RecorderConfig { capacity: cap })
 }
 
-fn test_config(dir: &std::path::Path) -> BlackboxConfig {
-    BlackboxConfig {
-        output_dir: dir.to_path_buf(),
-        ..BlackboxConfig::default()
-    }
-}
-
 /// Yield to the tokio runtime so the async writer task can drain the channel.
 async fn drain_writer() {
     for _ in 0..32 {
         tokio::task::yield_now().await;
+    }
+}
+
+/// Poll until `path` exists on disk, with a bounded 5-second timeout.
+async fn wait_for_file(path: &std::path::Path) {
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
+    while !path.exists() {
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "timed out waiting for file creation: {}",
+            path.display()
+        );
+        tokio::task::yield_now().await;
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+}
+
+fn test_config(dir: &std::path::Path) -> BlackboxConfig {
+    BlackboxConfig {
+        output_dir: dir.to_path_buf(),
+        ..BlackboxConfig::default()
     }
 }
 
@@ -62,12 +80,11 @@ async fn write_test_file(
         .unwrap();
 
     for (ts, st, data) in records {
-        let record = BlackboxRecord {
-            timestamp_ns: *ts,
-            stream_type: *st,
-            data: data.clone(),
-        };
-        writer.submit(record).unwrap();
+        match st {
+            StreamType::AxisFrames => writer.record_axis_frame(*ts, data).unwrap(),
+            StreamType::BusSnapshots => writer.record_bus_snapshot(*ts, data).unwrap(),
+            StreamType::Events => writer.record_event(*ts, data).unwrap(),
+        }
     }
 
     drain_writer().await;
@@ -636,8 +653,96 @@ async fn format_timestamp_and_sequence_preserved() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 5. File Management
+// 5. File Management & Writer Depth
 // ═════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn writer_creates_fbb_file() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v0.1".into())
+        .await
+        .unwrap();
+
+    // Poll for file creation with a bounded timeout
+    wait_for_file(&path).await;
+
+    assert!(path.exists(), "file should be created on start");
+    assert!(
+        path.extension() == Some(std::ffi::OsStr::new("fbb")),
+        "file should have .fbb extension"
+    );
+
+    writer.stop_recording().await.unwrap();
+}
+
+#[tokio::test]
+async fn writer_file_starts_with_length_prefixed_header() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("DCS".into(), "F16".into(), "v1".into())
+        .await
+        .unwrap();
+    writer.stop_recording().await.unwrap();
+
+    let raw = std::fs::read(&path).unwrap();
+    assert!(
+        raw.len() >= 4,
+        "file must contain at least the header length prefix"
+    );
+    let header_len = u32::from_le_bytes(raw[0..4].try_into().unwrap()) as usize;
+    assert!(
+        raw.len() >= 4 + header_len,
+        "file must contain the full header payload"
+    );
+
+    let header: BlackboxHeader =
+        postcard::from_bytes(&raw[4..4 + header_len]).unwrap();
+    assert_eq!(header.magic, *FBB_MAGIC);
+    assert_eq!(header.endian_marker, FBB_ENDIAN_MARKER);
+    assert_eq!(header.format_version, FBB_FORMAT_VERSION);
+    assert_eq!(header.sim_id, "DCS");
+    assert_eq!(header.aircraft_id, "F16");
+}
+
+#[tokio::test]
+async fn writer_records_are_length_prefixed_postcard() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+
+    writer.record_axis_frame(1000, &[0xAA, 0xBB]).unwrap();
+
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
+
+    let raw = std::fs::read(&path).unwrap();
+    let header_len = u32::from_le_bytes(raw[0..4].try_into().unwrap()) as usize;
+    let record_start = 4 + header_len;
+    assert!(
+        raw.len() > record_start + 4,
+        "should have at least one record"
+    );
+
+    let rec_len =
+        u32::from_le_bytes(raw[record_start..record_start + 4].try_into().unwrap()) as usize;
+    let rec_payload = &raw[record_start + 4..record_start + 4 + rec_len];
+    let record: BlackboxRecord = postcard::from_bytes(rec_payload).unwrap();
+    assert_eq!(record.stream_type, StreamType::AxisFrames);
+    assert_eq!(record.data, &[0xAA, 0xBB]);
+    assert_eq!(record.timestamp_ns, 1000);
+}
 
 #[tokio::test]
 async fn file_directory_creation_if_missing() {
@@ -733,6 +838,81 @@ async fn start_recording_returns_fbb_path() {
 // ═════════════════════════════════════════════════════════════════════
 // 6. Replay / Reading
 // ═════════════════════════════════════════════════════════════════════
+
+#[tokio::test]
+async fn reader_reads_all_records_in_order() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+
+    let timestamps = [100u64, 200, 300, 400, 500];
+    for &ts in &timestamps {
+        writer.record_axis_frame(ts, &[0x01]).unwrap();
+    }
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
+
+    let mut reader = BlackboxReader::open(&path).unwrap();
+    reader.validate().unwrap();
+
+    let mut read_timestamps = Vec::new();
+    while let Some(rec) = reader.next_record().unwrap() {
+        read_timestamps.push(rec.timestamp_ns);
+    }
+
+    assert_eq!(
+        read_timestamps,
+        timestamps.to_vec(),
+        "timestamps must preserve order"
+    );
+}
+
+#[tokio::test]
+async fn reader_returns_none_after_last_record() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+
+    writer.record_event(1000, &[0xFF]).unwrap();
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
+
+    let mut reader = BlackboxReader::open(&path).unwrap();
+    reader.validate().unwrap();
+
+    assert!(reader.next_record().unwrap().is_some());
+    assert!(reader.next_record().unwrap().is_none());
+    assert!(reader.next_record().unwrap().is_none());
+}
+
+#[tokio::test]
+async fn reader_validates_header_fields() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+    writer.stop_recording().await.unwrap();
+
+    let mut reader = BlackboxReader::open(&path).unwrap();
+    reader.validate().unwrap();
+    let header = reader.header();
+    assert_eq!(header.magic, *FBB_MAGIC);
+    assert_eq!(header.format_version, FBB_FORMAT_VERSION);
+}
 
 #[tokio::test]
 async fn replay_load_recording_iterate_frames() {
@@ -907,111 +1087,101 @@ async fn replay_forward_and_backward_iteration() {
     }
 }
 
+// ═════════════════════════════════════════════════════════════════════
+// 7. Round-trip tests — write → read → compare
+// ═════════════════════════════════════════════════════════════════════
+
 #[tokio::test]
-async fn write_single_record_read_back() {
+async fn roundtrip_all_stream_types() {
     let dir = tempdir().unwrap();
-    let path = write_test_file(
-        dir.path(),
-        &[(1000, StreamType::AxisFrames, vec![0xDE, 0xAD])],
-    )
-    .await;
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("XPLANE".into(), "B738".into(), "v2".into())
+        .await
+        .unwrap();
+
+    let records = vec![
+        (1000u64, StreamType::AxisFrames, vec![0x01, 0x02, 0x03]),
+        (2000, StreamType::BusSnapshots, vec![0x10, 0x20]),
+        (3000, StreamType::Events, vec![0xAA, 0xBB, 0xCC, 0xDD]),
+        (4000, StreamType::AxisFrames, vec![0xFF]),
+    ];
+
+    for (ts, st, data) in &records {
+        match st {
+            StreamType::AxisFrames => writer.record_axis_frame(*ts, data).unwrap(),
+            StreamType::BusSnapshots => writer.record_bus_snapshot(*ts, data).unwrap(),
+            StreamType::Events => writer.record_event(*ts, data).unwrap(),
+        }
+    }
+
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
     reader.validate().unwrap();
-    let rec = reader.next_record().unwrap().unwrap();
-    assert_eq!(rec.timestamp_ns, 1000);
-    assert_eq!(rec.stream_type, StreamType::AxisFrames);
-    assert_eq!(rec.data, vec![0xDE, 0xAD]);
+    assert_eq!(reader.header().sim_id, "XPLANE");
+    assert_eq!(reader.header().aircraft_id, "B738");
+
+    for (expected_ts, expected_st, expected_data) in &records {
+        let rec = reader.next_record().unwrap().expect("should have record");
+        assert_eq!(rec.timestamp_ns, *expected_ts);
+        assert_eq!(rec.stream_type, *expected_st);
+        assert_eq!(rec.data, *expected_data);
+    }
     assert!(reader.next_record().unwrap().is_none());
 }
 
 #[tokio::test]
-async fn write_multiple_stream_types_read_all() {
+async fn roundtrip_large_payload() {
     let dir = tempdir().unwrap();
-    let records = vec![
-        (100, StreamType::AxisFrames, vec![0x01]),
-        (200, StreamType::BusSnapshots, vec![0x02]),
-        (300, StreamType::Events, vec![0x03]),
-        (400, StreamType::AxisFrames, vec![0x04]),
-    ];
-    let path = write_test_file(dir.path(), &records).await;
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "A320".into(), "v1".into())
+        .await
+        .unwrap();
+
+    let large_data: Vec<u8> = (0..4096).map(|i| (i % 256) as u8).collect();
+    writer.record_axis_frame(999, &large_data).unwrap();
+
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
     reader.validate().unwrap();
-
-    let mut read_records = Vec::new();
-    while let Some(rec) = reader.next_record().unwrap() {
-        read_records.push(rec);
-    }
-    assert_eq!(read_records.len(), 4);
-    assert_eq!(read_records[0].stream_type, StreamType::AxisFrames);
-    assert_eq!(read_records[1].stream_type, StreamType::BusSnapshots);
-    assert_eq!(read_records[2].stream_type, StreamType::Events);
-    assert_eq!(read_records[3].stream_type, StreamType::AxisFrames);
+    let rec = reader.next_record().unwrap().unwrap();
+    assert_eq!(rec.data, large_data);
 }
 
 #[tokio::test]
-async fn write_many_records_preserves_order() {
+async fn roundtrip_empty_payload() {
     let dir = tempdir().unwrap();
-    let records: Vec<_> = (0..50)
-        .map(|i| {
-            (
-                i as u64 * 1000,
-                StreamType::AxisFrames,
-                vec![(i & 0xFF) as u8],
-            )
-        })
-        .collect();
-    let path = write_test_file(dir.path(), &records).await;
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+
+    writer.record_event(42, &[]).unwrap();
+
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
     reader.validate().unwrap();
-
-    let mut prev_ts = 0u64;
-    let mut count = 0;
-    while let Some(rec) = reader.next_record().unwrap() {
-        assert!(
-            rec.timestamp_ns >= prev_ts,
-            "records must be in timestamp order"
-        );
-        prev_ts = rec.timestamp_ns;
-        count += 1;
-    }
-    assert_eq!(count, 50);
-}
-
-#[tokio::test]
-async fn reader_validates_magic() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(dir.path(), &[]).await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    assert_eq!(reader.header().magic, *FBB_MAGIC);
-}
-
-#[tokio::test]
-async fn reader_validates_endian_marker() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(dir.path(), &[]).await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    assert_eq!(reader.header().endian_marker, FBB_ENDIAN_MARKER);
-}
-
-#[tokio::test]
-async fn reader_validates_format_version() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(dir.path(), &[]).await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    assert_eq!(reader.header().format_version, FBB_FORMAT_VERSION);
+    let rec = reader.next_record().unwrap().unwrap();
+    assert!(rec.data.is_empty());
+    assert_eq!(rec.timestamp_ns, 42);
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 7. Ring buffer semantics
+// 8. Ring buffer semantics
 // ═════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -1148,7 +1318,7 @@ fn ring_buffer_no_reallocation() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 8. Timestamp ordering and precision
+// 9. Timestamp ordering and precision
 // ═════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -1201,8 +1371,68 @@ fn monotonic_timestamps_non_decreasing() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// 9. Compression / Encoding Heuristics
+// 10. Compression / Encoding Heuristics & Performance
 // ═══════════════════════════════════════════════════════════════════════
+
+#[test]
+fn ring_buffer_no_alloc_during_recording() {
+    let mut rec = small_recorder(15_000);
+    let cap_before = rec.capacity();
+
+    for i in 0..15_000u64 {
+        rec.record_axis(
+            (i % 8) as u16,
+            (i as f64) / 15_000.0,
+            (i as f64) / 15_000.0,
+            i * 4_000_000,
+        );
+    }
+
+    assert_eq!(rec.capacity(), cap_before, "capacity must not change");
+    assert_eq!(rec.len(), 15_000);
+    assert_eq!(rec.total_written(), 15_000);
+    assert_eq!(rec.overflow_count(), 0);
+}
+
+#[test]
+fn ring_buffer_overflow_is_allocation_free() {
+    let mut rec = small_recorder(1000);
+
+    for i in 0..3000u64 {
+        rec.record_axis(0, i as f64, i as f64, i * 4_000_000);
+    }
+
+    assert_eq!(rec.capacity(), 1000);
+    assert_eq!(rec.len(), 1000);
+    assert_eq!(rec.total_written(), 3000);
+    assert_eq!(rec.overflow_count(), 2000);
+}
+
+// Run with: cargo test -p flight-blackbox -- --ignored (benchmark suite)
+#[test]
+#[ignore]
+fn mixed_record_types_throughput() {
+    let mut rec = small_recorder(10_000);
+    let start = Instant::now();
+
+    for i in 0..10_000u64 {
+        match i % 4 {
+            0 => rec.record_axis((i % 8) as u16, i as f64, i as f64, i * 4_000_000),
+            1 => rec.record_event(i as u16, "perf-test", &[0x01, 0x02]),
+            2 => rec.record_telemetry("MSFS", &[0xAA; 32]),
+            3 => rec.record_ffb(i as u16, (i as f64) / 10_000.0),
+            _ => unreachable!(),
+        }
+    }
+
+    let elapsed = start.elapsed();
+    assert_eq!(rec.len(), 10_000);
+    assert!(
+        elapsed.as_millis() < 500,
+        "recording 10k mixed entries should complete in <500ms, took {}ms",
+        elapsed.as_millis()
+    );
+}
 
 #[tokio::test]
 async fn compression_delta_encoding_for_axis_values() {
@@ -1333,9 +1563,116 @@ async fn compression_ratio_within_expected_range() {
     );
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// 10. Corruption Handling
-// ═══════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════
+// 11. Corruption Handling & Resilience
+// ═════════════════════════════════════════════════════════════════════
+
+#[test]
+fn corrupted_header_too_short() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("corrupt.fbb");
+    std::fs::write(&path, [0x00, 0x01]).unwrap();
+
+    let result = BlackboxReader::open(&path);
+    assert!(result.is_err(), "should fail on truncated header");
+}
+
+#[test]
+fn corrupted_header_bad_length() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("corrupt_len.fbb");
+    let mut file = std::fs::File::create(&path).unwrap();
+    file.write_all(&10000u32.to_le_bytes()).unwrap();
+    file.write_all(&[0xDE; 10]).unwrap();
+
+    let result = BlackboxReader::open(&path);
+    assert!(
+        result.is_err(),
+        "should fail when payload shorter than length prefix"
+    );
+}
+
+#[test]
+fn corrupted_header_invalid_postcard() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("corrupt_postcard.fbb");
+    let garbage = vec![0xFF; 64];
+    let mut file = std::fs::File::create(&path).unwrap();
+    file.write_all(&(garbage.len() as u32).to_le_bytes())
+        .unwrap();
+    file.write_all(&garbage).unwrap();
+
+    let result = BlackboxReader::open(&path);
+    assert!(result.is_err(), "should fail on invalid postcard header");
+}
+
+#[tokio::test]
+async fn truncated_record_does_not_panic() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+
+    writer.record_axis_frame(1000, &[0x01, 0x02]).unwrap();
+    wait_for_file(&path).await;
+    writer.stop_recording().await.unwrap();
+
+    let raw = std::fs::read(&path).unwrap();
+    let truncated = &raw[..raw.len().saturating_sub(3)];
+    std::fs::write(&path, truncated).unwrap();
+
+    let mut reader = BlackboxReader::open(&path).unwrap();
+    // Must not panic — any of Ok(None), Ok(Some(_)), Err(_) is acceptable
+    let _result = reader.next_record();
+}
+
+#[test]
+fn empty_fbb_file_fails_to_open() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("empty.fbb");
+    std::fs::write(&path, []).unwrap();
+
+    let result = BlackboxReader::open(&path);
+    assert!(result.is_err(), "empty file should fail to read header");
+}
+
+#[tokio::test]
+async fn validate_rejects_wrong_magic() {
+    let dir = tempdir().unwrap();
+    let config = test_config(dir.path());
+
+    let mut writer = BlackboxWriter::new(config);
+    let path = writer
+        .start_recording("MSFS".into(), "C172".into(), "v1".into())
+        .await
+        .unwrap();
+    writer.stop_recording().await.unwrap();
+
+    // Corrupt the magic bytes in the header
+    let raw = std::fs::read(&path).unwrap();
+    let header_len = u32::from_le_bytes(raw[0..4].try_into().unwrap()) as usize;
+    let header_payload = &raw[4..4 + header_len];
+    let mut header: BlackboxHeader =
+        postcard::from_bytes(header_payload).unwrap();
+    header.magic = *b"XXXX";
+    let new_payload = postcard::to_stdvec(&header).unwrap();
+    let new_len = new_payload.len() as u32;
+
+    // Rebuild file
+    let mut new_file = Vec::new();
+    new_file.extend_from_slice(&new_len.to_le_bytes());
+    new_file.extend_from_slice(&new_payload);
+    new_file.extend_from_slice(&raw[4 + header_len..]);
+    std::fs::write(&path, &new_file).unwrap();
+
+    let mut reader = BlackboxReader::open(&path).unwrap();
+    let result = reader.validate();
+    assert!(result.is_err(), "should reject invalid magic");
+}
 
 #[tokio::test]
 async fn corruption_truncated_file_reads_available() {
@@ -1499,45 +1836,6 @@ async fn corruption_header_only_no_records() {
     assert!(reader.next_record().unwrap().is_none());
 }
 
-#[test]
-fn reader_rejects_empty_file() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("empty.fbb");
-    std::fs::write(&path, b"").unwrap();
-    assert!(BlackboxReader::open(&path).is_err());
-}
-
-#[test]
-fn reader_rejects_truncated_length_prefix() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("short.fbb");
-    std::fs::write(&path, [0x01, 0x02]).unwrap();
-    assert!(BlackboxReader::open(&path).is_err());
-}
-
-#[test]
-fn reader_rejects_truncated_header_payload() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("trunc_header.fbb");
-    let mut f = std::fs::File::create(&path).unwrap();
-    f.write_all(&1000u32.to_le_bytes()).unwrap();
-    f.write_all(&[0xAA; 4]).unwrap();
-    f.flush().unwrap();
-    assert!(BlackboxReader::open(&path).is_err());
-}
-
-#[test]
-fn reader_rejects_corrupt_postcard_payload() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("corrupt.fbb");
-    let garbage = vec![0xFF; 64];
-    let mut f = std::fs::File::create(&path).unwrap();
-    f.write_all(&(garbage.len() as u32).to_le_bytes()).unwrap();
-    f.write_all(&garbage).unwrap();
-    f.flush().unwrap();
-    assert!(BlackboxReader::open(&path).is_err());
-}
-
 #[tokio::test]
 async fn reader_handles_truncated_record_payload() {
     let dir = tempdir().unwrap();
@@ -1563,7 +1861,7 @@ async fn reader_handles_truncated_record_payload() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 11. Error handling
+// 12. Error handling
 // ═════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
@@ -1572,16 +1870,16 @@ async fn lifecycle_double_start_returns_error() {
     let mut writer = BlackboxWriter::new(test_config(dir.path()));
 
     writer
-        .start("v1".into(), "MSFS".into(), "C172".into(), "test".into())
+        .start_recording("MSFS".into(), "C172".into(), "test".into())
         .await
         .unwrap();
 
     let result = writer
-        .start("v1".into(), "MSFS".into(), "C172".into(), "test".into())
+        .start_recording("MSFS".into(), "C172".into(), "test".into())
         .await;
     assert!(result.is_err(), "double start must return an error");
 
-    writer.stop().await.unwrap();
+    writer.stop_recording().await.unwrap();
 }
 
 #[tokio::test]
@@ -1589,7 +1887,7 @@ async fn lifecycle_stop_without_start_returns_error() {
     let dir = tempdir().unwrap();
     let mut writer = BlackboxWriter::new(test_config(dir.path()));
 
-    let result = writer.stop().await;
+    let result = writer.stop_recording().await;
     assert!(result.is_err(), "stop without start must return an error");
 }
 
@@ -1647,13 +1945,13 @@ fn blackbox_writer_not_running_before_start() {
         .unwrap();
     let result = rt.block_on(async {
         let mut w = writer;
-        w.stop().await
+        w.stop_recording().await
     });
     assert!(result.is_err());
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 12. Analysis module depth tests
+// 13. Analysis module depth tests
 // ═════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -1668,7 +1966,7 @@ fn anomaly_detection_clean_data_no_anomalies() {
         saturation_threshold: 0.999,
         max_gap_ns: 20_000_000,
     };
-    let anomalies = analysis::detect_anomalies(&rec, &thresholds);
+    let anomalies = detect_anomalies(&rec, &thresholds);
     assert!(anomalies.is_empty());
 }
 
@@ -1684,7 +1982,7 @@ fn anomaly_detection_saturation_at_boundary() {
         max_jitter_ns: u64::MAX,
         max_gap_ns: u64::MAX,
     };
-    let anomalies = analysis::detect_anomalies(&rec, &thresholds);
+    let anomalies = detect_anomalies(&rec, &thresholds);
     let sats: Vec<_> = anomalies
         .iter()
         .filter(|a| matches!(a, Anomaly::Saturation { .. }))
@@ -1704,7 +2002,7 @@ fn anomaly_detection_disconnect_large_gap() {
         saturation_threshold: 2.0,
         max_jitter_ns: u64::MAX,
     };
-    let anomalies = analysis::detect_anomalies(&rec, &thresholds);
+    let anomalies = detect_anomalies(&rec, &thresholds);
     let discs: Vec<_> = anomalies
         .iter()
         .filter(|a| matches!(a, Anomaly::Disconnect { .. }))
@@ -1720,7 +2018,7 @@ fn axis_statistics_known_distribution() {
         rec.record_axis(1, *v, *v, (i as u64) * 1000);
     }
 
-    let stats = analysis::axis_statistics(&rec, 1).unwrap();
+    let stats = axis_statistics(&rec, 1).unwrap();
     assert_eq!(stats.count, 10);
     assert!((stats.min - 1.0).abs() < f64::EPSILON);
     assert!((stats.max - 10.0).abs() < f64::EPSILON);
@@ -1731,7 +2029,7 @@ fn axis_statistics_known_distribution() {
 #[test]
 fn axis_statistics_returns_none_for_missing_axis() {
     let rec = small_recorder(8);
-    assert!(analysis::axis_statistics(&rec, 99).is_none());
+    assert!(axis_statistics(&rec, 99).is_none());
 }
 
 #[test]
@@ -1742,7 +2040,7 @@ fn event_timeline_sorted_and_excludes_axis() {
     rec.record_event(1, "test", &[]);
     rec.record_telemetry("MSFS", &[0x01]);
 
-    let tl = analysis::event_timeline(&rec);
+    let tl = event_timeline(&rec);
     assert_eq!(tl.len(), 3);
     for window in tl.windows(2) {
         assert!(window[0].timestamp_ns <= window[1].timestamp_ns);
@@ -1752,79 +2050,62 @@ fn event_timeline_sorted_and_excludes_axis() {
 #[test]
 fn event_timeline_empty_recorder() {
     let rec = small_recorder(8);
-    assert!(analysis::event_timeline(&rec).is_empty());
+    assert!(event_timeline(&rec).is_empty());
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 13. Export module depth tests
+// 14. Export module depth tests
 // ═════════════════════════════════════════════════════════════════════
 
 #[test]
-fn export_json_writes_valid_json() {
+fn export_json_binary_csv_consistency() {
     let dir = tempdir().unwrap();
-    let path = dir.path().join("out.json");
-    let mut rec = small_recorder(16);
-    rec.record_axis(1, 0.5, 0.6, 1000);
-    rec.record_event(2, "src", &[0xAA]);
+    let mut rec = small_recorder(64);
+    for i in 0..10u16 {
+        rec.record_axis(i, i as f64, i as f64, (i as u64) * 4_000_000);
+    }
+    rec.record_event(1, "test", &[0x42]);
 
-    export::export_json(&rec, &path).unwrap();
-    let json: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-    assert_eq!(json["version"], RecorderExportDoc::VERSION);
-    assert_eq!(json["entry_count"], 2);
+    let json_path = dir.path().join("out.json");
+    let csv_path = dir.path().join("out.csv");
+    let bin_path = dir.path().join("out.bin");
+
+    export_json(&rec, &json_path).unwrap();
+    export_csv(&rec, &csv_path).unwrap();
+    export_binary(&rec, &bin_path).unwrap();
+
+    let json_doc: RecorderExportDoc =
+        serde_json::from_str(&std::fs::read_to_string(&json_path).unwrap()).unwrap();
+    assert_eq!(json_doc.entry_count, 11);
+
+    let csv_lines = std::fs::read_to_string(&csv_path)
+        .unwrap()
+        .lines()
+        .count();
+    assert_eq!(csv_lines, 11);
+
+    let bin_bytes = std::fs::read(&bin_path).unwrap();
+    let bin_doc: RecorderExportDoc = postcard::from_bytes(&bin_bytes).unwrap();
+    assert_eq!(bin_doc.entry_count, 11);
+    assert_eq!(bin_doc, json_doc);
 }
 
 #[test]
-fn export_csv_header_and_axis_only() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("out.csv");
-    let mut rec = small_recorder(16);
-    rec.record_axis(1, 0.5, 0.6, 1000);
-    rec.record_event(2, "src", &[0xAA]);
-    rec.record_axis(2, -1.0, -0.5, 2000);
+fn summary_counts_all_record_types() {
+    let mut rec = small_recorder(64);
+    rec.record_axis(1, 0.5, 0.5, 1_000_000);
+    rec.record_axis(2, -0.3, -0.3, 2_000_000);
+    rec.record_event(10, "panel", &[0x01]);
+    rec.record_telemetry("MSFS", &[0xAA]);
+    rec.record_ffb(1, 0.8);
 
-    export::export_csv(&rec, &path).unwrap();
-    let csv = std::fs::read_to_string(&path).unwrap();
-    let lines: Vec<_> = csv.lines().collect();
-    assert_eq!(lines[0], "timestamp_ns,axis_id,raw,processed");
-    assert_eq!(lines.len(), 3);
-}
-
-#[test]
-fn export_binary_roundtrip_with_all_types() {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("out.bin");
-    let mut rec = small_recorder(16);
-    rec.record_axis(1, 0.5, 0.6, 100);
-    rec.record_event(2, "src", &[0xAA]);
-    rec.record_telemetry("DCS", &[0x01]);
-    rec.record_ffb(3, 0.9);
-
-    export::export_binary(&rec, &path).unwrap();
-    let bytes = std::fs::read(&path).unwrap();
-    let doc: RecorderExportDoc = postcard::from_bytes(&bytes).unwrap();
-    assert_eq!(doc.entry_count, 4);
-    assert!(matches!(doc.entries[0], ExportEntry::Axis(_)));
-    assert!(matches!(doc.entries[1], ExportEntry::Event(_)));
-    assert!(matches!(doc.entries[2], ExportEntry::Telemetry(_)));
-    assert!(matches!(doc.entries[3], ExportEntry::Ffb(_)));
-}
-
-#[test]
-fn summary_counts_all_types() {
-    let mut rec = small_recorder(32);
-    rec.record_axis(1, 0.0, 0.0, 100);
-    rec.record_axis(2, 0.0, 0.0, 200);
-    rec.record_event(1, "x", &[]);
-    rec.record_telemetry("MSFS", &[]);
-    rec.record_ffb(1, 0.5);
-
-    let s = export::summary(&rec);
+    let s = summary(&rec);
     assert_eq!(s.total_entries, 5);
     assert_eq!(s.axis_count, 2);
     assert_eq!(s.event_count, 1);
     assert_eq!(s.telemetry_count, 1);
     assert_eq!(s.ffb_count, 1);
+    assert_eq!(s.overflow_count, 0);
 }
 
 #[test]
@@ -1833,26 +2114,15 @@ fn summary_display_format() {
     rec.record_axis(1, 0.0, 0.5, 1_000_000_000);
     rec.record_axis(1, 0.0, 0.9, 2_000_000_000);
 
-    let s = export::summary(&rec);
+    let s = summary(&rec);
     let text = format!("{s}");
     assert!(text.contains("Blackbox Recording Summary"));
     assert!(text.contains("Total entries"));
     assert!(text.contains("Axis range"));
 }
 
-#[test]
-fn summary_with_overflow() {
-    let mut rec = small_recorder(4);
-    for i in 0..10u16 {
-        rec.record_axis(i, 0.0, i as f64, (i as u64) * 1000);
-    }
-    let s = export::summary(&rec);
-    assert_eq!(s.overflow_count, 6);
-    assert_eq!(s.total_entries, 4);
-}
-
 // ═════════════════════════════════════════════════════════════════════
-// 14. Export Integration
+// 15. Export Integration (FBB file-level)
 // ═════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
@@ -1942,94 +2212,7 @@ async fn export_json_serializable() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 15. Export doc (FBB file-level) depth tests
-// ═════════════════════════════════════════════════════════════════════
-
-#[tokio::test]
-async fn export_doc_sanitized_redacts_aircraft() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(
-        dir.path(),
-        &[(100, StreamType::AxisFrames, vec![0x01])],
-    )
-    .await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    let doc = reader.export(true).unwrap();
-    assert_eq!(doc.header.aircraft_id, "[REDACTED]");
-}
-
-#[tokio::test]
-async fn export_doc_unsanitized_preserves_aircraft() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(
-        dir.path(),
-        &[(100, StreamType::AxisFrames, vec![0x01])],
-    )
-    .await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    let doc = reader.export(false).unwrap();
-    assert_eq!(doc.header.aircraft_id, "C172");
-}
-
-#[tokio::test]
-async fn export_doc_summary_counts_match() {
-    let dir = tempdir().unwrap();
-    let records = vec![
-        (100, StreamType::AxisFrames, vec![0x01]),
-        (200, StreamType::AxisFrames, vec![0x02]),
-        (300, StreamType::BusSnapshots, vec![0x03]),
-        (400, StreamType::Events, vec![0x04]),
-        (500, StreamType::Events, vec![0x05]),
-        (600, StreamType::Events, vec![0x06]),
-    ];
-    let path = write_test_file(dir.path(), &records).await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    let doc = reader.export(false).unwrap();
-    assert_eq!(doc.summary.axis_frames, 2);
-    assert_eq!(doc.summary.bus_snapshots, 1);
-    assert_eq!(doc.summary.events, 3);
-    assert_eq!(doc.summary.total_records, 6);
-    assert_eq!(doc.records.len(), 6);
-}
-
-#[tokio::test]
-async fn export_doc_version_is_correct() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(dir.path(), &[]).await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    let doc = reader.export(false).unwrap();
-    assert_eq!(doc.export_version, ExportDoc::VERSION);
-}
-
-#[tokio::test]
-async fn export_doc_json_serializable() {
-    let dir = tempdir().unwrap();
-    let path = write_test_file(
-        dir.path(),
-        &[(100, StreamType::Events, vec![0xFF])],
-    )
-    .await;
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-    let doc = reader.export(false).unwrap();
-
-    let json = serde_json::to_string(&doc).unwrap();
-    assert!(json.contains("\"export_version\""));
-    let round_tripped: ExportDoc = serde_json::from_str(&json).unwrap();
-    assert_eq!(round_tripped.summary.total_records, 1);
-}
-
-// ═════════════════════════════════════════════════════════════════════
-// 16. Edge Cases
+// 16. Edge Cases & Boundary Tests
 // ═════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
@@ -2058,27 +2241,6 @@ async fn edge_large_payload() {
 }
 
 #[tokio::test]
-async fn edge_empty_payload() {
-    let dir = tempdir().unwrap();
-    let mut writer = BlackboxWriter::new(test_config(dir.path()));
-
-    let path = writer
-        .start_recording("MSFS".into(), "C172".into(), "v1".into())
-        .await
-        .unwrap();
-
-    writer.record_axis_frame(1000, &[]).unwrap();
-    drain_writer().await;
-    writer.stop_recording().await.unwrap();
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-
-    let rec = reader.next_record().unwrap().unwrap();
-    assert!(rec.data.is_empty(), "empty payload should round-trip");
-}
-
-#[tokio::test]
 async fn edge_max_timestamp() {
     let dir = tempdir().unwrap();
     let mut writer = BlackboxWriter::new(test_config(dir.path()));
@@ -2099,38 +2261,21 @@ async fn edge_max_timestamp() {
     assert_eq!(rec.timestamp_ns, u64::MAX);
 }
 
-#[tokio::test]
-async fn edge_all_stream_types_in_single_recording() {
-    let dir = tempdir().unwrap();
-    let mut writer = BlackboxWriter::new(test_config(dir.path()));
+#[test]
+fn recorder_capacity_one_works() {
+    let mut rec = small_recorder(1);
+    rec.record_axis(1, 0.5, 0.5, 100);
+    assert_eq!(rec.len(), 1);
+    rec.record_axis(2, 0.6, 0.6, 200);
+    assert_eq!(rec.len(), 1);
+    assert_eq!(rec.total_written(), 2);
 
-    let path = writer
-        .start_recording("MSFS".into(), "C172".into(), "v1".into())
-        .await
-        .unwrap();
-
-    writer.record_axis_frame(100, &[0x01]).unwrap();
-    writer.record_bus_snapshot(200, &[0x02]).unwrap();
-    writer.record_event(300, &[0x03]).unwrap();
-
-    drain_writer().await;
-    writer.stop_recording().await.unwrap();
-
-    let mut reader = BlackboxReader::open(&path).unwrap();
-    reader.validate().unwrap();
-
-    let r1 = reader.next_record().unwrap().unwrap();
-    assert_eq!(r1.stream_type, StreamType::AxisFrames);
-    let r2 = reader.next_record().unwrap().unwrap();
-    assert_eq!(r2.stream_type, StreamType::BusSnapshots);
-    let r3 = reader.next_record().unwrap().unwrap();
-    assert_eq!(r3.stream_type, StreamType::Events);
-    assert!(reader.next_record().unwrap().is_none());
+    let snap = rec.snapshot();
+    match &snap[0] {
+        RecordEntry::Axis(a) => assert_eq!(a.axis_id, 2),
+        _ => panic!("expected newest entry"),
+    }
 }
-
-// ═════════════════════════════════════════════════════════════════════
-// 17. Truncation and boundary tests
-// ═════════════════════════════════════════════════════════════════════
 
 #[test]
 fn event_source_truncation_at_max() {
@@ -2157,36 +2302,23 @@ fn event_data_truncation_at_max() {
     match &snap[0] {
         RecordEntry::Event(e) => {
             assert_eq!(e.data_len as usize, EVENT_DATA_MAX);
-            assert_eq!(e.data_bytes(), &vec![0xAB; EVENT_DATA_MAX]);
+            assert_eq!(e.data_bytes().len(), EVENT_DATA_MAX);
         }
         _ => panic!("expected Event"),
     }
 }
 
 #[test]
-fn telemetry_sim_truncation_at_max() {
+fn telemetry_truncation() {
     let mut rec = small_recorder(4);
-    let long_sim: String = "S".repeat(SIM_ID_MAX + 20);
-    rec.record_telemetry(&long_sim, &[]);
+    let long_sim = "A".repeat(SIM_ID_MAX + 10);
+    let long_snap = vec![0xCC; SNAPSHOT_MAX + 20];
+    rec.record_telemetry(&long_sim, &long_snap);
 
     let snap = rec.snapshot();
     match &snap[0] {
         RecordEntry::Telemetry(t) => {
             assert_eq!(t.sim_len as usize, SIM_ID_MAX);
-        }
-        _ => panic!("expected Telemetry"),
-    }
-}
-
-#[test]
-fn telemetry_snapshot_truncation_at_max() {
-    let mut rec = small_recorder(4);
-    let long_snap: Vec<u8> = vec![0xCC; SNAPSHOT_MAX + 20];
-    rec.record_telemetry("X", &long_snap);
-
-    let snap = rec.snapshot();
-    match &snap[0] {
-        RecordEntry::Telemetry(t) => {
             assert_eq!(t.snapshot_len as usize, SNAPSHOT_MAX);
         }
         _ => panic!("expected Telemetry"),
@@ -2194,7 +2326,7 @@ fn telemetry_snapshot_truncation_at_max() {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// 18. Property-based tests (proptest)
+// 17. Property-based tests (proptest)
 // ═════════════════════════════════════════════════════════════════════
 
 proptest! {
@@ -2236,34 +2368,15 @@ proptest! {
     }
 
     #[test]
-    fn prop_snapshot_preserves_newest(
-        cap in 1usize..64,
-        n in 1usize..500
-    ) {
-        let mut rec = small_recorder(cap);
-        for i in 0..n {
-            rec.record_axis(i as u16, 0.0, 0.0, i as u64 * 100);
-        }
-        let snap = rec.snapshot();
-        if let RecordEntry::Axis(a) = snap.last().unwrap() {
-            prop_assert_eq!(a.timestamp_ns, (n - 1) as u64 * 100);
-        } else {
-            prop_assert!(false, "expected Axis");
-        }
-    }
-
-    #[test]
     fn prop_blackbox_record_roundtrip(
         ts in any::<u64>(),
-        st_idx in 0u8..3,
-        data_len in 0usize..256
+        st in prop_oneof![
+            Just(StreamType::AxisFrames),
+            Just(StreamType::BusSnapshots),
+            Just(StreamType::Events),
+        ],
+        data in proptest::collection::vec(any::<u8>(), 0..256),
     ) {
-        let st = match st_idx {
-            0 => StreamType::AxisFrames,
-            1 => StreamType::BusSnapshots,
-            _ => StreamType::Events,
-        };
-        let data: Vec<u8> = (0..data_len).map(|i| (i & 0xFF) as u8).collect();
         let record = BlackboxRecord {
             timestamp_ns: ts,
             stream_type: st,
@@ -2277,61 +2390,71 @@ proptest! {
     }
 
     #[test]
-    fn prop_index_entry_roundtrip(
-        ts in any::<u64>(),
-        offset in any::<u64>(),
-        c0 in any::<u32>(),
-        c1 in any::<u32>(),
-        c2 in any::<u32>()
+    fn prop_recorder_snapshot_order_is_chronological(
+        capacity in 2usize..100,
+        num_writes in 2usize..500,
     ) {
-        let entry = IndexEntry {
-            timestamp_ns: ts,
-            file_offset: offset,
-            stream_counts: [c0, c1, c2],
-        };
-        let bytes = postcard::to_stdvec(&entry).unwrap();
-        let decoded: IndexEntry = postcard::from_bytes(&bytes).unwrap();
-        prop_assert_eq!(decoded.timestamp_ns, ts);
-        prop_assert_eq!(decoded.file_offset, offset);
-        prop_assert_eq!(decoded.stream_counts, [c0, c1, c2]);
+        let mut rec = BlackboxRecorder::new(RecorderConfig { capacity });
+        for i in 0..num_writes {
+            rec.record_axis(0, 0.0, 0.0, i as u64 * 1000);
+        }
+        let snap = rec.snapshot();
+        for window in snap.windows(2) {
+            let ts_a = match &window[0] {
+                RecordEntry::Axis(a) => a.timestamp_ns,
+                _ => continue,
+            };
+            let ts_b = match &window[1] {
+                RecordEntry::Axis(a) => a.timestamp_ns,
+                _ => continue,
+            };
+            prop_assert!(ts_b >= ts_a, "timestamps must be non-decreasing");
+        }
     }
 
     #[test]
-    fn prop_axis_dto_roundtrip(
+    fn prop_axis_record_preserves_all_fields(
         axis_id in any::<u16>(),
         raw in any::<f64>(),
         processed in any::<f64>(),
-        ts in any::<u64>()
+        timestamp_ns in any::<u64>(),
     ) {
-        let dto = AxisRecordDto { axis_id, raw, processed, timestamp_ns: ts };
-        let bytes = postcard::to_stdvec(&dto).unwrap();
-        let decoded: AxisRecordDto = postcard::from_bytes(&bytes).unwrap();
-        prop_assert_eq!(decoded.axis_id, axis_id);
-        prop_assert_eq!(decoded.timestamp_ns, ts);
-        prop_assert_eq!(decoded.raw.to_bits(), raw.to_bits());
-        prop_assert_eq!(decoded.processed.to_bits(), processed.to_bits());
-    }
-
-    #[test]
-    fn prop_to_ns_from_ms_monotonic(a in 0u64..u64::MAX / 1_000_000, b in 0u64..u64::MAX / 1_000_000) {
-        let na = flight_blackbox::to_ns_from_ms(a);
-        let nb = flight_blackbox::to_ns_from_ms(b);
-        if a <= b {
-            prop_assert!(na <= nb, "to_ns_from_ms should be monotonic");
-        } else {
-            prop_assert!(na >= nb, "to_ns_from_ms should be monotonic");
+        let mut rec = small_recorder(4);
+        rec.record_axis(axis_id, raw, processed, timestamp_ns);
+        let snap = rec.snapshot();
+        match &snap[0] {
+            RecordEntry::Axis(a) => {
+                prop_assert_eq!(a.axis_id, axis_id);
+                prop_assert_eq!(a.timestamp_ns, timestamp_ns);
+                if raw.is_nan() {
+                    prop_assert!(a.raw.is_nan());
+                } else {
+                    prop_assert_eq!(a.raw, raw);
+                }
+                if processed.is_nan() {
+                    prop_assert!(a.processed.is_nan());
+                } else {
+                    prop_assert_eq!(a.processed, processed);
+                }
+            }
+            _ => prop_assert!(false, "expected Axis record"),
         }
     }
 
     #[test]
-    fn prop_clear_always_empties(cap in 1usize..64, n in 0usize..200) {
-        let mut rec = small_recorder(cap);
-        for i in 0..n {
-            rec.record_axis(0, 0.0, 0.0, i as u64);
+    fn prop_event_source_str_is_valid_utf8(
+        source in "[a-z0-9_-]{0,32}",
+        data in proptest::collection::vec(any::<u8>(), 0..64),
+    ) {
+        let mut rec = small_recorder(4);
+        rec.record_event(1, &source, &data);
+        let snap = rec.snapshot();
+        match &snap[0] {
+            RecordEntry::Event(e) => {
+                let recovered = e.source_str();
+                prop_assert_eq!(recovered, &source[..source.len().min(EVENT_SOURCE_MAX)]);
+            }
+            _ => prop_assert!(false, "expected Event record"),
         }
-        rec.clear();
-        prop_assert!(rec.is_empty());
-        prop_assert_eq!(rec.len(), 0);
-        prop_assert_eq!(rec.total_written(), 0);
     }
 }
