@@ -19,6 +19,10 @@ tracing.workspace = true
 libc.workspace = true
 sha2.workspace = true
 hex.workspace = true
+rand.workspace = true
+ed25519-dalek.workspace = true
+rand_core.workspace = true
+subtle.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
