@@ -47,11 +47,14 @@ quirks:
 
 support:
   tier: 2
+  crate: flight-pedals
+  parser: parse_mfg_crosswind_report
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     MFG Crosswind V3 Rudder Pedals (circa 2020+). Premium aluminium-frame
     rudder pedals with roller bearings and adjustable clamp force. Successor
     to the V2 (crosswind-v2.yaml). PID 0x0003 is a community estimate from
-    the sequential MFG allocation; confirm with lsusb. Last reviewed: 2026-02.
+    the sequential MFG allocation; confirm with lsusb. Unified parser in
+    flight-pedals crate with calibration support. Last reviewed: 2026-02.

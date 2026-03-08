@@ -1318,6 +1318,11 @@ mod fault_detection_blackbox_tests;
 #[path = "tests/dinput_device_tests.rs"]
 mod dinput_device_tests;
 
+// FFB engine depth tests — force computation, safety, lifecycle, device, telemetry, RT
+#[cfg(test)]
+#[path = "tests/ffb_engine_depth_tests.rs"]
+mod ffb_engine_depth_tests;
+
 // Weather-to-FFB bridge depth tests
 #[cfg(test)]
 #[path = "tests/weather_ffb_depth_tests.rs"]

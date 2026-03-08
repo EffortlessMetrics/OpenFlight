@@ -46,6 +46,7 @@ pub const AXIS_CENTER: u16 = 32768;
 
 /// 8-way POV hat direction values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum PovDirection {
     Center = 0,
@@ -101,6 +102,7 @@ impl PovDirection {
 
 /// 4-way hat direction values (used on some Fighterstick secondary hats).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(u8)]
 pub enum FourWayHat {
     Center = 0,

@@ -1,0 +1,17 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcAcePedalsInputState {
+    axes: VpcAcePedalsAxes {
+        rudder: 0.5,
+        left_toe_brake: 0.0,
+        right_toe_brake: 0.0,
+    },
+    buttons: VpcAcePedalsButtons {
+        raw: [
+            0,
+            0,
+        ],
+    },
+}

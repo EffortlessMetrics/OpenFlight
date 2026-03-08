@@ -17,11 +17,16 @@ keywords = ["flight-sim", "openflight", "hotas", "ch-products"]
 
 [features]
 default = []
+serde = ["dep:serde"]
 
 [dependencies]
 flight-hid-support = { path = "../flight-hid-support" }
+serde = { workspace = true, optional = true }
 thiserror.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true
+
+[[example]]
+name = "ch_dump"

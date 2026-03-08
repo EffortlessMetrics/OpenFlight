@@ -850,4 +850,140 @@ mod tests {
             }
         )));
     }
+
+    // ── Gear LED round-trip / depth ──────────────────────────────────────────
+
+    #[test]
+    fn test_gear_led_all_color_combinations() {
+        let colors = [GearLedColor::Off, GearLedColor::Green, GearLedColor::Red];
+        for &left in &colors {
+            for &nose in &colors {
+                for &right in &colors {
+                    let leds = SwitchPanelGearLeds::ALL_OFF
+                        .set_left(left)
+                        .set_nose(nose)
+                        .set_right(right);
+
+                    // Verify each gear position independently
+                    let has_left_green = leds.raw() & gear_led_bits::LEFT_GREEN != 0;
+                    let has_left_red = leds.raw() & gear_led_bits::LEFT_RED != 0;
+                    match left {
+                        GearLedColor::Off => {
+                            assert!(!has_left_green && !has_left_red);
+                        }
+                        GearLedColor::Green => {
+                            assert!(has_left_green && !has_left_red);
+                        }
+                        GearLedColor::Red => {
+                            assert!(!has_left_green && has_left_red);
+                        }
+                    }
+
+                    // No color should set both green and red simultaneously
+                    let left_both = has_left_green && has_left_red;
+                    let nose_both = (leds.raw() & gear_led_bits::NOSE_GREEN != 0)
+                        && (leds.raw() & gear_led_bits::NOSE_RED != 0);
+                    let right_both = (leds.raw() & gear_led_bits::RIGHT_GREEN != 0)
+                        && (leds.raw() & gear_led_bits::RIGHT_RED != 0);
+                    assert!(!left_both && !nose_both && !right_both,
+                        "green+red should never be set simultaneously");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_gear_led_hid_report_roundtrip() {
+        // Build LED state, convert to HID report, verify byte layout
+        let leds = SwitchPanelGearLeds::ALL_OFF
+            .set_left(GearLedColor::Green)
+            .set_nose(GearLedColor::Red)
+            .set_right(GearLedColor::Green);
+        let report = leds.to_hid_report();
+
+        assert_eq!(report[0], 0x00, "report ID");
+        assert_eq!(report[1], leds.raw(), "LED byte");
+        assert_eq!(report.len(), SWITCH_PANEL_OUTPUT_BYTES);
+    }
+
+    #[test]
+    fn test_debounce_exact_boundary_timing() {
+        let period = Duration::from_millis(50);
+        let mut debounce = SwitchDebounce::new(period);
+        let t0 = Instant::now();
+
+        assert!(debounce.accept(0, t0));
+        // Exactly at the boundary: should still be rejected (< not <=)
+        assert!(!debounce.accept(0, t0 + period - Duration::from_nanos(1)));
+        // At exactly the period: should be accepted
+        assert!(debounce.accept(0, t0 + period));
+    }
+
+    #[test]
+    fn test_diff_with_debounce_rapid_toggle_suppressed() {
+        let debounce_period = Duration::from_millis(50);
+        let mut proto = SwitchPanelProtocol::new(debounce_period);
+        let t0 = Instant::now();
+
+        // First change: Master Battery on
+        let state_on = SwitchPanelSwitchState {
+            byte1: 0b0000_0001,
+            byte2: 0x00,
+        };
+        let events = proto.diff_with_debounce(&state_on, t0);
+        assert_eq!(events.len(), 1); // accepted
+
+        // Rapid toggle off within debounce period — debounced, and prev_state updated
+        let state_off = SwitchPanelSwitchState {
+            byte1: 0x00,
+            byte2: 0x00,
+        };
+        let events = proto.diff_with_debounce(&state_off, t0 + Duration::from_millis(10));
+        assert!(events.is_empty(), "should be suppressed by debounce");
+
+        // After debounce period, toggling back on should be accepted
+        let events = proto.diff_with_debounce(&state_on, t0 + Duration::from_millis(60));
+        assert_eq!(events.len(), 1);
+    }
+
+    #[test]
+    fn test_switch_state_all_individual_switches_toggle() {
+        // Verify each toggle switch independently responds to its bit
+        let switches: &[(&str, u8, fn(&SwitchPanelSwitchState) -> bool)] = &[
+            ("MASTER_BAT", 0, |s| s.master_battery()),
+            ("MASTER_ALT", 1, |s| s.master_alternator()),
+            ("AVIONICS", 2, |s| s.avionics_master()),
+            ("FUEL_PUMP", 3, |s| s.fuel_pump()),
+            ("DE_ICE", 4, |s| s.de_ice()),
+            ("PITOT_HEAT", 5, |s| s.pitot_heat()),
+            ("COWL_FLAPS", 6, |s| s.cowl_flaps_closed()),
+            ("PANEL_LIGHT", 7, |s| s.panel_light()),
+        ];
+
+        for (name, bit, accessor) in switches {
+            let data = [0x00u8, 1 << bit, 0x00];
+            let state = parse_switch_panel_input(&data).unwrap();
+            assert!(
+                accessor(&state),
+                "switch {name} (bit {bit}) should be on"
+            );
+
+            // All other switches should be off
+            let data_off = [0x00u8, 0x00, 0x00];
+            let state_off = parse_switch_panel_input(&data_off).unwrap();
+            assert!(
+                !accessor(&state_off),
+                "switch {name} should be off when bit is clear"
+            );
+        }
+    }
+
+    #[test]
+    fn test_switch_panel_malformed_report_extra_bytes_ok() {
+        // Reports longer than minimum should still parse (extra bytes ignored)
+        let data = [0x00u8, 0b0000_0001, 0b0000_0001, 0xFF, 0xFF];
+        let state = parse_switch_panel_input(&data).unwrap();
+        assert!(state.master_battery());
+        assert!(state.gear_down());
+    }
 }

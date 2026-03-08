@@ -1,0 +1,22 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: json
+---
+{
+  "capabilities": [
+    "EmitPanel",
+    "WriteBlackbox",
+    {
+      "FileSystem": {
+        "paths": [
+          "/opt/panels/config"
+        ]
+      }
+    }
+  ],
+  "description": null,
+  "name": "custom-panel-driver",
+  "plugin_type": "Native",
+  "signature": "Unsigned",
+  "version": "0.5.0"
+}

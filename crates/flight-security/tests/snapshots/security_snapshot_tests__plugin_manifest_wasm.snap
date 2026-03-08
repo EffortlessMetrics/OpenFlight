@@ -1,0 +1,22 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: json
+---
+{
+  "capabilities": [
+    "ReadBus",
+    "ReadDeviceHealth"
+  ],
+  "description": "Real-time traffic overlay for VFR navigation",
+  "name": "traffic-overlay",
+  "plugin_type": "Wasm",
+  "signature": {
+    "Signed": {
+      "issuer": "OpenFlight Plugin Authority",
+      "subject": "traffic-overlay-dev@example.com",
+      "valid_from": 1700000000,
+      "valid_until": 1731536000
+    }
+  },
+  "version": "1.2.0"
+}

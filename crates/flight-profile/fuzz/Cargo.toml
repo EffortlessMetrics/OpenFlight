@@ -44,3 +44,9 @@ name = "fuzz_profile_toml"
 path = "fuzz_targets/fuzz_profile_toml.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_profile_migration"
+path = "fuzz_targets/fuzz_profile_migration.rs"
+test = false
+doc = false
