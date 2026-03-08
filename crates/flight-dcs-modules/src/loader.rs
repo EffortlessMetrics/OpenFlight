@@ -88,6 +88,19 @@ impl ModuleLoader {
         names.sort_unstable();
         names
     }
+
+    /// Return all loaded modules whose [`DcsModule::version`] equals `version`.
+    pub fn modules_with_version(&self, version: &str) -> Vec<&DcsModule> {
+        self.modules
+            .values()
+            .filter(|m| m.version.as_deref() == Some(version))
+            .collect()
+    }
+
+    /// Iterate over all loaded modules (unordered).
+    pub fn all_modules(&self) -> impl Iterator<Item = &DcsModule> {
+        self.modules.values()
+    }
 }
 
 impl Default for ModuleLoader {

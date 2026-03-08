@@ -1,0 +1,8 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: config
+---
+axis_only: true
+use_basic_profile: true
+skip_power_checks: false
+minimal_mode: true

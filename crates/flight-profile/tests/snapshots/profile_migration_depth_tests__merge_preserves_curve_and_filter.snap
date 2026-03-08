@@ -1,0 +1,37 @@
+---
+source: crates/flight-profile/tests/profile_migration_depth_tests.rs
+expression: merged
+---
+{
+  "schema": "flight.profile/1",
+  "sim": "xplane",
+  "aircraft": null,
+  "axes": {
+    "pitch": {
+      "deadzone": 0.03,
+      "expo": 0.5,
+      "slew_rate": 1.0,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 0.5,
+          "output": 0.5
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": {
+        "alpha": 0.3,
+        "spike_threshold": 0.05,
+        "max_spike_count": 3
+      }
+    }
+  },
+  "pof_overrides": null
+}

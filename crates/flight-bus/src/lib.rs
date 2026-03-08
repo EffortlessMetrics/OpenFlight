@@ -30,6 +30,7 @@ pub mod replay;
 pub mod routing;
 pub mod snapshot;
 pub mod telemetry_aggregator;
+pub mod topic_routing;
 pub mod types;
 
 // Re-export main types for convenience
@@ -53,13 +54,18 @@ pub use publisher::{BusPublisher, PublisherError, Subscriber, SubscriberId, Subs
 pub use replay::{ReplayConfig, ReplayIterator, TelemetryRecord, TelemetryRecording};
 pub use routing::{
     BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
-    EventRouter as RoutingEventRouter, RouteId, RouteInfo, RouteMatches, RoutePattern, SourceType,
+    EventRouter as RoutingEventRouter, MAX_SUBSCRIBERS, RouteId, RouteInfo, RouteMatches,
+    RoutePattern, SourceType, SubscriberInfo, SubscriberStatus, Topic,
 };
 pub use snapshot::{
     AircraftConfig, BusSnapshot, EngineData, Environment, HeloData, Kinematics, LightsConfig,
     Navigation,
 };
 pub use telemetry_aggregator::{BusTelemetry, TelemetryAggregator, TopicMetrics};
+pub use topic_routing::{
+    BackpressurePolicy, BusStatistics, BusStatisticsSnapshot, DispatchSummary, EnqueueResult,
+    EventDomain, FilteredSubscriber, FilteredSubscriberSet, TopicFilter,
+};
 pub use types::{
     AircraftId, AutopilotState, BusTypeError, GForce, GearPosition, GearState, Mach, Percentage,
     SimId, ValidatedAngle, ValidatedSpeed,

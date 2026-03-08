@@ -26,3 +26,4 @@ tokio = { workspace = true, features = ["net", "time", "macros", "rt"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 approx = { workspace = true }
 proptest = { workspace = true }
+serde_json = { workspace = true }

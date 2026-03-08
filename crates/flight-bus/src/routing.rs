@@ -19,6 +19,12 @@ pub const MAX_ROUTES: usize = 64;
 /// Maximum number of matched destinations returned by a single `route_event`.
 pub const MAX_MATCHES: usize = 16;
 
+/// Maximum expected size of `BusEvent` in bytes (two cache lines).
+///
+/// If the struct grows beyond this, consider boxing large payloads or
+/// splitting hot/cold fields to preserve cache efficiency.
+pub const MAX_BUS_EVENT_BYTES: usize = 128;
+
 /// Tolerance for floating-point comparison in `changed_only` filtering.
 const CHANGED_EPSILON: f64 = 1e-9;
 
@@ -33,6 +39,24 @@ pub enum SourceType {
     Simulator,
     Internal,
     /// Wildcard — matches any source type.
+    Any,
+}
+
+/// Topic categories for event routing.
+///
+/// Events are classified into topics so subscribers can filter by category.
+/// `Any` matches all topics (wildcard).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Topic {
+    /// Telemetry data from simulators (airspeed, altitude, attitude, etc.).
+    Telemetry,
+    /// Control commands (axis movements, button presses, FFB commands).
+    Commands,
+    /// Lifecycle events (connect, disconnect, session start/stop).
+    Lifecycle,
+    /// Diagnostic and health-check events.
+    Diagnostics,
+    /// Wildcard — matches any topic.
     Any,
 }
 
@@ -83,7 +107,8 @@ impl RouteId {
 /// Pattern used to match incoming events to routes.
 ///
 /// All fields support wildcard semantics: [`SourceType::Any`] matches every
-/// source type, and `None` for `source_id` / `event_kind` matches any value.
+/// source type, [`Topic::Any`] matches every topic, and `None` for
+/// `source_id` / `event_kind` matches any value.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RoutePattern {
     pub source_type: SourceType,
@@ -91,6 +116,8 @@ pub struct RoutePattern {
     pub source_id: Option<u32>,
     /// Optional event kind filter. `None` matches any kind.
     pub event_kind: Option<EventKind>,
+    /// Topic filter. [`Topic::Any`] matches all topics.
+    pub topic: Topic,
 }
 
 impl RoutePattern {
@@ -101,12 +128,30 @@ impl RoutePattern {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
+        }
+    }
+
+    /// A pattern that matches events for a specific topic.
+    #[must_use]
+    pub fn for_topic(topic: Topic) -> Self {
+        Self {
+            source_type: SourceType::Any,
+            source_id: None,
+            event_kind: None,
+            topic,
         }
     }
 
     /// Check whether this pattern matches the given event attributes.
     #[inline]
-    fn matches(&self, source_type: SourceType, source_id: u32, kind: EventKind) -> bool {
+    fn matches(
+        &self,
+        source_type: SourceType,
+        source_id: u32,
+        kind: EventKind,
+        topic: Topic,
+    ) -> bool {
         // Source type: Any matches everything, otherwise exact match.
         if self.source_type != SourceType::Any && self.source_type != source_type {
             return false;
@@ -121,6 +166,10 @@ impl RoutePattern {
         if let Some(expected_kind) = self.event_kind
             && expected_kind != kind
         {
+            return false;
+        }
+        // Topic: Any matches everything.
+        if self.topic != Topic::Any && self.topic != topic {
             return false;
         }
         true
@@ -216,6 +265,8 @@ pub struct BusEvent {
     pub source_id: u32,
     /// Kind of event.
     pub kind: EventKind,
+    /// Topic category for routing.
+    pub topic: Topic,
     /// Delivery priority.
     pub priority: EventPriority,
     /// Timestamp in microseconds (monotonic).
@@ -235,14 +286,52 @@ impl BusEvent {
         timestamp_us: u64,
         payload: EventPayload,
     ) -> Self {
+        let topic = Self::infer_topic(kind);
         Self {
             id: NEXT_EVENT_ID.fetch_add(1, Ordering::Relaxed),
             source_type,
             source_id,
             kind,
+            topic,
             priority,
             timestamp_us,
             payload,
+        }
+    }
+
+    /// Create a new event with an explicit topic override.
+    #[must_use]
+    pub fn with_topic(
+        source_type: SourceType,
+        source_id: u32,
+        kind: EventKind,
+        topic: Topic,
+        priority: EventPriority,
+        timestamp_us: u64,
+        payload: EventPayload,
+    ) -> Self {
+        debug_assert!(topic != Topic::Any, "Topic::Any is for route patterns only");
+        Self {
+            id: NEXT_EVENT_ID.fetch_add(1, Ordering::Relaxed),
+            source_type,
+            source_id,
+            kind,
+            topic,
+            priority,
+            timestamp_us,
+            payload,
+        }
+    }
+
+    /// Infer topic from event kind (default mapping).
+    #[inline]
+    fn infer_topic(kind: EventKind) -> Topic {
+        match kind {
+            EventKind::TelemetryFrame => Topic::Telemetry,
+            EventKind::AxisUpdate | EventKind::ButtonPress | EventKind::ButtonRelease => {
+                Topic::Commands
+            }
+            EventKind::SystemStatus => Topic::Diagnostics,
         }
     }
 }
@@ -358,20 +447,72 @@ impl RouteState {
 }
 
 // ---------------------------------------------------------------------------
+// Subscriber lifecycle (allocation-free)
+// ---------------------------------------------------------------------------
+
+/// Maximum number of tracked subscribers.
+pub const MAX_SUBSCRIBERS: usize = 32;
+
+/// State of a subscriber in the bus lifecycle.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubscriberStatus {
+    /// Subscriber is active and receiving events.
+    Active,
+    /// Subscriber has been suspended (temporarily not receiving).
+    Suspended,
+    /// Subscriber has been detected as crashed/unresponsive.
+    Crashed,
+}
+
+/// Per-subscriber lifecycle info tracked by the router.
+#[derive(Debug, Clone, Copy)]
+pub struct SubscriberInfo {
+    /// Destination ID (matches route destination).
+    pub destination: u32,
+    /// Current lifecycle status.
+    pub status: SubscriberStatus,
+    /// Timestamp of last successful delivery (microseconds).
+    pub last_delivery_us: u64,
+    /// Count of consecutive delivery failures.
+    pub consecutive_failures: u16,
+    /// Total events routed to this subscriber.
+    pub total_routed: u64,
+    /// Total events dropped for this subscriber.
+    pub total_dropped: u64,
+}
+
+impl SubscriberInfo {
+    const EMPTY: Self = Self {
+        destination: 0,
+        status: SubscriberStatus::Active,
+        last_delivery_us: 0,
+        consecutive_failures: 0,
+        total_routed: 0,
+        total_dropped: 0,
+    };
+}
+
+/// Threshold of consecutive failures before marking a subscriber as crashed.
+const CRASH_THRESHOLD: u16 = 100;
+
+// ---------------------------------------------------------------------------
 // EventRouter
 // ---------------------------------------------------------------------------
 
 /// Allocation-free event router.
 ///
-/// Supports up to [`MAX_ROUTES`] concurrent routes. Pattern matching,
-/// value filtering, changed-only suppression, debounce, rate limiting,
-/// and priority-aware backpressure are all performed without heap allocation.
+/// Supports up to [`MAX_ROUTES`] concurrent routes and [`MAX_SUBSCRIBERS`]
+/// tracked subscribers. Pattern matching, topic-based filtering, value
+/// filtering, changed-only suppression, debounce, rate limiting, and
+/// priority-aware backpressure are all performed without heap allocation.
 pub struct EventRouter {
     routes: [Option<Route>; MAX_ROUTES],
     states: [RouteState; MAX_ROUTES],
     route_count: usize,
     next_id: u32,
     backpressure_percent: u8,
+    subscribers: [Option<SubscriberInfo>; MAX_SUBSCRIBERS],
+    subscriber_count: usize,
 }
 
 impl EventRouter {
@@ -384,6 +525,8 @@ impl EventRouter {
             route_count: 0,
             next_id: 1,
             backpressure_percent: 0,
+            subscribers: [None; MAX_SUBSCRIBERS],
+            subscriber_count: 0,
         }
     }
 
@@ -415,11 +558,12 @@ impl EventRouter {
 
     /// Remove a route by its [`RouteId`]. Returns `true` if found and removed.
     pub fn remove_route(&mut self, id: RouteId) -> bool {
-        for slot in &mut self.routes {
-            if let Some(route) = slot
+        for i in 0..MAX_ROUTES {
+            if let Some(route) = &self.routes[i]
                 && route.id == id
             {
-                *slot = None;
+                self.routes[i] = None;
+                self.states[i] = RouteState::EMPTY;
                 self.route_count -= 1;
                 return true;
             }
@@ -464,6 +608,142 @@ impl EventRouter {
         self.backpressure_percent
     }
 
+    // -- subscriber lifecycle -------------------------------------------------
+
+    /// Register a subscriber for lifecycle tracking.
+    ///
+    /// Returns `true` if registered, `false` if at capacity.
+    pub fn register_subscriber(&mut self, destination: u32) -> bool {
+        let mut empty_slot = None;
+        for (i, sub) in self.subscribers.iter().enumerate() {
+            if let Some(s) = sub {
+                if s.destination == destination {
+                    return true; // Already registered.
+                }
+            } else if empty_slot.is_none() {
+                empty_slot = Some(i);
+            }
+        }
+        match empty_slot {
+            Some(i) => {
+                self.subscribers[i] = Some(SubscriberInfo {
+                    destination,
+                    ..SubscriberInfo::EMPTY
+                });
+                self.subscriber_count += 1;
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// Unregister a subscriber and remove all its routes.
+    pub fn unregister_subscriber(&mut self, destination: u32) {
+        for sub in &mut self.subscribers {
+            if let Some(s) = sub
+                && s.destination == destination
+            {
+                *sub = None;
+                self.subscriber_count -= 1;
+                break;
+            }
+        }
+        // Remove routes targeting this destination and clear state.
+        for i in 0..MAX_ROUTES {
+            if let Some(route) = &self.routes[i]
+                && route.destination == destination
+            {
+                self.routes[i] = None;
+                self.states[i] = RouteState::EMPTY;
+                self.route_count -= 1;
+            }
+        }
+    }
+
+    /// Mark a subscriber as crashed (e.g., detected unresponsive).
+    ///
+    /// Crashed subscribers are skipped during routing but their routes
+    /// remain registered so they can be resumed.
+    pub fn mark_subscriber_crashed(&mut self, destination: u32) {
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Crashed;
+        }
+    }
+
+    /// Resume a previously crashed or suspended subscriber.
+    pub fn resume_subscriber(&mut self, destination: u32) {
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Active;
+            s.consecutive_failures = 0;
+        }
+    }
+
+    /// Suspend a subscriber (temporarily stop routing to it).
+    pub fn suspend_subscriber(&mut self, destination: u32) {
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.status = SubscriberStatus::Suspended;
+        }
+    }
+
+    /// Get the lifecycle info for a subscriber, if tracked.
+    #[must_use]
+    pub fn subscriber_info(&self, destination: u32) -> Option<&SubscriberInfo> {
+        self.subscribers
+            .iter()
+            .filter_map(|s| s.as_ref())
+            .find(|s| s.destination == destination)
+    }
+
+    /// Number of tracked subscribers.
+    #[inline]
+    #[must_use]
+    pub fn subscriber_count(&self) -> usize {
+        self.subscriber_count
+    }
+
+    /// Report a delivery failure for a subscriber.
+    ///
+    /// When consecutive failures exceed [`CRASH_THRESHOLD`], the subscriber
+    /// is automatically marked as crashed.
+    pub fn record_delivery_failure(&mut self, destination: u32) {
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.consecutive_failures = s.consecutive_failures.saturating_add(1);
+            s.total_dropped += 1;
+            if s.consecutive_failures >= CRASH_THRESHOLD {
+                s.status = SubscriberStatus::Crashed;
+            }
+        }
+    }
+
+    /// Report a successful delivery for a subscriber.
+    pub fn record_delivery_success(&mut self, destination: u32, timestamp_us: u64) {
+        if let Some(s) = self
+            .subscribers
+            .iter_mut()
+            .find_map(|sub| sub.as_mut().filter(|s| s.destination == destination))
+        {
+            s.consecutive_failures = 0;
+            s.last_delivery_us = timestamp_us;
+            s.total_routed += 1;
+        }
+    }
+
     /// Route an event through all active routes.
     ///
     /// Returns the set of matching destination IDs. This method **does not
@@ -488,8 +768,13 @@ impl EventRouter {
             // 1. Pattern match.
             if !route
                 .pattern
-                .matches(event.source_type, event.source_id, event.kind)
+                .matches(event.source_type, event.source_id, event.kind, event.topic)
             {
+                continue;
+            }
+
+            // 1b. Skip crashed/suspended subscribers.
+            if self.is_subscriber_inactive(route.destination) {
                 continue;
             }
 
@@ -536,6 +821,20 @@ impl EventRouter {
     }
 
     // -- private helpers (all inline, no allocation) --------------------------
+
+    /// Check if a subscriber (by destination) is inactive (crashed or suspended).
+    /// Returns `false` if the destination has no subscriber tracking entry
+    /// (untracked destinations are always routed to).
+    #[inline]
+    fn is_subscriber_inactive(&self, destination: u32) -> bool {
+        if self.subscriber_count == 0 {
+            return false;
+        }
+        self.subscribers
+            .iter()
+            .find_map(|sub| sub.as_ref().filter(|s| s.destination == destination))
+            .is_some_and(|s| s.status != SubscriberStatus::Active)
+    }
 
     #[inline]
     fn should_drop_for_backpressure(&self, priority: EventPriority) -> bool {
@@ -688,6 +987,7 @@ mod tests {
             source_type: SourceType::Device,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -704,6 +1004,7 @@ mod tests {
             source_type: SourceType::Simulator,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -733,6 +1034,7 @@ mod tests {
             source_type: SourceType::Any,
             source_id: Some(42),
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -749,6 +1051,7 @@ mod tests {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -765,6 +1068,7 @@ mod tests {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: Some(EventKind::ButtonPress),
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -781,6 +1085,7 @@ mod tests {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -799,6 +1104,7 @@ mod tests {
             source_type: SourceType::Device,
             source_id: Some(7),
             event_kind: Some(EventKind::AxisUpdate),
+            topic: Topic::Any,
         };
         router.register_route(pattern, EventFilter::pass_all(), 10);
 
@@ -1361,6 +1667,7 @@ mod tests {
             source_type: SourceType::Device,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(p1, EventFilter::pass_all(), 10);
 
@@ -1369,6 +1676,7 @@ mod tests {
             source_type: SourceType::Simulator,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(p2, EventFilter::pass_all(), 20);
 
@@ -1553,5 +1861,259 @@ mod tests {
         assert!(!f.changed_only);
         assert_eq!(f.debounce_ms, 0);
         assert!(f.rate_limit_hz.is_none());
+    }
+
+    // -----------------------------------------------------------------------
+    // Topic-based routing
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn topic_infer_axis_is_commands() {
+        let e = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        assert_eq!(e.topic, Topic::Commands);
+    }
+
+    #[test]
+    fn topic_infer_telemetry_frame() {
+        let e = telemetry_event(1000);
+        assert_eq!(e.topic, Topic::Telemetry);
+    }
+
+    #[test]
+    fn topic_infer_system_status_is_diagnostics() {
+        let e = BusEvent::new(
+            SourceType::Internal,
+            0,
+            EventKind::SystemStatus,
+            EventPriority::Normal,
+            1000,
+            EventPayload::System { code: 1 },
+        );
+        assert_eq!(e.topic, Topic::Diagnostics);
+    }
+
+    #[test]
+    fn topic_filter_commands_only() {
+        let mut router = EventRouter::new();
+        router.register_route(
+            RoutePattern::for_topic(Topic::Commands),
+            EventFilter::pass_all(),
+            10,
+        );
+
+        let axis = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        let telem = telemetry_event(2000);
+        assert_eq!(router.route_event(&axis).len(), 1);
+        assert!(router.route_event(&telem).is_empty());
+    }
+
+    #[test]
+    fn topic_filter_telemetry_only() {
+        let mut router = EventRouter::new();
+        router.register_route(
+            RoutePattern::for_topic(Topic::Telemetry),
+            EventFilter::pass_all(),
+            10,
+        );
+
+        let axis = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        let telem = telemetry_event(2000);
+        assert!(router.route_event(&axis).is_empty());
+        assert_eq!(router.route_event(&telem).len(), 1);
+    }
+
+    #[test]
+    fn topic_any_matches_all_topics() {
+        let mut router = EventRouter::new();
+        router.register_route(
+            RoutePattern::for_topic(Topic::Any),
+            EventFilter::pass_all(),
+            10,
+        );
+
+        let axis = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        let telem = telemetry_event(2000);
+        let sys = BusEvent::new(
+            SourceType::Internal,
+            0,
+            EventKind::SystemStatus,
+            EventPriority::Normal,
+            3000,
+            EventPayload::System { code: 1 },
+        );
+        assert_eq!(router.route_event(&axis).len(), 1);
+        assert_eq!(router.route_event(&telem).len(), 1);
+        assert_eq!(router.route_event(&sys).len(), 1);
+    }
+
+    #[test]
+    fn topic_explicit_override() {
+        let e = BusEvent::with_topic(
+            SourceType::Device,
+            1,
+            EventKind::AxisUpdate,
+            Topic::Lifecycle,
+            EventPriority::Normal,
+            1000,
+            EventPayload::Axis {
+                axis_id: 0,
+                value: 0.5,
+            },
+        );
+        assert_eq!(e.topic, Topic::Lifecycle);
+    }
+
+    #[test]
+    fn topic_multiple_routes_different_topics() {
+        let mut router = EventRouter::new();
+        router.register_route(
+            RoutePattern::for_topic(Topic::Commands),
+            EventFilter::pass_all(),
+            10,
+        );
+        router.register_route(
+            RoutePattern::for_topic(Topic::Telemetry),
+            EventFilter::pass_all(),
+            20,
+        );
+
+        let axis = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        let m = router.route_event(&axis);
+        assert_eq!(m.len(), 1);
+        assert!(m.contains(10));
+        assert!(!m.contains(20));
+    }
+
+    #[test]
+    fn for_topic_helper() {
+        let p = RoutePattern::for_topic(Topic::Diagnostics);
+        assert_eq!(p.source_type, SourceType::Any);
+        assert!(p.source_id.is_none());
+        assert!(p.event_kind.is_none());
+        assert_eq!(p.topic, Topic::Diagnostics);
+    }
+
+    // -----------------------------------------------------------------------
+    // Subscriber lifecycle
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn register_subscriber() {
+        let mut router = EventRouter::new();
+        assert!(router.register_subscriber(10));
+        assert_eq!(router.subscriber_count(), 1);
+        let info = router.subscriber_info(10).unwrap();
+        assert_eq!(info.status, SubscriberStatus::Active);
+    }
+
+    #[test]
+    fn register_subscriber_idempotent() {
+        let mut router = EventRouter::new();
+        assert!(router.register_subscriber(10));
+        assert!(router.register_subscriber(10));
+        assert_eq!(router.subscriber_count(), 1);
+    }
+
+    #[test]
+    fn unregister_subscriber_removes_routes() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+        assert_eq!(router.route_count(), 2);
+
+        router.unregister_subscriber(10);
+        assert_eq!(router.subscriber_count(), 0);
+        assert_eq!(router.route_count(), 0);
+    }
+
+    #[test]
+    fn crashed_subscriber_not_routed() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+
+        let event = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        assert_eq!(router.route_event(&event).len(), 1);
+
+        router.mark_subscriber_crashed(10);
+        assert!(router.route_event(&event).is_empty());
+    }
+
+    #[test]
+    fn suspended_subscriber_not_routed() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+
+        let event = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        assert_eq!(router.route_event(&event).len(), 1);
+
+        router.suspend_subscriber(10);
+        assert!(router.route_event(&event).is_empty());
+    }
+
+    #[test]
+    fn resumed_subscriber_receives_events() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+
+        router.mark_subscriber_crashed(10);
+        let event = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        assert!(router.route_event(&event).is_empty());
+
+        router.resume_subscriber(10);
+        assert_eq!(router.route_event(&event).len(), 1);
+    }
+
+    #[test]
+    fn auto_crash_after_consecutive_failures() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+
+        for _ in 0..100 {
+            router.record_delivery_failure(10);
+        }
+
+        let info = router.subscriber_info(10).unwrap();
+        assert_eq!(info.status, SubscriberStatus::Crashed);
+        assert_eq!(info.consecutive_failures, 100);
+        assert_eq!(info.total_dropped, 100);
+    }
+
+    #[test]
+    fn delivery_success_resets_failures() {
+        let mut router = EventRouter::new();
+        router.register_subscriber(10);
+
+        for _ in 0..50 {
+            router.record_delivery_failure(10);
+        }
+        router.record_delivery_success(10, 1_000_000);
+
+        let info = router.subscriber_info(10).unwrap();
+        assert_eq!(info.consecutive_failures, 0);
+        assert_eq!(info.total_routed, 1);
+        assert_eq!(info.last_delivery_us, 1_000_000);
+    }
+
+    #[test]
+    fn untracked_destination_always_routed() {
+        let mut router = EventRouter::new();
+        // Register route for destination 10 without registering subscriber.
+        router.register_route(RoutePattern::any(), EventFilter::pass_all(), 10);
+
+        let event = axis_event(SourceType::Device, 1, 0.5, EventPriority::Normal, 1000);
+        assert_eq!(router.route_event(&event).len(), 1);
+    }
+
+    #[test]
+    fn subscriber_capacity_limit() {
+        let mut router = EventRouter::new();
+        for i in 0..MAX_SUBSCRIBERS {
+            assert!(router.register_subscriber(i as u32));
+        }
+        assert!(!router.register_subscriber(999));
     }
 }

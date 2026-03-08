@@ -11,11 +11,28 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
+/// Describes the type of a metric family.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MetricFamilyType {
+    Counter,
+    Gauge,
+    Histogram,
+}
+
+/// A named metric family with help text, following the Prometheus data model.
+#[derive(Debug, Clone)]
+pub struct MetricFamily {
+    pub name: String,
+    pub help: String,
+    pub family_type: MetricFamilyType,
+}
+
 /// Thread-safe metrics registry.
 pub struct MetricsRegistry {
     counters: RwLock<HashMap<String, AtomicU64>>,
     gauges: RwLock<HashMap<String, AtomicU64>>,
     histograms: RwLock<HashMap<String, Histogram>>,
+    families: RwLock<Vec<MetricFamily>>,
     max_histogram_samples: usize,
 }
 
@@ -31,6 +48,7 @@ impl MetricsRegistry {
             counters: RwLock::new(HashMap::new()),
             gauges: RwLock::new(HashMap::new()),
             histograms: RwLock::new(HashMap::new()),
+            families: RwLock::new(Vec::new()),
             max_histogram_samples: max_histogram_samples.max(1),
         }
     }
@@ -139,6 +157,34 @@ impl MetricsRegistry {
             .write()
             .expect("metrics histograms lock poisoned")
             .clear();
+        self.families
+            .write()
+            .expect("metrics families lock poisoned")
+            .clear();
+    }
+
+    /// Register a metric family with help text.
+    pub fn register_family(&self, name: &str, help: &str, family_type: MetricFamilyType) {
+        let mut families = self
+            .families
+            .write()
+            .expect("metrics families lock poisoned");
+        // Avoid duplicates by name.
+        if !families.iter().any(|f| f.name == name) {
+            families.push(MetricFamily {
+                name: name.to_string(),
+                help: help.to_string(),
+                family_type,
+            });
+        }
+    }
+
+    /// Return a snapshot of all registered metric families.
+    pub fn families(&self) -> Vec<MetricFamily> {
+        self.families
+            .read()
+            .expect("metrics families lock poisoned")
+            .clone()
     }
 }
 
@@ -378,5 +424,44 @@ mod tests {
         registry.reset();
         registry.reset(); // second reset should not panic
         assert!(registry.snapshot().is_empty());
+    }
+
+    // ── Metric families ───────────────────────────────────────────────────────
+
+    #[test]
+    fn register_and_list_families() {
+        let registry = MetricsRegistry::new();
+        registry.register_family("req_total", "Total requests", MetricFamilyType::Counter);
+        registry.register_family("temp", "Temperature", MetricFamilyType::Gauge);
+        let families = registry.families();
+        assert_eq!(families.len(), 2);
+        assert_eq!(families[0].name, "req_total");
+        assert_eq!(families[0].help, "Total requests");
+        assert_eq!(families[0].family_type, MetricFamilyType::Counter);
+        assert_eq!(families[1].family_type, MetricFamilyType::Gauge);
+    }
+
+    #[test]
+    fn duplicate_family_name_ignored() {
+        let registry = MetricsRegistry::new();
+        registry.register_family("x", "first", MetricFamilyType::Counter);
+        registry.register_family("x", "second", MetricFamilyType::Gauge);
+        let families = registry.families();
+        assert_eq!(families.len(), 1);
+        assert_eq!(families[0].help, "first");
+    }
+
+    #[test]
+    fn reset_clears_families() {
+        let registry = MetricsRegistry::new();
+        registry.register_family("a", "A", MetricFamilyType::Histogram);
+        registry.reset();
+        assert!(registry.families().is_empty());
+    }
+
+    #[test]
+    fn families_empty_by_default() {
+        let registry = MetricsRegistry::new();
+        assert!(registry.families().is_empty());
     }
 }

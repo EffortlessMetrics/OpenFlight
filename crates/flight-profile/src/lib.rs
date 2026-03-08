@@ -70,6 +70,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+pub mod defaults;
 pub mod editor;
 pub mod hot_reload;
 pub mod profile_compare;
