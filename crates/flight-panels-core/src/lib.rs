@@ -15,6 +15,9 @@ pub use protocol::{
 };
 
 #[cfg(test)]
+mod depth_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use flight_core::rules::Action;

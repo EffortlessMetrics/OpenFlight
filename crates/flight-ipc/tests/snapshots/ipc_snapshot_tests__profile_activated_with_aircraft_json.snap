@@ -1,0 +1,5 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: msg.to_json()
+---
+{"type":"ProfileActivated","name":"combat-f16","aircraft":"F-16C"}

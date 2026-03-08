@@ -1,0 +1,19 @@
+schema_version: "1"
+
+game:
+  name: "Invalid Tier Game"
+  id: invalid-tier-game
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+
+test_coverage:
+  hil: false
+
+support_tier: 7
