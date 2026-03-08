@@ -94,7 +94,12 @@ pub fn apply_telemetry(snapshot: &mut BusSnapshot, raw: &KspRawTelemetry) {
         snapshot.kinematics.ias = ias;
     }
 
-    snapshot.kinematics.vertical_speed = (raw.vertical_speed_mps * MPS_TO_FPM) as f32;
+    if raw.vertical_speed_mps.is_finite() {
+        let vs_fpm = (raw.vertical_speed_mps * MPS_TO_FPM) as f32;
+        if vs_fpm.is_finite() {
+            snapshot.kinematics.vertical_speed = vs_fpm;
+        }
+    }
 
     let g_clamped = raw.g_force.clamp(-20.0, 20.0) as f32;
     if let Ok(g) = GForce::new(g_clamped) {
@@ -102,15 +107,16 @@ pub fn apply_telemetry(snapshot: &mut BusSnapshot, raw: &KspRawTelemetry) {
     }
 
     // ── Environment ──────────────────────────────────────────────────────────
+    let altitude_ft = (raw.altitude_m * M_TO_FEET) as f32;
     snapshot.environment = Environment {
-        altitude: (raw.altitude_m * M_TO_FEET) as f32,
+        altitude: if altitude_ft.is_finite() { altitude_ft } else { 0.0 },
         ..Environment::default()
     };
 
     // ── Navigation ───────────────────────────────────────────────────────────
     snapshot.navigation = Navigation {
-        latitude: raw.latitude_deg,
-        longitude: raw.longitude_deg,
+        latitude: if raw.latitude_deg.is_finite() { raw.latitude_deg } else { 0.0 },
+        longitude: if raw.longitude_deg.is_finite() { raw.longitude_deg } else { 0.0 },
         ..Navigation::default()
     };
 
