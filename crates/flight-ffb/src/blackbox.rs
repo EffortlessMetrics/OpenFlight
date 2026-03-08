@@ -24,8 +24,11 @@
 //! Both are stored in the same ring buffer for unified fault analysis.
 
 use std::collections::VecDeque;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
+
+use crate::TimeSource;
 
 /// High-rate telemetry sample for blackbox recording
 ///
@@ -41,6 +44,7 @@ use thiserror::Error;
 /// # Example
 /// ```ignore
 /// let sample = BlackboxSample::new(
+///     Instant::now(),
 ///     "pitch_axis",
 ///     0.5,   // raw input
 ///     0.6,   // processed output
@@ -110,6 +114,7 @@ pub struct DeviceFlags {
 impl BlackboxSample {
     /// Create a new blackbox sample
     pub fn new(
+        timestamp: Instant,
         device_id: &str,
         raw_input: f32,
         processed_output: f32,
@@ -117,7 +122,7 @@ impl BlackboxSample {
         actual_torque_nm: f32,
     ) -> Self {
         Self {
-            timestamp: Instant::now(),
+            timestamp,
             device_id: device_id.to_string(),
             raw_input,
             processed_output,
@@ -130,6 +135,7 @@ impl BlackboxSample {
 
     /// Create a new blackbox sample with full details
     pub fn with_details(
+        timestamp: Instant,
         device_id: &str,
         raw_input: f32,
         processed_output: f32,
@@ -139,7 +145,7 @@ impl BlackboxSample {
         device_flags: DeviceFlags,
     ) -> Self {
         Self {
-            timestamp: Instant::now(),
+            timestamp,
             device_id: device_id.to_string(),
             raw_input,
             processed_output,
@@ -455,6 +461,8 @@ pub struct BlackboxRecorder {
     sample_count: u64,
     /// Actual capture rate (calculated)
     actual_capture_rate_hz: f32,
+    /// Time source for deterministic recording
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// Blackbox errors
@@ -484,6 +492,14 @@ impl BlackboxRecorder {
     /// - `max_entries` is 0
     /// - `max_entries` is less than `MIN_BUFFER_SIZE_3S_250HZ` (750) - warning only
     pub fn new(config: BlackboxConfig) -> BlackboxResult<Self> {
+        Self::with_time_source(config, Arc::new(crate::DefaultTimeSource))
+    }
+
+    /// Create new blackbox recorder with time source
+    pub fn with_time_source(
+        config: BlackboxConfig,
+        time_source: Arc<dyn TimeSource>,
+    ) -> BlackboxResult<Self> {
         if config.max_entries == 0 {
             return Err(BlackboxError::InvalidConfig {
                 message: "max_entries must be > 0".to_string(),
@@ -516,10 +532,11 @@ impl BlackboxRecorder {
             active_capture: None,
             completed_captures: Vec::new(),
             max_completed_captures: 10,
-            recording_start: Instant::now(),
+            recording_start: time_source.now(),
             last_sample_time: None,
             sample_count: 0,
             actual_capture_rate_hz: 0.0,
+            time_source,
         })
     }
 
@@ -534,6 +551,7 @@ impl BlackboxRecorder {
     /// # Example
     /// ```ignore
     /// let sample = BlackboxSample::new(
+    ///     Instant::now(),
     ///     "pitch_axis",
     ///     raw_input,
     ///     processed_output,
@@ -553,7 +571,7 @@ impl BlackboxRecorder {
     /// Captures BusSnapshot, FFB setpoints, and device status at ≥250 Hz
     pub fn record(&mut self, entry: BlackboxEntry) -> BlackboxResult<()> {
         // Track capture rate
-        let now = Instant::now();
+        let now = self.time_source.now();
         if let Some(last_time) = self.last_sample_time {
             let elapsed = now.duration_since(last_time);
             if elapsed.as_secs_f32() > 0.0 {
@@ -610,7 +628,7 @@ impl BlackboxRecorder {
         torque_nm: f32,
     ) -> BlackboxResult<()> {
         self.record(BlackboxEntry::AxisFrame {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             device_id: device_id.to_string(),
             raw_input,
             processed_output,
@@ -629,7 +647,7 @@ impl BlackboxRecorder {
         actual_torque: f32,
     ) -> BlackboxResult<()> {
         self.record(BlackboxEntry::FfbState {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             safety_state: safety_state.to_string(),
             torque_setpoint,
             actual_torque,
@@ -642,7 +660,7 @@ impl BlackboxRecorder {
     /// Captures device status
     pub fn record_device_status(&mut self, event_type: &str, details: &str) -> BlackboxResult<()> {
         self.record(BlackboxEntry::SystemEvent {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             event_type: event_type.to_string(),
             details: details.to_string(),
         })
@@ -703,7 +721,7 @@ impl BlackboxRecorder {
 
     /// Get recent entries from circular buffer
     pub fn get_recent_entries(&self, duration: Duration) -> Vec<&BlackboxEntry> {
-        let cutoff_time = Instant::now() - duration;
+        let cutoff_time = self.time_source.now() - duration;
         self.circular_buffer
             .iter()
             .filter(|entry| entry.timestamp() >= cutoff_time)
@@ -1517,6 +1535,7 @@ mod tests {
     #[test]
     fn test_blackbox_sample_creation() {
         let sample = BlackboxSample::new(
+            Instant::now(),
             "pitch_axis",
             0.5, // raw input
             0.6, // processed output
@@ -1545,6 +1564,7 @@ mod tests {
         };
 
         let sample = BlackboxSample::with_details(
+            Instant::now(),
             "roll_axis",
             -0.3,
             -0.25,
@@ -1567,7 +1587,7 @@ mod tests {
     fn test_record_sample_method() {
         let mut recorder = BlackboxRecorder::default();
 
-        let sample = BlackboxSample::new("test_axis", 0.5, 0.6, 5.0, 4.8);
+        let sample = BlackboxSample::new(Instant::now(), "test_axis", 0.5, 0.6, 5.0, 4.8);
         recorder.record_sample(sample).unwrap();
 
         assert_eq!(recorder.get_all_entries().len(), 1);
@@ -1593,7 +1613,7 @@ mod tests {
     /// **Validates: Requirement FFB-BLACKBOX-01**
     #[test]
     fn test_blackbox_sample_serialization() {
-        let sample = BlackboxSample::new("test_axis", 0.5, 0.6, 5.0, 4.8);
+        let sample = BlackboxSample::new(Instant::now(), "test_axis", 0.5, 0.6, 5.0, 4.8);
         let serialized = sample.serialize();
 
         assert!(serialized.contains("SAMPLE"));
