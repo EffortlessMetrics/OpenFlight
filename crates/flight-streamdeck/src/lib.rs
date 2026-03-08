@@ -20,26 +20,34 @@ use thiserror::Error;
 
 pub mod actions;
 pub mod api;
+pub mod button_manager;
 pub mod compatibility;
 pub mod device;
 pub mod layout;
+pub mod page_system;
 pub mod plugin;
 pub mod profiles;
 pub mod render;
+pub mod renderer;
 pub mod server;
 pub mod verify;
 
 pub use actions::{ActionCategory, ActionRegistry, ActionTemplate, builtin_templates};
 pub use api::{ApiError, StreamDeckApi};
+pub use button_manager::{
+    ButtonAction, ButtonConfig, ButtonDisplayState, ButtonEvent, ButtonManager,
+};
 pub use compatibility::{CompatibilityMatrix, VersionCompatibility, VersionRange};
 pub use device::{
     Brightness, DeviceInfo, DeviceManager, DialAction, DialEvent, KeyEvent, LcdStripInfo,
     LcdStripLayout, StreamDeckModel, TouchEvent, TouchType, validate_image_size,
 };
 pub use layout::{NavTarget, Page, PageLayout, ProfileLayout};
+pub use page_system::{ButtonPage, PageError, PageManager};
 pub use plugin::{PluginConfig, PluginError, StreamDeckPlugin};
 pub use profiles::{AircraftType, ProfileManager, SampleProfiles};
 pub use render::{IconRenderer, IconTheme, KeyIcon};
+pub use renderer::{ButtonImage, ButtonRenderer};
 pub use server::{ServerConfig, ServerError, StreamDeckServer};
 pub use verify::{EventRoundTrip, VerifyResult, VerifyTest};
 
