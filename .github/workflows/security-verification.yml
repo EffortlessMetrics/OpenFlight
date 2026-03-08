@@ -9,6 +9,10 @@ on:
     # Run security checks daily at 2 AM UTC
     - cron: '0 2 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -16,6 +20,7 @@ jobs:
   security-verification:
     name: Security Verification
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
     - name: Checkout code
@@ -146,6 +151,7 @@ jobs:
   windows-security-verification:
     name: Windows Security Verification
     runs-on: windows-latest
+    timeout-minutes: 20
     
     steps:
     - name: Checkout code
@@ -180,6 +186,7 @@ jobs:
   macos-security-verification:
     name: macOS Security Verification  
     runs-on: macos-latest
+    timeout-minutes: 20
     
     steps:
     - name: Checkout code
