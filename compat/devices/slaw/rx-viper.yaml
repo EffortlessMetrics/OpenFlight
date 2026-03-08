@@ -49,11 +49,14 @@ quirks:
       Apply separate curve/deadzone profiles for each axis.
 
 support:
-  tier: 3
+  tier: 2
+  crate: flight-pedals
+  parser: parse_slaw_viper_report
   test_coverage:
-    simulated: false
+    simulated: true
     hil: false
   notes: >
     Slaw Device RX Viper — boutique aluminium rudder pedals with long throw.
     Targeted at DCS and MSFS combat sims. VID 0x0483 / PID 0x5746 are
-    community estimates; confirm with lsusb. Last reviewed: 2026-06.
+    community estimates; confirm with lsusb. Unified parser in flight-pedals
+    crate with calibration support. Last reviewed: 2026-06.

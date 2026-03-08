@@ -36,8 +36,11 @@
 //!
 //! SDK reference: <https://developer.x-plane.com/sdk/>
 
+#[cfg(any(test, feature = "test-support"))]
+pub mod bridge;
+#[cfg(not(any(test, feature = "test-support")))]
 mod bridge;
-mod protocol;
+pub mod protocol;
 pub mod xplm;
 
 use bridge::Bridge;

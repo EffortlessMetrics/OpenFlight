@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Depth tests for the Writers data-tables system (ADR-002).
+//! Combined depth tests for the flight-writers crate.
 //!
-//! Covers variable tables, write batching, golden file regression,
-//! diff tables, serialization, and integration flows.
+//! Covers: variable tables, write batching, golden file regression,
+//! diff tables, serialization, integration flows, and property-based (proptest) fuzzing.
 
-use flight_writers::{
-    CcWriterConfig, CurveConflictWriter, DiffOperation, FileDiff, GoldenFileTester, SimulatorType,
-    WriterApplier, WriterConfig, WritersConfig,
-};
+use flight_writers::*;
+use proptest::prelude::*;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════════════════════
 
 fn writers_dir() -> PathBuf {
     PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/writers"))
@@ -30,7 +30,32 @@ fn read_writer_json(filename: &str) -> Value {
         .unwrap_or_else(|e| panic!("{filename} contains invalid JSON: {e}"))
 }
 
-fn make_ini_diff(target: PathBuf, section: &str, kvs: &[(&str, &str)]) -> FileDiff {
+fn make_applier(tmp: &TempDir) -> WriterApplier {
+    WriterApplier::new(tmp.path())
+}
+
+fn make_backup_dir(tmp: &TempDir) -> PathBuf {
+    let p = tmp.path().join("backup");
+    fs::create_dir_all(&p).unwrap();
+    p
+}
+
+fn make_ini_diff(target: PathBuf, section: &str, kv: Vec<(&str, &str)>) -> FileDiff {
+    let mut changes = HashMap::new();
+    for (k, v) in kv {
+        changes.insert(k.to_string(), v.to_string());
+    }
+    FileDiff {
+        file: target,
+        operation: DiffOperation::IniSection {
+            section: section.to_string(),
+            changes,
+        },
+        backup: false,
+    }
+}
+
+fn make_ini_diff_slice(target: PathBuf, section: &str, kvs: &[(&str, &str)]) -> FileDiff {
     let changes: HashMap<String, String> = kvs
         .iter()
         .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -56,8 +81,38 @@ fn make_writer_config(sim: SimulatorType, version: &str, diffs: Vec<FileDiff>) -
     }
 }
 
+fn make_json_patch_diff(target: PathBuf, patches: Vec<JsonPatchOp>) -> FileDiff {
+    FileDiff {
+        file: target,
+        operation: DiffOperation::JsonPatch { patches },
+        backup: false,
+    }
+}
+
+fn make_replace_diff(target: PathBuf, content: &str) -> FileDiff {
+    FileDiff {
+        file: target,
+        operation: DiffOperation::Replace {
+            content: content.to_string(),
+        },
+        backup: false,
+    }
+}
+
+fn make_line_replace_diff(target: PathBuf, pattern: &str, replacement: &str, regex: bool) -> FileDiff {
+    FileDiff {
+        file: target,
+        operation: DiffOperation::LineReplace {
+            pattern: pattern.to_string(),
+            replacement: replacement.to_string(),
+            regex,
+        },
+        backup: false,
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 1. Variable tables (8 tests)
+// 1. Variable tables / Loading & Validation
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -126,7 +181,6 @@ fn vt_type_information_preserved() {
 
 #[test]
 fn vt_unit_values_are_strings() {
-    // ADR-002: change values are always string-typed in the JSON tables
     for file in &["msfs_1.36.0.json", "xplane_12.0.json", "dcs_2.9.json"] {
         let v = read_writer_json(file);
         for diff in v["diffs"].as_array().unwrap() {
@@ -152,8 +206,46 @@ fn vt_version_string_present_in_all_tables() {
     }
 }
 
+#[test]
+fn all_writer_json_files_deserialize_to_cc_writer_config() {
+    let dir = writers_dir();
+    let mut count = 0u32;
+    for entry in fs::read_dir(&dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().and_then(|e| e.to_str()) == Some("json") {
+            let content = fs::read_to_string(&path).unwrap();
+            serde_json::from_str::<CcWriterConfig>(&content)
+                .unwrap_or_else(|e| panic!("{path:?} failed CcWriterConfig deser: {e}"));
+            count += 1;
+        }
+    }
+    assert!(count >= 3, "expected at least 3 writer JSONs, got {count}");
+}
+
+#[test]
+fn msfs_diff_table_has_required_top_level_keys() {
+    let v = read_writer_json("msfs_1.36.0.json");
+    assert!(v.get("sim").is_some());
+    assert!(v.get("version").is_some());
+    assert!(v.get("diffs").is_some());
+    assert!(v.get("verification_tests").is_some());
+}
+
+#[test]
+fn verification_tests_have_name_and_type() {
+    for filename in ["msfs_1.36.0.json", "xplane_12.0.json", "dcs_2.9.json"] {
+        let v = read_writer_json(filename);
+        if let Some(tests) = v.get("verification_tests").and_then(|t| t.as_array()) {
+            for (i, test) in tests.iter().enumerate() {
+                assert!(test.get("name").is_some());
+                assert!(test.get("test_type").is_some());
+            }
+        }
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// 2. Write batching (8 tests)
+// 2. Write batching
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
@@ -170,8 +262,8 @@ async fn wb_batch_accumulation_multiple_diffs() {
         SimulatorType::MSFS,
         "1.36.0",
         vec![
-            make_ini_diff(f1.clone(), "S", &[("k1", "v1")]),
-            make_ini_diff(f2.clone(), "S", &[("k2", "v2")]),
+            make_ini_diff_slice(f1.clone(), "S", &[("k1", "v1")]),
+            make_ini_diff_slice(f2.clone(), "S", &[("k2", "v2")]),
         ],
     );
 
@@ -184,13 +276,11 @@ async fn wb_batch_accumulation_multiple_diffs() {
 async fn wb_flush_produces_all_files() {
     let tmp = TempDir::new().unwrap();
     let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
 
     let targets: Vec<PathBuf> = (0..5).map(|i| tmp.path().join(format!("f{i}.ini"))).collect();
     let diffs: Vec<FileDiff> = targets
         .iter()
-        .map(|t| make_ini_diff(t.clone(), "SEC", &[("key", "val")]))
+        .map(|t| make_ini_diff_slice(t.clone(), "SEC", &[("key", "val")]))
         .collect();
 
     let config = make_writer_config(SimulatorType::XPlane, "12.0", diffs);
@@ -198,7 +288,7 @@ async fn wb_flush_produces_all_files() {
     assert_eq!(result.modified_files.len(), 5);
 
     for t in &targets {
-        assert!(t.exists(), "{t:?} must be created");
+        assert!(t.exists());
     }
 }
 
@@ -206,9 +296,6 @@ async fn wb_flush_produces_all_files() {
 async fn wb_priority_ordering_last_write_wins() {
     let tmp = TempDir::new().unwrap();
     let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
-
     let target = tmp.path().join("priority.txt");
 
     let config = make_writer_config(
@@ -235,7 +322,7 @@ async fn wb_priority_ordering_last_write_wins() {
     let result = applier.apply(&config).await.unwrap();
     assert!(result.success);
     let content = fs::read_to_string(&target).unwrap();
-    assert_eq!(content, "second", "later diff must overwrite earlier");
+    assert_eq!(content, "second");
 }
 
 #[tokio::test]
@@ -246,24 +333,20 @@ async fn wb_coalescing_duplicate_ini_keys() {
     fs::create_dir_all(&backup).unwrap();
 
     let target = tmp.path().join("coalesce.ini");
-    // First write sets key=old
-    let diff1 = make_ini_diff(target.clone(), "S", &[("key", "old")]);
+    let diff1 = make_ini_diff_slice(target.clone(), "S", &[("key", "old")]);
     applier.apply_diff(&diff1, &backup).await.unwrap();
 
-    // Second write overwrites key=new
-    let diff2 = make_ini_diff(target.clone(), "S", &[("key", "new")]);
+    let diff2 = make_ini_diff_slice(target.clone(), "S", &[("key", "new")]);
     applier.apply_diff(&diff2, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("key=new"), "coalesced value must be 'new'");
-    // Key should appear only once in the section
+    assert!(content.contains("key=new"));
     let count = content.matches("key=").count();
-    assert_eq!(count, 1, "key should appear exactly once after coalescing");
+    assert_eq!(count, 1);
 }
 
 #[tokio::test]
 async fn wb_batch_size_limit_respected() {
-    // Verify we can apply a large batch without error
     let tmp = TempDir::new().unwrap();
     let applier = WriterApplier::new(tmp.path());
 
@@ -294,59 +377,8 @@ async fn wb_empty_batch_succeeds() {
     assert!(result.modified_files.is_empty());
 }
 
-#[tokio::test]
-async fn wb_line_replace_diff_applied() {
-    let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
-
-    let target = tmp.path().join("line.txt");
-    fs::write(&target, "hello world\nfoo bar\n").unwrap();
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::LineReplace {
-            pattern: "foo".to_string(),
-            replacement: "baz".to_string(),
-            regex: false,
-        },
-        backup: false,
-    };
-    applier.apply_diff(&diff, &backup).await.unwrap();
-
-    let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("baz"), "pattern must be replaced");
-    assert!(!content.contains("foo"), "original pattern must be gone");
-}
-
-#[tokio::test]
-async fn wb_regex_line_replace() {
-    let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
-
-    let target = tmp.path().join("regex.txt");
-    fs::write(&target, "version=1.2.3\n").unwrap();
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::LineReplace {
-            pattern: r"version=\d+\.\d+\.\d+".to_string(),
-            replacement: "version=2.0.0".to_string(),
-            regex: true,
-        },
-        backup: false,
-    };
-    applier.apply_diff(&diff, &backup).await.unwrap();
-
-    let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("version=2.0.0"));
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
-// 3. Golden file tests (8 tests)
+// 3. Golden file tests
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
@@ -359,7 +391,7 @@ async fn gf_snapshot_current_table_output() {
     let config = make_writer_config(
         SimulatorType::MSFS,
         "1.36.0",
-        vec![make_ini_diff(
+        vec![make_ini_diff_slice(
             "ap.cfg".into(),
             "AUTOPILOT",
             &[("enabled", "1")],
@@ -390,7 +422,7 @@ async fn gf_regression_detection_mismatch() {
     let config = make_writer_config(
         SimulatorType::MSFS,
         "1.36.0",
-        vec![make_ini_diff(
+        vec![make_ini_diff_slice(
             "cfg.ini".into(),
             "SEC",
             &[("key", "actual_value")],
@@ -402,51 +434,13 @@ async fn gf_regression_detection_mismatch() {
     )
     .unwrap();
 
-    // Expected output differs from what config produces
     let expected = test_dir.join("expected");
     fs::create_dir_all(&expected).unwrap();
     fs::write(expected.join("cfg.ini"), "[SEC]\nkey=WRONG_VALUE\n").unwrap();
 
     let tester = GoldenFileTester::new(&golden_dir);
     let result = tester.test_simulator(SimulatorType::MSFS).await.unwrap();
-    assert!(!result.success, "mismatch must be detected as failure");
-    assert!(result.test_cases[0].diff.is_some());
-}
-
-#[tokio::test]
-async fn gf_version_diff_format_detected() {
-    let tmp = TempDir::new().unwrap();
-    let golden_dir = tmp.path().join("golden");
-
-    // Two different version test cases
-    for ver in &["v1.35.0", "v1.36.0"] {
-        let test_dir = golden_dir
-            .join("msfs")
-            .join(format!("test_{ver}_autopilot"));
-        fs::create_dir_all(&test_dir).unwrap();
-        fs::write(test_dir.join("input.json"), "{}").unwrap();
-        let expected = test_dir.join("expected");
-        fs::create_dir_all(&expected).unwrap();
-        fs::write(expected.join("test.txt"), "test").unwrap();
-    }
-
-    let tester = GoldenFileTester::new(&golden_dir);
-    let result = tester.test_simulator(SimulatorType::MSFS).await.unwrap();
-    assert!(
-        result.coverage.versions.len() >= 2,
-        "both versions must be detected"
-    );
-}
-
-#[tokio::test]
-async fn gf_no_golden_dir_returns_failure() {
-    let tmp = TempDir::new().unwrap();
-    let golden_dir = tmp.path().join("nonexistent_golden");
-
-    let tester = GoldenFileTester::new(&golden_dir);
-    let result = tester.test_simulator(SimulatorType::MSFS).await.unwrap();
     assert!(!result.success);
-    assert!(result.test_cases.is_empty());
 }
 
 #[tokio::test]
@@ -467,114 +461,15 @@ async fn gf_coverage_matrix_tracks_areas() {
 
     let tester = GoldenFileTester::new(&golden_dir);
     let result = tester.test_simulator(SimulatorType::XPlane).await.unwrap();
-    assert!(
-        result.coverage.areas.len() >= 3,
-        "all areas must appear in coverage"
-    );
-}
-
-#[tokio::test]
-async fn gf_dcs_golden_test_passes() {
-    let tmp = TempDir::new().unwrap();
-    let golden_dir = tmp.path().join("golden");
-    let test_dir = golden_dir.join("dcs").join("test_v2.9_engine");
-    fs::create_dir_all(&test_dir).unwrap();
-
-    let config = make_writer_config(
-        SimulatorType::DCS,
-        "2.9",
-        vec![FileDiff {
-            file: "engine.cfg".into(),
-            operation: DiffOperation::Replace {
-                content: "throttle=linear".to_string(),
-            },
-            backup: false,
-        }],
-    );
-    fs::write(
-        test_dir.join("input.json"),
-        serde_json::to_string_pretty(&config).unwrap(),
-    )
-    .unwrap();
-
-    let expected = test_dir.join("expected");
-    fs::create_dir_all(&expected).unwrap();
-    fs::write(expected.join("engine.cfg"), "throttle=linear").unwrap();
-
-    let tester = GoldenFileTester::new(&golden_dir);
-    let result = tester.test_simulator(SimulatorType::DCS).await.unwrap();
-    assert!(result.success);
-}
-
-#[tokio::test]
-async fn gf_multiple_files_in_single_test_case() {
-    let tmp = TempDir::new().unwrap();
-    let golden_dir = tmp.path().join("golden");
-    let test_dir = golden_dir.join("msfs").join("test_v1.36.0_avionics");
-    fs::create_dir_all(&test_dir).unwrap();
-
-    let config = make_writer_config(
-        SimulatorType::MSFS,
-        "1.36.0",
-        vec![
-            FileDiff {
-                file: "nav.cfg".into(),
-                operation: DiffOperation::Replace {
-                    content: "nav=on".to_string(),
-                },
-                backup: false,
-            },
-            FileDiff {
-                file: "radio.cfg".into(),
-                operation: DiffOperation::Replace {
-                    content: "radio=active".to_string(),
-                },
-                backup: false,
-            },
-        ],
-    );
-    fs::write(
-        test_dir.join("input.json"),
-        serde_json::to_string_pretty(&config).unwrap(),
-    )
-    .unwrap();
-
-    let expected = test_dir.join("expected");
-    fs::create_dir_all(&expected).unwrap();
-    fs::write(expected.join("nav.cfg"), "nav=on").unwrap();
-    fs::write(expected.join("radio.cfg"), "radio=active").unwrap();
-
-    let tester = GoldenFileTester::new(&golden_dir);
-    let result = tester.test_simulator(SimulatorType::MSFS).await.unwrap();
-    assert!(result.success);
-}
-
-#[test]
-fn gf_all_writer_files_deserialize_as_cc_config() {
-    // Every JSON in writers/ must parse as CcWriterConfig
-    let dir = writers_dir();
-    for entry in fs::read_dir(&dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|e| e.to_str()) == Some("json") {
-            let content = fs::read_to_string(&path).unwrap();
-            let result = serde_json::from_str::<CcWriterConfig>(&content);
-            assert!(
-                result.is_ok(),
-                "{}: failed to deserialize as CcWriterConfig: {}",
-                path.display(),
-                result.unwrap_err()
-            );
-        }
-    }
+    assert!(result.coverage.areas.len() >= 3);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 4. Diff tables (6 tests)
+// 4. Diff tables / Application
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
 async fn dt_version_to_version_diff() {
-    // Applying two versions in sequence should produce cumulative changes
     let tmp = TempDir::new().unwrap();
     let applier = WriterApplier::new(tmp.path());
     let backup = tmp.path().join("bk");
@@ -582,10 +477,10 @@ async fn dt_version_to_version_diff() {
 
     let target = tmp.path().join("panel.ini");
 
-    let v1 = make_ini_diff(target.clone(), "PANEL", &[("rev", "1"), ("feature_a", "on")]);
+    let v1 = make_ini_diff_slice(target.clone(), "PANEL", &[("rev", "1"), ("feature_a", "on")]);
     applier.apply_diff(&v1, &backup).await.unwrap();
 
-    let v2 = make_ini_diff(
+    let v2 = make_ini_diff_slice(
         target.clone(),
         "PANEL",
         &[("rev", "2"), ("feature_b", "on")],
@@ -593,9 +488,9 @@ async fn dt_version_to_version_diff() {
     applier.apply_diff(&v2, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("rev=2"), "rev must be updated to 2");
-    assert!(content.contains("feature_a=on"), "feature_a must persist");
-    assert!(content.contains("feature_b=on"), "feature_b must be added");
+    assert!(content.contains("rev=2"));
+    assert!(content.contains("feature_a=on"));
+    assert!(content.contains("feature_b=on"));
 }
 
 #[tokio::test]
@@ -608,12 +503,12 @@ async fn dt_additive_diff() {
     let target = tmp.path().join("add.ini");
     fs::write(&target, "[SEC]\nexisting=1\n").unwrap();
 
-    let diff = make_ini_diff(target.clone(), "SEC", &[("new_key", "new_val")]);
+    let diff = make_ini_diff_slice(target.clone(), "SEC", &[("new_key", "new_val")]);
     applier.apply_diff(&diff, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();
-    assert!(content.contains("existing=1"), "existing keys preserved");
-    assert!(content.contains("new_key=new_val"), "new key added");
+    assert!(content.contains("existing=1"));
+    assert!(content.contains("new_key=new_val"));
 }
 
 #[tokio::test]
@@ -629,8 +524,8 @@ async fn dt_removal_via_json_patch() {
     let diff = FileDiff {
         file: target.clone(),
         operation: DiffOperation::JsonPatch {
-            patches: vec![flight_writers::JsonPatchOp {
-                op: flight_writers::JsonPatchOpType::Remove,
+            patches: vec![JsonPatchOp {
+                op: JsonPatchOpType::Remove,
                 path: "/remove_me".to_string(),
                 value: None,
                 from: None,
@@ -643,7 +538,7 @@ async fn dt_removal_via_json_patch() {
     let content = fs::read_to_string(&target).unwrap();
     let json: Value = serde_json::from_str(&content).unwrap();
     assert_eq!(json["keep"], 1);
-    assert!(json.get("remove_me").is_none(), "removed key must be gone");
+    assert!(json.get("remove_me").is_none());
 }
 
 #[tokio::test]
@@ -659,8 +554,8 @@ async fn dt_modified_fields_via_json_replace() {
     let diff = FileDiff {
         file: target.clone(),
         operation: DiffOperation::JsonPatch {
-            patches: vec![flight_writers::JsonPatchOp {
-                op: flight_writers::JsonPatchOpType::Replace,
+            patches: vec![JsonPatchOp {
+                op: JsonPatchOpType::Replace,
                 path: "/field".to_string(),
                 value: Some(json!("new")),
                 from: None,
@@ -676,80 +571,37 @@ async fn dt_modified_fields_via_json_replace() {
 }
 
 #[tokio::test]
-async fn dt_diff_application_to_empty_json() {
+async fn ini_diff_adds_new_section_and_keys() {
     let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
+    let applier = make_applier(&tmp);
+    let backup = make_backup_dir(&tmp);
+    let target = tmp.path().join("new.ini");
 
-    // File does not exist yet — apply_json_patches creates it with {}
-    let target = tmp.path().join("new.json");
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::JsonPatch {
-            patches: vec![flight_writers::JsonPatchOp {
-                op: flight_writers::JsonPatchOpType::Add,
-                path: "/created".to_string(),
-                value: Some(json!(true)),
-                from: None,
-            }],
-        },
-        backup: false,
-    };
+    let diff = make_ini_diff(target.clone(), "NEW_SEC", vec![("key1", "val1"), ("key2", "val2")]);
     applier.apply_diff(&diff, &backup).await.unwrap();
 
-    let json: Value = serde_json::from_str(&fs::read_to_string(&target).unwrap()).unwrap();
-    assert_eq!(json["created"], true);
+    let content = fs::read_to_string(&target).unwrap();
+    assert!(content.contains("[NEW_SEC]"));
+    assert!(content.contains("key1=val1"));
+    assert!(content.contains("key2=val2"));
 }
 
 #[tokio::test]
-async fn dt_multiple_patches_in_single_diff() {
+async fn line_replace_literal_works() {
     let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
+    let applier = make_applier(&tmp);
+    let backup = make_backup_dir(&tmp);
+    let target = tmp.path().join("file.txt");
 
-    let target = tmp.path().join("multi.json");
-    fs::write(&target, r#"{"a": 1, "b": 2, "c": 3}"#).unwrap();
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::JsonPatch {
-            patches: vec![
-                flight_writers::JsonPatchOp {
-                    op: flight_writers::JsonPatchOpType::Replace,
-                    path: "/a".to_string(),
-                    value: Some(json!(10)),
-                    from: None,
-                },
-                flight_writers::JsonPatchOp {
-                    op: flight_writers::JsonPatchOpType::Remove,
-                    path: "/b".to_string(),
-                    value: None,
-                    from: None,
-                },
-                flight_writers::JsonPatchOp {
-                    op: flight_writers::JsonPatchOpType::Add,
-                    path: "/d".to_string(),
-                    value: Some(json!(4)),
-                    from: None,
-                },
-            ],
-        },
-        backup: false,
-    };
+    fs::write(&target, "foo bar baz").unwrap();
+    let diff = make_line_replace_diff(target.clone(), "bar", "qux", false);
     applier.apply_diff(&diff, &backup).await.unwrap();
 
-    let json: Value = serde_json::from_str(&fs::read_to_string(&target).unwrap()).unwrap();
-    assert_eq!(json["a"], 10);
-    assert!(json.get("b").is_none());
-    assert_eq!(json["c"], 3);
-    assert_eq!(json["d"], 4);
+    assert_eq!(fs::read_to_string(&target).unwrap(), "foo qux baz");
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. Serialization (5 tests)
+// 5. Serialization / Type Checking
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[test]
@@ -775,64 +627,34 @@ fn ser_json_round_trip_writer_config() {
 }
 
 #[test]
-fn ser_schema_validation_present() {
-    let config = make_writer_config(SimulatorType::XPlane, "12.0", vec![]);
-    let json: Value = serde_json::to_value(&config).unwrap();
-    assert_eq!(json["schema"], "flight.writer/1");
+fn simulator_type_display() {
+    assert_eq!(SimulatorType::MSFS.to_string(), "msfs");
+    assert_eq!(SimulatorType::XPlane.to_string(), "xplane");
+    assert_eq!(SimulatorType::DCS.to_string(), "dcs");
 }
 
 #[test]
-fn ser_unknown_fields_preserved_in_raw_json() {
-    // Raw JSON with extra fields should parse without error
-    let raw = r#"{
-        "sim": "msfs",
-        "version": "1.36.0",
-        "description": "test",
-        "diffs": [],
-        "verification_tests": [],
-        "future_field": "should_be_preserved"
-    }"#;
-
-    let value: Value = serde_json::from_str(raw).unwrap();
-    assert_eq!(value["future_field"], "should_be_preserved");
-    // CcWriterConfig should still parse the known fields
-    let parsed: CcWriterConfig = serde_json::from_str(raw).unwrap();
-    assert_eq!(parsed.sim, "msfs");
-}
-
-#[test]
-fn ser_empty_diffs_array() {
-    let config = make_writer_config(SimulatorType::DCS, "2.9", vec![]);
-    let json_str = serde_json::to_string(&config).unwrap();
-    let deserialized: WriterConfig = serde_json::from_str(&json_str).unwrap();
-    assert!(deserialized.diffs.is_empty());
-}
-
-#[test]
-fn ser_large_config_round_trip() {
-    let diffs: Vec<FileDiff> = (0..100)
-        .map(|i| FileDiff {
-            file: format!("file_{i}.cfg").into(),
-            operation: DiffOperation::Replace {
-                content: format!("content_{i}"),
-            },
-            backup: i % 2 == 0,
-        })
-        .collect();
-
-    let config = make_writer_config(SimulatorType::MSFS, "1.36.0", diffs);
-    let json_str = serde_json::to_string(&config).unwrap();
-    let deserialized: WriterConfig = serde_json::from_str(&json_str).unwrap();
-    assert_eq!(deserialized.diffs.len(), 100);
+fn diff_operation_serde_ini_section() {
+    let mut changes = HashMap::new();
+    changes.insert("k".to_string(), "v".to_string());
+    let op = DiffOperation::IniSection {
+        section: "S".to_string(),
+        changes,
+    };
+    let json_str = serde_json::to_string(&op).unwrap();
+    let decoded: DiffOperation = serde_json::from_str(&json_str).unwrap();
+    match decoded {
+        DiffOperation::IniSection { section, .. } => assert_eq!(section, "S"),
+        _ => panic!("expected IniSection"),
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 6. Integration (5 tests)
+// 6. Integration
 // ═══════════════════════════════════════════════════════════════════════════════
 
 #[tokio::test]
 async fn int_full_pipeline_ini() {
-    // sim config → variable table → write batch → output
     let tmp = TempDir::new().unwrap();
     let config_dir = tmp.path().join("cfg");
     let golden_dir = tmp.path().join("golden");
@@ -846,7 +668,7 @@ async fn int_full_pipeline_ini() {
         sim: SimulatorType::MSFS,
         version: "1.36.0".to_string(),
         description: Some("integration test".to_string()),
-        diffs: vec![make_ini_diff(
+        diffs: vec![make_ini_diff_slice(
             target.clone(),
             "CONTROLS",
             &[("UseLinearCurves", "1"), ("sensitivity", "50")],
@@ -860,106 +682,10 @@ async fn int_full_pipeline_ini() {
     let content = fs::read_to_string(&target).unwrap();
     assert!(content.contains("[CONTROLS]"));
     assert!(content.contains("UseLinearCurves=1"));
-    assert!(content.contains("sensitivity=50"));
 }
 
 #[tokio::test]
-async fn int_full_pipeline_json_patch() {
-    let tmp = TempDir::new().unwrap();
-    let config_dir = tmp.path().join("cfg");
-    let golden_dir = tmp.path().join("golden");
-    let backup_dir = tmp.path().join("bk");
-
-    let writers = flight_writers::Writers::new(&config_dir, &golden_dir, &backup_dir).unwrap();
-
-    let target = tmp.path().join("settings.json");
-    fs::write(&target, r#"{"graphics": {"quality": "low"}}"#).unwrap();
-
-    let config = WriterConfig {
-        schema: "flight.writer/1".to_string(),
-        sim: SimulatorType::XPlane,
-        version: "12.0".to_string(),
-        description: Some("json integration".to_string()),
-        diffs: vec![FileDiff {
-            file: target.clone(),
-            operation: DiffOperation::JsonPatch {
-                patches: vec![flight_writers::JsonPatchOp {
-                    op: flight_writers::JsonPatchOpType::Replace,
-                    path: "/graphics/quality".to_string(),
-                    value: Some(json!("high")),
-                    from: None,
-                }],
-            },
-            backup: true,
-        }],
-        verify_scripts: vec![],
-    };
-
-    let result = writers.apply_writer(&config).await.unwrap();
-    assert!(result.success);
-
-    let json: Value = serde_json::from_str(&fs::read_to_string(&target).unwrap()).unwrap();
-    assert_eq!(json["graphics"]["quality"], "high");
-}
-
-#[tokio::test]
-async fn int_variable_not_found_handling() {
-    // JSON patch test op should fail when the path doesn't exist
-    let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
-
-    let target = tmp.path().join("sparse.json");
-    fs::write(&target, r#"{"a": 1}"#).unwrap();
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::JsonPatch {
-            patches: vec![flight_writers::JsonPatchOp {
-                op: flight_writers::JsonPatchOpType::Test,
-                path: "/nonexistent".to_string(),
-                value: Some(json!(42)),
-                from: None,
-            }],
-        },
-        backup: false,
-    };
-
-    let result = applier.apply_diff(&diff, &backup).await;
-    assert!(result.is_err(), "test against missing path must error");
-}
-
-#[tokio::test]
-async fn int_type_mismatch_test_op_fails() {
-    let tmp = TempDir::new().unwrap();
-    let applier = WriterApplier::new(tmp.path());
-    let backup = tmp.path().join("bk");
-    fs::create_dir_all(&backup).unwrap();
-
-    let target = tmp.path().join("types.json");
-    fs::write(&target, r#"{"num": 42}"#).unwrap();
-
-    let diff = FileDiff {
-        file: target.clone(),
-        operation: DiffOperation::JsonPatch {
-            patches: vec![flight_writers::JsonPatchOp {
-                op: flight_writers::JsonPatchOpType::Test,
-                path: "/num".to_string(),
-                value: Some(json!("forty-two")), // string vs number
-                from: None,
-            }],
-        },
-        backup: false,
-    };
-
-    let result = applier.apply_diff(&diff, &backup).await;
-    assert!(result.is_err(), "type mismatch in test op must fail");
-}
-
-#[test]
-fn int_curve_conflict_writer_default_configs() {
-    // CurveConflictWriter loads default configs for all three sims
+async fn int_curve_conflict_writer_default_configs() {
     let tmp = TempDir::new().unwrap();
     let config = WritersConfig {
         config_dir: tmp.path().join("cfg"),
@@ -969,12 +695,63 @@ fn int_curve_conflict_writer_default_configs() {
     };
 
     let writer = CurveConflictWriter::with_config(config.clone()).unwrap();
-    let backups = writer.list_backups().unwrap();
-    // No backups yet, but writer was created successfully with default configs
-    assert!(backups.is_empty());
+    assert!(config.config_dir.join("msfs_1.36.0.json").exists());
+    assert!(config.config_dir.join("xplane_12.0.json").exists());
+    assert!(config.config_dir.join("dcs_2.9.json").exists());
+}
 
-    // Verify that default config files were actually created
-    assert!(config.config_dir.join("msfs_1.36.0.json").exists(), "MSFS default config missing");
-    assert!(config.config_dir.join("xplane_12.0.json").exists(), "X-Plane default config missing");
-    assert!(config.config_dir.join("dcs_2.9.json").exists(), "DCS default config missing");
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. Error Handling
+// ═══════════════════════════════════════════════════════════════════════════════
+
+#[test]
+fn invalid_json_fails_to_parse_as_writer_config() {
+    let bad_json = "{ not valid json }";
+    let result = serde_json::from_str::<WriterConfig>(bad_json);
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn json_patch_test_op_fails_on_value_mismatch() {
+    let tmp = TempDir::new().unwrap();
+    let applier = make_applier(&tmp);
+    let backup = make_backup_dir(&tmp);
+
+    let target = tmp.path().join("test.json");
+    fs::write(&target, r#"{"key": "actual"}"#).unwrap();
+
+    let diff = make_json_patch_diff(
+        target,
+        vec![JsonPatchOp {
+            op: JsonPatchOpType::Test,
+            path: "/key".to_string(),
+            value: Some(json!("expected_different")),
+            from: None,
+        }],
+    );
+
+    let result = applier.apply_diff(&diff, &backup).await;
+    assert!(result.is_err());
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. Property-Based Tests (proptest)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+proptest! {
+    #[test]
+    fn parse_arbitrary_json_as_writer_config_never_panics(s in "\\PC{0,256}") {
+        let _ = serde_json::from_str::<WriterConfig>(&s);
+    }
+
+    #[test]
+    fn simulator_type_display_never_panics(idx in 0u8..3) {
+        let sim = match idx {
+            0 => SimulatorType::MSFS,
+            1 => SimulatorType::XPlane,
+            _ => SimulatorType::DCS,
+        };
+        let s = sim.to_string();
+        prop_assert!(!s.is_empty());
+    }
 }

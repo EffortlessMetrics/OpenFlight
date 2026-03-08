@@ -1,0 +1,69 @@
+# VKB Gladiator NXT EVO (Right/Left)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). Most popular VKB consumer stick.
+# PID 0x0200 (Right), 0x0201 (Left) — confirmed via linux-hardware.org.
+schema_version: "1"
+
+device:
+  name: "VKB Gladiator NXT EVO"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0200   # Right variant; Left = 0x0201
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, yaw, mini_x, mini_y, throttle]
+    resolution_bits: 16
+  buttons: 34
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      VKBDevCfg can remap axes, buttons, and hats. Factory defaults assumed.
+  - id: TWIST_AXIS
+    description: >
+      Twist (yaw) axis can be physically locked on some models. When locked,
+      the yaw axis reports a fixed centre value (0x8000).
+  - id: SHIFT_LAYERS
+    description: >
+      Firmware supports up to 2 shift layers, expanding 34 physical buttons
+      to up to 64 logical buttons in VKBDevCfg.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB Gladiator NXT EVO — most popular consumer VKB stick. Full HID report
+    parser with axis normalization, button extraction, and hat decoding.
+    VID 0x231D, PID 0x0200/0x0201. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software for firmware updates and axis remapping.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Full axis and button support."
+  - game: "Microsoft Flight Simulator"
+    integration: direct_input
+    notes: "All axes and buttons recognized."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "All axes and buttons recognized."

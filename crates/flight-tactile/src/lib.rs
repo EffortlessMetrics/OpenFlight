@@ -11,9 +11,12 @@ pub mod bridge;
 pub mod channel;
 pub mod effects;
 pub mod engine;
+pub mod haptic_effect;
 pub mod mixer;
 pub mod presets;
 pub mod simshaker;
+pub mod tactile_zone;
+pub mod vibration_motor;
 
 use flight_core::Result;
 use parking_lot::RwLock;
@@ -24,9 +27,14 @@ pub use bridge::{TactileBridge, TactileConfig, TactileStats};
 pub use channel::{ChannelId, ChannelMapping, ChannelRouter};
 pub use effects::{EffectEvent, EffectIntensity, EffectProcessor, EffectType};
 pub use engine::{MAX_EFFECTS, TICK_RATE_HZ, TactileEffect, TactileEngine, TexturePattern};
+pub use haptic_effect::{HapticEffect, HapticPattern, HapticPulse, PatternPlayer};
 pub use mixer::{FrequencyBand, MixerOutput, TactileMixer};
 pub use presets::TactilePresets;
 pub use simshaker::{SimShakerBridge, SimShakerConfig, SimShakerStatus};
+pub use tactile_zone::{TactileRouter, TactileZone, ZoneConfig};
+pub use vibration_motor::{
+    MotorCommand, MotorConfig, MotorDirection, MotorType, ResponseCurve, VibrationMotor,
+};
 
 /// Main tactile manager for coordinating all tactile feedback
 pub struct TactileManager {

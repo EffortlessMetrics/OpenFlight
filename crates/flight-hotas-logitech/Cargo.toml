@@ -7,9 +7,9 @@ rust-version.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Logitech Extreme 3D Pro and related joystick driver for OpenFlight."
+description = "Logitech/Saitek flight peripheral drivers (Extreme 3D Pro, X56, rudder pedals, yoke, G940) for OpenFlight."
 readme = "README.md"
-keywords = ["flight-sim", "openflight", "logitech", "joystick", "extreme3dpro"]
+keywords = ["flight-sim", "openflight", "logitech", "joystick", "x56"]
 categories = ["hardware-support"]
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
@@ -25,3 +25,4 @@ flight-hid-support = { path = "../flight-hid-support" }
 [dev-dependencies]
 insta = { workspace = true }
 proptest = { workspace = true }
+serde_json = { workspace = true }

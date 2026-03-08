@@ -411,3 +411,280 @@ mod tests {
         assert_eq!(1u32 << AXIS_RESOLUTION_BITS, AXIS_MAX as u32);
     }
 }
+
+// ─── Unified report dispatcher ────────────────────────────────────────────────
+
+use crate::{
+    VpcAcePedalsInputState, VpcAcePedalsParseError, VpcAceTorqInputState, VpcAceTorqParseError,
+    VpcAlphaInputState, VpcAlphaParseError, VpcCm3ParseError, VpcCm3ThrottleInputState,
+    VpcMongoostInputState, VpcMongoostParseError, VpcPanel1InputState, VpcPanel1ParseError,
+    VpcPanel2InputState, VpcPanel2ParseError, VpcRotorTcsInputState, VpcRotorTcsParseError,
+    VpcWarBrdInputState, VpcWarBrdParseError, WarBrdVariant, parse_ace_pedals_report,
+    parse_ace_torq_report, parse_alpha_report, parse_cm3_throttle_report,
+    parse_mongoost_stick_report, parse_panel1_report, parse_panel2_report, parse_rotor_tcs_report,
+    parse_warbrd_report,
+};
+
+/// Error from the unified report dispatcher.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DispatchError {
+    /// The Product ID is not in the known VIRPIL device table.
+    UnknownPid(u16),
+    /// Alpha stick parser error.
+    Alpha(VpcAlphaParseError),
+    /// MongoosT-50CM3 stick parser error.
+    Mongoost(VpcMongoostParseError),
+    /// WarBRD base parser error.
+    WarBrd(VpcWarBrdParseError),
+    /// CM3 Throttle parser error.
+    Cm3Throttle(VpcCm3ParseError),
+    /// Control Panel 1 parser error.
+    Panel1(VpcPanel1ParseError),
+    /// Control Panel 2 parser error.
+    Panel2(VpcPanel2ParseError),
+    /// ACE Pedals parser error.
+    AcePedals(VpcAcePedalsParseError),
+    /// ACE Torq parser error.
+    AceTorq(VpcAceTorqParseError),
+    /// Rotor TCS Plus parser error.
+    RotorTcs(VpcRotorTcsParseError),
+}
+
+impl core::fmt::Display for DispatchError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::UnknownPid(pid) => write!(f, "unknown VIRPIL PID: 0x{pid:04X}"),
+            Self::Alpha(e) => write!(f, "{e}"),
+            Self::Mongoost(e) => write!(f, "{e}"),
+            Self::WarBrd(e) => write!(f, "{e}"),
+            Self::Cm3Throttle(e) => write!(f, "{e}"),
+            Self::Panel1(e) => write!(f, "{e}"),
+            Self::Panel2(e) => write!(f, "{e}"),
+            Self::AcePedals(e) => write!(f, "{e}"),
+            Self::AceTorq(e) => write!(f, "{e}"),
+            Self::RotorTcs(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+/// Parsed input state from any VIRPIL VPC device.
+///
+/// The dispatcher returns one of these variants based on the USB PID.
+#[derive(Debug, Clone, PartialEq)]
+pub enum VirpilInputState {
+    Alpha(VpcAlphaInputState),
+    Mongoost(VpcMongoostInputState),
+    WarBrd(VpcWarBrdInputState),
+    Cm3Throttle(VpcCm3ThrottleInputState),
+    Panel1(VpcPanel1InputState),
+    Panel2(VpcPanel2InputState),
+    AcePedals(VpcAcePedalsInputState),
+    AceTorq(VpcAceTorqInputState),
+    RotorTcs(VpcRotorTcsInputState),
+}
+
+/// Route a raw HID report to the correct VIRPIL device parser based on PID.
+///
+/// This is the primary entry point when the caller knows the USB PID but
+/// doesn't want to match on device family manually.
+///
+/// Alpha Prime grips are routed to the Alpha parser (identical protocol).
+pub fn dispatch_report(pid: u16, data: &[u8]) -> Result<VirpilInputState, DispatchError> {
+    match pid {
+        VIRPIL_CONSTELLATION_ALPHA_LEFT_PID
+        | VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID
+        | VIRPIL_CONSTELLATION_ALPHA_PRIME_RIGHT_PID => parse_alpha_report(data)
+            .map(VirpilInputState::Alpha)
+            .map_err(DispatchError::Alpha),
+
+        VIRPIL_MONGOOST_STICK_PID => parse_mongoost_stick_report(data)
+            .map(VirpilInputState::Mongoost)
+            .map_err(DispatchError::Mongoost),
+
+        VIRPIL_WARBRD_PID => parse_warbrd_report(data, WarBrdVariant::Original)
+            .map(VirpilInputState::WarBrd)
+            .map_err(DispatchError::WarBrd),
+
+        VIRPIL_WARBRD_D_PID => parse_warbrd_report(data, WarBrdVariant::D)
+            .map(VirpilInputState::WarBrd)
+            .map_err(DispatchError::WarBrd),
+
+        VIRPIL_CM3_THROTTLE_PID => parse_cm3_throttle_report(data)
+            .map(VirpilInputState::Cm3Throttle)
+            .map_err(DispatchError::Cm3Throttle),
+
+        VIRPIL_PANEL1_PID => parse_panel1_report(data)
+            .map(VirpilInputState::Panel1)
+            .map_err(DispatchError::Panel1),
+
+        VIRPIL_PANEL2_PID => parse_panel2_report(data)
+            .map(VirpilInputState::Panel2)
+            .map_err(DispatchError::Panel2),
+
+        VIRPIL_ACE_PEDALS_PID => parse_ace_pedals_report(data)
+            .map(VirpilInputState::AcePedals)
+            .map_err(DispatchError::AcePedals),
+
+        VIRPIL_ACE_TORQ_PID => parse_ace_torq_report(data)
+            .map(VirpilInputState::AceTorq)
+            .map_err(DispatchError::AceTorq),
+
+        VIRPIL_ROTOR_TCS_PLUS_PID => parse_rotor_tcs_report(data)
+            .map(VirpilInputState::RotorTcs)
+            .map_err(DispatchError::RotorTcs),
+
+        _ => Err(DispatchError::UnknownPid(pid)),
+    }
+}
+
+#[cfg(test)]
+mod dispatch_tests {
+    use super::*;
+
+    fn make_5ax_report(axes: [u16; 5], buttons: [u8; 4]) -> Vec<u8> {
+        let mut data = vec![0x01u8];
+        for ax in &axes {
+            data.extend_from_slice(&ax.to_le_bytes());
+        }
+        data.extend_from_slice(&buttons);
+        data
+    }
+
+    fn make_cm3_report(axes: [u16; 6], buttons: [u8; 10]) -> Vec<u8> {
+        let mut data = vec![0x01u8];
+        for ax in &axes {
+            data.extend_from_slice(&ax.to_le_bytes());
+        }
+        data.extend_from_slice(&buttons);
+        data
+    }
+
+    fn make_pedals_report(axes: [u16; 3], buttons: [u8; 2]) -> Vec<u8> {
+        let mut data = vec![0x01u8];
+        for ax in &axes {
+            data.extend_from_slice(&ax.to_le_bytes());
+        }
+        data.extend_from_slice(&buttons);
+        data
+    }
+
+    fn make_torq_report(throttle: u16, buttons: [u8; 2]) -> Vec<u8> {
+        let mut data = vec![0x01u8];
+        data.extend_from_slice(&throttle.to_le_bytes());
+        data.extend_from_slice(&buttons);
+        data
+    }
+
+    #[test]
+    fn dispatch_alpha_left() {
+        let r = make_5ax_report([8192; 5], [0u8; 4]);
+        let state = dispatch_report(VIRPIL_CONSTELLATION_ALPHA_LEFT_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Alpha(_)));
+    }
+
+    #[test]
+    fn dispatch_alpha_prime_left() {
+        let r = make_5ax_report([0; 5], [0u8; 4]);
+        let state = dispatch_report(VIRPIL_CONSTELLATION_ALPHA_PRIME_LEFT_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Alpha(_)));
+    }
+
+    #[test]
+    fn dispatch_mongoost() {
+        let r = make_5ax_report([0; 5], [0u8; 4]);
+        let state = dispatch_report(VIRPIL_MONGOOST_STICK_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Mongoost(_)));
+    }
+
+    #[test]
+    fn dispatch_warbrd_original() {
+        let r = make_5ax_report([0; 5], [0u8; 4]);
+        let state = dispatch_report(VIRPIL_WARBRD_PID, &r).unwrap();
+        match state {
+            VirpilInputState::WarBrd(s) => {
+                assert_eq!(s.variant, WarBrdVariant::Original);
+            }
+            _ => panic!("expected WarBrd variant"),
+        }
+    }
+
+    #[test]
+    fn dispatch_warbrd_d() {
+        let r = make_5ax_report([0; 5], [0u8; 4]);
+        let state = dispatch_report(VIRPIL_WARBRD_D_PID, &r).unwrap();
+        match state {
+            VirpilInputState::WarBrd(s) => {
+                assert_eq!(s.variant, WarBrdVariant::D);
+            }
+            _ => panic!("expected WarBrd-D variant"),
+        }
+    }
+
+    #[test]
+    fn dispatch_cm3_throttle() {
+        let r = make_cm3_report([0; 6], [0u8; 10]);
+        let state = dispatch_report(VIRPIL_CM3_THROTTLE_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Cm3Throttle(_)));
+    }
+
+    #[test]
+    fn dispatch_panel1() {
+        let mut r = vec![0x01u8];
+        r.extend_from_slice(&[0u8; 6]);
+        let state = dispatch_report(VIRPIL_PANEL1_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Panel1(_)));
+    }
+
+    #[test]
+    fn dispatch_panel2() {
+        let mut r = vec![0x01u8];
+        r.extend_from_slice(&[0u8; 10]);
+        let state = dispatch_report(VIRPIL_PANEL2_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::Panel2(_)));
+    }
+
+    #[test]
+    fn dispatch_ace_pedals() {
+        let r = make_pedals_report([8192; 3], [0u8; 2]);
+        let state = dispatch_report(VIRPIL_ACE_PEDALS_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::AcePedals(_)));
+    }
+
+    #[test]
+    fn dispatch_ace_torq() {
+        let r = make_torq_report(8192, [0u8; 2]);
+        let state = dispatch_report(VIRPIL_ACE_TORQ_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::AceTorq(_)));
+    }
+
+    #[test]
+    fn dispatch_rotor_tcs() {
+        let mut r = vec![0x01u8];
+        for _ in 0..3 {
+            r.extend_from_slice(&8192u16.to_le_bytes());
+        }
+        r.extend_from_slice(&[0u8; 4]);
+        let state = dispatch_report(VIRPIL_ROTOR_TCS_PLUS_PID, &r).unwrap();
+        assert!(matches!(state, VirpilInputState::RotorTcs(_)));
+    }
+
+    #[test]
+    fn dispatch_unknown_pid() {
+        let r = vec![0x01u8; 23];
+        let err = dispatch_report(0xFFFF, &r).unwrap_err();
+        assert!(matches!(err, DispatchError::UnknownPid(0xFFFF)));
+    }
+
+    #[test]
+    fn dispatch_error_display() {
+        let err = DispatchError::UnknownPid(0xBEEF);
+        assert!(err.to_string().contains("0xBEEF"));
+    }
+
+    #[test]
+    fn dispatch_too_short_report() {
+        let r = vec![0x01u8; 2];
+        let err = dispatch_report(VIRPIL_CM3_THROTTLE_PID, &r).unwrap_err();
+        assert!(matches!(err, DispatchError::Cm3Throttle(_)));
+    }
+}

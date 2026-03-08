@@ -7,9 +7,9 @@
 //! See `docs/reference/hotas-claims.md` for protocol verification status.
 
 use crate::device_support::{
-    LOGITECH_VENDOR_ID, MAD_CATZ_VENDOR_ID, SAITEK_VENDOR_ID, X52_PID, X52_PRO_PID, X55_STICK_PID,
-    X55_THROTTLE_PID, X56_LOGITECH_STICK_PID, X56_MADCATZ_STICK_PID, X56_MADCATZ_THROTTLE_PID,
-    X65F_PID,
+    LOGITECH_VENDOR_ID, MAD_CATZ_VENDOR_ID, SAITEK_VENDOR_ID, X52_PID, X52_PRO_PID, X52_V1_PID,
+    X55_STICK_PID, X55_THROTTLE_PID, X56_LOGITECH_STICK_PID, X56_MADCATZ_STICK_PID,
+    X56_MADCATZ_THROTTLE_PID, X65F_PID,
 };
 
 /// Saitek/Logitech HOTAS device types.
@@ -65,7 +65,7 @@ impl SaitekHotasType {
         // Check Saitek VID (original devices)
         if vid == SAITEK_VENDOR_ID {
             return match pid {
-                X52_PID => Some(Self::X52),
+                X52_V1_PID | X52_PID => Some(Self::X52),
                 X52_PRO_PID => Some(Self::X52Pro),
                 X65F_PID => Some(Self::X65F),
                 // X55 may also appear under Saitek VID on some units
@@ -200,6 +200,14 @@ mod tests {
         assert!(SaitekHotasType::X52.is_unified_topology());
         assert!(SaitekHotasType::X52.is_stick());
         assert!(!SaitekHotasType::X52.is_throttle());
+    }
+
+    #[test]
+    fn test_x52_v1_detection() {
+        assert_eq!(
+            SaitekHotasType::from_vid_pid(SAITEK_VENDOR_ID, X52_V1_PID),
+            Some(SaitekHotasType::X52)
+        );
     }
 
     #[test]

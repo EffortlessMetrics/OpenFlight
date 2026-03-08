@@ -1,0 +1,14 @@
+schema_version: "1"
+
+device:
+  name: "No Caps Device"
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x5555
+    product_id: 0x6666
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false

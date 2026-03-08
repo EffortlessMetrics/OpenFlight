@@ -244,4 +244,18 @@ mod tests {
         assert!(result.batch_result.is_none());
         assert!(result.parse_errors.is_empty());
     }
+
+    #[test]
+    fn snapshot_script_result_success() {
+        let input = "set-deadzone roll 0.05\nset-expo pitch 0.3\nenable-axis yaw\n";
+        let result = run_script(Cursor::new(input), false);
+        insta::assert_snapshot!("script_result_success", format!("{:#?}", result));
+    }
+
+    #[test]
+    fn snapshot_script_parse_errors() {
+        let input = "not-a-command foo\nset-deadzone roll bad_number\n";
+        let result = run_script(Cursor::new(input), false);
+        insta::assert_snapshot!("script_parse_errors", format!("{:#?}", result));
+    }
 }

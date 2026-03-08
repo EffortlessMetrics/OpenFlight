@@ -24,6 +24,7 @@ pub mod adapter_state;
 pub mod aircraft_db;
 pub mod aircraft_detection;
 pub mod auto_deploy;
+pub mod connection;
 pub mod control_injection;
 pub mod export_lua;
 pub mod installer;
@@ -44,6 +45,10 @@ pub use aircraft_detection::{
     detect_category,
 };
 pub use auto_deploy::{DeployResult, deploy_export_script, find_dcs_install};
+pub use connection::{
+    ConnectionTransitionError, DcsConnectionEvent, DcsConnectionPolicy, DcsConnectionState,
+    DcsSessionHealth,
+};
 pub use control_injection::{
     AircraftAxisMapping, Clickable, DcsActionType, DcsCommandDef, DcsControlCommand,
     DcsControlInjector, DcsDevice, DcsUdpSender, WireParseError, lookup_aircraft_axis,

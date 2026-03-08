@@ -1,0 +1,30 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: result
+---
+overall_status: Warning
+checks:
+  - name: File system access policy
+    category: FileSystemAccess
+    status: Warning
+    description: "Plugin 'nav-helper' has broad file system access"
+    details: "Allowed paths: /home/user/*, /tmp/*"
+    severity: Medium
+    remediation: Restrict file system access to specific directories
+audit_events:
+  - timestamp: 1700000000
+    event_type: FileAccess
+    component: nav-helper
+    description: Plugin accessed /home/user/.config/openflight/profiles
+    metadata: {}
+    severity: Low
+recommendations:
+  - title: Restrict plugin file system access
+    description: The nav-helper plugin has broad file system access permissions
+    priority: Medium
+    action_required: false
+    remediation_steps:
+      - Edit plugin manifest to specify exact paths
+      - Remove wildcard path patterns
+timestamp: 1700000000
+duration_ms: 55

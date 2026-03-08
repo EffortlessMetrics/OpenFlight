@@ -1,0 +1,10 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: output
+---
+AxisData
+DeviceEvents
+SimTelemetry
+ProfileChanges
+HealthStatus
+FfbStatus

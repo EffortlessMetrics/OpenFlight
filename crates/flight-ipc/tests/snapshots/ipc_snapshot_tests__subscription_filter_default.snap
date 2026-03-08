@@ -1,0 +1,8 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: filter
+---
+device_id: ~
+axis_id: ~
+min_interval_ms: ~
+changed_only: false
