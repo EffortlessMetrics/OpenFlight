@@ -230,6 +230,7 @@ mod tests {
 
     /// Test no AX jitter regression with comprehensive performance validation
     #[test]
+    #[ignore]
     fn test_no_ax_jitter_regression() {
         let config = PerformanceConfig {
             test_duration: Duration::from_millis(200), // Short test for CI

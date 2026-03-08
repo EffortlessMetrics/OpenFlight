@@ -1,0 +1,96 @@
+# Deb file manifest for Flight Hub Linux installer
+# Consumed by flight-installer-tests to validate packaging completeness.
+
+[metadata]
+platform = "linux"
+installer_type = "deb"
+install_prefix = "/"
+
+[control]
+package = "flight-hub"
+version = "0.1.0"
+section = "games"
+priority = "optional"
+architecture = "amd64"
+depends = "libc6 (>= 2.31), libdbus-1-3, libudev1"
+recommends = "rtkit"
+maintainer = "OpenFlight Team <contact@openflight.dev>"
+homepage = "https://github.com/EffortlessMetrics/OpenFlight"
+description = "Flight Hub daemon for flight simulation input management"
+
+[[files]]
+source = "usr/bin/flightd"
+destination = "/usr/bin/flightd"
+permissions = "755"
+required = true
+conffile = false
+
+[[files]]
+source = "usr/bin/flightctl"
+destination = "/usr/bin/flightctl"
+permissions = "755"
+required = true
+conffile = false
+
+[[files]]
+source = "usr/share/flight-hub/99-flight-hub.rules"
+destination = "/usr/share/flight-hub/99-flight-hub.rules"
+permissions = "644"
+required = true
+conffile = false
+
+[[files]]
+source = "usr/lib/systemd/user/flightd.service"
+destination = "/usr/lib/systemd/user/flightd.service"
+permissions = "644"
+required = true
+conffile = false
+
+[postinst]
+creates_udev_rules = true
+udev_rules_source = "/usr/share/flight-hub/99-flight-hub.rules"
+udev_rules_destination = "/etc/udev/rules.d/99-flight-hub.rules"
+adds_group_membership = true
+group_name = "input"
+reloads_udev = true
+
+[postrm]
+removes_udev_rules = true
+udev_rules_path = "/etc/udev/rules.d/99-flight-hub.rules"
+removes_system_config = true
+system_config_dir = "/etc/flight-hub"
+removes_system_data = true
+system_data_dir = "/var/lib/flightd"
+
+[systemd]
+unit_file = "/usr/lib/systemd/user/flightd.service"
+exec_start = "/usr/bin/flightd"
+type = "simple"
+restart = "on-failure"
+restart_sec = 5
+wanted_by = "default.target"
+user_mode = true
+
+[[uninstall.cleanup_paths]]
+path = "/usr/bin/flightd"
+type = "file"
+
+[[uninstall.cleanup_paths]]
+path = "/usr/bin/flightctl"
+type = "file"
+
+[[uninstall.cleanup_paths]]
+path = "/usr/share/flight-hub"
+type = "directory"
+
+[[uninstall.cleanup_paths]]
+path = "/usr/lib/systemd/user/flightd.service"
+type = "file"
+
+[[uninstall.preserved_paths]]
+path = "~/.config/flight-hub"
+reason = "User configuration"
+
+[[uninstall.preserved_paths]]
+path = "~/.local/share/flight-hub"
+reason = "User data"

@@ -1,0 +1,11 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 26
+expression: cfg
+---
+WritersConfig {
+    config_dir: "writers",
+    backup_dir: "backups",
+    max_backups: 10,
+    enable_verification: true,
+}

@@ -1,0 +1,23 @@
+schema_version: "1"
+
+game:
+  name: "Test Arcade Sim"
+  id: test-arcade
+  developer: "ArcadeDev"
+
+integration:
+  mechanism: "Plugin API"
+  crate: flight-dcs-export
+
+features:
+  telemetry_read: false
+  control_injection:
+    commands: true
+  force_feedback_translation: false
+  aircraft_detection: false
+
+test_coverage:
+  trace_replay: false
+  hil: false
+
+support_tier: 3

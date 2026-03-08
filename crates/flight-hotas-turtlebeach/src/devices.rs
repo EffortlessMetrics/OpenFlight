@@ -154,7 +154,7 @@ pub fn capabilities(device: VelocityOneDevice) -> DeviceCapabilities {
             toggle_switch_count: 7,
         },
         VelocityOneDevice::Flightstick => DeviceCapabilities {
-            axes: 5,
+            axes: 4,
             buttons: 16,
             hats: 1,
             resolution_bits: 12,
@@ -292,7 +292,7 @@ mod tests {
     #[test]
     fn test_flightstick_capabilities() {
         let caps = capabilities(VelocityOneDevice::Flightstick);
-        assert_eq!(caps.axes, 5);
+        assert_eq!(caps.axes, 4);
         assert_eq!(caps.hats, 1);
         assert!(!caps.has_leds);
         assert!(!caps.has_display);

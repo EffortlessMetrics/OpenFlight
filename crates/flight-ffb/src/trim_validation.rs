@@ -13,9 +13,10 @@
 //! - Replay reproducibility validation
 
 use crate::{
-    BlackboxConfig, BlackboxEntry, BlackboxRecorder, SetpointChange, SpringConfig, TrimController,
-    TrimLimits, TrimMode, TrimOutput,
+    BlackboxConfig, BlackboxEntry, BlackboxRecorder, DefaultTimeSource, SetpointChange,
+    SpringConfig, TimeSource, TrimController, TrimLimits, TrimMode, TrimOutput,
 };
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Trim validation configuration
@@ -96,11 +97,17 @@ impl Default for TrimValidationMetrics {
 pub struct TrimValidationSuite {
     config: TrimValidationConfig,
     blackbox: BlackboxRecorder,
+    time_source: Arc<dyn TimeSource>,
 }
 
 impl TrimValidationSuite {
     /// Create new trim validation suite
     pub fn new(config: TrimValidationConfig) -> Self {
+        Self::with_time_source(config, Arc::new(DefaultTimeSource))
+    }
+
+    /// Create new trim validation suite with a custom time source
+    pub fn with_time_source(config: TrimValidationConfig, time_source: Arc<dyn TimeSource>) -> Self {
         let blackbox_config = BlackboxConfig {
             max_entries: 50000, // Large buffer for validation
             pre_fault_duration: Duration::from_secs(5),
@@ -108,10 +115,14 @@ impl TrimValidationSuite {
             ..Default::default()
         };
 
-        let blackbox =
-            BlackboxRecorder::new(blackbox_config).expect("Failed to create blackbox recorder");
+        let blackbox = BlackboxRecorder::with_time_source(blackbox_config, time_source.clone())
+            .expect("Failed to create blackbox recorder");
 
-        Self { config, blackbox }
+        Self {
+            config,
+            blackbox,
+            time_source,
+        }
     }
 
     /// Run complete trim validation test suite
@@ -143,12 +154,12 @@ impl TrimValidationSuite {
 
     /// Test FFB rate limiting compliance
     fn test_ffb_rate_limiting(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             let limits = TrimLimits {
@@ -169,7 +180,7 @@ impl TrimValidationSuite {
             let mut max_observed_rate = 0.0f32;
 
             for i in 0..5000 {
-                let output = controller.update();
+                let output = controller.update_with_dt(0.001);
 
                 if let TrimOutput::ForceFeedback {
                     rate_nm_per_s,
@@ -182,7 +193,7 @@ impl TrimValidationSuite {
                     // Record in blackbox
                     self.blackbox
                         .record(BlackboxEntry::FfbState {
-                            timestamp: Instant::now(),
+                            timestamp: self.time_source.now(),
                             safety_state: "TRIM_TEST".to_string(),
                             torque_setpoint: setpoint_nm,
                             actual_torque: setpoint_nm,
@@ -200,9 +211,9 @@ impl TrimValidationSuite {
                     }
                 }
 
-                std::thread::sleep(sample_interval);
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -223,7 +234,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "FFB Rate Limiting".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -232,12 +243,12 @@ impl TrimValidationSuite {
 
     /// Test FFB jerk limiting compliance
     fn test_ffb_jerk_limiting(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             let limits = TrimLimits {
@@ -256,24 +267,23 @@ impl TrimValidationSuite {
 
             let mut previous_rate = 0.0f32;
             let mut max_observed_jerk = 0.0f32;
-            let mut last_tick = Instant::now();
+            let sample_interval = Duration::from_millis(1);
 
             for _ in 0..3000 {
-                let tick_dt = last_tick.elapsed().as_secs_f32().max(1e-6);
-                last_tick = Instant::now();
-                let output = controller.update();
+                let tick_dt = 0.001f32;
+                let output = controller.update_with_dt(tick_dt);
 
                 if let TrimOutput::ForceFeedback { rate_nm_per_s, .. } = output {
-                    // Jerk is enforced internally; record for metrics only (external dt is unreliable)
+                    // Jerk is enforced internally; record for metrics only
                     let jerk = (rate_nm_per_s - previous_rate).abs() / tick_dt;
                     max_observed_jerk = max_observed_jerk.max(jerk);
                     measurements.push(jerk);
                     previous_rate = rate_nm_per_s;
                 }
 
-                std::thread::sleep(Duration::from_millis(1));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -286,7 +296,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "FFB Jerk Limiting".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -295,12 +305,12 @@ impl TrimValidationSuite {
 
     /// Test that no torque steps occur during FFB setpoint changes
     fn test_ffb_no_torque_steps(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             let limits = TrimLimits {
@@ -319,15 +329,14 @@ impl TrimValidationSuite {
 
             let mut previous_output = 0.0f32;
             let mut torque_steps = 0u32;
-            let mut last_tick = Instant::now();
+            let sample_interval = Duration::from_millis(1);
 
             for i in 0..4000 {
-                let tick_dt = last_tick.elapsed().as_secs_f32().max(1e-6);
-                last_tick = Instant::now();
-                let output = controller.update();
+                let tick_dt = 0.001f32;
+                let output = controller.update_with_dt(tick_dt);
 
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
-                    // Validate no torque steps using actual elapsed dt
+                    // Validate no torque steps using fixed dt
                     if i > 0 {
                         if let Err(_) = controller.validate_no_torque_steps(
                             previous_output,
@@ -343,9 +352,9 @@ impl TrimValidationSuite {
                     previous_output = setpoint_nm;
                 }
 
-                std::thread::sleep(Duration::from_millis(1));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -365,7 +374,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "FFB No Torque Steps".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -374,12 +383,12 @@ impl TrimValidationSuite {
 
     /// Test FFB convergence accuracy
     fn test_ffb_convergence_accuracy(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             let target = 7.5f32;
@@ -395,9 +404,10 @@ impl TrimValidationSuite {
             let convergence_tolerance = 0.01f32; // 10mNm tolerance
             let mut converged = false;
             let mut convergence_time = None;
+            let sample_interval = Duration::from_millis(1);
 
             for _ in 0..10000 {
-                let output = controller.update();
+                let output = controller.update_with_dt(0.001);
 
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                     let error = (setpoint_nm - target).abs();
@@ -406,15 +416,15 @@ impl TrimValidationSuite {
                     // Check for convergence
                     if error < convergence_tolerance && !converged {
                         converged = true;
-                        convergence_time = Some(start_time.elapsed());
+                        convergence_time = Some(self.time_source.now().duration_since(start_time));
                     }
 
                     metrics.final_error_nm = error;
                 }
 
-                std::thread::sleep(Duration::from_millis(1));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -436,7 +446,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "FFB Convergence Accuracy".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -445,12 +455,12 @@ impl TrimValidationSuite {
 
     /// Test FFB setpoint overshoot behavior
     fn test_ffb_setpoint_overshoot(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             let target = 5.0f32;
@@ -467,9 +477,10 @@ impl TrimValidationSuite {
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             let mut max_overshoot = 0.0f32;
+            let sample_interval = Duration::from_millis(1);
 
             for _ in 0..5000 {
-                let output = controller.update();
+                let output = controller.update_with_dt(0.001);
 
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                     // Measure overshoot (setpoint exceeding target)
@@ -478,14 +489,14 @@ impl TrimValidationSuite {
                     measurements.push(overshoot);
                 }
 
-                std::thread::sleep(Duration::from_millis(1));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
 
-            // Overshoot should be bounded (allow up to 15% for discrete OS timer steps)
+            // Overshoot should be bounded
             let max_acceptable_overshoot = target * 0.15;
             if max_overshoot > max_acceptable_overshoot {
                 return Err(format!(
@@ -502,7 +513,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "FFB Setpoint Overshoot".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -511,12 +522,12 @@ impl TrimValidationSuite {
 
     /// Test spring freeze behavior for non-FFB devices
     fn test_spring_freeze_behavior(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::SpringCentered);
 
             let change = SetpointChange {
@@ -529,11 +540,11 @@ impl TrimValidationSuite {
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Verify spring is immediately frozen
-            let output = controller.update();
+            let output = controller.update_with_dt(0.001);
             if let TrimOutput::SpringCentered { frozen, .. } = output {
                 if !frozen {
                     return Err(
-                        "Spring should be frozen immediately after setpoint change".to_string()
+                        "Spring should be frozen immediately after setpoint change".to_string(),
                     );
                 }
                 measurements.push(1.0); // Frozen state
@@ -542,11 +553,12 @@ impl TrimValidationSuite {
             }
 
             // Monitor freeze duration
-            let freeze_start = Instant::now();
+            let freeze_start = self.time_source.now();
             let mut freeze_ended = false;
+            let sample_interval = Duration::from_millis(10);
 
             for _ in 0..1000 {
-                let output = controller.update();
+                let output = controller.update_with_dt(0.01);
                 if let TrimOutput::SpringCentered { frozen, .. } = output {
                     measurements.push(if frozen { 1.0 } else { 0.0 });
 
@@ -555,13 +567,14 @@ impl TrimValidationSuite {
                     } else if !frozen && !freeze_ended {
                         // Freeze just ended
                         freeze_ended = true;
-                        metrics.spring_freeze_duration = Some(freeze_start.elapsed());
+                        metrics.spring_freeze_duration =
+                            Some(self.time_source.now().duration_since(freeze_start));
                     }
                 }
 
-                std::thread::sleep(Duration::from_millis(10));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -588,7 +601,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Spring Freeze Behavior".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -597,12 +610,12 @@ impl TrimValidationSuite {
 
     /// Test spring ramp behavior for gradual re-enable
     fn test_spring_ramp_behavior(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::SpringCentered);
 
             let change = SetpointChange {
@@ -615,27 +628,29 @@ impl TrimValidationSuite {
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Wait for freeze period to end and ramp to start
-            std::thread::sleep(Duration::from_millis(150));
+            self.time_source.advance(Duration::from_millis(150));
 
             let mut ramp_started = false;
             let mut ramp_completed = false;
             let mut ramp_start_time = None;
             let mut observed_strengths = Vec::new();
+            let sample_interval = Duration::from_millis(10);
 
             for _ in 0..500 {
                 let state = controller.get_trim_state();
 
                 if state.spring_ramping && !ramp_started {
                     ramp_started = true;
-                    ramp_start_time = Some(Instant::now());
+                    ramp_start_time = Some(self.time_source.now());
                 } else if !state.spring_ramping && ramp_started && !ramp_completed {
                     ramp_completed = true;
                     if let Some(start) = ramp_start_time {
-                        metrics.spring_ramp_duration = Some(start.elapsed());
+                        metrics.spring_ramp_duration =
+                            Some(self.time_source.now().duration_since(start));
                     }
                 }
 
-                let output = controller.update();
+                let output = controller.update_with_dt(0.01);
                 if let TrimOutput::SpringCentered { config, .. } = output {
                     if ramp_started {
                         observed_strengths.push(config.strength);
@@ -643,9 +658,9 @@ impl TrimValidationSuite {
                     measurements.push(config.strength);
                 }
 
-                std::thread::sleep(Duration::from_millis(10));
+                self.time_source.advance(sample_interval);
 
-                if start_time.elapsed() > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
                     break;
                 }
             }
@@ -674,7 +689,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Spring Ramp Behavior".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -683,12 +698,12 @@ impl TrimValidationSuite {
 
     /// Test spring center position mapping accuracy
     fn test_spring_center_mapping(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::SpringCentered);
 
             // Test various setpoints and verify center mapping
@@ -711,7 +726,7 @@ impl TrimValidationSuite {
                     .apply_setpoint_change(change)
                     .map_err(|e| format!("Failed to apply setpoint {}: {}", target_nm, e))?;
 
-                let output = controller.update();
+                let output = controller.update_with_dt(0.001);
                 if let TrimOutput::SpringCentered { config, .. } = output {
                     let center_error = (config.center - expected_center).abs();
                     measurements.push(center_error);
@@ -733,7 +748,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Spring Center Mapping".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -742,12 +757,12 @@ impl TrimValidationSuite {
 
     /// Test non-FFB recentre illusion implementation
     fn test_spring_recentre_illusion(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::SpringCentered);
 
             // Set initial spring configuration
@@ -769,7 +784,7 @@ impl TrimValidationSuite {
                 .map_err(|e| format!("Failed to apply setpoint change: {}", e))?;
 
             // Phase 1: Verify spring freeze (recentre illusion)
-            let output = controller.update();
+            let output = controller.update_with_dt(0.001);
             if let TrimOutput::SpringCentered { frozen, config } = output {
                 if !frozen {
                     return Err("Spring should be frozen during recentre illusion".to_string());
@@ -790,12 +805,13 @@ impl TrimValidationSuite {
             }
 
             // Phase 2: Wait for ramp to start
-            std::thread::sleep(Duration::from_millis(150));
+            self.time_source.advance(Duration::from_millis(150));
 
             // Phase 3: Verify gradual spring re-enable
             let mut ramp_observed = false;
+            let sample_interval = Duration::from_millis(5);
             for _ in 0..200 {
-                let output = controller.update();
+                let output = controller.update_with_dt(0.005);
                 if let TrimOutput::SpringCentered { frozen, config } = output {
                     if !frozen && config.strength < initial_config.strength {
                         ramp_observed = true;
@@ -803,7 +819,7 @@ impl TrimValidationSuite {
                     }
                 }
 
-                std::thread::sleep(Duration::from_millis(5));
+                self.time_source.advance(sample_interval);
             }
 
             if !ramp_observed {
@@ -816,7 +832,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Spring Recentre Illusion".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -825,12 +841,12 @@ impl TrimValidationSuite {
 
     /// Test stability when switching between trim modes
     fn test_mode_switching_stability(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
 
             // Test switching between modes multiple times
             for cycle in 0..5 {
@@ -848,11 +864,11 @@ impl TrimValidationSuite {
 
                 // Run a few updates
                 for _ in 0..10 {
-                    let output = controller.update();
+                    let output = controller.update_with_dt(0.001);
                     if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                         measurements.push(setpoint_nm);
                     }
-                    std::thread::sleep(Duration::from_millis(1));
+                    self.time_source.advance(Duration::from_millis(1));
                 }
 
                 // Switch to spring mode
@@ -869,11 +885,11 @@ impl TrimValidationSuite {
 
                 // Run a few updates
                 for _ in 0..10 {
-                    let output = controller.update();
+                    let output = controller.update_with_dt(0.001);
                     if let TrimOutput::SpringCentered { config, .. } = output {
                         measurements.push(config.center);
                     }
-                    std::thread::sleep(Duration::from_millis(1));
+                    self.time_source.advance(Duration::from_millis(1));
                 }
             }
 
@@ -890,7 +906,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Mode Switching Stability".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -899,12 +915,12 @@ impl TrimValidationSuite {
 
     /// Test handling of extreme setpoint values
     fn test_extreme_setpoint_handling(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
         let result = (|| -> Result<(), String> {
-            let mut controller = TrimController::new(15.0);
+            let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
             controller.set_mode(TrimMode::ForceFeedback);
 
             // Test extreme values
@@ -936,7 +952,7 @@ impl TrimValidationSuite {
                 if result.is_ok() {
                     // Run a few updates to verify stability
                     for _ in 0..10 {
-                        let output = controller.update();
+                        let output = controller.update_with_dt(0.001);
                         if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                             measurements.push(setpoint_nm);
 
@@ -948,7 +964,7 @@ impl TrimValidationSuite {
                                 ));
                             }
                         }
-                        std::thread::sleep(Duration::from_millis(1));
+                        self.time_source.advance(Duration::from_millis(1));
                     }
                 }
             }
@@ -959,7 +975,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Extreme Setpoint Handling".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -968,7 +984,7 @@ impl TrimValidationSuite {
 
     /// Test replay reproducibility of trim behavior
     pub fn test_replay_reproducibility(&mut self) -> TrimValidationResult {
-        let start_time = Instant::now();
+        let start_time = self.time_source.now();
         let mut measurements = Vec::new();
         let mut metrics = TrimValidationMetrics::default();
 
@@ -994,13 +1010,8 @@ impl TrimValidationSuite {
                 max_difference = max_difference.max(difference);
                 measurements.push(difference);
 
-                // Check reproducibility tolerance — allow for OS scheduler timing variance.
-                // On Windows, thread::sleep(1ms) may actually sleep 10-16ms, so consecutive
-                // runs of the same sequence can produce different dt values and thus different
-                // accumulated setpoints. 0.25 Nm accounts for up to ~60ms scheduler jitter at
-                // the maximum 4 Nm/s rate used in this test (conservative to prevent flakiness
-                // on heavily loaded CI runners).
-                if difference > 0.25 {
+                // With deterministic update_with_dt, reproducibility should be perfect (within float precision).
+                if difference > 1e-6 {
                     return Err(format!(
                         "Reproducibility error at sample {}: {} vs {} (diff: {})",
                         i, first, second, difference
@@ -1021,7 +1032,7 @@ impl TrimValidationSuite {
         TrimValidationResult {
             name: "Replay Reproducibility".to_string(),
             passed: result.is_ok(),
-            duration: start_time.elapsed(),
+            duration: self.time_source.now().duration_since(start_time),
             error: result.err(),
             measurements,
             metrics,
@@ -1030,7 +1041,7 @@ impl TrimValidationSuite {
 
     /// Record a deterministic trim sequence for replay testing
     fn record_trim_sequence(&mut self) -> Result<Vec<f32>, String> {
-        let mut controller = TrimController::new(15.0);
+        let mut controller = TrimController::with_time_source(15.0, self.time_source.clone());
         controller.set_mode(TrimMode::ForceFeedback);
 
         let mut outputs = Vec::new();
@@ -1053,12 +1064,11 @@ impl TrimValidationSuite {
 
             // Record outputs for a fixed number of steps
             for _ in 0..100 {
-                let output = controller.update();
+                // Use fixed 1ms timestep for perfect reproducibility
+                let output = controller.update_with_dt(0.001);
                 if let TrimOutput::ForceFeedback { setpoint_nm, .. } = output {
                     outputs.push(setpoint_nm);
                 }
-                // Use fixed time step for deterministic replay
-                std::thread::sleep(Duration::from_millis(1));
             }
         }
 
@@ -1240,10 +1250,14 @@ mod tests {
 
     #[test]
     fn test_ffb_rate_limiting_validation() {
-        let mut suite = TrimValidationSuite::new(TrimValidationConfig {
-            max_test_duration: Duration::from_secs(2),
-            ..TrimValidationConfig::default()
-        });
+        let fake_time = Arc::new(crate::FakeTimeSource::new());
+        let mut suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(10),
+                ..TrimValidationConfig::default()
+            },
+            fake_time,
+        );
         let result = suite.test_ffb_rate_limiting();
 
         assert!(
@@ -1257,10 +1271,14 @@ mod tests {
 
     #[test]
     fn test_spring_freeze_validation() {
-        let mut suite = TrimValidationSuite::new(TrimValidationConfig {
-            max_test_duration: Duration::from_secs(2),
-            ..TrimValidationConfig::default()
-        });
+        let fake_time = Arc::new(crate::FakeTimeSource::new());
+        let mut suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(10),
+                ..TrimValidationConfig::default()
+            },
+            fake_time,
+        );
         let result = suite.test_spring_freeze_behavior();
 
         assert!(
@@ -1273,10 +1291,14 @@ mod tests {
 
     #[test]
     fn test_replay_reproducibility_validation() {
-        let mut suite = TrimValidationSuite::new(TrimValidationConfig {
-            max_test_duration: Duration::from_secs(2),
-            ..TrimValidationConfig::default()
-        });
+        let fake_time = Arc::new(crate::FakeTimeSource::new());
+        let mut suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(10),
+                ..TrimValidationConfig::default()
+            },
+            fake_time,
+        );
         let result = suite.test_replay_reproducibility();
 
         assert!(
@@ -1288,11 +1310,37 @@ mod tests {
     }
 
     #[test]
+    fn test_trim_validation_with_fake_time() {
+        let fake_time = Arc::new(crate::FakeTimeSource::new());
+        let mut suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(10),
+                ..TrimValidationConfig::default()
+            },
+            fake_time.clone(),
+        );
+
+        let result = suite.test_ffb_rate_limiting();
+
+        assert!(result.passed, "FFB rate limiting should pass with fake time");
+        // With fake time, duration should be based on the advances (5000 * 1ms = 5s)
+        assert!(
+            result.duration >= Duration::from_secs(5),
+            "Expected duration >= 5s, got {:?}",
+            result.duration
+        );
+    }
+
+    #[test]
     fn test_complete_validation_suite() {
-        let mut suite = TrimValidationSuite::new(TrimValidationConfig {
-            max_test_duration: Duration::from_secs(2),
-            ..TrimValidationConfig::default()
-        });
+        let fake_time = Arc::new(crate::FakeTimeSource::new());
+        let mut suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(10),
+                ..TrimValidationConfig::default()
+            },
+            fake_time,
+        );
         let results = suite.run_complete_validation();
 
         assert!(!results.is_empty());

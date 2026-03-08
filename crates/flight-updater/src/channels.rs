@@ -9,12 +9,16 @@ use std::fmt;
 
 /// Update channel types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Channel {
     /// Stable releases - thoroughly tested, recommended for production
+    #[serde(alias = "Stable")]
     Stable,
     /// Beta releases - feature complete, undergoing final testing
+    #[serde(alias = "Beta")]
     Beta,
     /// Canary releases - latest features, may be unstable
+    #[serde(alias = "Canary")]
     Canary,
 }
 

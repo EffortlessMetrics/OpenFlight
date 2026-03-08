@@ -1,0 +1,21 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: status
+---
+overall_status: Degraded
+checks:
+  - name: Power Plan
+    status: Degraded
+    description: Windows power plan is not set to High Performance
+    current_value: Balanced
+    expected_value: High Performance
+  - name: USB Selective Suspend
+    status: Optimal
+    description: USB selective suspend is disabled
+    current_value: Disabled
+    expected_value: Disabled
+remediation_steps:
+  - description: Switch to High Performance power plan
+    action: powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+    requires_admin: true
+    priority: 1

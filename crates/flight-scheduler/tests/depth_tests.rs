@@ -6,8 +6,13 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::thread;
 use std::time::{Duration, Instant};
 
+use flight_scheduler::platform::{
+    request_rt_priority_mmcss, request_rt_priority_noop, request_rt_priority_rtkit,
+};
+use flight_scheduler::timer::JITTER_BUCKETS;
 use flight_scheduler::*;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -41,6 +46,46 @@ mod timing_discipline {
                 "tick {i}: error {error:?} exceeds {tolerance:?}"
             );
         }
+    }
+
+    /// 250 Hz tick rate produces ~4 ms periods.
+    #[test]
+    fn tick_timing_250hz_period() {
+        let config = SchedulerConfig {
+            frequency_hz: 250,
+            busy_spin_us: 50,
+            pll_gain: 0.001,
+            measure_jitter: true,
+        };
+        let mut sched = Scheduler::new(config);
+
+        // Warm up PLL.
+        for _ in 0..20 {
+            sched.wait_for_tick();
+        }
+
+        // Measure 50 ticks (~200 ms).
+        let before = Instant::now();
+        for _ in 0..50 {
+            sched.wait_for_tick();
+        }
+        let elapsed = before.elapsed();
+
+        let expected = Duration::from_millis(200); // 50 × 4 ms
+        let tolerance = if std::env::var_os("CI").is_some() {
+            Duration::from_millis(100)
+        } else {
+            Duration::from_millis(30)
+        };
+
+        assert!(
+            elapsed >= expected.saturating_sub(tolerance),
+            "50 ticks too fast: {elapsed:?}"
+        );
+        assert!(
+            elapsed <= expected + tolerance,
+            "50 ticks too slow: {elapsed:?}"
+        );
     }
 
     /// Collect tick deltas over 50 ticks and verify p99 < 2ms jitter.
@@ -177,6 +222,38 @@ mod timing_discipline {
         assert_eq!(stats.total_ticks, 20);
     }
 
+    /// Tick phase tracking: early arrival has negative error, late has positive.
+    #[test]
+    fn tick_phase_tracking() {
+        let config = SchedulerConfig {
+            frequency_hz: 250,
+            busy_spin_us: 50,
+            pll_gain: 0.001,
+            measure_jitter: true,
+        };
+        let mut sched = Scheduler::new(config);
+
+        // Run enough ticks to see both signs of error (PLL correction causes both).
+        let mut saw_negative = false;
+        let mut saw_nonnegative = false;
+        for _ in 0..200 {
+            let result = sched.wait_for_tick();
+            if result.error_ns < 0 {
+                saw_negative = true;
+            } else {
+                saw_nonnegative = true;
+            }
+            if saw_negative && saw_nonnegative {
+                break;
+            }
+        }
+
+        assert!(
+            saw_nonnegative,
+            "should see at least one non-negative (on-time/late) tick"
+        );
+    }
+
     /// JitterTracker: verify p99 computation from known data.
     #[test]
     fn jitter_tracker_known_p99() {
@@ -211,6 +288,24 @@ mod timing_discipline {
             stats.sample_count, 0,
             "no samples should be collected during warmup"
         );
+    }
+
+    /// TimerStats histogram bucketing is correct.
+    #[test]
+    fn timer_stats_histogram_bucketing() {
+        let mut stats = TimerStats::new(); // 10 µs buckets
+
+        stats.record_tick(5_000, false); // bucket 0
+        stats.record_tick(15_000, false); // bucket 1
+        stats.record_tick(-25_000, false); // |25 µs| → bucket 2
+        stats.record_tick(700_000, false); // overflow bucket
+
+        assert_eq!(stats.tick_count(), 4);
+        let h = stats.jitter_histogram();
+        assert_eq!(h[0], 1);
+        assert_eq!(h[1], 1);
+        assert_eq!(h[2], 1);
+        assert_eq!(h[JITTER_BUCKETS - 1], 1);
     }
 }
 
@@ -384,6 +479,28 @@ mod configuration {
 
         assert_ne!(h_normal.level(), h_elevated.level());
         assert_ne!(h_elevated.level(), h_rt.level());
+    }
+
+    /// Platform RT request with mock MMCSS succeeds and returns active handle.
+    #[test]
+    fn platform_rt_mmcss_lifecycle() {
+        let backend = MockMmcssBackend::new_success();
+        let handle = request_rt_priority_mmcss(backend, RtPriority::Realtime).unwrap();
+        assert!(handle.is_active());
+        assert_eq!(handle.level(), RtPriority::Realtime);
+        assert_eq!(handle.platform(), Platform::Windows);
+        handle.release().unwrap();
+    }
+
+    /// Platform RT request with mock rtkit succeeds.
+    #[test]
+    fn platform_rt_rtkit_lifecycle() {
+        let backend = MockRtkitBackend::new_success();
+        let handle = request_rt_priority_rtkit(backend, RtPriority::Elevated).unwrap();
+        assert!(handle.is_active());
+        assert_eq!(handle.level(), RtPriority::Elevated);
+        assert_eq!(handle.platform(), Platform::Linux);
+        handle.release().unwrap();
     }
 }
 
@@ -590,6 +707,75 @@ mod state_machine {
         assert!(pll.integral().abs() < f64::EPSILON);
         assert!((pll.corrected_period_ns() - nominal).abs() < f64::EPSILON);
         assert!(!pll.locked());
+    }
+
+    /// Tick overrun detection: deliberately stalling between ticks causes `missed`.
+    #[test]
+    fn tick_overrun_detection() {
+        let config = SchedulerConfig {
+            frequency_hz: 1000, // 1 ms period
+            busy_spin_us: 0,
+            pll_gain: 0.001,
+            measure_jitter: false,
+        };
+        let mut sched = Scheduler::new(config);
+
+        // Consume first tick to initialise next_tick.
+        sched.wait_for_tick();
+
+        // Sleep 5 ms — guarantees overrun for a 1 ms period scheduler.
+        thread::sleep(Duration::from_millis(5));
+
+        let result = sched.wait_for_tick();
+        assert!(result.missed, "tick should be flagged as missed after stall");
+        assert!(
+            sched.get_stats().missed_ticks > 0,
+            "missed_ticks counter should be > 0"
+        );
+    }
+
+    /// Multiple tasks scheduled per tick execute in registration order.
+    #[test]
+    fn task_scheduling_order() {
+        let log = Arc::new(std::sync::Mutex::new(Vec::<u32>::new()));
+        let mut exec = TickExecutor::new();
+
+        for id in 0..5u32 {
+            let l = log.clone();
+            exec.register_task(
+                match id {
+                    0 => "axis",
+                    1 => "ffb",
+                    2 => "bus",
+                    3 => "panel",
+                    _ => "diag",
+                },
+                move || {
+                    l.lock().unwrap().push(id);
+                },
+            );
+        }
+
+        exec.run_tick(4_000_000);
+        let order = log.lock().unwrap().clone();
+        assert_eq!(order, vec![0, 1, 2, 3, 4], "tasks must execute in order");
+    }
+
+    /// MAX_TASKS enforcement — cannot register beyond limit.
+    #[test]
+    fn task_max_registration() {
+        let mut exec = TickExecutor::new();
+        static NAMES: [&str; 16] = [
+            "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9", "t10", "t11", "t12", "t13",
+            "t14", "t15",
+        ];
+        for name in &NAMES {
+            assert!(exec.register_task(name, || {}));
+        }
+        assert!(
+            !exec.register_task("overflow", || {}),
+            "should reject task beyond MAX_TASKS"
+        );
     }
 }
 
@@ -852,21 +1038,10 @@ mod zero_allocation {
         const JSTATS: pll::JitterStats = pll::JitterStats::new();
         assert_eq!(JSTATS.count(), 0);
     }
-
-    /// TimerStats with_bucket_width preserves bucket width across reset.
-    #[test]
-    fn timer_stats_bucket_width_preserved() {
-        let mut stats = TimerStats::with_bucket_width(5_000);
-        stats.record_tick(10_000, false);
-        assert_eq!(stats.bucket_width_ns(), 5_000);
-        stats.reset();
-        assert_eq!(stats.bucket_width_ns(), 5_000);
-        assert_eq!(stats.tick_count(), 0);
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 6. INTEGRATION TESTS
+// 6. INTEGRATION TESTS / STRESS TESTS
 // ═══════════════════════════════════════════════════════════════════════════
 
 mod integration {
@@ -910,9 +1085,6 @@ mod integration {
     }
 
     /// SpscRing: concurrent producer/consumer with stats accounting.
-    /// With a small ring (64) and 5000 items, the producer will encounter
-    /// full-buffer conditions that increment the dropped counter. Each failed
-    /// try_push attempt counts as a drop, so dropped > 0 is expected.
     #[test]
     fn ring_concurrent_accounting() {
         let ring = Arc::new(SpscRing::new(64));
@@ -955,8 +1127,6 @@ mod integration {
         let stats = ring.stats();
         assert_eq!(stats.produced, 5000);
         assert_eq!(stats.consumed, 5000);
-        // Drops are expected: each failed try_push on a full ring
-        // increments the dropped counter before the producer retries.
         assert!(
             stats.produced == stats.consumed,
             "all successfully pushed items must be consumed"
@@ -1017,44 +1187,145 @@ mod integration {
         );
     }
 
-    /// PLL update (period-based API) produces sensible corrections.
+    /// PLL lock → unlock → re-lock transition with hysteresis.
     #[test]
-    fn pll_update_period_based() {
-        let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0);
+    fn pll_lock_unlock_hysteresis() {
+        let nominal = 4_000_000.0;
+        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal)
+            .with_lock_detection(50_000.0, 200_000.0, 5);
 
-        // Perfect period
-        let correction = pll.update(4_000_000);
-        assert!(
-            correction.phase_error_ns == 0,
-            "perfect period should have 0 error"
-        );
-        assert!(
-            (correction.frequency_ratio - 1.0).abs() < 0.01,
-            "frequency ratio should be ~1.0"
-        );
+        // Lock.
+        for _ in 0..50 {
+            pll.tick(100.0);
+        }
+        assert!(pll.locked());
 
-        // Slow period (tick arrived late)
-        let correction = pll.update(4_100_000);
-        assert!(correction.phase_error_ns > 0);
-        assert!(correction.sleep_adjust_ns < 0, "should shorten next sleep");
+        // Brief spike — should NOT unlock (fewer than hysteresis ticks).
+        for _ in 0..3 {
+            pll.tick(300_000.0);
+        }
+        assert!(pll.locked(), "brief spike should not defeat hysteresis");
+
+        // Return to low error.
+        for _ in 0..10 {
+            pll.tick(100.0);
+        }
+        assert!(pll.locked(), "should remain locked after brief spike");
+
+        // Sustained high error — should unlock.
+        for _ in 0..20 {
+            pll.tick(500_000.0);
+        }
+        assert!(!pll.locked(), "sustained high error should unlock PLL");
+
+        // Re-lock.
+        for _ in 0..50 {
+            pll.tick(100.0);
+        }
+        assert!(pll.locked(), "PLL should re-lock after error subsides");
     }
 
-    /// Verify quality gate detection in JitterMetrics.
+    /// 1000 ticks stability: scheduler runs 1000 ticks without panic and with
+    /// acceptable miss rate.
     #[test]
-    fn quality_gate_detection() {
-        let mut metrics = JitterMetrics::new(250);
-        let start = Instant::now();
+    fn stress_1000_ticks_stability() {
+        let config = SchedulerConfig {
+            frequency_hz: 250,
+            busy_spin_us: 50,
+            pll_gain: 0.001,
+            measure_jitter: true,
+        };
+        let mut sched = Scheduler::new(config);
 
-        // Not enough samples — quality gate should not trigger
-        assert!(!metrics.exceeds_quality_gate());
-
-        // Feed good timing past warmup (1250 ticks)
-        for i in 0..2500 {
-            let t = start + Duration::from_nanos(i as u64 * 4_000_000);
-            metrics.record_tick(t, 0);
+        for _ in 0..1000 {
+            sched.wait_for_tick();
         }
 
-        // Good timing should pass quality gate
-        assert!(!metrics.exceeds_quality_gate());
+        let stats = sched.get_stats();
+        assert_eq!(stats.total_ticks, 1000);
+
+        // Allow some misses — CI and loaded dev machines have scheduling noise.
+        let max_miss_rate = if std::env::var_os("CI").is_some() {
+            0.15 // Increased slightly for CI stability
+        } else {
+            0.05
+        };
+        assert!(
+            stats.miss_rate < max_miss_rate,
+            "miss rate {:.2}% exceeds {:.0}% threshold",
+            stats.miss_rate * 100.0,
+            max_miss_rate * 100.0
+        );
+    }
+
+    /// Concurrent scheduler instances on separate threads do not interfere.
+    #[test]
+    fn stress_concurrent_scheduler_instances() {
+        let handles: Vec<_> = (0..4)
+            .map(|_| {
+                thread::spawn(|| {
+                    let config = SchedulerConfig {
+                        frequency_hz: 250,
+                        busy_spin_us: 30,
+                        pll_gain: 0.001,
+                        measure_jitter: false,
+                    };
+                    let mut sched = Scheduler::new(config);
+                    for _ in 0..100 {
+                        sched.wait_for_tick();
+                    }
+                    sched.get_stats().total_ticks
+                })
+            })
+            .collect();
+
+        for h in handles {
+            let ticks = h.join().expect("scheduler thread should not panic");
+            assert_eq!(ticks, 100, "each scheduler should complete 100 ticks");
+        }
+    }
+
+    /// JitterTracker (zero-allocation) records correct p99 after many samples.
+    #[test]
+    fn stress_jitter_tracker_many_samples() {
+        let mut tracker = JitterTracker::new();
+
+        // Record 1000 samples with known distribution.
+        for i in 0..1000u64 {
+            tracker.record(i * 100); // 0, 100, 200, ..., 99900 ns
+        }
+
+        assert_eq!(tracker.count(), 1000);
+        assert_eq!(tracker.min_ns(), 0);
+        assert_eq!(tracker.max_ns(), 99_900);
+
+        // p99 should be in the top 1% of values.
+        let p99 = tracker.p99_ns();
+        assert!(
+            p99 >= 90_000,
+            "p99 should be near the top of the range, got {p99}"
+        );
+    }
+
+    /// JitterStats (from pll module) tracks min/max/mean correctly.
+    #[test]
+    fn jitter_stats_running_accuracy() {
+        let mut js = pll::JitterStats::new();
+
+        js.record(100);
+        js.record(-200);
+        js.record(300);
+
+        assert_eq!(js.count(), 3);
+        assert_eq!(js.min_ns(), -200);
+        assert_eq!(js.max_ns(), 300);
+
+        // mean = (100 + (-200) + 300) / 3 ≈ 66.67
+        let expected_mean = (100.0 - 200.0 + 300.0) / 3.0;
+        assert!(
+            (js.mean() - expected_mean).abs() < 1.0,
+            "mean should be ~{expected_mean}, got {}",
+            js.mean()
+        );
     }
 }

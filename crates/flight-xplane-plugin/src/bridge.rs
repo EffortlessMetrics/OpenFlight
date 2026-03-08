@@ -158,7 +158,17 @@ fn connect_and_run(running: &AtomicBool) -> Result<(), BridgeError> {
 }
 
 /// Handle an incoming request from Flight Hub and return an optional response.
+#[cfg(any(test, feature = "test-support"))]
+pub fn handle_message(msg: PluginMessage) -> Option<PluginResponse> {
+    handle_message_inner(msg)
+}
+
+#[cfg(not(any(test, feature = "test-support")))]
 fn handle_message(msg: PluginMessage) -> Option<PluginResponse> {
+    handle_message_inner(msg)
+}
+
+fn handle_message_inner(msg: PluginMessage) -> Option<PluginResponse> {
     use crate::xplm;
 
     match msg {

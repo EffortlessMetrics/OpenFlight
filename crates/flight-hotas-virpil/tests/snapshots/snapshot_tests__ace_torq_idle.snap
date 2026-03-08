@@ -1,0 +1,15 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcAceTorqInputState {
+    axis: VpcAceTorqAxis {
+        throttle: 0.0,
+    },
+    buttons: VpcAceTorqButtons {
+        raw: [
+            0,
+            0,
+        ],
+    },
+}

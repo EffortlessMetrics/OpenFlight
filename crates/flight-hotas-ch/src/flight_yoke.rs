@@ -23,6 +23,8 @@
 //! The Flight Sim Yoke is the classic CH Products yoke (circa 1997–2008),
 //! predecessor to the Eclipse Yoke. It has 20 buttons and 1 hat.
 
+use std::fmt;
+
 use crate::ChError;
 
 pub use flight_hid_support::device_support::CH_FLIGHT_YOKE_PID as FLIGHT_YOKE_PID;
@@ -32,6 +34,7 @@ pub const FLIGHT_YOKE_MIN_REPORT_BYTES: usize = 10;
 
 /// Parsed input state from one CH Flight Sim Yoke HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FlightYokeState {
     /// Roll axis (left-right yoke), 0–65535.
     pub roll: u16,
@@ -77,6 +80,16 @@ pub fn parse_flight_yoke(report: &[u8]) -> Result<FlightYokeState, ChError> {
         hat,
         buttons,
     })
+}
+
+impl fmt::Display for FlightYokeState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "FlightYoke roll={} pitch={} throttle={} hat={} buttons={:#07x}",
+            self.roll, self.pitch, self.throttle, self.hat, self.buttons
+        )
+    }
 }
 
 #[cfg(test)]

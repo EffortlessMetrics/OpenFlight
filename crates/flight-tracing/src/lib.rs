@@ -33,9 +33,12 @@ mod tracepoints;
 
 pub mod correlation;
 pub mod counters;
+pub mod diagnostic_bundle;
+pub mod error_aggregator;
 pub mod events;
 pub mod log_rotation;
 pub mod regression;
+pub mod span_recorder;
 pub mod spans;
 pub mod structured;
 pub mod structured_log;
@@ -46,8 +49,11 @@ use std::time::Instant;
 
 pub use correlation::{ChainCollector, CorrelatedEvent, CorrelationId, EventChain};
 pub use counters::{CounterSnapshot, PerfCounters};
+pub use diagnostic_bundle::{DiagnosticBundle, DiagnosticCollector};
+pub use error_aggregator::{ErrorAggregator, Severity, SuppressionConfig};
 pub use events::{EventData, TraceEvent};
 pub use regression::{Alert, RegressionDetector, Threshold};
+pub use span_recorder::{SpanRecorder, SpanStats, SpanToken};
 pub use spans::{FlightSpan, SpanCollector, SpanSummary};
 pub use structured::{EventBuilder, EventContext, EventLevel, EventSink, FlightEvent, MemorySink};
 

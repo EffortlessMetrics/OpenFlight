@@ -19,3 +19,6 @@ default = []
 [dependencies]
 thiserror.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+proptest = { workspace = true }
