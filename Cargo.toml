@@ -91,6 +91,7 @@ members = [
     "crates/flight-open-hardware",
     "crates/flight-pedals",
     "crates/flight-plugin",
+    "crates/flight-dcs-bios",
     "crates/flight-testkit",
     "examples",
     "installer",
