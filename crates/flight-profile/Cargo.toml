@@ -27,3 +27,7 @@ toml.workspace = true
 [[bench]]
 name = "profile_merge"
 harness = false
+
+[[bench]]
+name = "profile_migration"
+harness = false
