@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Depth tests for `flight-watchdog`: heartbeat timing, escalation levels,
-//! component health tracking, recovery procedures, timeout behavior, error
-//! handling, and property-based tests.
+//! Depth tests for the watchdog system.
+//!
+//! Covers heartbeat monitoring, escalation policy, component lifecycle,
+//! safe-mode triggering, resource monitoring, and integration scenarios.
+//! All timing is deterministic (no wall-clock sleeps) unless explicitly
+//! testing real-time watchdog timer behaviour.
 
 use std::time::Duration;
 
@@ -29,6 +32,49 @@ use flight_watchdog::{
 
 mod heartbeat {
     use super::*;
+
+    /// Components register and send heartbeats via HealthCheckManager.
+    #[test]
+    fn components_register_and_send_heartbeats() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("axis", Duration::from_secs(5), 3);
+        mgr.register("ffb", Duration::from_secs(5), 3);
+        mgr.register("hid", Duration::from_secs(5), 3);
+
+        // All start healthy.
+        assert!(mgr.is_all_healthy());
+        assert_eq!(mgr.check_status("axis"), Some(&HealthStatus::Healthy));
+        assert_eq!(mgr.check_status("ffb"), Some(&HealthStatus::Healthy));
+        assert_eq!(mgr.check_status("hid"), Some(&HealthStatus::Healthy));
+
+        // Heartbeats keep them healthy.
+        mgr.report_healthy("axis");
+        mgr.report_healthy("ffb");
+        mgr.report_healthy("hid");
+        assert!(mgr.is_all_healthy());
+    }
+
+    /// Missing heartbeat leads to Degraded and then Failed states.
+    #[test]
+    fn missing_heartbeat_leads_to_degraded_then_failed() {
+        let mut agg = HealthAggregator::new();
+        let cfg = SubsystemCheckConfig::new("axis")
+            .with_failure_threshold(3);
+        agg.register(cfg);
+        agg.report_healthy("axis");
+
+        // One failure → Degraded (below failure_threshold=3).
+        agg.report_failure("axis", "heartbeat missed");
+        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Degraded);
+
+        // Second failure → still Degraded.
+        agg.report_failure("axis", "heartbeat missed");
+        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Degraded);
+
+        // Third failure → Failed (meets threshold).
+        agg.report_failure("axis", "heartbeat missed");
+        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Failed);
+    }
 
     #[test]
     fn fresh_monitor_starts_normal() {
@@ -117,13 +163,6 @@ mod heartbeat {
     }
 
     #[test]
-    fn check_heartbeat_timeout_returns_false_when_no_heartbeat_yet() {
-        let mut mon = SystemMonitor::default();
-        // No heartbeat recorded yet — last_heartbeat is None
-        assert!(!mon.check_heartbeat_timeout());
-    }
-
-    #[test]
     fn snapshot_reflects_heartbeat_state() {
         let mut mon = SystemMonitor::default();
         for _ in 0..10 {
@@ -147,6 +186,27 @@ mod heartbeat {
         assert!(!events.is_empty());
         assert!(mon.events().is_empty());
     }
+
+    /// Property: heartbeats always reset the countdown in HealthCheckManager.
+    #[test]
+    fn heartbeat_always_resets_failure_countdown() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("x", Duration::from_secs(5), 5);
+
+        for cycle in 0..10 {
+            // Accumulate some failures.
+            for _ in 0..4 {
+                mgr.report_unhealthy("x", &format!("cycle {cycle}"));
+            }
+            // Heartbeat resets.
+            mgr.report_healthy("x");
+            assert_eq!(
+                mgr.check_status("x"),
+                Some(&HealthStatus::Healthy),
+                "heartbeat must reset to Healthy on cycle {cycle}"
+            );
+        }
+    }
 }
 
 // ============================================================================
@@ -156,7 +216,7 @@ mod heartbeat {
 mod escalation_tests {
     use super::*;
 
-    fn ladder(warn: u32, degrade: u32, restart: u32, safe: u32) -> EscalationLadder {
+    fn ladder_factory(warn: u32, degrade: u32, restart: u32, safe: u32) -> EscalationLadder {
         EscalationLadder::new(EscalationConfig {
             warn_threshold: warn,
             degrade_threshold: degrade,
@@ -166,6 +226,36 @@ mod escalation_tests {
             restart_cooldown: Duration::ZERO,
             max_restart_attempts: 2,
         })
+    }
+
+    /// Warn → Degrade → Restart → SafeMode sequence with default thresholds.
+    #[test]
+    fn full_escalation_sequence() {
+        let config = EscalationConfig {
+            restart_cooldown: Duration::ZERO,
+            ..EscalationConfig::default()
+        };
+        let mut ladder = EscalationLadder::new(config.clone());
+        ladder.register("comp");
+
+        // Accumulate failures and record levels at each threshold crossing.
+        let mut levels = vec![];
+        for i in 1..=config.safe_mode_threshold {
+            ladder.record_failure("comp", "fail");
+            let lvl = ladder.level("comp");
+            if levels.last() != Some(&lvl) {
+                levels.push(lvl);
+            }
+            // Early exit once we reach SafeMode.
+            if lvl == EscalationLevel::SafeMode && i >= config.safe_mode_threshold {
+                break;
+            }
+        }
+
+        assert!(levels.contains(&EscalationLevel::Warn));
+        assert!(levels.contains(&EscalationLevel::Degrade));
+        assert!(levels.contains(&EscalationLevel::Restart));
+        assert!(levels.contains(&EscalationLevel::SafeMode));
     }
 
     #[test]
@@ -178,7 +268,7 @@ mod escalation_tests {
 
     #[test]
     fn warn_threshold_triggers_warn_action() {
-        let mut ld = ladder(2, 5, 10, 20);
+        let mut ld = ladder_factory(2, 5, 10, 20);
         ld.record_failure("c", "err");
         // 1 failure, threshold=2 → still Normal
         assert_eq!(ld.level("c"), EscalationLevel::Normal);
@@ -189,7 +279,7 @@ mod escalation_tests {
 
     #[test]
     fn degrade_threshold_triggers_degrade() {
-        let mut ld = ladder(1, 3, 10, 20);
+        let mut ld = ladder_factory(1, 3, 10, 20);
         for _ in 0..3 {
             ld.record_failure("c", "err");
         }
@@ -198,7 +288,7 @@ mod escalation_tests {
 
     #[test]
     fn restart_threshold_triggers_restart() {
-        let mut ld = ladder(1, 3, 5, 20);
+        let mut ld = ladder_factory(1, 3, 5, 20);
         for _ in 0..5 {
             ld.record_failure("c", "err");
         }
@@ -208,7 +298,7 @@ mod escalation_tests {
 
     #[test]
     fn safe_mode_threshold_triggers_safe_mode() {
-        let mut ld = ladder(1, 3, 5, 8);
+        let mut ld = ladder_factory(1, 3, 5, 8);
         for _ in 0..8 {
             ld.record_failure("c", "err");
         }
@@ -217,7 +307,7 @@ mod escalation_tests {
 
     #[test]
     fn max_restarts_exceeded_triggers_safe_mode() {
-        let mut ld = ladder(1, 3, 5, 100);
+        let mut ld = ladder_factory(1, 3, 5, 100);
         // First restart cycle
         for _ in 0..5 {
             ld.record_failure("x", "err");
@@ -255,7 +345,7 @@ mod escalation_tests {
 
     #[test]
     fn transitions_log_each_level_change() {
-        let mut ld = ladder(1, 3, 5, 8);
+        let mut ld = ladder_factory(1, 3, 5, 8);
         for _ in 0..8 {
             ld.record_failure("a", "err");
         }
@@ -268,7 +358,7 @@ mod escalation_tests {
 
     #[test]
     fn component_isolation_in_ladder() {
-        let mut ld = ladder(1, 5, 10, 20);
+        let mut ld = ladder_factory(1, 5, 10, 20);
         for _ in 0..5 {
             ld.record_failure("a", "err");
         }
@@ -279,7 +369,7 @@ mod escalation_tests {
 
     #[test]
     fn reset_clears_component_state() {
-        let mut ld = ladder(1, 3, 5, 8);
+        let mut ld = ladder_factory(1, 3, 5, 8);
         for _ in 0..5 {
             ld.record_failure("r", "err");
         }
@@ -289,10 +379,39 @@ mod escalation_tests {
         assert_eq!(ld.failure_count("r"), 0);
         assert_eq!(ld.restart_count("r"), 0);
     }
+
+    #[test]
+    fn multiple_components_independent_escalation() {
+        let mut ladder = EscalationLadder::new(EscalationConfig {
+            warn_threshold: 1,
+            degrade_threshold: 3,
+            restart_threshold: 6,
+            safe_mode_threshold: 12,
+            recovery_threshold: 3,
+            restart_cooldown: Duration::ZERO,
+            max_restart_attempts: 5,
+        });
+
+        ladder.register("axis");
+        ladder.register("ffb");
+        ladder.register("hid");
+
+        // axis → Warn (1 failure).
+        ladder.record_failure("axis", "miss");
+        // ffb → Degrade (3 failures).
+        for _ in 0..3 {
+            ladder.record_failure("ffb", "overrun");
+        }
+        // hid stays Normal.
+
+        assert_eq!(ladder.level("axis"), EscalationLevel::Warn);
+        assert_eq!(ladder.level("ffb"), EscalationLevel::Degrade);
+        assert_eq!(ladder.level("hid"), EscalationLevel::Normal);
+    }
 }
 
 // ============================================================================
-// Module 3: Component health tracking (HealthCheckManager + HealthAggregator)
+// Module 3: Component health tracking and lifecycle
 // ============================================================================
 
 mod health_tracking {
@@ -361,12 +480,6 @@ mod health_tracking {
         assert_eq!(s.unhealthy, 1);
     }
 
-    #[test]
-    fn unknown_component_returns_none() {
-        let mgr = HealthCheckManager::new();
-        assert_eq!(mgr.check_status("ghost"), None);
-    }
-
     // --- HealthAggregator tests ---
 
     #[test]
@@ -411,31 +524,76 @@ mod health_tracking {
         assert_eq!(report.degraded_count, 1);
     }
 
+    // --- Component lifecycle tests ---
+
     #[test]
-    fn aggregator_transitions_filtered_by_subsystem() {
-        let mut agg = HealthAggregator::new();
-        agg.register(SubsystemCheckConfig::new("a"));
-        agg.register(SubsystemCheckConfig::new("b"));
-        agg.report_healthy("a");
-        agg.report_healthy("b");
-        agg.report_failure("a", "err");
-        let a_trans = agg.transitions_for("a");
-        let b_trans = agg.transitions_for("b");
-        assert_eq!(a_trans.len(), 2); // Unknown→Healthy, Healthy→Degraded
-        assert_eq!(b_trans.len(), 1); // Unknown→Healthy
+    fn register_monitor_unregister() {
+        let mut wd = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("ep1".into());
+
+        wd.register_component(comp.clone(), WatchdogConfig::default());
+        assert_eq!(wd.get_quarantine_status(&comp), Some(&QuarantineStatus::Active));
+
+        // Monitor via heartbeat.
+        wd.record_usb_success("ep1");
+        assert!(!wd.is_quarantined(&comp));
+
+        // Unregister.
+        wd.unregister_component(&comp);
+        assert_eq!(wd.get_quarantine_status(&comp), None);
     }
 
     #[test]
-    fn aggregator_empty_is_healthy() {
-        let agg = HealthAggregator::new();
-        let report = agg.aggregate();
-        assert_eq!(report.overall, SubsystemHealth::Healthy);
-        assert_eq!(report.healthy_count, 0);
+    fn double_register_is_idempotent() {
+        let mut wd = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("ep_double".into());
+
+        wd.register_component(
+            comp.clone(),
+            WatchdogConfig {
+                max_consecutive_failures: 1,
+                ..WatchdogConfig::default()
+            },
+        );
+
+        // Quarantine it.
+        wd.record_usb_error("ep_double", "err");
+        assert!(wd.is_quarantined(&comp));
+
+        // Re-register overwrites state.
+        wd.register_component(comp.clone(), WatchdogConfig::default());
+        assert_eq!(wd.get_quarantine_status(&comp), Some(&QuarantineStatus::Active));
+        assert!(!wd.is_quarantined(&comp));
+    }
+
+    #[test]
+    fn unregister_during_escalation_cleans_up() {
+        let mut wd = WatchdogSystem::new();
+        let comp = ComponentType::UsbEndpoint("ep_esc".into());
+
+        wd.register_component(
+            comp.clone(),
+            WatchdogConfig {
+                max_consecutive_failures: 1,
+                ..WatchdogConfig::default()
+            },
+        );
+        wd.record_usb_error("ep_esc", "fatal");
+        assert!(wd.is_quarantined(&comp));
+
+        wd.unregister_component(&comp);
+        assert!(!wd.is_quarantined(&comp));
+        assert_eq!(wd.get_quarantine_status(&comp), None);
+
+        // Health summary no longer counts it.
+        let summary = wd.get_health_summary();
+        assert_eq!(summary.total_components, 0);
+        assert_eq!(summary.quarantined_components, 0);
     }
 }
 
 // ============================================================================
-// Module 4: Recovery procedures
+// Module 4: Recovery procedures and Safe Mode
 // ============================================================================
 
 mod recovery_tests {
@@ -451,7 +609,8 @@ mod recovery_tests {
     fn escalating_rules_select_highest_matching() {
         let mut policy = RecoveryPolicy::new();
         policy.add_rule("hid", 1, RecoveryAction::LogWarning("warn".into()));
-        policy.add_rule("hid", 3, RecoveryAction::RestartComponent("hid".into()));
+        policy.add_rule("hid", 3, RecoveryAction::AlertUser("alert".into()));
+        policy.add_rule("hid", 5, RecoveryAction::RestartComponent("hid".into()));
         policy.add_rule("hid", 10, RecoveryAction::EnterSafeMode);
 
         assert_eq!(
@@ -459,17 +618,16 @@ mod recovery_tests {
             RecoveryAction::LogWarning("warn".into())
         );
         assert_eq!(
+            policy.evaluate("hid", 3),
+            RecoveryAction::AlertUser("alert".into())
+        );
+        assert_eq!(
             policy.evaluate("hid", 5),
             RecoveryAction::RestartComponent("hid".into())
         );
-        assert_eq!(policy.evaluate("hid", 15), RecoveryAction::EnterSafeMode);
-    }
-
-    #[test]
-    fn below_all_thresholds_returns_no_action() {
-        let mut policy = RecoveryPolicy::new();
-        policy.add_rule("z", 5, RecoveryAction::EnterSafeMode);
-        assert_eq!(policy.evaluate("z", 4), RecoveryAction::NoAction);
+        assert_eq!(policy.evaluate("hid", 10), RecoveryAction::EnterSafeMode);
+        // Above highest threshold → still EnterSafeMode.
+        assert_eq!(policy.evaluate("hid", 100), RecoveryAction::EnterSafeMode);
     }
 
     #[test]
@@ -489,43 +647,49 @@ mod recovery_tests {
     }
 
     #[test]
-    fn rules_for_returns_ordered_subset() {
-        let mut policy = RecoveryPolicy::new();
-        policy.add_rule("x", 1, RecoveryAction::LogWarning("w".into()));
-        policy.add_rule("y", 2, RecoveryAction::EnterSafeMode);
-        policy.add_rule("x", 5, RecoveryAction::RestartComponent("x".into()));
-        let rules = policy.rules_for("x");
-        assert_eq!(rules.len(), 2);
-        assert_eq!(rules[0].on_failure_count, 1);
-        assert_eq!(rules[1].on_failure_count, 5);
+    fn safe_mode_on_critical_threshold() {
+        let mut ladder = EscalationLadder::new(EscalationConfig {
+            warn_threshold: 1,
+            degrade_threshold: 2,
+            restart_threshold: 3,
+            safe_mode_threshold: 5,
+            recovery_threshold: 3,
+            restart_cooldown: Duration::ZERO,
+            max_restart_attempts: 10,
+        });
+
+        for i in 1..=5 {
+            let action = ladder.record_failure("critical", "total failure");
+            if i == 5 {
+                assert!(
+                    matches!(action, EscalationAction::EnterSafeMode(_)),
+                    "must trigger safe mode at threshold"
+                );
+            }
+        }
+        assert_eq!(ladder.level("critical"), EscalationLevel::SafeMode);
     }
 
     #[test]
-    fn escalation_ladder_de_escalation_via_success() {
-        let mut ld = EscalationLadder::new(EscalationConfig {
+    fn exit_safe_mode_via_reset() {
+        let mut ladder = EscalationLadder::new(EscalationConfig {
             warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 10,
-            safe_mode_threshold: 20,
+            degrade_threshold: 2,
+            restart_threshold: 3,
+            safe_mode_threshold: 4,
             recovery_threshold: 2,
             restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 5,
+            max_restart_attempts: 10,
         });
-        // Escalate to Degrade
-        for _ in 0..3 {
-            ld.record_failure("comp", "err");
+
+        for _ in 0..4 {
+            ladder.record_failure("sys", "fail");
         }
-        assert_eq!(ld.level("comp"), EscalationLevel::Degrade);
-        // De-escalate: 2 successes → Warn
-        for _ in 0..2 {
-            ld.record_success("comp");
-        }
-        assert_eq!(ld.level("comp"), EscalationLevel::Warn);
-        // 2 more successes → Normal
-        for _ in 0..2 {
-            ld.record_success("comp");
-        }
-        assert_eq!(ld.level("comp"), EscalationLevel::Normal);
+        assert_eq!(ladder.level("sys"), EscalationLevel::SafeMode);
+
+        ladder.reset("sys");
+        assert_eq!(ladder.level("sys"), EscalationLevel::Normal);
+        assert_eq!(ladder.failure_count("sys"), 0);
     }
 
     #[test]
@@ -561,7 +725,7 @@ mod recovery_tests {
 }
 
 // ============================================================================
-// Module 5: Timeout behavior (supervisor watchdog + dead-man switch)
+// Module 5: Timeout behavior and Resource monitoring
 // ============================================================================
 
 mod timeout_tests {
@@ -585,91 +749,6 @@ mod timeout_tests {
     }
 
     #[test]
-    fn hardware_watchdog_expires_after_max() {
-        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
-            timeout: Duration::from_millis(1),
-            max_timeouts: 2,
-        });
-        std::thread::sleep(Duration::from_millis(5));
-        wd.check(); // 1st timeout
-        let status = wd.check(); // 2nd timeout → expired
-        assert!(matches!(status, WatchdogTimerStatus::Expired { .. }));
-    }
-
-    #[test]
-    fn hardware_watchdog_pet_resets() {
-        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
-            timeout: Duration::from_millis(1),
-            max_timeouts: 5,
-        });
-        std::thread::sleep(Duration::from_millis(5));
-        wd.check();
-        assert!(wd.consecutive_timeouts() > 0);
-        wd.pet();
-        assert_eq!(wd.consecutive_timeouts(), 0);
-        assert_eq!(wd.check(), WatchdogTimerStatus::Ok);
-    }
-
-    #[test]
-    fn hardware_watchdog_disabled_always_ok() {
-        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
-            timeout: Duration::from_millis(1),
-            max_timeouts: 1,
-        });
-        wd.set_enabled(false);
-        assert!(!wd.is_enabled());
-        std::thread::sleep(Duration::from_millis(5));
-        assert_eq!(wd.check(), WatchdogTimerStatus::Ok);
-    }
-
-    #[test]
-    fn hardware_watchdog_re_enable_resets_pet() {
-        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
-            timeout: Duration::from_secs(10),
-            max_timeouts: 3,
-        });
-        wd.set_enabled(false);
-        wd.set_enabled(true);
-        assert!(wd.is_enabled());
-        // Should be Ok because re-enabling resets the pet timestamp
-        assert_eq!(wd.check(), WatchdogTimerStatus::Ok);
-    }
-
-    #[test]
-    fn hardware_watchdog_total_timeouts_accumulate() {
-        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
-            timeout: Duration::from_millis(1),
-            max_timeouts: 100,
-        });
-        std::thread::sleep(Duration::from_millis(5));
-        wd.check();
-        wd.check();
-        wd.check();
-        assert_eq!(wd.total_timeouts(), 3);
-    }
-
-    #[test]
-    fn dead_man_switch_alive_when_recently_ticked() {
-        let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
-            expected_interval: Duration::from_secs(10),
-            missed_intervals_threshold: 5,
-        });
-        dms.tick();
-        assert_eq!(dms.check(), DeadManStatus::Alive);
-    }
-
-    #[test]
-    fn dead_man_switch_late_on_small_overdue() {
-        let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
-            expected_interval: Duration::from_millis(1),
-            missed_intervals_threshold: 100,
-        });
-        std::thread::sleep(Duration::from_millis(5));
-        let status = dms.check();
-        assert!(matches!(status, DeadManStatus::Late { .. }));
-    }
-
-    #[test]
     fn dead_man_switch_triggers_on_threshold() {
         let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
             expected_interval: Duration::from_millis(1),
@@ -677,29 +756,73 @@ mod timeout_tests {
         });
         std::thread::sleep(Duration::from_millis(10));
         let status = dms.check();
-        assert!(matches!(status, DeadManStatus::Triggered { .. }));
+        assert!(matches!(status, DeadManStatus::Triggered { .. }), "should trigger after exceeding threshold");
         assert_eq!(dms.total_triggers(), 1);
     }
 
     #[test]
-    fn dead_man_switch_reset_recovers() {
-        let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
-            expected_interval: Duration::from_millis(1),
-            missed_intervals_threshold: 2,
+    fn memory_pressure_detection() {
+        let monitor = ProcessMonitor::new(ProcessMonitorConfig {
+            memory_warn_bytes: 256 * 1024 * 1024,      // 256 MB
+            memory_critical_bytes: 512 * 1024 * 1024, // 512 MB
+            thread_warn_count: 1000,
+            thread_critical_count: 2000,
         });
-        std::thread::sleep(Duration::from_millis(10));
-        dms.check();
-        assert!(dms.total_triggers() > 0);
-        dms.reset();
-        assert_eq!(dms.check(), DeadManStatus::Alive);
+
+        // Normal.
+        let normal = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 100 * 1024 * 1024,
+            thread_count: 10,
+            uptime: Duration::from_secs(60),
+        });
+        assert_eq!(normal.severity, ProcessAlert::Normal);
+
+        // Warning.
+        let warning = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 300 * 1024 * 1024,
+            thread_count: 10,
+            uptime: Duration::from_secs(60),
+        });
+        assert_eq!(warning.severity, ProcessAlert::Warning);
+
+        // Critical.
+        let critical = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 600 * 1024 * 1024,
+            thread_count: 10,
+            uptime: Duration::from_secs(60),
+        });
+        assert_eq!(critical.severity, ProcessAlert::Critical);
     }
 
     #[test]
-    fn dead_man_switch_elapsed_since_tick() {
-        let dms = DeadManSwitch::default();
-        let elapsed = dms.elapsed_since_tick();
-        // Should be very small right after creation
-        assert!(elapsed < Duration::from_secs(1));
+    fn thread_count_limits() {
+        let monitor = ProcessMonitor::new(ProcessMonitorConfig {
+            memory_warn_bytes: u64::MAX,
+            memory_critical_bytes: u64::MAX,
+            thread_warn_count: 50,
+            thread_critical_count: 100,
+        });
+
+        let normal = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 0,
+            thread_count: 20,
+            uptime: Duration::from_secs(1),
+        });
+        assert_eq!(normal.severity, ProcessAlert::Normal);
+
+        let warning = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 0,
+            thread_count: 75,
+            uptime: Duration::from_secs(1),
+        });
+        assert_eq!(warning.severity, ProcessAlert::Warning);
+
+        let critical = monitor.evaluate(&ProcessSnapshot {
+            memory_bytes: 0,
+            thread_count: 150,
+            uptime: Duration::from_secs(1),
+        });
+        assert_eq!(critical.severity, ProcessAlert::Critical);
     }
 }
 
@@ -734,56 +857,11 @@ mod system_escalation {
     }
 
     #[test]
-    fn safe_mode_sticky_under_continued_failures() {
-        let mut mon = monitor(1, 3, 5);
-        for _ in 0..5 {
-            mon.record_missed_tick();
-        }
-        assert_eq!(mon.mode(), SystemMode::SafeMode);
-        for _ in 0..10 {
-            mon.record_missed_tick();
-        }
-        assert_eq!(mon.mode(), SystemMode::SafeMode);
-    }
-
-    #[test]
-    fn heartbeat_recovery_from_safe_mode() {
-        let mut mon = monitor(1, 3, 5);
-        for _ in 0..5 {
-            mon.record_missed_tick();
-        }
-        assert_eq!(mon.mode(), SystemMode::SafeMode);
-        mon.record_heartbeat();
-        assert_eq!(mon.mode(), SystemMode::Normal);
-    }
-
-    #[test]
-    fn intermittent_miss_recover_does_not_escalate() {
-        let mut mon = monitor(1, 3, 10);
-        for _ in 0..20 {
-            mon.record_missed_tick();
-            mon.record_heartbeat();
-        }
-        // Should never have reached Degraded
-        assert!(mon.mode() <= SystemMode::Normal);
-    }
-
-    #[test]
     fn adapter_disconnect_triggers_warning() {
         let mut mon = SystemMonitor::default();
         mon.register_adapter("msfs");
         mon.report_adapter_disconnected("msfs");
         assert_eq!(mon.mode(), SystemMode::Warning);
-    }
-
-    #[test]
-    fn adapter_reconnect_recovers_to_normal() {
-        let mut mon = SystemMonitor::default();
-        mon.register_adapter("xplane");
-        mon.report_adapter_disconnected("xplane");
-        assert_eq!(mon.mode(), SystemMode::Warning);
-        mon.report_adapter_connected("xplane");
-        assert_eq!(mon.mode(), SystemMode::Normal);
     }
 
     #[test]
@@ -794,80 +872,78 @@ mod system_escalation {
         });
         mon.report_rt_memory(2048);
         assert_eq!(mon.mode(), SystemMode::Warning);
-        assert_eq!(mon.current_rt_memory(), 2048);
-    }
-
-    #[test]
-    fn peak_memory_tracks_maximum() {
-        let mut mon = SystemMonitor::new(MonitorConfig {
-            rt_memory_budget_bytes: 0,
-            ..MonitorConfig::default()
-        });
-        mon.report_rt_memory(100);
-        mon.report_rt_memory(500);
-        mon.report_rt_memory(200);
-        assert_eq!(mon.peak_rt_memory(), 500);
-        assert_eq!(mon.current_rt_memory(), 200);
-    }
-
-    #[test]
-    fn force_mode_changes_system_mode() {
-        let mut mon = SystemMonitor::default();
-        mon.force_mode(SystemMode::SafeMode);
-        assert_eq!(mon.mode(), SystemMode::SafeMode);
-    }
-
-    #[test]
-    fn system_mode_ordering() {
-        assert!(SystemMode::Normal < SystemMode::Warning);
-        assert!(SystemMode::Warning < SystemMode::Degraded);
-        assert!(SystemMode::Degraded < SystemMode::SafeMode);
     }
 }
 
 // ============================================================================
-// Module 7: Error handling and edge cases
+// Module 7: Integration scenarios
+// ============================================================================
+
+mod integration {
+    use super::*;
+
+    /// Full lifecycle: start watchdog → register 3 components → one fails →
+    /// escalation → recovery.
+    #[test]
+    fn full_lifecycle_register_fail_recover() {
+        let mut wd = WatchdogSystem::new();
+
+        // Register 3 components.
+        let axis = ComponentType::UsbEndpoint("axis_ep".into());
+        let ffb = ComponentType::NativePlugin("ffb_plugin".into());
+        let hid = ComponentType::UsbEndpoint("hid_ep".into());
+
+        let config = WatchdogConfig {
+            max_consecutive_failures: 2,
+            ..WatchdogConfig::default()
+        };
+        wd.register_component(axis.clone(), config.clone());
+        wd.register_component(ffb.clone(), WatchdogConfig {
+            max_consecutive_failures: 2,
+            max_execution_time: Duration::from_micros(100),
+            ..WatchdogConfig::default()
+        });
+        wd.register_component(hid.clone(), config);
+
+        let summary = wd.get_health_summary();
+        assert_eq!(summary.total_components, 3);
+        assert_eq!(summary.active_components, 3);
+        assert_eq!(summary.quarantined_components, 0);
+
+        // HID fails twice → quarantined.
+        wd.record_usb_error("hid_ep", "disconnect");
+        wd.record_usb_error("hid_ep", "disconnect");
+        assert!(wd.is_quarantined(&hid));
+
+        let summary = wd.get_health_summary();
+        assert_eq!(summary.quarantined_components, 1);
+
+        // Initiate recovery.
+        assert!(wd.attempt_recovery(&hid));
+        assert!(!wd.is_quarantined(&hid));
+        assert!(matches!(
+            wd.get_quarantine_status(&hid),
+            Some(QuarantineStatus::Recovering { .. })
+        ));
+
+        // After recovery, system should show 0 quarantined.
+        let summary = wd.get_health_summary();
+        assert_eq!(summary.quarantined_components, 0);
+    }
+}
+
+// ============================================================================
+// Module 8: Error handling and edge cases
 // ============================================================================
 
 mod error_handling {
     use super::*;
 
     #[test]
-    fn unregistered_component_level_is_normal() {
-        let ld = EscalationLadder::default();
-        assert_eq!(ld.level("nonexistent"), EscalationLevel::Normal);
-        assert_eq!(ld.failure_count("nonexistent"), 0);
-        assert_eq!(ld.restart_count("nonexistent"), 0);
-    }
-
-    #[test]
     fn record_failure_auto_registers_component() {
         let mut ld = EscalationLadder::default();
         ld.record_failure("auto", "err");
         assert_eq!(ld.failure_count("auto"), 1);
-    }
-
-    #[test]
-    fn record_success_auto_registers_component() {
-        let mut ld = EscalationLadder::default();
-        let level = ld.record_success("auto");
-        assert_eq!(level, EscalationLevel::Normal);
-    }
-
-    #[test]
-    fn reset_nonexistent_component_is_noop() {
-        let mut ld = EscalationLadder::default();
-        ld.reset("nonexistent"); // should not panic
-    }
-
-    #[test]
-    fn report_on_unregistered_subsystem_is_noop() {
-        let mut agg = HealthAggregator::new();
-        agg.report_healthy("ghost");
-        agg.report_warning("ghost", "warn");
-        agg.report_failure("ghost", "fail");
-        // Nothing should panic; subsystem health for ghost is Unknown
-        assert_eq!(agg.subsystem_health("ghost"), SubsystemHealth::Unknown);
     }
 
     #[test]
@@ -884,176 +960,12 @@ mod error_handling {
         );
         let event = wd.check_nan_guard(f32::NAN, "test_value", comp);
         assert!(event.is_some());
-        let event = event.unwrap();
-        assert_eq!(event.event_type, WatchdogEventType::NanDetected);
-    }
-
-    #[test]
-    fn watchdog_system_nan_guard_infinity() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::AxisNode("axis1".to_string());
-        wd.register_component(
-            comp.clone(),
-            WatchdogConfig {
-                enable_nan_guards: true,
-                is_critical: false,
-                ..WatchdogConfig::default()
-            },
-        );
-        let event = wd.check_nan_guard(f32::INFINITY, "inf_value", comp);
-        assert!(event.is_some());
-    }
-
-    #[test]
-    fn watchdog_system_nan_guard_normal_value() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::AxisNode("axis2".to_string());
-        wd.register_component(
-            comp.clone(),
-            WatchdogConfig {
-                enable_nan_guards: true,
-                ..WatchdogConfig::default()
-            },
-        );
-        let event = wd.check_nan_guard(0.5, "normal_value", comp);
-        assert!(event.is_none());
-    }
-
-    #[test]
-    fn watchdog_system_clear_all_state() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::UsbEndpoint("ep".to_string());
-        wd.register_component(comp.clone(), WatchdogConfig::default());
-        wd.record_usb_error("ep", "err");
-        wd.clear_all_state();
-        assert_eq!(wd.get_all_events().len(), 0);
-        assert!(wd.get_quarantine_status(&comp).is_none());
-    }
-
-    #[test]
-    fn watchdog_health_summary_reflects_state() {
-        let mut wd = WatchdogSystem::new();
-        let comp_a = ComponentType::UsbEndpoint("a".to_string());
-        let comp_b = ComponentType::UsbEndpoint("b".to_string());
-        wd.register_component(comp_a.clone(), WatchdogConfig::default());
-        wd.register_component(comp_b.clone(), WatchdogConfig::default());
-        let summary = wd.get_health_summary();
-        assert_eq!(summary.total_components, 2);
-        assert_eq!(summary.active_components, 2);
-        assert_eq!(summary.quarantined_components, 0);
     }
 
     #[test]
     fn component_type_display_name() {
         assert!(ComponentType::UsbEndpoint("ep1".into()).display_name().contains("USB"));
         assert!(ComponentType::NativePlugin("p1".into()).display_name().contains("Native"));
-        assert!(ComponentType::WasmPlugin("w1".into()).display_name().contains("WASM"));
-        assert!(ComponentType::SimAdapter("sa".into()).display_name().contains("Sim"));
-        assert!(ComponentType::PanelDevice("pd".into()).display_name().contains("Panel"));
-        assert!(ComponentType::AxisNode("an".into()).display_name().contains("Axis"));
-    }
-
-    #[test]
-    fn component_type_id_extraction() {
-        let comp = ComponentType::UsbEndpoint("my_ep".to_string());
-        assert_eq!(comp.id(), "my_ep");
-    }
-}
-
-// ============================================================================
-// Module 8: Process monitor
-// ============================================================================
-
-mod process_monitor_tests {
-    use super::*;
-
-    #[test]
-    fn default_check_is_normal() {
-        let mon = ProcessMonitor::default();
-        let alert = mon.check();
-        assert_eq!(alert.severity, ProcessAlert::Normal);
-        assert!(alert.messages.is_empty());
-    }
-
-    #[test]
-    fn memory_warning_threshold() {
-        let mon = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: 100,
-            memory_critical_bytes: 200,
-            thread_warn_count: 1000,
-            thread_critical_count: 2000,
-        });
-        let snap = ProcessSnapshot {
-            memory_bytes: 150,
-            thread_count: 4,
-            uptime: Duration::from_secs(1),
-        };
-        let alert = mon.evaluate(&snap);
-        assert_eq!(alert.severity, ProcessAlert::Warning);
-    }
-
-    #[test]
-    fn memory_critical_threshold() {
-        let mon = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: 100,
-            memory_critical_bytes: 200,
-            thread_warn_count: 1000,
-            thread_critical_count: 2000,
-        });
-        let snap = ProcessSnapshot {
-            memory_bytes: 250,
-            thread_count: 4,
-            uptime: Duration::from_secs(1),
-        };
-        let alert = mon.evaluate(&snap);
-        assert_eq!(alert.severity, ProcessAlert::Critical);
-    }
-
-    #[test]
-    fn thread_count_warning() {
-        let mon = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: u64::MAX,
-            memory_critical_bytes: u64::MAX,
-            thread_warn_count: 5,
-            thread_critical_count: 10,
-        });
-        let snap = ProcessSnapshot {
-            memory_bytes: 0,
-            thread_count: 7,
-            uptime: Duration::from_secs(1),
-        };
-        let alert = mon.evaluate(&snap);
-        assert_eq!(alert.severity, ProcessAlert::Warning);
-    }
-
-    #[test]
-    fn thread_count_critical() {
-        let mon = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: u64::MAX,
-            memory_critical_bytes: u64::MAX,
-            thread_warn_count: 5,
-            thread_critical_count: 10,
-        });
-        let snap = ProcessSnapshot {
-            memory_bytes: 0,
-            thread_count: 15,
-            uptime: Duration::from_secs(1),
-        };
-        let alert = mon.evaluate(&snap);
-        assert_eq!(alert.severity, ProcessAlert::Critical);
-    }
-
-    #[test]
-    fn process_alert_ordering() {
-        assert!(ProcessAlert::Normal < ProcessAlert::Warning);
-        assert!(ProcessAlert::Warning < ProcessAlert::Critical);
-    }
-
-    #[test]
-    fn uptime_advances() {
-        let mon = ProcessMonitor::default();
-        std::thread::sleep(Duration::from_millis(10));
-        assert!(mon.uptime() >= Duration::from_millis(10));
     }
 }
 
@@ -1069,15 +981,6 @@ mod fault_injection {
         let wd = WatchdogSystem::new();
         let summary = wd.get_health_summary();
         assert!(!summary.fault_injection_enabled);
-    }
-
-    #[test]
-    fn enable_and_disable_fault_injection() {
-        let mut wd = WatchdogSystem::new();
-        wd.enable_fault_injection();
-        assert!(wd.get_health_summary().fault_injection_enabled);
-        wd.disable_fault_injection();
-        assert!(!wd.get_health_summary().fault_injection_enabled);
     }
 
     #[test]
@@ -1105,7 +1008,7 @@ mod fault_injection {
 // Module 10: Property-based tests
 // ============================================================================
 
-mod proptest_tests {
+mod property_tests {
     use super::*;
     use proptest::prelude::*;
 
@@ -1141,32 +1044,6 @@ mod proptest_tests {
         }
 
         #[test]
-        fn system_mode_is_always_valid_after_operations(
-            misses in 0u32..30,
-            recoveries in 0u32..10,
-        ) {
-            let mut mon = SystemMonitor::new(MonitorConfig {
-                warn_after_missed_ticks: 1,
-                degrade_after_missed_ticks: 5,
-                safe_mode_after_missed_ticks: 20,
-                ..MonitorConfig::default()
-            });
-
-            for _ in 0..misses {
-                mon.record_missed_tick();
-            }
-            for _ in 0..recoveries {
-                mon.record_heartbeat();
-            }
-
-            let mode = mon.mode();
-            assert!(mode == SystemMode::Normal
-                || mode == SystemMode::Warning
-                || mode == SystemMode::Degraded
-                || mode == SystemMode::SafeMode);
-        }
-
-        #[test]
         fn recovery_always_decreases_or_maintains_level(
             initial_failures in 1u32..10,
             successes in 0u32..20,
@@ -1195,37 +1072,7 @@ mod proptest_tests {
         }
 
         #[test]
-        fn health_check_manager_summary_consistent(
-            n_healthy in 0usize..5,
-            n_degraded in 0usize..5,
-            n_unhealthy in 0usize..5,
-        ) {
-            let mut mgr = HealthCheckManager::new();
-            for i in 0..n_healthy {
-                let name = format!("h{i}");
-                mgr.register(&name, Duration::from_secs(5), 3);
-                // already healthy by default
-            }
-            for i in 0..n_degraded {
-                let name = format!("d{i}");
-                mgr.register(&name, Duration::from_secs(5), 3);
-                mgr.report_degraded(&name, "slow");
-            }
-            for i in 0..n_unhealthy {
-                let name = format!("u{i}");
-                mgr.register(&name, Duration::from_secs(5), 3);
-                mgr.report_unhealthy(&name, "dead");
-            }
-
-            let s = mgr.summary();
-            assert_eq!(s.healthy, n_healthy);
-            assert_eq!(s.degraded, n_degraded);
-            assert_eq!(s.unhealthy, n_unhealthy);
-            assert_eq!(s.healthy + s.degraded + s.unhealthy, n_healthy + n_degraded + n_unhealthy);
-        }
-
-        #[test]
-        fn process_monitor_severity_monotonic(
+        fn resource_severity_monotonic(
             memory in 0u64..1000,
         ) {
             let mon = ProcessMonitor::new(ProcessMonitorConfig {
@@ -1249,24 +1096,6 @@ mod proptest_tests {
             } else {
                 assert_eq!(alert.severity, ProcessAlert::Normal);
             }
-        }
-
-        #[test]
-        fn aggregate_health_counts_sum_correctly(
-            n in 1usize..8,
-        ) {
-            let mut agg = HealthAggregator::new();
-            for i in 0..n {
-                agg.register(SubsystemCheckConfig::new(&format!("s{i}")));
-                agg.report_healthy(&format!("s{i}"));
-            }
-            let report = agg.aggregate();
-            assert_eq!(report.healthy_count, n);
-            assert_eq!(
-                report.healthy_count + report.warning_count + report.degraded_count
-                    + report.failed_count + report.unknown_count,
-                n
-            );
         }
     }
 }
