@@ -644,4 +644,205 @@ mod tests {
             panic!("unexpected command variant");
         }
     }
+
+    // ── Additional depth: command parsing ─────────────────────────────────
+
+    #[test]
+    fn parse_sim_configure_verify_subcommand() {
+        let cli = Cli::try_parse_from(["flightctl", "sim", "configure", "msfs", "verify"])
+            .unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Sim {
+                action: commands::SimAction::Configure { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_torque_unlock_subcommand() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "torque", "unlock", "dev-ffb"]).unwrap();
+        if let Commands::Torque {
+            action:
+                commands::TorqueAction::Unlock {
+                    device_id,
+                    skip_physical_confirm,
+                },
+        } = cli.command
+        {
+            assert_eq!(device_id, "dev-ffb");
+            assert!(!skip_physical_confirm);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_torque_set_mode_subcommand() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "torque", "set-mode", "demo"]).unwrap();
+        if let Commands::Torque {
+            action: commands::TorqueAction::SetMode { mode, .. },
+        } = cli.command
+        {
+            assert_eq!(mode, "demo");
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_metrics_snapshot_subcommand() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "metrics", "snapshot"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Metrics {
+                action: commands::MetricsAction::Snapshot { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_overlay_notify_subcommand() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "overlay",
+            "notify",
+            "test message",
+            "--severity",
+            "warning",
+            "--ttl",
+            "10",
+        ])
+        .unwrap();
+        if let Commands::Overlay {
+            action:
+                commands::OverlayAction::Notify {
+                    message,
+                    severity,
+                    ttl,
+                },
+        } = cli.command
+        {
+            assert_eq!(message, "test message");
+            assert_eq!(severity, "warning");
+            assert_eq!(ttl, 10);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    #[test]
+    fn parse_panels_verify_subcommand() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "panels", "verify"]).unwrap();
+        assert!(matches!(
+            cli.command,
+            Commands::Panels {
+                action: commands::PanelAction::Verify { .. }
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_diag_record_with_all_options() {
+        let cli = Cli::try_parse_from([
+            "flightctl",
+            "diag",
+            "record",
+            "--output",
+            "rec.fbb",
+            "--duration",
+            "120",
+            "--include-performance",
+        ])
+        .unwrap();
+        if let Commands::Diag {
+            action:
+                commands::DiagAction::Record {
+                    output,
+                    duration,
+                    include_performance,
+                },
+        } = cli.command
+        {
+            assert_eq!(output, std::path::PathBuf::from("rec.fbb"));
+            assert_eq!(duration, Some(120));
+            assert!(include_performance);
+        } else {
+            panic!("unexpected command variant");
+        }
+    }
+
+    // ── Additional depth: error code / exit code mapping ──────────────────
+
+    #[test]
+    fn error_to_code_unknown_error_fallback() {
+        let err = anyhow::anyhow!("some random error");
+        assert_eq!(error_to_code(&err), "UNKNOWN_ERROR");
+    }
+
+    #[test]
+    fn error_to_exit_code_generic_error_is_one() {
+        let err = anyhow::anyhow!("generic failure");
+        assert_eq!(error_to_exit_code(&err), 1);
+    }
+
+    #[test]
+    fn error_to_code_connection_failed() {
+        let ipc_err = flight_ipc::IpcError::ConnectionFailed {
+            reason: "connection refused".into(),
+        };
+        let err: anyhow::Error = ipc_err.into();
+        assert_eq!(error_to_code(&err), "CONNECTION_FAILED");
+    }
+
+    #[test]
+    fn error_to_exit_code_connection_failed_is_two() {
+        let ipc_err = flight_ipc::IpcError::ConnectionFailed {
+            reason: "connection refused".into(),
+        };
+        let err: anyhow::Error = ipc_err.into();
+        assert_eq!(error_to_exit_code(&err), 2);
+    }
+
+    #[test]
+    fn error_to_code_transport_error() {
+        let ipc_err = flight_ipc::IpcError::Transport(
+            flight_ipc::transport::TransportError::Timeout,
+        );
+        let err: anyhow::Error = ipc_err.into();
+        assert_eq!(error_to_code(&err), "TRANSPORT_ERROR");
+    }
+
+    #[test]
+    fn error_to_exit_code_transport_is_five() {
+        let ipc_err = flight_ipc::IpcError::Transport(
+            flight_ipc::transport::TransportError::Timeout,
+        );
+        let err: anyhow::Error = ipc_err.into();
+        assert_eq!(error_to_exit_code(&err), 5);
+    }
+
+    // ── Additional depth: JSON flag override ──────────────────────────────
+
+    #[test]
+    fn json_flag_overrides_human_output() {
+        let mut cli =
+            Cli::try_parse_from(["flightctl", "--output", "human", "--json", "status"])
+                .unwrap();
+        if cli.json {
+            cli.output = OutputFormat::Json;
+        }
+        assert!(matches!(cli.output, OutputFormat::Json));
+    }
+
+    #[test]
+    fn output_short_flag_o() {
+        let cli =
+            Cli::try_parse_from(["flightctl", "-o", "json", "status"]).unwrap();
+        assert!(matches!(cli.output, OutputFormat::Json));
+    }
 }

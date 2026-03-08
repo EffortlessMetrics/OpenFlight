@@ -6,7 +6,10 @@
 //! Implements rate and jerk limited setpoint changes to prevent torque steps.
 //! Handles both FFB devices (true force feedback) and non-FFB devices (spring-centered).
 
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+use crate::TimeSource;
 
 /// Trim operation mode
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -130,6 +133,8 @@ pub struct TrimController {
     spring_freeze_start: Option<Instant>,
     /// Last update timestamp
     last_update: Instant,
+    /// Time source for deterministic operation
+    time_source: Arc<dyn TimeSource>,
     /// Active setpoint change
     active_change: Option<SetpointChange>,
 }
@@ -137,6 +142,11 @@ pub struct TrimController {
 impl TrimController {
     /// Create new trim controller
     pub fn new(max_torque_nm: f32) -> Self {
+        Self::with_time_source(max_torque_nm, Arc::new(crate::DefaultTimeSource))
+    }
+
+    /// Create new trim controller with time source
+    pub fn with_time_source(max_torque_nm: f32, time_source: Arc<dyn TimeSource>) -> Self {
         Self {
             mode: TrimMode::ForceFeedback,
             max_torque_nm,
@@ -149,7 +159,8 @@ impl TrimController {
             spring_ramp_start: None,
             spring_ramp_duration: Duration::from_millis(150),
             spring_freeze_start: None,
-            last_update: Instant::now(),
+            last_update: time_source.now(),
+            time_source,
             active_change: None,
         }
     }
@@ -224,7 +235,7 @@ impl TrimController {
 
     /// Update trim controller (call at regular intervals)
     pub fn update(&mut self) -> TrimOutput {
-        let now = Instant::now();
+        let now = self.time_source.now();
         let dt = now.duration_since(self.last_update).as_secs_f32();
         self.last_update = now;
 
@@ -235,8 +246,7 @@ impl TrimController {
     }
 
     /// Update with an explicit timestep (for deterministic testing).
-    #[cfg(test)]
-    fn update_with_dt(&mut self, dt_secs: f32) -> TrimOutput {
+    pub fn update_with_dt(&mut self, dt_secs: f32) -> TrimOutput {
         match self.mode {
             TrimMode::ForceFeedback => self.update_ffb(dt_secs),
             TrimMode::SpringCentered => self.update_spring(dt_secs),
@@ -305,7 +315,7 @@ impl TrimController {
     fn update_spring(&mut self, _dt: f32) -> TrimOutput {
         // Handle spring ramp if active
         if let Some(ramp_start) = self.spring_ramp_start {
-            let ramp_elapsed = ramp_start.elapsed();
+            let ramp_elapsed = self.time_source.now().duration_since(ramp_start);
 
             if ramp_elapsed >= self.spring_ramp_duration {
                 // Ramp complete - unfreeze spring
@@ -333,10 +343,10 @@ impl TrimController {
                 // Start ramping after a brief hold period (measured from when freeze began)
                 let freeze_elapsed = self
                     .spring_freeze_start
-                    .map(|t| t.elapsed())
+                    .map(|t| self.time_source.now().duration_since(t))
                     .unwrap_or(Duration::from_millis(200));
                 if freeze_elapsed > Duration::from_millis(100) {
-                    self.spring_ramp_start = Some(Instant::now());
+                    self.spring_ramp_start = Some(self.time_source.now());
                     self.spring_freeze_start = None;
                 }
             }
@@ -352,7 +362,7 @@ impl TrimController {
     pub fn freeze_spring(&mut self) {
         if self.mode == TrimMode::SpringCentered {
             self.spring_frozen = true;
-            self.spring_freeze_start = Some(Instant::now());
+            self.spring_freeze_start = Some(self.time_source.now());
         }
     }
 
@@ -360,7 +370,7 @@ impl TrimController {
     pub fn ramp_spring_enable(&mut self, ramp_duration: Duration) {
         if self.mode == TrimMode::SpringCentered && self.spring_frozen {
             // Start gradual ramp by setting up a ramp state
-            self.spring_ramp_start = Some(Instant::now());
+            self.spring_ramp_start = Some(self.time_source.now());
             self.spring_ramp_duration = ramp_duration;
             // Don't unfreeze immediately - let update() handle the ramp
         }
@@ -425,7 +435,7 @@ impl TrimController {
     /// Get spring ramp progress (0.0 to 1.0)
     pub fn get_spring_ramp_progress(&self) -> Option<f32> {
         if let Some(ramp_start) = self.spring_ramp_start {
-            let elapsed = ramp_start.elapsed().as_secs_f32();
+            let elapsed = self.time_source.now().duration_since(ramp_start).as_secs_f32();
             let total = self.spring_ramp_duration.as_secs_f32();
             Some((elapsed / total).min(1.0))
         } else {

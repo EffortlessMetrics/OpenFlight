@@ -20,7 +20,7 @@
 //! ```
 //!
 //! Axis resolution: 12-bit (0–4095), stored in 16-bit LE fields.
-//! Alpha Yoke VID: 0x294B  PID: 0x0102 (community-reported, unverified)
+//! Alpha Yoke VID: 0x294B  PID: 0x1900 (confirmed via linux-hardware.org)
 
 /// Expected minimum report length in bytes.
 pub const ALPHA_REPORT_LEN: usize = 11;

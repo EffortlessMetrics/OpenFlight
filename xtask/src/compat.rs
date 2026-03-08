@@ -3,10 +3,11 @@
 
 //! Generate COMPATIBILITY.md and compatibility.json from `compat/` YAML manifests.
 //!
-//! Run with: `cargo xtask gen-compat` or `cargo xtask generate-compat`
+//! Run with: `cargo xtask compat-matrix`, `cargo xtask gen-compat`,
+//! or `cargo xtask generate-compat`.
 
 use anyhow::{Context, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fmt::Write as FmtWrite,
@@ -17,9 +18,9 @@ use std::{
 // ---------- validation types ----------
 
 /// A manifest validation error.
-struct ValidationError {
-    path: PathBuf,
-    message: String,
+pub(crate) struct ValidationError {
+    pub(crate) path: PathBuf,
+    pub(crate) message: String,
 }
 
 impl std::fmt::Display for ValidationError {
@@ -30,69 +31,82 @@ impl std::fmt::Display for ValidationError {
 
 // ---------- JSON output types ----------
 
-#[derive(Serialize)]
-struct CompatJson {
-    generated_by: &'static str,
-    devices: Vec<DeviceEntry>,
-    games: Vec<GameEntry>,
-    summary: Summary,
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub(crate) struct CompatJson {
+    pub(crate) generated_by: String,
+    pub(crate) devices: Vec<DeviceEntry>,
+    pub(crate) games: Vec<GameEntry>,
+    pub(crate) summary: Summary,
+    pub(crate) badge: BadgeData,
 }
 
-#[derive(Serialize)]
-struct DeviceEntry {
-    name: String,
-    vendor: String,
-    vendor_id: String,
-    product_id: String,
-    axes: u64,
-    buttons: u64,
-    force_feedback: bool,
-    tier: u64,
-    test_coverage: TestCoverage,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct DeviceEntry {
+    pub(crate) name: String,
+    pub(crate) vendor: String,
+    pub(crate) vendor_id: String,
+    pub(crate) product_id: String,
+    pub(crate) axes: u64,
+    pub(crate) buttons: u64,
+    pub(crate) force_feedback: bool,
+    pub(crate) tier: u64,
+    pub(crate) test_coverage: TestCoverage,
+    pub(crate) last_validated: Option<String>,
 }
 
-#[derive(Serialize)]
-struct GameEntry {
-    name: String,
-    id: String,
-    mechanism: String,
-    crate_name: String,
-    features: GameFeatures,
-    test_coverage: GameTestCoverage,
-    tier: u64,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct GameEntry {
+    pub(crate) name: String,
+    pub(crate) id: String,
+    pub(crate) mechanism: String,
+    pub(crate) crate_name: String,
+    pub(crate) features: GameFeatures,
+    pub(crate) test_coverage: GameTestCoverage,
+    pub(crate) tier: u64,
+    pub(crate) supported_versions: Vec<String>,
 }
 
-#[derive(Serialize)]
-struct GameFeatures {
-    telemetry_read: bool,
-    control_injection: bool,
-    force_feedback_translation: bool,
-    aircraft_detection: bool,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct GameFeatures {
+    pub(crate) telemetry_read: bool,
+    pub(crate) control_injection: bool,
+    pub(crate) force_feedback_translation: bool,
+    pub(crate) aircraft_detection: bool,
 }
 
-#[derive(Serialize)]
-struct TestCoverage {
-    simulated: bool,
-    hil: bool,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct TestCoverage {
+    pub(crate) simulated: bool,
+    pub(crate) hil: bool,
 }
 
-#[derive(Serialize)]
-struct GameTestCoverage {
-    trace_replay: bool,
-    hil: bool,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct GameTestCoverage {
+    pub(crate) trace_replay: bool,
+    pub(crate) hil: bool,
 }
 
-#[derive(Serialize)]
-struct Summary {
-    total_devices: usize,
-    total_games: usize,
-    tier_distribution: BTreeMap<String, usize>,
-    game_tier_distribution: BTreeMap<String, usize>,
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct Summary {
+    pub(crate) total_devices: usize,
+    pub(crate) total_games: usize,
+    pub(crate) tier_distribution: BTreeMap<String, usize>,
+    pub(crate) game_tier_distribution: BTreeMap<String, usize>,
+}
+
+/// CI badge data: device/game counts by tier and test coverage stats.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub(crate) struct BadgeData {
+    pub(crate) devices_by_tier: BTreeMap<String, usize>,
+    pub(crate) games_by_tier: BTreeMap<String, usize>,
+    pub(crate) devices_with_sim_tests: usize,
+    pub(crate) devices_with_hil_tests: usize,
+    pub(crate) games_with_hil_tests: usize,
 }
 
 // ---------- entry point ----------
 
-/// Entry point for `cargo xtask gen-compat` / `cargo xtask generate-compat`.
+/// Entry point for `cargo xtask compat-matrix` / `gen-compat` / `generate-compat`.
 pub fn run_gen_compat() -> Result<()> {
     let compat_dir = Path::new("compat");
     if !compat_dir.exists() {
@@ -138,149 +152,177 @@ pub fn run_gen_compat() -> Result<()> {
         }
     }
 
-    // --- Compute summary statistics ---
-    let mut tier_dist: BTreeMap<String, usize> = BTreeMap::new();
-    for d in &device_entries {
-        *tier_dist.entry(format!("tier_{}", d.tier)).or_insert(0) += 1;
-    }
-    let mut game_tier_dist: BTreeMap<String, usize> = BTreeMap::new();
-    for g in &game_entries {
-        *game_tier_dist
-            .entry(format!("tier_{}", g.tier))
-            .or_insert(0) += 1;
-    }
-    let summary = Summary {
-        total_devices: device_entries.len(),
-        total_games: game_entries.len(),
-        tier_distribution: tier_dist.clone(),
-        game_tier_distribution: game_tier_dist.clone(),
-    };
-
-    // --- Generate COMPATIBILITY.md ---
-    let mut out = String::new();
-    writeln!(out, "# OpenFlight Compatibility Matrix")?;
-    writeln!(out)?;
-    writeln!(
-        out,
-        "> Auto-generated by `cargo xtask gen-compat`. Do not edit manually."
-    )?;
-    writeln!(out)?;
-
-    // Summary statistics
-    writeln!(out, "## Summary")?;
-    writeln!(out)?;
-    writeln!(out, "- **Total devices:** {}", device_entries.len())?;
-    writeln!(out, "- **Total games:** {}", game_entries.len())?;
-    writeln!(out, "- **Tier distribution (devices):**")?;
-    for (tier, count) in &tier_dist {
-        writeln!(out, "  - {tier}: {count}")?;
-    }
-    writeln!(out, "- **Tier distribution (games):**")?;
-    for (tier, count) in &game_tier_dist {
-        writeln!(out, "  - {tier}: {count}")?;
-    }
-    writeln!(out)?;
-
-    // Device support matrix
-    writeln!(out, "## Hardware Devices")?;
-    writeln!(out)?;
-    writeln!(
-        out,
-        "| Device | Vendor | Vendor ID | Product ID | Axes | Buttons | FFB | Tier | Test Coverage |"
-    )?;
-    writeln!(
-        out,
-        "|--------|--------|-----------|------------|------|---------|-----|------|---------------|"
-    )?;
-
-    for d in &device_entries {
-        let ffb = if d.force_feedback { "✓" } else { "✗" };
-        let coverage = match (d.test_coverage.simulated, d.test_coverage.hil) {
-            (true, true) => "sim + HIL",
-            (true, false) => "sim",
-            (false, true) => "HIL",
-            (false, false) => "none",
-        };
-        writeln!(
-            out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
-            d.name, d.vendor, d.vendor_id, d.product_id, d.axes, d.buttons, ffb, d.tier, coverage
-        )?;
-    }
-    writeln!(out)?;
-
-    // Game support matrix
-    writeln!(out, "## Game Integrations")?;
-    writeln!(out)?;
-    writeln!(
-        out,
-        "| Game | Adapter | Integration | Telemetry | Control Injection | FFB | Aircraft Detection | Tier | HIL Tested |"
-    )?;
-    writeln!(
-        out,
-        "|------|---------|-------------|-----------|-------------------|-----|--------------------|------|------------|"
-    )?;
-
-    for g in &game_entries {
-        let telemetry = bool_to_check(g.features.telemetry_read);
-        let control = bool_to_check(g.features.control_injection);
-        let ffb = bool_to_check(g.features.force_feedback_translation);
-        let ac_detect = bool_to_check(g.features.aircraft_detection);
-        let hil = bool_to_check(g.test_coverage.hil);
-        writeln!(
-            out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
-            g.name, g.crate_name, g.mechanism, telemetry, control, ffb, ac_detect, g.tier, hil
-        )?;
-    }
-    writeln!(out)?;
-
-    // Support tier legend
-    writeln!(out, "## Support Tier Legend")?;
-    writeln!(out)?;
-    writeln!(out, "| Tier | Meaning |")?;
-    writeln!(out, "|------|---------|")?;
-    writeln!(out, "| 1 | Automated trace tests + recent HIL validation |")?;
-    writeln!(
-        out,
-        "| 2 | Automated tests (no HIL) + community confirmation |"
-    )?;
-    writeln!(out, "| 3 | Compiles / best-effort — no guarantees |")?;
+    let out = generate_markdown(&device_entries, &game_entries);
 
     let md_path = "COMPATIBILITY.md";
     fs::write(md_path, &out).with_context(|| format!("Failed to write {md_path}"))?;
 
     // --- Generate compat/compatibility.json ---
-    let compat_json = CompatJson {
-        generated_by: "cargo xtask gen-compat",
-        devices: device_entries,
-        games: game_entries,
-        summary,
-    };
     let json_path = "compat/compatibility.json";
-    let json_out = serde_json::to_string_pretty(&compat_json)
-        .context("Failed to serialize compatibility.json")?;
+    let json_out = generate_json(device_entries, game_entries)?;
     fs::write(json_path, format!("{json_out}\n"))
         .with_context(|| format!("Failed to write {json_path}"))?;
 
     println!("✓ Written {md_path} ({} bytes)", out.len());
     println!("✓ Written {json_path} ({} bytes)", json_out.len());
-    println!(
-        "  Devices: {}  Games: {}",
-        compat_json.summary.total_devices, compat_json.summary.total_games
-    );
-    for (tier, count) in &tier_dist {
-        println!("  Device {tier}: {count}");
-    }
-    for (tier, count) in &game_tier_dist {
-        println!("  Game {tier}: {count}");
-    }
     Ok(())
+}
+
+// ---------- generation helpers (testable) ----------
+
+/// Generate Markdown content from parsed device and game entries.
+pub(crate) fn generate_markdown(devices: &[DeviceEntry], games: &[GameEntry]) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "# OpenFlight Compatibility Matrix");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "> Auto-generated by `cargo xtask compat-matrix`. Do not edit manually."
+    );
+    let _ = writeln!(out);
+
+    // Summary
+    let tier_dist = tier_distribution(devices.iter().map(|d| d.tier));
+    let game_tier_dist = tier_distribution(games.iter().map(|g| g.tier));
+
+    let _ = writeln!(out, "## Summary");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "- **Total devices:** {}", devices.len());
+    let _ = writeln!(out, "- **Total games:** {}", games.len());
+    let _ = writeln!(out, "- **Tier distribution (devices):**");
+    for (tier, count) in &tier_dist {
+        let _ = writeln!(out, "  - {tier}: {count}");
+    }
+    let _ = writeln!(out, "- **Tier distribution (games):**");
+    for (tier, count) in &game_tier_dist {
+        let _ = writeln!(out, "  - {tier}: {count}");
+    }
+    let _ = writeln!(out);
+
+    // Device support matrix — grouped by vendor
+    let _ = writeln!(out, "## Hardware Devices");
+    let _ = writeln!(out);
+
+    let vendors = group_by_vendor(devices);
+    for (vendor, devs) in &vendors {
+        let _ = writeln!(out, "### {vendor}");
+        let _ = writeln!(out);
+        let _ = writeln!(
+            out,
+            "| Device | VID | PID | Axes | Buttons | FFB | Tier | Coverage | Last Validated |"
+        );
+        let _ = writeln!(
+            out,
+            "|--------|-----|-----|------|---------|-----|------|----------|----------------|"
+        );
+
+        for d in devs {
+            let ffb = if d.force_feedback { "✓" } else { "✗" };
+            let coverage = match (d.test_coverage.simulated, d.test_coverage.hil) {
+                (true, true) => "sim + HIL",
+                (true, false) => "sim",
+                (false, true) => "HIL",
+                (false, false) => "none",
+            };
+            let validated = d.last_validated.as_deref().unwrap_or("—");
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {} | {} | {ffb} | {} | {coverage} | {validated} |",
+                d.name, d.vendor_id, d.product_id, d.axes, d.buttons, d.tier,
+            );
+        }
+        let _ = writeln!(out);
+    }
+
+    // Game support matrix
+    let _ = writeln!(out, "## Game Integrations");
+    let _ = writeln!(out);
+    let _ = writeln!(
+        out,
+        "| Game | Adapter | Integration | Versions | Telemetry | Control | FFB | Aircraft Detect | Tier | HIL |"
+    );
+    let _ = writeln!(
+        out,
+        "|------|---------|-------------|----------|-----------|---------|-----|-----------------|------|-----|"
+    );
+
+    for g in games {
+        let telemetry = bool_to_check(g.features.telemetry_read);
+        let control = bool_to_check(g.features.control_injection);
+        let ffb = bool_to_check(g.features.force_feedback_translation);
+        let ac_detect = bool_to_check(g.features.aircraft_detection);
+        let hil = bool_to_check(g.test_coverage.hil);
+        let versions = if g.supported_versions.is_empty() {
+            "—".to_string()
+        } else {
+            g.supported_versions.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            g.name,
+            g.crate_name,
+            g.mechanism,
+            versions,
+            telemetry,
+            control,
+            ffb,
+            ac_detect,
+            g.tier,
+            hil,
+        );
+    }
+    let _ = writeln!(out);
+
+    // Support tier legend
+    let _ = writeln!(out, "## Support Tier Legend");
+    let _ = writeln!(out);
+    let _ = writeln!(out, "| Tier | Meaning |");
+    let _ = writeln!(out, "|------|---------|");
+    let _ = writeln!(out, "| 1 | Automated trace tests + recent HIL validation |");
+    let _ = writeln!(
+        out,
+        "| 2 | Automated tests (no HIL) + community confirmation |"
+    );
+    let _ = writeln!(out, "| 3 | Compiles / best-effort — no guarantees |");
+
+    out
+}
+
+/// Generate JSON string from parsed device and game entries.
+pub(crate) fn generate_json(devices: Vec<DeviceEntry>, games: Vec<GameEntry>) -> Result<String> {
+    let tier_dist = tier_distribution(devices.iter().map(|d| d.tier));
+    let game_tier_dist = tier_distribution(games.iter().map(|g| g.tier));
+
+    let badge = BadgeData {
+        devices_by_tier: tier_dist.clone(),
+        games_by_tier: game_tier_dist.clone(),
+        devices_with_sim_tests: devices.iter().filter(|d| d.test_coverage.simulated).count(),
+        devices_with_hil_tests: devices.iter().filter(|d| d.test_coverage.hil).count(),
+        games_with_hil_tests: games.iter().filter(|g| g.test_coverage.hil).count(),
+    };
+
+    let summary = Summary {
+        total_devices: devices.len(),
+        total_games: games.len(),
+        tier_distribution: tier_dist,
+        game_tier_distribution: game_tier_dist,
+    };
+
+    let compat_json = CompatJson {
+        generated_by: "cargo xtask compat-matrix".to_string(),
+        devices,
+        games,
+        summary,
+        badge,
+    };
+
+    serde_json::to_string_pretty(&compat_json).context("Failed to serialize compatibility.json")
 }
 
 // ---------- manifest validation ----------
 
-fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
+pub(crate) fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
     let text = match fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) => {
@@ -291,7 +333,11 @@ fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
             return;
         }
     };
-    let doc: serde_yaml::Value = match serde_yaml::from_str(&text) {
+    validate_device_yaml(&text, path, errors);
+}
+
+pub(crate) fn validate_device_yaml(text: &str, path: &Path, errors: &mut Vec<ValidationError>) {
+    let doc: serde_yaml::Value = match serde_yaml::from_str(text) {
         Ok(d) => d,
         Err(e) => {
             errors.push(ValidationError {
@@ -334,7 +380,7 @@ fn validate_device_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
     }
 }
 
-fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
+pub(crate) fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
     let text = match fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) => {
@@ -345,7 +391,11 @@ fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
             return;
         }
     };
-    let doc: serde_yaml::Value = match serde_yaml::from_str(&text) {
+    validate_game_yaml(&text, path, errors);
+}
+
+pub(crate) fn validate_game_yaml(text: &str, path: &Path, errors: &mut Vec<ValidationError>) {
+    let doc: serde_yaml::Value = match serde_yaml::from_str(text) {
         Ok(d) => d,
         Err(e) => {
             errors.push(ValidationError {
@@ -392,9 +442,15 @@ fn validate_game_manifest(path: &Path, errors: &mut Vec<ValidationError>) {
 
 // ---------- manifest parsing ----------
 
-fn parse_device(path: &Path) -> Result<DeviceEntry> {
+pub(crate) fn parse_device(path: &Path) -> Result<DeviceEntry> {
     let text = fs::read_to_string(path)?;
-    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
+    parse_device_yaml(&text)
+}
+
+pub(crate) fn parse_device_yaml(text: &str) -> Result<DeviceEntry> {
+    let doc: serde_yaml::Value = serde_yaml::from_str(text)?;
+
+    let last_validated = doc["support"]["last_validated"].as_str().map(String::from);
 
     Ok(DeviceEntry {
         name: doc["device"]["name"].as_str().unwrap_or("?").to_string(),
@@ -419,12 +475,17 @@ fn parse_device(path: &Path) -> Result<DeviceEntry> {
                 .as_bool()
                 .unwrap_or(false),
         },
+        last_validated,
     })
 }
 
-fn parse_game(path: &Path) -> Result<GameEntry> {
+pub(crate) fn parse_game(path: &Path) -> Result<GameEntry> {
     let text = fs::read_to_string(path)?;
-    let doc: serde_yaml::Value = serde_yaml::from_str(&text)?;
+    parse_game_yaml(&text)
+}
+
+pub(crate) fn parse_game_yaml(text: &str) -> Result<GameEntry> {
+    let doc: serde_yaml::Value = serde_yaml::from_str(text)?;
 
     let control_injection = {
         let ci = &doc["features"]["control_injection"];
@@ -434,6 +495,15 @@ fn parse_game(path: &Path) -> Result<GameEntry> {
         let commands = ci["commands"].as_bool().unwrap_or(false);
         std_events || direct || dataref || commands
     };
+
+    let supported_versions = doc["supported_versions"]
+        .as_sequence()
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|v| v.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default();
 
     Ok(GameEntry {
         name: doc["game"]["name"].as_str().unwrap_or("?").to_string(),
@@ -463,13 +533,14 @@ fn parse_game(path: &Path) -> Result<GameEntry> {
             hil: doc["test_coverage"]["hil"].as_bool().unwrap_or(false),
         },
         tier: doc["support_tier"].as_u64().unwrap_or(0),
+        supported_versions,
     })
 }
 
 // ---------- helpers ----------
 
 /// Collect `.yaml` manifest paths from a directory tree, sorted.
-fn collect_manifests(dir: &Path) -> Result<Vec<PathBuf>> {
+pub(crate) fn collect_manifests(dir: &Path) -> Result<Vec<PathBuf>> {
     if !dir.exists() {
         return Ok(Vec::new());
     }
@@ -495,4 +566,365 @@ fn collect_yaml(dir: &Path, out: &mut Vec<PathBuf>) {
 
 fn bool_to_check(v: bool) -> &'static str {
     if v { "✓" } else { "✗" }
+}
+
+/// Group devices by vendor name, preserving sort order within each group.
+fn group_by_vendor(devices: &[DeviceEntry]) -> Vec<(String, Vec<&DeviceEntry>)> {
+    let mut map: BTreeMap<String, Vec<&DeviceEntry>> = BTreeMap::new();
+    for d in devices {
+        map.entry(d.vendor.clone()).or_default().push(d);
+    }
+    map.into_iter().collect()
+}
+
+/// Compute tier distribution from an iterator of tier values.
+fn tier_distribution(tiers: impl Iterator<Item = u64>) -> BTreeMap<String, usize> {
+    let mut dist = BTreeMap::new();
+    for t in tiers {
+        *dist.entry(format!("tier_{t}")).or_insert(0) += 1;
+    }
+    dist
+}
+
+// ---------- tests ----------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    const SAMPLE_DEVICE_YAML: &str = r#"
+schema_version: "1"
+device:
+  name: "Test Joystick"
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x1234
+    product_id: 0xABCD
+capabilities:
+  axes:
+    count: 4
+  buttons: 12
+  force_feedback: true
+support:
+  tier: 1
+  last_validated: "2025-06"
+  test_coverage:
+    simulated: true
+    hil: true
+"#;
+
+    const SAMPLE_GAME_YAML: &str = r#"
+schema_version: "1"
+game:
+  name: "Test Sim"
+  id: testsim
+  developer: "Dev Co"
+integration:
+  mechanism: SimConnect
+  crate: flight-testsim
+supported_versions:
+  - "v1.0"
+  - "v2.0"
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+  force_feedback_translation: false
+  aircraft_detection: true
+test_coverage:
+  trace_replay: true
+  hil: false
+support_tier: 2
+"#;
+
+    #[test]
+    fn parse_sample_device() {
+        let entry = parse_device_yaml(SAMPLE_DEVICE_YAML).unwrap();
+        assert_eq!(entry.name, "Test Joystick");
+        assert_eq!(entry.vendor, "TestVendor");
+        assert_eq!(entry.vendor_id, "0x1234");
+        assert_eq!(entry.product_id, "0xABCD");
+        assert_eq!(entry.axes, 4);
+        assert_eq!(entry.buttons, 12);
+        assert!(entry.force_feedback);
+        assert_eq!(entry.tier, 1);
+        assert!(entry.test_coverage.simulated);
+        assert!(entry.test_coverage.hil);
+        assert_eq!(entry.last_validated.as_deref(), Some("2025-06"));
+    }
+
+    #[test]
+    fn parse_sample_game() {
+        let entry = parse_game_yaml(SAMPLE_GAME_YAML).unwrap();
+        assert_eq!(entry.name, "Test Sim");
+        assert_eq!(entry.id, "testsim");
+        assert_eq!(entry.mechanism, "SimConnect");
+        assert_eq!(entry.crate_name, "flight-testsim");
+        assert!(entry.features.telemetry_read);
+        assert!(entry.features.control_injection);
+        assert!(!entry.features.force_feedback_translation);
+        assert!(entry.features.aircraft_detection);
+        assert!(entry.test_coverage.trace_replay);
+        assert!(!entry.test_coverage.hil);
+        assert_eq!(entry.tier, 2);
+        assert_eq!(entry.supported_versions, vec!["v1.0", "v2.0"]);
+    }
+
+    #[test]
+    fn empty_directory_produces_empty_matrix() {
+        let tmp = tempfile::tempdir().unwrap();
+        let paths = collect_manifests(tmp.path()).unwrap();
+        assert!(paths.is_empty());
+
+        let md = generate_markdown(&[], &[]);
+        assert!(md.contains("# OpenFlight Compatibility Matrix"));
+        assert!(md.contains("**Total devices:** 0"));
+        assert!(md.contains("**Total games:** 0"));
+    }
+
+    #[test]
+    fn nonexistent_directory_produces_empty_vec() {
+        let paths = collect_manifests(Path::new("/nonexistent/path")).unwrap();
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn malformed_device_manifest_reports_error() {
+        let mut errors = Vec::new();
+        validate_device_yaml("not: valid: yaml: [", Path::new("bad.yaml"), &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].message.contains("invalid YAML"));
+    }
+
+    #[test]
+    fn missing_fields_device_manifest_reports_errors() {
+        let yaml = "device:\n  name: Foo\n";
+        let mut errors = Vec::new();
+        validate_device_yaml(yaml, Path::new("partial.yaml"), &mut errors);
+        // Should report missing vendor, usb ids, capabilities, tier
+        assert!(
+            errors.len() >= 4,
+            "got {} errors: {:?}",
+            errors.len(),
+            errors.iter().map(|e| &e.message).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn malformed_game_manifest_reports_error() {
+        let mut errors = Vec::new();
+        validate_game_yaml("{{{bad", Path::new("bad.yaml"), &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].message.contains("invalid YAML"));
+    }
+
+    #[test]
+    fn json_round_trip() {
+        let device = DeviceEntry {
+            name: "Test".into(),
+            vendor: "V".into(),
+            vendor_id: "0x1234".into(),
+            product_id: "0x5678".into(),
+            axes: 3,
+            buttons: 8,
+            force_feedback: true,
+            tier: 1,
+            test_coverage: TestCoverage {
+                simulated: true,
+                hil: false,
+            },
+            last_validated: Some("2025-01".into()),
+        };
+        let game = GameEntry {
+            name: "Sim".into(),
+            id: "sim".into(),
+            mechanism: "UDP".into(),
+            crate_name: "flight-sim".into(),
+            features: GameFeatures {
+                telemetry_read: true,
+                control_injection: false,
+                force_feedback_translation: false,
+                aircraft_detection: true,
+            },
+            test_coverage: GameTestCoverage {
+                trace_replay: false,
+                hil: false,
+            },
+            tier: 2,
+            supported_versions: vec!["v1".into()],
+        };
+
+        let json_str = generate_json(vec![device.clone()], vec![game.clone()]).unwrap();
+        let parsed: CompatJson = serde_json::from_str(&json_str).unwrap();
+
+        assert_eq!(parsed.devices.len(), 1);
+        assert_eq!(parsed.games.len(), 1);
+        assert_eq!(parsed.devices[0], device);
+        assert_eq!(parsed.games[0], game);
+        assert_eq!(parsed.summary.total_devices, 1);
+        assert_eq!(parsed.summary.total_games, 1);
+        assert_eq!(parsed.badge.devices_with_sim_tests, 1);
+        assert_eq!(parsed.badge.devices_with_hil_tests, 0);
+    }
+
+    #[test]
+    fn generate_markdown_groups_by_vendor() {
+        let d1 = DeviceEntry {
+            name: "Stick A".into(),
+            vendor: "Bravo".into(),
+            vendor_id: "0x0001".into(),
+            product_id: "0x0001".into(),
+            axes: 2,
+            buttons: 4,
+            force_feedback: false,
+            tier: 2,
+            test_coverage: TestCoverage {
+                simulated: false,
+                hil: false,
+            },
+            last_validated: None,
+        };
+        let d2 = DeviceEntry {
+            name: "Stick B".into(),
+            vendor: "Alpha".into(),
+            vendor_id: "0x0002".into(),
+            product_id: "0x0002".into(),
+            axes: 3,
+            buttons: 6,
+            force_feedback: true,
+            tier: 1,
+            test_coverage: TestCoverage {
+                simulated: true,
+                hil: true,
+            },
+            last_validated: Some("2025-03".into()),
+        };
+
+        let md = generate_markdown(&[d1, d2], &[]);
+        // Vendors should appear in alphabetical order: Alpha before Bravo
+        let alpha_pos = md.find("### Alpha").unwrap();
+        let bravo_pos = md.find("### Bravo").unwrap();
+        assert!(alpha_pos < bravo_pos);
+        assert!(md.contains("| Stick B |"));
+        assert!(md.contains("| 2025-03 |"));
+        assert!(md.contains("| — |")); // d1 has no last_validated
+    }
+
+    #[test]
+    fn generate_markdown_shows_game_versions() {
+        let g = GameEntry {
+            name: "MySim".into(),
+            id: "mysim".into(),
+            mechanism: "UDP".into(),
+            crate_name: "flight-mysim".into(),
+            features: GameFeatures {
+                telemetry_read: true,
+                control_injection: false,
+                force_feedback_translation: false,
+                aircraft_detection: false,
+            },
+            test_coverage: GameTestCoverage {
+                trace_replay: false,
+                hil: false,
+            },
+            tier: 3,
+            supported_versions: vec!["v1.0".into(), "v2.0".into()],
+        };
+        let md = generate_markdown(&[], &[g]);
+        assert!(md.contains("v1.0, v2.0"));
+    }
+
+    #[test]
+    fn badge_data_counts_coverage() {
+        let devices = vec![
+            DeviceEntry {
+                name: "A".into(),
+                vendor: "V".into(),
+                vendor_id: "0x01".into(),
+                product_id: "0x01".into(),
+                axes: 1,
+                buttons: 1,
+                force_feedback: false,
+                tier: 1,
+                test_coverage: TestCoverage {
+                    simulated: true,
+                    hil: true,
+                },
+                last_validated: None,
+            },
+            DeviceEntry {
+                name: "B".into(),
+                vendor: "V".into(),
+                vendor_id: "0x02".into(),
+                product_id: "0x02".into(),
+                axes: 1,
+                buttons: 1,
+                force_feedback: false,
+                tier: 2,
+                test_coverage: TestCoverage {
+                    simulated: true,
+                    hil: false,
+                },
+                last_validated: None,
+            },
+            DeviceEntry {
+                name: "C".into(),
+                vendor: "V".into(),
+                vendor_id: "0x03".into(),
+                product_id: "0x03".into(),
+                axes: 1,
+                buttons: 1,
+                force_feedback: false,
+                tier: 3,
+                test_coverage: TestCoverage {
+                    simulated: false,
+                    hil: false,
+                },
+                last_validated: None,
+            },
+        ];
+        let json_str = generate_json(devices, vec![]).unwrap();
+        let parsed: CompatJson = serde_json::from_str(&json_str).unwrap();
+
+        assert_eq!(parsed.badge.devices_with_sim_tests, 2);
+        assert_eq!(parsed.badge.devices_with_hil_tests, 1);
+        assert_eq!(*parsed.badge.devices_by_tier.get("tier_1").unwrap(), 1);
+        assert_eq!(*parsed.badge.devices_by_tier.get("tier_2").unwrap(), 1);
+        assert_eq!(*parsed.badge.devices_by_tier.get("tier_3").unwrap(), 1);
+    }
+
+    #[test]
+    fn collect_manifests_from_temp_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        let sub = tmp.path().join("vendor");
+        fs::create_dir_all(&sub).unwrap();
+        fs::write(sub.join("dev.yaml"), SAMPLE_DEVICE_YAML).unwrap();
+        fs::write(sub.join("readme.txt"), "not yaml").unwrap();
+
+        let paths = collect_manifests(tmp.path()).unwrap();
+        assert_eq!(paths.len(), 1);
+        assert!(paths[0].ends_with("dev.yaml"));
+    }
+
+    #[test]
+    fn parse_device_from_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("test.yaml");
+        fs::write(&path, SAMPLE_DEVICE_YAML).unwrap();
+
+        let entry = parse_device(&path).unwrap();
+        assert_eq!(entry.name, "Test Joystick");
+    }
+
+    #[test]
+    fn parse_game_from_file() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("game.yaml");
+        fs::write(&path, SAMPLE_GAME_YAML).unwrap();
+
+        let entry = parse_game(&path).unwrap();
+        assert_eq!(entry.name, "Test Sim");
+        assert_eq!(entry.supported_versions, vec!["v1.0", "v2.0"]);
+    }
 }

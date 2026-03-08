@@ -30,6 +30,71 @@
 
 use std::time::{Duration, Instant};
 
+/// Trait for providing current time, allowing for deterministic testing.
+pub trait TimeSource: std::fmt::Debug + Send + Sync {
+    /// Get the current time as an [`Instant`].
+    fn now(&self) -> Instant;
+
+    /// Advance the fake time by the given duration.
+    /// No-op for real-time sources.
+    fn advance(&self, _duration: Duration) {}
+}
+
+/// Default implementation of [`TimeSource`] using [`Instant::now()`].
+#[derive(Debug, Default, Clone, Copy)]
+pub struct DefaultTimeSource;
+
+impl TimeSource for DefaultTimeSource {
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+
+    fn advance(&self, _duration: Duration) {}
+}
+
+/// Mock implementation of [`TimeSource`] for deterministic testing.
+#[derive(Debug)]
+pub struct FakeTimeSource {
+    now: std::sync::Arc<std::sync::Mutex<Instant>>,
+}
+
+impl FakeTimeSource {
+    /// Create a new [`FakeTimeSource`] starting at the current time.
+    pub fn new() -> Self {
+        Self {
+            now: std::sync::Arc::new(std::sync::Mutex::new(Instant::now())),
+        }
+    }
+
+    /// Advance the fake time by the given duration.
+    pub fn advance_time(&self, duration: Duration) {
+        let mut now = self.now.lock().unwrap();
+        *now += duration;
+    }
+
+    /// Set the fake time to a specific instant.
+    pub fn set_now(&self, instant: Instant) {
+        let mut now = self.now.lock().unwrap();
+        *now = instant;
+    }
+}
+
+impl Default for FakeTimeSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TimeSource for FakeTimeSource {
+    fn now(&self) -> Instant {
+        *self.now.lock().unwrap()
+    }
+
+    fn advance(&self, duration: Duration) {
+        self.advance_time(duration);
+    }
+}
+
 pub mod audio;
 pub mod blackbox;
 pub mod crosswind;
@@ -41,6 +106,8 @@ pub mod dinput_com;
 pub mod dinput_device;
 #[cfg(windows)]
 pub mod dinput_window;
+pub mod effect_library;
+pub mod effect_mixer;
 pub mod effects;
 pub mod engine_vibration;
 pub mod fault;
@@ -57,6 +124,9 @@ pub mod ofp1_integration;
 pub mod performance_validation;
 pub mod ramp;
 pub mod safety;
+pub mod safety_depth;
+#[cfg(test)]
+pub mod safety_depth_tests;
 pub mod safety_envelope;
 #[cfg(test)]
 pub mod safety_envelope_integration_tests;
@@ -70,6 +140,7 @@ pub mod telemetry_synth;
 pub mod trim;
 #[cfg(test)]
 pub mod trim_hil_tests;
+pub mod trim_system;
 pub mod trim_validation;
 #[cfg(test)]
 pub mod usb_yank_test;
@@ -87,6 +158,11 @@ pub use device::*;
 pub use device_health::*;
 pub use dinput_backend::*;
 pub use dinput_device::*;
+pub use effect_library::{
+    ConstantForce, DamperForce, FrictionForce, PeriodicForce, SpringForce, SynthEffect,
+    SynthWaveform,
+};
+pub use effect_mixer::EffectMixer;
 pub use effects::*;
 pub use engine_vibration::*;
 pub use fault::*;
@@ -101,6 +177,7 @@ pub use ofp1_integration::*;
 pub use performance_validation::*;
 pub use ramp::*;
 pub use safety::*;
+pub use safety_depth::*;
 pub use safety_envelope::*;
 pub use safety_interlock::*;
 pub use soft_stop::*;
@@ -108,6 +185,7 @@ pub use telemetry_synth::*;
 pub use trim::*;
 #[cfg(test)]
 pub use trim_hil_tests::*;
+pub use trim_system::SynthTrimState;
 pub use trim_validation::*;
 #[cfg(test)]
 pub use usb_yank_test::*;
@@ -133,6 +211,8 @@ pub struct FfbEngine {
     /// Device health monitor for over-temp/over-current detection
     /// **Validates: Requirements FFB-SAFETY-01.7, FFB-SAFETY-01.9**
     device_health_monitor: DeviceHealthMonitor,
+    /// Time source for deterministic operation
+    time_source: std::sync::Arc<dyn TimeSource>,
 }
 
 /// Configuration for the FFB engine
@@ -257,9 +337,19 @@ pub type Result<T> = std::result::Result<T, FfbError>;
 impl FfbEngine {
     /// Create a new FFB engine with the given configuration
     pub fn new(config: FfbConfig) -> Result<Self> {
+        Self::with_time_source(config, std::sync::Arc::new(DefaultTimeSource))
+    }
+
+    /// Create a new FFB engine with the given configuration and time source
+    pub fn with_time_source(
+        config: FfbConfig,
+        time_source: std::sync::Arc<dyn TimeSource>,
+    ) -> Result<Self> {
         let interlock_system = InterlockSystem::new(config.interlock_required);
-        let fault_detector =
-            FaultDetector::new(Duration::from_millis(config.fault_timeout_ms as u64));
+        let fault_detector = FaultDetector::new(
+            Duration::from_millis(config.fault_timeout_ms as u64),
+            time_source.clone(),
+        );
         let trim_controller = TrimController::new(config.max_torque_nm);
 
         // Configure soft-stop for 50ms ramp time
@@ -269,10 +359,13 @@ impl FfbEngine {
             led_indication: true,
             ..Default::default()
         };
-        let soft_stop_controller = SoftStopController::new(soft_stop_config);
+        let soft_stop_controller =
+            SoftStopController::with_time_source(soft_stop_config, time_source.clone());
 
         let audio_system = AudioCueSystem::default();
-        let blackbox_recorder = BlackboxRecorder::default();
+        let blackbox_recorder =
+            BlackboxRecorder::with_time_source(BlackboxConfig::default(), time_source.clone())
+                .unwrap();
         let device_health_monitor = DeviceHealthMonitor::new();
 
         Ok(Self {
@@ -285,9 +378,10 @@ impl FfbEngine {
             audio_system,
             blackbox_recorder,
             telemetry_synth: None,
-            last_heartbeat: Instant::now(),
+            last_heartbeat: time_source.now(),
             device_capabilities: None,
             device_health_monitor,
+            time_source,
         })
     }
 
@@ -398,7 +492,7 @@ impl FfbEngine {
 
     /// Process fault detection and handle safety response
     pub fn process_fault(&mut self, fault: FaultType) -> Result<()> {
-        let now = Instant::now();
+        let now = self.time_source.now();
 
         // Create fault entry for blackbox
         let fault_entry = BlackboxEntry::Fault {
@@ -501,13 +595,14 @@ impl FfbEngine {
     /// # Arguments
     /// * `current_torque` - The torque value to ramp from (in Nm)
     pub fn trigger_soft_stop_from_torque(&mut self, current_torque: f32) -> Result<()> {
+        let now = self.time_source.now();
         // Record soft-stop in fault detector
-        self.fault_detector.record_soft_stop(Instant::now());
+        self.fault_detector.record_soft_stop(now);
 
         // Record in blackbox
         self.blackbox_recorder
             .record(BlackboxEntry::SoftStop {
-                timestamp: Instant::now(),
+                timestamp: now,
                 reason: "Fault-triggered soft-stop".to_string(),
                 initial_torque: current_torque,
                 target_ramp_time: Duration::from_millis(50),
@@ -562,12 +657,12 @@ impl FfbEngine {
 
     /// Update heartbeat for health monitoring
     pub fn update_heartbeat(&mut self) {
-        self.last_heartbeat = Instant::now();
+        self.last_heartbeat = self.time_source.now();
     }
 
     /// Check if engine is healthy (recent heartbeat)
     pub fn is_healthy(&self) -> bool {
-        self.last_heartbeat.elapsed() < Duration::from_secs(5)
+        self.time_source.now().duration_since(self.last_heartbeat) < Duration::from_secs(5)
     }
 
     /// Get fault history
@@ -809,7 +904,8 @@ impl FfbEngine {
 
     /// Run trim validation suite
     pub fn run_trim_validation(&mut self) -> Vec<TrimValidationResult> {
-        let mut validation_suite = TrimValidationSuite::default();
+        let mut validation_suite =
+            TrimValidationSuite::with_time_source(TrimValidationConfig::default(), self.time_source.clone());
         validation_suite.run_complete_validation()
     }
 
@@ -818,7 +914,8 @@ impl FfbEngine {
         &mut self,
         config: TrimValidationConfig,
     ) -> Vec<TrimValidationResult> {
-        let mut validation_suite = TrimValidationSuite::new(config);
+        let mut validation_suite =
+            TrimValidationSuite::with_time_source(config, self.time_source.clone());
         validation_suite.run_complete_validation()
     }
 

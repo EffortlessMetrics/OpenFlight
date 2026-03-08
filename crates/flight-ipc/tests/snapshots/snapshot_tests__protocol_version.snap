@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 172
+expression: PROTOCOL_VERSION
+---
+1.0.0

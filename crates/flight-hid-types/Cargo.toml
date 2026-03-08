@@ -16,3 +16,6 @@ keywords = ["flight-sim", "openflight", "hid", "types"]
 # SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
 [dependencies]
+
+[dev-dependencies]
+proptest.workspace = true

@@ -1,0 +1,15 @@
+schema_version: "1"
+
+game:
+  name: "Missing Mechanism Game"
+  id: missing-mech
+
+features:
+  telemetry_read: true
+  control_injection:
+    direct: false
+
+test_coverage:
+  hil: false
+
+support_tier: 2

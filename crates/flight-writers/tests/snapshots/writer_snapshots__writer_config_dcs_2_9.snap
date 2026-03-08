@@ -1,0 +1,23 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 145
+expression: config
+---
+{
+  "schema": "flight.writer/1",
+  "sim": "dcs",
+  "version": "2.9",
+  "description": "Apply linear control curves for DCS",
+  "diffs": [
+    {
+      "backup": true,
+      "changes": {
+        "use_linear_controls": "true"
+      },
+      "file": "Config/options.lua",
+      "section": "controls",
+      "type": "ini_section"
+    }
+  ],
+  "verify_scripts": []
+}
