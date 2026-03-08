@@ -1,0 +1,25 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: json
+---
+{
+  "status": "Degraded",
+  "checks": [
+    {
+      "name": "axis-engine",
+      "status": "Healthy",
+      "message": "Operating normally",
+      "latency_ms": 0.3
+    },
+    {
+      "name": "hid-manager",
+      "status": "Degraded",
+      "message": "Device 044F:B10A not responding, retrying",
+      "latency_ms": 305.0
+    }
+  ],
+  "recommendations": [
+    "Check USB connection for Thrustmaster T.Flight HOTAS 4",
+    "Run 'flightctl diag' for a full diagnostic bundle"
+  ]
+}

@@ -15,6 +15,9 @@ libfuzzer-sys = "0.4"
 [dependencies.flight-hid]
 path = ".."
 
+[dependencies.flight-hid-support]
+path = "../../flight-hid-support"
+
 [profile.release]
 debug = 1
 
@@ -27,5 +30,11 @@ doc = false
 [[bin]]
 name = "fuzz_descriptor"
 path = "fuzz_targets/fuzz_descriptor.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_hid_report"
+path = "fuzz_targets/fuzz_hid_report.rs"
 test = false
 doc = false

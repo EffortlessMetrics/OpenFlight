@@ -8,9 +8,9 @@
 //! Under `#[cfg(test)]`, a thread-local mock registry is used instead so
 //! that bridge logic can be unit-tested without the simulator.
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 use std::ffi::c_void;
-#[cfg(not(test))]
+#[cfg(not(any(test, feature = "test-support")))]
 use std::ffi::{CString, c_char, c_void};
 
 // ── XPLM opaque handles ────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ pub const XPLM_TYPE_DATA: i32 = 32;
 
 // ── Real XPLM extern declarations (resolved by X-Plane at load time) ──────
 
-#[cfg(not(test))]
+#[cfg(not(any(test, feature = "test-support")))]
 unsafe extern "C" {
     fn XPLMFindDataRef(name: *const c_char) -> XPLMDataRef;
     fn XPLMGetDataRefTypes(dataref: XPLMDataRef) -> i32;
@@ -49,7 +49,7 @@ unsafe extern "C" {
 
 // ── Mock backend (test builds) ─────────────────────────────────────────────
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 pub mod mock {
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -65,7 +65,7 @@ pub mod mock {
 
     thread_local! {
         static MOCK_DATAREFS: RefCell<HashMap<String, MockValue>> = RefCell::new(HashMap::new());
-        static MOCK_COMMANDS: RefCell<Vec<String>> = RefCell::new(Vec::new());
+        static MOCK_COMMANDS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
     }
 
     /// Register a mock DataRef value.
@@ -95,7 +95,7 @@ pub mod mock {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 pub use mock::{MockValue, clear_mocks, executed_commands, set_mock_dataref};
 
 // ── Safe wrappers ──────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ pub use mock::{MockValue, clear_mocks, executed_commands, set_mock_dataref};
 ///
 /// Returns `None` if the DataRef does not exist.
 pub fn read_dataref(name: &str) -> Option<serde_json::Value> {
-    #[cfg(not(test))]
+    #[cfg(not(any(test, feature = "test-support")))]
     {
         let c_name = CString::new(name).ok()?;
         unsafe {
@@ -125,7 +125,7 @@ pub fn read_dataref(name: &str) -> Option<serde_json::Value> {
             }
         }
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     {
         mock::get_mock_dataref(name).map(|v| match v {
             MockValue::Int(i) => serde_json::json!(i),
@@ -142,7 +142,7 @@ pub fn read_dataref(name: &str) -> Option<serde_json::Value> {
 ///
 /// Returns `None` if the DataRef does not exist.
 pub fn read_dataref_string(name: &str) -> Option<String> {
-    #[cfg(not(test))]
+    #[cfg(not(any(test, feature = "test-support")))]
     {
         let c_name = CString::new(name).ok()?;
         unsafe {
@@ -164,7 +164,7 @@ pub fn read_dataref_string(name: &str) -> Option<String> {
             Some(String::from_utf8_lossy(trimmed).into_owned())
         }
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     {
         mock::get_mock_dataref(name).and_then(|v| match v {
             MockValue::Data(bytes) => {
@@ -184,7 +184,7 @@ pub fn read_dataref_string(name: &str) -> Option<String> {
 /// Returns `true` on success, `false` if the DataRef is not found or the
 /// value type is incompatible.
 pub fn write_dataref(name: &str, value: &serde_json::Value) -> bool {
-    #[cfg(not(test))]
+    #[cfg(not(any(test, feature = "test-support")))]
     {
         let Some(c_name) = CString::new(name).ok() else {
             return false;
@@ -218,7 +218,7 @@ pub fn write_dataref(name: &str, value: &serde_json::Value) -> bool {
             false
         }
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     {
         if mock::get_mock_dataref(name).is_none() {
             return false;
@@ -240,7 +240,7 @@ pub fn write_dataref(name: &str, value: &serde_json::Value) -> bool {
 ///
 /// Returns `true` if the command was found and executed, `false` otherwise.
 pub fn execute_command(name: &str) -> bool {
-    #[cfg(not(test))]
+    #[cfg(not(any(test, feature = "test-support")))]
     {
         let Some(c_name) = CString::new(name).ok() else {
             return false;
@@ -254,7 +254,7 @@ pub fn execute_command(name: &str) -> bool {
             true
         }
     }
-    #[cfg(test)]
+    #[cfg(any(test, feature = "test-support"))]
     {
         mock::record_command(name);
         true

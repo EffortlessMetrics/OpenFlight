@@ -562,3 +562,295 @@ fn convert_snapshot_aoa_from_alpha_dataref() {
         "expected AoA 8°, got {aoa_deg}°"
     );
 }
+
+// ---------------------------------------------------------------------------
+// 13. State machine — disconnect / reconnect lifecycle
+// ---------------------------------------------------------------------------
+
+/// Full happy-path lifecycle:
+///   Disconnected → Connecting → Connected → Active → Stale → Active (recovery)
+#[tokio::test]
+async fn state_machine_full_lifecycle_happy_path() {
+    use flight_xplane::XPlaneAdapterState;
+
+    let adapter = make_adapter();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Disconnected);
+
+    // Socket bound → Connecting
+    adapter.handle_socket_bound();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Connecting);
+
+    // Socket bound again → Connected
+    adapter.handle_socket_bound();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Connected);
+    assert_eq!(adapter.state(), AdapterState::Connected);
+
+    // Telemetry received → Active
+    let snapshot = flight_bus::snapshot::BusSnapshot::new(
+        flight_bus::types::SimId::XPlane,
+        flight_bus::types::AircraftId::new("C172"),
+    );
+    adapter.process_telemetry(snapshot).unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+    assert_eq!(adapter.state(), AdapterState::Active);
+
+    // Timeout → Stale (maps to AdapterState::Disconnected)
+    adapter.handle_telemetry_timeout().unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
+    assert_eq!(adapter.state(), AdapterState::Disconnected);
+
+    // Recovery: telemetry resumes → Active
+    let snapshot2 = flight_bus::snapshot::BusSnapshot::new(
+        flight_bus::types::SimId::XPlane,
+        flight_bus::types::AircraftId::new("C172"),
+    );
+    adapter.process_telemetry(snapshot2).unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+    assert_eq!(adapter.state(), AdapterState::Active);
+}
+
+/// Socket error from Active drives to Error, then SocketBound recovers.
+#[tokio::test]
+async fn state_machine_error_and_reconnect() {
+    use flight_xplane::XPlaneAdapterState;
+
+    let publisher = make_publisher();
+    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), publisher).unwrap();
+
+    // Advance to Active
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+    let snapshot = flight_bus::snapshot::BusSnapshot::new(
+        flight_bus::types::SimId::XPlane,
+        flight_bus::types::AircraftId::new("C172"),
+    );
+    adapter.process_telemetry(snapshot).unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+
+    // Socket error → Error
+    adapter.handle_socket_error("connection reset");
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Error);
+    assert_eq!(adapter.state(), AdapterState::Error);
+
+    // Retry → Connecting
+    adapter.handle_socket_bound();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Connecting);
+
+    // → Connected
+    adapter.handle_socket_bound();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Connected);
+
+    // → Active again with new telemetry
+    let snapshot2 = flight_bus::snapshot::BusSnapshot::new(
+        flight_bus::types::SimId::XPlane,
+        flight_bus::types::AircraftId::new("C172"),
+    );
+    adapter.process_telemetry(snapshot2).unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+}
+
+/// Shutdown from Active returns to Disconnected and clears error state.
+#[tokio::test]
+async fn shutdown_from_active_returns_to_disconnected() {
+    use flight_xplane::XPlaneAdapterState;
+
+    let adapter = make_adapter();
+
+    // Advance to Active
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+    let snapshot = flight_bus::snapshot::BusSnapshot::new(
+        flight_bus::types::SimId::XPlane,
+        flight_bus::types::AircraftId::new("C172"),
+    );
+    adapter.process_telemetry(snapshot).unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
+
+    // Shutdown
+    adapter.handle_shutdown();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Disconnected);
+    assert_eq!(adapter.state(), AdapterState::Disconnected);
+}
+
+// ---------------------------------------------------------------------------
+// 14. Bus subscriber receives snapshots through state transitions
+// ---------------------------------------------------------------------------
+
+/// Subscriber receives valid snapshot on Active transition and stale on timeout.
+#[tokio::test]
+async fn subscriber_receives_snapshots_across_state_transitions() {
+    use flight_bus::{
+        snapshot::BusSnapshot,
+        types::{AircraftId, SimId},
+    };
+
+    let publisher = make_publisher();
+    let mut subscriber = publisher
+        .lock()
+        .unwrap()
+        .subscribe(SubscriptionConfig::default())
+        .expect("subscribe");
+
+    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+
+    // Drive to Connected (no bus publish yet)
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+
+    // Process telemetry → Active, publishes to bus
+    let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
+    adapter.process_telemetry(snapshot).unwrap();
+
+    let received = subscriber.try_recv().unwrap().expect("should receive valid snapshot");
+    assert_eq!(received.sim, SimId::XPlane);
+    assert_eq!(received.aircraft.icao, "A320");
+
+    // Wait for rate limiter to allow next publish
+    std::thread::sleep(std::time::Duration::from_millis(20));
+
+    // Timeout → Stale, publishes stale snapshot
+    adapter.handle_telemetry_timeout().unwrap();
+
+    let stale = subscriber.try_recv().unwrap().expect("should receive stale snapshot");
+    assert!(!stale.validity.safe_for_ffb, "stale must not be safe for FFB");
+    assert_eq!(stale.aircraft.icao, "unknown", "stale uses 'unknown' aircraft");
+
+    // Wait for rate limiter again
+    std::thread::sleep(std::time::Duration::from_millis(20));
+
+    // Recovery → Active again
+    let recovery = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
+    adapter.process_telemetry(recovery).unwrap();
+
+    let recovered = subscriber.try_recv().unwrap().expect("should receive recovery snapshot");
+    assert_eq!(recovered.aircraft.icao, "A320");
+}
+
+/// After an error and reconnect, the subscriber still receives new data.
+#[tokio::test]
+async fn subscriber_receives_after_reconnect() {
+    use flight_bus::{
+        snapshot::BusSnapshot,
+        types::{AircraftId, SimId},
+    };
+
+    let publisher = make_publisher();
+    let mut subscriber = publisher
+        .lock()
+        .unwrap()
+        .subscribe(SubscriptionConfig::default())
+        .expect("subscribe");
+
+    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+
+    // Drive to Active and send first snapshot
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+    let snap1 = BusSnapshot::new(SimId::XPlane, AircraftId::new("C172"));
+    adapter.process_telemetry(snap1).unwrap();
+    let _ = subscriber.try_recv().unwrap().expect("first snapshot");
+
+    // Error → disconnect
+    adapter.handle_socket_error("link dropped");
+
+    // Reconnect cycle
+    adapter.handle_socket_bound(); // → Connecting
+    adapter.handle_socket_bound(); // → Connected
+
+    // Wait for rate limiter
+    std::thread::sleep(std::time::Duration::from_millis(20));
+
+    // New telemetry after reconnect
+    let snap2 = BusSnapshot::new(SimId::XPlane, AircraftId::new("B738"));
+    adapter.process_telemetry(snap2).unwrap();
+
+    let received = subscriber.try_recv().unwrap().expect("snapshot after reconnect");
+    assert_eq!(received.aircraft.icao, "B738", "should receive data for new aircraft after reconnect");
+}
+
+// ---------------------------------------------------------------------------
+// 15. Repeated timeout stays Stale
+// ---------------------------------------------------------------------------
+
+/// Multiple consecutive timeouts keep the adapter in Stale state and continue
+/// publishing stale snapshots (subscribers keep getting notified).
+#[tokio::test]
+async fn repeated_timeout_stays_stale_and_keeps_publishing() {
+    use flight_bus::{
+        snapshot::BusSnapshot,
+        types::{AircraftId, SimId},
+    };
+    use flight_xplane::XPlaneAdapterState;
+
+    let publisher = make_publisher();
+    let mut subscriber = publisher
+        .lock()
+        .unwrap()
+        .subscribe(SubscriptionConfig::default())
+        .expect("subscribe");
+
+    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+
+    // Advance to Active
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+    let snap = BusSnapshot::new(SimId::XPlane, AircraftId::new("C172"));
+    adapter.process_telemetry(snap).unwrap();
+    let _ = subscriber.try_recv().unwrap(); // drain
+
+    // First timeout
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    adapter.handle_telemetry_timeout().unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
+    let stale1 = subscriber.try_recv().unwrap().expect("first stale");
+    assert!(!stale1.validity.safe_for_ffb);
+
+    // Second timeout (should remain Stale)
+    std::thread::sleep(std::time::Duration::from_millis(20));
+    adapter.handle_telemetry_timeout().unwrap();
+    assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
+    let stale2 = subscriber.try_recv().unwrap().expect("second stale");
+    assert!(!stale2.validity.safe_for_ffb);
+}
+
+// ---------------------------------------------------------------------------
+// 16. Validity flags through full pipeline
+// ---------------------------------------------------------------------------
+
+/// A snapshot converted from complete datarefs has safe_for_ffb=true and flows
+/// through the bus with those flags intact.
+#[tokio::test]
+async fn validity_flags_preserved_through_bus_publish() {
+    let mut datarefs = make_critical_datarefs();
+    // Add attitude
+    datarefs.insert("sim/flightmodel/position/theta".to_string(), DataRefValue::Float(5.0));
+    datarefs.insert("sim/flightmodel/position/phi".to_string(), DataRefValue::Float(10.0));
+    datarefs.insert("sim/flightmodel/position/psi".to_string(), DataRefValue::Float(90.0));
+    // Add angular rates
+    datarefs.insert("sim/flightmodel/position/P".to_string(), DataRefValue::Float(1.0));
+    datarefs.insert("sim/flightmodel/position/Q".to_string(), DataRefValue::Float(0.5));
+    datarefs.insert("sim/flightmodel/position/R".to_string(), DataRefValue::Float(0.2));
+
+    let raw = make_raw_data(datarefs);
+    let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now()).unwrap();
+    assert!(snapshot.validity.safe_for_ffb, "source snapshot should be FFB-safe");
+
+    // Publish through bus and verify flags are preserved
+    let publisher = make_publisher();
+    let mut subscriber = publisher
+        .lock()
+        .unwrap()
+        .subscribe(SubscriptionConfig::default())
+        .expect("subscribe");
+
+    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+    adapter.handle_socket_bound();
+    adapter.handle_socket_bound();
+    adapter.process_telemetry(snapshot).unwrap();
+
+    let received = subscriber.try_recv().unwrap().expect("should receive snapshot");
+    assert!(received.validity.safe_for_ffb, "FFB-safe flag must survive bus round-trip");
+    assert!(received.validity.attitude_valid);
+    assert!(received.validity.angular_rates_valid);
+    assert!(received.validity.velocities_valid);
+}

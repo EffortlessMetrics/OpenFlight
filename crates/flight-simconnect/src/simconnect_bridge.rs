@@ -87,6 +87,12 @@ pub trait SimConnectBackend {
     fn transmit_event(&mut self, event_id: u32, data: u32) -> BackendResult<()>;
     /// Subscribe to a system event (e.g. AircraftLoaded).
     fn subscribe_system_event(&mut self, event_id: u32, event_name: &str) -> BackendResult<()>;
+    /// Write SimVar values back to the sim object (SimConnect_SetDataOnSimObject).
+    fn set_data_on_sim_object(
+        &mut self,
+        define_id: u32,
+        values: &[f64],
+    ) -> BackendResult<()>;
     /// Poll for the next dispatch message (non-blocking).
     fn get_next_dispatch(&mut self) -> BackendResult<Option<DispatchMessage>>;
 }
@@ -111,10 +117,14 @@ pub struct MockSimConnectBackend {
     system_events: HashMap<u32, String>,
     /// Requests started.
     active_requests: HashMap<u32, u32>,
+    /// Data written via `set_data_on_sim_object` — (define_id, values).
+    written_data: Vec<(u32, Vec<f64>)>,
     /// When true, the next `open()` will fail.
     pub fail_next_open: bool,
     /// When true, the next `transmit_event()` will fail.
     pub fail_next_transmit: bool,
+    /// When true, the next `set_data_on_sim_object()` will fail.
+    pub fail_next_write: bool,
 }
 
 impl MockSimConnectBackend {
@@ -127,8 +137,10 @@ impl MockSimConnectBackend {
             transmitted_events: Vec::new(),
             system_events: HashMap::new(),
             active_requests: HashMap::new(),
+            written_data: Vec::new(),
             fail_next_open: false,
             fail_next_transmit: false,
+            fail_next_write: false,
         }
     }
 
@@ -160,6 +172,10 @@ impl MockSimConnectBackend {
     pub fn active_requests(&self) -> &HashMap<u32, u32> {
         &self.active_requests
     }
+
+    pub fn written_data(&self) -> &[(u32, Vec<f64>)] {
+        &self.written_data
+    }
 }
 
 impl Default for MockSimConnectBackend {
@@ -184,6 +200,7 @@ impl SimConnectBackend for MockSimConnectBackend {
         self.mapped_events.clear();
         self.system_events.clear();
         self.active_requests.clear();
+        self.written_data.clear();
         Ok(())
     }
 
@@ -236,6 +253,22 @@ impl SimConnectBackend for MockSimConnectBackend {
             return Err(BackendError::ConnectionLost("not open".into()));
         }
         self.system_events.insert(event_id, event_name.to_string());
+        Ok(())
+    }
+
+    fn set_data_on_sim_object(
+        &mut self,
+        define_id: u32,
+        values: &[f64],
+    ) -> BackendResult<()> {
+        if !self.opened {
+            return Err(BackendError::ConnectionLost("not open".into()));
+        }
+        if self.fail_next_write {
+            self.fail_next_write = false;
+            return Err(BackendError::EventFailed("mock write failure".into()));
+        }
+        self.written_data.push((define_id, values.to_vec()));
         Ok(())
     }
 
@@ -703,6 +736,28 @@ impl<B: SimConnectBackend> SimConnectBridge<B> {
         None // Only axis events are cached; key events use fresh mapping.
     }
 
+    // -- SimVar write --
+
+    /// Write SimVar values back to the sim via SetDataOnSimObject.
+    /// The `values` slice must match the order of the telemetry definition.
+    pub fn write_simvar(&mut self, define_id: u32, values: &[f64]) -> Result<(), BackendError> {
+        self.backend.set_data_on_sim_object(define_id, values)
+    }
+
+    // -- telemetry snapshot publishing --
+
+    /// Build a `VarSnapshot` from the latest telemetry data and return it.
+    /// Returns `None` if no telemetry has been received yet.
+    pub fn take_snapshot(&self) -> Option<VarSnapshot> {
+        self.latest_snapshot.clone()
+    }
+
+    /// Returns `true` if new telemetry data is available since the last call
+    /// to `take_snapshot`.
+    pub fn has_pending_telemetry(&self) -> bool {
+        self.latest_snapshot.is_some()
+    }
+
     // -- aircraft detection --
 
     /// Run aircraft detection on the provided sim data.
@@ -759,12 +814,13 @@ mod tests {
     }
 
     #[test]
-    fn connect_failure_transitions_to_error() {
+    fn connect_failure_transitions_to_reconnecting() {
         let mut b = default_bridge();
         b.backend_mut().fail_next_open = true;
         let res = b.connect();
         assert!(res.is_err());
-        assert_eq!(b.state(), SimConnectAdapterState::Error);
+        // Connecting → ConnectionLost → Reconnecting (recoverable)
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
     }
 
     #[test]
@@ -894,7 +950,8 @@ mod tests {
         b.backend_mut().push_dispatch(DispatchMessage::Quit);
 
         b.poll().unwrap();
-        assert_eq!(b.state(), SimConnectAdapterState::Error);
+        // Connected → ConnectionLost → Reconnecting (recoverable)
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
         assert!(b.latest_snapshot.is_none());
     }
 
@@ -928,7 +985,8 @@ mod tests {
         b.backend_mut().close().unwrap();
         let res = b.poll();
         assert!(res.is_err());
-        assert_eq!(b.state(), SimConnectAdapterState::Error);
+        // Connected → ConnectionLost → Reconnecting (recoverable)
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
     }
 
     // -- control injection tests --
@@ -1036,8 +1094,8 @@ mod tests {
     fn reconnect_after_failure() {
         let mut b = default_bridge();
         b.backend_mut().fail_next_open = true;
-        let _ = b.connect(); // fails
-        assert_eq!(b.state(), SimConnectAdapterState::Error);
+        let _ = b.connect(); // fails → Reconnecting
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
 
         // Now reconnect should succeed.
         let ok = b.try_reconnect().unwrap();
@@ -1053,12 +1111,13 @@ mod tests {
         };
         let mut b = SimConnectBridge::new(MockSimConnectBackend::new(), config);
 
-        // First failure.
+        // First failure — Connecting → ConnectionLost (1 error == max_retries).
         b.backend_mut().fail_next_open = true;
         let _ = b.connect();
+        // With max_retries=1, error_count=1, is_recoverable() is false → Error
         assert_eq!(b.state(), SimConnectAdapterState::Error);
 
-        // State machine says not recoverable (1 error == max_retries).
+        // State machine says not recoverable.
         let res = b.try_reconnect();
         assert!(res.is_err());
     }
@@ -1219,5 +1278,92 @@ mod tests {
         assert!(mock.transmit_event(1, 0).is_err());
         assert!(mock.subscribe_system_event(1, "X").is_err());
         assert!(mock.get_next_dispatch().is_err());
+    }
+
+    // -- SimVar write tests --
+
+    #[test]
+    fn write_simvar_sends_to_backend() {
+        let mut b = connected_bridge();
+        b.write_simvar(DEF_TELEMETRY, &[1.0, 2.0, 3.0]).unwrap();
+        let data = b.backend().written_data();
+        assert_eq!(data.len(), 1);
+        assert_eq!(data[0].0, DEF_TELEMETRY);
+        assert_eq!(data[0].1, vec![1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn write_simvar_fails_when_backend_errors() {
+        let mut b = connected_bridge();
+        b.backend_mut().fail_next_write = true;
+        let res = b.write_simvar(DEF_TELEMETRY, &[1.0]);
+        assert!(res.is_err());
+    }
+
+    // -- snapshot tests --
+
+    #[test]
+    fn take_snapshot_returns_none_before_telemetry() {
+        let b = connected_bridge();
+        assert!(b.take_snapshot().is_none());
+        assert!(!b.has_pending_telemetry());
+    }
+
+    #[test]
+    fn take_snapshot_returns_data_after_telemetry() {
+        let mut b = connected_bridge();
+        let n = b.registered_vars().len();
+        b.backend_mut()
+            .push_dispatch(DispatchMessage::SimObjectData {
+                define_id: DEF_TELEMETRY,
+                request_id: REQ_TELEMETRY,
+                values: vec![42.0; n],
+            });
+        b.poll().unwrap();
+        assert!(b.has_pending_telemetry());
+        let snap = b.take_snapshot().expect("snapshot should exist");
+        assert_eq!(snap.values.len(), n);
+    }
+
+    // -- reconnecting state flow tests --
+
+    #[test]
+    fn poll_reconnecting_state_preserved_on_quit() {
+        let mut b = connected_bridge();
+        // Receive some telemetry first.
+        let n = b.registered_vars().len();
+        b.backend_mut()
+            .push_dispatch(DispatchMessage::SimObjectData {
+                define_id: DEF_TELEMETRY,
+                request_id: REQ_TELEMETRY,
+                values: vec![1.0; n],
+            });
+        b.poll().unwrap();
+        assert!(b.latest_snapshot.is_some());
+
+        // Quit clears snapshot and goes to Reconnecting.
+        b.backend_mut().push_dispatch(DispatchMessage::Quit);
+        b.poll().unwrap();
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
+        assert!(b.latest_snapshot.is_none());
+    }
+
+    #[test]
+    fn full_reconnect_lifecycle() {
+        let mut b = default_bridge();
+
+        // Connect successfully.
+        b.connect().unwrap();
+        assert_eq!(b.state(), SimConnectAdapterState::Connected);
+
+        // Lose connection → Reconnecting.
+        b.backend_mut().push_dispatch(DispatchMessage::Quit);
+        b.poll().unwrap();
+        assert_eq!(b.state(), SimConnectAdapterState::Reconnecting);
+
+        // Reconnect successfully.
+        let ok = b.try_reconnect().unwrap();
+        assert!(ok);
+        assert_eq!(b.state(), SimConnectAdapterState::Connected);
     }
 }

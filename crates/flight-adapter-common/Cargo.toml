@@ -13,3 +13,6 @@ categories.workspace = true
 keywords = ["flight-sim", "openflight", "adapter", "telemetry"]
 [dependencies]
 thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

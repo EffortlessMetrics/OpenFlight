@@ -39,7 +39,9 @@
 //!
 //! Validates: Requirements FFB-HID-01.5
 
-use std::time::Instant;
+use crate::TimeSource;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 /// XInput rumble device for limited FFB support
 ///
@@ -57,6 +59,8 @@ pub struct XInputRumbleDevice {
     last_update: Instant,
     /// Whether device is connected
     connected: bool,
+    /// Time source for deterministic testing
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// XInput rumble channel mapping
@@ -98,21 +102,25 @@ impl XInputRumbleDevice {
     /// # Arguments
     ///
     /// * `user_index` - XInput user index (0-3)
+    /// * `time_source` - Time source for deterministic testing
     ///
     /// # Errors
     ///
     /// Returns error if user_index is invalid (>3)
-    pub fn new(user_index: u32) -> Result<Self> {
+    pub fn new(user_index: u32, time_source: Arc<dyn TimeSource>) -> Result<Self> {
         if user_index > 3 {
             return Err(XInputRumbleError::InvalidUserIndex(user_index));
         }
+
+        let now = time_source.now();
 
         Ok(Self {
             user_index,
             last_low_freq: 0.0,
             last_high_freq: 0.0,
-            last_update: Instant::now(),
+            last_update: now,
             connected: false,
+            time_source,
         })
     }
 
@@ -199,7 +207,7 @@ impl XInputRumbleDevice {
         // Update state
         self.last_low_freq = low_freq;
         self.last_high_freq = high_freq;
-        self.last_update = Instant::now();
+        self.last_update = self.time_source.now();
 
         Ok(())
     }
@@ -229,7 +237,7 @@ impl XInputRumbleDevice {
 
     /// Get time since last update
     pub fn time_since_last_update(&self) -> std::time::Duration {
-        self.last_update.elapsed()
+        self.time_source.now().duration_since(self.last_update)
     }
 
     /// Apply vibration to both motors (side-effect free mapping)
@@ -378,6 +386,7 @@ pub enum FfbBackend {
 ///
 /// * `has_directinput_device` - Whether a DirectInput FFB device is connected
 /// * `xinput_user_index` - Optional XInput user index to check (0-3)
+/// * `time_source` - Time source for deterministic testing
 ///
 /// # Returns
 ///
@@ -389,6 +398,7 @@ pub enum FfbBackend {
 pub fn detect_ffb_backend(
     has_directinput_device: bool,
     xinput_user_index: Option<u32>,
+    time_source: Arc<dyn TimeSource>,
 ) -> FfbBackend {
     // Prefer DirectInput FFB when available
     if has_directinput_device {
@@ -399,7 +409,7 @@ pub fn detect_ffb_backend(
     if let Some(user_index) = xinput_user_index {
         if user_index <= 3 {
             // Check if XInput device is connected
-            let mut device = match XInputRumbleDevice::new(user_index) {
+            let mut device = match XInputRumbleDevice::new(user_index, time_source) {
                 Ok(d) => d,
                 Err(_) => return FfbBackend::None,
             };
@@ -422,6 +432,7 @@ pub fn detect_ffb_backend(
 pub struct FfbOutputRouter {
     backend: FfbBackend,
     xinput_device: Option<XInputRumbleDevice>,
+    time_source: Arc<dyn TimeSource>,
 }
 
 impl FfbOutputRouter {
@@ -431,10 +442,15 @@ impl FfbOutputRouter {
     ///
     /// * `backend` - The detected FFB backend to use
     /// * `xinput_user_index` - XInput user index if using XInput rumble
-    pub fn new(backend: FfbBackend, xinput_user_index: Option<u32>) -> Result<Self> {
+    /// * `time_source` - Time source for deterministic testing
+    pub fn new(
+        backend: FfbBackend,
+        xinput_user_index: Option<u32>,
+        time_source: Arc<dyn TimeSource>,
+    ) -> Result<Self> {
         let xinput_device = if backend == FfbBackend::XInputRumble {
             let user_index = xinput_user_index.unwrap_or(0);
-            let mut device = XInputRumbleDevice::new(user_index)?;
+            let mut device = XInputRumbleDevice::new(user_index, time_source.clone())?;
             device.check_connection();
             Some(device)
         } else {
@@ -444,6 +460,7 @@ impl FfbOutputRouter {
         Ok(Self {
             backend,
             xinput_device,
+            time_source,
         })
     }
 
@@ -516,24 +533,27 @@ impl FfbOutputRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::FakeTimeSource;
 
     #[test]
     fn test_xinput_device_creation() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // Valid user indices
         for i in 0..=3 {
-            let device = XInputRumbleDevice::new(i);
+            let device = XInputRumbleDevice::new(i, time_source.clone());
             assert!(device.is_ok());
             assert_eq!(device.unwrap().user_index(), i);
         }
 
         // Invalid user index
-        let device = XInputRumbleDevice::new(4);
+        let device = XInputRumbleDevice::new(4, time_source.clone());
         assert!(device.is_err());
     }
 
     #[test]
     fn test_rumble_clamping() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true; // Simulate connected device
 
         // Test clamping of out-of-range values
@@ -561,7 +581,8 @@ mod tests {
 
     #[test]
     fn test_stop_rumble() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Set some rumble
@@ -585,7 +606,8 @@ mod tests {
 
     #[test]
     fn test_not_connected_error() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         // Don't set connected flag
 
         let channels = RumbleChannels {
@@ -621,7 +643,8 @@ mod tests {
 
     #[test]
     fn test_drop_stops_rumble() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Set some rumble
@@ -638,7 +661,8 @@ mod tests {
 
     #[test]
     fn test_time_tracking() {
-        let device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let device = XInputRumbleDevice::new(0, time_source).unwrap();
 
         // Should have very recent timestamp
         let elapsed = device.time_since_last_update();
@@ -647,7 +671,8 @@ mod tests {
 
     #[test]
     fn test_apply_vibration() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Test apply_vibration method
@@ -669,7 +694,8 @@ mod tests {
 
     #[test]
     fn test_apply_vibration_clamping() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Test clamping in apply_vibration
@@ -739,20 +765,22 @@ mod tests {
 
     #[test]
     fn test_ffb_backend_detection_directinput_preferred() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // DirectInput should be preferred when available
-        let backend = detect_ffb_backend(true, Some(0));
+        let backend = detect_ffb_backend(true, Some(0), time_source.clone());
         assert_eq!(backend, FfbBackend::DirectInput);
 
         // DirectInput should be preferred even without XInput
-        let backend = detect_ffb_backend(true, None);
+        let backend = detect_ffb_backend(true, None, time_source);
         assert_eq!(backend, FfbBackend::DirectInput);
     }
 
     #[test]
     fn test_ffb_backend_detection_xinput_fallback() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // XInput should be used when DirectInput is not available
         // Note: On non-Windows, XInput will not be connected
-        let backend = detect_ffb_backend(false, Some(0));
+        let backend = detect_ffb_backend(false, Some(0), time_source);
 
         #[cfg(target_os = "windows")]
         {
@@ -768,24 +796,27 @@ mod tests {
 
     #[test]
     fn test_ffb_backend_detection_none() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // No backend when nothing is available
-        let backend = detect_ffb_backend(false, None);
+        let backend = detect_ffb_backend(false, None, time_source.clone());
         assert_eq!(backend, FfbBackend::None);
 
         // Invalid XInput index should result in None
-        let backend = detect_ffb_backend(false, Some(5));
+        let backend = detect_ffb_backend(false, Some(5), time_source);
         assert_eq!(backend, FfbBackend::None);
     }
 
     #[test]
     fn test_ffb_output_router_directinput() {
-        let router = FfbOutputRouter::new(FfbBackend::DirectInput, None).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let router = FfbOutputRouter::new(FfbBackend::DirectInput, None, time_source).unwrap();
         assert_eq!(router.backend(), FfbBackend::DirectInput);
     }
 
     #[test]
     fn test_ffb_output_router_none() {
-        let mut router = FfbOutputRouter::new(FfbBackend::None, None).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut router = FfbOutputRouter::new(FfbBackend::None, None, time_source).unwrap();
         assert_eq!(router.backend(), FfbBackend::None);
         assert!(!router.is_connected());
 
@@ -801,7 +832,8 @@ mod tests {
 
     #[test]
     fn test_ffb_output_router_stop() {
-        let mut router = FfbOutputRouter::new(FfbBackend::None, None).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut router = FfbOutputRouter::new(FfbBackend::None, None, time_source).unwrap();
         // Stop should succeed for None backend
         assert!(router.stop().is_ok());
     }
@@ -809,7 +841,8 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn test_ffb_output_router_xinput() {
-        let router = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0));
+        let time_source = Arc::new(FakeTimeSource::new());
+        let router = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source);
         assert!(router.is_ok());
         let router = router.unwrap();
         assert_eq!(router.backend(), FfbBackend::XInputRumble);
@@ -818,7 +851,8 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn test_ffb_output_router_xinput_routing() {
-        let mut router = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0)).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut router = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
 
         let effect = crate::EffectOutput {
             torque_nm: 2.0,
@@ -851,8 +885,9 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_xinput_all_valid_user_indices() {
+        let time_source = Arc::new(FakeTimeSource::new());
         for i in 0..=3 {
-            let device = XInputRumbleDevice::new(i);
+            let device = XInputRumbleDevice::new(i, time_source.clone());
             assert!(device.is_ok(), "User index {} should be valid", i);
             let device = device.unwrap();
             assert_eq!(device.user_index(), i);
@@ -864,8 +899,9 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_xinput_invalid_user_indices() {
+        let time_source = Arc::new(FakeTimeSource::new());
         for i in 4..=10 {
-            let device = XInputRumbleDevice::new(i);
+            let device = XInputRumbleDevice::new(i, time_source.clone());
             assert!(device.is_err(), "User index {} should be invalid", i);
             match device.unwrap_err() {
                 XInputRumbleError::InvalidUserIndex(idx) => assert_eq!(idx, i),
@@ -878,7 +914,8 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_rumble_boundary_values() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Test exact boundary values
@@ -1098,15 +1135,16 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_backend_detection_all_user_indices() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // DirectInput always wins regardless of XInput index
         for i in 0..=3 {
-            let backend = detect_ffb_backend(true, Some(i));
+            let backend = detect_ffb_backend(true, Some(i), time_source.clone());
             assert_eq!(backend, FfbBackend::DirectInput);
         }
 
         // Without DirectInput, valid XInput indices should work (on Windows)
         for i in 0..=3 {
-            let backend = detect_ffb_backend(false, Some(i));
+            let backend = detect_ffb_backend(false, Some(i), time_source.clone());
             #[cfg(target_os = "windows")]
             assert_eq!(backend, FfbBackend::XInputRumble);
             #[cfg(not(target_os = "windows"))]
@@ -1115,7 +1153,7 @@ mod tests {
 
         // Invalid XInput indices should result in None
         for i in 4..=10 {
-            let backend = detect_ffb_backend(false, Some(i));
+            let backend = detect_ffb_backend(false, Some(i), time_source.clone());
             assert_eq!(backend, FfbBackend::None);
         }
     }
@@ -1124,7 +1162,8 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_device_state_tracking() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
 
         // Initial state
         assert!(!device.is_connected());
@@ -1162,7 +1201,8 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_router_directinput_passthrough() {
-        let mut router = FfbOutputRouter::new(FfbBackend::DirectInput, None).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut router = FfbOutputRouter::new(FfbBackend::DirectInput, None, time_source).unwrap();
 
         // DirectInput routing should succeed (passthrough)
         let effect = crate::EffectOutput {
@@ -1183,18 +1223,19 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_router_stop_all_backends() {
+        let time_source = Arc::new(FakeTimeSource::new());
         // None backend
-        let mut router_none = FfbOutputRouter::new(FfbBackend::None, None).unwrap();
+        let mut router_none = FfbOutputRouter::new(FfbBackend::None, None, time_source.clone()).unwrap();
         assert!(router_none.stop().is_ok());
 
         // DirectInput backend
-        let mut router_di = FfbOutputRouter::new(FfbBackend::DirectInput, None).unwrap();
+        let mut router_di = FfbOutputRouter::new(FfbBackend::DirectInput, None, time_source.clone()).unwrap();
         assert!(router_di.stop().is_ok());
 
         // XInput backend (Windows only)
         #[cfg(target_os = "windows")]
         {
-            let mut router_xi = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0)).unwrap();
+            let mut router_xi = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
             assert!(router_xi.stop().is_ok());
         }
     }
@@ -1218,7 +1259,8 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_rapid_rumble_updates() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
         device.connected = true;
 
         // Simulate 100 rapid updates (like a 100Hz FFB loop)
@@ -1266,7 +1308,8 @@ mod tests {
     /// Validates: Requirements FFB-HID-01.5
     #[test]
     fn test_connection_state_changes() {
-        let mut device = XInputRumbleDevice::new(0).unwrap();
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut device = XInputRumbleDevice::new(0, time_source).unwrap();
 
         // Initially not connected
         assert!(!device.is_connected());

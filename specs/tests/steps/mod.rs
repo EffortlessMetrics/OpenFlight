@@ -8,6 +8,7 @@ pub mod coverage;
 pub mod documentation;
 pub mod new_adapters;
 pub mod tflight_hotas4;
+pub mod user_journeys;
 
 use crate::FlightWorld;
 use cucumber::given;

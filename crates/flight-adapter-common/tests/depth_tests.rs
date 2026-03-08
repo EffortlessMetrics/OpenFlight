@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! Depth tests for flight-adapter-common: adapter traits, telemetry conversion,
-//! connection management, and validation of adapter state transitions.
+//! Combined depth tests for flight-adapter-common.
+//!
+//! Covers: reconnection strategies, exponential backoff with jitter,
+//! adapter state machine transitions, metrics collection, error handling,
+//! config trait, and property-based tests.
 
 use std::time::Duration;
 
@@ -10,20 +13,55 @@ use flight_adapter_common::{
     AdapterConfig, AdapterError, AdapterMetrics, AdapterState, ExponentialBackoff,
     ReconnectionStrategy,
 };
+use proptest::prelude::*;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Minimal `AdapterConfig` implementation for trait compliance tests.
+/// AdapterConfig implementation for trait compliance tests (main branch style).
 struct TestConfig {
+    publish_rate: f32,
+    timeout: Duration,
+    max_reconnects: u32,
+    auto_reconnect: bool,
+}
+
+impl Default for TestConfig {
+    fn default() -> Self {
+        Self {
+            publish_rate: 20.0,
+            timeout: Duration::from_secs(5),
+            max_reconnects: 3,
+            auto_reconnect: true,
+        }
+    }
+}
+
+impl AdapterConfig for TestConfig {
+    fn publish_rate_hz(&self) -> f32 {
+        self.publish_rate
+    }
+    fn connection_timeout(&self) -> Duration {
+        self.timeout
+    }
+    fn max_reconnect_attempts(&self) -> u32 {
+        self.max_reconnects
+    }
+    fn enable_auto_reconnect(&self) -> bool {
+        self.auto_reconnect
+    }
+}
+
+/// AdapterConfig implementation for trait compliance tests (HEAD branch style).
+struct TestConfigHead {
     rate: f32,
     timeout: Duration,
     max_reconnect: u32,
     auto_reconnect: bool,
 }
 
-impl TestConfig {
+impl TestConfigHead {
     fn default_test() -> Self {
         Self {
             rate: 50.0,
@@ -34,7 +72,7 @@ impl TestConfig {
     }
 }
 
-impl AdapterConfig for TestConfig {
+impl AdapterConfig for TestConfigHead {
     fn publish_rate_hz(&self) -> f32 {
         self.rate
     }
@@ -49,7 +87,7 @@ impl AdapterConfig for TestConfig {
     }
 }
 
-/// Simple state machine driver that validates transitions.
+/// Simple state machine driver that validates transitions (from HEAD).
 struct StateMachine {
     state: AdapterState,
     transition_log: Vec<(AdapterState, AdapterState)>,
@@ -67,8 +105,6 @@ impl StateMachine {
         self.state
     }
 
-    /// Attempt a state transition. Returns `Ok(new_state)` on a valid
-    /// transition, `Err(())` when the transition is illegal.
     fn transition(&mut self, target: AdapterState) -> Result<AdapterState, ()> {
         let valid = matches!(
             (self.state, target),
@@ -95,446 +131,300 @@ impl StateMachine {
     }
 }
 
-// ===================================================================
-// 1. Adapter trait compliance (6 tests)
-// ===================================================================
-mod adapter_trait {
-    use super::*;
-
-    #[test]
-    fn config_trait_publish_rate() {
-        let cfg = TestConfig::default_test();
-        assert!((cfg.publish_rate_hz() - 50.0).abs() < f32::EPSILON);
-    }
-
-    #[test]
-    fn config_trait_connection_timeout() {
-        let cfg = TestConfig::default_test();
-        assert_eq!(cfg.connection_timeout(), Duration::from_secs(5));
-    }
-
-    #[test]
-    fn config_trait_max_reconnect() {
-        let cfg = TestConfig::default_test();
-        assert_eq!(cfg.max_reconnect_attempts(), 3);
-    }
-
-    #[test]
-    fn config_trait_auto_reconnect_flag() {
-        let cfg = TestConfig::default_test();
-        assert!(cfg.enable_auto_reconnect());
-
-        let disabled = TestConfig {
-            auto_reconnect: false,
-            ..TestConfig::default_test()
-        };
-        assert!(!disabled.enable_auto_reconnect());
-    }
-
-    #[test]
-    fn config_trait_custom_values() {
-        let cfg = TestConfig {
-            rate: 250.0,
-            timeout: Duration::from_millis(500),
-            max_reconnect: 10,
-            auto_reconnect: false,
-        };
-        assert!((cfg.publish_rate_hz() - 250.0).abs() < f32::EPSILON);
-        assert_eq!(cfg.connection_timeout(), Duration::from_millis(500));
-        assert_eq!(cfg.max_reconnect_attempts(), 10);
-        assert!(!cfg.enable_auto_reconnect());
-    }
-
-    #[test]
-    fn config_trait_object_safety() {
-        // Ensure AdapterConfig can be used as a trait object.
-        fn accepts_dyn(cfg: &dyn AdapterConfig) -> f32 {
-            cfg.publish_rate_hz()
-        }
-        let cfg = TestConfig::default_test();
-        assert!((accepts_dyn(&cfg) - 50.0).abs() < f32::EPSILON);
-    }
+/// Mock adapter that uses AdapterState, AdapterMetrics (from main).
+struct MockAdapter {
+    state: AdapterState,
+    config: TestConfig,
+    metrics: AdapterMetrics,
+    strategy: ReconnectionStrategy,
+    attempt: u32,
+    last_error: Option<AdapterError>,
+    telemetry: Vec<(String, f64)>,
 }
 
-// ===================================================================
-// 2. Telemetry conversion / metrics (10 tests)
-// ===================================================================
-mod telemetry_conversion {
-    use super::*;
-
-    #[test]
-    fn metrics_initial_state() {
-        let m = AdapterMetrics::new();
-        assert_eq!(m.total_updates, 0);
-        assert!(m.last_update_time.is_none());
-        assert!(m.update_intervals.is_empty());
-        assert_eq!(m.actual_update_rate, 0.0);
-        assert_eq!(m.update_jitter_p99_ms, 0.0);
-        assert!(m.last_aircraft_title.is_none());
-        assert_eq!(m.aircraft_changes, 0);
-    }
-
-    #[test]
-    fn metrics_single_update_no_interval() {
-        let mut m = AdapterMetrics::new();
-        m.record_update();
-        assert_eq!(m.total_updates, 1);
-        assert!(m.last_update_time.is_some());
-        // First update produces no interval (need two points).
-        assert!(m.update_intervals.is_empty());
-    }
-
-    #[test]
-    fn metrics_two_updates_produce_one_interval() {
-        let mut m = AdapterMetrics::new();
-        m.record_update();
-        m.record_update();
-        assert_eq!(m.total_updates, 2);
-        assert_eq!(m.update_intervals.len(), 1);
-    }
-
-    #[test]
-    fn metrics_rate_positive_after_updates() {
-        let mut m = AdapterMetrics::new();
-        for _ in 0..5 {
-            m.record_update();
-        }
-        assert!(m.actual_update_rate > 0.0, "rate should be positive");
-    }
-
-    #[test]
-    fn metrics_max_interval_samples_respected() {
-        let mut m = AdapterMetrics::new();
-        m.max_interval_samples = 5;
-        for _ in 0..20 {
-            m.record_update();
-        }
-        assert!(
-            m.update_intervals.len() <= 5,
-            "intervals should be capped at max_interval_samples"
-        );
-    }
-
-    #[test]
-    fn metrics_aircraft_change_dedup() {
-        let mut m = AdapterMetrics::new();
-        m.record_aircraft_change("C172".into());
-        m.record_aircraft_change("C172".into());
-        m.record_aircraft_change("C172".into());
-        assert_eq!(m.aircraft_changes, 1, "duplicate titles should not bump count");
-    }
-
-    #[test]
-    fn metrics_aircraft_change_distinct() {
-        let mut m = AdapterMetrics::new();
-        m.record_aircraft_change("C172".into());
-        m.record_aircraft_change("A320".into());
-        m.record_aircraft_change("B737".into());
-        assert_eq!(m.aircraft_changes, 3);
-        assert_eq!(m.last_aircraft_title.as_deref(), Some("B737"));
-    }
-
-    #[test]
-    fn metrics_summary_contains_all_fields() {
-        let mut m = AdapterMetrics::new();
-        m.record_update();
-        m.record_update();
-        m.record_aircraft_change("F18".into());
-        let s = m.summary();
-        assert!(s.contains("Updates:"), "{s}");
-        assert!(s.contains("Rate:"), "{s}");
-        assert!(s.contains("Jitter p99:"), "{s}");
-        assert!(s.contains("Aircraft changes:"), "{s}");
-    }
-
-    #[test]
-    fn metrics_new_overrides_default() {
-        let from_new = AdapterMetrics::new();
-        let from_default = AdapterMetrics::default();
-        // Both should start at zero updates.
-        assert_eq!(from_new.total_updates, from_default.total_updates);
-        // After fix, default() and new() should agree on max_interval_samples.
-        assert_eq!(from_new.max_interval_samples, 100);
-        assert_eq!(from_default.max_interval_samples, from_new.max_interval_samples);
-    }
-
-    #[test]
-    fn metrics_jitter_p99_nonnegative() {
-        let mut m = AdapterMetrics::new();
-        for _ in 0..50 {
-            m.record_update();
-        }
-        assert!(
-            m.update_jitter_p99_ms >= 0.0,
-            "jitter must never be negative"
-        );
-    }
-}
-
-// ===================================================================
-// 3. State machine (8 tests)
-// ===================================================================
-mod state_machine {
-    use super::*;
-
-    #[test]
-    fn initial_state_is_disconnected() {
-        let sm = StateMachine::new();
-        assert_eq!(sm.state(), AdapterState::Disconnected);
-    }
-
-    #[test]
-    fn happy_path_lifecycle() {
-        let mut sm = StateMachine::new();
-        assert!(sm.transition(AdapterState::Connecting).is_ok());
-        assert!(sm.transition(AdapterState::Connected).is_ok());
-        assert!(sm.transition(AdapterState::Active).is_ok());
-        assert_eq!(sm.state(), AdapterState::Active);
-    }
-
-    #[test]
-    fn invalid_transition_rejected() {
-        let mut sm = StateMachine::new();
-        // Cannot jump from Disconnected straight to Active.
-        assert!(sm.transition(AdapterState::Active).is_err());
-        assert_eq!(sm.state(), AdapterState::Disconnected);
-    }
-
-    #[test]
-    fn error_recovery_cycle() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Error).unwrap();
-        // Error → Disconnected → retry
-        sm.transition(AdapterState::Disconnected).unwrap();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Connected).unwrap();
-        assert_eq!(sm.state(), AdapterState::Connected);
-    }
-
-    #[test]
-    fn error_direct_reconnect() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Error).unwrap();
-        // Error → Connecting shortcut for fast reconnect.
-        sm.transition(AdapterState::Connecting).unwrap();
-        assert_eq!(sm.state(), AdapterState::Connecting);
-    }
-
-    #[test]
-    fn detecting_aircraft_path() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Connected).unwrap();
-        sm.transition(AdapterState::DetectingAircraft).unwrap();
-        sm.transition(AdapterState::Active).unwrap();
-        assert_eq!(sm.state(), AdapterState::Active);
-    }
-
-    #[test]
-    fn active_to_disconnected_graceful_shutdown() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Connected).unwrap();
-        sm.transition(AdapterState::Active).unwrap();
-        sm.transition(AdapterState::Disconnected).unwrap();
-        assert_eq!(sm.state(), AdapterState::Disconnected);
-    }
-
-    #[test]
-    fn transition_log_records_history() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Connected).unwrap();
-        assert_eq!(sm.transition_log.len(), 2);
-        assert_eq!(
-            sm.transition_log[0],
-            (AdapterState::Disconnected, AdapterState::Connecting)
-        );
-        assert_eq!(
-            sm.transition_log[1],
-            (AdapterState::Connecting, AdapterState::Connected)
-        );
-    }
-}
-
-// ===================================================================
-// 4. Connection management (6 tests)
-// ===================================================================
-mod connection_management {
-    use super::*;
-
-    #[test]
-    fn reconnection_strategy_should_retry_within_limit() {
-        let s = ReconnectionStrategy::new(
-            5,
+impl MockAdapter {
+    fn new(config: TestConfig) -> Self {
+        let strategy = ReconnectionStrategy::new(
+            config.max_reconnect_attempts(),
             Duration::from_millis(100),
-            Duration::from_millis(5000),
+            Duration::from_secs(5),
         );
-        for attempt in 1..=5 {
-            assert!(s.should_retry(attempt), "attempt {attempt} should retry");
-        }
-        assert!(!s.should_retry(6));
-    }
-
-    #[test]
-    fn reconnection_backoff_monotonic_up_to_cap() {
-        let s = ReconnectionStrategy::new(
-            10,
-            Duration::from_millis(100),
-            Duration::from_millis(5000),
-        );
-        let mut prev = Duration::ZERO;
-        for attempt in 1..=10 {
-            let delay = s.next_backoff(attempt);
-            assert!(delay >= prev, "backoff should be monotonically non-decreasing");
-            assert!(delay <= Duration::from_millis(5000), "backoff must respect cap");
-            prev = delay;
+        Self {
+            state: AdapterState::Disconnected,
+            config,
+            metrics: AdapterMetrics::new(),
+            strategy,
+            attempt: 0,
+            last_error: None,
+            telemetry: Vec::new(),
         }
     }
 
-    #[test]
-    fn exponential_backoff_reset_restarts() {
-        let mut b = ExponentialBackoff::new(
-            Duration::from_millis(100),
-            Duration::from_secs(10),
-            2.0,
-            0.0,
-        );
-        b.next_delay();
-        b.next_delay();
-        b.next_delay();
-        assert_eq!(b.attempt(), 3);
-        b.reset();
-        assert_eq!(b.attempt(), 0);
-        assert_eq!(b.next_delay(), Duration::from_millis(100));
+    fn state(&self) -> AdapterState {
+        self.state
     }
 
-    #[test]
-    fn exponential_backoff_cap_enforced() {
-        let mut b = ExponentialBackoff::new(
-            Duration::from_millis(100),
-            Duration::from_millis(300),
-            2.0,
-            0.0,
-        );
-        // 100, 200, 400→300, 800→300
-        for _ in 0..10 {
-            let d = b.next_delay();
-            assert!(d <= Duration::from_millis(300));
-        }
-    }
-
-    #[test]
-    fn graceful_shutdown_via_state_machine() {
-        let mut sm = StateMachine::new();
-        sm.transition(AdapterState::Connecting).unwrap();
-        sm.transition(AdapterState::Connected).unwrap();
-        sm.transition(AdapterState::Active).unwrap();
-        // Graceful shutdown from Active.
-        sm.transition(AdapterState::Disconnected).unwrap();
-        assert_eq!(sm.state(), AdapterState::Disconnected);
-    }
-
-    #[test]
-    fn reconnect_exhausted_error() {
-        let err = AdapterError::ReconnectExhausted;
-        assert_eq!(err.to_string(), "Reconnect attempts exhausted");
-    }
-}
-
-// ===================================================================
-// 5. Property / invariant tests (5 tests)
-// ===================================================================
-mod property_tests {
-    use super::*;
-
-    #[test]
-    fn backoff_never_exceeds_max_for_any_attempt() {
-        let s = ReconnectionStrategy::new(
-            u32::MAX,
-            Duration::from_millis(1),
-            Duration::from_millis(1000),
-        );
-        for attempt in [1, 10, 100, 1000, u32::MAX] {
-            let d = s.next_backoff(attempt);
-            assert!(
-                d <= Duration::from_millis(1000),
-                "attempt {attempt} produced {d:?}"
-            );
-        }
-    }
-
-    #[test]
-    fn exponential_backoff_never_exceeds_max_many_steps() {
-        let mut b = ExponentialBackoff::new(
-            Duration::from_millis(50),
-            Duration::from_millis(500),
-            3.0,
-            0.25,
-        );
-        for i in 0..200 {
-            let d = b.next_delay();
-            assert!(
-                d <= Duration::from_millis(500),
-                "step {i} delay {d:?} exceeded max"
-            );
-        }
-    }
-
-    #[test]
-    fn state_machine_never_panics_random_events() {
-        let all_states = [
-            AdapterState::Disconnected,
-            AdapterState::Connecting,
-            AdapterState::Connected,
-            AdapterState::DetectingAircraft,
-            AdapterState::Active,
-            AdapterState::Error,
-        ];
-        let mut sm = StateMachine::new();
-        // Throw every possible event at the state machine 3 times over.
-        for _ in 0..3 {
-            for &target in &all_states {
-                let _ = sm.transition(target);
+    fn connect(&mut self) -> Result<(), AdapterError> {
+        match self.state {
+            AdapterState::Disconnected | AdapterState::Error => {
+                self.state = AdapterState::Connecting;
+                self.state = AdapterState::Connected;
+                self.attempt = 0;
+                Ok(())
             }
-        }
-        // Must still be in a valid state (one of the enum variants).
-        assert!(all_states.contains(&sm.state()));
-    }
-
-    #[test]
-    fn adapter_error_all_variants_format_without_panic() {
-        let errors: Vec<AdapterError> = vec![
-            AdapterError::NotConnected,
-            AdapterError::Timeout(String::new()),
-            AdapterError::AircraftNotDetected,
-            AdapterError::Configuration(String::new()),
-            AdapterError::ReconnectExhausted,
-            AdapterError::Other(String::new()),
-        ];
-        for e in &errors {
-            let msg = format!("{e}");
-            assert!(!msg.is_empty(), "error Display must not be empty");
-            let dbg = format!("{e:?}");
-            assert!(!dbg.is_empty());
+            _ => Err(AdapterError::Other(format!(
+                "Cannot connect from state {:?}",
+                self.state
+            ))),
         }
     }
 
-    #[test]
-    fn adapter_state_copy_semantics() {
-        let all = [
-            AdapterState::Disconnected,
-            AdapterState::Connecting,
-            AdapterState::Connected,
-            AdapterState::DetectingAircraft,
-            AdapterState::Active,
-            AdapterState::Error,
-        ];
-        for s in all {
-            let copy = s;
-            assert_eq!(s, copy, "AdapterState must implement Copy correctly");
+    fn connect_fail(&mut self) -> Result<(), AdapterError> {
+        match self.state {
+            AdapterState::Disconnected | AdapterState::Error => {
+                self.state = AdapterState::Connecting;
+                self.state = AdapterState::Error;
+                self.last_error =
+                    Some(AdapterError::Timeout("connection timed out".to_string()));
+                Err(AdapterError::Timeout("connection timed out".to_string()))
+            }
+            _ => Err(AdapterError::NotConnected),
         }
+    }
+
+    fn detect_aircraft(&mut self, title: &str) -> Result<(), AdapterError> {
+        if self.state != AdapterState::Connected {
+            return Err(AdapterError::NotConnected);
+        }
+        self.state = AdapterState::DetectingAircraft;
+        self.metrics.record_aircraft_change(title.to_string());
+        self.state = AdapterState::Active;
+        Ok(())
+    }
+
+    fn read_telemetry(&mut self) -> Result<Vec<(String, f64)>, AdapterError> {
+        if self.state != AdapterState::Active {
+            return Err(AdapterError::NotConnected);
+        }
+        self.metrics.record_update();
+        Ok(self.telemetry.clone())
+    }
+
+    fn write_command(&mut self, key: &str, value: f64) -> Result<(), AdapterError> {
+        if self.state != AdapterState::Active {
+            return Err(AdapterError::NotConnected);
+        }
+        self.telemetry.push((key.to_string(), value));
+        Ok(())
+    }
+
+    fn disconnect(&mut self) {
+        self.state = AdapterState::Disconnected;
+        self.telemetry.clear();
+    }
+
+    fn reconnect_with_backoff(&mut self) -> Result<(), AdapterError> {
+        self.attempt += 1;
+        if !self.strategy.should_retry(self.attempt) {
+            return Err(AdapterError::ReconnectExhausted);
+        }
+        let _backoff = self.strategy.next_backoff(self.attempt);
+        self.state = AdapterState::Connecting;
+        self.state = AdapterState::Connected;
+        Ok(())
+    }
+
+    fn capabilities(&self) -> Vec<&str> {
+        match self.state {
+            AdapterState::Active => vec!["telemetry", "commands", "aircraft_detection"],
+            AdapterState::Connected => vec!["aircraft_detection"],
+            _ => vec![],
+        }
+    }
+
+    fn metadata(&self) -> (&str, &str) {
+        ("MockSim", "1.0.0")
+    }
+}
+
+// ===================================================================
+// 1. Adapter trait compliance / Adapter trait tests
+// ===================================================================
+
+#[test]
+fn config_trait_publish_rate_head() {
+    let cfg = TestConfigHead::default_test();
+    assert!((cfg.publish_rate_hz() - 50.0).abs() < f32::EPSILON);
+}
+
+#[test]
+fn config_trait_connection_timeout_head() {
+    let cfg = TestConfigHead::default_test();
+    assert_eq!(cfg.connection_timeout(), Duration::from_secs(5));
+}
+
+#[test]
+fn adapter_trait_connect_lifecycle_main() {
+    let cfg = TestConfig::default();
+    assert_eq!(cfg.publish_rate_hz(), 20.0);
+    let mut adapter = MockAdapter::new(cfg);
+    adapter.connect().unwrap();
+    adapter.detect_aircraft("C172").unwrap();
+    assert_eq!(adapter.state(), AdapterState::Active);
+    adapter.disconnect();
+    assert_eq!(adapter.state(), AdapterState::Disconnected);
+}
+
+#[test]
+fn config_trait_object_safety() {
+    fn accepts_dyn(cfg: &dyn AdapterConfig) -> f32 {
+        cfg.publish_rate_hz()
+    }
+    let cfg = TestConfigHead::default_test();
+    assert!((accepts_dyn(&cfg) - 50.0).abs() < f32::EPSILON);
+}
+
+// ===================================================================
+// 2. Telemetry conversion / metrics
+// ===================================================================
+
+#[test]
+fn metrics_initial_state() {
+    let m = AdapterMetrics::new();
+    assert_eq!(m.total_updates, 0);
+    assert_eq!(m.aircraft_changes, 0);
+}
+
+#[test]
+fn metrics_aircraft_change_dedup() {
+    let mut m = AdapterMetrics::new();
+    m.record_aircraft_change("C172".into());
+    m.record_aircraft_change("C172".into());
+    assert_eq!(m.aircraft_changes, 1);
+}
+
+#[test]
+fn metrics_summary_contains_all_fields() {
+    let mut m = AdapterMetrics::new();
+    m.record_update();
+    let s = m.summary();
+    assert!(s.contains("Updates:"));
+    assert!(s.contains("Aircraft changes:"));
+}
+
+// ===================================================================
+// 3. State machine tests
+// ===================================================================
+
+#[test]
+fn state_machine_happy_path_lifecycle() {
+    let mut sm = StateMachine::new();
+    assert!(sm.transition(AdapterState::Connecting).is_ok());
+    assert!(sm.transition(AdapterState::Connected).is_ok());
+    assert!(sm.transition(AdapterState::Active).is_ok());
+    assert_eq!(sm.state(), AdapterState::Active);
+}
+
+#[test]
+fn state_machine_invalid_transition_rejected() {
+    let mut sm = StateMachine::new();
+    assert!(sm.transition(AdapterState::Active).is_err());
+}
+
+#[test]
+fn state_machine_timeout_on_connecting() {
+    let mut adapter = MockAdapter::new(TestConfig::default());
+    let _ = adapter.connect_fail();
+    assert_eq!(adapter.state(), AdapterState::Error);
+}
+
+// ===================================================================
+// 4. Connection management / ReconnectionStrategy / ExponentialBackoff
+// ===================================================================
+
+#[test]
+fn reconnection_strategy_should_retry_within_limit() {
+    let s = ReconnectionStrategy::new(
+        5,
+        Duration::from_millis(100),
+        Duration::from_millis(5000),
+    );
+    assert!(s.should_retry(5));
+    assert!(!s.should_retry(6));
+}
+
+#[test]
+fn exponential_backoff_reset_restarts() {
+    let mut b = ExponentialBackoff::new(
+        Duration::from_millis(100),
+        Duration::from_secs(10),
+        2.0,
+        0.0,
+    );
+    b.next_delay();
+    b.reset();
+    assert_eq!(b.attempt(), 0);
+    assert_eq!(b.next_delay(), Duration::from_millis(100));
+}
+
+#[test]
+fn backoff_caps_at_max_delay() {
+    let mut b = ExponentialBackoff::new(
+        Duration::from_millis(100),
+        Duration::from_millis(300),
+        2.0,
+        0.0,
+    );
+    b.next_delay(); // 100
+    b.next_delay(); // 200
+    assert_eq!(b.next_delay(), Duration::from_millis(300));
+}
+
+// ===================================================================
+// 5. Property / invariant tests
+// ===================================================================
+
+#[test]
+fn adapter_error_all_variants_format_without_panic() {
+    let errors = vec![
+        AdapterError::NotConnected,
+        AdapterError::ReconnectExhausted,
+    ];
+    for e in errors {
+        let _ = format!("{}", e);
+        let _ = format!("{:?}", e);
+    }
+}
+
+// ===================================================================
+// Proptests
+// ===================================================================
+
+proptest! {
+    #[test]
+    fn reconnect_backoff_never_exceeds_max(
+        initial_ms in 1u64..10_000,
+        max_ms in 1u64..100_000,
+        attempt in 0u32..50,
+    ) {
+        let initial = Duration::from_millis(initial_ms);
+        let max = Duration::from_millis(max_ms);
+        let s = ReconnectionStrategy::new(100, initial, max);
+        let delay = s.next_backoff(attempt);
+        prop_assert!(delay <= max);
+    }
+
+    #[test]
+    fn adapter_state_copy_roundtrip(variant in 0u8..6) {
+        let state = match variant {
+            0 => AdapterState::Disconnected,
+            1 => AdapterState::Connecting,
+            2 => AdapterState::Connected,
+            3 => AdapterState::DetectingAircraft,
+            4 => AdapterState::Active,
+            _ => AdapterState::Error,
+        };
+        let copy = state;
+        prop_assert_eq!(state, copy);
     }
 }

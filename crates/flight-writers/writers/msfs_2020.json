@@ -1,0 +1,152 @@
+{
+  "sim": "msfs",
+  "version": "2020",
+  "description": "MSFS 2020 SimVar table — common axis mappings, control events, LED variables",
+  "variables": {
+    "aileron": {
+      "sim_var_name": "AILERON POSITION",
+      "unit": "position",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Aileron deflection, -1 full left to +1 full right"
+    },
+    "elevator": {
+      "sim_var_name": "ELEVATOR POSITION",
+      "unit": "position",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Elevator deflection, -1 full down to +1 full up"
+    },
+    "rudder": {
+      "sim_var_name": "RUDDER POSITION",
+      "unit": "position",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Rudder deflection, -1 full left to +1 full right"
+    },
+    "throttle": {
+      "sim_var_name": "GENERAL ENG THROTTLE LEVER POSITION:1",
+      "unit": "percent",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Engine 1 throttle lever position"
+    },
+    "propeller": {
+      "sim_var_name": "PROP RPM:1",
+      "unit": "rpm",
+      "data_type": "float64",
+      "settable": false,
+      "min": 0.0,
+      "max": 2700.0,
+      "description": "Propeller RPM for engine 1 (read-only)"
+    },
+    "mixture": {
+      "sim_var_name": "GENERAL ENG MIXTURE LEVER POSITION:1",
+      "unit": "percent",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Engine 1 mixture lever position"
+    },
+    "flaps": {
+      "sim_var_name": "FLAPS HANDLE INDEX",
+      "unit": "number",
+      "data_type": "int32",
+      "settable": true,
+      "min": 0.0,
+      "max": 4.0,
+      "description": "Flaps handle detent index"
+    },
+    "gear": {
+      "sim_var_name": "GEAR HANDLE POSITION",
+      "unit": "bool",
+      "data_type": "bool",
+      "settable": true,
+      "description": "Landing gear handle position (up/down)"
+    },
+    "spoilers": {
+      "sim_var_name": "SPOILERS HANDLE POSITION",
+      "unit": "percent",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Spoiler handle position"
+    },
+    "parking_brake": {
+      "sim_var_name": "BRAKE PARKING INDICATOR",
+      "unit": "bool",
+      "data_type": "bool",
+      "settable": false,
+      "description": "Parking brake indicator (read-only)"
+    },
+    "ap_master": {
+      "sim_var_name": "AUTOPILOT MASTER",
+      "unit": "bool",
+      "data_type": "bool",
+      "settable": true,
+      "description": "Autopilot master switch"
+    },
+    "ap_heading": {
+      "sim_var_name": "AUTOPILOT HEADING LOCK DIR",
+      "unit": "degrees",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 360.0,
+      "description": "Autopilot heading bug direction"
+    },
+    "ap_altitude": {
+      "sim_var_name": "AUTOPILOT ALTITUDE LOCK VAR",
+      "unit": "feet",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 50000.0,
+      "description": "Autopilot altitude target"
+    },
+    "ap_vs": {
+      "sim_var_name": "AUTOPILOT VERTICAL HOLD VAR",
+      "unit": "feet per minute",
+      "data_type": "float64",
+      "settable": true,
+      "min": -6000.0,
+      "max": 6000.0,
+      "description": "Autopilot vertical speed target"
+    },
+    "nav_obs": {
+      "sim_var_name": "NAV OBS:1",
+      "unit": "degrees",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 360.0,
+      "description": "NAV1 OBS setting"
+    },
+    "led_gear_green": {
+      "sim_var_name": "GEAR POSITION:0",
+      "unit": "percent",
+      "data_type": "float64",
+      "settable": false,
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Nose gear position for green LED indicator"
+    },
+    "led_ap_active": {
+      "sim_var_name": "AUTOPILOT MASTER",
+      "unit": "bool",
+      "data_type": "bool",
+      "settable": false,
+      "description": "Autopilot active for LED indicator"
+    }
+  }
+}

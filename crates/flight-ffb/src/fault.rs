@@ -8,7 +8,10 @@
 //! Includes pre-fault capture system for diagnostics and stable error codes.
 
 use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+
+use crate::TimeSource;
 
 /// Types of faults that can be detected
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -236,6 +239,8 @@ pub struct PreFaultCapture {
     pub system_events: VecDeque<SystemEvent>,
     /// Maximum samples to keep
     max_samples: usize,
+    /// Time source for deterministic capture
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// Axis data sample for pre-fault capture
@@ -335,18 +340,21 @@ pub struct FaultDetector {
     endpoint_wedge_timer: Option<Instant>,
     /// Plugin overrun counters by plugin ID
     plugin_overrun_counters: HashMap<String, u32>,
+    /// Time source for deterministic detection
+    time_source: Arc<dyn TimeSource>,
 }
 
 impl PreFaultCapture {
     /// Create new pre-fault capture system
-    pub fn new(capture_duration: Duration) -> Self {
+    pub fn new(capture_duration: Duration, time_source: Arc<dyn TimeSource>) -> Self {
         Self {
-            capture_start: Instant::now(),
+            capture_start: time_source.now(),
             capture_duration,
             axis_samples: VecDeque::new(),
             ffb_samples: VecDeque::new(),
             system_events: VecDeque::new(),
             max_samples: 1000, // Limit memory usage
+            time_source,
         }
     }
 
@@ -355,7 +363,7 @@ impl PreFaultCapture {
         self.axis_samples.push_back(sample);
 
         // Keep only samples within capture duration
-        let cutoff = Instant::now() - self.capture_duration;
+        let cutoff = self.time_source.now() - self.capture_duration;
         while let Some(front) = self.axis_samples.front() {
             if front.timestamp < cutoff {
                 self.axis_samples.pop_front();
@@ -375,7 +383,7 @@ impl PreFaultCapture {
         self.ffb_samples.push_back(sample);
 
         // Keep only samples within capture duration
-        let cutoff = Instant::now() - self.capture_duration;
+        let cutoff = self.time_source.now() - self.capture_duration;
         while let Some(front) = self.ffb_samples.front() {
             if front.timestamp < cutoff {
                 self.ffb_samples.pop_front();
@@ -395,7 +403,7 @@ impl PreFaultCapture {
         self.system_events.push_back(event);
 
         // Keep only events within capture duration
-        let cutoff = Instant::now() - self.capture_duration;
+        let cutoff = self.time_source.now() - self.capture_duration;
         while let Some(front) = self.system_events.front() {
             if front.timestamp < cutoff {
                 self.system_events.pop_front();
@@ -420,13 +428,13 @@ impl PreFaultCapture {
         self.axis_samples.clear();
         self.ffb_samples.clear();
         self.system_events.clear();
-        self.capture_start = Instant::now();
+        self.capture_start = self.time_source.now();
     }
 }
 
 impl FaultDetector {
     /// Create new fault detector
-    pub fn new(max_response_time: Duration) -> Self {
+    pub fn new(max_response_time: Duration, time_source: Arc<dyn TimeSource>) -> Self {
         Self {
             _max_response_time: max_response_time,
             fault_history: VecDeque::new(),
@@ -434,16 +442,17 @@ impl FaultDetector {
             max_history_size: 1000,
             fault_counters: HashMap::new(),
             last_fault_time: None,
-            pre_fault_capture: PreFaultCapture::new(Duration::from_secs(2)),
+            pre_fault_capture: PreFaultCapture::new(Duration::from_secs(2), time_source.clone()),
             usb_stall_counter: 0,
             endpoint_wedge_timer: None,
             plugin_overrun_counters: HashMap::new(),
+            time_source,
         }
     }
 
     /// Record a detected fault
     pub fn record_fault(&mut self, fault_type: FaultType) -> FaultRecord {
-        let detected_at = Instant::now();
+        let detected_at = self.time_source.now();
         self.last_fault_time = Some(detected_at);
 
         // Increment counter
@@ -562,7 +571,7 @@ impl FaultDetector {
 
     /// Get recent faults (within specified duration)
     pub fn get_recent_faults(&self, within: Duration) -> Vec<&FaultRecord> {
-        let cutoff = Instant::now() - within;
+        let cutoff = self.time_source.now() - within;
         self.fault_history
             .iter()
             .filter(|record| record.detected_at > cutoff)
@@ -619,9 +628,9 @@ impl FaultDetector {
     pub fn check_endpoint_wedge(&mut self, endpoint_responsive: bool) -> Option<FaultRecord> {
         if !endpoint_responsive {
             if self.endpoint_wedge_timer.is_none() {
-                self.endpoint_wedge_timer = Some(Instant::now());
+                self.endpoint_wedge_timer = Some(self.time_source.now());
             } else if let Some(timer) = self.endpoint_wedge_timer {
-                if timer.elapsed() >= Duration::from_millis(100) {
+                if self.time_source.now().duration_since(timer) >= Duration::from_millis(100) {
                     self.endpoint_wedge_timer = None;
                     return Some(self.record_fault(FaultType::EndpointWedged));
                 }
@@ -646,7 +655,7 @@ impl FaultDetector {
 
             // Add system event to pre-fault capture
             self.pre_fault_capture.add_system_event(SystemEvent {
-                timestamp: Instant::now(),
+                timestamp: self.time_source.now(),
                 event_type: "PLUGIN_OVERRUN".to_string(),
                 details: format!(
                     "Plugin {} exceeded 100μs budget: {:?}",
@@ -670,7 +679,7 @@ impl FaultDetector {
         pipeline_stage: String,
     ) {
         let sample = AxisSample {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             device_id,
             raw_input,
             processed_output,
@@ -688,7 +697,7 @@ impl FaultDetector {
         device_health: Option<String>,
     ) {
         let sample = FfbSample {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             torque_setpoint,
             actual_torque,
             safety_state,
@@ -705,7 +714,7 @@ impl FaultDetector {
         severity: EventSeverity,
     ) {
         let event = SystemEvent {
-            timestamp: Instant::now(),
+            timestamp: self.time_source.now(),
             event_type,
             details,
             severity,
@@ -932,7 +941,7 @@ pub struct FaultStatistics {
 
 impl Default for FaultDetector {
     fn default() -> Self {
-        Self::new(Duration::from_millis(50))
+        Self::new(Duration::from_millis(50), Arc::new(crate::DefaultTimeSource))
     }
 }
 
@@ -981,7 +990,8 @@ mod tests {
 
     #[test]
     fn test_fault_recording() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source);
 
         let record = detector.record_fault(FaultType::UsbStall);
 
@@ -1001,7 +1011,8 @@ mod tests {
 
     #[test]
     fn test_fault_response_completion() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source);
 
         detector.record_fault(FaultType::UsbStall);
         detector.record_fault_response_complete(FaultType::UsbStall, Duration::from_millis(30));
@@ -1012,9 +1023,10 @@ mod tests {
 
     #[test]
     fn test_soft_stop_recording() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
-        let triggered_at = Instant::now();
+        let triggered_at = time_source.now();
         let record = detector.record_soft_stop(triggered_at);
 
         assert_eq!(record.triggered_at, triggered_at);
@@ -1032,10 +1044,11 @@ mod tests {
 
     #[test]
     fn test_recent_faults() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
         detector.record_fault(FaultType::UsbStall);
-        std::thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
         detector.record_fault(FaultType::OverTemp);
 
         let recent = detector.get_recent_faults(Duration::from_millis(100));
@@ -1048,7 +1061,8 @@ mod tests {
 
     #[test]
     fn test_fault_rate_detection() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source);
 
         // Record multiple faults of same type
         for _ in 0..5 {
@@ -1066,7 +1080,8 @@ mod tests {
 
     #[test]
     fn test_fault_storm_detection() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source);
 
         // Record many faults to trigger storm detection
         for i in 0..15 {
@@ -1083,7 +1098,8 @@ mod tests {
 
     #[test]
     fn test_fault_statistics() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source);
 
         detector.record_fault(FaultType::UsbStall);
         detector.record_fault_response_complete(FaultType::UsbStall, Duration::from_millis(30));
@@ -1102,10 +1118,11 @@ mod tests {
 
     #[test]
     fn test_clear_faults() {
-        let mut detector = FaultDetector::new(Duration::from_millis(50));
+        let time_source = Arc::new(crate::DefaultTimeSource);
+        let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
         detector.record_fault(FaultType::UsbStall);
-        detector.record_soft_stop(Instant::now());
+        detector.record_soft_stop(time_source.now());
 
         assert!(!detector.get_fault_history().is_empty());
         assert!(!detector.get_soft_stop_history().is_empty());

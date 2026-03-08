@@ -507,7 +507,7 @@ impl ProcessDetector {
     }
 
     /// Check if simulator processes are running
-    async fn check_simulator_processes(
+    pub async fn check_simulator_processes(
         sim_id: SimId,
         definition: &ProcessDefinition,
         system_processes: &[SystemProcess],
@@ -952,12 +952,11 @@ impl ProcessDetector {
 
 /// System process information
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
-struct SystemProcess {
-    pid: u32,
-    name: String,
-    path: PathBuf,
-    window_title: Option<String>,
+pub struct SystemProcess {
+    pub pid: u32,
+    pub name: String,
+    pub path: PathBuf,
+    pub window_title: Option<String>,
 }
 
 impl DetectionState {
@@ -1117,7 +1116,7 @@ mod tests {
         ) {
             let rt = tokio::runtime::Runtime::new().unwrap();
 
-            rt.block_on(async {
+            let _ = rt.block_on(async {
                 let definition = ProcessDefinition {
                     process_names: vec![format!("{}.exe", name_fragment)],
                     window_titles: vec![],

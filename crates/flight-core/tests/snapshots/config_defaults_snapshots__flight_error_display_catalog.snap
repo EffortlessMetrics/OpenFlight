@@ -1,0 +1,12 @@
+---
+source: crates/flight-core/tests/config_defaults_snapshots.rs
+assertion_line: 32
+expression: errors
+---
+[
+    "Configuration error: missing api_key",
+    "Hardware error: USB stall on endpoint 3",
+    "Writer error: output channel closed",
+    "Rules validation error: unknown operator '~~'",
+    "IO error: file gone",
+]

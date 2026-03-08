@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 77
+expression: msg.to_json()
+---
+{"type":"ServiceStatus","status":"Running","uptime_secs":86400}

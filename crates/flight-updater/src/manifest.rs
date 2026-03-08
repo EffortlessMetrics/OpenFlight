@@ -173,6 +173,107 @@ pub fn verify_signature(manifest: &UpdateManifest, public_key_hex: &str) -> crat
 }
 
 // ---------------------------------------------------------------------------
+// Platform-specific release manifest
+// ---------------------------------------------------------------------------
+
+/// Target platform for an artifact.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Platform {
+    Windows,
+    Linux,
+}
+
+impl fmt::Display for Platform {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Platform::Windows => write!(f, "windows"),
+            Platform::Linux => write!(f, "linux"),
+        }
+    }
+}
+
+/// CPU architecture for an artifact.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Architecture {
+    X64,
+    Arm64,
+}
+
+impl fmt::Display for Architecture {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Architecture::X64 => write!(f, "x64"),
+            Architecture::Arm64 => write!(f, "arm64"),
+        }
+    }
+}
+
+/// A downloadable artifact for a specific platform and architecture.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PlatformArtifact {
+    /// Download URL for this artifact.
+    pub url: String,
+    /// Target platform.
+    pub platform: Platform,
+    /// Target CPU architecture.
+    pub architecture: Architecture,
+    /// SHA-256 checksum (64 hex characters).
+    pub sha256: String,
+    /// Size in bytes.
+    pub size_bytes: u64,
+}
+
+/// A release manifest describing an available update with per-platform
+/// artifacts, release date, and optional release notes.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReleaseManifest {
+    /// Target version this release installs.
+    pub version: SemVer,
+    /// Release channel.
+    pub channel: Channel,
+    /// ISO 8601 release date (e.g. `"2025-07-10"`).
+    pub release_date: String,
+    /// Platform-specific download artifacts.
+    pub artifacts: Vec<PlatformArtifact>,
+    /// Optional human-readable release notes.
+    pub release_notes: Option<String>,
+}
+
+impl ReleaseManifest {
+    /// Validate required fields and checksum format.
+    ///
+    /// Returns `Ok(())` when the manifest is well-formed, or an error
+    /// string describing the first problem found.
+    pub fn validate(&self) -> crate::Result<()> {
+        if self.release_date.is_empty() {
+            return Err(crate::UpdateError::VersionValidation(
+                "release_date is required".into(),
+            ));
+        }
+        if self.artifacts.is_empty() {
+            return Err(crate::UpdateError::VersionValidation(
+                "at least one artifact is required".into(),
+            ));
+        }
+        for (i, artifact) in self.artifacts.iter().enumerate() {
+            if artifact.url.is_empty() {
+                return Err(crate::UpdateError::VersionValidation(format!(
+                    "artifact[{i}]: url must not be empty"
+                )));
+            }
+            if !crate::is_valid_sha256(&artifact.sha256) {
+                return Err(crate::UpdateError::VersionValidation(format!(
+                    "artifact[{i}]: sha256 must be 64 hex characters"
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -410,5 +511,103 @@ mod tests {
         let mut m2 = unsigned_manifest();
         m2.signature = "bbb".into();
         assert_eq!(m1.canonical_bytes(), m2.canonical_bytes());
+    }
+
+    // -- ReleaseManifest --------------------------------------------------
+
+    fn sample_artifact(platform: Platform, arch: Architecture) -> PlatformArtifact {
+        PlatformArtifact {
+            url: format!("https://dl.example.com/{platform}-{arch}.zip"),
+            platform,
+            architecture: arch,
+            sha256: "aa".repeat(32), // 64 hex chars
+            size_bytes: 10_000,
+        }
+    }
+
+    fn valid_release_manifest() -> ReleaseManifest {
+        ReleaseManifest {
+            version: SemVer::new(2, 0, 0),
+            channel: Channel::Stable,
+            release_date: "2025-07-10".into(),
+            artifacts: vec![
+                sample_artifact(Platform::Windows, Architecture::X64),
+                sample_artifact(Platform::Linux, Architecture::X64),
+            ],
+            release_notes: Some("Bug fixes and improvements.".into()),
+        }
+    }
+
+    #[test]
+    fn release_manifest_validate_valid() {
+        assert!(valid_release_manifest().validate().is_ok());
+    }
+
+    #[test]
+    fn release_manifest_validate_empty_release_date() {
+        let mut m = valid_release_manifest();
+        m.release_date = String::new();
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn release_manifest_validate_no_artifacts() {
+        let mut m = valid_release_manifest();
+        m.artifacts.clear();
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn release_manifest_validate_bad_checksum_length() {
+        let mut m = valid_release_manifest();
+        m.artifacts[0].sha256 = "abcd".into();
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn release_manifest_validate_bad_checksum_chars() {
+        let mut m = valid_release_manifest();
+        m.artifacts[0].sha256 = "zz".repeat(32); // 64 chars but not hex
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn release_manifest_validate_empty_url() {
+        let mut m = valid_release_manifest();
+        m.artifacts[0].url = String::new();
+        assert!(m.validate().is_err());
+    }
+
+    #[test]
+    fn release_manifest_without_notes_is_valid() {
+        let mut m = valid_release_manifest();
+        m.release_notes = None;
+        assert!(m.validate().is_ok());
+    }
+
+    #[test]
+    fn architecture_x64_serde_roundtrip() {
+        let arch = Architecture::X64;
+        let json = serde_json::to_string(&arch).unwrap();
+        assert_eq!(json, "\"x64\"");
+        let back: Architecture = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, Architecture::X64);
+    }
+
+    #[test]
+    fn architecture_arm64_serde_roundtrip() {
+        let arch = Architecture::Arm64;
+        let json = serde_json::to_string(&arch).unwrap();
+        assert_eq!(json, "\"arm64\"");
+        let back: Architecture = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, Architecture::Arm64);
+    }
+
+    #[test]
+    fn release_manifest_serde_roundtrip() {
+        let m = valid_release_manifest();
+        let json = serde_json::to_string(&m).unwrap();
+        let back: ReleaseManifest = serde_json::from_str(&json).unwrap();
+        assert_eq!(m, back);
     }
 }
