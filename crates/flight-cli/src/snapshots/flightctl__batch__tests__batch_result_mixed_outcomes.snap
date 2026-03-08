@@ -1,0 +1,34 @@
+---
+source: crates/flight-cli/src/batch.rs
+expression: debug
+---
+BatchResult {
+    results: [
+        OpResult {
+            op: SetDeadzone {
+                axis: "pitch",
+                value: 0.03,
+            },
+            outcome: Ok(
+                (),
+            ),
+        },
+        OpResult {
+            op: SetDeadzone {
+                axis: "roll",
+                value: 5.0,
+            },
+            outcome: Err(
+                "deadzone value 5 out of range 0.0–1.0",
+            ),
+        },
+        OpResult {
+            op: EnableAxis {
+                axis: "rudder",
+            },
+            outcome: Ok(
+                (),
+            ),
+        },
+    ],
+}

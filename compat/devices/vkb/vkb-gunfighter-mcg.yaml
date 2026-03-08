@@ -1,0 +1,74 @@
+# VKB Gunfighter Mk.IV + MCG Pro/Ultimate Grip
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). High-end metal gimbal base with MCG grip.
+# PID 0x0125 (Gunfighter+MCG Pro), 0x0126 (Space GF), 0x0127 (Space GF Left).
+schema_version: "1"
+
+device:
+  name: "VKB Gunfighter Mk.IV + MCG"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x0125   # MCG Pro; Space GF = 0x0126, Space GF Left = 0x0127
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 6
+    names: [roll, pitch, yaw, mini_x, mini_y, throttle]
+    resolution_bits: 16
+  buttons: 42
+  hats: 4
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: CONFIGURABLE_AXES
+    description: >
+      VKBDevCfg can remap axes, buttons, and hats. Factory defaults assumed.
+  - id: INTERCHANGEABLE_GRIPS
+    description: >
+      Gunfighter base accepts multiple grip modules (MCG, SCG, KG12, etc.).
+      Button count and layout vary by grip. This manifest covers MCG Pro/Ultimate.
+  - id: SHIFT_LAYERS
+    description: >
+      Firmware supports up to 3 shift layers, expanding 42 physical buttons
+      to up to 128 logical buttons across multiple virtual controllers.
+  - id: DRY_CLUTCH
+    description: >
+      Metal gimbal uses adjustable dry clutches for spring tension. No
+      electronic force feedback, but gimbal feel is configurable mechanically.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB Gunfighter Mk.IV with MCG grip. Full HID report parser with axis
+    normalization, button extraction, and hat decoding. Metal gimbal provides
+    higher precision than Gladiator. VID 0x231D. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software for firmware updates, axis remapping, and clutch
+    calibration profiles.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Full axis and button support. MCG castle switch useful for TDC."
+  - game: "Microsoft Flight Simulator"
+    integration: direct_input
+    notes: "All axes recognized."
+  - game: "X-Plane 12"
+    integration: direct_input
+    notes: "All axes recognized."

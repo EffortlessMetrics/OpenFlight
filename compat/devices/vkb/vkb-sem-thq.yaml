@@ -1,0 +1,61 @@
+# VKB SEM Throttle Quadrant (SEM-V2)
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). Side Extension Module throttle quadrant.
+# PID 0x2214 — confirmed.
+schema_version: "1"
+
+device:
+  name: "VKB SEM Throttle Quadrant"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0x2214
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 4
+    names: [throttle_left, throttle_right, rotary_left, rotary_right]
+    resolution_bits: 16
+  buttons: 12
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: DUAL_THROTTLE
+    description: >
+      Twin throttle levers with detent and AB gate switches. Can be used
+      as independent throttles or linked for single-engine aircraft.
+  - id: CONFIGURABLE_AXES
+    description: >
+      VKBDevCfg can remap axes and buttons. Factory defaults assumed.
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB SEM THQ — dual throttle quadrant with rotary encoders. Full HID
+    report parser. VID 0x231D, PID 0x2214. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg software for firmware updates and axis remapping.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Dual throttle recognized for twin-engine aircraft."
+  - game: "Microsoft Flight Simulator"
+    integration: direct_input
+    notes: "All axes recognized."

@@ -1,0 +1,31 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: result
+---
+overall_status: Pass
+checks:
+  - name: IPC local-only binding
+    category: IpcSecurity
+    status: Pass
+    description: IPC server binds only to localhost
+    details: "Bound to 127.0.0.1:50051"
+    severity: Critical
+    remediation: ~
+  - name: Plugin signature verification
+    category: SignatureValidation
+    status: Pass
+    description: All loaded plugins have valid signatures
+    details: ~
+    severity: High
+    remediation: ~
+  - name: Telemetry consent
+    category: TelemetryPrivacy
+    status: Pass
+    description: Telemetry collection disabled (no consent)
+    details: ~
+    severity: Medium
+    remediation: ~
+audit_events: []
+recommendations: []
+timestamp: 1700000000
+duration_ms: 42

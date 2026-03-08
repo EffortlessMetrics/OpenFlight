@@ -1,0 +1,28 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcCm3ThrottleInputState {
+    axes: VpcCm3ThrottleAxes {
+        left_throttle: 0.0,
+        right_throttle: 0.0,
+        flaps: 0.0,
+        scx: 0.0,
+        scy: 0.0,
+        slider: 0.0,
+    },
+    buttons: VpcCm3ThrottleButtons {
+        raw: [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ],
+    },
+}

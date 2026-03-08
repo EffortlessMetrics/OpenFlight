@@ -21,5 +21,6 @@ thiserror = { workspace = true }
 dirs = { workspace = true }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 tempfile = { workspace = true }
 proptest = { workspace = true }

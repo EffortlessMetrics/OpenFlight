@@ -7,7 +7,10 @@
 //! Provides process+aircraft detection, profile resolution with merge hierarchy, and
 //! compile-and-swap system for profile changes with PoF hysteresis logic.
 
+pub mod crash_recovery;
+pub mod lifecycle;
 pub mod migration;
+pub mod persistence;
 pub mod recovery;
 pub mod state_persistence;
 pub mod store;

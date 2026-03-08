@@ -1,0 +1,8 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: filter
+---
+device_id: dev-001
+axis_id: pitch
+min_interval_ms: 100
+changed_only: true

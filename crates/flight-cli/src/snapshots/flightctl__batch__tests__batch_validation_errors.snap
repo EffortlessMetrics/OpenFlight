@@ -1,0 +1,7 @@
+---
+source: crates/flight-cli/src/batch.rs
+expression: output
+---
+axis name must not be empty
+expo value 2 out of range -1.0–1.0
+curve name must not be empty

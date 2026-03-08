@@ -1,0 +1,8 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: output
+---
+FFB_FAULT: Force feedback safety fault detected
+INTERLOCK_FAILURE: Safety interlock system failure
+TORQUE_LIMIT_EXCEEDED: Force feedback torque exceeded safety limits
+WATCHDOG_TIMEOUT: Component watchdog timeout detected

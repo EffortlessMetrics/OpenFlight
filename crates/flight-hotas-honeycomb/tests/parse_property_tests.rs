@@ -5,8 +5,11 @@
 
 use flight_hotas_honeycomb::alpha::ALPHA_REPORT_LEN;
 use flight_hotas_honeycomb::bravo::BRAVO_REPORT_LEN;
+use flight_hotas_honeycomb::button_delta::ButtonDelta;
 use flight_hotas_honeycomb::{
-    AlphaParseError, BravoParseError, HONEYCOMB_VENDOR_ID, parse_alpha_report, parse_bravo_report,
+    AlphaButton, AlphaParseError, BravoButton, BravoParseError, HONEYCOMB_ALPHA_YOKE_PID_LEGACY,
+    HONEYCOMB_BRAVO_PID_LEGACY, HONEYCOMB_VENDOR_ID, HONEYCOMB_VENDOR_ID_LEGACY,
+    honeycomb_model_from_vid_pid, is_honeycomb_device, parse_alpha_report, parse_bravo_report,
 };
 use proptest::prelude::*;
 
@@ -102,6 +105,36 @@ proptest! {
             "expected UnknownReportId for id=0x{:02X}", id
         );
     }
+
+    /// Alpha button mask round-trips: button N pressed iff bit N-1 is set.
+    #[test]
+    fn prop_alpha_button_mask_roundtrip(
+        mask_lo in 0u32..=u32::MAX,
+        hat in 0u8..=15u8,
+    ) {
+        let mask = mask_lo as u64;
+        let state = parse_alpha_report(&make_alpha_report(2048, 2048, mask, hat)).unwrap();
+        // Only lower 40 bits are populated (5 button bytes)
+        prop_assert_eq!(state.buttons.mask & 0xFF_FFFF_FFFF, mask & 0xFF_FFFF_FFFF);
+    }
+
+    /// Alpha roll/pitch are monotonically increasing with raw value.
+    #[test]
+    fn prop_alpha_roll_monotonic(a in 0u16..=4094u16) {
+        let b = a + 1;
+        let sa = parse_alpha_report(&make_alpha_report(a, 2048, 0, 15)).unwrap();
+        let sb = parse_alpha_report(&make_alpha_report(b, 2048, 0, 15)).unwrap();
+        prop_assert!(sb.axes.roll >= sa.axes.roll, "roll not monotonic");
+    }
+
+    /// Alpha pitch is monotonically increasing with raw value.
+    #[test]
+    fn prop_alpha_pitch_monotonic(a in 0u16..=4094u16) {
+        let b = a + 1;
+        let sa = parse_alpha_report(&make_alpha_report(2048, a, 0, 15)).unwrap();
+        let sb = parse_alpha_report(&make_alpha_report(2048, b, 0, 15)).unwrap();
+        prop_assert!(sb.axes.pitch >= sa.axes.pitch, "pitch not monotonic");
+    }
 }
 
 // ─── Bravo Throttle Quadrant ──────────────────────────────────────────────────
@@ -190,6 +223,35 @@ proptest! {
             );
         }
     }
+
+    /// Bravo throttle axes are monotonically increasing with raw value.
+    #[test]
+    fn prop_bravo_throttle1_monotonic(a in 0u16..=4094u16) {
+        let b = a + 1;
+        let sa = parse_bravo_report(&make_bravo_report([a, 0, 0, 0, 0, 0, 0], 0)).unwrap();
+        let sb = parse_bravo_report(&make_bravo_report([b, 0, 0, 0, 0, 0, 0], 0)).unwrap();
+        prop_assert!(sb.axes.throttle1 >= sa.axes.throttle1, "throttle1 not monotonic");
+    }
+
+    /// Button delta: pressed and released masks are disjoint.
+    #[test]
+    fn prop_button_delta_disjoint(prev in 0u64..=u64::MAX, curr in 0u64..=u64::MAX) {
+        let delta = ButtonDelta::compute(prev, curr);
+        prop_assert_eq!(delta.pressed & delta.released, 0, "pressed and released overlap");
+    }
+
+    /// Button delta: pressed ∪ released ∪ unchanged = all buttons.
+    #[test]
+    fn prop_button_delta_partition(prev in 0u64..=u64::MAX, curr in 0u64..=u64::MAX) {
+        let delta = ButtonDelta::compute(prev, curr);
+        let unchanged = prev & curr;
+        let still_off = !prev & !curr;
+        // All 64 bits are accounted for
+        prop_assert_eq!(
+            delta.pressed | delta.released | unchanged | still_off,
+            u64::MAX,
+        );
+    }
 }
 
 // ─── Unit tests ───────────────────────────────────────────────────────────────
@@ -200,8 +262,51 @@ fn honeycomb_vendor_id_is_correct() {
 }
 
 #[test]
+fn legacy_vendor_id_is_microchip() {
+    assert_eq!(HONEYCOMB_VENDOR_ID_LEGACY, 0x04D8);
+}
+
+#[test]
+fn legacy_alpha_pid() {
+    assert_eq!(HONEYCOMB_ALPHA_YOKE_PID_LEGACY, 0xE6D6);
+}
+
+#[test]
+fn legacy_bravo_pid() {
+    assert_eq!(HONEYCOMB_BRAVO_PID_LEGACY, 0xE6D5);
+}
+
+#[test]
+fn is_honeycomb_device_legacy_alpha() {
+    assert!(is_honeycomb_device(0x04D8, 0xE6D6));
+}
+
+#[test]
+fn is_honeycomb_device_legacy_bravo() {
+    assert!(is_honeycomb_device(0x04D8, 0xE6D5));
+}
+
+#[test]
+fn legacy_vid_pid_model_detection() {
+    use flight_hotas_honeycomb::HoneycombModel;
+    assert_eq!(
+        honeycomb_model_from_vid_pid(0x04D8, 0xE6D6),
+        Some(HoneycombModel::AlphaYoke)
+    );
+    assert_eq!(
+        honeycomb_model_from_vid_pid(0x04D8, 0xE6D5),
+        Some(HoneycombModel::BravoThrottle)
+    );
+}
+
+#[test]
+fn unknown_vid_pid_returns_none() {
+    assert_eq!(honeycomb_model_from_vid_pid(0x1234, 0x5678), None);
+    assert!(!is_honeycomb_device(0x1234, 0x5678));
+}
+
+#[test]
 fn alpha_hat_centred_maps_to_zero() {
-    // Hat nibble 0xF (15) = centred → hat field should be 0
     let state = parse_alpha_report(&make_alpha_report(2048, 2048, 0, 15)).unwrap();
     assert_eq!(state.buttons.hat, 0);
     assert_eq!(state.buttons.hat_direction(), "center");
@@ -216,4 +321,49 @@ fn bravo_gear_up_bit_30() {
         "gear_up should be active at bit 30"
     );
     assert!(!state.buttons.gear_down());
+}
+
+#[test]
+fn alpha_named_button_ptt_matches_bit0() {
+    let mask: u64 = 1;
+    let state = parse_alpha_report(&make_alpha_report(2048, 2048, mask, 15)).unwrap();
+    assert!(AlphaButton::Ptt.is_active(&state.buttons));
+}
+
+#[test]
+fn bravo_named_ap_master_matches_bit7() {
+    let mask: u64 = 1 << 7;
+    let state = parse_bravo_report(&make_bravo_report([0; 7], mask)).unwrap();
+    assert!(BravoButton::ApMaster.is_active(&state.buttons));
+}
+
+#[test]
+fn button_delta_single_press() {
+    let delta = ButtonDelta::compute(0, 1 << 30);
+    assert!(delta.was_pressed(31)); // bit 30 = button 31 (gear up)
+    assert!(!delta.was_released(31));
+}
+
+#[test]
+fn button_delta_single_release() {
+    let delta = ButtonDelta::compute(1 << 7, 0);
+    assert!(delta.was_released(8)); // bit 7 = button 8 (AP master)
+}
+
+#[test]
+fn alpha_all_buttons_pressed() {
+    let mask: u64 = (1u64 << 36) - 1; // bits 0-35 set
+    let state = parse_alpha_report(&make_alpha_report(2048, 2048, mask, 15)).unwrap();
+    for n in 1..=36u8 {
+        assert!(state.buttons.is_pressed(n), "button {n} should be pressed");
+    }
+}
+
+#[test]
+fn bravo_toggle_switch_buttons_via_enum() {
+    // Toggle 1 UP = button 34 = bit 33
+    let mask: u64 = 1 << 33;
+    let state = parse_bravo_report(&make_bravo_report([0; 7], mask)).unwrap();
+    assert!(BravoButton::Toggle1Up.is_active(&state.buttons));
+    assert!(!BravoButton::Toggle1Down.is_active(&state.buttons));
 }

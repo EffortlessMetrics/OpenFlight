@@ -1,0 +1,19 @@
+schema_version: "1"
+
+device:
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x9999
+    product_id: 0x8888
+
+capabilities:
+  axes:
+    count: 2
+  buttons: 4
+  force_feedback: false
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false
