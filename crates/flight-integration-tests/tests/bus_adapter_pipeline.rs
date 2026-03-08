@@ -23,7 +23,7 @@ use flight_bus::event_router::{EventFilter, EventRouter};
 use flight_bus::metrics::{BusMetrics, BusMetricsSnapshot};
 use flight_bus::routing::{
     BusEvent, EventFilter as RoutingFilter, EventKind, EventPayload, EventPriority,
-    EventRouter as RtRouter, RoutePattern, SourceType,
+    EventRouter as RtRouter, RoutePattern, SourceType, Topic,
 };
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::telemetry_aggregator::TelemetryAggregator;
@@ -252,6 +252,7 @@ fn rt_router_registers_and_routes_axis_events() {
         source_type: SourceType::Device,
         source_id: Some(1),
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     let _id = router
         .register_route(pattern, RoutingFilter::pass_all(), 100)
