@@ -639,4 +639,42 @@ mod tests {
         let layout = SampleProfiles::get_recommended_layout(AircraftType::Airbus);
         assert!(layout.contains("3x3"));
     }
+
+    #[test]
+    fn test_profile_serialization_round_trip() {
+        let mut manager = ProfileManager::new();
+        manager.load_sample_profiles().unwrap();
+
+        for aircraft in &[AircraftType::GA, AircraftType::Airbus, AircraftType::Helo] {
+            let profile_value = manager.get_profile(*aircraft).unwrap();
+            let json = serde_json::to_string(profile_value).unwrap();
+            let reparsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+            assert_eq!(*profile_value, reparsed, "{:?} round-trip failed", aircraft);
+        }
+    }
+
+    #[test]
+    fn test_profile_has_expected_structure() {
+        let manager = ProfileManager::new();
+        let profile = manager.create_ga_profile().unwrap();
+        assert!(!profile.name.is_empty());
+        assert!(!profile.version.is_empty());
+        assert!(!profile.application_version.is_empty());
+        assert!(!profile.plugin_version.is_empty());
+
+        for (pos, action) in &profile.actions {
+            assert!(!action.uuid.is_empty(), "action at {} missing uuid", pos);
+            assert!(!action.name.is_empty(), "action at {} missing name", pos);
+            assert!(!action.states.is_empty(), "action at {} has no states", pos);
+        }
+    }
+
+    #[test]
+    fn test_aircraft_type_serialization_round_trip() {
+        for aircraft in &[AircraftType::GA, AircraftType::Airbus, AircraftType::Helo] {
+            let json = serde_json::to_string(aircraft).unwrap();
+            let parsed: AircraftType = serde_json::from_str(&json).unwrap();
+            assert_eq!(*aircraft, parsed);
+        }
+    }
 }

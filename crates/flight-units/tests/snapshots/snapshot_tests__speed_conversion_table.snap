@@ -1,0 +1,12 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 26
+expression: table
+---
+knots → m/s → kph
+─────────────────────────────────
+    0.0 kt  →    0.0000 m/s  →    0.0000 kph
+    1.0 kt  →    0.5144 m/s  →    1.8520 kph
+  100.0 kt  →   51.4444 m/s  →  185.1998 kph
+  250.0 kt  →  128.6110 m/s  →  462.9996 kph
+  500.0 kt  →  257.2220 m/s  →  925.9991 kph

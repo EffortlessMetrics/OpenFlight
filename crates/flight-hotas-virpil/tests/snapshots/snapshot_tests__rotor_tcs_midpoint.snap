@@ -1,0 +1,19 @@
+---
+source: crates/flight-hotas-virpil/tests/snapshot_tests.rs
+expression: state
+---
+VpcRotorTcsInputState {
+    axes: VpcRotorTcsAxes {
+        collective: 0.5,
+        throttle_idle: 0.0,
+        rotary: 0.0,
+    },
+    buttons: VpcRotorTcsButtons {
+        raw: [
+            0,
+            0,
+            0,
+            0,
+        ],
+    },
+}

@@ -1,0 +1,17 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 159
+expression: cfg
+---
+ClientConfig {
+    client_version: "1.0.0",
+    supported_features: [
+        "device-management",
+        "health-monitoring",
+        "profile-management",
+        "force-feedback",
+        "real-time-telemetry",
+    ],
+    preferred_transport: NamedPipes,
+    connection_timeout_ms: 5000,
+}

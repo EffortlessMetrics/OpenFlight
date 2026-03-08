@@ -8,4 +8,7 @@
 
 pub mod modules;
 
-pub use modules::{GoFlightError, GoFlightModule, GoFlightReport, build_led_command, parse_report};
+pub use modules::{
+    GOFLIGHT_MIN_REPORT_BYTES, GoFlightError, GoFlightModule, GoFlightReport, build_led_command,
+    parse_report,
+};

@@ -66,3 +66,15 @@ name = "fuzz_device_arg"
 path = "fuzz_targets/fuzz_device_arg.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_dcs_protocol"
+path = "fuzz_targets/fuzz_dcs_protocol.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_dcs_commands"
+path = "fuzz_targets/fuzz_dcs_commands.rs"
+test = false
+doc = false

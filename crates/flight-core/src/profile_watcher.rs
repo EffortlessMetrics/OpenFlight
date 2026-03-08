@@ -159,6 +159,8 @@ mod tests {
 
     fn temp_dir_for_test(name: &str) -> PathBuf {
         let dir = env::temp_dir().join(format!("openflight_watcher_test_{name}"));
+        // Clean up any leftovers from previous runs to avoid stale-file flakiness
+        let _ = fs::remove_dir_all(&dir);
         let _ = fs::create_dir_all(&dir);
         dir
     }
@@ -252,5 +254,76 @@ mod tests {
         let n2 = n1.clone();
         n1.notify(PathBuf::from("foo.yaml"));
         assert!(n2.has_pending());
+    }
+
+    #[test]
+    fn test_ignores_non_yaml_toml_files() {
+        let dir = temp_dir_for_test("extensions");
+        let mut watcher = ProfileWatcher::with_default_interval(dir.clone());
+        watcher.poll(); // initial scan
+
+        // Create files with non-matching extensions
+        fs::write(dir.join("readme.txt"), "hello").unwrap();
+        fs::write(dir.join("data.json"), "{}").unwrap();
+        // Also create a matching file for comparison
+        fs::write(dir.join("profile.yaml"), "test: true").unwrap();
+
+        let events = watcher.poll();
+        // Only the yaml file should be detected
+        assert!(
+            events.iter().all(|e| {
+                let ext = e.path.extension().and_then(|e| e.to_str()).unwrap_or("");
+                ext == "yaml" || ext == "toml"
+            }),
+            "should only detect yaml/toml files, got: {events:?}"
+        );
+        assert!(
+            events.iter().any(|e| e.path.ends_with("profile.yaml")),
+            "should detect the yaml file"
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_modified_file_detected() {
+        let dir = temp_dir_for_test("modified");
+        let file = dir.join("config.toml");
+        fs::write(&file, "version = 1").unwrap();
+
+        let mut watcher = ProfileWatcher::with_default_interval(dir.clone());
+        watcher.poll(); // initial scan registers the file
+
+        // Wait briefly so mtime changes, then modify
+        std::thread::sleep(Duration::from_millis(50));
+        fs::write(&file, "version = 2").unwrap();
+
+        let events = watcher.poll();
+        assert!(
+            events
+                .iter()
+                .any(|e| e.kind == FileChangeKind::Modified && e.path == file),
+            "should detect modified file, got: {events:?}"
+        );
+
+        // A subsequent poll with no changes should produce no events
+        let events2 = watcher.poll();
+        assert!(
+            events2.is_empty(),
+            "no events expected when file unchanged, got: {events2:?}"
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_poll_interval_returns_configured_value() {
+        let dir = temp_dir_for_test("interval");
+        let interval = Duration::from_millis(500);
+        let watcher = ProfileWatcher::new(dir.clone(), interval);
+        assert_eq!(
+            watcher.poll_interval(),
+            interval,
+            "poll_interval should return the configured value"
+        );
+        let _ = fs::remove_dir_all(&dir);
     }
 }

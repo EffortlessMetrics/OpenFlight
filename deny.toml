@@ -10,11 +10,16 @@ exclude-dev = true
 # Only allow licenses that are compatible with our MIT/Apache-2.0 dual license
 allow = [
     "MIT",
+    "MIT-0",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
     "BSD-2-Clause",
     "BSD-3-Clause",
     "ISC",
+    "OpenSSL",
+    "Zlib",
+    "BlueOak-1.0.0",
+    "CDLA-Permissive-2.0",
     "Unicode-DFS-2016",
     "Unicode-3.0",
     "MPL-2.0",
@@ -33,17 +38,25 @@ exceptions = [
     { allow = ["MIT", "Apache-2.0", "Unicode-3.0"], name = "unicode-ident" },
 ]
 
+# Private workspace crates without a license field
+[[licenses.clarify]]
+name = "xtask"
+expression = "MIT OR Apache-2.0"
+license-files = []
+
 [bans]
 # Deny specific crates that have known security issues or are unmaintained
 deny = [
     # Unmaintained or problematic crates
     { name = "net2" },
     { name = "tempdir" },
-    
+
     # Crates that could compromise real-time performance
-    { name = "lazy_static" }, # Prefer once_cell or std::sync::LazyLock
+    # lazy_static: prefer once_cell or std::sync::LazyLock for new code,
+    # but allow transitive usage via fraction (jsonschema) and sharded-slab (tracing-subscriber)
+    { name = "lazy_static", wrappers = ["fraction", "sharded-slab"] },
     { name = "failure" }, # Prefer anyhow or thiserror
-    
+
     # HTTP stack unification - ban conflicting dependencies
     { name = "hyper", version = "<1.0.0" },
     { name = "native-tls" },
@@ -53,16 +66,37 @@ deny = [
 
 # Multiple version policy - be strict about these
 multiple-versions = "deny"
-wildcards = "deny"
+
+# Workspace crates use path dependencies via { workspace = true } which
+# resolve as wildcard versions — this is expected and correct
+wildcards = "allow"
 
 # Allow multiple versions for these specific crates if needed
 multiple-versions-include-dev = false
 
 # Skip certain crates from duplicate version checking
 skip = [
-    # Allow multiple versions of these crates if needed
+    # Windows platform crates: multiple versions co-exist due to different
+    # upstream consumers (windows-sys 0.42/0.52/0.53) — cannot be unified
     { name = "windows-sys" },
-    { name = "windows" },
+    { name = "windows-targets" },
+    { name = "windows_aarch64_gnullvm" },
+    { name = "windows_aarch64_msvc" },
+    { name = "windows_i686_gnu" },
+    { name = "windows_i686_gnullvm" },
+    { name = "windows_i686_msvc" },
+    { name = "windows_x86_64_gnu" },
+    { name = "windows_x86_64_gnullvm" },
+    { name = "windows_x86_64_msvc" },
+
+    # Ecosystem crates in transition between major versions —
+    # transitive deps pull both old and new; revisit when upstreams converge
+    { name = "foldhash" },
+    { name = "getrandom" },
+    { name = "hashbrown" },
+    { name = "rand_core" },
+    { name = "thiserror" },
+    { name = "thiserror-impl" },
 ]
 
 # Skip tree checking for certain crates
@@ -79,9 +113,10 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 
 # Ignore specific advisories (use sparingly and with justification)
 ignore = [
-    # Example: "RUSTSEC-2020-0001", # Justification for ignoring
-    # Add specific ignores here only with clear business justification
-    # and time-bound remediation plans
+    # atomic-polyfill is unmaintained (archived by embassy-rs).
+    # Pulled transitively; no updated upstream version available yet.
+    # Revisit when the parent crate drops this dependency.
+    "RUSTSEC-2023-0089",
 ]
 
 [sources]

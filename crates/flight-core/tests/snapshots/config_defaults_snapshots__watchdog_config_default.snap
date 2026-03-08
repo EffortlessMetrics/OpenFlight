@@ -1,0 +1,14 @@
+---
+source: crates/flight-core/tests/config_defaults_snapshots.rs
+assertion_line: 18
+expression: cfg
+---
+WatchdogConfig {
+    max_execution_time: 100µs,
+    usb_timeout: 100ms,
+    max_consecutive_failures: 3,
+    failure_rate_window: 60s,
+    max_failures_per_window: 10,
+    enable_nan_guards: true,
+    is_critical: false,
+}

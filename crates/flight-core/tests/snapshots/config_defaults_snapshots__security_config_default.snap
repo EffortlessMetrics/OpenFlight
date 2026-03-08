@@ -1,0 +1,12 @@
+---
+source: crates/flight-core/tests/config_defaults_snapshots.rs
+assertion_line: 40
+expression: cfg
+---
+SecurityConfig {
+    enforce_signatures: true,
+    trusted_cas: [],
+    allow_unsigned: false,
+    max_plugin_budget_us: 100,
+    audit_logging: true,
+}

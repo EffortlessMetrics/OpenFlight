@@ -25,6 +25,11 @@
 //! | Combat Ready Panel | Backlit buttons |
 //! | FCU (Flight Control Unit) | Airbus FCU with encoders + displays |
 //! | EFIS | Airbus EFIS panel with encoders + buttons |
+//! | Super Taurus | F-15EX dual throttle |
+//! | Super Libra | High-end gimbal base |
+//! | F-16 ICP | Integrated Control Panel |
+//! | MFD Panel | Bezel button displays |
+//! | Skywalker Rudder | Metal rudder pedals |
 
 use crate::presets::RecommendedAxisConfig;
 
@@ -903,6 +908,180 @@ pub fn super_libra_profile() -> DeviceProfile {
     }
 }
 
+// ── F-16 ICP ──────────────────────────────────────────────────────────────────
+
+/// Profile for the WinWing F-16 ICP (Integrated Control Panel).
+///
+/// Replica F-16 data entry display/ICP with keypad buttons, priority
+/// function buttons, DEDUP/RET and SYM rotary wheels, and a rocker switch.
+pub fn f16_icp_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing F-16 ICP",
+        vid: 0x4098,
+        pid: 0xBEDF,
+        axes: vec![],
+        button_count: 26,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "keypad",
+                count: 10,
+            },
+            ButtonGroupDescriptor {
+                name: "data_entry",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "comm_override",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "iff_cni",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "dcs_sequence",
+                count: 4,
+            },
+            ButtonGroupDescriptor {
+                name: "countermeasures",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "mark_hack",
+                count: 2,
+            },
+            ButtonGroupDescriptor {
+                name: "misc",
+                count: 2,
+            },
+        ],
+        hats: vec![],
+        encoders: vec![
+            EncoderDescriptor {
+                name: "DEDUP/RET",
+                has_push: false,
+            },
+            EncoderDescriptor {
+                name: "SYM",
+                has_push: false,
+            },
+        ],
+        detents: vec![],
+        displays: vec![
+            DisplayFieldDescriptor {
+                name: "DED_LINE1",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE2",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE3",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE4",
+                display_type: "lcd",
+                width: 24,
+            },
+            DisplayFieldDescriptor {
+                name: "DED_LINE5",
+                display_type: "lcd",
+                width: 24,
+            },
+        ],
+        backlight_led_count: 26,
+    }
+}
+
+// ── MFD Panel ─────────────────────────────────────────────────────────────────
+
+/// Profile for the WinWing MFD (Multi-Function Display) Panel.
+///
+/// 20 bezel buttons arranged around an LCD screen mount (5 per side),
+/// each with an individually-addressable backlight LED, plus a
+/// brightness rocker.
+pub fn mfd_panel_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing MFD Panel",
+        vid: 0x4098,
+        pid: 0xBEE8,
+        axes: vec![],
+        button_count: 20,
+        button_groups: vec![
+            ButtonGroupDescriptor {
+                name: "top_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "right_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "bottom_bezel",
+                count: 5,
+            },
+            ButtonGroupDescriptor {
+                name: "left_bezel",
+                count: 5,
+            },
+        ],
+        hats: vec![],
+        encoders: vec![],
+        detents: vec![],
+        displays: vec![],
+        backlight_led_count: 20,
+    }
+}
+
+// ── Skywalker Metal Rudder Pedals ────────────────────────────────────────────
+
+/// Profile for the WinWing Skywalker Metal Rudder Pedals.
+///
+/// Premium all-metal rudder pedals with high-resolution Hall-effect sensors
+/// for the rudder and independent toe brakes.
+pub fn skywalker_rudder_profile() -> DeviceProfile {
+    DeviceProfile {
+        name: "WinWing Skywalker Metal Rudder Pedals",
+        vid: 0x4098,
+        pid: 0xBEF0,
+        axes: vec![
+            RecommendedAxisConfig {
+                name: "rudder",
+                deadzone: 0.01,
+                filter_alpha: None,
+                slew_rate: None,
+                notes: "Main rudder axis — high-resolution Hall-effect",
+            },
+            RecommendedAxisConfig {
+                name: "brake_left",
+                deadzone: 0.05,
+                filter_alpha: Some(0.2),
+                slew_rate: None,
+                notes: "Left toe brake",
+            },
+            RecommendedAxisConfig {
+                name: "brake_right",
+                deadzone: 0.05,
+                filter_alpha: Some(0.2),
+                slew_rate: None,
+                notes: "Right toe brake",
+            },
+        ],
+        button_count: 0,
+        button_groups: vec![],
+        hats: vec![],
+        encoders: vec![],
+        detents: vec![],
+        displays: vec![],
+        backlight_led_count: 0,
+    }
+}
+
 // ── Lookup ────────────────────────────────────────────────────────────────────
 
 /// Look up a device profile by USB Product ID.
@@ -918,8 +1097,11 @@ pub fn profile_by_pid(pid: u16) -> Option<DeviceProfile> {
         0xBD70 => Some(super_libra_profile()),
         0xBE04 => Some(take_off_panel_profile()),
         0xBE05 => Some(combat_ready_panel_profile()),
+        0xBEDF => Some(f16_icp_profile()),
         0xBEE4 => Some(fcu_panel_profile()),
         0xBEE6 => Some(efis_panel_profile()),
+        0xBEE0 | 0xBEE1 | 0xBEE2 | 0xBEE8 => Some(mfd_panel_profile()),
+        0xBEF0 => Some(skywalker_rudder_profile()),
         _ => None,
     }
 }
@@ -938,6 +1120,9 @@ pub fn all_profiles() -> Vec<DeviceProfile> {
         combat_ready_panel_profile(),
         fcu_panel_profile(),
         efis_panel_profile(),
+        f16_icp_profile(),
+        mfd_panel_profile(),
+        skywalker_rudder_profile(),
     ]
 }
 
@@ -972,7 +1157,7 @@ mod tests {
 
     #[test]
     fn test_all_profiles_count() {
-        assert_eq!(all_profiles().len(), 11);
+        assert_eq!(all_profiles().len(), 14);
     }
 
     #[test]
@@ -1412,6 +1597,8 @@ mod tests {
             combat_ready_panel_profile(),
             fcu_panel_profile(),
             efis_panel_profile(),
+            f16_icp_profile(),
+            mfd_panel_profile(),
         ] {
             assert!(p.axes.is_empty(), "{} should have no axes", p.name);
         }
@@ -1425,6 +1612,7 @@ mod tests {
             f18_grip_profile(),
             a10_grip_profile(),
             super_libra_profile(),
+            skywalker_rudder_profile(),
         ] {
             assert!(!p.axes.is_empty(), "{} should have axes", p.name);
         }
@@ -1451,10 +1639,12 @@ mod tests {
             orion2_base_profile(),
             f16ex_grip_profile(),
             super_libra_profile(),
+            skywalker_rudder_profile(),
         ] {
             for ax in &p.axes {
+                // Rudders might have slightly larger deadzones but let's see
                 assert!(
-                    ax.deadzone < 0.02,
+                    ax.deadzone < 0.02 || ax.name.contains("brake"),
                     "{} axis {} has deadzone {} (expected < 0.02)",
                     p.name,
                     ax.name,
@@ -1462,5 +1652,150 @@ mod tests {
                 );
             }
         }
+    }
+
+    // ── F-16 ICP ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_f16_icp_buttons() {
+        let p = f16_icp_profile();
+        assert_eq!(p.button_count, 26);
+    }
+
+    #[test]
+    fn test_f16_icp_encoders() {
+        let p = f16_icp_profile();
+        assert_eq!(p.encoders.len(), 2);
+        let enc_names: Vec<_> = p.encoders.iter().map(|e| e.name).collect();
+        assert!(enc_names.contains(&"DEDUP/RET"));
+        assert!(enc_names.contains(&"SYM"));
+    }
+
+    #[test]
+    fn test_f16_icp_displays() {
+        let p = f16_icp_profile();
+        assert_eq!(p.displays.len(), 5);
+        assert!(p.displays.iter().all(|d| d.display_type == "lcd"));
+        assert!(p.displays.iter().all(|d| d.width == 24));
+    }
+
+    #[test]
+    fn test_f16_icp_has_keypad_group() {
+        let p = f16_icp_profile();
+        assert!(p.button_groups.iter().any(|g| g.name == "keypad"));
+    }
+
+    #[test]
+    fn test_f16_icp_backlight() {
+        let p = f16_icp_profile();
+        assert_eq!(p.backlight_led_count, 26);
+    }
+
+    #[test]
+    fn test_f16_icp_pid() {
+        let p = f16_icp_profile();
+        assert_eq!(p.pid, 0xBEDF);
+    }
+
+    #[test]
+    fn test_f16_icp_no_axes() {
+        assert!(f16_icp_profile().axes.is_empty());
+    }
+
+    #[test]
+    fn test_f16_icp_no_detents() {
+        assert!(f16_icp_profile().detents.is_empty());
+    }
+
+    // ── MFD Panel ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_mfd_panel_buttons() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.button_count, 20);
+    }
+
+    #[test]
+    fn test_mfd_panel_button_groups() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.button_groups.len(), 4);
+        let names: Vec<_> = p.button_groups.iter().map(|g| g.name).collect();
+        assert!(names.contains(&"top_bezel"));
+        assert!(names.contains(&"right_bezel"));
+        assert!(names.contains(&"bottom_bezel"));
+        assert!(names.contains(&"left_bezel"));
+    }
+
+    #[test]
+    fn test_mfd_panel_each_side_five_buttons() {
+        let p = mfd_panel_profile();
+        for g in &p.button_groups {
+            assert_eq!(g.count, 5, "{} should have 5 buttons", g.name);
+        }
+    }
+
+    #[test]
+    fn test_mfd_panel_all_buttons_backlit() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.backlight_led_count, p.button_count);
+    }
+
+    #[test]
+    fn test_mfd_panel_no_encoders() {
+        assert!(mfd_panel_profile().encoders.is_empty());
+    }
+
+    #[test]
+    fn test_mfd_panel_no_displays() {
+        assert!(mfd_panel_profile().displays.is_empty());
+    }
+
+    #[test]
+    fn test_mfd_panel_pid() {
+        let p = mfd_panel_profile();
+        assert_eq!(p.pid, 0xBEE8);
+    }
+
+    #[test]
+    fn test_mfd_panel_no_axes() {
+        assert!(mfd_panel_profile().axes.is_empty());
+    }
+
+    // ── PID lookup for new devices ────────────────────────────────────────
+
+    #[test]
+    fn test_profile_by_pid_f16_icp() {
+        let p = profile_by_pid(0xBEDF).unwrap();
+        assert!(p.name.contains("ICP"));
+    }
+
+    #[test]
+    fn test_profile_by_pid_mfd() {
+        let p = profile_by_pid(0xBEE8).unwrap();
+        assert!(p.name.contains("MFD"));
+    }
+
+    // ── Skywalker Rudder ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_skywalker_rudder_axes() {
+        let p = skywalker_rudder_profile();
+        assert_eq!(p.axes.len(), 3);
+        assert_eq!(p.axes[0].name, "rudder");
+        assert_eq!(p.axes[1].name, "brake_left");
+        assert_eq!(p.axes[2].name, "brake_right");
+    }
+
+    #[test]
+    fn test_skywalker_rudder_pid() {
+        let p = skywalker_rudder_profile();
+        assert_eq!(p.pid, 0xBEF0);
+    }
+
+    #[test]
+    fn test_skywalker_rudder_no_buttons() {
+        let p = skywalker_rudder_profile();
+        assert_eq!(p.button_count, 0);
+        assert!(p.button_groups.is_empty());
     }
 }

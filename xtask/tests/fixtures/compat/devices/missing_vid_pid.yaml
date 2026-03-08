@@ -1,0 +1,17 @@
+schema_version: "1"
+
+device:
+  name: "No USB IDs Device"
+  vendor: "TestVendor"
+
+capabilities:
+  axes:
+    count: 2
+  buttons: 4
+  force_feedback: false
+
+support:
+  tier: 3
+  test_coverage:
+    simulated: false
+    hil: false

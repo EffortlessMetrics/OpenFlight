@@ -1,0 +1,12 @@
+---
+source: crates/flight-hotas-honeycomb/tests/snapshot_tests.rs
+assertion_line: 121
+expression: report
+---
+[
+    0,
+    0,
+    21,
+    0,
+    0,
+]

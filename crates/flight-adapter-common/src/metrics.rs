@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 /// Adapter metrics for monitoring update rate and jitter.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AdapterMetrics {
     /// Total number of telemetry updates received.
     pub total_updates: u64,
@@ -26,13 +26,25 @@ pub struct AdapterMetrics {
     pub aircraft_changes: u64,
 }
 
+impl Default for AdapterMetrics {
+    fn default() -> Self {
+        Self {
+            total_updates: 0,
+            last_update_time: None,
+            update_intervals: Vec::new(),
+            max_interval_samples: 100,
+            actual_update_rate: 0.0,
+            update_jitter_p99_ms: 0.0,
+            last_aircraft_title: None,
+            aircraft_changes: 0,
+        }
+    }
+}
+
 impl AdapterMetrics {
     /// Create new metrics with default buffer size.
     pub fn new() -> Self {
-        Self {
-            max_interval_samples: 100,
-            ..Default::default()
-        }
+        Self::default()
     }
 
     /// Record a telemetry update.

@@ -1,0 +1,7 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: output
+---
+Protocol version mismatch: client=1.0.0, server=2.0.0
+Feature not supported: force-feedback-v2
+Connection failed: named pipe not found

@@ -6,7 +6,7 @@
 //! Supports the **Orion 2 Throttle**, **Orion 2 F/A-18C Stick**,
 //! **TFRP Rudder Pedals**, **F-16EX Grip**, **SuperTaurus Dual Throttle**,
 //! **Super Libra Joystick Base**, **F/A-18 Combat Ready Panel**,
-//! **F/A-18 Take Off Panel**, and **UFC1 + HUD1 Panel** via USB HID.
+//! **F/A-18 Take Off Panel**, **UFC1 + HUD1 Panel**, **F-16 ICP**, and **MFD Panels** via USB HID.
 //!
 //! # USB Identifiers
 //!
@@ -21,6 +21,8 @@
 //! | F/A-18 Combat Ready Panel     | 0x4098 | 0xBE05 | Confirmed |
 //! | F/A-18 Take Off Panel         | 0x4098 | 0xBE04 | Confirmed |
 //! | UFC1 + HUD1 Panel             | 0x4098 | 0xBEDE | Confirmed |
+//! | F-16 ICP                      | 0x4098 | 0xBEDF | Confirmed |
+//! | MFD Panel                     | 0x4098 | 0xBEE8 | Confirmed |
 //! | Skywalker Metal Rudder Pedals | 0x4098 | 0xBEF0 | Confirmed |
 //! | Orion 1 F-18 Stick            | 0x4098 | 0xBE11 | Confirmed |
 //! | Orion 2 F-16 Throttle         | 0x4098 | 0xBE68 | Confirmed |
@@ -40,10 +42,12 @@
 //! ```
 
 pub mod combat_ready_panel;
+pub mod f16_icp;
 pub mod f16ex_stick;
 pub mod health;
 pub mod input;
 pub mod led;
+pub mod mfd_panel;
 pub mod orion2_stick;
 pub mod orion2_throttle;
 pub mod orion_joystick;
@@ -71,6 +75,11 @@ pub use combat_ready_panel::{
     CombatReadyPanelInputState, CombatReadyParseError, MIN_REPORT_BYTES as COMBAT_READY_REPORT_LEN,
     parse_combat_ready_panel_report,
 };
+pub use f16_icp::{
+    BUTTON_COUNT as F16_ICP_BUTTON_COUNT, ENCODER_COUNT as F16_ICP_ENCODER_COUNT, F16_ICP_PID,
+    F16IcpInputState, F16IcpParseError, IcpButtons, MIN_REPORT_BYTES as F16_ICP_REPORT_LEN,
+    parse_f16_icp_report,
+};
 pub use f16ex_stick::{
     BUTTON_COUNT as F16EX_BUTTON_COUNT, F16EX_STICK_PID, F16ExAxes, F16ExButtons, F16ExInputState,
     F16ExParseError, MIN_REPORT_BYTES as F16EX_REPORT_LEN, parse_f16ex_stick_report,
@@ -82,7 +91,15 @@ pub use input::{
     ThrottleButtons, ThrottleInputState, WINWING_VENDOR_ID, WinWingParseError, parse_rudder_report,
     parse_stick_report, parse_throttle_report,
 };
-pub use led::{COMBAT_READY_PANEL_LEDS, LedZone, LedZoneMap, find_zone_by_name};
+pub use led::{
+    COMBAT_READY_PANEL_LEDS, LedController, LedState, LedZone, LedZoneMap, MAX_LEDS, RgbColor,
+    find_zone_by_name,
+};
+pub use mfd_panel::{
+    BUTTON_COUNT as MFD_BUTTON_COUNT, BUTTONS_PER_SIDE as MFD_BUTTONS_PER_SIDE, MFD_PANEL_PID,
+    MIN_REPORT_BYTES as MFD_PANEL_REPORT_LEN, MfdButtons, MfdPanelInputState, MfdPanelParseError,
+    MfdSide, parse_mfd_panel_report,
+};
 pub use orion_joystick::{
     ORION_JOYSTICK_MIN_REPORT_BYTES, ORION_JOYSTICK_PID, OrionJoystickState, URSA_MINOR_L_PID,
     parse_orion_joystick,
@@ -106,9 +123,9 @@ pub use presets::{
 pub use profiles::{
     ButtonGroupDescriptor, DetentDescriptor, DeviceProfile, DisplayFieldDescriptor,
     EncoderDescriptor, HatDescriptor, a10_grip_profile, all_profiles, combat_ready_panel_profile,
-    efis_panel_profile, f16ex_grip_profile, f18_grip_profile, fcu_panel_profile,
-    orion2_base_profile, orion2_throttle_profile, profile_by_pid, super_libra_profile,
-    super_taurus_profile, take_off_panel_profile,
+    efis_panel_profile, f16_icp_profile, f16ex_grip_profile, f18_grip_profile, fcu_panel_profile,
+    mfd_panel_profile, orion2_base_profile, orion2_throttle_profile, profile_by_pid,
+    super_libra_profile, super_taurus_profile, take_off_panel_profile,
 };
 pub use protocol::{
     BacklightSubCommand, CommandCategory, DetentName, DetentPosition, DetentReport,
@@ -161,6 +178,8 @@ pub const WINWING_PIDS: &[u16] = &[
     COMBAT_READY_PANEL_PID,
     TAKE_OFF_PANEL_PID,
     UFC_PANEL_PID,
+    F16_ICP_PID,
+    MFD_PANEL_PID,
     SKYWALKER_RUDDER_PID,
 ];
 

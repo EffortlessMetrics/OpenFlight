@@ -21,6 +21,8 @@
 //!
 //! `axis4` is zero for 9-byte reports.
 
+use std::fmt;
+
 use crate::ChError;
 
 /// PID for the CH Products Pro Throttle (confirmed from Linux kernel hid-ids.h).
@@ -31,6 +33,7 @@ pub const PRO_THROTTLE_MIN_REPORT_BYTES: usize = 9;
 
 /// Parsed input state from one CH Pro Throttle HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProThrottleState {
     /// Main throttle axis, 0–65535.
     pub throttle_main: u16,
@@ -86,6 +89,16 @@ pub fn parse_pro_throttle(report: &[u8]) -> Result<ProThrottleState, ChError> {
 /// Maps `0` → `0.0`, `65535` → `1.0`.
 pub fn normalize_throttle(raw: u16) -> f32 {
     (raw as f32 / 65535.0).clamp(0.0, 1.0)
+}
+
+impl fmt::Display for ProThrottleState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ProThrottle main={} axis2={} axis3={} axis4={} hat={} buttons={:#06x}",
+            self.throttle_main, self.axis2, self.axis3, self.axis4, self.hat, self.buttons
+        )
+    }
 }
 
 #[cfg(test)]
