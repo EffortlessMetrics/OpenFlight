@@ -26,6 +26,7 @@ pub mod policy;
 pub mod rollback;
 pub mod signature;
 pub mod signed_manifest;
+pub mod state_machine;
 pub mod update_manifest;
 pub mod updater;
 
@@ -45,6 +46,7 @@ pub use rollback::{
     UpdateRollbackConfig, UpdateRollbackManager, UpdateState, VersionInfo,
 };
 pub use signature::{SignatureVerifier, UpdateSignature};
+pub use state_machine::{UpdateEvent, UpdateState as LifecycleState, UpdateStateMachine};
 pub use update_manifest::{
     ManifestUpdateManager, UpdateChannel, UpdateManifest, UpdateRecord, VersionEntry,
 };
