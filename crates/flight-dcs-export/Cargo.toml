@@ -32,3 +32,4 @@ chrono = { workspace = true, features = ["serde"] }
 [dev-dependencies]
 tempfile.workspace = true
 proptest = { workspace = true }
+flight-dcs-modules = { path = "../flight-dcs-modules" }

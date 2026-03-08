@@ -1,0 +1,71 @@
+{
+  "sim": "msfs",
+  "version": "2024",
+  "base_version": "2020",
+  "description": "MSFS 2024 delta from 2020 — new/changed SimVars for the updated engine",
+  "variables": {
+    "throttle": {
+      "sim_var_name": "GENERAL ENG THROTTLE LEVER POSITION:1",
+      "unit": "percent",
+      "data_type": "float64",
+      "settable": true,
+      "min": -20.0,
+      "max": 100.0,
+      "description": "Engine 1 throttle lever position (MSFS 2024 supports reverse thrust to -20%)"
+    },
+    "spoilers": {
+      "sim_var_name": "SPOILERS HANDLE POSITION",
+      "unit": "percent over 100",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 16383.0,
+      "description": "Spoiler handle position (MSFS 2024 uses 0-16383 range)"
+    },
+    "ap_speed": {
+      "sim_var_name": "AUTOPILOT AIRSPEED HOLD VAR",
+      "unit": "knots",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 500.0,
+      "description": "Autopilot speed target (new in MSFS 2024)"
+    },
+    "ap_mach": {
+      "sim_var_name": "AUTOPILOT MACH HOLD VAR",
+      "unit": "mach",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 2.0,
+      "description": "Autopilot Mach target (new in MSFS 2024)"
+    },
+    "trim_aileron": {
+      "sim_var_name": "AILERON TRIM PCT",
+      "unit": "percent over 100",
+      "data_type": "float64",
+      "settable": true,
+      "min": -16383.0,
+      "max": 16383.0,
+      "description": "Aileron trim percentage (new settable in MSFS 2024)"
+    },
+    "trim_rudder": {
+      "sim_var_name": "RUDDER TRIM PCT",
+      "unit": "percent over 100",
+      "data_type": "float64",
+      "settable": true,
+      "min": -16383.0,
+      "max": 16383.0,
+      "description": "Rudder trim percentage (new settable in MSFS 2024)"
+    },
+    "led_gear_green": {
+      "sim_var_name": "GEAR POSITION:0",
+      "unit": "enum",
+      "data_type": "int32",
+      "settable": false,
+      "min": 0.0,
+      "max": 2.0,
+      "description": "Nose gear position enum 0=up 1=transit 2=down (changed type in MSFS 2024)"
+    }
+  }
+}

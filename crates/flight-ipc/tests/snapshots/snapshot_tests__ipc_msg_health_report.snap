@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 101
+expression: msg.to_json()
+---
+{"type":"HealthReport","components":[{"name":"axis-engine","healthy":true,"detail":null},{"name":"ffb-engine","healthy":false,"detail":"envelope exceeded on device usb-044f"},{"name":"hid-manager","healthy":true,"detail":null}]}

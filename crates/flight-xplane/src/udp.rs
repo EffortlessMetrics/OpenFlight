@@ -99,12 +99,14 @@ pub struct UdpClient {
     pending_requests: Arc<RwLock<HashMap<u32, PendingRequest>>>,
     next_request_id: Arc<RwLock<u32>>,
     dataref_cache: Arc<RwLock<HashMap<String, (DataRefValue, Instant)>>>,
+    /// Handles for background tasks so they can be aborted on shutdown.
+    background_tasks: Arc<std::sync::Mutex<Vec<tokio::task::JoinHandle<()>>>>,
 }
 
 impl UdpClient {
     /// Create a new UDP client
     pub fn new(config: UdpConfig) -> Result<Self, UdpError> {
-        let local_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), config.local_port);
+        let local_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.local_port);
 
         // Create socket - this is synchronous but should be fast
         let socket = std::net::UdpSocket::bind(local_addr)?;
@@ -118,12 +120,24 @@ impl UdpClient {
             pending_requests: Arc::new(RwLock::new(HashMap::new())),
             next_request_id: Arc::new(RwLock::new(1)),
             dataref_cache: Arc::new(RwLock::new(HashMap::new())),
+            background_tasks: Arc::new(std::sync::Mutex::new(Vec::new())),
         };
 
         // Start response handler
         client.start_response_handler();
 
         Ok(client)
+    }
+
+    /// Abort background tasks spawned by this client.
+    ///
+    /// Call this when the client is no longer needed to prevent resource leaks.
+    pub fn shutdown(&self) {
+        if let Ok(mut tasks) = self.background_tasks.lock() {
+            for handle in tasks.drain(..) {
+                handle.abort();
+            }
+        }
     }
 
     /// Request a DataRef value
@@ -289,7 +303,7 @@ impl UdpClient {
         let pending_requests = self.pending_requests.clone();
         let dataref_cache = self.dataref_cache.clone();
 
-        tokio::spawn(async move {
+        let recv_handle = tokio::spawn(async move {
             let mut buffer = vec![0u8; 1024];
 
             loop {
@@ -313,7 +327,7 @@ impl UdpClient {
         let pending_requests_cleanup = self.pending_requests.clone();
         let timeout = self.config.timeout;
 
-        tokio::spawn(async move {
+        let cleanup_handle = tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
 
             loop {
@@ -340,6 +354,12 @@ impl UdpClient {
                 }
             }
         });
+
+        // Store handles so they can be aborted on shutdown.
+        if let Ok(mut tasks) = self.background_tasks.lock() {
+            tasks.push(recv_handle);
+            tasks.push(cleanup_handle);
+        }
     }
 
     /// Handle incoming UDP response

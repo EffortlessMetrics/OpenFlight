@@ -410,7 +410,7 @@ mod tests {
     fn memory_sink_stores_up_to_capacity() {
         let mut sink = MemorySink::new(3);
         for i in 0..3 {
-            let ev = EventBuilder::new(EventLevel::Info, "t", &format!("msg {i}")).build();
+            let ev = EventBuilder::new(EventLevel::Info, "t", format!("msg {i}")).build();
             sink.send(&ev).unwrap();
         }
         assert_eq!(sink.len(), 3);
@@ -424,7 +424,7 @@ mod tests {
     fn memory_sink_evicts_oldest_when_full() {
         let mut sink = MemorySink::new(3);
         for i in 0..5 {
-            let ev = EventBuilder::new(EventLevel::Info, "t", &format!("msg {i}")).build();
+            let ev = EventBuilder::new(EventLevel::Info, "t", format!("msg {i}")).build();
             sink.send(&ev).unwrap();
         }
         assert_eq!(sink.len(), 3);
@@ -461,7 +461,7 @@ mod tests {
         let mut sink = FileSink::open(&path, config).unwrap();
 
         for i in 0..3 {
-            let ev = EventBuilder::new(EventLevel::Info, "test", &format!("line {i}")).build();
+            let ev = EventBuilder::new(EventLevel::Info, "test", format!("line {i}")).build();
             sink.send(&ev).unwrap();
         }
         sink.flush().unwrap();
@@ -487,7 +487,7 @@ mod tests {
 
         // Write enough events to trigger at least one rotation
         for i in 0..10 {
-            let ev = EventBuilder::new(EventLevel::Info, "t", &format!("event {i}")).build();
+            let ev = EventBuilder::new(EventLevel::Info, "t", format!("event {i}")).build();
             sink.send(&ev).unwrap();
         }
         sink.flush().unwrap();

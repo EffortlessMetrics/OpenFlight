@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 23
+expression: msg.to_json()
+---
+{"type":"DeviceConnected","device_id":"usb-044f-b10a-0","name":"Thrustmaster T.16000M","vid":1103,"pid":45322}

@@ -32,6 +32,11 @@ quirks:
     description: >
       Landing gear lever is reported as a button pair (up/down), not an axis.
       OpenFlight maps gear-up and gear-down events via the rules engine.
+  - id: LEGACY_MICROCHIP_VID
+    description: >
+      Early production Bravo units shipped with the Microchip default VID 0x04D8
+      and PID 0xE6D5 before Honeycomb obtained their own vendor ID (0x294B).
+      OpenFlight matches both VID/PID combinations for backwards compatibility.
   - id: AUTOPILOT_BUTTONS
     description: >
       Autopilot panel switches (HDG, NAV, APR, REV, ALT, VS, IAS, AP, YD) are

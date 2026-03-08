@@ -1,0 +1,24 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 84
+expression: diff
+---
+{
+  "file": "XPlane/preferences.json",
+  "type": "json_patch",
+  "patches": [
+    {
+      "op": "add",
+      "path": "/controls/linear",
+      "value": true,
+      "from": null
+    },
+    {
+      "op": "replace",
+      "path": "/controls/sensitivity",
+      "value": 1.0,
+      "from": null
+    }
+  ],
+  "backup": false
+}

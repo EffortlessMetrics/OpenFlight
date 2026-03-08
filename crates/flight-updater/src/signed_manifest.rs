@@ -134,7 +134,7 @@ impl fmt::Display for ManifestValidationError {
 }
 
 fn is_valid_sha256(s: &str) -> bool {
-    s.len() == 64 && s.chars().all(|c| c.is_ascii_hexdigit())
+    crate::is_valid_sha256(s)
 }
 
 fn parse_semver(version: &str) -> Option<(u32, u32, u32)> {

@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 32
+expression: msg.to_json()
+---
+{"type":"DeviceDisconnected","device_id":"usb-044f-b10a-0","reason":"USB cable unplugged"}

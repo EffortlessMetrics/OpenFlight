@@ -263,6 +263,8 @@ pub const THRUSTMASTER_USB_JOYSTICK_PID: u16 = 0xB304;
 // See docs/reference/hotas-claims.md for verification status
 //
 // X52 family (unified USB) - confidence: KNOWN
+// Source: nirenjan/libx52 usb-ids.h — X52_PROD_X52_1 = 0x0255, X52_PROD_X52_2 = 0x075C
+pub const X52_V1_PID: u16 = 0x0255;
 pub const X52_PID: u16 = 0x075C;
 pub const X52_PRO_PID: u16 = 0x0762;
 

@@ -1,0 +1,63 @@
+# VKB T-Rudder Mk.V Pedals
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+#
+# VID 0x231D (VKBsim). Rudder pedals with toe brakes.
+# PID not yet confirmed — community estimate pending hardware capture.
+schema_version: "1"
+
+device:
+  name: "VKB T-Rudder Mk.V"
+  vendor: "VKB"
+  usb:
+    vendor_id: 0x231D
+    product_id: 0xFFFF   # Placeholder — PID not yet confirmed
+  hid:
+    usage_page: 0x01      # Generic Desktop
+    usage: 0x04           # Joystick
+
+capabilities:
+  axes:
+    count: 3
+    names: [left_toe_brake, right_toe_brake, rudder]
+    resolution_bits: 16
+  buttons: 0
+  hats: 0
+  force_feedback: false
+
+polling:
+  expected_rate_hz: 125
+  max_jitter_ms: 2
+
+quirks:
+  - id: PID_UNCONFIRMED
+    description: >
+      PID not yet confirmed from a live device. The Mk.V is expected to use
+      the same HID report layout as the Mk.IV. Verify with lsusb or USB
+      descriptor capture when hardware is available.
+  - id: TOE_BRAKES
+    description: >
+      Two independent toe brake axes (unidirectional 0..1) plus one rudder
+      axis (bidirectional -1..1). No buttons or hats.
+
+support:
+  tier: 2
+  test_coverage:
+    simulated: true
+    hil: false
+  notes: >
+    VKB T-Rudder Mk.V pedals. HID parser implemented with 3-axis layout.
+    PID unconfirmed. VID 0x231D. Last reviewed: 2026-07.
+
+driver:
+  type: vkb_devcfg
+  notes: >
+    VKBDevCfg for calibration.
+
+tested_games:
+  - game: "DCS World"
+    integration: direct_input
+    notes: "Rudder and toe brakes recognized."
+  - game: "Microsoft Flight Simulator"
+    integration: direct_input
+    notes: "All three axes recognized."

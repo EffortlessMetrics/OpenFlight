@@ -1,0 +1,19 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: event
+---
+id: evt_00000001
+timestamp: 1700000000
+component: ffb-engine
+severity: Warning
+category: Safety
+message: Torque approaching envelope limit on channel 0
+error_code:
+  code: TORQUE_LIMIT_EXCEEDED
+  category: Safety
+  description: Force feedback torque exceeded safety limits
+  kb_url: "https://docs.flight-hub.dev/kb/TORQUE_LIMIT_EXCEEDED"
+metadata:
+  channel: "0"
+  current_nm: "2.8"
+  limit_nm: "3.0"

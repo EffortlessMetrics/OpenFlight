@@ -17,9 +17,11 @@
 //! Provides the main service implementation for Flight Hub including
 //! axis processing, curve conflict detection, and simulator integration.
 
+pub mod adapter_manager;
 pub mod aircraft_auto_switch_service;
 pub mod audit_log;
 pub mod capability_service;
+pub mod config;
 pub mod config_validator;
 pub mod config_watcher;
 pub mod crash_report;
@@ -36,11 +38,15 @@ pub mod health_http;
 pub mod health_report;
 pub mod input_runtime;
 pub mod instance_lock;
+pub mod lifecycle;
 pub mod metrics_server;
 pub mod one_click_resolver;
 pub mod orchestrator;
 pub mod perf_profiler;
 pub mod plugin;
+pub mod plugin_api;
+pub mod plugin_lifecycle;
+pub mod plugin_manifest;
 pub mod plugin_registry;
 pub mod power;
 pub mod safe_mode;
@@ -71,7 +77,8 @@ pub use aircraft_auto_switch_service::{
     AircraftAutoSwitchServiceConfig, BusSubscriptionConfig, ServiceMetrics,
 };
 pub use capability_service::{
-    AxisCapabilityStatus, CapabilityService, CapabilityServiceConfig, SetCapabilityResult,
+    AxisCapabilityStatus, AxisClampStats, CapabilityMetrics, CapabilityReport, CapabilityService,
+    CapabilityServiceConfig, ClampCounter, SetCapabilityResult,
 };
 pub use curve_conflict_service::{CurveConflictService, CurveConflictServiceConfig};
 pub use error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy, StableError};
@@ -99,11 +106,21 @@ pub use stecs_runtime::{
     VkbStecsRuntimeConfig, VkbStecsSnapshot,
 };
 
+pub use adapter_manager::{
+    AdapterEventRecord, AdapterHealth, AdapterManager, AdapterManagerStatus,
+};
+pub use config::{
+    AdapterSettings, AxisSettings, BusSettings, ConfigReloader, ConfigValidationError,
+    MetricsSettings, UnifiedServiceConfig, WatchdogSettings,
+};
 pub use orchestrator::{
-    AdapterEvent, BootSequence, CompiledProfile, DeviceEvent, OrchestratorError,
-    OrchestratorStatus, ServiceConfig, ServiceOrchestrator, SubsystemHandle, SubsystemHealth,
-    SubsystemStatus,
+    AdapterEvent, AdapterFlags, AdapterLifecycleState, BootSequence, CompiledProfile, DeviceEvent,
+    OrchestratorError, OrchestratorMetrics, OrchestratorStatus, ServiceConfig, ServiceOrchestrator,
+    SubsystemHandle, SubsystemHealth, SubsystemStatus,
 };
 pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
 pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
+pub use plugin_api::{BudgetViolation, PluginApi, PluginBudget, PluginContext, PluginOutput};
+pub use plugin_lifecycle::{LifecycleError, LifecycleState, PluginInstance, PluginManager};
+pub use plugin_manifest::{PluginDiscoveryRegistry, PluginManifest, validate_manifest};
 pub use plugin_registry::PluginRegistry;

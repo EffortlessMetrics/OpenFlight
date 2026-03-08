@@ -1,0 +1,22 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 121
+expression: config
+---
+{
+  "schema": "flight.writer/1",
+  "sim": "xplane",
+  "version": "12.0",
+  "description": "Disable X-Plane built-in curves",
+  "diffs": [
+    {
+      "file": "Output/preferences/X-Plane Window Positions.prf",
+      "type": "line_replace",
+      "pattern": "joy_linear 0",
+      "replacement": "joy_linear 1",
+      "regex": false,
+      "backup": true
+    }
+  ],
+  "verify_scripts": []
+}
