@@ -12,6 +12,8 @@
 //!
 //! **Validates: Requirements FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4, FFB-SAFETY-01.6**
 
+use crate::{DefaultTimeSource, TimeSource};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
@@ -62,6 +64,7 @@ struct SafetyEnvelopeState {
 pub struct SafetyEnvelope {
     config: SafetyEnvelopeConfig,
     state: SafetyEnvelopeState,
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// Safety envelope errors
@@ -78,6 +81,14 @@ pub type SafetyEnvelopeResult<T> = std::result::Result<T, SafetyEnvelopeError>;
 impl SafetyEnvelope {
     /// Create new safety envelope with configuration
     pub fn new(config: SafetyEnvelopeConfig) -> SafetyEnvelopeResult<Self> {
+        Self::with_time_source(config, Arc::new(DefaultTimeSource))
+    }
+
+    /// Create new safety envelope with configuration and time source
+    pub fn with_time_source(
+        config: SafetyEnvelopeConfig,
+        time_source: Arc<dyn TimeSource>,
+    ) -> SafetyEnvelopeResult<Self> {
         // Validate configuration
         if !config.max_torque_nm.is_finite() || config.max_torque_nm <= 0.0 {
             return Err(SafetyEnvelopeError::InvalidConfig {
@@ -98,7 +109,7 @@ impl SafetyEnvelope {
             });
         }
 
-        let now = Instant::now();
+        let now = time_source.now();
         Ok(Self {
             config,
             state: SafetyEnvelopeState {
@@ -108,19 +119,11 @@ impl SafetyEnvelope {
                 fault_timestamp: None,
                 fault_initial_torque_nm: 0.0,
             },
+            time_source,
         })
     }
 
     /// Apply safety envelope to desired torque
-    ///
-    /// **Validates: Requirements FFB-SAFETY-01.1, FFB-SAFETY-01.2, FFB-SAFETY-01.3, FFB-SAFETY-01.4**
-    ///
-    /// # Arguments
-    /// * `desired_torque_nm` - Desired torque output
-    /// * `safe_for_ffb` - Whether FFB is safe to apply (from telemetry sanity gate)
-    ///
-    /// # Returns
-    /// Safe torque output after applying all safety constraints
     pub fn apply(
         &mut self,
         desired_torque_nm: f32,
@@ -133,7 +136,7 @@ impl SafetyEnvelope {
             });
         }
 
-        let now = Instant::now();
+        let now = self.time_source.now();
         let dt = self.config.timestep_s;
 
         // **Requirement FFB-SAFETY-01.4**: Enforce safe_for_ffb flag
@@ -200,14 +203,9 @@ impl SafetyEnvelope {
     }
 
     /// Trigger fault ramp-down
-    ///
-    /// **Validates: Requirement FFB-SAFETY-01.6**
-    ///
-    /// Initiates a 50ms ramp to zero with explicit fault timestamp tracking.
-    /// Once triggered, all subsequent calls to `apply()` will return ramped-down values.
     pub fn trigger_fault_ramp(&mut self) {
         if self.state.fault_timestamp.is_none() {
-            let now = Instant::now();
+            let now = self.time_source.now();
             self.state.fault_timestamp = Some(now);
             self.state.fault_initial_torque_nm = self.state.last_torque_nm;
         }
@@ -227,7 +225,7 @@ impl SafetyEnvelope {
     /// Get fault ramp progress (0.0 to 1.0), or None if not in fault
     pub fn get_fault_ramp_progress(&self) -> Option<f32> {
         self.state.fault_timestamp.map(|fault_time| {
-            let elapsed = fault_time.elapsed();
+            let elapsed = self.time_source.now().duration_since(fault_time);
             let progress = elapsed.as_secs_f32() / self.config.fault_ramp_time.as_secs_f32();
             progress.clamp(0.0, 1.0)
         })
@@ -235,7 +233,9 @@ impl SafetyEnvelope {
 
     /// Get time since fault was triggered
     pub fn get_fault_elapsed_time(&self) -> Option<Duration> {
-        self.state.fault_timestamp.map(|t| t.elapsed())
+        self.state
+            .fault_timestamp
+            .map(|t| self.time_source.now().duration_since(t))
     }
 
     /// Get last output torque
@@ -281,7 +281,7 @@ impl SafetyEnvelope {
 
     /// Reset state (clears all history)
     pub fn reset(&mut self) {
-        let now = Instant::now();
+        let now = self.time_source.now();
         self.state = SafetyEnvelopeState {
             last_torque_nm: 0.0,
             last_slew_rate_nm_per_s: 0.0,

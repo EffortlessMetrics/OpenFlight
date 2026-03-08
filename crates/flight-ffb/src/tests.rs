@@ -846,6 +846,7 @@ mod soft_stop_integration_tests {
 #[cfg(test)]
 mod trim_correctness_tests {
     use crate::*;
+    use std::sync::Arc;
     use std::time::{Duration, Instant};
 
     /// Test the complete trim correctness validation implementation
@@ -1043,10 +1044,10 @@ mod trim_correctness_tests {
             "Should have reproducibility measurements"
         );
 
-        // All differences should be within acceptable OS timing variance (0.10 Nm threshold)
+        // With deterministic update_with_dt, reproducibility should be perfect (within float precision).
         let max_difference = result.measurements.iter().fold(0.0f32, |a, &b| a.max(b));
         assert!(
-            max_difference < 0.12,
+            max_difference < 1e-5,
             "Reproducibility error too large: {}",
             max_difference
         );
@@ -1055,10 +1056,10 @@ mod trim_correctness_tests {
     /// Test complete validation suite integration
     #[test]
     fn test_validation_suite_integration() {
-        let mut validation_suite = TrimValidationSuite::new(TrimValidationConfig {
+        let mut validation_suite = TrimValidationSuite::with_time_source(TrimValidationConfig {
             max_test_duration: Duration::from_secs(2),
             ..TrimValidationConfig::default()
-        });
+        }, Arc::new(FakeTimeSource::new()));
         let results = validation_suite.run_complete_validation();
 
         assert!(
@@ -1096,7 +1097,8 @@ mod trim_correctness_tests {
             device_path: None,
         };
 
-        let mut engine = FfbEngine::new(config).unwrap();
+        let mut engine =
+            FfbEngine::with_time_source(config, std::sync::Arc::new(FakeTimeSource::new())).unwrap();
 
         // Set device capabilities
         let capabilities = DeviceCapabilities {
