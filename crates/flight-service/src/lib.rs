@@ -42,6 +42,9 @@ pub mod one_click_resolver;
 pub mod orchestrator;
 pub mod perf_profiler;
 pub mod plugin;
+pub mod plugin_api;
+pub mod plugin_lifecycle;
+pub mod plugin_manifest;
 pub mod plugin_registry;
 pub mod power;
 pub mod safe_mode;
@@ -107,4 +110,7 @@ pub use orchestrator::{
 };
 pub use perf_profiler::{PerfProfiler, PerfReport, SpanStats};
 pub use plugin::{Plugin, PluginError, PluginErrorKind, PluginState, PluginTier};
+pub use plugin_api::{BudgetViolation, PluginApi, PluginBudget, PluginContext, PluginOutput};
+pub use plugin_lifecycle::{LifecycleError, LifecycleState, PluginInstance, PluginManager};
+pub use plugin_manifest::{PluginDiscoveryRegistry, PluginManifest, validate_manifest};
 pub use plugin_registry::PluginRegistry;
