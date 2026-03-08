@@ -22,6 +22,8 @@
 //! The Combat Stick is similar to the Fighterstick but with a different
 //! grip shape and button layout optimized for combat simulation.
 
+use std::fmt;
+
 use crate::ChError;
 
 pub use flight_hid_support::device_support::CH_COMBAT_STICK_PID as COMBATSTICK_PID;
@@ -31,6 +33,7 @@ pub const COMBATSTICK_MIN_REPORT_BYTES: usize = 9;
 
 /// Parsed input state from one CH Combat Stick HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CombatstickState {
     /// Aileron (left-right), 0–65535.
     pub x: u16,
@@ -75,6 +78,16 @@ pub fn parse_combatstick(report: &[u8]) -> Result<CombatstickState, ChError> {
         hat,
         buttons,
     })
+}
+
+impl fmt::Display for CombatstickState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "CombatStick X={} Y={} Z={} hat={} buttons={:#06x}",
+            self.x, self.y, self.z, self.hat, self.buttons
+        )
+    }
 }
 
 #[cfg(test)]

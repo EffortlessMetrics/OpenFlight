@@ -1,0 +1,28 @@
+{
+  "name": "single_axis_ramp",
+  "device_id": "FakeStick-001",
+  "duration_us": 80000,
+  "events": [
+    { "timestamp_us": 0,     "event_type": "AxisInput", "source": "Device", "data": [0.0]  },
+    { "timestamp_us": 4000,  "event_type": "AxisInput", "source": "Device", "data": [0.1]  },
+    { "timestamp_us": 8000,  "event_type": "AxisInput", "source": "Device", "data": [0.2]  },
+    { "timestamp_us": 12000, "event_type": "AxisInput", "source": "Device", "data": [0.3]  },
+    { "timestamp_us": 16000, "event_type": "AxisInput", "source": "Device", "data": [0.4]  },
+    { "timestamp_us": 20000, "event_type": "AxisInput", "source": "Device", "data": [0.5]  },
+    { "timestamp_us": 24000, "event_type": "AxisInput", "source": "Device", "data": [0.6]  },
+    { "timestamp_us": 28000, "event_type": "AxisInput", "source": "Device", "data": [0.7]  },
+    { "timestamp_us": 32000, "event_type": "AxisInput", "source": "Device", "data": [0.8]  },
+    { "timestamp_us": 36000, "event_type": "AxisInput", "source": "Device", "data": [0.9]  },
+    { "timestamp_us": 40000, "event_type": "AxisInput", "source": "Device", "data": [1.0]  },
+    { "timestamp_us": 44000, "event_type": "AxisInput", "source": "Device", "data": [0.9]  },
+    { "timestamp_us": 48000, "event_type": "AxisInput", "source": "Device", "data": [0.7]  },
+    { "timestamp_us": 52000, "event_type": "AxisInput", "source": "Device", "data": [0.5]  },
+    { "timestamp_us": 56000, "event_type": "AxisInput", "source": "Device", "data": [0.3]  },
+    { "timestamp_us": 60000, "event_type": "AxisInput", "source": "Device", "data": [0.1]  },
+    { "timestamp_us": 64000, "event_type": "AxisInput", "source": "Device", "data": [0.03] },
+    { "timestamp_us": 68000, "event_type": "AxisInput", "source": "Device", "data": [0.0]  },
+    { "timestamp_us": 72000, "event_type": "AxisInput", "source": "Device", "data": [-0.5] },
+    { "timestamp_us": 76000, "event_type": "AxisInput", "source": "Device", "data": [-1.0] },
+    { "timestamp_us": 80000, "event_type": "AxisInput", "source": "Device", "data": [0.0]  }
+  ]
+}

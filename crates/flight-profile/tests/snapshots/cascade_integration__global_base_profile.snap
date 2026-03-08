@@ -1,0 +1,59 @@
+---
+source: crates/flight-profile/tests/cascade_integration.rs
+expression: "&global"
+---
+{
+  "schema": "flight.profile/1",
+  "sim": null,
+  "aircraft": null,
+  "axes": {
+    "pitch": {
+      "deadzone": 0.05,
+      "expo": 0.0,
+      "slew_rate": 2.0,
+      "detents": [],
+      "curve": [
+        {
+          "input": 0.0,
+          "output": 0.0
+        },
+        {
+          "input": 1.0,
+          "output": 1.0
+        }
+      ],
+      "filter": null
+    },
+    "roll": {
+      "deadzone": 0.05,
+      "expo": 0.0,
+      "slew_rate": 2.0,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    },
+    "throttle": {
+      "deadzone": 0.02,
+      "expo": null,
+      "slew_rate": 50.0,
+      "detents": [
+        {
+          "position": -1.0,
+          "width": 0.05,
+          "role": "cutoff"
+        }
+      ],
+      "curve": null,
+      "filter": null
+    },
+    "yaw": {
+      "deadzone": 0.08,
+      "expo": 0.1,
+      "slew_rate": 1.5,
+      "detents": [],
+      "curve": null,
+      "filter": null
+    }
+  },
+  "pof_overrides": null
+}

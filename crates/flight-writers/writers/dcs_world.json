@@ -1,0 +1,115 @@
+{
+  "sim": "dcs",
+  "version": "world",
+  "description": "DCS World export variable table — export variable IDs for common axes and controls",
+  "variables": {
+    "aileron": {
+      "sim_var_name": "STICK_ROLL",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Stick roll axis"
+    },
+    "elevator": {
+      "sim_var_name": "STICK_PITCH",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Stick pitch axis"
+    },
+    "rudder": {
+      "sim_var_name": "RUDDER",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Rudder pedal axis"
+    },
+    "throttle": {
+      "sim_var_name": "THROTTLE",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Throttle axis (normalized)"
+    },
+    "flaps": {
+      "sim_var_name": "FLAPS",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Flaps position (normalized)"
+    },
+    "gear": {
+      "sim_var_name": "GEAR_LEVER",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Gear lever position"
+    },
+    "spoilers": {
+      "sim_var_name": "SPEEDBRAKE",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Speedbrake position"
+    },
+    "wheel_brake_left": {
+      "sim_var_name": "W_BRAKE_LEFT",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Left wheel brake"
+    },
+    "wheel_brake_right": {
+      "sim_var_name": "W_BRAKE_RIGHT",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Right wheel brake"
+    },
+    "trim_pitch": {
+      "sim_var_name": "TRIM_PITCH",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Pitch trim axis"
+    },
+    "trim_roll": {
+      "sim_var_name": "TRIM_ROLL",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Roll trim axis"
+    },
+    "trim_yaw": {
+      "sim_var_name": "TRIM_YAW",
+      "unit": "dimensionless",
+      "data_type": "float64",
+      "settable": true,
+      "min": -1.0,
+      "max": 1.0,
+      "description": "Yaw trim axis"
+    }
+  }
+}

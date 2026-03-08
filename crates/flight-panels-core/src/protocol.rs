@@ -569,6 +569,75 @@ mod tests {
         assert!(codec.encode(&PanelMessage::ReadState).is_some());
     }
 
+    #[test]
+    fn test_codec_roundtrip_all_message_types() {
+        let codec = MockCodec;
+        let messages = [
+            PanelMessage::ReadState,
+            PanelMessage::WriteDisplay {
+                row: 0,
+                text: [0x3F, 0x06, 0x5B, 0x4F, 0x66],
+            },
+            PanelMessage::WriteDisplay {
+                row: 1,
+                text: [0x00; 5],
+            },
+            PanelMessage::SetLed {
+                led_index: 0,
+                on: true,
+            },
+            PanelMessage::SetLed {
+                led_index: 7,
+                on: false,
+            },
+            PanelMessage::SetBacklight { brightness: 0 },
+            PanelMessage::SetBacklight { brightness: 255 },
+            PanelMessage::Calibrate,
+        ];
+        for msg in &messages {
+            let encoded = codec.encode(msg);
+            assert!(
+                encoded.is_some(),
+                "encode should succeed for {:?}",
+                msg
+            );
+            assert!(!encoded.unwrap().is_empty());
+        }
+    }
+
+    #[test]
+    fn test_codec_decode_malformed_single_byte() {
+        let codec = MockCodec;
+        // Single byte that doesn't match any response prefix
+        assert!(codec.decode(&[0x42]).is_none());
+        assert!(codec.decode(&[0x00]).is_none());
+        assert!(codec.decode(&[0x7F]).is_none());
+    }
+
+    #[test]
+    fn test_codec_decode_error_without_code_byte() {
+        let codec = MockCodec;
+        // Error response with only prefix byte → code defaults to 0
+        let resp = codec.decode(&[0xFF]).unwrap();
+        if let PanelResponse::Error { code, .. } = resp {
+            assert_eq!(code, 0);
+        } else {
+            panic!("expected error response");
+        }
+    }
+
+    #[test]
+    fn test_codec_decode_state_data_empty_payload() {
+        let codec = MockCodec;
+        // State data with just the prefix and no payload bytes
+        let resp = codec.decode(&[0x80]).unwrap();
+        if let PanelResponse::StateData { data } = resp {
+            assert!(data.is_empty());
+        } else {
+            panic!("expected state data");
+        }
+    }
+
     // ── PanelConnection mock ─────────────────────────────────────────────────
 
     struct MockConnection {
@@ -641,5 +710,126 @@ mod tests {
             pending: Vec::new(),
         });
         assert!(!conn.poll());
+    }
+
+    // ── State machine lifecycle tests ────────────────────────────────────────
+
+    /// Simulates the full panel lifecycle:
+    /// connect → configure (calibrate + set backlight) → update loop → disconnect
+    #[test]
+    fn test_panel_lifecycle_connect_configure_update_disconnect() {
+        let codec = MockCodec;
+        let mut conn = MockConnection {
+            pending: Vec::new(),
+        };
+
+        // Phase 1: Connect — read initial state
+        conn.send(&PanelMessage::ReadState).unwrap();
+        let resp = conn.receive(Duration::from_millis(100)).unwrap();
+        assert_eq!(resp, PanelResponse::Ack);
+
+        // Phase 2: Configure — calibrate and set backlight
+        conn.send(&PanelMessage::Calibrate).unwrap();
+        let resp = conn.receive(Duration::from_millis(100)).unwrap();
+        assert_eq!(resp, PanelResponse::Ack);
+
+        conn.send(&PanelMessage::SetBacklight { brightness: 200 })
+            .unwrap();
+        let resp = conn.receive(Duration::from_millis(100)).unwrap();
+        assert_eq!(resp, PanelResponse::Ack);
+
+        // Phase 3: Update loop — send display + LED updates
+        for i in 0..10 {
+            let text = [
+                0x3F,
+                0x06,
+                0x5B,
+                0x4F,
+                (0x60 + i as u8) & 0x7F,
+            ];
+            conn.send(&PanelMessage::WriteDisplay { row: 0, text })
+                .unwrap();
+            let resp = conn.receive(Duration::from_millis(100)).unwrap();
+            assert_eq!(resp, PanelResponse::Ack);
+
+            conn.send(&PanelMessage::SetLed {
+                led_index: (i % 8) as u8,
+                on: i % 2 == 0,
+            })
+            .unwrap();
+            let resp = conn.receive(Duration::from_millis(100)).unwrap();
+            assert_eq!(resp, PanelResponse::Ack);
+        }
+
+        // Phase 4: Disconnect — blank display and LEDs
+        conn.send(&PanelMessage::WriteDisplay {
+            row: 0,
+            text: [0x00; 5],
+        })
+        .unwrap();
+        let resp = conn.receive(Duration::from_millis(100)).unwrap();
+        assert_eq!(resp, PanelResponse::Ack);
+
+        // All messages consumed
+        assert!(!conn.poll());
+    }
+
+    #[test]
+    fn test_panel_protocol_parse_empty_report() {
+        let panel = MockPanel;
+        assert!(panel.parse_input(&[]).is_none());
+    }
+
+    #[test]
+    fn test_panel_protocol_parse_all_zeros() {
+        let panel = MockPanel;
+        let events = panel.parse_input(&[0x00, 0x00]).unwrap();
+        assert!(events.is_empty(), "all-zeros report should produce no events");
+    }
+
+    #[test]
+    fn test_panel_protocol_parse_max_bytes() {
+        let panel = MockPanel;
+        // Large report — only first 2 bytes matter for MockPanel
+        let data = vec![0x00; 256];
+        let events = panel.parse_input(&data).unwrap();
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn test_connection_interleaved_send_receive() {
+        let mut conn = MockConnection {
+            pending: Vec::new(),
+        };
+
+        // Send 3 messages, receive after each one
+        for _ in 0..3 {
+            conn.send(&PanelMessage::ReadState).unwrap();
+            assert!(conn.poll());
+            let resp = conn.receive(Duration::from_millis(10)).unwrap();
+            assert_eq!(resp, PanelResponse::Ack);
+            assert!(!conn.poll());
+        }
+    }
+
+    #[test]
+    fn test_connection_drain_all_pending() {
+        let mut conn = MockConnection {
+            pending: Vec::new(),
+        };
+
+        // Queue up several messages
+        for _ in 0..5 {
+            conn.send(&PanelMessage::ReadState).unwrap();
+        }
+
+        // Drain all
+        let mut count = 0;
+        while conn.poll() {
+            let _ = conn.receive(Duration::from_millis(10)).unwrap();
+            count += 1;
+        }
+        assert_eq!(count, 5);
+        assert!(conn.receive(Duration::from_millis(10)).is_none());
     }
 }
