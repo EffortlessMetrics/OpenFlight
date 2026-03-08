@@ -80,14 +80,18 @@ members = [
     "crates/flight-hotas-microsoft",
     "crates/flight-hotas-sony",
     "crates/flight-integration-tests",
+    "crates/flight-installer-tests",
     "crates/flight-ffb-moza",
+    "crates/flight-ffb-brunner",
     "crates/flight-trackir",
     "crates/flight-hotas-simucube",
     "crates/flight-hotas-turtlebeach",
     "crates/flight-panels-goflight",
     "crates/flight-macos-hid",
     "crates/flight-open-hardware",
+    "crates/flight-pedals",
     "crates/flight-plugin",
+    "crates/flight-testkit",
     "examples",
     "installer",
     "xtask",
@@ -218,6 +222,7 @@ ed25519-dalek = { version = "2.2.0", features = ["rand_core"] }
 rand_core = { version = "0.6.4", features = ["getrandom"] }
 semver = "1.0.27"
 uuid = { version = "1.19.0", features = ["v4", "serde"] }
+subtle = "2.6.1"
 fastrand = "2.3.0"
 axum = "0.8.8"
 tower = "0.5.3"

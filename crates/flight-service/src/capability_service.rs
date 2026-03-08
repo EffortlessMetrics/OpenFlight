@@ -6,7 +6,9 @@
 use flight_axis::AxisEngine;
 use flight_core::profile::{CapabilityContext, CapabilityLimits, CapabilityMode};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{info, warn};
 
 /// Service for managing capability enforcement across axes
@@ -19,6 +21,8 @@ pub struct CapabilityService {
     axis_overrides: Arc<RwLock<HashMap<String, CapabilityMode>>>,
     /// Global capability audit logging state
     audit_enabled: Arc<RwLock<bool>>,
+    /// Service-level capability clamp metrics
+    metrics: Arc<CapabilityMetrics>,
 }
 
 /// Configuration for capability service
@@ -57,8 +61,258 @@ pub struct AxisCapabilityStatus {
     pub audit_enabled: bool,
     pub clamp_events_count: u64,
     pub last_clamp_timestamp: Option<i64>,
-    /// Maximum absolute output value seen before a clamp (diagnostics)
-    pub max_value_before_clamp: f32,
+    /// Maximum absolute original output value seen before a clamp (diagnostics)
+    pub max_original_value_before_clamp: f32,
+}
+
+/// Atomic clamp event counter for a single axis.
+pub struct ClampCounter {
+    /// Total number of clamp events recorded
+    clamp_events: AtomicU64,
+    /// Timestamp of the last clamp event (UNIX millis)
+    last_clamp_timestamp: AtomicU64,
+    /// Minimum absolute clamped output value (stored as f64 bits)
+    min_clamped_value: AtomicU64,
+    /// Maximum absolute original value before clamping (stored as f64 bits)
+    max_value_before_clamp: AtomicU64,
+}
+
+impl ClampCounter {
+    /// Create a new zeroed clamp counter.
+    pub fn new() -> Self {
+        Self {
+            clamp_events: AtomicU64::new(0),
+            last_clamp_timestamp: AtomicU64::new(0),
+            min_clamped_value: AtomicU64::new(f64::to_bits(f64::MAX)),
+            max_value_before_clamp: AtomicU64::new(f64::to_bits(0.0)),
+        }
+    }
+
+    /// Record a clamp event with the original and clamped values.
+    pub fn record(&self, original_value: f64, clamped_value: f64) {
+        self.clamp_events.fetch_add(1, Ordering::Relaxed);
+
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
+        let _ =
+            self.last_clamp_timestamp
+                .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |prev| {
+                    if now > prev { Some(now) } else { None }
+                });
+
+        // Update min clamped value (CAS loop)
+        let clamped_abs = clamped_value.abs();
+        loop {
+            let current = f64::from_bits(self.min_clamped_value.load(Ordering::Relaxed));
+            if clamped_abs >= current {
+                break;
+            }
+            if self
+                .min_clamped_value
+                .compare_exchange_weak(
+                    current.to_bits(),
+                    clamped_abs.to_bits(),
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                )
+                .is_ok()
+            {
+                break;
+            }
+        }
+
+        // Update max clamped value (original value before clamp)
+        let original_abs = original_value.abs();
+        loop {
+            let current = f64::from_bits(self.max_value_before_clamp.load(Ordering::Relaxed));
+            if original_abs <= current {
+                break;
+            }
+            if self
+                .max_value_before_clamp
+                .compare_exchange_weak(
+                    current.to_bits(),
+                    original_abs.to_bits(),
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                )
+                .is_ok()
+            {
+                break;
+            }
+        }
+    }
+
+    /// Number of recorded clamp events.
+    pub fn clamp_events(&self) -> u64 {
+        self.clamp_events.load(Ordering::Relaxed)
+    }
+
+    /// Timestamp (UNIX millis) of the last clamp event, or 0 if none.
+    pub fn last_clamp_timestamp(&self) -> u64 {
+        self.last_clamp_timestamp.load(Ordering::Relaxed)
+    }
+
+    /// Minimum absolute clamped output value, or 0.0 if none recorded.
+    pub fn min_clamped_value(&self) -> f64 {
+        let v = f64::from_bits(self.min_clamped_value.load(Ordering::Relaxed));
+        if v == f64::MAX { 0.0 } else { v }
+    }
+
+    /// Maximum absolute original value observed before a clamp.
+    pub fn max_original_value_before_clamp(&self) -> f64 {
+        f64::from_bits(self.max_value_before_clamp.load(Ordering::Relaxed))
+    }
+
+    /// Deprecated: use [`max_original_value_before_clamp`] instead.
+    #[deprecated(note = "renamed to max_original_value_before_clamp for clarity")]
+    pub fn max_value_before_clamp(&self) -> f64 {
+        self.max_original_value_before_clamp()
+    }
+
+    /// Deprecated: use [`max_original_value_before_clamp`] instead.
+    #[deprecated(note = "renamed to max_original_value_before_clamp for clarity")]
+    pub fn max_clamped_value(&self) -> f64 {
+        self.max_original_value_before_clamp()
+    }
+
+    /// Reset all counters to initial state.
+    pub fn reset(&self) {
+        self.clamp_events.store(0, Ordering::Relaxed);
+        self.last_clamp_timestamp.store(0, Ordering::Relaxed);
+        self.min_clamped_value
+            .store(f64::to_bits(f64::MAX), Ordering::Relaxed);
+        self.max_value_before_clamp
+            .store(f64::to_bits(0.0), Ordering::Relaxed);
+    }
+}
+
+impl Default for ClampCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl std::fmt::Debug for ClampCounter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClampCounter")
+            .field("clamp_events", &self.clamp_events())
+            .field("last_clamp_timestamp", &self.last_clamp_timestamp())
+            .field("min_clamped_value", &self.min_clamped_value())
+            .field("max_original_value_before_clamp", &self.max_original_value_before_clamp())
+            .finish()
+    }
+}
+
+/// Per-capability clamp statistics across all axes.
+pub struct CapabilityMetrics {
+    counters: RwLock<HashMap<String, Arc<ClampCounter>>>,
+}
+
+impl CapabilityMetrics {
+    /// Create empty metrics.
+    pub fn new() -> Self {
+        Self {
+            counters: RwLock::new(HashMap::new()),
+        }
+    }
+
+    /// Record a clamp event for the given axis.
+    pub fn record_clamp_event(&self, axis_id: &str, original_value: f64, clamped_value: f64) {
+        // Fast path: read lock
+        {
+            let counters = self.counters.read().unwrap_or_else(|e| e.into_inner());
+            if let Some(counter) = counters.get(axis_id) {
+                counter.record(original_value, clamped_value);
+                return;
+            }
+        }
+        // Slow path: write lock to insert new counter
+        let mut counters = self.counters.write().unwrap_or_else(|e| e.into_inner());
+        let counter = counters
+            .entry(axis_id.to_string())
+            .or_insert_with(|| Arc::new(ClampCounter::new()));
+        counter.record(original_value, clamped_value);
+    }
+
+    /// Get the clamp counter for a specific axis.
+    pub fn get_counter(&self, axis_id: &str) -> Option<Arc<ClampCounter>> {
+        self.counters
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(axis_id)
+            .cloned()
+    }
+
+    /// Snapshot of all per-axis counters.
+    pub fn all_counters(&self) -> HashMap<String, Arc<ClampCounter>> {
+        self.counters
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+    }
+
+    /// Reset counters for all axes.
+    pub fn reset_all(&self) {
+        for counter in self
+            .counters
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .values()
+        {
+            counter.reset();
+        }
+    }
+
+    /// Reset the counter for a specific axis.
+    pub fn reset_axis(&self, axis_id: &str) {
+        if let Some(counter) = self
+            .counters
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(axis_id)
+        {
+            counter.reset();
+        }
+    }
+}
+
+impl Default for CapabilityMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Per-axis clamp statistics snapshot.
+#[derive(Debug, Clone)]
+pub struct AxisClampStats {
+    pub axis_id: String,
+    pub clamp_events: u64,
+    pub last_clamp_timestamp_ms: u64,
+    pub min_clamped_value: f64,
+    pub max_original_value_before_clamp: f64,
+}
+
+/// Summary report of all capability clamp activity.
+#[derive(Debug, Clone)]
+pub struct CapabilityReport {
+    /// Clamp events from engine-level counters only.
+    pub engine_clamp_events: u64,
+    /// Clamp events from service-level metrics only.
+    pub service_clamp_events: u64,
+    /// Combined total: `engine_clamp_events + service_clamp_events`.
+    ///
+    /// Note: engine and service counters may track the same underlying clamp
+    /// from different vantage points, so this value can exceed the number of
+    /// unique physical clamp events.
+    pub total_clamp_events: u64,
+    /// Maximum pre-clamp value across all axes (from engine counters).
+    pub max_original_value_before_clamp: f32,
+    /// Per-axis clamp statistics (merged from engine and service-level metrics).
+    /// When both sources exist for an axis, service-level data takes priority.
+    pub axes: Vec<AxisClampStats>,
 }
 
 impl CapabilityService {
@@ -74,6 +328,7 @@ impl CapabilityService {
             global_mode: Arc::new(RwLock::new(config.default_mode)),
             axis_overrides: Arc::new(RwLock::new(HashMap::new())),
             audit_enabled: Arc::new(RwLock::new(config.audit_enabled)),
+            metrics: Arc::new(CapabilityMetrics::new()),
         }
     }
 
@@ -235,7 +490,7 @@ impl CapabilityService {
                         let ns = engine.counters().last_capability_clamp_ns();
                         if ns == 0 { None } else { Some(ns as i64) }
                     },
-                    max_value_before_clamp: engine.counters().max_value_before_clamp(),
+                    max_original_value_before_clamp: engine.counters().max_value_before_clamp(),
                 });
             }
         }
@@ -320,7 +575,11 @@ impl CapabilityService {
         Ok(restricted)
     }
 
-    /// Get the total number of clamp events across all registered axes.
+    /// Get the total number of engine-level clamp events across all registered axes.
+    ///
+    /// This does **not** include service-level clamp events recorded via
+    /// [`record_clamp_event`](Self::record_clamp_event). Use
+    /// [`get_capability_report`](Self::get_capability_report) for the full breakdown.
     pub fn total_clamp_events(&self) -> Result<u64, String> {
         let engines = self
             .engines
@@ -336,7 +595,7 @@ impl CapabilityService {
 
     /// Get the highest absolute output value observed before any clamp, across
     /// all registered axes.  Returns 0.0 if no clamp has ever occurred.
-    pub fn max_value_before_clamp(&self) -> Result<f32, String> {
+    pub fn max_original_value_before_clamp(&self) -> Result<f32, String> {
         let engines = self
             .engines
             .read()
@@ -347,6 +606,12 @@ impl CapabilityService {
             .map(|e| e.counters().max_value_before_clamp())
             .fold(0.0_f32, f32::max);
         Ok(max)
+    }
+
+    /// Deprecated: use [`max_original_value_before_clamp`] instead.
+    #[deprecated(note = "renamed to max_original_value_before_clamp for clarity")]
+    pub fn max_value_before_clamp(&self) -> Result<f32, String> {
+        self.max_original_value_before_clamp()
     }
 
     /// Reset clamp counters for all axes (or a specific set of axes).
@@ -365,6 +630,7 @@ impl CapabilityService {
                 for name in names {
                     if let Some(engine) = engines.get(name) {
                         engine.reset_counters();
+                        self.metrics.reset_axis(name);
                         reset_axes.push(name.clone());
                     }
                 }
@@ -374,9 +640,89 @@ impl CapabilityService {
                     engine.reset_counters();
                     reset_axes.push(name.clone());
                 }
+                self.metrics.reset_all();
             }
         }
         Ok(reset_axes)
+    }
+
+    /// Record a clamp event for a specific axis in the service-level metrics.
+    pub fn record_clamp_event(&self, axis_id: &str, original_value: f64, clamped_value: f64) {
+        self.metrics
+            .record_clamp_event(axis_id, original_value, clamped_value);
+    }
+
+    /// Get the service-level capability metrics.
+    pub fn metrics(&self) -> &CapabilityMetrics {
+        &self.metrics
+    }
+
+    /// Build a capability report combining engine counters and service-level
+    /// metrics into a single observability snapshot.
+    ///
+    /// The `axes` section merges engine per-axis counters with service-level
+    /// metrics so that every axis with clamp activity appears in the report.
+    pub fn get_capability_report(&self) -> Result<CapabilityReport, String> {
+        let engines = self
+            .engines
+            .read()
+            .map_err(|e| format!("Lock error: {}", e))?;
+
+        let mut engine_clamp_events: u64 = 0;
+        let mut max_before_clamp: f32 = 0.0;
+
+        // Collect engine-level totals and per-axis stats into a map
+        let mut axes_map: HashMap<String, AxisClampStats> = HashMap::new();
+        for (axis_id, engine) in engines.iter() {
+            let counters = engine.counters();
+            let events = counters.capability_clamp_events();
+            engine_clamp_events += events;
+            let v = counters.max_value_before_clamp();
+            if v > max_before_clamp {
+                max_before_clamp = v;
+            }
+            if events > 0 {
+                let ns = counters.last_capability_clamp_ns();
+                axes_map.insert(
+                    axis_id.clone(),
+                    AxisClampStats {
+                        axis_id: axis_id.clone(),
+                        clamp_events: events,
+                        last_clamp_timestamp_ms: ns / 1_000_000,
+                        min_clamped_value: 0.0, // engine counters don't track min clamped
+                        max_original_value_before_clamp: f64::from(v),
+                    },
+                );
+            }
+        }
+
+        // Merge service-level per-axis stats (overrides engine-only entries)
+        let service_counters = self.metrics.all_counters();
+        let mut service_clamp_events: u64 = 0;
+        for (axis_id, counter) in &service_counters {
+            service_clamp_events += counter.clamp_events();
+            axes_map.insert(
+                axis_id.clone(),
+                AxisClampStats {
+                    axis_id: axis_id.clone(),
+                    clamp_events: counter.clamp_events(),
+                    last_clamp_timestamp_ms: counter.last_clamp_timestamp(),
+                    min_clamped_value: counter.min_clamped_value(),
+                    max_original_value_before_clamp: counter.max_original_value_before_clamp(),
+                },
+            );
+        }
+
+        let mut axes: Vec<AxisClampStats> = axes_map.into_values().collect();
+        axes.sort_by(|a, b| a.axis_id.cmp(&b.axis_id));
+
+        Ok(CapabilityReport {
+            engine_clamp_events,
+            service_clamp_events,
+            total_clamp_events: engine_clamp_events + service_clamp_events,
+            max_original_value_before_clamp: max_before_clamp,
+            axes,
+        })
     }
 }
 
@@ -545,7 +891,7 @@ mod tests {
         assert_eq!(status.mode, CapabilityMode::Full);
         assert_eq!(status.clamp_events_count, 0);
         assert!(status.last_clamp_timestamp.is_none());
-        assert_eq!(status.max_value_before_clamp, 0.0);
+        assert_eq!(status.max_original_value_before_clamp, 0.0);
         assert_eq!(status.limits.max_axis_output, 1.0);
         assert_eq!(status.limits.max_ffb_torque, 50.0);
     }
@@ -618,7 +964,7 @@ mod tests {
         let status = service.get_capability_status(None).unwrap();
         assert_eq!(status[0].clamp_events_count, 1);
         assert!(status[0].last_clamp_timestamp.is_some());
-        assert!((status[0].max_value_before_clamp - 0.9).abs() < f32::EPSILON);
+        assert!((status[0].max_original_value_before_clamp - 0.9).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -647,7 +993,7 @@ mod tests {
         let status = service.get_capability_status(None).unwrap();
         assert_eq!(status[0].clamp_events_count, 1);
         assert!(status[0].last_clamp_timestamp.is_some());
-        assert!((status[0].max_value_before_clamp - 0.95).abs() < f32::EPSILON);
+        assert!((status[0].max_original_value_before_clamp - 0.95).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -676,7 +1022,7 @@ mod tests {
         let status = service.get_capability_status(None).unwrap();
         assert_eq!(status[0].clamp_events_count, 1);
         assert!(status[0].last_clamp_timestamp.is_some());
-        assert!((status[0].max_value_before_clamp - 0.8).abs() < f32::EPSILON);
+        assert!((status[0].max_original_value_before_clamp - 0.8).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -779,21 +1125,21 @@ mod tests {
         f1.out = 0.7;
         engine.process(&mut f1).unwrap();
 
-        assert!((service.max_value_before_clamp().unwrap() - 0.7).abs() < f32::EPSILON);
+        assert!((service.max_original_value_before_clamp().unwrap() - 0.7).abs() < f32::EPSILON);
 
         // Larger overshoot — max should update
         let mut f2 = AxisFrame::new(0.95, 2000);
         f2.out = 0.95;
         engine.process(&mut f2).unwrap();
 
-        assert!((service.max_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
+        assert!((service.max_original_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
 
         // Smaller overshoot — max should stay at 0.95
         let mut f3 = AxisFrame::new(0.6, 3000);
         f3.out = 0.6;
         engine.process(&mut f3).unwrap();
 
-        assert!((service.max_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
+        assert!((service.max_original_value_before_clamp().unwrap() - 0.95).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -825,7 +1171,7 @@ mod tests {
         let reset = service.reset_clamp_counters(None).unwrap();
         assert_eq!(reset.len(), 2);
         assert_eq!(service.total_clamp_events().unwrap(), 0);
-        assert_eq!(service.max_value_before_clamp().unwrap(), 0.0);
+        assert_eq!(service.max_original_value_before_clamp().unwrap(), 0.0);
     }
 
     #[test]
@@ -862,5 +1208,281 @@ mod tests {
         let roll = statuses.iter().find(|s| s.axis_name == "roll").unwrap();
         assert_eq!(pitch.clamp_events_count, 0);
         assert_eq!(roll.clamp_events_count, 1);
+    }
+
+    // --- New ClampCounter / CapabilityMetrics / report tests ---
+
+    #[test]
+    fn clamp_counter_struct_tracks_events() {
+        let counter = ClampCounter::new();
+        assert_eq!(counter.clamp_events(), 0);
+        assert_eq!(counter.last_clamp_timestamp(), 0);
+        assert_eq!(counter.min_clamped_value(), 0.0);
+        assert_eq!(counter.max_original_value_before_clamp(), 0.0);
+
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), 1);
+        assert!(counter.last_clamp_timestamp() > 0);
+        assert!((counter.min_clamped_value() - 0.5).abs() < f64::EPSILON);
+        assert!((counter.max_original_value_before_clamp() - 0.9).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn clamp_counter_tracks_min_max() {
+        let counter = ClampCounter::new();
+        counter.record(0.9, 0.8);
+        counter.record(0.95, 0.5);
+        counter.record(0.7, 0.6);
+
+        assert_eq!(counter.clamp_events(), 3);
+        // min clamped is 0.5 (smallest output after clamp)
+        assert!((counter.min_clamped_value() - 0.5).abs() < f64::EPSILON);
+        // max clamped is 0.95 (largest original before clamp)
+        assert!((counter.max_original_value_before_clamp() - 0.95).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn clamp_counter_reset_clears_state() {
+        let counter = ClampCounter::new();
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), 1);
+
+        counter.reset();
+        assert_eq!(counter.clamp_events(), 0);
+        assert_eq!(counter.last_clamp_timestamp(), 0);
+        assert_eq!(counter.min_clamped_value(), 0.0);
+        assert_eq!(counter.max_original_value_before_clamp(), 0.0);
+    }
+
+    #[test]
+    fn capability_metrics_records_per_axis() {
+        let metrics = CapabilityMetrics::new();
+        metrics.record_clamp_event("pitch", 0.9, 0.5);
+        metrics.record_clamp_event("roll", 0.85, 0.8);
+
+        let pitch = metrics.get_counter("pitch").expect("pitch counter");
+        assert_eq!(pitch.clamp_events(), 1);
+        assert!((pitch.max_original_value_before_clamp() - 0.9).abs() < f64::EPSILON);
+
+        let roll = metrics.get_counter("roll").expect("roll counter");
+        assert_eq!(roll.clamp_events(), 1);
+        assert!((roll.max_original_value_before_clamp() - 0.85).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn capability_metrics_creates_counter_on_first_event() {
+        let metrics = CapabilityMetrics::new();
+        assert!(metrics.get_counter("throttle").is_none());
+
+        metrics.record_clamp_event("throttle", 0.9, 0.5);
+        assert!(metrics.get_counter("throttle").is_some());
+    }
+
+    #[test]
+    fn capability_metrics_reset_all() {
+        let metrics = CapabilityMetrics::new();
+        metrics.record_clamp_event("pitch", 0.9, 0.5);
+        metrics.record_clamp_event("roll", 0.8, 0.5);
+        metrics.reset_all();
+
+        let pitch = metrics.get_counter("pitch").unwrap();
+        assert_eq!(pitch.clamp_events(), 0);
+        let roll = metrics.get_counter("roll").unwrap();
+        assert_eq!(roll.clamp_events(), 0);
+    }
+
+    #[test]
+    fn capability_metrics_reset_single_axis() {
+        let metrics = CapabilityMetrics::new();
+        metrics.record_clamp_event("pitch", 0.9, 0.5);
+        metrics.record_clamp_event("roll", 0.8, 0.5);
+        metrics.reset_axis("pitch");
+
+        let pitch = metrics.get_counter("pitch").unwrap();
+        assert_eq!(pitch.clamp_events(), 0);
+        let roll = metrics.get_counter("roll").unwrap();
+        assert_eq!(roll.clamp_events(), 1);
+    }
+
+    #[test]
+    fn record_clamp_event_on_service() {
+        let service = CapabilityService::new();
+        service.record_clamp_event("pitch", 0.9, 0.5);
+        service.record_clamp_event("pitch", 0.95, 0.5);
+        service.record_clamp_event("roll", 0.8, 0.5);
+
+        let pitch = service.metrics().get_counter("pitch").unwrap();
+        assert_eq!(pitch.clamp_events(), 2);
+        let roll = service.metrics().get_counter("roll").unwrap();
+        assert_eq!(roll.clamp_events(), 1);
+    }
+
+    #[test]
+    fn record_clamp_event_sets_timestamps() {
+        let service = CapabilityService::new();
+        service.record_clamp_event("yaw", 0.9, 0.5);
+
+        let yaw = service.metrics().get_counter("yaw").unwrap();
+        assert!(yaw.last_clamp_timestamp() > 0);
+    }
+
+    #[test]
+    fn demo_mode_clamping_records_service_event() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("roll".to_string()));
+        service
+            .register_axis("roll".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_demo_mode(true).unwrap();
+
+        let mut frame = AxisFrame::new(0.95, 1000);
+        frame.out = 0.95;
+        engine.process(&mut frame).unwrap();
+
+        // Engine-level counter should fire
+        assert_eq!(engine.counters().capability_clamp_events(), 1);
+
+        // Also record at service level for report
+        service.record_clamp_event("roll", 0.95, f64::from(frame.out));
+
+        let report = service.get_capability_report().unwrap();
+        // 1 from engine, 1 from service-level — now tracked separately
+        assert_eq!(report.engine_clamp_events, 1);
+        assert_eq!(report.service_clamp_events, 1);
+        assert_eq!(report.total_clamp_events, 2);
+        assert_eq!(report.axes.len(), 1);
+        assert_eq!(report.axes[0].axis_id, "roll");
+        assert_eq!(report.axes[0].clamp_events, 1);
+    }
+
+    #[test]
+    fn kid_mode_clamping_records_service_event() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("throttle".to_string()));
+        service
+            .register_axis("throttle".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        let mut frame = AxisFrame::new(0.8, 1000);
+        frame.out = 0.8;
+        engine.process(&mut frame).unwrap();
+
+        assert_eq!(engine.counters().capability_clamp_events(), 1);
+
+        service.record_clamp_event("throttle", 0.8, f64::from(frame.out));
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.engine_clamp_events, 1);
+        assert_eq!(report.service_clamp_events, 1);
+        assert_eq!(report.total_clamp_events, 2);
+        assert_eq!(report.axes[0].axis_id, "throttle");
+    }
+
+    #[test]
+    fn capability_report_format_with_no_events() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        service.register_axis("pitch".to_string(), engine).unwrap();
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.engine_clamp_events, 0);
+        assert_eq!(report.service_clamp_events, 0);
+        assert_eq!(report.total_clamp_events, 0);
+        assert_eq!(report.max_original_value_before_clamp, 0.0);
+        assert!(report.axes.is_empty());
+    }
+
+    #[test]
+    fn capability_report_axes_sorted_by_id() {
+        let service = CapabilityService::new();
+        service.record_clamp_event("yaw", 0.9, 0.5);
+        service.record_clamp_event("pitch", 0.9, 0.5);
+        service.record_clamp_event("roll", 0.9, 0.5);
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.axes.len(), 3);
+        assert_eq!(report.axes[0].axis_id, "pitch");
+        assert_eq!(report.axes[1].axis_id, "roll");
+        assert_eq!(report.axes[2].axis_id, "yaw");
+    }
+
+    #[test]
+    fn multiple_axes_tracked_independently_in_report() {
+        let service = CapabilityService::new();
+        service.record_clamp_event("pitch", 0.9, 0.5);
+        service.record_clamp_event("pitch", 0.95, 0.5);
+        service.record_clamp_event("roll", 0.85, 0.8);
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.axes.len(), 2);
+
+        let pitch = report.axes.iter().find(|a| a.axis_id == "pitch").unwrap();
+        assert_eq!(pitch.clamp_events, 2);
+        assert!((pitch.max_original_value_before_clamp - 0.95).abs() < f64::EPSILON);
+        assert!((pitch.min_clamped_value - 0.5).abs() < f64::EPSILON);
+
+        let roll = report.axes.iter().find(|a| a.axis_id == "roll").unwrap();
+        assert_eq!(roll.clamp_events, 1);
+        assert!((roll.max_original_value_before_clamp - 0.85).abs() < f64::EPSILON);
+        assert!((roll.min_clamped_value - 0.8).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn clamp_counter_timestamps_advance() {
+        let counter = ClampCounter::new();
+        counter.record(0.9, 0.5);
+        let ts1 = counter.last_clamp_timestamp();
+
+        std::thread::sleep(std::time::Duration::from_millis(2));
+
+        counter.record(0.9, 0.5);
+        let ts2 = counter.last_clamp_timestamp();
+        assert!(ts2 >= ts1, "timestamps must be non-decreasing");
+    }
+
+    #[test]
+    fn counter_overflow_wraps_gracefully() {
+        let counter = ClampCounter::new();
+        // Simulate near-overflow by writing a high value directly
+        counter
+            .clamp_events
+            .store(u64::MAX - 1, Ordering::Relaxed);
+        assert_eq!(counter.clamp_events(), u64::MAX - 1);
+
+        // One more event
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), u64::MAX);
+
+        // Next event wraps to 0 (AtomicU64::fetch_add wraps)
+        counter.record(0.9, 0.5);
+        assert_eq!(counter.clamp_events(), 0);
+    }
+
+    #[test]
+    fn report_includes_engine_only_clamp_axes() {
+        let service = CapabilityService::new();
+        let engine = Arc::new(AxisEngine::new_for_axis("pitch".to_string()));
+        service
+            .register_axis("pitch".to_string(), engine.clone())
+            .unwrap();
+
+        service.set_kid_mode(true).unwrap();
+
+        // Clamp via engine only — no explicit service.record_clamp_event()
+        let mut frame = AxisFrame::new(0.9, 1000);
+        frame.out = 0.9;
+        engine.process(&mut frame).unwrap();
+
+        let report = service.get_capability_report().unwrap();
+        assert_eq!(report.engine_clamp_events, 1);
+        assert_eq!(report.service_clamp_events, 0);
+        assert_eq!(report.total_clamp_events, 1);
+        // The axes section must still contain the engine-sourced clamp data
+        assert_eq!(report.axes.len(), 1);
+        assert_eq!(report.axes[0].axis_id, "pitch");
+        assert_eq!(report.axes[0].clamp_events, 1);
     }
 }

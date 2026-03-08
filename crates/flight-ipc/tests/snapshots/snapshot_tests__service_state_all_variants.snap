@@ -1,0 +1,10 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 151
+expression: output
+---
+{"type":"ServiceStatus","status":"Starting","uptime_secs":0}
+{"type":"ServiceStatus","status":"Running","uptime_secs":0}
+{"type":"ServiceStatus","status":"Degraded","uptime_secs":0}
+{"type":"ServiceStatus","status":"Stopping","uptime_secs":0}
+{"type":"ServiceStatus","status":"Stopped","uptime_secs":0}

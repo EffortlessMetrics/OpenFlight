@@ -1,0 +1,9 @@
+---
+source: crates/flight-core/tests/config_defaults_snapshots.rs
+assertion_line: 57
+expression: output
+---
+detection_interval: 1s
+enable_window_detection: true
+max_detection_time: 100ms
+num_sim_definitions: 9

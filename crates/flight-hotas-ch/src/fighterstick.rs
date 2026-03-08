@@ -21,6 +21,8 @@
 //!
 //! `throttle`, `hats[1..3]`, and `buttons[31:12]` are zero for 9-byte reports.
 
+use std::fmt;
+
 use crate::ChError;
 
 /// VID for all CH Products devices.
@@ -34,6 +36,7 @@ pub const FIGHTERSTICK_MIN_REPORT_BYTES: usize = 9;
 
 /// Parsed input state from one CH Fighterstick HID report.
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FighterstickState {
     /// Aileron (left-right), 0–65535.
     pub x: u16,
@@ -89,6 +92,16 @@ pub fn parse_fighterstick(report: &[u8]) -> Result<FighterstickState, ChError> {
 /// Maps `0` → `-1.0`, `32768` ≈ `0.0`, `65535` → `1.0`.
 pub fn normalize_axis(raw: u16) -> f32 {
     (raw as f32 / 65535.0 * 2.0 - 1.0).clamp(-1.0, 1.0)
+}
+
+impl fmt::Display for FighterstickState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Fighterstick X={} Y={} Z={} throttle={} hat0={} buttons={:#06x}",
+            self.x, self.y, self.z, self.throttle, self.hats[0], self.buttons
+        )
+    }
 }
 
 #[cfg(test)]

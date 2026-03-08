@@ -1,0 +1,9 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: config
+---
+enforce_signatures: true
+trusted_cas: []
+allow_unsigned: false
+max_plugin_budget_us: 100
+audit_logging: true

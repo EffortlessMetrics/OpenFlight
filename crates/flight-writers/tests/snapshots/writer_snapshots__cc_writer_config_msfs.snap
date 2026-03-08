@@ -1,0 +1,28 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 174
+expression: config
+---
+{
+  "sim": "msfs",
+  "version": "1.36.0",
+  "description": "Disable MSFS built-in control curves",
+  "diffs": [
+    {
+      "file": "UserCfg.opt",
+      "section": "CONTROLS",
+      "changes": {
+        "UseLinearCurves": "1"
+      },
+      "operation": "Set"
+    }
+  ],
+  "verification_tests": [
+    {
+      "name": "check_linear_curves",
+      "description": "Verify UseLinearCurves is set",
+      "test_type": "FileContains",
+      "expected_result": "UseLinearCurves=1"
+    }
+  ]
+}

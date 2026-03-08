@@ -1,0 +1,11 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 40
+expression: diff
+---
+{
+  "file": "MSFS/UserCfg.opt",
+  "type": "replace",
+  "content": "[CONTROLS]\nUseLinearCurves=1\n",
+  "backup": true
+}

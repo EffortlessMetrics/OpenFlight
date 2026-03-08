@@ -32,6 +32,7 @@ pub mod stick_warbrd;
 pub mod throttle_cm3;
 
 pub mod collective_tcs;
+pub mod encoder;
 pub mod pedals_ace;
 pub mod profiles;
 pub mod protocol;
@@ -98,4 +99,13 @@ pub use collective_tcs::{
 pub use throttle_ace_torq::{
     ACE_TORQ_BUTTON_COUNT, VPC_ACE_TORQ_MIN_REPORT_BYTES, VpcAceTorqAxis, VpcAceTorqButtons,
     VpcAceTorqInputState, VpcAceTorqParseError, parse_ace_torq_report,
+};
+
+pub use encoder::{EncoderBank, EncoderPair, cm3_encoder_bank, rotor_tcs_encoder_bank};
+
+pub use protocol::{DispatchError, VirpilInputState, dispatch_report};
+
+pub use profiles::{
+    ALL_PROFILES, MONGOOST_STICK_PROFILE, PANEL1_PROFILE, PANEL2_PROFILE, WARBRD_D_PROFILE,
+    WARBRD_PROFILE,
 };

@@ -1,0 +1,15 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: json
+---
+{
+  "collected_data": [
+    "DeviceEvents",
+    "Errors",
+    "Performance"
+  ],
+  "consent_timestamp": 1700000000,
+  "enabled": true,
+  "include_in_support": true,
+  "retention_days": 90
+}

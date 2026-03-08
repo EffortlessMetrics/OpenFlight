@@ -15,6 +15,7 @@ use flight_session::store::{
 use flight_session::state_persistence::StatePersistence;
 use flight_session::recovery::RecoveryManager;
 
+use std::collections::HashSet;
 use tempfile::TempDir;
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -67,6 +68,22 @@ mod creation_depth {
         let path = dir.path().join("my_state.json");
         let store = SessionStore::new(&path);
         assert_eq!(store.path(), path);
+    }
+
+    #[test]
+    fn session_id_uniqueness() {
+        let mut ids = HashSet::new();
+        for i in 0..100 {
+            let sp = StatePersistence::new(&format!("session-{i}"), 5);
+            let json = sp.to_json();
+            let state = StatePersistence::from_json(&json).unwrap();
+            assert!(
+                ids.insert(state.session_id.clone()),
+                "session ID '{}' must be unique",
+                state.session_id
+            );
+        }
+        assert_eq!(ids.len(), 100);
     }
 }
 
@@ -179,6 +196,22 @@ mod state_transitions {
         let oldest = sp.restore_by_index(0).unwrap();
         assert_eq!(oldest.preferences.get("val").unwrap(), "2");
     }
+
+    #[test]
+    fn session_restore_latest_returns_most_recent() {
+        let mut sp = StatePersistence::new("restore-test", 10);
+        sp.set_profile("old");
+        sp.snapshot();
+        sp.set_profile("new");
+        sp.snapshot();
+
+        // Two snapshots should exist before restore.
+        assert_eq!(sp.snapshot_count(), 2);
+        let latest = sp.restore_latest().unwrap();
+        assert_eq!(latest.active_profile.as_deref(), Some("new"));
+        // restore_latest() consumes one snapshot.
+        assert_eq!(sp.snapshot_count(), 1);
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -239,6 +272,24 @@ mod event_recording {
         assert_eq!(sp.get_preference("theme"), Some("dark"));
         assert_eq!(sp.get_preference("units"), Some("imperial"));
         assert_eq!(sp.get_preference("language"), Some("en"));
+    }
+
+    #[test]
+    fn session_duration_tracking_via_timestamps() {
+        let mut sp = StatePersistence::new("dur-test", 10);
+
+        sp.set_profile("first");
+        sp.snapshot();
+        let t1 = sp.restore_by_index(0).unwrap().last_save_timestamp;
+
+        // Ensure a minimal time difference (may be 0 on fast machines)
+        std::thread::sleep(std::time::Duration::from_millis(10));
+
+        sp.set_profile("second");
+        sp.snapshot();
+        let t2 = sp.restore_by_index(1).unwrap().last_save_timestamp;
+
+        assert!(t2 >= t1, "second snapshot timestamp must be >= first");
     }
 }
 
@@ -332,6 +383,22 @@ mod persistence_depth {
         std::fs::write(&path, "not valid json {{{").unwrap();
         let store = SessionStore::new(path);
         assert!(store.load().is_err());
+    }
+
+    #[test]
+    fn corrupted_session_file_does_not_prevent_new_save() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("state.json");
+
+        std::fs::write(&path, "garbage").unwrap();
+        let store = SessionStore::new(&path);
+        assert!(store.load().is_err());
+
+        // Saving a new valid state must succeed
+        let state = SessionState::default();
+        store.save(&state).unwrap();
+        let loaded = store.load().unwrap().unwrap();
+        assert_eq!(loaded, state);
     }
 
     #[test]
@@ -473,6 +540,28 @@ mod concurrent_access {
             let expected_sim = format!("sim_{i}");
             assert_eq!(loaded.active_profile.as_deref(), Some(expected_profile.as_str()));
             assert_eq!(loaded.last_sim.as_deref(), Some(expected_sim.as_str()));
+        }
+    }
+
+    #[test]
+    fn concurrent_session_instances() {
+        let handles: Vec<_> = (0..8)
+            .map(|i| {
+                std::thread::spawn(move || {
+                    let mut sp = StatePersistence::new(&format!("thread-{i}"), 5);
+                    sp.set_profile(&format!("profile_{i}"));
+                    sp.set_aircraft(&format!("aircraft-{i}"));
+                    sp.snapshot();
+
+                    let json = sp.to_json();
+                    let state = StatePersistence::from_json(&json).unwrap();
+                    assert_eq!(state.session_id, format!("thread-{i}"));
+                    assert_eq!(state.active_profile.as_deref(), Some(format!("profile_{i}").as_str()));
+                    })
+                    })
+                    .collect();
+        for h in handles {
+            h.join().expect("thread panicked");
         }
     }
 }

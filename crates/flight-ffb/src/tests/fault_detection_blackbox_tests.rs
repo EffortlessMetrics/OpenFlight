@@ -15,6 +15,7 @@
 //! - Emergency stop functionality
 
 use crate::*;
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -374,7 +375,8 @@ fn test_device_disconnect_detection() {
 /// **Validates: Requirement FFB-SAFETY-01.8**
 #[test]
 fn test_endpoint_wedge_detection() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
     // Endpoint responsive - no fault
     let result = detector.check_endpoint_wedge(true);
@@ -385,7 +387,7 @@ fn test_endpoint_wedge_detection() {
     assert!(result.is_none()); // Not yet 100ms
 
     // Wait for 100ms threshold
-    thread::sleep(Duration::from_millis(110));
+    time_source.advance(Duration::from_millis(110));
 
     // Check again - should trigger fault
     let result = detector.check_endpoint_wedge(false);
@@ -401,13 +403,14 @@ fn test_endpoint_wedge_detection() {
 /// **Validates: Requirement FFB-SAFETY-01.8**
 #[test]
 fn test_endpoint_recovery_resets_timer() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
     // Endpoint unresponsive - start timer
     detector.check_endpoint_wedge(false);
 
     // Wait 50ms
-    thread::sleep(Duration::from_millis(50));
+    time_source.advance(Duration::from_millis(50));
 
     // Endpoint recovers - should reset timer
     let result = detector.check_endpoint_wedge(true);
@@ -417,7 +420,7 @@ fn test_endpoint_recovery_resets_timer() {
     detector.check_endpoint_wedge(false);
 
     // Wait 50ms - not enough for fault
-    thread::sleep(Duration::from_millis(50));
+    time_source.advance(Duration::from_millis(50));
     let result = detector.check_endpoint_wedge(false);
     assert!(result.is_none());
 }
@@ -565,18 +568,19 @@ fn test_blackbox_capture_rate_250hz() {
         ..Default::default()
     };
 
-    let mut recorder = BlackboxRecorder::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut recorder = BlackboxRecorder::with_time_source(config, time_source.clone()).unwrap();
 
     // Record samples at 250 Hz (4ms intervals) for 100ms
-    let start = Instant::now();
+    let start = time_source.now();
     let mut sample_count = 0;
 
-    while start.elapsed() < Duration::from_millis(100) {
+    while time_source.now().duration_since(start) < Duration::from_millis(100) {
         recorder
             .record_bus_snapshot("test_device", 0.5, 0.6, 1.0)
             .unwrap();
         sample_count += 1;
-        thread::sleep(Duration::from_micros(4000)); // 4ms = 250 Hz
+        time_source.advance(Duration::from_micros(4000)); // 4ms = 250 Hz
     }
 
     // Should have recorded approximately 25 samples (100ms / 4ms)
@@ -604,20 +608,21 @@ fn test_blackbox_2s_pre_fault_capture() {
         ..Default::default()
     };
 
-    let mut recorder = BlackboxRecorder::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut recorder = BlackboxRecorder::with_time_source(config, time_source.clone()).unwrap();
 
     // Record samples for 3 seconds
-    let start = Instant::now();
-    while start.elapsed() < Duration::from_millis(500) {
+    let start = time_source.now();
+    while time_source.now().duration_since(start) < Duration::from_millis(500) {
         recorder
             .record_bus_snapshot("test_device", 0.5, 0.6, 1.0)
             .unwrap();
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Trigger fault capture
     let fault_entry = BlackboxEntry::Fault {
-        timestamp: Instant::now(),
+        timestamp: time_source.now(),
         fault_type: "USB_STALL".to_string(),
         fault_code: "HID_OUT_STALL".to_string(),
         context: "Test fault".to_string(),
@@ -648,11 +653,12 @@ fn test_blackbox_1s_post_fault_capture() {
         ..Default::default()
     };
 
-    let mut recorder = BlackboxRecorder::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut recorder = BlackboxRecorder::with_time_source(config, time_source.clone()).unwrap();
 
     // Trigger fault capture
     let fault_entry = BlackboxEntry::Fault {
-        timestamp: Instant::now(),
+        timestamp: time_source.now(),
         fault_type: "USB_STALL".to_string(),
         fault_code: "HID_OUT_STALL".to_string(),
         context: "Test fault".to_string(),
@@ -664,7 +670,7 @@ fn test_blackbox_1s_post_fault_capture() {
         recorder
             .record_bus_snapshot("test_device", 0.5, 0.6, 1.0)
             .unwrap();
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Verify capture completed
@@ -996,30 +1002,31 @@ fn test_soft_stop_completes_within_50ms() {
         ..Default::default()
     };
 
-    let mut controller = SoftStopController::new(config);
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut controller = SoftStopController::with_time_source(config, time_source.clone());
 
     // Start ramp from 10 Nm
     controller.start_ramp(10.0).unwrap();
     assert!(controller.is_active());
 
-    let start = Instant::now();
+    let start = time_source.now();
 
     // Update until complete
     loop {
-        let result = controller.update();
+        let _ = controller.update();
         if !controller.is_active() {
             break;
         }
-        thread::sleep(Duration::from_millis(1));
+        time_source.advance(Duration::from_millis(1));
 
         // Safety check - should not take more than 60ms
-        if start.elapsed() > Duration::from_millis(60) {
+        if time_source.now().duration_since(start) > Duration::from_millis(60) {
             panic!("Soft-stop took longer than 60ms");
         }
     }
 
     // Verify completed within 50ms (with some tolerance)
-    let elapsed = start.elapsed();
+    let elapsed = time_source.now().duration_since(start);
     assert!(
         elapsed <= Duration::from_millis(55),
         "Soft-stop took {:?}, expected <= 55ms",
@@ -1094,27 +1101,28 @@ fn test_soft_stop_ramp_profiles() {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
         controller.start_ramp(10.0).unwrap();
 
-        let start = Instant::now();
+        let start = time_source.now();
 
         // Update until complete
         while controller.is_active() {
             controller.update().ok();
-            thread::sleep(Duration::from_millis(1));
+            time_source.advance(Duration::from_millis(1));
 
-            if start.elapsed() > Duration::from_millis(80) {
+            if time_source.now().duration_since(start) > Duration::from_millis(80) {
                 panic!("Profile {:?} took longer than 80ms", profile);
             }
         }
 
         // All profiles should complete within 60ms (relaxed for CI load)
         assert!(
-            start.elapsed() <= Duration::from_millis(60),
+            time_source.now().duration_since(start) <= Duration::from_millis(60),
             "Profile {:?} took {:?}",
             profile,
-            start.elapsed()
+            time_source.now().duration_since(start)
         );
     }
 }
@@ -1137,14 +1145,15 @@ fn test_complete_fault_detection_flow() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // 1. Record some pre-fault data
     for i in 0..10 {
         engine
             .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.5)
             .unwrap();
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // 2. Trigger fault
@@ -1172,7 +1181,7 @@ fn test_complete_fault_detection_flow() {
             .record_axis_frame("test_device".to_string(), 0.5, 0.6, (i as f32) * 0.1)
             .unwrap();
         let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(50));
+        time_source.advance(Duration::from_millis(50));
     }
 
     // 7. Verify fault record contains all required info
@@ -1188,7 +1197,7 @@ fn test_complete_fault_detection_flow() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_statistics_tracking() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record multiple faults
     detector.record_fault(FaultType::UsbStall);
@@ -1221,7 +1230,7 @@ fn test_fault_statistics_tracking() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_storm_detection() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record many faults quickly
     for i in 0..15 {
@@ -1248,7 +1257,8 @@ fn test_fault_storm_detection() {
 /// **Validates: Requirement FFB-SAFETY-01.12**
 #[test]
 fn test_pre_fault_capture_data() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut detector = FaultDetector::new(Duration::from_millis(50), time_source.clone());
 
     // Add axis samples
     for i in 0..10 {
@@ -1258,7 +1268,7 @@ fn test_pre_fault_capture_data() {
             i as f32 * 0.2,
             format!("stage_{}", i),
         );
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Add FFB samples
@@ -1269,7 +1279,7 @@ fn test_pre_fault_capture_data() {
             "SafeTorque".to_string(),
             Some("healthy".to_string()),
         );
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Record fault - should capture pre-fault data
@@ -1288,7 +1298,7 @@ fn test_pre_fault_capture_data() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_rate_excessive() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50));
+    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record 5 USB stall faults
     for _ in 0..5 {
@@ -1321,13 +1331,14 @@ fn test_continuous_pre_fault_sampling() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Simulate continuous FFB loop operation at ~250 Hz for 100ms
-    let start = Instant::now();
+    let start = time_source.now();
     let mut sample_count = 0;
 
-    while start.elapsed() < Duration::from_millis(100) {
+    while time_source.now().duration_since(start) < Duration::from_millis(100) {
         // Record axis frame on every tick (simulating FFB loop)
         engine
             .record_axis_frame(
@@ -1339,7 +1350,7 @@ fn test_continuous_pre_fault_sampling() {
             .unwrap();
 
         sample_count += 1;
-        thread::sleep(Duration::from_micros(4000)); // 4ms = 250 Hz
+        time_source.advance(Duration::from_micros(4000)); // 4ms = 250 Hz
     }
 
     // Verify samples were recorded
@@ -1371,14 +1382,15 @@ fn test_complete_2s_pre_1s_post_capture_window() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Record pre-fault data for 300ms (simulating continuous operation)
     // Using shorter duration for test but verifying the mechanism works
-    let pre_fault_start = Instant::now();
+    let pre_fault_start = time_source.now();
     let mut pre_fault_count = 0;
 
-    while pre_fault_start.elapsed() < Duration::from_millis(300) {
+    while time_source.now().duration_since(pre_fault_start) < Duration::from_millis(300) {
         engine
             .record_axis_frame(
                 "pitch_axis".to_string(),
@@ -1388,7 +1400,7 @@ fn test_complete_2s_pre_1s_post_capture_window() {
             )
             .unwrap();
         pre_fault_count += 1;
-        thread::sleep(Duration::from_millis(10)); // 100 Hz for faster test
+        time_source.advance(Duration::from_millis(10)); // 100 Hz for faster test
     }
 
     // Trigger fault - this should capture pre-fault data
@@ -1418,14 +1430,14 @@ fn test_complete_2s_pre_1s_post_capture_window() {
             )
             .unwrap();
         // Don't call engine.update() here to avoid soft-stop timeout
-        thread::sleep(Duration::from_millis(5));
+        time_source.advance(Duration::from_millis(5));
     }
 
     // Now update engine to process capture completion
     // The soft-stop should have completed by now
     for _ in 0..5 {
         let _ = engine.update(); // Ignore soft-stop timeout errors
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Verify capture completed (check both active and completed)
@@ -1470,7 +1482,8 @@ fn test_post_fault_sampling_continues() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Trigger fault first
     engine.process_fault(FaultType::NanValue).unwrap();
@@ -1494,13 +1507,13 @@ fn test_post_fault_sampling_continues() {
                 i as f32 * 0.01, // Small varying torque during ramp-down
             )
             .unwrap();
-        thread::sleep(Duration::from_millis(5));
+        time_source.advance(Duration::from_millis(5));
     }
 
     // Update engine to process capture (ignore soft-stop errors)
     for _ in 0..5 {
         let _ = engine.update();
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Verify post-fault entries were captured
@@ -1551,15 +1564,16 @@ fn test_ffb_loop_recording_rate_250hz() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Record at 250 Hz for 200ms
-    let start = Instant::now();
+    let start = time_source.now();
     let target_interval = Duration::from_micros(4000); // 4ms = 250 Hz
     let mut sample_count = 0;
     let mut next_tick = start;
 
-    while start.elapsed() < Duration::from_millis(200) {
+    while time_source.now().duration_since(start) < Duration::from_millis(200) {
         // Record axis frame
         engine
             .record_axis_frame(
@@ -1574,9 +1588,9 @@ fn test_ffb_loop_recording_rate_250hz() {
         next_tick += target_interval;
 
         // Sleep until next tick
-        let now = Instant::now();
+        let now = time_source.now();
         if next_tick > now {
-            thread::sleep(next_tick - now);
+            time_source.advance(next_tick - now);
         }
     }
 
@@ -1616,14 +1630,15 @@ fn test_ffb_engine_update_processes_blackbox() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Record some pre-fault data
     for i in 0..10 {
         engine
             .record_axis_frame("test_device".to_string(), 0.5, 0.6, i as f32)
             .unwrap();
-        thread::sleep(Duration::from_millis(5));
+        time_source.advance(Duration::from_millis(5));
     }
 
     // Trigger fault
@@ -1634,13 +1649,13 @@ fn test_ffb_engine_update_processes_blackbox() {
         engine
             .record_axis_frame("test_device".to_string(), 0.0, 0.0, 0.0)
             .unwrap();
-        thread::sleep(Duration::from_millis(5));
+        time_source.advance(Duration::from_millis(5));
     }
 
     // Call update a few times to process capture completion (ignore soft-stop errors)
     for _ in 0..5 {
         let _ = engine.update();
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Verify capture was processed through update cycle
@@ -1669,7 +1684,8 @@ fn test_blackbox_records_ffb_state_during_operation() {
         device_path: None,
     };
 
-    let mut engine = FfbEngine::new(config).unwrap();
+    let time_source = Arc::new(FakeTimeSource::new());
+    let mut engine = FfbEngine::with_time_source(config, time_source.clone()).unwrap();
 
     // Simulate FFB loop with state recording
     for i in 0..20 {
@@ -1681,7 +1697,7 @@ fn test_blackbox_records_ffb_state_during_operation() {
         // Update engine (records FFB state during soft-stop if active)
         engine.update().unwrap();
 
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
     }
 
     // Verify entries were recorded

@@ -1,0 +1,9 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: config
+---
+audit_logging_enabled: true
+max_audit_events: 10000
+fail_on_warnings: false
+skip_checks: []
+custom_policies: {}

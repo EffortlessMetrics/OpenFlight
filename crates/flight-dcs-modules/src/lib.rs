@@ -31,6 +31,7 @@ pub mod module;
 
 pub use loader::ModuleLoader;
 pub use module::DcsModule;
+pub use module::{ControlType, DcsControl};
 
 use thiserror::Error;
 
@@ -158,6 +159,9 @@ quirks = ["twin-throttle", "gun-trigger"]
             throttle_range: [0.0, 1.0],
             stick_throw: 45.0,
             quirks: vec!["twin-throttle".to_owned()],
+            version: None,
+            description: None,
+            controls: vec![],
         };
         let serialized = toml::to_string(&original).expect("serialize");
         let restored: DcsModule = toml::from_str(&serialized).expect("deserialize");

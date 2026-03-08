@@ -126,6 +126,21 @@ mod counter_depth {
             assert_eq!(counter_value(&reg, &format!("counter_{i}")), i as u64);
         }
     }
+
+    #[test]
+    fn duplicate_counter_registration_is_idempotent() {
+        let reg = MetricsRegistry::new();
+        reg.inc_counter("dup", 1);
+        reg.inc_counter("dup", 2);
+
+        let metrics = reg.snapshot();
+        let count = metrics
+            .iter()
+            .filter(|m| matches!(m, Metric::Counter { name, .. } if name == "dup"))
+            .count();
+        assert_eq!(count, 1, "same name must yield a single counter entry");
+        assert_eq!(counter_value(&reg, "dup"), 3);
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -381,6 +396,20 @@ mod histogram_depth {
         assert_eq!(summary.count, 1);
         assert_eq!(summary.max, 99.0);
     }
+
+    #[test]
+    fn histogram_reset_clears_data() {
+        let reg = MetricsRegistry::new();
+        reg.observe("h", 1.0);
+        reg.observe("h", 2.0);
+        reg.reset();
+
+        let metrics = reg.snapshot();
+        assert!(
+            find_histogram(&metrics, "h").is_none(),
+            "histogram must be gone after reset"
+        );
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -432,7 +461,7 @@ mod timer_depth {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 5. Registry tests
+// 5. Registry tests / Collection lifecycle
 // ══════════════════════════════════════════════════════════════════════════════
 
 mod registry_depth {
@@ -520,6 +549,38 @@ mod registry_depth {
         counter2.increment_by(20);
         assert_eq!(counter1.value(), 10);
         assert_eq!(counter2.value(), 20);
+    }
+
+    #[test]
+    fn lifecycle_register_record_export_reset() {
+        let reg = MetricsRegistry::new();
+
+        // Register (implicit on first use)
+        reg.inc_counter("lifecycle_ctr", 5);
+        reg.set_gauge("lifecycle_gauge", 3.14);
+        reg.observe("lifecycle_hist", 42.0);
+
+        // Record more
+        reg.inc_counter("lifecycle_ctr", 5);
+        reg.observe("lifecycle_hist", 43.0);
+
+        // Export (snapshot)
+        let metrics = reg.snapshot();
+        assert_eq!(metrics.len(), 3);
+
+        let ctr = metrics.iter().find_map(|m| match m {
+            Metric::Counter { name, value } if name == "lifecycle_ctr" => Some(*value),
+            _ => None,
+        });
+        assert_eq!(ctr, Some(10));
+
+        // Reset
+        reg.reset();
+        assert!(reg.snapshot().is_empty(), "all metrics must be cleared");
+
+        // Re-register after reset
+        reg.inc_counter("lifecycle_ctr", 1);
+        assert_eq!(counter_value(&reg, "lifecycle_ctr"), 1);
     }
 }
 
@@ -653,11 +714,11 @@ mod export_depth {
     fn prometheus_registry_labels_in_output() {
         let mut reg = PrometheusRegistry::new();
         let mut labels = BTreeMap::new();
-        labels.insert("method".to_string(), "GET".to_string());
+        labels.insert("method".to_string(), "POST".to_string());
         labels.insert("status".to_string(), "200".to_string());
         reg.register_counter("http_requests", "HTTP requests", labels, 10.0);
         let output = reg.export_prometheus();
-        assert!(output.contains("http_requests{method=\"GET\",status=\"200\"} 10.0"));
+        assert!(output.contains("http_requests{method=\"POST\",status=\"200\"} 10.0"));
     }
 
     #[test]
@@ -973,4 +1034,12 @@ fn find_histogram<'a>(metrics: &'a [Metric], name: &str) -> Option<&'a Histogram
         Metric::Histogram { name: n, summary } if n == name => Some(summary),
         _ => None,
     })
+}
+
+#[allow(dead_code)]
+fn labels(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+    pairs
+        .iter()
+        .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+        .collect()
 }

@@ -1,0 +1,13 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 56
+expression: table
+---
+fpm → m/s
+──────────────────────────
+   -2000 fpm  →  -10.1600 m/s
+    -500 fpm  →   -2.5400 m/s
+       0 fpm  →    0.0000 m/s
+     500 fpm  →    2.5400 m/s
+    1800 fpm  →    9.1440 m/s
+    6000 fpm  →   30.4800 m/s

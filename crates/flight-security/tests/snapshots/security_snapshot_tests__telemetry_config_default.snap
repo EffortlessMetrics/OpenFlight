@@ -1,0 +1,9 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: config
+---
+enabled: false
+consent_timestamp: ~
+collected_data: []
+retention_days: 30
+include_in_support: false

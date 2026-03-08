@@ -356,6 +356,179 @@ fn cougar_profile() -> DeviceProfile {
     }
 }
 
+/// 8-bit centred bipolar (T.Flight twist/rocker, 0..=255, center=128).
+const NORM_8BIT_BIPOLAR: AxisNormalization = AxisNormalization::Bipolar {
+    center: 127.5,
+    half_span: 127.5,
+};
+
+/// 8-bit unipolar (T.Flight throttle, 0..=255).
+const NORM_8BIT_UNIPOLAR: AxisNormalization = AxisNormalization::Unipolar { max: 255.0 };
+
+fn tflight_hotas_x_profile() -> DeviceProfile {
+    DeviceProfile {
+        device: ThrustmasterDevice::TFlightHotasX,
+        name: "T.Flight HOTAS X",
+        axes: vec![
+            AxisDescriptor {
+                id: "x",
+                label: "Stick X (Roll)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "y",
+                label: "Stick Y (Pitch)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "throttle",
+                label: "Throttle",
+                normalization: NORM_8BIT_UNIPOLAR,
+                deadzone: 0.02,
+                filter_alpha: Some(0.10),
+            },
+            AxisDescriptor {
+                id: "twist",
+                label: "Twist (Yaw)",
+                normalization: NORM_8BIT_BIPOLAR,
+                deadzone: 0.08,
+                filter_alpha: Some(0.15),
+            },
+        ],
+        button_count: 12,
+        hat_count: 1,
+        has_leds: false,
+        notes: "Combined stick+throttle. B104 potentiometers may need filtering. Merged/Separate mode switch on base.",
+    }
+}
+
+fn tflight_hotas4_profile() -> DeviceProfile {
+    DeviceProfile {
+        device: ThrustmasterDevice::TFlightHotas4,
+        name: "T.Flight HOTAS 4",
+        axes: vec![
+            AxisDescriptor {
+                id: "x",
+                label: "Stick X (Roll)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "y",
+                label: "Stick Y (Pitch)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "throttle",
+                label: "Throttle",
+                normalization: NORM_8BIT_UNIPOLAR,
+                deadzone: 0.02,
+                filter_alpha: Some(0.10),
+            },
+            AxisDescriptor {
+                id: "twist",
+                label: "Twist (Yaw)",
+                normalization: NORM_8BIT_BIPOLAR,
+                deadzone: 0.08,
+                filter_alpha: Some(0.15),
+            },
+        ],
+        button_count: 12,
+        hat_count: 1,
+        has_leds: false,
+        notes: "PS4/PC HOTAS. Detent at ~5% throttle. B104 pots may jitter. Supports merged/separate axis modes.",
+    }
+}
+
+fn tflight_hotas_one_profile() -> DeviceProfile {
+    DeviceProfile {
+        device: ThrustmasterDevice::TFlightHotasOne,
+        name: "T.Flight HOTAS One",
+        axes: vec![
+            AxisDescriptor {
+                id: "x",
+                label: "Stick X (Roll)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "y",
+                label: "Stick Y (Pitch)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "throttle",
+                label: "Throttle",
+                normalization: NORM_8BIT_UNIPOLAR,
+                deadzone: 0.02,
+                filter_alpha: Some(0.10),
+            },
+            AxisDescriptor {
+                id: "twist",
+                label: "Twist (Yaw)",
+                normalization: NORM_8BIT_BIPOLAR,
+                deadzone: 0.08,
+                filter_alpha: Some(0.15),
+            },
+        ],
+        button_count: 12,
+        hat_count: 1,
+        has_leds: false,
+        notes: "Xbox/PC HOTAS. Same HID layout as HOTAS 4. Requires PC mode handshake for full axis access.",
+    }
+}
+
+fn tflight_stick_x_profile() -> DeviceProfile {
+    DeviceProfile {
+        device: ThrustmasterDevice::TFlightStickX,
+        name: "T.Flight Stick X",
+        axes: vec![
+            AxisDescriptor {
+                id: "x",
+                label: "Stick X (Roll)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "y",
+                label: "Stick Y (Pitch)",
+                normalization: NORM_16BIT_BIPOLAR,
+                deadzone: 0.05,
+                filter_alpha: Some(0.15),
+            },
+            AxisDescriptor {
+                id: "throttle",
+                label: "Throttle",
+                normalization: NORM_8BIT_UNIPOLAR,
+                deadzone: 0.02,
+                filter_alpha: Some(0.10),
+            },
+            AxisDescriptor {
+                id: "twist",
+                label: "Twist (Yaw)",
+                normalization: NORM_8BIT_BIPOLAR,
+                deadzone: 0.08,
+                filter_alpha: Some(0.15),
+            },
+        ],
+        button_count: 12,
+        hat_count: 1,
+        has_leds: false,
+        notes: "Standalone joystick with integrated throttle slider. Same HID layout as T.Flight HOTAS X.",
+    }
+}
+
 // ─── Profile lookup ─────────────────────────────────────────────────────────
 
 /// Retrieve the input profile for a given Thrustmaster device.
@@ -373,6 +546,16 @@ pub fn device_profile(device: ThrustmasterDevice) -> Option<DeviceProfile> {
             Some(tpr_profile())
         }
         ThrustmasterDevice::HotasCougar => Some(cougar_profile()),
+        ThrustmasterDevice::TFlightHotasX => Some(tflight_hotas_x_profile()),
+        ThrustmasterDevice::TFlightHotas4
+        | ThrustmasterDevice::TFlightHotas4Legacy
+        | ThrustmasterDevice::TFlightHotas4V2 => Some(tflight_hotas4_profile()),
+        ThrustmasterDevice::TFlightHotasOne | ThrustmasterDevice::TFlightHotasOneBulk => {
+            Some(tflight_hotas_one_profile())
+        }
+        ThrustmasterDevice::TFlightStickX | ThrustmasterDevice::TFlightStickXV2 => {
+            Some(tflight_stick_x_profile())
+        }
         _ => None,
     }
 }
@@ -387,6 +570,10 @@ pub fn profiled_devices() -> Vec<ThrustmasterDevice> {
         ThrustmasterDevice::TfrpRudderPedals,
         ThrustmasterDevice::TprPendular,
         ThrustmasterDevice::HotasCougar,
+        ThrustmasterDevice::TFlightHotasX,
+        ThrustmasterDevice::TFlightHotas4,
+        ThrustmasterDevice::TFlightHotasOne,
+        ThrustmasterDevice::TFlightStickX,
     ]
 }
 
@@ -642,18 +829,101 @@ mod tests {
         assert_eq!(p.hat_count, 1);
     }
 
-    // ── Unsupported devices ──────────────────────────────────────────────
+    // ── T.Flight HOTAS X ──────────────────────────────────────────────
 
     #[test]
-    fn tflight_hotas_x_profile_is_none() {
-        assert!(device_profile(ThrustmasterDevice::TFlightHotasX).is_none());
+    fn tflight_hotas_x_profile_exists() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotasX).unwrap();
+        assert_eq!(p.name, "T.Flight HOTAS X");
+    }
+
+    #[test]
+    fn tflight_hotas_x_has_4_axes_12_buttons_1_hat() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotasX).unwrap();
+        assert_eq!(p.axes.len(), 4);
+        assert_eq!(p.button_count, 12);
+        assert_eq!(p.hat_count, 1);
+        assert!(!p.has_leds);
+    }
+
+    #[test]
+    fn tflight_hotas_x_axis_ids() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotasX).unwrap();
+        let ids: Vec<&str> = p.axes.iter().map(|a| a.id).collect();
+        assert!(ids.contains(&"x"));
+        assert!(ids.contains(&"y"));
+        assert!(ids.contains(&"throttle"));
+        assert!(ids.contains(&"twist"));
+    }
+
+    #[test]
+    fn tflight_hotas_x_uses_8bit_for_throttle_and_twist() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotasX).unwrap();
+        let throttle = p.axes.iter().find(|a| a.id == "throttle").unwrap();
+        assert!(
+            matches!(throttle.normalization, AxisNormalization::Unipolar { max } if (max - 255.0).abs() < 0.01),
+            "T.Flight throttle should use 8-bit unipolar"
+        );
+        let twist = p.axes.iter().find(|a| a.id == "twist").unwrap();
+        assert!(
+            matches!(twist.normalization, AxisNormalization::Bipolar { center, .. } if (center - 127.5).abs() < 0.01),
+            "T.Flight twist should use 8-bit bipolar"
+        );
+    }
+
+    // ── T.Flight HOTAS 4 ────────────────────────────────────────────────
+
+    #[test]
+    fn tflight_hotas4_profile_exists() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotas4).unwrap();
+        assert_eq!(p.name, "T.Flight HOTAS 4");
+        assert_eq!(p.button_count, 12);
+    }
+
+    #[test]
+    fn tflight_hotas4_legacy_gets_same_profile() {
+        let p1 = device_profile(ThrustmasterDevice::TFlightHotas4).unwrap();
+        let p2 = device_profile(ThrustmasterDevice::TFlightHotas4Legacy).unwrap();
+        assert_eq!(p1.axes.len(), p2.axes.len());
+        assert_eq!(p1.button_count, p2.button_count);
+    }
+
+    // ── T.Flight HOTAS One ──────────────────────────────────────────────
+
+    #[test]
+    fn tflight_hotas_one_profile_exists() {
+        let p = device_profile(ThrustmasterDevice::TFlightHotasOne).unwrap();
+        assert_eq!(p.name, "T.Flight HOTAS One");
+        assert_eq!(p.button_count, 12);
+    }
+
+    // ── T.Flight Stick X ────────────────────────────────────────────────
+
+    #[test]
+    fn tflight_stick_x_profile_exists() {
+        let p = device_profile(ThrustmasterDevice::TFlightStickX).unwrap();
+        assert_eq!(p.name, "T.Flight Stick X");
+        assert_eq!(p.axes.len(), 4);
+    }
+
+    // ── TCA Boeing still unsupported ────────────────────────────────────
+
+    #[test]
+    fn tca_boeing_yoke_profile_is_none() {
+        assert!(device_profile(ThrustmasterDevice::TcaYokeBoeing).is_none());
     }
 
     // ── Axis normalization parameters ────────────────────────────────────
 
     #[test]
     fn normalization_constants_are_positive() {
-        let norms = [NORM_14BIT_BIPOLAR, NORM_16BIT_BIPOLAR, NORM_16BIT_UNIPOLAR];
+        let norms = [
+            NORM_14BIT_BIPOLAR,
+            NORM_16BIT_BIPOLAR,
+            NORM_16BIT_UNIPOLAR,
+            NORM_8BIT_BIPOLAR,
+            NORM_8BIT_UNIPOLAR,
+        ];
         for n in &norms {
             match n {
                 AxisNormalization::Bipolar { center, half_span } => {

@@ -31,3 +31,5 @@ x11rb = { workspace = true }
 
 [dev-dependencies]
 proptest.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
