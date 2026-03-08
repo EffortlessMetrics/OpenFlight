@@ -1,0 +1,72 @@
+# MSI file manifest for Flight Hub Windows installer
+# Consumed by flight-installer-tests to validate packaging completeness.
+
+[metadata]
+platform = "windows"
+installer_type = "msi"
+install_prefix = 'C:\Program Files\Flight Hub'
+config_dir = 'C:\ProgramData\Flight Hub'
+
+[[files]]
+source = "bin/flightd.exe"
+destination = "bin/flightd.exe"
+permissions = "755"
+required = true
+component = "CoreBinaries"
+
+[[files]]
+source = "bin/flightctl.exe"
+destination = "bin/flightctl.exe"
+permissions = "755"
+required = true
+component = "CLIBinaries"
+
+[[files]]
+source = "config/config.toml"
+destination = "config/config.toml"
+permissions = "644"
+required = true
+component = "CoreConfig"
+
+[[files]]
+source = "config/default.profile.toml"
+destination = "config/default.profile.toml"
+permissions = "644"
+required = true
+component = "CoreConfig"
+
+[service]
+name = "FlightHub"
+display_name = "Flight Hub Service"
+description = "Flight Hub input management service for flight simulation"
+binary_path = "bin/flightd.exe"
+start_type = "auto"
+account = "LocalSystem"
+
+[service.recovery]
+first_failure = "restart"
+second_failure = "restart"
+third_failure = "none"
+restart_delay_seconds = 60
+reset_period_days = 1
+
+[registry]
+install_path_key = 'HKLM\SOFTWARE\OpenFlight\Flight Hub\InstallPath'
+version_key = 'HKLM\SOFTWARE\OpenFlight\Flight Hub\Version'
+service_key = 'HKLM\SYSTEM\CurrentControlSet\Services\FlightHub'
+
+[[uninstall.cleanup_paths]]
+path = "bin"
+type = "directory"
+
+[[uninstall.cleanup_paths]]
+path = "config/default.profile.toml"
+type = "file"
+
+[[uninstall.cleanup_paths]]
+path = "logs"
+type = "directory"
+
+[[uninstall.preserved_paths]]
+path = "config/config.toml"
+reason = "User configuration"

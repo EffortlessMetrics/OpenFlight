@@ -1,0 +1,6 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 118
+expression: msg.to_json()
+---
+{"type":"SimDisconnected","sim_type":"xplane"}

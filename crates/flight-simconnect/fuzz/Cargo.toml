@@ -37,3 +37,9 @@ name = "fuzz_engine_params"
 path = "fuzz_targets/fuzz_engine_params.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_simvar_names"
+path = "fuzz_targets/fuzz_simvar_names.rs"
+test = false
+doc = false

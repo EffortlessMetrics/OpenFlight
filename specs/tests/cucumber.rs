@@ -58,6 +58,14 @@ pub struct FlightWorld {
     pub open_hw_firmware_parsed: Option<flight_open_hardware::FirmwareVersionReport>,
     pub open_hw_norms: Option<(f32, f32, f32)>,
     pub open_hw_checked_vendor_id: bool,
+
+    // User journey BDD state (REQ-1051 through REQ-1056)
+    pub first_time_setup: Option<steps::user_journeys::FirstTimeSetupState>,
+    pub profile_lifecycle: Option<steps::user_journeys::ProfileLifecycleState>,
+    pub device_hotplug: Option<steps::user_journeys::DeviceHotplugState>,
+    pub sim_adapter: Option<steps::user_journeys::SimAdapterState>,
+    pub safe_mode: Option<steps::user_journeys::SafeModeState>,
+    pub update_journey: Option<steps::user_journeys::UpdateJourneyState>,
 }
 
 #[derive(Debug)]

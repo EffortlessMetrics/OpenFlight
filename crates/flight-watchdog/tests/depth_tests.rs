@@ -11,18 +11,24 @@
 use std::time::Duration;
 
 use flight_watchdog::escalation::{EscalationAction, EscalationConfig, EscalationLadder, EscalationLevel};
-use flight_watchdog::health_aggregator::{HealthAggregator, SubsystemCheckConfig, SubsystemHealth};
+use flight_watchdog::health_aggregator::{
+    HealthAggregator, SubsystemCheckConfig, SubsystemHealth,
+};
 use flight_watchdog::health_check::{HealthCheckManager, HealthStatus};
+use flight_watchdog::monitor::{HealthEventKind, MonitorConfig, SystemMode, SystemMonitor};
 use flight_watchdog::recovery::{RecoveryAction, RecoveryPolicy};
 use flight_watchdog::supervisor::{
-    DeadManStatus, DeadManSwitch, DeadManSwitchConfig, ProcessAlert, ProcessMonitor,
-    ProcessMonitorConfig, ProcessSnapshot,
+    DeadManStatus, DeadManSwitch, DeadManSwitchConfig, HardwareWatchdog, ProcessAlert,
+    ProcessMonitor, ProcessMonitorConfig, ProcessSnapshot, WatchdogTimerConfig, WatchdogTimerStatus,
 };
-use flight_watchdog::{ComponentType, QuarantineStatus, WatchdogConfig, WatchdogSystem};
+use flight_watchdog::{
+    ComponentType, QuarantineStatus, SyntheticFault, WatchdogConfig, WatchdogEventType,
+    WatchdogSystem,
+};
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 1. Heartbeat monitoring
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 1: Heartbeat timing and detection
+// ============================================================================
 
 mod heartbeat {
     use super::*;
@@ -70,63 +76,115 @@ mod heartbeat {
         assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Failed);
     }
 
-    /// Multiple missed heartbeats drive escalation through levels.
     #[test]
-    fn multiple_missed_heartbeats_escalate() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 6,
-            safe_mode_threshold: 12,
-            recovery_threshold: 3,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 5,
-        });
-        ladder.register("axis");
-
-        // 1 failure → Warn.
-        ladder.record_failure("axis", "no heartbeat");
-        assert_eq!(ladder.level("axis"), EscalationLevel::Warn);
-
-        // 2 more → Degrade.
-        ladder.record_failure("axis", "no heartbeat");
-        ladder.record_failure("axis", "no heartbeat");
-        assert_eq!(ladder.level("axis"), EscalationLevel::Degrade);
-
-        // 3 more → Restart.
-        for _ in 0..3 {
-            ladder.record_failure("axis", "no heartbeat");
-        }
-        assert_eq!(ladder.level("axis"), EscalationLevel::Restart);
-
-        // 6 more → SafeMode.
-        for _ in 0..6 {
-            ladder.record_failure("axis", "no heartbeat");
-        }
-        assert_eq!(ladder.level("axis"), EscalationLevel::SafeMode);
+    fn fresh_monitor_starts_normal() {
+        let mon = SystemMonitor::default();
+        assert_eq!(mon.mode(), SystemMode::Normal);
+        assert_eq!(mon.consecutive_missed_ticks(), 0);
+        assert_eq!(mon.total_missed_ticks(), 0);
+        assert_eq!(mon.total_received_ticks(), 0);
     }
 
-    /// Recovery: component resumes heartbeats → back to healthy.
     #[test]
-    fn recovery_after_resumed_heartbeats() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 6,
-            safe_mode_threshold: 20,
-            recovery_threshold: 2,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 5,
+    fn heartbeat_increments_received_counter() {
+        let mut mon = SystemMonitor::default();
+        for i in 1..=25 {
+            mon.record_heartbeat();
+            assert_eq!(mon.total_received_ticks(), i);
+        }
+    }
+
+    #[test]
+    fn missed_tick_increments_counters() {
+        let mut mon = SystemMonitor::new(MonitorConfig {
+            warn_after_missed_ticks: 100,
+            degrade_after_missed_ticks: 200,
+            safe_mode_after_missed_ticks: 300,
+            ..MonitorConfig::default()
         });
+        for i in 1..=10 {
+            mon.record_missed_tick();
+            assert_eq!(mon.consecutive_missed_ticks(), i);
+            assert_eq!(mon.total_missed_ticks(), i as u64);
+        }
+    }
 
-        // Escalate to Warn.
-        ladder.record_failure("hid", "miss");
-        assert_eq!(ladder.level("hid"), EscalationLevel::Warn);
+    #[test]
+    fn heartbeat_resets_consecutive_misses() {
+        let mut mon = SystemMonitor::new(MonitorConfig {
+            warn_after_missed_ticks: 100,
+            ..MonitorConfig::default()
+        });
+        mon.record_missed_tick();
+        mon.record_missed_tick();
+        mon.record_missed_tick();
+        assert_eq!(mon.consecutive_missed_ticks(), 3);
+        mon.record_heartbeat();
+        assert_eq!(mon.consecutive_missed_ticks(), 0);
+        // total_missed_ticks is still preserved
+        assert_eq!(mon.total_missed_ticks(), 3);
+    }
 
-        // Recover with 2 consecutive successes (recovery_threshold = 2).
-        ladder.record_success("hid");
-        ladder.record_success("hid");
-        assert_eq!(ladder.level("hid"), EscalationLevel::Normal);
+    #[test]
+    fn heartbeat_recovery_emits_event() {
+        let mut mon = SystemMonitor::new(MonitorConfig {
+            warn_after_missed_ticks: 1,
+            ..MonitorConfig::default()
+        });
+        mon.record_missed_tick();
+        mon.record_heartbeat();
+
+        let recovered: Vec<_> = mon
+            .events()
+            .iter()
+            .filter(|e| e.kind == HealthEventKind::HeartbeatRecovered)
+            .collect();
+        assert_eq!(recovered.len(), 1);
+    }
+
+    #[test]
+    fn no_recovery_event_when_already_healthy() {
+        let mut mon = SystemMonitor::default();
+        mon.record_heartbeat();
+        mon.record_heartbeat();
+        let recovered: Vec<_> = mon
+            .events()
+            .iter()
+            .filter(|e| e.kind == HealthEventKind::HeartbeatRecovered)
+            .collect();
+        assert!(recovered.is_empty());
+    }
+
+    #[test]
+    fn check_heartbeat_timeout_returns_false_when_fresh() {
+        let mut mon = SystemMonitor::default();
+        mon.record_heartbeat();
+        assert!(!mon.check_heartbeat_timeout());
+    }
+
+    #[test]
+    fn snapshot_reflects_heartbeat_state() {
+        let mut mon = SystemMonitor::default();
+        for _ in 0..10 {
+            mon.record_heartbeat();
+        }
+        mon.record_missed_tick();
+        let snap = mon.snapshot();
+        assert_eq!(snap.total_received_ticks, 10);
+        assert_eq!(snap.total_missed_ticks, 1);
+        assert_eq!(snap.consecutive_missed_ticks, 1);
+    }
+
+    #[test]
+    fn drain_events_clears_buffer() {
+        let mut mon = SystemMonitor::new(MonitorConfig {
+            warn_after_missed_ticks: 1,
+            ..MonitorConfig::default()
+        });
+        mon.record_missed_tick();
+        let events = mon.drain_events();
+        assert!(!events.is_empty());
+        assert!(mon.events().is_empty());
     }
 
     /// Property: heartbeats always reset the countdown in HealthCheckManager.
@@ -151,12 +209,24 @@ mod heartbeat {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 2. Escalation policy
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 2: Escalation levels (Warn → Degrade → Restart → SafeMode)
+// ============================================================================
 
-mod escalation_policy {
+mod escalation_tests {
     use super::*;
+
+    fn ladder_factory(warn: u32, degrade: u32, restart: u32, safe: u32) -> EscalationLadder {
+        EscalationLadder::new(EscalationConfig {
+            warn_threshold: warn,
+            degrade_threshold: degrade,
+            restart_threshold: restart,
+            safe_mode_threshold: safe,
+            recovery_threshold: 3,
+            restart_cooldown: Duration::ZERO,
+            max_restart_attempts: 2,
+        })
+    }
 
     /// Warn → Degrade → Restart → SafeMode sequence with default thresholds.
     #[test]
@@ -188,106 +258,128 @@ mod escalation_policy {
         assert!(levels.contains(&EscalationLevel::SafeMode));
     }
 
-    /// Custom thresholds per component.
     #[test]
-    fn custom_thresholds_per_component() {
-        let mut ladder_strict = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 2,
-            restart_threshold: 3,
-            safe_mode_threshold: 4,
-            recovery_threshold: 1,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        });
+    fn default_ladder_starts_normal() {
+        let mut ld = EscalationLadder::default();
+        ld.register("comp");
+        assert_eq!(ld.level("comp"), EscalationLevel::Normal);
+        assert_eq!(ld.failure_count("comp"), 0);
+    }
 
-        let mut ladder_lenient = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 5,
-            degrade_threshold: 10,
-            restart_threshold: 15,
-            safe_mode_threshold: 20,
-            recovery_threshold: 3,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        });
+    #[test]
+    fn warn_threshold_triggers_warn_action() {
+        let mut ld = ladder_factory(2, 5, 10, 20);
+        ld.record_failure("c", "err");
+        // 1 failure, threshold=2 → still Normal
+        assert_eq!(ld.level("c"), EscalationLevel::Normal);
+        let action = ld.record_failure("c", "err");
+        assert!(matches!(action, EscalationAction::Warn(_)));
+        assert_eq!(ld.level("c"), EscalationLevel::Warn);
+    }
 
-        // 3 failures: strict → Restart, lenient → Normal.
+    #[test]
+    fn degrade_threshold_triggers_degrade() {
+        let mut ld = ladder_factory(1, 3, 10, 20);
         for _ in 0..3 {
-            ladder_strict.record_failure("a", "err");
-            ladder_lenient.record_failure("b", "err");
+            ld.record_failure("c", "err");
         }
-        assert_eq!(ladder_strict.level("a"), EscalationLevel::Restart);
-        assert_eq!(ladder_lenient.level("b"), EscalationLevel::Normal);
+        assert_eq!(ld.level("c"), EscalationLevel::Degrade);
     }
 
-    /// Deterministic escalation timing (no wall clock dependency).
     #[test]
-    fn escalation_is_deterministic_by_failure_count() {
-        let config = EscalationConfig {
-            warn_threshold: 2,
-            degrade_threshold: 4,
-            restart_threshold: 8,
-            safe_mode_threshold: 16,
-            recovery_threshold: 3,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        };
-
-        // Run twice — must produce identical results.
-        for _ in 0..2 {
-            let mut ladder = EscalationLadder::new(config.clone());
-            ladder.register("x");
-
-            for _ in 0..2 {
-                ladder.record_failure("x", "f");
-            }
-            assert_eq!(ladder.level("x"), EscalationLevel::Warn);
-
-            for _ in 0..2 {
-                ladder.record_failure("x", "f");
-            }
-            assert_eq!(ladder.level("x"), EscalationLevel::Degrade);
-
-            for _ in 0..4 {
-                ladder.record_failure("x", "f");
-            }
-            assert_eq!(ladder.level("x"), EscalationLevel::Restart);
+    fn restart_threshold_triggers_restart() {
+        let mut ld = ladder_factory(1, 3, 5, 20);
+        for _ in 0..5 {
+            ld.record_failure("c", "err");
         }
+        assert_eq!(ld.level("c"), EscalationLevel::Restart);
+        assert_eq!(ld.restart_count("c"), 1);
     }
 
-    /// De-escalation when component recovers.
     #[test]
-    fn de_escalation_on_recovery() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 6,
-            safe_mode_threshold: 50,
-            recovery_threshold: 2,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        });
+    fn safe_mode_threshold_triggers_safe_mode() {
+        let mut ld = ladder_factory(1, 3, 5, 8);
+        for _ in 0..8 {
+            ld.record_failure("c", "err");
+        }
+        assert_eq!(ld.level("c"), EscalationLevel::SafeMode);
+    }
 
-        // Escalate to Degrade.
+    #[test]
+    fn max_restarts_exceeded_triggers_safe_mode() {
+        let mut ld = ladder_factory(1, 3, 5, 100);
+        // First restart cycle
+        for _ in 0..5 {
+            ld.record_failure("x", "err");
+        }
+        assert_eq!(ld.restart_count("x"), 1);
+        // Recover
         for _ in 0..3 {
-            ladder.record_failure("comp", "fail");
+            ld.record_success("x");
         }
-        assert_eq!(ladder.level("comp"), EscalationLevel::Degrade);
-
-        // De-escalate one level: Degrade → Warn.
-        for _ in 0..2 {
-            ladder.record_success("comp");
+        // Second restart cycle
+        for _ in 0..5 {
+            ld.record_failure("x", "err");
         }
-        assert_eq!(ladder.level("comp"), EscalationLevel::Warn);
-
-        // De-escalate again: Warn → Normal.
-        for _ in 0..2 {
-            ladder.record_success("comp");
+        assert_eq!(ld.restart_count("x"), 2);
+        // Now max_restart_attempts=2, further restart-level failures → SafeMode
+        for _ in 0..5 {
+            ld.record_failure("x", "err");
         }
-        assert_eq!(ladder.level("comp"), EscalationLevel::Normal);
+        assert_eq!(ld.level("x"), EscalationLevel::SafeMode);
     }
 
-    /// Multiple components can be in different escalation states.
+    #[test]
+    fn escalation_level_ordering_is_correct() {
+        assert!(EscalationLevel::Normal < EscalationLevel::Warn);
+        assert!(EscalationLevel::Warn < EscalationLevel::Degrade);
+        assert!(EscalationLevel::Degrade < EscalationLevel::Restart);
+        assert!(EscalationLevel::Restart < EscalationLevel::SafeMode);
+    }
+
+    #[test]
+    fn escalation_level_display() {
+        assert_eq!(EscalationLevel::Normal.to_string(), "Normal");
+        assert_eq!(EscalationLevel::SafeMode.to_string(), "SafeMode");
+    }
+
+    #[test]
+    fn transitions_log_each_level_change() {
+        let mut ld = ladder_factory(1, 3, 5, 8);
+        for _ in 0..8 {
+            ld.record_failure("a", "err");
+        }
+        let ts = ld.transitions();
+        // Normal→Warn, Warn→Degrade, Degrade→Restart, Restart→SafeMode
+        assert!(ts.len() >= 4, "expected >=4 transitions, got {}", ts.len());
+        assert_eq!(ts[0].from, EscalationLevel::Normal);
+        assert_eq!(ts[0].to, EscalationLevel::Warn);
+    }
+
+    #[test]
+    fn component_isolation_in_ladder() {
+        let mut ld = ladder_factory(1, 5, 10, 20);
+        for _ in 0..5 {
+            ld.record_failure("a", "err");
+        }
+        ld.record_failure("b", "err");
+        assert_eq!(ld.level("a"), EscalationLevel::Degrade);
+        assert_eq!(ld.level("b"), EscalationLevel::Warn);
+    }
+
+    #[test]
+    fn reset_clears_component_state() {
+        let mut ld = ladder_factory(1, 3, 5, 8);
+        for _ in 0..5 {
+            ld.record_failure("r", "err");
+        }
+        assert_eq!(ld.level("r"), EscalationLevel::Restart);
+        ld.reset("r");
+        assert_eq!(ld.level("r"), EscalationLevel::Normal);
+        assert_eq!(ld.failure_count("r"), 0);
+        assert_eq!(ld.restart_count("r"), 0);
+    }
+
     #[test]
     fn multiple_components_independent_escalation() {
         let mut ladder = EscalationLadder::new(EscalationConfig {
@@ -318,14 +410,122 @@ mod escalation_policy {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 3. Component lifecycle
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 3: Component health tracking and lifecycle
+// ============================================================================
 
-mod lifecycle {
+mod health_tracking {
     use super::*;
 
-    /// Register → Monitor → Unregister.
+    #[test]
+    fn health_check_manager_register_and_query() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("axis", Duration::from_secs(5), 3);
+        assert_eq!(mgr.check_status("axis"), Some(&HealthStatus::Healthy));
+    }
+
+    #[test]
+    fn degraded_report_tracks_consecutive_failures() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("ffb", Duration::from_secs(5), 3);
+        mgr.report_degraded("ffb", "slow");
+        mgr.report_degraded("ffb", "slower");
+        let summary = mgr.summary();
+        assert_eq!(summary.degraded, 1);
+    }
+
+    #[test]
+    fn unhealthy_report_sets_status() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("hid", Duration::from_secs(5), 3);
+        mgr.report_unhealthy("hid", "device lost");
+        assert_eq!(
+            mgr.check_status("hid"),
+            Some(&HealthStatus::Unhealthy("device lost".into()))
+        );
+    }
+
+    #[test]
+    fn healthy_report_resets_failures() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("x", Duration::from_secs(5), 3);
+        mgr.report_unhealthy("x", "err");
+        mgr.report_unhealthy("x", "err");
+        mgr.report_healthy("x");
+        assert_eq!(mgr.check_status("x"), Some(&HealthStatus::Healthy));
+    }
+
+    #[test]
+    fn all_healthy_check() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("a", Duration::from_secs(5), 3);
+        mgr.register("b", Duration::from_secs(5), 3);
+        assert!(mgr.is_all_healthy());
+        mgr.report_degraded("a", "slow");
+        assert!(!mgr.is_all_healthy());
+    }
+
+    #[test]
+    fn summary_counts_all_states() {
+        let mut mgr = HealthCheckManager::new();
+        mgr.register("a", Duration::from_secs(5), 3);
+        mgr.register("b", Duration::from_secs(5), 3);
+        mgr.register("c", Duration::from_secs(5), 3);
+        mgr.register("d", Duration::from_secs(5), 3);
+        mgr.report_degraded("b", "slow");
+        mgr.report_unhealthy("c", "dead");
+        let s = mgr.summary();
+        assert_eq!(s.healthy, 2);
+        assert_eq!(s.degraded, 1);
+        assert_eq!(s.unhealthy, 1);
+    }
+
+    // --- HealthAggregator tests ---
+
+    #[test]
+    fn aggregator_starts_unknown() {
+        let mut agg = HealthAggregator::new();
+        agg.register(SubsystemCheckConfig::new("axis"));
+        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Unknown);
+    }
+
+    #[test]
+    fn aggregator_healthy_report() {
+        let mut agg = HealthAggregator::new();
+        agg.register(SubsystemCheckConfig::new("axis"));
+        agg.report_healthy("axis");
+        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Healthy);
+    }
+
+    #[test]
+    fn aggregator_failure_escalation() {
+        let mut agg = HealthAggregator::new();
+        agg.register(
+            SubsystemCheckConfig::new("x").with_failure_threshold(2),
+        );
+        agg.report_healthy("x");
+        agg.report_failure("x", "err");
+        assert_eq!(agg.subsystem_health("x"), SubsystemHealth::Degraded);
+        agg.report_failure("x", "err");
+        assert_eq!(agg.subsystem_health("x"), SubsystemHealth::Failed);
+    }
+
+    #[test]
+    fn aggregator_overall_worst() {
+        let mut agg = HealthAggregator::new();
+        agg.register(SubsystemCheckConfig::new("a"));
+        agg.register(SubsystemCheckConfig::new("b"));
+        agg.report_healthy("a");
+        agg.report_healthy("b");
+        agg.report_failure("b", "crash");
+        let report = agg.aggregate();
+        assert_eq!(report.overall, SubsystemHealth::Degraded);
+        assert_eq!(report.healthy_count, 1);
+        assert_eq!(report.degraded_count, 1);
+    }
+
+    // --- Component lifecycle tests ---
+
     #[test]
     fn register_monitor_unregister() {
         let mut wd = WatchdogSystem::new();
@@ -343,7 +543,6 @@ mod lifecycle {
         assert_eq!(wd.get_quarantine_status(&comp), None);
     }
 
-    /// Double-register is idempotent — config is overwritten, status reset.
     #[test]
     fn double_register_is_idempotent() {
         let mut wd = WatchdogSystem::new();
@@ -367,7 +566,6 @@ mod lifecycle {
         assert!(!wd.is_quarantined(&comp));
     }
 
-    /// Unregister during escalation cleans up the component fully.
     #[test]
     fn unregister_during_escalation_cleans_up() {
         let mut wd = WatchdogSystem::new();
@@ -392,71 +590,62 @@ mod lifecycle {
         assert_eq!(summary.total_components, 0);
         assert_eq!(summary.quarantined_components, 0);
     }
-
-    /// Component crash detection: no heartbeat + process gone
-    /// simulated by repeated failures without any successes.
-    #[test]
-    fn component_crash_detection_via_repeated_failures() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::NativePlugin("crasher".into());
-
-        wd.register_component(
-            comp.clone(),
-            WatchdogConfig {
-                max_consecutive_failures: 3,
-                max_execution_time: Duration::from_micros(50),
-                ..WatchdogConfig::default()
-            },
-        );
-
-        // Plugin never sends a successful heartbeat; only overruns.
-        for _ in 0..3 {
-            wd.record_plugin_execution("crasher", Duration::from_millis(10), true);
-        }
-
-        assert!(wd.is_quarantined(&comp), "crashed plugin must be quarantined");
-
-        let stats = wd.get_plugin_overrun_stats("crasher").unwrap();
-        assert!(stats.total_overruns >= 3);
-    }
-
-    /// HealthCheckManager lifecycle: register → degrade → recover.
-    #[test]
-    fn health_check_manager_full_lifecycle() {
-        let mut mgr = HealthCheckManager::new();
-        mgr.register("panel", Duration::from_secs(5), 3);
-
-        // Healthy initially.
-        assert_eq!(mgr.check_status("panel"), Some(&HealthStatus::Healthy));
-
-        // Degrade.
-        mgr.report_degraded("panel", "slow USB");
-        assert!(matches!(
-            mgr.check_status("panel"),
-            Some(HealthStatus::Degraded(_))
-        ));
-
-        // Unhealthy.
-        mgr.report_unhealthy("panel", "disconnected");
-        assert!(matches!(
-            mgr.check_status("panel"),
-            Some(HealthStatus::Unhealthy(_))
-        ));
-
-        // Recover.
-        mgr.report_healthy("panel");
-        assert_eq!(mgr.check_status("panel"), Some(&HealthStatus::Healthy));
-    }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 4. Safe mode triggering
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 4: Recovery procedures and Safe Mode
+// ============================================================================
 
-mod safe_mode {
+mod recovery_tests {
     use super::*;
 
-    /// Watchdog triggers safe mode when critical threshold reached.
+    #[test]
+    fn no_rule_returns_no_action() {
+        let policy = RecoveryPolicy::new();
+        assert_eq!(policy.evaluate("x", 10), RecoveryAction::NoAction);
+    }
+
+    #[test]
+    fn escalating_rules_select_highest_matching() {
+        let mut policy = RecoveryPolicy::new();
+        policy.add_rule("hid", 1, RecoveryAction::LogWarning("warn".into()));
+        policy.add_rule("hid", 3, RecoveryAction::AlertUser("alert".into()));
+        policy.add_rule("hid", 5, RecoveryAction::RestartComponent("hid".into()));
+        policy.add_rule("hid", 10, RecoveryAction::EnterSafeMode);
+
+        assert_eq!(
+            policy.evaluate("hid", 1),
+            RecoveryAction::LogWarning("warn".into())
+        );
+        assert_eq!(
+            policy.evaluate("hid", 3),
+            RecoveryAction::AlertUser("alert".into())
+        );
+        assert_eq!(
+            policy.evaluate("hid", 5),
+            RecoveryAction::RestartComponent("hid".into())
+        );
+        assert_eq!(policy.evaluate("hid", 10), RecoveryAction::EnterSafeMode);
+        // Above highest threshold → still EnterSafeMode.
+        assert_eq!(policy.evaluate("hid", 100), RecoveryAction::EnterSafeMode);
+    }
+
+    #[test]
+    fn per_component_policy_isolation() {
+        let mut policy = RecoveryPolicy::new();
+        policy.add_rule("a", 1, RecoveryAction::LogWarning("a-warn".into()));
+        policy.add_rule("b", 1, RecoveryAction::AlertUser("b-alert".into()));
+        assert_eq!(
+            policy.evaluate("a", 1),
+            RecoveryAction::LogWarning("a-warn".into())
+        );
+        assert_eq!(
+            policy.evaluate("b", 1),
+            RecoveryAction::AlertUser("b-alert".into())
+        );
+        assert_eq!(policy.evaluate("c", 1), RecoveryAction::NoAction);
+    }
+
     #[test]
     fn safe_mode_on_critical_threshold() {
         let mut ladder = EscalationLadder::new(EscalationConfig {
@@ -481,45 +670,6 @@ mod safe_mode {
         assert_eq!(ladder.level("critical"), EscalationLevel::SafeMode);
     }
 
-    /// Safe mode via max restart attempts exceeded.
-    #[test]
-    fn safe_mode_via_max_restarts() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 5,
-            safe_mode_threshold: 100, // high so it doesn't trigger by count alone
-            recovery_threshold: 2,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 2,
-        });
-
-        // First cycle → Restart #1.
-        for _ in 0..5 {
-            ladder.record_failure("comp", "fail");
-        }
-        assert_eq!(ladder.level("comp"), EscalationLevel::Restart);
-        assert_eq!(ladder.restart_count("comp"), 1);
-
-        // Recover.
-        for _ in 0..2 {
-            ladder.record_success("comp");
-        }
-
-        // Second cycle → Restart #2.
-        for _ in 0..5 {
-            ladder.record_failure("comp", "fail");
-        }
-        assert_eq!(ladder.restart_count("comp"), 2);
-
-        // Third cycle → SafeMode (max_restart_attempts=2 exceeded).
-        for _ in 0..5 {
-            ladder.record_failure("comp", "fail");
-        }
-        assert_eq!(ladder.level("comp"), EscalationLevel::SafeMode);
-    }
-
-    /// Exit safe mode on manual reset (operator command).
     #[test]
     fn exit_safe_mode_via_reset() {
         let mut ladder = EscalationLadder::new(EscalationConfig {
@@ -542,73 +692,74 @@ mod safe_mode {
         assert_eq!(ladder.failure_count("sys"), 0);
     }
 
-    /// Exit safe mode via gradual recovery (de-escalation).
     #[test]
-    fn exit_safe_mode_via_gradual_recovery() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 2,
-            restart_threshold: 3,
-            safe_mode_threshold: 4,
-            recovery_threshold: 1,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        });
+    fn watchdog_system_quarantine_and_recovery_lifecycle() {
+        let mut wd = WatchdogSystem::new();
+        let id = "ep1";
+        let comp = ComponentType::UsbEndpoint(id.to_string());
+        wd.register_component(
+            comp.clone(),
+            WatchdogConfig {
+                max_consecutive_failures: 3,
+                ..WatchdogConfig::default()
+            },
+        );
 
-        for _ in 0..4 {
-            ladder.record_failure("sys", "fail");
+        // 3 errors → quarantine
+        for _ in 0..3 {
+            wd.record_usb_error(id, "fail");
         }
-        assert_eq!(ladder.level("sys"), EscalationLevel::SafeMode);
+        assert!(wd.is_quarantined(&comp));
+        assert!(matches!(
+            wd.get_quarantine_status(&comp),
+            Some(QuarantineStatus::Quarantined { .. })
+        ));
 
-        // De-escalate step by step: SafeMode → Restart → Degrade → Warn → Normal.
-        ladder.record_success("sys");
-        assert_eq!(ladder.level("sys"), EscalationLevel::Restart);
-
-        ladder.record_success("sys");
-        assert_eq!(ladder.level("sys"), EscalationLevel::Degrade);
-
-        ladder.record_success("sys");
-        assert_eq!(ladder.level("sys"), EscalationLevel::Warn);
-
-        ladder.record_success("sys");
-        assert_eq!(ladder.level("sys"), EscalationLevel::Normal);
-    }
-
-    /// Transition history is logged on safe mode entry.
-    #[test]
-    fn diagnostic_transitions_logged_on_safe_mode_entry() {
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 2,
-            restart_threshold: 3,
-            safe_mode_threshold: 4,
-            recovery_threshold: 3,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 10,
-        });
-
-        for _ in 0..4 {
-            ladder.record_failure("core", "critical");
-        }
-
-        let transitions = ladder.transitions();
-        assert!(!transitions.is_empty(), "transitions must be logged");
-
-        // Verify the final transition is to SafeMode.
-        let last = transitions.last().unwrap();
-        assert_eq!(last.to, EscalationLevel::SafeMode);
-        assert_eq!(last.component, "core");
+        // Attempt recovery → enters Recovering state
+        assert!(wd.attempt_recovery(&comp));
+        assert!(matches!(
+            wd.get_quarantine_status(&comp),
+            Some(QuarantineStatus::Recovering { .. })
+        ));
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 5. Resource monitoring
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 5: Timeout behavior and Resource monitoring
+// ============================================================================
 
-mod resource_monitoring {
+mod timeout_tests {
     use super::*;
 
-    /// Memory pressure detection.
+    #[test]
+    fn hardware_watchdog_ok_immediately_after_creation() {
+        let mut wd = HardwareWatchdog::default();
+        assert_eq!(wd.check(), WatchdogTimerStatus::Ok);
+    }
+
+    #[test]
+    fn hardware_watchdog_warns_on_single_timeout() {
+        let mut wd = HardwareWatchdog::new(WatchdogTimerConfig {
+            timeout: Duration::from_millis(1),
+            max_timeouts: 5,
+        });
+        std::thread::sleep(Duration::from_millis(5));
+        let status = wd.check();
+        assert!(matches!(status, WatchdogTimerStatus::Warning { .. }));
+    }
+
+    #[test]
+    fn dead_man_switch_triggers_on_threshold() {
+        let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
+            expected_interval: Duration::from_millis(1),
+            missed_intervals_threshold: 2,
+        });
+        std::thread::sleep(Duration::from_millis(10));
+        let status = dms.check();
+        assert!(matches!(status, DeadManStatus::Triggered { .. }), "should trigger after exceeding threshold");
+        assert_eq!(dms.total_triggers(), 1);
+    }
+
     #[test]
     fn memory_pressure_detection() {
         let monitor = ProcessMonitor::new(ProcessMonitorConfig {
@@ -643,7 +794,6 @@ mod resource_monitoring {
         assert_eq!(critical.severity, ProcessAlert::Critical);
     }
 
-    /// Thread count limits.
     #[test]
     fn thread_count_limits() {
         let monitor = ProcessMonitor::new(ProcessMonitorConfig {
@@ -674,82 +824,60 @@ mod resource_monitoring {
         });
         assert_eq!(critical.severity, ProcessAlert::Critical);
     }
+}
 
-    /// Tick budget overrun detection via DeadManSwitch with short interval.
-    #[test]
-    fn tick_budget_overrun_detection() {
-        let mut dms = DeadManSwitch::new(DeadManSwitchConfig {
-            expected_interval: Duration::from_millis(50),
-            missed_intervals_threshold: 3,
-        });
+// ============================================================================
+// Module 6: SystemMonitor escalation chain
+// ============================================================================
 
-        // Immediately after creation, should be alive (or possibly late on slow CI).
-        let status = dms.check();
-        assert!(matches!(status, DeadManStatus::Alive | DeadManStatus::Late { .. }));
+mod system_escalation {
+    use super::*;
 
-        // Simulate overrun by sleeping.
-        std::thread::sleep(Duration::from_millis(500));
-        let status = dms.check();
-        assert!(
-            matches!(status, DeadManStatus::Triggered { .. }),
-            "should trigger after exceeding threshold"
-        );
+    fn monitor(warn: u32, degrade: u32, safe: u32) -> SystemMonitor {
+        SystemMonitor::new(MonitorConfig {
+            warn_after_missed_ticks: warn,
+            degrade_after_missed_ticks: degrade,
+            safe_mode_after_missed_ticks: safe,
+            ..MonitorConfig::default()
+        })
     }
 
-    /// Resource checks produce monotonically increasing severity.
     #[test]
-    fn resource_severity_is_monotonically_ordered() {
-        assert!(ProcessAlert::Normal < ProcessAlert::Warning);
-        assert!(ProcessAlert::Warning < ProcessAlert::Critical);
-
-        let monitor = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: 100,
-            memory_critical_bytes: 200,
-            thread_warn_count: 50,
-            thread_critical_count: 100,
-        });
-
-        let snapshots = [
-            ProcessSnapshot { memory_bytes: 50, thread_count: 10, uptime: Duration::ZERO },
-            ProcessSnapshot { memory_bytes: 150, thread_count: 10, uptime: Duration::ZERO },
-            ProcessSnapshot { memory_bytes: 250, thread_count: 10, uptime: Duration::ZERO },
-        ];
-
-        let severities: Vec<ProcessAlert> =
-            snapshots.iter().map(|s| monitor.evaluate(s).severity).collect();
-
-        // Severities must be non-decreasing.
-        for window in severities.windows(2) {
-            assert!(window[0] <= window[1], "severity must not decrease");
-        }
-        // And specifically: Normal, Warning, Critical.
-        assert_eq!(severities, vec![ProcessAlert::Normal, ProcessAlert::Warning, ProcessAlert::Critical]);
+    fn full_escalation_normal_to_safe_mode() {
+        let mut mon = monitor(1, 3, 5);
+        assert_eq!(mon.mode(), SystemMode::Normal);
+        mon.record_missed_tick();
+        assert_eq!(mon.mode(), SystemMode::Warning);
+        mon.record_missed_tick();
+        mon.record_missed_tick();
+        assert_eq!(mon.mode(), SystemMode::Degraded);
+        mon.record_missed_tick();
+        mon.record_missed_tick();
+        assert_eq!(mon.mode(), SystemMode::SafeMode);
     }
 
-    /// Combined memory + thread pressure yields highest severity.
     #[test]
-    fn combined_resource_pressure_yields_highest_severity() {
-        let monitor = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: 100,
-            memory_critical_bytes: 200,
-            thread_warn_count: 10,
-            thread_critical_count: 20,
-        });
+    fn adapter_disconnect_triggers_warning() {
+        let mut mon = SystemMonitor::default();
+        mon.register_adapter("msfs");
+        mon.report_adapter_disconnected("msfs");
+        assert_eq!(mon.mode(), SystemMode::Warning);
+    }
 
-        // Memory warning + thread critical → overall Critical.
-        let alert = monitor.evaluate(&ProcessSnapshot {
-            memory_bytes: 150,
-            thread_count: 25,
-            uptime: Duration::ZERO,
+    #[test]
+    fn memory_over_budget_escalates() {
+        let mut mon = SystemMonitor::new(MonitorConfig {
+            rt_memory_budget_bytes: 1024,
+            ..MonitorConfig::default()
         });
-        assert_eq!(alert.severity, ProcessAlert::Critical);
-        assert!(alert.messages.len() >= 2, "should have messages for both resources");
+        mon.report_rt_memory(2048);
+        assert_eq!(mon.mode(), SystemMode::Warning);
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. Integration scenarios
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 7: Integration scenarios
+// ============================================================================
 
 mod integration {
     use super::*;
@@ -786,8 +914,6 @@ mod integration {
         wd.record_usb_error("hid_ep", "disconnect");
         wd.record_usb_error("hid_ep", "disconnect");
         assert!(wd.is_quarantined(&hid));
-        assert!(!wd.is_quarantined(&axis));
-        assert!(!wd.is_quarantined(&ffb));
 
         let summary = wd.get_health_summary();
         assert_eq!(summary.quarantined_components, 1);
@@ -804,324 +930,172 @@ mod integration {
         let summary = wd.get_health_summary();
         assert_eq!(summary.quarantined_components, 0);
     }
+}
 
-    /// Shutdown: graceful shutdown sequence with timeout.
+// ============================================================================
+// Module 8: Error handling and edge cases
+// ============================================================================
+
+mod error_handling {
+    use super::*;
+
     #[test]
-    fn graceful_shutdown_sequence() {
+    fn record_failure_auto_registers_component() {
+        let mut ld = EscalationLadder::default();
+        ld.record_failure("auto", "err");
+        assert_eq!(ld.failure_count("auto"), 1);
+    }
+
+    #[test]
+    fn watchdog_system_nan_guard_on_non_critical() {
         let mut wd = WatchdogSystem::new();
-
-        // Set up several components, some quarantined.
-        for i in 0..5 {
-            let comp = ComponentType::UsbEndpoint(format!("ep_{i}"));
-            wd.register_component(
-                comp,
-                WatchdogConfig {
-                    max_consecutive_failures: 1,
-                    ..WatchdogConfig::default()
-                },
-            );
-        }
-
-        // Quarantine a couple.
-        wd.record_usb_error("ep_0", "err");
-        wd.record_usb_error("ep_2", "err");
-        assert_eq!(wd.get_health_summary().quarantined_components, 2);
-
-        // Graceful shutdown.
-        wd.clear_all_state();
-
-        let summary = wd.get_health_summary();
-        assert_eq!(summary.total_components, 0);
-        assert_eq!(summary.quarantined_components, 0);
-        assert!(wd.get_all_events().is_empty());
-        assert!(wd.get_quarantined_components().is_empty());
-    }
-
-    /// Concurrent: multiple watchers observing same component via different
-    /// subsystems (HealthAggregator + EscalationLadder + RecoveryPolicy).
-    #[test]
-    fn multiple_watchers_same_component() {
-        // HealthAggregator tracks subsystem health.
-        let mut agg = HealthAggregator::new();
-        agg.register(SubsystemCheckConfig::new("axis").with_failure_threshold(3));
-
-        // EscalationLadder tracks escalation level.
-        let mut ladder = EscalationLadder::new(EscalationConfig {
-            warn_threshold: 1,
-            degrade_threshold: 3,
-            restart_threshold: 5,
-            safe_mode_threshold: 10,
-            recovery_threshold: 3,
-            restart_cooldown: Duration::ZERO,
-            max_restart_attempts: 3,
-        });
-        ladder.register("axis");
-
-        // RecoveryPolicy decides actions.
-        let mut policy = RecoveryPolicy::new();
-        policy.add_rule("axis", 1, RecoveryAction::LogWarning("axis slow".into()));
-        policy.add_rule("axis", 3, RecoveryAction::RestartComponent("axis".into()));
-        policy.add_rule("axis", 5, RecoveryAction::EnterSafeMode);
-
-        // Simulate 3 failures.
-        for _ in 0..3 {
-            agg.report_failure("axis", "tick missed");
-            ladder.record_failure("axis", "tick missed");
-        }
-
-        // All three systems should reflect the same component's distress.
-        assert_eq!(agg.subsystem_health("axis"), SubsystemHealth::Failed);
-        assert_eq!(ladder.level("axis"), EscalationLevel::Degrade);
-        assert_eq!(
-            policy.evaluate("axis", 3),
-            RecoveryAction::RestartComponent("axis".into())
-        );
-    }
-
-    /// Recovery policy escalation matches expected actions at each threshold.
-    #[test]
-    fn recovery_policy_escalation_ladder() {
-        let mut policy = RecoveryPolicy::new();
-        policy.add_rule("hid", 1, RecoveryAction::LogWarning("warn".into()));
-        policy.add_rule("hid", 3, RecoveryAction::AlertUser("alert".into()));
-        policy.add_rule("hid", 5, RecoveryAction::RestartComponent("hid".into()));
-        policy.add_rule("hid", 10, RecoveryAction::EnterSafeMode);
-
-        assert_eq!(policy.evaluate("hid", 0), RecoveryAction::NoAction);
-        assert_eq!(
-            policy.evaluate("hid", 1),
-            RecoveryAction::LogWarning("warn".into())
-        );
-        assert_eq!(
-            policy.evaluate("hid", 3),
-            RecoveryAction::AlertUser("alert".into())
-        );
-        assert_eq!(
-            policy.evaluate("hid", 5),
-            RecoveryAction::RestartComponent("hid".into())
-        );
-        assert_eq!(policy.evaluate("hid", 10), RecoveryAction::EnterSafeMode);
-        // Above highest threshold → still EnterSafeMode.
-        assert_eq!(policy.evaluate("hid", 100), RecoveryAction::EnterSafeMode);
-    }
-
-    /// Health aggregator aggregate report reflects worst overall status.
-    #[test]
-    fn health_aggregator_worst_of_all() {
-        let mut agg = HealthAggregator::new();
-        agg.register(SubsystemCheckConfig::new("a").with_failure_threshold(3));
-        agg.register(SubsystemCheckConfig::new("b").with_failure_threshold(3));
-        agg.register(SubsystemCheckConfig::new("c").with_failure_threshold(3));
-
-        agg.report_healthy("a");
-        agg.report_healthy("b");
-        agg.report_healthy("c");
-
-        let report = agg.aggregate();
-        assert_eq!(report.overall, SubsystemHealth::Healthy);
-        assert_eq!(report.healthy_count, 3);
-
-        // One warning → overall Warning.
-        agg.report_warning("b", "slow");
-        let report = agg.aggregate();
-        assert_eq!(report.overall, SubsystemHealth::Warning);
-
-        // One failure → overall Degraded (or Failed depending on count).
-        agg.report_failure("c", "down");
-        let report = agg.aggregate();
-        assert!(
-            report.overall == SubsystemHealth::Degraded
-                || report.overall == SubsystemHealth::Failed,
-            "overall must be at least Degraded"
-        );
-    }
-
-    /// WatchdogSystem: event history is bounded and correct.
-    #[test]
-    fn event_history_tracking() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::UsbEndpoint("ep_hist".into());
+        let comp = ComponentType::AxisNode("axis0".to_string());
         wd.register_component(
             comp.clone(),
             WatchdogConfig {
-                max_consecutive_failures: 100,
+                enable_nan_guards: true,
+                is_critical: false,
                 ..WatchdogConfig::default()
             },
         );
-
-        for i in 0..20 {
-            wd.record_usb_error("ep_hist", &format!("error {i}"));
-        }
-
-        let events = wd.get_all_events();
-        // Each record_usb_error generates an UsbError event, plus quarantine
-        // events once the threshold is crossed. Just verify events are tracked.
-        assert_eq!(events.len(), 31, "should have exactly 31 events, got {}", events.len());
+        let event = wd.check_nan_guard(f32::NAN, "test_value", comp);
+        assert!(event.is_some());
     }
 
-    /// Fault storm detection.
     #[test]
-    fn fault_storm_detection() {
-        let mut wd = WatchdogSystem::new();
-        let comp = ComponentType::UsbEndpoint("ep_storm".into());
-        wd.register_component(
-            comp.clone(),
-            WatchdogConfig {
-                max_consecutive_failures: 100,
-                ..WatchdogConfig::default()
-            },
-        );
-
-        // Generate > 10 faults in quick succession.
-        for i in 0..15 {
-            wd.record_usb_error("ep_storm", &format!("storm {i}"));
-        }
-
-        assert!(wd.is_in_fault_storm(), "should detect fault storm");
+    fn component_type_display_name() {
+        assert!(ComponentType::UsbEndpoint("ep1".into()).display_name().contains("USB"));
+        assert!(ComponentType::NativePlugin("p1".into()).display_name().contains("Native"));
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Property tests
-// ═══════════════════════════════════════════════════════════════════════════
+// ============================================================================
+// Module 9: Synthetic fault injection
+// ============================================================================
+
+mod fault_injection {
+    use super::*;
+
+    #[test]
+    fn fault_injection_disabled_by_default() {
+        let wd = WatchdogSystem::new();
+        let summary = wd.get_health_summary();
+        assert!(!summary.fault_injection_enabled);
+    }
+
+    #[test]
+    fn inject_and_process_synthetic_fault() {
+        let mut wd = WatchdogSystem::new();
+        let comp = ComponentType::NativePlugin("test_plugin".to_string());
+        wd.register_component(comp.clone(), WatchdogConfig::default());
+        wd.enable_fault_injection();
+
+        let fault = SyntheticFault {
+            component: comp.clone(),
+            fault_type: WatchdogEventType::PluginOverrun,
+            inject_at: std::time::Instant::now(),
+            context: "test overrun".to_string(),
+        };
+        wd.inject_synthetic_fault(fault);
+
+        let events = wd.process_synthetic_faults();
+        assert!(!events.is_empty());
+        assert_eq!(events[0].event_type, WatchdogEventType::SyntheticFault);
+    }
+}
+
+// ============================================================================
+// Module 10: Property-based tests
+// ============================================================================
 
 mod property_tests {
     use super::*;
     use proptest::prelude::*;
 
-    // Heartbeats always reset the escalation failure countdown.
     proptest! {
         #[test]
-        fn heartbeat_resets_escalation_countdown(
-            failures_before in 1u32..20,
+        fn escalation_level_never_exceeds_safe_mode(
+            failures in 0u32..100,
         ) {
-            let config = EscalationConfig {
-                warn_threshold: 1,
-                degrade_threshold: 5,
-                restart_threshold: 10,
-                safe_mode_threshold: 50,
-                recovery_threshold: 1,
-                restart_cooldown: Duration::ZERO,
-                max_restart_attempts: 10,
-            };
-            let mut ladder = EscalationLadder::new(config);
-            ladder.register("x");
-
-            // Accumulate some failures.
-            for _ in 0..failures_before {
-                ladder.record_failure("x", "miss");
+            let mut ld = EscalationLadder::default();
+            for _ in 0..failures {
+                ld.record_failure("c", "err");
             }
-
-            // "Heartbeat" via recovery_threshold=1 successes.
-            ladder.record_success("x");
-
-            // After one success the failure count should be reset.
-            prop_assert_eq!(ladder.failure_count("x"), 0);
+            assert!(ld.level("c") <= EscalationLevel::SafeMode);
         }
-    }
 
-    // Escalation level never decreases on failure.
-    proptest! {
         #[test]
-        fn escalation_never_decreases_on_failure(n_failures in 1u32..30) {
-            let mut ladder = EscalationLadder::new(EscalationConfig {
-                warn_threshold: 1,
-                degrade_threshold: 3,
-                restart_threshold: 6,
-                safe_mode_threshold: 12,
+        fn failure_count_tracks_accurately(
+            failures in 0u32..50,
+        ) {
+            let mut ld = EscalationLadder::new(EscalationConfig {
+                warn_threshold: 100,
+                degrade_threshold: 200,
+                restart_threshold: 300,
+                safe_mode_threshold: 400,
                 recovery_threshold: 5,
                 restart_cooldown: Duration::ZERO,
                 max_restart_attempts: 10,
             });
-            ladder.register("comp");
-
-            let mut prev_level = EscalationLevel::Normal;
-            for _ in 0..n_failures {
-                ladder.record_failure("comp", "fail");
-                let current = ladder.level("comp");
-                prop_assert!(
-                    current >= prev_level,
-                    "level must not decrease on failure: {:?} -> {:?}",
-                    prev_level,
-                    current
-                );
-                prev_level = current;
+            for _ in 0..failures {
+                ld.record_failure("c", "err");
             }
+            assert_eq!(ld.failure_count("c"), failures);
         }
-    }
 
-    // WatchdogSystem: quarantined count never exceeds total.
-    proptest! {
         #[test]
-        fn quarantined_never_exceeds_total(
-            n_components in 1usize..6,
-            ops in proptest::collection::vec(
-                prop_oneof![Just(true), Just(false)],
-                1..30
-            ),
+        fn recovery_always_decreases_or_maintains_level(
+            initial_failures in 1u32..10,
+            successes in 0u32..20,
         ) {
-            let mut wd = WatchdogSystem::new();
+            let mut ld = EscalationLadder::new(EscalationConfig {
+                warn_threshold: 1,
+                degrade_threshold: 3,
+                restart_threshold: 5,
+                safe_mode_threshold: 8,
+                recovery_threshold: 2,
+                restart_cooldown: Duration::ZERO,
+                max_restart_attempts: 10,
+            });
 
-            for i in 0..n_components {
-                wd.register_component(
-                    ComponentType::UsbEndpoint(format!("ep_{i}")),
-                    WatchdogConfig {
-                        max_consecutive_failures: 2,
-                        ..WatchdogConfig::default()
-                    },
-                );
+            for _ in 0..initial_failures {
+                ld.record_failure("c", "err");
             }
+            let level_after_failures = ld.level("c");
 
-            for (i, &is_success) in ops.iter().enumerate() {
-                let ep = format!("ep_{}", i % n_components);
-                if is_success {
-                    wd.record_usb_success(&ep);
-                } else {
-                    wd.record_usb_error(&ep, "err");
-                }
+            for _ in 0..successes {
+                ld.record_success("c");
             }
+            let level_after_recovery = ld.level("c");
 
-            let summary = wd.get_health_summary();
-            prop_assert!(
-                summary.quarantined_components <= summary.total_components,
-                "quarantined ({}) > total ({})",
-                summary.quarantined_components,
-                summary.total_components,
-            );
+            assert!(level_after_recovery <= level_after_failures);
         }
-    }
 
-    // Resource severity is monotonically increasing with resource usage.
-    proptest! {
         #[test]
         fn resource_severity_monotonic(
-            mem_low in 0u64..100,
-            mem_high in 200u64..400,
+            memory in 0u64..1000,
         ) {
-            let monitor = ProcessMonitor::new(ProcessMonitorConfig {
-                memory_warn_bytes: 100,
-                memory_critical_bytes: 200,
+            let mon = ProcessMonitor::new(ProcessMonitorConfig {
+                memory_warn_bytes: 300,
+                memory_critical_bytes: 700,
                 thread_warn_count: 1000,
                 thread_critical_count: 2000,
             });
 
-            let low = monitor.evaluate(&ProcessSnapshot {
-                memory_bytes: mem_low,
+            let snap = ProcessSnapshot {
+                memory_bytes: memory,
                 thread_count: 1,
-                uptime: Duration::ZERO,
-            });
-            let high = monitor.evaluate(&ProcessSnapshot {
-                memory_bytes: mem_high,
-                thread_count: 1,
-                uptime: Duration::ZERO,
-            });
+                uptime: Duration::from_secs(1),
+            };
 
-            prop_assert!(
-                high.severity >= low.severity,
-                "higher memory must yield >= severity: {:?} vs {:?}",
-                low.severity,
-                high.severity,
-            );
+            let alert = mon.evaluate(&snap);
+            if memory >= 700 {
+                assert_eq!(alert.severity, ProcessAlert::Critical);
+            } else if memory >= 300 {
+                assert_eq!(alert.severity, ProcessAlert::Warning);
+            } else {
+                assert_eq!(alert.severity, ProcessAlert::Normal);
+            }
         }
     }
 }

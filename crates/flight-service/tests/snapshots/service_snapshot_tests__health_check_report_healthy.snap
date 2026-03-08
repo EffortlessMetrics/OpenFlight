@@ -1,0 +1,28 @@
+---
+source: crates/flight-service/tests/service_snapshot_tests.rs
+expression: json
+---
+{
+  "status": "Healthy",
+  "checks": [
+    {
+      "name": "axis-engine",
+      "status": "Healthy",
+      "message": "250Hz tick rate stable, p99 jitter 0.12ms",
+      "latency_ms": 0.45
+    },
+    {
+      "name": "hid-manager",
+      "status": "Healthy",
+      "message": "3 devices connected, no errors",
+      "latency_ms": 1.2
+    },
+    {
+      "name": "ffb-engine",
+      "status": "Healthy",
+      "message": "All envelopes within limits",
+      "latency_ms": 0.8
+    }
+  ],
+  "recommendations": []
+}

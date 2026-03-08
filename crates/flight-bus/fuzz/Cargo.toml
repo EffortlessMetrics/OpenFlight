@@ -25,3 +25,9 @@ name = "fuzz_bus_snapshot"
 path = "fuzz_targets/fuzz_bus_snapshot.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "fuzz_bus_event"
+path = "fuzz_targets/fuzz_bus_event.rs"
+test = false
+doc = false

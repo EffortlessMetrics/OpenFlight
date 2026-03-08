@@ -1,0 +1,12 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 178
+expression: features
+---
+[
+    "device-management",
+    "health-monitoring",
+    "profile-management",
+    "force-feedback",
+    "real-time-telemetry",
+]

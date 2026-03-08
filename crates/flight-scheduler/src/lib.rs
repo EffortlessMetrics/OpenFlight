@@ -35,6 +35,7 @@ pub mod metrics;
 pub mod mmcss;
 pub mod platform;
 pub mod pll;
+pub mod priority;
 pub mod ring;
 pub mod rtkit;
 pub mod soak;
@@ -71,10 +72,16 @@ pub use platform::{
     Platform, PlatformRtError, RtHandle, RtPriority, detect_platform, is_rt_available,
     request_rt_priority,
 };
+pub use priority::{
+    ConfigError, CoreAffinity, PriorityClass, RtSchedulerConfig, TimerDiscipline, TimerReport,
+};
 pub use rtkit::{MockRtkitBackend, RtkitBackend, RtkitError, RtkitHandle};
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod depth_tests;
 
 /// Real-time scheduler configuration
 #[derive(Debug, Clone)]

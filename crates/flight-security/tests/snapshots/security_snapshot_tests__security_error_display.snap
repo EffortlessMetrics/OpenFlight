@@ -1,0 +1,10 @@
+---
+source: crates/flight-security/tests/security_snapshot_tests.rs
+expression: output
+---
+Plugin signature verification failed: certificate expired on 2024-01-15
+Capability not granted: Network { hosts: ["example.com"] }
+Plugin manifest invalid: missing required field 'capabilities'
+Telemetry collection not authorized
+Unauthorized path access: "/etc/shadow" (allowed roots: ["/opt/openflight", "/tmp"])
+Path traversal detected: "../../../etc/passwd"

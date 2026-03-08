@@ -1,0 +1,139 @@
+name: Nightly
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 3 AM UTC daily
+  workflow_dispatch:
+
+jobs:
+  fuzz-smoke:
+    name: Fuzz Smoke (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - flight-profile
+          - flight-rules
+          - flight-dcs-export
+          - flight-xplane
+          - flight-hid
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz
+      - name: Install Linux HID build deps
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - name: Run fuzz targets (5 min each)
+        id: fuzz
+        run: |
+          set -euo pipefail
+          cd crates/${{ matrix.target }}/fuzz
+          targets=$(cargo fuzz list)
+          failed=0
+          passed=0
+          timed_out=0
+          summary=""
+          for target in $targets; do
+            echo "::group::Fuzzing: $target"
+            exit_code=0
+            timeout 300 cargo fuzz run "$target" -- -max_total_time=300 || exit_code=$?
+            if [ "$exit_code" -eq 0 ]; then
+              passed=$((passed + 1))
+              summary="${summary}| ${target} | ✅ passed |\n"
+            elif [ "$exit_code" -eq 124 ]; then
+              timed_out=$((timed_out + 1))
+              summary="${summary}| ${target} | ⏱️ timed out (ok) |\n"
+            else
+              failed=$((failed + 1))
+              summary="${summary}| ${target} | ❌ crashed (exit $exit_code) |\n"
+            fi
+            echo "::endgroup::"
+          done
+          echo "## Fuzz Results for ${{ matrix.target }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Target | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo -e "$summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Passed:** $passed | **Timed out:** $timed_out | **Crashed:** $failed" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::$failed fuzz target(s) crashed"
+            exit 1
+          fi
+      - name: Upload corpus
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-corpus-${{ matrix.target }}
+          path: crates/${{ matrix.target }}/fuzz/corpus/
+          retention-days: 30
+
+  mutation-test:
+    name: Mutation Testing (${{ matrix.crate }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate:
+          - flight-core
+          - flight-axis
+          - flight-bus
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-mutants
+      - name: Install Linux HID build deps
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - name: Run mutation tests (30 min timeout)
+        id: mutants
+        continue-on-error: true
+        run: |
+          timeout 1800 cargo mutants -p ${{ matrix.crate }} --timeout=120 -- --test-threads=2
+      - name: Report mutation results
+        if: always() && steps.mutants.outcome != 'skipped'
+        run: |
+          set -euo pipefail
+          outcomes_file="mutants.out/outcomes.json"
+          if [ ! -f "$outcomes_file" ]; then
+            echo "::warning::No mutation outcomes found"
+            exit 0
+          fi
+          total=$(jq '.outcomes | length' "$outcomes_file")
+          missed=$(jq '[.outcomes[] | select(.scenario != "Baseline" and .summary == "MissedMutant")] | length' "$outcomes_file")
+          caught=$(jq '[.outcomes[] | select(.scenario != "Baseline" and .summary == "CaughtMutant")] | length' "$outcomes_file")
+          timeout=$(jq '[.outcomes[] | select(.scenario != "Baseline" and .summary == "Timeout")] | length' "$outcomes_file")
+          unviable=$(jq '[.outcomes[] | select(.scenario != "Baseline" and .summary == "Unviable")] | length' "$outcomes_file")
+          echo "## Mutation Results for ${{ matrix.crate }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Metric | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ✅ Caught | $caught |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ❌ Missed | $missed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ⏱️ Timeout | $timeout |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 🚫 Unviable | $unviable |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$missed" -gt 0 ]; then
+            echo "::warning::$missed missed mutant(s) in ${{ matrix.crate }} — tests may have gaps"
+          fi
+      - name: Upload mutation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutants-${{ matrix.crate }}
+          path: mutants.out/
+          retention-days: 30
+
+  sanitizer-check:
+    name: Address Sanitizer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - name: Install Linux HID build deps
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+      - name: Run tests with AddressSanitizer
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+          RUSTDOCFLAGS: -Zsanitizer=address
+        run: |
+          cargo test -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p flight-core -p flight-axis -p flight-bus -- --test-threads=1

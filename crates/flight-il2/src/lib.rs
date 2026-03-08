@@ -474,7 +474,8 @@ pub fn parse_telemetry_frame(data: &[u8]) -> Result<Il2TelemetryFrame, Il2Adapte
     let yaw = read_f32_le(data, 16)?;
     let speed = read_f32_le(data, 20)?;
     let altitude = read_f32_le(data, 24)?;
-    let throttle = read_f32_le(data, 28)?.clamp(0.0, 1.0);
+    let raw_throttle = read_f32_le(data, 28)?;
+    let throttle = if raw_throttle.is_nan() { 0.0 } else { raw_throttle.clamp(0.0, 1.0) };
     let gear = GearState::try_from(data[32]).unwrap_or(GearState::Up);
 
     tracing::trace!(

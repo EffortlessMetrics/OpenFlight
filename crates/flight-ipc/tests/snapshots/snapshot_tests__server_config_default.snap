@@ -1,0 +1,18 @@
+---
+source: crates/flight-ipc/tests/snapshot_tests.rs
+assertion_line: 165
+expression: cfg
+---
+ServerConfig {
+    server_version: "1.0.0",
+    enabled_features: [
+        "device-management",
+        "health-monitoring",
+        "profile-management",
+        "force-feedback",
+        "real-time-telemetry",
+    ],
+    bind_address: "\\\\.\\pipe\\flight-hub",
+    max_connections: 100,
+    request_timeout: 5s,
+}

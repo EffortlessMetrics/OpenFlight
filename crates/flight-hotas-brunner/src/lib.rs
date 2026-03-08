@@ -25,7 +25,11 @@
 
 pub mod cls_e;
 
+#[cfg(test)]
+mod brunner_ffb_depth_tests;
+
 pub use flight_hid_support::device_support::{
+    BRUNNER_CLS_E_JOYSTICK_PID, BRUNNER_CLS_E_NG_YOKE_PID, BRUNNER_CLS_E_RUDDER_PID,
     BRUNNER_CLS_E_YOKE_PID, BRUNNER_VENDOR_ID, BrunnerModel, brunner_model, is_brunner_device,
 };
 

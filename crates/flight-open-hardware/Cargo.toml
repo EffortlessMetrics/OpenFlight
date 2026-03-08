@@ -19,3 +19,4 @@ categories = ["embedded", "hardware-support", "no-std"]
 # no external deps — bitfield manipulation is done manually
 
 [dev-dependencies]
+proptest = { workspace = true }
