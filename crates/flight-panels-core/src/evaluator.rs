@@ -462,4 +462,290 @@ mod tests {
             // For now, we just ensure no panics or errors occur
         }
     }
+
+    // ── Complex rule chain depth ─────────────────────────────────────────────
+
+    #[test]
+    fn test_chained_rules_multiple_conditions() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        let rules_schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "!gear_down".to_string(),
+                    do_action: "led.panel('GEAR').off()".to_string(),
+                    action: "led.panel('GEAR').off()".to_string(),
+                },
+                Rule {
+                    when: "ias > 100".to_string(),
+                    do_action: "led.panel('SPEED').on()".to_string(),
+                    action: "led.panel('SPEED').on()".to_string(),
+                },
+                Rule {
+                    when: "altitude > 5000".to_string(),
+                    do_action: "led.panel('ALT_HIGH').on()".to_string(),
+                    action: "led.panel('ALT_HIGH').on()".to_string(),
+                },
+                Rule {
+                    when: "altitude > 10000".to_string(),
+                    do_action: "led.panel('FL100').on()".to_string(),
+                    action: "led.panel('FL100').on()".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+
+        let compiled = rules_schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        let mut telemetry = HashMap::new();
+        telemetry.insert("gear_down".to_string(), 1.0);
+        telemetry.insert("ias".to_string(), 150.0);
+        telemetry.insert("altitude".to_string(), 12000.0);
+
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        // gear_down=1 → GEAR on, ias>100 → SPEED on, alt>5000 → ALT_HIGH, alt>10000 → FL100
+        // !gear_down is false so no GEAR off
+        assert_eq!(actions.len(), 4);
+
+        // Change conditions: gear up, slow, low
+        telemetry.insert("gear_down".to_string(), 0.0);
+        telemetry.insert("ias".to_string(), 80.0);
+        telemetry.insert("altitude".to_string(), 500.0);
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        // !gear_down=true → GEAR off only
+        assert_eq!(actions.len(), 1);
+    }
+
+    #[test]
+    fn test_deep_hysteresis_chain() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        let mut hysteresis = HashMap::new();
+        hysteresis.insert("aoa".to_string(), 2.0);
+        hysteresis.insert("ias".to_string(), 10.0);
+        hysteresis.insert("altitude".to_string(), 200.0);
+
+        let rules_schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "aoa > 12".to_string(),
+                    do_action: "led.indexer.blink(rate_hz=6)".to_string(),
+                    action: "led.indexer.blink(rate_hz=6)".to_string(),
+                },
+                Rule {
+                    when: "ias > 250".to_string(),
+                    do_action: "led.panel('OVERSPEED').on()".to_string(),
+                    action: "led.panel('OVERSPEED').on()".to_string(),
+                },
+                Rule {
+                    when: "altitude > 18000".to_string(),
+                    do_action: "led.panel('O2_REQUIRED').on()".to_string(),
+                    action: "led.panel('O2_REQUIRED').on()".to_string(),
+                },
+            ],
+            defaults: Some(RuleDefaults {
+                hysteresis: Some(hysteresis),
+            }),
+        };
+
+        let compiled = rules_schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        let mut telemetry = HashMap::new();
+
+        // All below thresholds
+        telemetry.insert("aoa".to_string(), 10.0);
+        telemetry.insert("ias".to_string(), 200.0);
+        telemetry.insert("altitude".to_string(), 15000.0);
+        assert_eq!(evaluator.evaluate(&compiled, &telemetry).len(), 0);
+
+        // Cross all upper thresholds
+        telemetry.insert("aoa".to_string(), 14.0); // > 12 + 1.0 (half band)
+        telemetry.insert("ias".to_string(), 260.0); // > 250 + 5.0
+        telemetry.insert("altitude".to_string(), 18200.0); // > 18000 + 100
+        assert_eq!(evaluator.evaluate(&compiled, &telemetry).len(), 3);
+
+        // Drop into hysteresis band (above lower threshold, below upper)
+        telemetry.insert("aoa".to_string(), 11.5); // > 12 - 1.0 = 11.0
+        telemetry.insert("ias".to_string(), 246.0); // > 250 - 5.0 = 245
+        telemetry.insert("altitude".to_string(), 17950.0); // > 18000 - 100 = 17900
+        // All should still be triggered (hysteresis prevents flicker)
+        assert_eq!(evaluator.evaluate(&compiled, &telemetry).len(), 3);
+
+        // Drop below lower thresholds
+        telemetry.insert("aoa".to_string(), 10.5); // < 11.0
+        telemetry.insert("ias".to_string(), 240.0); // < 245
+        telemetry.insert("altitude".to_string(), 17800.0); // < 17900
+        assert_eq!(evaluator.evaluate(&compiled, &telemetry).len(), 0);
+    }
+
+    #[test]
+    fn test_evaluator_with_missing_telemetry_variables() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        let rules_schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "ias > 100".to_string(),
+                    do_action: "led.panel('SPEED').on()".to_string(),
+                    action: "led.panel('SPEED').on()".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+
+        let compiled = rules_schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        // Empty telemetry — missing variables default to 0.0
+        let telemetry = HashMap::new();
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        // gear_down=0 → false, ias=0 > 100 → false
+        assert_eq!(actions.len(), 0);
+
+        // Partial telemetry — only gear_down present
+        let mut partial = HashMap::new();
+        partial.insert("gear_down".to_string(), 1.0);
+        let actions = evaluator.evaluate(&compiled, &partial);
+        // gear_down=1 → true, ias defaults to 0 → not > 100
+        assert_eq!(actions.len(), 1);
+    }
+
+    #[test]
+    fn test_evaluator_nan_inf_handling() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        let rules_schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "ias > 100".to_string(),
+                do_action: "led.panel('SPEED').on()".to_string(),
+                action: "led.panel('SPEED').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules_schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        // NaN should not trigger the rule (NaN > 100 is false)
+        let mut telemetry = HashMap::new();
+        telemetry.insert("ias".to_string(), f32::NAN);
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        assert_eq!(actions.len(), 0, "NaN should not satisfy comparison");
+
+        // +Inf should trigger (Inf > 100 is true)
+        telemetry.insert("ias".to_string(), f32::INFINITY);
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        assert_eq!(actions.len(), 1, "+Inf should satisfy > comparison");
+
+        // -Inf should not trigger (-Inf > 100 is false)
+        telemetry.insert("ias".to_string(), f32::NEG_INFINITY);
+        let actions = evaluator.evaluate(&compiled, &telemetry);
+        assert_eq!(actions.len(), 0, "-Inf should not satisfy > comparison");
+    }
+
+    #[test]
+    fn test_rapid_telemetry_oscillation() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        let rules_schema = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled = rules_schema.compile().unwrap();
+        evaluator.initialize_for_program(&compiled.bytecode);
+
+        let mut telemetry = HashMap::new();
+        let mut on_count = 0usize;
+        let mut off_count = 0usize;
+
+        // Rapidly alternate between on and off
+        for i in 0..2000 {
+            let value = if i % 2 == 0 { 1.0 } else { 0.0 };
+            telemetry.insert("gear_down".to_string(), value);
+            let actions = evaluator.evaluate(&compiled, &telemetry);
+            if actions.len() == 1 {
+                on_count += 1;
+            } else {
+                off_count += 1;
+            }
+        }
+
+        assert_eq!(on_count, 1000, "exactly half should fire");
+        assert_eq!(off_count, 1000, "exactly half should not fire");
+    }
+
+    #[test]
+    fn test_reinitialize_for_different_program() {
+        let mut evaluator = RulesEvaluator::new();
+        evaluator.set_min_eval_interval(std::time::Duration::ZERO);
+
+        // First program: one rule
+        let schema1 = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![Rule {
+                when: "gear_down".to_string(),
+                do_action: "led.panel('GEAR').on()".to_string(),
+                action: "led.panel('GEAR').on()".to_string(),
+            }],
+            defaults: None,
+        };
+
+        let compiled1 = schema1.compile().unwrap();
+        evaluator.initialize_for_program(&compiled1.bytecode);
+
+        let mut telemetry = HashMap::new();
+        telemetry.insert("gear_down".to_string(), 1.0);
+        assert_eq!(evaluator.evaluate(&compiled1, &telemetry).len(), 1);
+
+        // Reinitialize with a different program (two rules)
+        let schema2 = RulesSchema {
+            schema: "flight.ledmap/1".to_string(),
+            rules: vec![
+                Rule {
+                    when: "gear_down".to_string(),
+                    do_action: "led.panel('GEAR').on()".to_string(),
+                    action: "led.panel('GEAR').on()".to_string(),
+                },
+                Rule {
+                    when: "flaps_deployed".to_string(),
+                    do_action: "led.panel('FLAPS').on()".to_string(),
+                    action: "led.panel('FLAPS').on()".to_string(),
+                },
+            ],
+            defaults: None,
+        };
+
+        let compiled2 = schema2.compile().unwrap();
+        evaluator.initialize_for_program(&compiled2.bytecode);
+
+        telemetry.insert("flaps_deployed".to_string(), 1.0);
+        assert_eq!(evaluator.evaluate(&compiled2, &telemetry).len(), 2);
+    }
 }

@@ -43,12 +43,15 @@ impl KspControls {
     }
 
     /// Return a copy with all values clamped to their valid ranges.
+    /// Non-finite values (NaN, Inf) are coerced to the safe default (0.0)
+    /// before clamping.
     pub fn clamped(&self) -> Self {
+        let sanitize = |v: f32, default: f32| if v.is_finite() { v } else { default };
         Self {
-            pitch: self.pitch.clamp(-1.0, 1.0),
-            roll: self.roll.clamp(-1.0, 1.0),
-            yaw: self.yaw.clamp(-1.0, 1.0),
-            throttle: self.throttle.clamp(0.0, 1.0),
+            pitch: sanitize(self.pitch, 0.0).clamp(-1.0, 1.0),
+            roll: sanitize(self.roll, 0.0).clamp(-1.0, 1.0),
+            yaw: sanitize(self.yaw, 0.0).clamp(-1.0, 1.0),
+            throttle: sanitize(self.throttle, 0.0).clamp(0.0, 1.0),
             gear: self.gear,
         }
     }

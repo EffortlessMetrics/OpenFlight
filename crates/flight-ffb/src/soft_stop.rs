@@ -6,6 +6,8 @@
 //! Provides controlled torque ramp to zero within 50ms constraint with
 //! audio/LED cues and comprehensive timing validation.
 
+use crate::{DefaultTimeSource, TimeSource};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
@@ -71,6 +73,7 @@ pub struct SoftStopState {
 pub struct SoftStopController {
     state: Option<SoftStopState>,
     config: SoftStopConfig,
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// Soft-stop errors
@@ -94,6 +97,16 @@ impl SoftStopController {
         Self {
             state: None,
             config,
+            time_source: Arc::new(DefaultTimeSource),
+        }
+    }
+
+    /// Create new soft-stop controller with custom time source
+    pub fn with_time_source(config: SoftStopConfig, time_source: Arc<dyn TimeSource>) -> Self {
+        Self {
+            state: None,
+            config,
+            time_source,
         }
     }
 
@@ -102,7 +115,10 @@ impl SoftStopController {
         if let Some(state) = &self.state {
             // Allow restart only if the previous ramp has logically timed out (elapsed > max_ramp_time)
             // and update() hasn't been called to clear the state yet.
-            if state.active && state.start_time.elapsed() <= state.config.max_ramp_time {
+            if state.active
+                && self.time_source.now().duration_since(state.start_time)
+                    <= state.config.max_ramp_time
+            {
                 return Err(SoftStopError::RampAlreadyActive);
             }
             // Ramp is either completed (active=false) or timed out; clear it for restart.
@@ -115,7 +131,7 @@ impl SoftStopController {
             });
         }
 
-        let now = Instant::now();
+        let now = self.time_source.now();
         self.state = Some(SoftStopState {
             active: true,
             initial_torque_nm: current_torque_nm,
@@ -137,7 +153,7 @@ impl SoftStopController {
             None => return Ok(None),    // No active ramp
         };
 
-        let now = Instant::now();
+        let now = self.time_source.now();
         let elapsed = now.duration_since(state.start_time);
 
         // Calculate progress (0.0 to 1.0)
@@ -190,7 +206,7 @@ impl SoftStopController {
     pub fn get_progress(&self) -> Option<f32> {
         self.state.as_ref().and_then(|state| {
             if state.active {
-                let elapsed = state.start_time.elapsed();
+                let elapsed = self.time_source.now().duration_since(state.start_time);
                 let progress = elapsed.as_secs_f32() / state.config.max_ramp_time.as_secs_f32();
                 Some(progress.clamp(0.0, 1.0))
             } else {
@@ -201,7 +217,9 @@ impl SoftStopController {
 
     /// Get elapsed time since ramp start
     pub fn get_elapsed_time(&self) -> Option<Duration> {
-        self.state.as_ref().map(|state| state.start_time.elapsed())
+        self.state
+            .as_ref()
+            .map(|state| self.time_source.now().duration_since(state.start_time))
     }
 
     /// Mark audio cue as triggered
@@ -257,7 +275,6 @@ impl Default for SoftStopController {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread;
 
     #[test]
     fn test_linear_ramp() {
@@ -267,7 +284,8 @@ mod tests {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
 
         // Start ramp from 10 Nm
         controller.start_ramp(10.0).unwrap();
@@ -277,14 +295,14 @@ mod tests {
         let torque = controller.update().unwrap().unwrap();
         assert!((torque - 10.0).abs() < 0.1);
 
-        // Wait and check progress
-        thread::sleep(Duration::from_millis(50));
+        // Advance time and check progress
+        time_source.advance(Duration::from_millis(50));
         let torque = controller.update().unwrap().unwrap();
         assert!(torque < 10.0 && torque > 0.0);
 
         // Check progress calculation
         let progress = controller.get_progress().unwrap();
-        assert!(progress > 0.4 && progress < 0.6); // Should be around 50%
+        assert!((progress - 0.5).abs() < 0.01); // Should be exactly 50%
     }
 
     #[test]
@@ -295,11 +313,12 @@ mod tests {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
         controller.start_ramp(10.0).unwrap();
 
         // Exponential should drop faster initially
-        thread::sleep(Duration::from_millis(25));
+        time_source.advance(Duration::from_millis(25));
         let torque = controller.update().unwrap().unwrap();
 
         // Should have dropped significantly (more than linear)
@@ -314,11 +333,12 @@ mod tests {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
         controller.start_ramp(1.0).unwrap();
 
-        // Wait for completion
-        thread::sleep(Duration::from_millis(120));
+        // Advance for completion
+        time_source.advance(Duration::from_millis(120));
         let torque = controller.update().unwrap();
 
         // Should be complete (None) or zero
@@ -336,11 +356,12 @@ mod tests {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
         controller.start_ramp(10.0).unwrap();
 
-        // Wait longer than timeout
-        thread::sleep(Duration::from_millis(20));
+        // Advance longer than timeout
+        time_source.advance(Duration::from_millis(20));
 
         let result = controller.update();
         assert!(
@@ -419,16 +440,17 @@ mod tests {
             ..Default::default()
         };
 
-        let mut controller = SoftStopController::new(config);
+        let time_source = Arc::new(crate::FakeTimeSource::new());
+        let mut controller = SoftStopController::with_time_source(config, time_source.clone());
         controller.start_ramp(10.0).unwrap();
 
         // S-curve should start slow, accelerate, then slow down
         let initial_torque = controller.update().unwrap().unwrap();
 
-        thread::sleep(Duration::from_millis(10));
+        time_source.advance(Duration::from_millis(10));
         let early_torque = controller.update().unwrap().unwrap();
 
-        thread::sleep(Duration::from_millis(30));
+        time_source.advance(Duration::from_millis(30));
         let mid_torque = controller.update().unwrap().unwrap();
 
         // Should show S-curve characteristics
@@ -440,6 +462,6 @@ mod tests {
         let mid_rate = (early_torque - mid_torque) / 0.03; // per 30ms
 
         // Mid section should have higher rate (steeper part of S-curve)
-        assert!(mid_rate > early_rate * 0.5); // Allow some tolerance
+        assert!(mid_rate > early_rate * 1.2); // Allow some tolerance
     }
 }

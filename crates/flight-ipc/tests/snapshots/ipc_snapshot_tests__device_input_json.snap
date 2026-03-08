@@ -1,0 +1,5 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: msg.to_json()
+---
+{"type":"DeviceInput","device_id":"stick-1","axes":[0.0,0.5,-0.75,1.0],"buttons":[false,true,false,true,false]}

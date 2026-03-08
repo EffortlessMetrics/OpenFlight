@@ -73,6 +73,7 @@ chrono.workspace = true
 tokio-stream = { workspace = true, features = ["sync"] }
 tracing-subscriber.workspace = true
 proptest.workspace = true
+insta.workspace = true
 
 [[bench]]
 name = "ipc_benchmarks"

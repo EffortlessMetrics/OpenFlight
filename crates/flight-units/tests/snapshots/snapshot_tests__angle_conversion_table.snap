@@ -1,0 +1,13 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 71
+expression: table
+---
+degrees → radians
+──────────────────────────
+    0.0°  →  0.000000 rad
+   45.0°  →  0.785398 rad
+   90.0°  →  1.570796 rad
+  180.0°  →  3.141593 rad
+  270.0°  →  4.712389 rad
+  360.0°  →  6.283185 rad

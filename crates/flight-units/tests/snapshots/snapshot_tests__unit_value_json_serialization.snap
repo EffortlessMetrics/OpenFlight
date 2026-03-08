@@ -1,0 +1,22 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 140
+expression: output
+---
+Speed:
+{
+  "value": 250.0,
+  "unit": "Knots"
+}
+
+Angle:
+{
+  "value": 3.14159,
+  "unit": "Radians"
+}
+
+Force:
+{
+  "value": 12.5,
+  "unit": "NewtonMeters"
+}

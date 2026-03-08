@@ -14,6 +14,9 @@ pub mod capabilities;
 pub mod registry;
 pub mod sandbox;
 
+#[cfg(test)]
+mod depth_tests;
+
 use capabilities::{CapabilityDenied, CapabilitySet};
 use serde::{Deserialize, Serialize};
 

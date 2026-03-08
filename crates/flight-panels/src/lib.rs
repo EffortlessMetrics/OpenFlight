@@ -24,13 +24,22 @@ pub use flight_panels_cougar as cougar;
 pub use flight_panels_saitek as saitek;
 pub use flight_panels_saitek::verify_matrix;
 
+mod message_engine;
 pub mod protocol_handler;
+
+pub use message_engine::{
+    DisplayFormat, FrameError, LedColor, MessageDispatcher, MessageFrame, MessageHandler,
+    PanelMessage as EngineMessage, MAX_PAYLOAD,
+};
 
 #[cfg(test)]
 mod allocation_test;
 
 #[cfg(test)]
 mod integration_test;
+
+#[cfg(test)]
+mod protocol_depth_test;
 
 pub use flight_panels_core::RulesEvaluator;
 pub use flight_panels_core::led::{LedController, LedTarget};
