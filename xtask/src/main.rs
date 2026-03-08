@@ -11,6 +11,7 @@ use std::env;
 
 mod ac_status;
 mod bench_compare;
+mod changelog;
 mod check;
 mod clean_worktrees;
 mod compat;
@@ -125,6 +126,27 @@ enum Commands {
         #[arg(long)]
         save_baseline: bool,
     },
+
+    /// Generate changelog from conventional commits since the last tag
+    Changelog {
+        /// Git ref to start from (tag, commit, branch). Defaults to latest tag.
+        #[arg(long)]
+        since: Option<String>,
+
+        /// Write output into CHANGELOG.md instead of stdout
+        #[arg(long)]
+        write: bool,
+    },
+
+    /// Prepare a release: generate changelog, bump versions, create tag
+    PrepareRelease {
+        /// Explicit version to release (e.g., 1.2.3). Mutually exclusive with --bump.
+        version: Option<String>,
+
+        /// Automatically bump: major, minor, patch, or pre:<label> (e.g., pre:rc.1)
+        #[arg(long)]
+        bump: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -177,6 +199,11 @@ fn main() -> Result<()> {
             threshold,
             save_baseline,
         } => bench_compare::run_bench_compare(threshold, save_baseline),
+        Commands::Changelog { since, write } => changelog::run_changelog(since.as_deref(), write),
+        Commands::PrepareRelease { version, bump } => {
+            let version = release::resolve_version(version, bump)?;
+            release::run_prepare_release(&version)
+        }
     }
 }
 

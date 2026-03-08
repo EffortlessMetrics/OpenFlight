@@ -439,3 +439,301 @@ fn warthog_stick_centered_axes_near_zero() {
     assert!(s.axes.y.abs() < 0.001, "y not near 0: {}", s.axes.y);
     assert!(s.axes.rz.abs() < 0.001, "rz not near 0: {}", s.axes.rz);
 }
+
+// ─── T.Flight HOTAS family ──────────────────────────────────────────────────
+
+use flight_hotas_thrustmaster::tflight::{
+    TFLIGHT_MERGED_MIN_BYTES, TFLIGHT_SEPARATE_MIN_BYTES, TFlightAxisMode, TFlightHat,
+};
+use flight_hotas_thrustmaster::{parse_tflight_auto, parse_tflight_merged, parse_tflight_separate};
+
+fn make_tflight_merged(x: u16, y: u16, throttle: u8, rz: u8, buttons: u16, hat: u8) -> [u8; 8] {
+    let mut r = [0u8; 8];
+    r[0..2].copy_from_slice(&x.to_le_bytes());
+    r[2..4].copy_from_slice(&y.to_le_bytes());
+    r[4] = throttle;
+    r[5] = rz;
+    let btn_hat = buttons & 0x0FFF | (u16::from(hat) << 12);
+    r[6..8].copy_from_slice(&btn_hat.to_le_bytes());
+    r
+}
+
+fn make_tflight_separate(
+    x: u16,
+    y: u16,
+    throttle: u8,
+    twist: u8,
+    rocker: u8,
+    buttons: u16,
+    hat: u8,
+) -> [u8; 9] {
+    let mut r = [0u8; 9];
+    r[0..2].copy_from_slice(&x.to_le_bytes());
+    r[2..4].copy_from_slice(&y.to_le_bytes());
+    r[4] = throttle;
+    r[5] = twist;
+    r[6] = rocker;
+    let btn_hat = buttons & 0x0FFF | (u16::from(hat) << 12);
+    r[7..9].copy_from_slice(&btn_hat.to_le_bytes());
+    r
+}
+
+proptest! {
+    /// T.Flight merged mode: X/Y bipolar axes in [-1.0, 1.0].
+    #[test]
+    fn prop_tflight_merged_stick_axes_in_range(
+        x in 0u16..=u16::MAX,
+        y in 0u16..=u16::MAX,
+    ) {
+        let r = make_tflight_merged(x, y, 128, 128, 0, 0);
+        let s = parse_tflight_merged(&r).unwrap();
+        prop_assert!((-1.0..=1.0).contains(&s.axes.x), "x={}", s.axes.x);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.y), "y={}", s.axes.y);
+    }
+
+    /// T.Flight merged mode: throttle in [0.0, 1.0].
+    #[test]
+    fn prop_tflight_merged_throttle_in_range(throttle in 0u8..=u8::MAX) {
+        let r = make_tflight_merged(32768, 32768, throttle, 128, 0, 0);
+        let s = parse_tflight_merged(&r).unwrap();
+        prop_assert!(
+            (0.0..=1.0).contains(&s.axes.throttle),
+            "throttle={}", s.axes.throttle
+        );
+    }
+
+    /// T.Flight merged mode: Rz (combined twist) in [-1.0, 1.0].
+    #[test]
+    fn prop_tflight_merged_rz_in_range(rz in 0u8..=u8::MAX) {
+        let r = make_tflight_merged(32768, 32768, 0, rz, 0, 0);
+        let s = parse_tflight_merged(&r).unwrap();
+        let twist = s.axes.twist;
+        prop_assert!((-1.0..=1.0).contains(&twist), "twist={}", twist);
+    }
+
+    /// T.Flight merged mode: all axes always finite.
+    #[test]
+    fn prop_tflight_merged_axes_finite(
+        x in 0u16..=u16::MAX,
+        y in 0u16..=u16::MAX,
+        throttle in 0u8..=u8::MAX,
+        rz in 0u8..=u8::MAX,
+    ) {
+        let r = make_tflight_merged(x, y, throttle, rz, 0, 0);
+        let s = parse_tflight_merged(&r).unwrap();
+        prop_assert!(s.axes.x.is_finite(), "x not finite");
+        prop_assert!(s.axes.y.is_finite(), "y not finite");
+        prop_assert!(s.axes.throttle.is_finite(), "throttle not finite");
+        prop_assert!(s.axes.twist.is_finite(), "twist not finite");
+    }
+
+    /// T.Flight merged mode: short reports error.
+    #[test]
+    fn prop_tflight_merged_short_errors(
+        data in proptest::collection::vec(any::<u8>(), 0..TFLIGHT_MERGED_MIN_BYTES),
+    ) {
+        prop_assert!(parse_tflight_merged(&data).is_err());
+    }
+
+    /// T.Flight merged mode: buttons decode consistently.
+    #[test]
+    fn prop_tflight_merged_buttons_consistent(buttons in 0u16..=0x0FFF) {
+        let r = make_tflight_merged(32768, 32768, 128, 128, buttons, 0);
+        let s = parse_tflight_merged(&r).unwrap();
+        for n in 1u8..=12 {
+            let expected = (buttons >> (n - 1)) & 1 != 0;
+            prop_assert_eq!(s.buttons.button(n), expected, "button {}", n);
+        }
+        // Out-of-range queries always return false.
+        prop_assert!(!s.buttons.button(0));
+        prop_assert!(!s.buttons.button(13));
+    }
+
+    /// T.Flight merged mode: arbitrary valid-length reports don't panic.
+    #[test]
+    fn prop_tflight_merged_no_panic(
+        data in proptest::collection::vec(any::<u8>(), TFLIGHT_MERGED_MIN_BYTES..64),
+    ) {
+        let _ = parse_tflight_merged(&data);
+    }
+
+    /// T.Flight separate mode: X/Y bipolar axes in [-1.0, 1.0].
+    #[test]
+    fn prop_tflight_separate_stick_axes_in_range(
+        x in 0u16..=u16::MAX,
+        y in 0u16..=u16::MAX,
+    ) {
+        let r = make_tflight_separate(x, y, 128, 128, 128, 0, 0);
+        let s = parse_tflight_separate(&r).unwrap();
+        prop_assert!((-1.0..=1.0).contains(&s.axes.x), "x={}", s.axes.x);
+        prop_assert!((-1.0..=1.0).contains(&s.axes.y), "y={}", s.axes.y);
+    }
+
+    /// T.Flight separate mode: twist and rocker both in [-1.0, 1.0].
+    #[test]
+    fn prop_tflight_separate_twist_rocker_in_range(
+        twist in 0u8..=u8::MAX,
+        rocker in 0u8..=u8::MAX,
+    ) {
+        let r = make_tflight_separate(32768, 32768, 0, twist, rocker, 0, 0);
+        let s = parse_tflight_separate(&r).unwrap();
+        let tw = s.axes.twist;
+        let rk = s.axes.rocker.unwrap_or(0.0);
+        prop_assert!((-1.0..=1.0).contains(&tw), "twist={}", tw);
+        prop_assert!((-1.0..=1.0).contains(&rk), "rocker={}", rk);
+    }
+
+    /// T.Flight separate mode: all axes finite.
+    #[test]
+    fn prop_tflight_separate_axes_finite(
+        x in 0u16..=u16::MAX,
+        throttle in 0u8..=u8::MAX,
+        twist in 0u8..=u8::MAX,
+        rocker in 0u8..=u8::MAX,
+    ) {
+        let r = make_tflight_separate(x, x, throttle, twist, rocker, 0, 0);
+        let s = parse_tflight_separate(&r).unwrap();
+        prop_assert!(s.axes.x.is_finite());
+        prop_assert!(s.axes.y.is_finite());
+        prop_assert!(s.axes.throttle.is_finite());
+        prop_assert!(s.axes.twist.is_finite());
+        if let Some(rk) = s.axes.rocker {
+            prop_assert!(rk.is_finite());
+        }
+    }
+
+    /// T.Flight separate mode: short reports error.
+    #[test]
+    fn prop_tflight_separate_short_errors(
+        data in proptest::collection::vec(any::<u8>(), 0..TFLIGHT_SEPARATE_MIN_BYTES),
+    ) {
+        prop_assert!(parse_tflight_separate(&data).is_err());
+    }
+
+    /// T.Flight separate mode: arbitrary valid-length reports don't panic.
+    #[test]
+    fn prop_tflight_separate_no_panic(
+        data in proptest::collection::vec(any::<u8>(), TFLIGHT_SEPARATE_MIN_BYTES..64),
+    ) {
+        let _ = parse_tflight_separate(&data);
+    }
+
+    /// T.Flight auto-detect: 8-byte → merged, 9-byte → separate.
+    #[test]
+    fn prop_tflight_auto_mode_detection(
+        x in 0u16..=u16::MAX,
+        y in 0u16..=u16::MAX,
+    ) {
+        let m = make_tflight_merged(x, y, 128, 128, 0, 0);
+        let sm = parse_tflight_auto(&m).unwrap();
+        prop_assert_eq!(sm.mode, TFlightAxisMode::Merged);
+
+        let s = make_tflight_separate(x, y, 128, 128, 128, 0, 0);
+        let ss = parse_tflight_auto(&s).unwrap();
+        prop_assert_eq!(ss.mode, TFlightAxisMode::Separate);
+    }
+}
+
+// ─── T.Flight deterministic tests ───────────────────────────────────────────
+
+#[test]
+fn tflight_merged_centered_axes_near_zero() {
+    let r = make_tflight_merged(32768, 32768, 0, 128, 0, 0);
+    let s = parse_tflight_merged(&r).unwrap();
+    assert!(s.axes.x.abs() < 0.001, "x not near 0: {}", s.axes.x);
+    assert!(s.axes.y.abs() < 0.001, "y not near 0: {}", s.axes.y);
+    let twist = s.axes.twist;
+    assert!(twist.abs() < 0.01, "twist not near 0: {}", twist);
+}
+
+#[test]
+fn tflight_merged_full_throttle() {
+    let r = make_tflight_merged(32768, 32768, 255, 128, 0, 0);
+    let s = parse_tflight_merged(&r).unwrap();
+    assert!((s.axes.throttle - 1.0).abs() < 0.01, "full throttle: {}", s.axes.throttle);
+}
+
+#[test]
+fn tflight_merged_idle_throttle() {
+    let r = make_tflight_merged(32768, 32768, 0, 128, 0, 0);
+    let s = parse_tflight_merged(&r).unwrap();
+    assert!(s.axes.throttle.abs() < 0.01, "idle throttle: {}", s.axes.throttle);
+}
+
+#[test]
+fn tflight_merged_hat_directions() {
+    for dir in 0u8..=8 {
+        let r = make_tflight_merged(32768, 32768, 0, 128, 0, dir);
+        let s = parse_tflight_merged(&r).unwrap();
+        if dir == 0 {
+            assert_eq!(s.buttons.hat, TFlightHat::Center);
+        } else {
+            assert_ne!(s.buttons.hat, TFlightHat::Center, "hat {} should not be center", dir);
+        }
+    }
+}
+
+#[test]
+fn tflight_merged_all_buttons_set() {
+    let r = make_tflight_merged(32768, 32768, 0, 128, 0x0FFF, 0);
+    let s = parse_tflight_merged(&r).unwrap();
+    for n in 1u8..=12 {
+        assert!(s.buttons.button(n), "button {} should be set", n);
+    }
+}
+
+#[test]
+fn tflight_merged_no_buttons_set() {
+    let r = make_tflight_merged(32768, 32768, 0, 128, 0, 0);
+    let s = parse_tflight_merged(&r).unwrap();
+    for n in 1u8..=12 {
+        assert!(!s.buttons.button(n), "button {} should not be set", n);
+    }
+}
+
+#[test]
+fn tflight_separate_centered_axes_near_zero() {
+    let r = make_tflight_separate(32768, 32768, 0, 128, 128, 0, 0);
+    let s = parse_tflight_separate(&r).unwrap();
+    assert!(s.axes.x.abs() < 0.001, "x not near 0: {}", s.axes.x);
+    assert!(s.axes.y.abs() < 0.001, "y not near 0: {}", s.axes.y);
+    let twist = s.axes.twist;
+    let rocker = s.axes.rocker.unwrap_or(0.0);
+    assert!(twist.abs() < 0.01, "twist not near 0: {}", twist);
+    assert!(rocker.abs() < 0.01, "rocker not near 0: {}", rocker);
+}
+
+#[test]
+fn tflight_separate_extreme_twist() {
+    let r = make_tflight_separate(32768, 32768, 0, 255, 0, 0, 0);
+    let s = parse_tflight_separate(&r).unwrap();
+    let twist = s.axes.twist;
+    assert!(twist > 0.9, "max twist should be near 1.0: {}", twist);
+
+    let r2 = make_tflight_separate(32768, 32768, 0, 0, 0, 0, 0);
+    let s2 = parse_tflight_separate(&r2).unwrap();
+    let twist2 = s2.axes.twist;
+    assert!(twist2 < -0.9, "min twist should be near -1.0: {}", twist2);
+}
+
+#[test]
+fn tflight_auto_rejects_short_data() {
+    assert!(parse_tflight_auto(&[0u8; 7]).is_err());
+    assert!(parse_tflight_auto(&[]).is_err());
+}
+
+#[test]
+fn tflight_mode_detection_merged() {
+    let r = make_tflight_merged(32768, 32768, 0, 128, 0, 0);
+    let s = parse_tflight_auto(&r).unwrap();
+    assert_eq!(s.mode, TFlightAxisMode::Merged);
+    assert!(s.axes.rocker.is_none(), "merged mode should have no rocker");
+}
+
+#[test]
+fn tflight_mode_detection_separate() {
+    let r = make_tflight_separate(32768, 32768, 0, 128, 128, 0, 0);
+    let s = parse_tflight_auto(&r).unwrap();
+    assert_eq!(s.mode, TFlightAxisMode::Separate);
+    assert!(s.axes.rocker.is_some(), "separate mode should have rocker");
+}

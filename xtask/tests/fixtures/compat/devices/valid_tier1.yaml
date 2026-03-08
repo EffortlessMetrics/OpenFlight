@@ -1,0 +1,35 @@
+schema_version: "1"
+
+device:
+  name: "Test HOTAS Alpha"
+  vendor: "TestVendor"
+  usb:
+    vendor_id: 0x1234
+    product_id: 0x5678
+  hid:
+    usage_page: 0x01
+    usage: 0x04
+
+capabilities:
+  axes:
+    count: 5
+    names: [x, y, z, rx, ry]
+    resolution_bits: 16
+  buttons: 32
+  hats: 1
+  force_feedback: true
+
+polling:
+  expected_rate_hz: 1000
+  max_jitter_ms: 1
+
+quirks:
+  - id: TEST_QUIRK
+    description: "A test quirk for validation"
+
+support:
+  tier: 1
+  test_coverage:
+    simulated: true
+    hil: true
+  notes: "Tier 1 device with full test coverage"

@@ -166,7 +166,7 @@ fn honeycomb_alpha_button_detection() {
 #[test]
 fn honeycomb_vid_pid_constants() {
     assert_eq!(HONEYCOMB_VENDOR_ID, 0x294B);
-    assert_eq!(HONEYCOMB_ALPHA_YOKE_PID, 0x0102);
+    assert_eq!(HONEYCOMB_ALPHA_YOKE_PID, 0x1900);
 }
 
 /// Bus round-trip: published snapshot is received with correct sim/aircraft.

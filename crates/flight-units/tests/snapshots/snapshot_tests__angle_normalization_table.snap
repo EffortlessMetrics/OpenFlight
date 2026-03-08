@@ -1,0 +1,18 @@
+---
+source: crates/flight-units/tests/snapshot_tests.rs
+assertion_line: 90
+expression: table
+---
+input → signed [-180,180] → unsigned [0,360)
+─────────────────────────────────────────────
+  -720.0°  →       0.0° signed  →       0.0° unsigned
+  -270.0°  →      90.0° signed  →      90.0° unsigned
+  -180.0°  →    -180.0° signed  →     180.0° unsigned
+   -90.0°  →     -90.0° signed  →     270.0° unsigned
+     0.0°  →       0.0° signed  →       0.0° unsigned
+    90.0°  →      90.0° signed  →      90.0° unsigned
+   180.0°  →    -180.0° signed  →     180.0° unsigned
+   270.0°  →     -90.0° signed  →     270.0° unsigned
+   360.0°  →       0.0° signed  →       0.0° unsigned
+   450.0°  →      90.0° signed  →      90.0° unsigned
+   720.0°  →       0.0° signed  →       0.0° unsigned

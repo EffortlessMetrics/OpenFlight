@@ -1,0 +1,13 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 98
+expression: diff
+---
+{
+  "file": "DCS/options.lua",
+  "type": "line_replace",
+  "pattern": "[\"curves\"] = true",
+  "replacement": "[\"curves\"] = false",
+  "regex": false,
+  "backup": true
+}

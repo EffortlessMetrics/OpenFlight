@@ -70,6 +70,9 @@ pub fn parse_data_packet(bytes: &[u8]) -> Result<XPlaneDataPacket, ParseError> {
         });
     }
 
+    // TODO: Vec::with_capacity driven by untrusted input length — consider capping
+    // the allocation to a reasonable maximum (e.g., MAX_DATA_GROUPS) to prevent
+    // memory exhaustion from malformed packets.
     let mut groups = Vec::with_capacity(payload.len() / DATA_GROUP_LEN);
     for chunk in payload.chunks_exact(DATA_GROUP_LEN) {
         let index = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
@@ -141,6 +144,9 @@ pub fn parse_rref_response(bytes: &[u8]) -> Result<Vec<(u32, f32)>, ParseError> 
         });
     }
 
+    // TODO: Vec::with_capacity driven by untrusted input length — consider capping
+    // the allocation to a reasonable maximum to prevent memory exhaustion from
+    // malformed packets.
     let mut entries = Vec::with_capacity(payload.len() / RREF_ENTRY_LEN);
     for chunk in payload.chunks_exact(RREF_ENTRY_LEN) {
         let id = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);

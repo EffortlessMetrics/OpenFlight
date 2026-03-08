@@ -1,0 +1,36 @@
+schema_version: "1"
+
+game:
+  name: "Test Flight Sim"
+  id: test-flightsim
+  developer: "TestDev"
+
+integration:
+  mechanism: SimConnect
+  crate: flight-simconnect
+  sdk_version: "1.0"
+
+supported_versions:
+  - "1.0.x"
+  - "1.1.x"
+
+features:
+  telemetry_read: true
+  control_injection:
+    standard_events: true
+    input_events: false
+  force_feedback_translation: true
+  aircraft_detection: true
+
+test_coverage:
+  trace_replay: true
+  integration_tests: true
+  fuzz_coverage: true
+  hil: false
+
+support_tier: 1
+
+known_issues:
+  - id: TEST_ISSUE
+    description: "A test known issue"
+    workaround: "Use workaround X"

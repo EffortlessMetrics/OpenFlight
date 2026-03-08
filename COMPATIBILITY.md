@@ -4,13 +4,13 @@
 
 ## Summary
 
-- **Total devices:** 2175
+- **Total devices:** 2180
 - **Total games:** 18
 - **Tier distribution (devices):**
   - tier_0: 2
-  - tier_1: 18
-  - tier_2: 687
-  - tier_3: 1460
+  - tier_1: 22
+  - tier_2: 691
+  - tier_3: 1457
   - tier_4: 7
   - tier_5: 1
 - **Tier distribution (games):**
@@ -1663,7 +1663,7 @@
 | MFG Crosswind V3 Black Edition Rudder Pedals | 0x0483 | 0x5739 | 3 | 0 | ✗ | 3 | none | — |
 | MFG Crosswind V3 Premium Rudder Pedals | 0x0483 | 0xA353 | 3 | 0 | ✗ | 2 | none | — |
 | MFG Crosswind V3 Rudder Pedals (STM variant) | 0x0483 | 0xA352 | 3 | 0 | ✗ | 2 | none | — |
-| MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0003 | 3 | 0 | ✗ | 2 | none | — |
+| MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0003 | 3 | 0 | ✗ | 2 | sim | — |
 | MFG Crosswind V4 Pro Rudder Pedals | 0x1551 | 0x0044 | 3 | 0 | ✗ | 3 | none | — |
 | MFG Crosswind V4 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 3 | none | — |
 | MFG Crosswind V3 Rudder Pedals | 0x1551 | 0x0004 | 3 | 0 | ✗ | 2 | none | — |
@@ -2684,7 +2684,7 @@
 | Saitek Pro Flight Multi Panel | 0x06A3 | 0x0D06 | 0 | 32 | ✗ | 2 | none | — |
 | Saitek Pro Flight Quadrant | 0x06A3 | 0x0C2D | 3 | 6 | ✗ | 2 | none | — |
 | Saitek Pro Flight Radio Panel | 0x06A3 | 0x0D05 | 0 | 16 | ✗ | 2 | none | — |
-| Saitek Pro Flight Rudder Pedals | 0x06A3 | 0x0763 | 3 | 0 | ✗ | 3 | none | — |
+| Saitek Pro Flight Rudder Pedals | 0x06A3 | 0x0763 | 3 | 0 | ✗ | 2 | sim | — |
 | Saitek Pro Flight Switch Panel V2 | 0x06A3 | 0x0D68 | 0 | 24 | ✗ | 2 | none | — |
 | Saitek Pro Flight Switch Panel | 0x06A3 | 0x0D67 | 0 | 20 | ✗ | 2 | none | — |
 | Saitek Pro Flight Trim Panel | 0x06A3 | 0x0763 | 3 | 3 | ✗ | 3 | none | — |
@@ -2969,7 +2969,7 @@
 | Slaw Device RX Viper V2 Compact | ? | ? | 0 | 0 | ✗ | 2 | none | — |
 | Slaw Device RX Viper V2 Pro | ? | ? | 0 | 0 | ✗ | 2 | none | — |
 | Slaw Device RX Viper V2 | ? | ? | 0 | 0 | ✗ | 2 | none | — |
-| Slaw Device RX Viper Rudder Pedals | 0x0483 | 0x5746 | 3 | 0 | ✗ | 3 | none | — |
+| Slaw Device RX Viper Rudder Pedals | 0x0483 | 0x5746 | 3 | 0 | ✗ | 2 | sim | — |
 | Slaw Device BF-109 Rudder Pedals | 0x1209 | 0x3202 | 3 | 0 | ✗ | 2 | sim | — |
 | Slaw Device Helicopter Pedals | 0x1209 | 0x3203 | 2 | 0 | ✗ | 2 | sim | — |
 | Slaw Device Viper RX Pedals | 0x1209 | 0x3201 | 3 | 0 | ✗ | 2 | sim | — |
@@ -3548,16 +3548,21 @@
 | VKB STECS Mini Throttle | 0x231D | 0x0201 | 2 | 20 | ✗ | 2 | none | — |
 | VKB STECS Standard Throttle | 0x231D | 0x0209 | 4 | 28 | ✗ | 2 | none | — |
 | VKB T-Rudder Mk.IV SE | 0x231D | 0x020A | 2 | 0 | ✗ | 3 | none | — |
-| VKB T-Rudder Mk.IV | 0x231D | 0x0126 | 3 | 0 | ✗ | 3 | none | — |
+| VKB T-Rudder Mk.IV | 0x231D | 0x0126 | 3 | 0 | ✗ | 2 | sim | — |
 | VKB T-Rudder Mk.V Combat | ? | ? | 0 | 0 | ✗ | 2 | none | — |
 | VKB T-Rudder Mk.V Premium | ? | ? | 0 | 0 | ✗ | 2 | none | — |
 | VKB T-Rudder MK5 | 0x231D | 0x0132 | 3 | 0 | ✗ | 2 | none | — |
 | VKB T-Rudder | 0x231D | 0x0300 | 3 | 0 | ✗ | 2 | none | — |
 | VKB TECS FS Throttle | 0x231D | 0x0280 | 5 | 24 | ✗ | 2 | none | — |
 | VKB TECS Max Throttle | 0x231D | 0x0285 | 6 | 32 | ✗ | 2 | none | — |
+| VKB Gladiator NXT EVO | 0x231D | 0x0200 | 6 | 34 | ✗ | 1 | sim | — |
+| VKB Gunfighter Mk.IV + MCG | 0x231D | 0x0125 | 6 | 42 | ✗ | 1 | sim | — |
 | VKB Modern Combat Grip Standard | 0x231D | 0x0222 | 8 | 32 | ✗ | 3 | none | — |
+| VKB SEM Throttle Quadrant | 0x231D | 0x2214 | 4 | 12 | ✗ | 1 | sim | — |
 | VKB SEM Throttle Control System Duo | 0x231D | 0x020E | 4 | 16 | ✗ | 2 | sim | — |
 | VKB SEM Throttle Control System Mini | 0x231D | 0x020D | 2 | 8 | ✗ | 2 | sim | — |
+| VKB STECS Standard/Plus | 0x231D | 0x013C | 5 | 24 | ✗ | 1 | sim | — |
+| VKB T-Rudder Mk.V | 0x231D | 0xFFFF | 3 | 0 | ✗ | 2 | sim | — |
 
 ### VKB Sim
 

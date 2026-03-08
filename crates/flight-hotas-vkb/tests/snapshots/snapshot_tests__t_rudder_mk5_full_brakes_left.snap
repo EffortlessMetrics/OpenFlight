@@ -1,0 +1,12 @@
+---
+source: crates/flight-hotas-vkb/tests/snapshot_tests.rs
+expression: state
+---
+TRudderInputState {
+    variant: Mk5,
+    axes: TRudderAxes {
+        left_toe_brake: 1.0,
+        right_toe_brake: 1.0,
+        rudder: -1.0,
+    },
+}

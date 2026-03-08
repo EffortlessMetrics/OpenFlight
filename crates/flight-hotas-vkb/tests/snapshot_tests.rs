@@ -8,8 +8,9 @@
 //! or enum variant naming will surface as a diff before it reaches users.
 
 use flight_hotas_vkb::{
-    GladiatorInputHandler, StecsInputHandler, StecsMtVariant, VkbGladiatorVariant, VkbStecsVariant,
-    parse_stecs_mt_report,
+    GladiatorInputHandler, GunfighterInputHandler, GunfighterVariant, SemThqInputHandler,
+    StecsInputHandler, StecsMtVariant, TRudderInputHandler, TRudderVariant, VkbGladiatorVariant,
+    VkbStecsVariant, parse_stecs_mt_report,
 };
 
 // ── report builders ───────────────────────────────────────────────────────────
@@ -126,4 +127,91 @@ fn snapshot_stecs_mt_max_full() {
     let report = stecs_mt_report(u16::MAX, u16::MAX, u16::MAX, u16::MAX, 0, 0);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Max).expect("valid report");
     insta::assert_debug_snapshot!("stecs_mt_max_full", state);
+}
+
+// ── Gunfighter snapshots ─────────────────────────────────────────────────────
+
+/// Pin the parsed state of the Gunfighter MCG Pro at neutral position.
+#[test]
+fn snapshot_gunfighter_mcg_neutral() {
+    let report = gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+    let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("gunfighter_mcg_neutral", state);
+}
+
+/// Pin the parsed state of the Gunfighter with full deflection and buttons.
+#[test]
+fn snapshot_gunfighter_full_deflection_with_buttons() {
+    let report = gladiator_report(
+        [0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF],
+        0x8000_0001, // buttons 1 and 32
+        0x0000_0004, // button 35
+        0xF2,        // hat0=E(2), hat1=centred
+    );
+    let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("gunfighter_full_deflection_buttons", state);
+}
+
+// ── SEM THQ snapshots ────────────────────────────────────────────────────────
+
+/// Build a 16-byte SEM THQ report.
+fn sem_thq_report(axes: [u16; 4], btn_lo: u32, btn_hi: u32) -> Vec<u8> {
+    let mut report = vec![0u8; 16];
+    for (i, &v) in axes.iter().enumerate() {
+        let bytes = v.to_le_bytes();
+        report[i * 2] = bytes[0];
+        report[i * 2 + 1] = bytes[1];
+    }
+    report[8..12].copy_from_slice(&btn_lo.to_le_bytes());
+    report[12..16].copy_from_slice(&btn_hi.to_le_bytes());
+    report
+}
+
+/// Pin the SEM THQ at idle position.
+#[test]
+fn snapshot_sem_thq_idle() {
+    let report = sem_thq_report([0, 0, 0, 0], 0, 0);
+    let handler = SemThqInputHandler::new();
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("sem_thq_idle", state);
+}
+
+/// Pin the SEM THQ at full throttle with some buttons.
+#[test]
+fn snapshot_sem_thq_full_throttle_buttons() {
+    let report = sem_thq_report([0xFFFF, 0xFFFF, 0x8000, 0x8000], 0x0000_0005, 0);
+    let handler = SemThqInputHandler::new();
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("sem_thq_full_throttle_buttons", state);
+}
+
+// ── T-Rudder snapshots ───────────────────────────────────────────────────────
+
+/// Build a 6-byte T-Rudder report.
+fn t_rudder_report(left: u16, right: u16, rudder: u16) -> Vec<u8> {
+    let mut data = Vec::with_capacity(6);
+    data.extend_from_slice(&left.to_le_bytes());
+    data.extend_from_slice(&right.to_le_bytes());
+    data.extend_from_slice(&rudder.to_le_bytes());
+    data
+}
+
+/// Pin T-Rudder Mk.IV at idle (brakes released, rudder centred).
+#[test]
+fn snapshot_t_rudder_mk4_idle() {
+    let report = t_rudder_report(0, 0, 0x8000);
+    let handler = TRudderInputHandler::new(TRudderVariant::Mk4);
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("t_rudder_mk4_idle", state);
+}
+
+/// Pin T-Rudder Mk.V at full brakes and full left rudder.
+#[test]
+fn snapshot_t_rudder_mk5_full_brakes_left_rudder() {
+    let report = t_rudder_report(0xFFFF, 0xFFFF, 0x0000);
+    let handler = TRudderInputHandler::new(TRudderVariant::Mk5);
+    let state = handler.parse_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("t_rudder_mk5_full_brakes_left", state);
 }

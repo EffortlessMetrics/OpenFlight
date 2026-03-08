@@ -31,7 +31,7 @@ impl HeadPose {
         }
     }
 
-    /// Normalize rotation angles to `[-180.0, 180.0]`.
+    /// Normalize rotation angles to `(-180.0, 180.0]`.
     ///
     /// Positional fields (`x`, `y`, `z`) are left unchanged.
     pub fn normalize(&self) -> Self {

@@ -1,0 +1,15 @@
+---
+source: crates/flight-writers/tests/writer_snapshots.rs
+assertion_line: 58
+expression: diff
+---
+{
+  "backup": true,
+  "changes": {
+    "DisableNonLinearControls": "1",
+    "UseLinearCurves": "1"
+  },
+  "file": "MSFS/UserCfg.opt",
+  "section": "CONTROLS",
+  "type": "ini_section"
+}

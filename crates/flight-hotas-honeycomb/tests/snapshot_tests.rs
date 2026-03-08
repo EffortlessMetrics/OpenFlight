@@ -7,13 +7,13 @@
 //! known input values.  Any change to the struct layout, normalisation formula,
 //! or enum variant naming will surface as a diff before it reaches users.
 
-use flight_hotas_honeycomb::{parse_alpha_report, parse_bravo_report};
+use flight_hotas_honeycomb::bravo_leds::BravoLedState;
+use flight_hotas_honeycomb::button_delta::ButtonDelta;
+use flight_hotas_honeycomb::{parse_alpha_report, parse_bravo_report, serialize_led_report};
 
 // ── report builders ───────────────────────────────────────────────────────────
 
 /// Build an 11-byte Alpha Yoke report.
-///
-/// Layout: report_id=0x01, roll u16-LE, pitch u16-LE, 5 button bytes, hat nibble byte.
 fn alpha_report(roll: u16, pitch: u16, buttons: u64, hat: u8) -> [u8; 11] {
     let mut r = [0u8; 11];
     r[0] = 0x01;
@@ -29,8 +29,6 @@ fn alpha_report(roll: u16, pitch: u16, buttons: u64, hat: u8) -> [u8; 11] {
 }
 
 /// Build a 23-byte Bravo Throttle report.
-///
-/// Layout: report_id=0x01, 7×u16-LE throttle/flap/spoiler axes, 8 button bytes.
 fn bravo_report(throttles: [u16; 7], buttons: u64) -> [u8; 23] {
     let mut r = [0u8; 23];
     r[0] = 0x01;
@@ -44,9 +42,6 @@ fn bravo_report(throttles: [u16; 7], buttons: u64) -> [u8; 23] {
 
 // ── Alpha Yoke snapshots ──────────────────────────────────────────────────────
 
-/// Pin the parsed state of the Alpha Yoke at the neutral / centred position.
-///
-/// Both axes at 12-bit centre (2048 → 0.0), no buttons pressed, hat centred (raw 15).
 #[test]
 fn snapshot_alpha_yoke_neutral() {
     let report = alpha_report(2048, 2048, 0, 15);
@@ -54,9 +49,6 @@ fn snapshot_alpha_yoke_neutral() {
     insta::assert_debug_snapshot!("alpha_yoke_neutral", state);
 }
 
-/// Pin the parsed state of the Alpha Yoke at full right roll.
-///
-/// Roll at maximum (4095 → ~+1.0), pitch at centre, no buttons pressed, hat centred.
 #[test]
 fn snapshot_alpha_yoke_full_right_roll() {
     let report = alpha_report(4095, 2048, 0, 15);
@@ -64,11 +56,24 @@ fn snapshot_alpha_yoke_full_right_roll() {
     insta::assert_debug_snapshot!("alpha_yoke_full_right_roll", state);
 }
 
+#[test]
+fn snapshot_alpha_yoke_full_left_roll_with_buttons() {
+    let buttons: u64 = (1 << 0) | (1 << 24) | (1 << 25); // PTT + magneto both
+    let report = alpha_report(0, 2048, buttons, 0); // hat N
+    let state = parse_alpha_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("alpha_yoke_full_left_with_magneto_both", state);
+}
+
+#[test]
+fn snapshot_alpha_yoke_all_buttons() {
+    let all_36: u64 = (1u64 << 36) - 1;
+    let report = alpha_report(2048, 2048, all_36, 3);
+    let state = parse_alpha_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("alpha_yoke_all_36_buttons_hat_se", state);
+}
+
 // ── Bravo Throttle snapshots ──────────────────────────────────────────────────
 
-/// Pin the parsed state of the Bravo Throttle Quadrant at idle / all axes zero.
-///
-/// All seven levers at zero (→ 0.0), no buttons pressed.
 #[test]
 fn snapshot_bravo_throttle_idle() {
     let report = bravo_report([0; 7], 0);
@@ -76,13 +81,52 @@ fn snapshot_bravo_throttle_idle() {
     insta::assert_debug_snapshot!("bravo_throttle_idle", state);
 }
 
-/// Pin the parsed state of the Bravo Throttle Quadrant at full travel.
-///
-/// All seven levers at maximum (4095 → 1.0), gear-up button pressed (bit 30).
 #[test]
 fn snapshot_bravo_throttle_full_with_gear_up() {
     let gear_up: u64 = 1 << 30;
     let report = bravo_report([4095; 7], gear_up);
     let state = parse_bravo_report(&report).expect("valid report");
     insta::assert_debug_snapshot!("bravo_throttle_full_with_gear_up", state);
+}
+
+#[test]
+fn snapshot_bravo_throttle_ap_panel_active() {
+    let ap_mask: u64 = 0xFF; // all 8 AP buttons (bits 0-7)
+    let report = bravo_report([2048, 2048, 0, 0, 0, 0, 0], ap_mask);
+    let state = parse_bravo_report(&report).expect("valid report");
+    insta::assert_debug_snapshot!("bravo_throttle_ap_panel_active", state);
+}
+
+// ── LED snapshots ─────────────────────────────────────────────────────────────
+
+#[test]
+fn snapshot_led_all_off() {
+    let leds = BravoLedState::all_off();
+    let report = serialize_led_report(&leds);
+    insta::assert_debug_snapshot!("led_all_off", report);
+}
+
+#[test]
+fn snapshot_led_all_on() {
+    let leds = BravoLedState::all_on();
+    let report = serialize_led_report(&leds);
+    insta::assert_debug_snapshot!("led_all_on", report);
+}
+
+#[test]
+fn snapshot_led_gear_down_green() {
+    let mut leds = BravoLedState::all_off();
+    leds.set_all_gear(true);
+    let report = serialize_led_report(&leds);
+    insta::assert_debug_snapshot!("led_gear_down_green", report);
+}
+
+// ── Button delta snapshots ────────────────────────────────────────────────────
+
+#[test]
+fn snapshot_button_delta_gear_transition() {
+    let prev: u64 = 1 << 30; // gear up
+    let curr: u64 = 1 << 31; // gear down
+    let delta = ButtonDelta::compute(prev, curr);
+    insta::assert_debug_snapshot!("button_delta_gear_transition", delta);
 }
