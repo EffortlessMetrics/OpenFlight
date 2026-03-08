@@ -10,6 +10,7 @@
 //! - TFRP / TPR rudder pedals
 //! - HOTAS Cougar (legacy)
 
+pub mod calibration;
 pub mod cougar;
 pub mod detents;
 pub mod health;
@@ -19,15 +20,22 @@ pub mod presets;
 pub mod profiles;
 pub mod protocol;
 pub mod t16000m;
+pub mod tflight;
 pub mod tfrp;
 pub mod tpr;
 pub mod warthog;
 
+pub use calibration::{
+    AxisCalibration, CalibrationProfile, apply_calibration, auto_calibrate, detect_center_drift,
+};
 pub use cougar::{
     COUGAR_MIN_REPORT_BYTES, COUGAR_STICK_PID, CougarAxes, CougarButtons, CougarHat,
     CougarInputState, CougarParseError, parse_cougar,
 };
-pub use detents::{DetentEvent, ThrottleDetentConfig, ThrottleDetentTracker};
+pub use detents::{
+    DetentConfig, DetentEvent, DetentType, ThrottleDetentConfig, ThrottleDetentTracker,
+    detect_detent, snap_to_detent,
+};
 pub use flight_hid_support::device_support::{
     AxisMode, T_RUDDER_PID, T16000M_JOYSTICK_PID, T16000mModel, TCA_QUADRANT_BOEING_ENG12_PID,
     TCA_QUADRANT_BOEING_ENG34_PID, TCA_YOKE_BOEING_PID, TFLIGHT_HOTAS_4_PID,
@@ -63,6 +71,13 @@ pub use warthog::{
 
 pub use profiles::{AxisDescriptor, AxisNormalization, DeviceProfile, device_profile};
 pub use protocol::{
-    DEVICE_TABLE, DeviceEntry, LedState, ThrustmasterDevice, VENDOR_ID, build_led_report,
-    identify_device, is_pinkie_held, is_throttle_split, resolve_shifted_button,
+    DEVICE_TABLE, DeviceEntry, LedState, StickState, ThrottleState, ThrustmasterDevice,
+    ThrustmasterProtocol, ThrustmasterProtocolError, VENDOR_ID, build_led_report, identify_device,
+    is_pinkie_held, is_throttle_split, parse_stick_report, parse_throttle_report,
+    resolve_shifted_button,
+};
+pub use tflight::{
+    TFLIGHT_MERGED_MIN_BYTES, TFLIGHT_SEPARATE_MIN_BYTES, TFlightAxisMode, TFlightHat,
+    TFlightStickAxes, TFlightStickButtons, TFlightStickParseError, TFlightStickState,
+    parse_tflight_auto, parse_tflight_merged, parse_tflight_separate,
 };

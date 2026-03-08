@@ -7,9 +7,10 @@
 //! including stall buffet, touchdown impulse, ground roll effects, gear warnings,
 //! and helicopter rotor effects. All effects are rate-limited and run off the RT thread.
 
-use crate::Result;
+use crate::{Result, TimeSource};
 use flight_bus::{BusSnapshot, HeloData, Kinematics};
 use std::collections::VecDeque;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{debug, trace, warn};
 
@@ -127,6 +128,7 @@ pub struct TelemetrySynthEngine {
     rate_limiter: RateLimiter,
     blackbox_markers: VecDeque<BlackboxMarker>,
     user_tuning: UserTuningInterface,
+    time_source: Arc<dyn TimeSource>,
 }
 
 /// Internal state for all effects
@@ -196,6 +198,26 @@ struct RateLimiter {
     min_interval: Duration,
     smoothing_factor: f32,
     last_output: f32,
+}
+
+impl RateLimiter {
+    /// Check if update should proceed based on rate limit
+    fn check(&mut self, now: Instant) -> bool {
+        if now.duration_since(self.last_update) < self.min_interval {
+            false
+        } else {
+            self.last_update = now;
+            true
+        }
+    }
+
+    /// Apply smoothing to the output value
+    fn apply_smoothing(&mut self, current: f32) -> f32 {
+        let smoothed = self.last_output * (1.0 - self.smoothing_factor)
+            + current * self.smoothing_factor;
+        self.last_output = smoothed;
+        smoothed
+    }
 }
 
 /// Blackbox marker for effect events
@@ -281,50 +303,57 @@ impl Default for TelemetrySynthConfig {
 impl TelemetrySynthEngine {
     /// Create a new telemetry synthesis engine
     pub fn new(config: TelemetrySynthConfig) -> Self {
+        Self::with_time_source(config, Arc::new(crate::DefaultTimeSource))
+    }
+
+    /// Create a new telemetry synthesis engine with time source
+    pub fn with_time_source(config: TelemetrySynthConfig, time_source: Arc<dyn TimeSource>) -> Self {
         let min_interval = Duration::from_millis(config.rate_limiting.min_interval_ms as u64);
         let smoothing_factor = config.rate_limiting.smoothing_factor;
+        let now = time_source.now();
 
         Self {
             config,
-            last_update: Instant::now(),
+            last_update: now,
             last_snapshot: None,
             effect_state: EffectState::default(),
             rate_limiter: RateLimiter {
-                last_update: Instant::now(),
+                last_update: now,
                 min_interval,
                 smoothing_factor,
                 last_output: 0.0,
             },
             blackbox_markers: VecDeque::new(),
             user_tuning: UserTuningInterface::default(),
+            time_source,
         }
     }
 
     /// Update effects based on telemetry snapshot
     pub fn update(&mut self, snapshot: &BusSnapshot) -> Result<EffectOutput> {
-        let now = Instant::now();
+        let now = self.time_source.now();
+        let dt = now.duration_since(self.last_update).as_secs_f32();
 
         // Rate limiting check
-        if now.duration_since(self.rate_limiter.last_update) < self.rate_limiter.min_interval {
+        if !self.rate_limiter.check(now) {
             // Return last computed output if rate limited
             return Ok(self.compute_current_output());
         }
 
-        self.rate_limiter.last_update = now;
         self.last_update = now;
 
         // Update individual effects
-        self.update_stall_buffet(&snapshot.kinematics)?;
+        self.update_stall_buffet(&snapshot.kinematics, dt)?;
         self.update_touchdown_impulse(&snapshot.kinematics)?;
-        self.update_ground_roll(&snapshot.kinematics)?;
+        self.update_ground_roll(&snapshot.kinematics, dt)?;
 
         // Clone helo data to avoid borrowing issues
         let helo_data = snapshot.helo.clone();
-        self.update_gear_warning(snapshot)?;
+        self.update_gear_warning(snapshot, dt)?;
 
         // Update helicopter effects if applicable
         if let Some(ref helo_data) = helo_data {
-            self.update_rotor_effects(helo_data)?;
+            self.update_rotor_effects(helo_data, dt)?;
         }
 
         // Store snapshot for next update
@@ -340,7 +369,7 @@ impl TelemetrySynthEngine {
     }
 
     /// Update stall buffet effect based on angle of attack
-    fn update_stall_buffet(&mut self, kinematics: &Kinematics) -> Result<()> {
+    fn update_stall_buffet(&mut self, kinematics: &Kinematics, dt: f32) -> Result<()> {
         if !self.config.stall_buffet.enabled {
             self.effect_state.stall_buffet.current_intensity = 0.0;
             return Ok(());
@@ -369,7 +398,6 @@ impl TelemetrySynthEngine {
 
         // Update phase for oscillation
         if intensity > 0.0 {
-            let dt = self.last_update.elapsed().as_secs_f32();
             state.phase += state.current_frequency * dt * 2.0 * std::f32::consts::PI;
             state.phase = state.phase % (2.0 * std::f32::consts::PI);
         }
@@ -377,7 +405,7 @@ impl TelemetrySynthEngine {
         // Record blackbox marker for significant changes
         if intensity_changed && intensity > 0.1 {
             let marker = BlackboxMarker {
-                timestamp: Instant::now(),
+                timestamp: self.time_source.now(),
                 effect_type: "stall_buffet".to_string(),
                 event: "intensity_change".to_string(),
                 parameters: [
@@ -428,12 +456,12 @@ impl TelemetrySynthEngine {
                 * self.user_tuning.touchdown_sensitivity;
 
             state.impulse_active = true;
-            state.impulse_start = Some(Instant::now());
+            state.impulse_start = Some(self.time_source.now());
             state.impulse_magnitude = impulse_magnitude;
             state.touchdown_detected = true;
 
             let marker = BlackboxMarker {
-                timestamp: Instant::now(),
+                timestamp: self.time_source.now(),
                 effect_type: "touchdown".to_string(),
                 event: "impulse_triggered".to_string(),
                 parameters: [
@@ -458,7 +486,7 @@ impl TelemetrySynthEngine {
 
         // Update impulse state
         if let Some(start_time) = state.impulse_start {
-            let elapsed = start_time.elapsed();
+            let elapsed = self.time_source.now().duration_since(start_time);
             let duration = Duration::from_millis(self.config.touchdown.duration_ms as u64);
 
             if elapsed > duration {
@@ -480,7 +508,7 @@ impl TelemetrySynthEngine {
     }
 
     /// Update ground roll effects
-    fn update_ground_roll(&mut self, kinematics: &Kinematics) -> Result<()> {
+    fn update_ground_roll(&mut self, kinematics: &Kinematics, dt: f32) -> Result<()> {
         if !self.config.ground_roll.enabled {
             self.effect_state.ground_roll.current_intensity = 0.0;
             return Ok(());
@@ -510,7 +538,6 @@ impl TelemetrySynthEngine {
 
         // Update phase for rumble effect
         if intensity > 0.0 {
-            let dt = self.last_update.elapsed().as_secs_f32();
             state.phase += self.config.ground_roll.frequency_hz * dt * 2.0 * std::f32::consts::PI;
             state.phase = state.phase % (2.0 * std::f32::consts::PI);
         }
@@ -524,7 +551,7 @@ impl TelemetrySynthEngine {
     }
 
     /// Update gear warning effect
-    fn update_gear_warning(&mut self, snapshot: &BusSnapshot) -> Result<()> {
+    fn update_gear_warning(&mut self, snapshot: &BusSnapshot, dt: f32) -> Result<()> {
         if !self.config.gear_warning.enabled {
             self.effect_state.gear_warning.warning_active = false;
             return Ok(());
@@ -546,7 +573,7 @@ impl TelemetrySynthEngine {
 
             if should_warn {
                 let marker = BlackboxMarker {
-                    timestamp: Instant::now(),
+                    timestamp: self.time_source.now(),
                     effect_type: "gear_warning".to_string(),
                     event: "activated".to_string(),
                     parameters: [
@@ -574,7 +601,6 @@ impl TelemetrySynthEngine {
 
         // Update pulse phase
         if state.warning_active {
-            let dt = self.last_update.elapsed().as_secs_f32();
             state.pulse_phase +=
                 self.config.gear_warning.pulse_frequency_hz * dt * 2.0 * std::f32::consts::PI;
             state.pulse_phase = state.pulse_phase % (2.0 * std::f32::consts::PI);
@@ -588,7 +614,7 @@ impl TelemetrySynthEngine {
     }
 
     /// Update helicopter rotor effects
-    fn update_rotor_effects(&mut self, helo_data: &HeloData) -> Result<()> {
+    fn update_rotor_effects(&mut self, helo_data: &HeloData, dt: f32) -> Result<()> {
         if !self.config.rotor_effects.enabled {
             return Ok(());
         }
@@ -608,7 +634,7 @@ impl TelemetrySynthEngine {
             state.nr_warning_active = nr_warning;
             if nr_warning {
                 let marker = BlackboxMarker {
-                    timestamp: Instant::now(),
+                    timestamp: self.time_source.now(),
                     effect_type: "rotor_effects".to_string(),
                     event: "nr_low_warning".to_string(),
                     parameters: [
@@ -638,7 +664,7 @@ impl TelemetrySynthEngine {
             state.np_warning_active = np_warning;
             if np_warning {
                 let marker = BlackboxMarker {
-                    timestamp: Instant::now(),
+                    timestamp: self.time_source.now(),
                     effect_type: "rotor_effects".to_string(),
                     event: "np_low_warning".to_string(),
                     parameters: [
@@ -671,7 +697,6 @@ impl TelemetrySynthEngine {
 
         // Update vibration phase based on rotor speed
         let rotor_freq = self.config.rotor_effects.base_frequency_hz * (nr_pct / 100.0);
-        let dt = self.last_update.elapsed().as_secs_f32();
         state.vibration_phase += rotor_freq * dt * 2.0 * std::f32::consts::PI;
         state.vibration_phase = state.vibration_phase % (2.0 * std::f32::consts::PI);
 
@@ -780,11 +805,7 @@ impl TelemetrySynthEngine {
 
     /// Apply rate limiting and smoothing to output
     fn apply_rate_limiting(&mut self, output: EffectOutput) -> EffectOutput {
-        let smoothed_torque = self.rate_limiter.last_output
-            * (1.0 - self.rate_limiter.smoothing_factor)
-            + output.torque_nm * self.rate_limiter.smoothing_factor;
-
-        self.rate_limiter.last_output = smoothed_torque;
+        let smoothed_torque = self.rate_limiter.apply_smoothing(output.torque_nm);
 
         EffectOutput {
             torque_nm: smoothed_torque,

@@ -14,3 +14,6 @@ keywords = ["flight-sim", "openflight", "device", "hardware"]
 
 [dependencies]
 flight-metrics = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

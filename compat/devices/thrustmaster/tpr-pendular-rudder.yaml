@@ -49,6 +49,8 @@ quirks:
 
 support:
   tier: 2
+  crate: flight-pedals
+  parser: parse_tpr_report
   test_coverage:
     simulated: true
     hil: false
@@ -56,3 +58,4 @@ support:
     PID 0xB68F confirmed from linux-hardware.org (7 probes, USB string "T-Pendular-Rudder").
     Shares HID report layout with TFRP (0xB678) and T-Rudder (0xB679).
     A Bulk-channel variant exists at PID 0xB68E ("TPR Rudder Bulk") with the same axis layout.
+    Unified parser in flight-pedals crate with calibration support.

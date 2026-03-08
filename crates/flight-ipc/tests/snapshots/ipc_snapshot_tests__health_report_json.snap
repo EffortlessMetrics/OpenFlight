@@ -1,0 +1,5 @@
+---
+source: crates/flight-ipc/tests/ipc_snapshot_tests.rs
+expression: msg.to_json()
+---
+{"type":"HealthReport","components":[{"name":"axis-engine","healthy":true,"detail":null},{"name":"ffb-engine","healthy":false,"detail":"envelope limit exceeded on channel 0"},{"name":"hid-manager","healthy":true,"detail":null}]}

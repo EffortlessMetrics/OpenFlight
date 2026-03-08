@@ -1,0 +1,27 @@
+[package]
+name = "flight-blackbox-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+postcard = { version = "1.1.3", features = ["alloc", "use-std"] }
+serde = { version = "1", features = ["derive"] }
+
+[dependencies.flight-blackbox]
+path = ".."
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "fuzz_blackbox_decode"
+path = "fuzz_targets/fuzz_blackbox_decode.rs"
+test = false
+doc = false

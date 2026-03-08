@@ -210,4 +210,77 @@ mod tests {
         assert_eq!(result.failure_count(), 1);
         assert!(!result.all_succeeded());
     }
+
+    #[test]
+    fn snapshot_batch_op_display_all_variants() {
+        let ops = vec![
+            BatchOp::SetDeadzone {
+                axis: "pitch".into(),
+                value: 0.03,
+            },
+            BatchOp::SetExpo {
+                axis: "roll".into(),
+                value: 0.25,
+            },
+            BatchOp::SetCurve {
+                axis: "throttle".into(),
+                curve: "linear".into(),
+            },
+            BatchOp::EnableAxis {
+                axis: "rudder".into(),
+            },
+            BatchOp::DisableAxis {
+                axis: "toe-brake-left".into(),
+            },
+        ];
+        let mut output = String::new();
+        for op in &ops {
+            output.push_str(&format!("{}\n", op));
+        }
+        insta::assert_snapshot!("batch_op_display_all_variants", output);
+    }
+
+    #[test]
+    fn snapshot_batch_result_mixed() {
+        let result = execute_batch(&[
+            BatchOp::SetDeadzone {
+                axis: "pitch".into(),
+                value: 0.03,
+            },
+            BatchOp::SetDeadzone {
+                axis: "roll".into(),
+                value: 5.0, // out of range
+            },
+            BatchOp::EnableAxis {
+                axis: "rudder".into(),
+            },
+        ]);
+        let debug = format!("{:#?}", result);
+        insta::assert_snapshot!("batch_result_mixed_outcomes", debug);
+    }
+
+    #[test]
+    fn snapshot_batch_validation_errors() {
+        let result = execute_batch(&[
+            BatchOp::SetDeadzone {
+                axis: "".into(),
+                value: 0.1,
+            },
+            BatchOp::SetExpo {
+                axis: "pitch".into(),
+                value: 2.0,
+            },
+            BatchOp::SetCurve {
+                axis: "roll".into(),
+                curve: "".into(),
+            },
+        ]);
+        let errors: Vec<String> = result
+            .results
+            .iter()
+            .filter_map(|r| r.outcome.as_ref().err().cloned())
+            .collect();
+        let output = errors.join("\n");
+        insta::assert_snapshot!("batch_validation_errors", output);
+    }
 }

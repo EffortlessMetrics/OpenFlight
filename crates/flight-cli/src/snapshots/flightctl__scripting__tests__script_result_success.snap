@@ -1,0 +1,40 @@
+---
+source: crates/flight-cli/src/scripting.rs
+expression: "format!(\"{:#?}\", result)"
+---
+ScriptResult {
+    exit_code: 0,
+    batch_result: Some(
+        BatchResult {
+            results: [
+                OpResult {
+                    op: SetDeadzone {
+                        axis: "roll",
+                        value: 0.05,
+                    },
+                    outcome: Ok(
+                        (),
+                    ),
+                },
+                OpResult {
+                    op: SetExpo {
+                        axis: "pitch",
+                        value: 0.3,
+                    },
+                    outcome: Ok(
+                        (),
+                    ),
+                },
+                OpResult {
+                    op: EnableAxis {
+                        axis: "yaw",
+                    },
+                    outcome: Ok(
+                        (),
+                    ),
+                },
+            ],
+        },
+    ),
+    parse_errors: [],
+}

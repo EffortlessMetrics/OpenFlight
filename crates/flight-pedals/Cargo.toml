@@ -1,0 +1,25 @@
+[package]
+homepage.workspace = true
+name = "flight-pedals"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Unified rudder pedals input model with vendor-specific parsers for OpenFlight."
+readme = "README.md"
+categories.workspace = true
+keywords = ["flight-sim", "openflight", "pedals", "rudder"]
+# SPDX License Identifier
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
+
+[features]
+default = []
+
+[dependencies]
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

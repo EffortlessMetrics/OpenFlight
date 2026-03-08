@@ -27,9 +27,11 @@
 //! - [`devices`] — Device database and capability descriptors
 //! - [`protocol`] — HID report parsing, LED control, display commands
 //! - [`profiles`] — Default axis/button configuration profiles
+//! - [`presets`] — Tuned deadzone, filter, and slew-rate presets per device
 //! - [`velocityone`] — Legacy Flightdeck/Rudder report parsing (VID 0x1432)
 
 pub mod devices;
+pub mod presets;
 pub mod profiles;
 pub mod protocol;
 pub mod velocityone;
@@ -56,3 +58,6 @@ pub use protocol::{
 
 // Profile re-exports
 pub use profiles::{DeviceProfile, profile_for_device};
+
+// Preset re-exports
+pub use presets::{RecommendedAxisConfig, preset_for_device};

@@ -16,6 +16,7 @@ pub use flight_hid_support::device_support::{
 
 /// Complete catalogue of known CH Products flight-sim USB devices.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ChDevice {
     /// CH Fighterstick — 3 axes + twist, 32 buttons, 4 hats.
     Fighterstick,
