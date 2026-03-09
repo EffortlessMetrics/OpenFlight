@@ -575,11 +575,8 @@ fn set_path(root: &mut Value, path: &str, value: Value) {
             }
             current = &mut arr[i];
         } else if is_last {
-            match current {
-                Value::Object(map) => {
-                    map.insert((*part).to_string(), value);
-                }
-                _ => {}
+            if let Value::Object(map) = current {
+                map.insert((*part).to_string(), value);
             }
             return;
         } else {
