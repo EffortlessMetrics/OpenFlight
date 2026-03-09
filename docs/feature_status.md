@@ -25,10 +25,10 @@
 | Needs Tests | 0 |
 | Draft | 4455 |
 | Incomplete | 0 |
-| Microcrates | 87 |
-| Microcrates with tests | 65 (74.7%) |
-| Microcrates with Gherkin | 65 (74.7%) |
-| Microcrates fully covered | 65 (74.7%) |
+| Microcrates | 92 |
+| Microcrates with tests | 65 (70.7%) |
+| Microcrates with Gherkin | 65 (70.7%) |
+| Microcrates fully covered | 65 (70.7%) |
 | Test coverage | 100.0% |
 | Gherkin coverage | 36.4% |
 | Test + Gherkin coverage | 36.4% |
@@ -49,12 +49,14 @@
 | flight-cli | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-cloud-profiles | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
 | flight-core | 13 | 13 | 13 | 13 | 13 | 100.0% | 100.0% | 100.0% |
+| flight-dcs-bios | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-dcs-export | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-dcs-modules | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-device-common | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-elite | 8 | 8 | 8 | 8 | 8 | 100.0% | 100.0% | 100.0% |
 | flight-falcon-bms | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ffb | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-ffb-brunner | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ffb-moza | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
 | flight-ffb-vpforce | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-headless | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
@@ -77,6 +79,7 @@
 | flight-hotas-vpforce | 5 | 5 | 5 | 5 | 5 | 100.0% | 100.0% | 100.0% |
 | flight-hotas-winwing | 16 | 16 | 16 | 16 | 16 | 100.0% | 100.0% | 100.0% |
 | flight-il2 | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
+| flight-installer-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-integration-tests | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ipc | 15 | 15 | 15 | 15 | 15 | 100.0% | 100.0% | 100.0% |
 | flight-ksp | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -92,6 +95,7 @@
 | flight-panels-cougar | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-panels-goflight | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-panels-saitek | 17 | 17 | 17 | 17 | 17 | 100.0% | 100.0% | 100.0% |
+| flight-pedals | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-plugin | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-prepar3d | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-process-detection | 6 | 6 | 6 | 6 | 6 | 100.0% | 100.0% | 100.0% |
@@ -109,6 +113,7 @@
 | flight-streamdeck | 1 | 1 | 1 | 1 | 1 | 100.0% | 100.0% | 100.0% |
 | flight-tactile | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
 | flight-test-helpers | 3 | 3 | 3 | 3 | 3 | 100.0% | 100.0% | 100.0% |
+| flight-testkit | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-tracing | 2 | 2 | 2 | 2 | 2 | 100.0% | 100.0% | 100.0% |
 | flight-trackir | 0 | 0 | 0 | 0 | 0 | 0.0% | 0.0% | 0.0% |
 | flight-ui | 4 | 4 | 4 | 4 | 4 | 100.0% | 100.0% | 100.0% |
@@ -214,8 +219,8 @@
 | REQ-39 | AC-39.8 | WHEN journal events are applied THEN adapter state (current_system, docked_station, current_ship) SHALL reflect the events | specs/features/req_39_elite.feature:93<br>specs/features/req_39_elite.feature:100<br>specs/features/req_39_elite.feature:107 | 5 | ✅ Complete |
 | REQ-40 | AC-40.1 | WHEN connected event carries dwApplicationVersionMajor < 13 THEN sim_id SHALL be Msfs | specs/features/req_40_msfs2024.feature:5<br>specs/features/req_40_msfs2024.feature:11 | 1 | ✅ Complete |
 | REQ-40 | AC-40.2 | WHEN connected event carries dwApplicationVersionMajor >= 13 THEN sim_id SHALL be Msfs2024 | specs/features/req_40_msfs2024.feature:17<br>specs/features/req_40_msfs2024.feature:23 | 1 | ✅ Complete |
-| REQ-40 | AC-40.3 | Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *) | specs/features/req_40_msfs2024.feature:31 | 3 | ✅ Complete |
-| REQ-40 | AC-40.4 | ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units | specs/features/req_40_msfs2024.feature:39<br>specs/features/req_40_msfs2024.feature:46 | 2 | ✅ Complete |
+| REQ-40 | AC-40.3 | Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *) | specs/features/req_40_msfs2024.feature:31 | 1 | ✅ Complete |
+| REQ-40 | AC-40.4 | ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units | specs/features/req_40_msfs2024.feature:39<br>specs/features/req_40_msfs2024.feature:46 | 1 | ✅ Complete |
 | REQ-40 | AC-40.5 | ProcessDetectionConfig SHALL contain a Msfs2024 definition with process FlightSimulator2024.exe | specs/features/req_40_msfs2024.feature:53<br>specs/features/req_40_msfs2024.feature:60 | 1 | ✅ Complete |
 | REQ-41 | AC-41.1 | KspAdapter::sim_id() SHALL return SimId::Ksp and initial state SHALL be Disconnected | specs/features/req_41_ksp.feature:5<br>specs/features/req_41_ksp.feature:11 | 2 | ✅ Complete |
 | REQ-41 | AC-41.2 | WHEN heading_deg > 180 THEN normalized heading SHALL be heading_deg - 360; otherwise heading SHALL be unchanged | specs/features/req_41_ksp.feature:17<br>specs/features/req_41_ksp.feature:23 | 2 | ✅ Complete |
@@ -568,7 +573,7 @@
 | INF-REQ-16 | AC-16.2 | WHEN Gherkin scenario headers and AC tags are parsed THEN Scenario/Background/Outline headers SHALL be recognized and non-AC tags SHALL be filtered | specs/features/req_inf16_bdd_metrics.feature:17<br>specs/features/req_inf16_bdd_metrics.feature:23 | 3 | ✅ Complete |
 | INF-REQ-16 | AC-16.3 | WHEN test references are parsed THEN double-colon notation and -p flag notation SHALL both be extracted; valid and invalid crate name candidates SHALL be distinguished | specs/features/req_inf16_bdd_metrics.feature:29<br>specs/features/req_inf16_bdd_metrics.feature:35 | 5 | ✅ Complete |
 | INF-REQ-16 | AC-16.4 | WHEN coverage status is computed for all AC state combinations THEN every branch SHALL produce the correct AcStatus value; workspace crate filtering SHALL preserve unmapped rows | specs/features/req_inf16_bdd_metrics.feature:41<br>specs/features/req_inf16_bdd_metrics.feature:47 | 3 | ✅ Complete |
-| INF-REQ-17 | AC-17.1 | WHEN MetadataValidationReport is created THEN it SHALL start in success state; adding issues SHALL mark it as failed | specs/features/req_inf16_bdd_metrics.feature:56<br>specs/features/req_inf17_workspace_meta.feature:11 | 2 | ✅ Complete |
+| INF-REQ-17 | AC-17.1 | WHEN MetadataValidationReport is created THEN it SHALL start in success state; adding issues SHALL mark it as failed | specs/features/req_inf17_workspace_meta.feature:5<br>specs/features/req_inf17_workspace_meta.feature:11 | 2 | ✅ Complete |
 | INF-REQ-17 | AC-17.2 | WHEN CrateMetadataIssue summary is formatted THEN missing fields SHALL be listed as 'missing' and invalid fields as 'invalid' | specs/features/req_inf17_workspace_meta.feature:17 | 2 | ✅ Complete |
 | INF-REQ-17 | AC-17.3 | WHEN readme path is resolved THEN absolute paths SHALL be returned unchanged and relative paths SHALL be joined to the manifest directory; None readme SHALL yield None path | specs/features/req_inf17_workspace_meta.feature:23<br>specs/features/req_inf17_workspace_meta.feature:29 | 3 | ✅ Complete |
 | INF-REQ-17 | AC-17.4 | WHEN workspace microcrate names are loaded from the repo root THEN core flight crates SHALL be present in the result | specs/features/req_inf17_workspace_meta.feature:35 | 2 | ✅ Complete |
