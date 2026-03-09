@@ -8,7 +8,7 @@
 
 use flight_bus::routing::{
     BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType,
+    SourceType, Topic,
 };
 use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
@@ -67,6 +67,7 @@ fn integration_route_matches_axis_events_only() {
         source_type: SourceType::Any,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 1);
 
@@ -126,6 +127,7 @@ fn integration_route_source_id_filter() {
         source_type: SourceType::Device,
         source_id: Some(42),
         event_kind: None,
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 100);
 
