@@ -8,7 +8,7 @@
   "needs_tests": 0,
   "draft": 4455,
   "incomplete": 0,
-  "microcrate_total": 87,
+  "microcrate_total": 92,
   "microcrate_with_tests": 65,
   "microcrate_with_gherkin": 65,
   "microcrate_with_tests_and_gherkin": 65,
@@ -158,6 +158,18 @@
       "incomplete": 0
     },
     {
+      "crate_name": "flight-dcs-bios",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
       "crate_name": "flight-dcs-export",
       "total_ac": 8,
       "ac_with_tests": 8,
@@ -224,6 +236,18 @@
       "ac_with_gherkin": 3,
       "ac_with_tests_and_gherkin": 3,
       "complete": 3,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-ffb-brunner",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
@@ -494,6 +518,18 @@
       "incomplete": 0
     },
     {
+      "crate_name": "flight-installer-tests",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
       "crate_name": "flight-integration-tests",
       "total_ac": 0,
       "ac_with_tests": 0,
@@ -668,6 +704,18 @@
       "ac_with_gherkin": 17,
       "ac_with_tests_and_gherkin": 17,
       "complete": 17,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-pedals",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
@@ -872,6 +920,18 @@
       "ac_with_gherkin": 3,
       "ac_with_tests_and_gherkin": 3,
       "complete": 3,
+      "needs_gherkin": 0,
+      "needs_tests": 0,
+      "draft": 0,
+      "incomplete": 0
+    },
+    {
+      "crate_name": "flight-testkit",
+      "total_ac": 0,
+      "ac_with_tests": 0,
+      "ac_with_gherkin": 0,
+      "ac_with_tests_and_gherkin": 0,
+      "complete": 0,
       "needs_gherkin": 0,
       "needs_tests": 0,
       "draft": 0,
