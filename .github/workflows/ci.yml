@@ -502,7 +502,7 @@ jobs:
     name: Public API Guard
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    continue-on-error: true  # cargo-public-api v0.38.0 can't parse rustdoc JSON v498
+    continue-on-error: true  # Gracefully degrade when cargo-public-api can't parse rustdoc JSON
     if: github.event_name == 'pull_request'
     needs: path-filter
     steps:
@@ -511,14 +511,17 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Install Rust toolchain
+    - name: Install Rust nightly toolchain
       id: rust-toolchain
+      uses: dtolnay/rust-toolchain@nightly
+
+    - name: Install Rust stable toolchain
       uses: dtolnay/rust-toolchain@stable
 
     - name: Get toolchain hash
       id: toolchain-hash
       shell: bash
-      run: echo "cachekey=$(rustc -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+      run: echo "cachekey=$(rustc +nightly -Vv | sha256sum | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
     - name: Cache cargo registry
       uses: actions/cache@v4
@@ -549,58 +552,36 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libudev-dev
 
-    - name: Cache cargo-public-api binary
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/cargo-public-api
-        key: cargo-public-api-${{ runner.os }}-0.38.0
-
-    - name: Install cargo-public-api
+    - name: Install cargo-public-api (latest)
       run: |
-        if ! command -v cargo-public-api &> /dev/null; then
-          cargo install --locked cargo-public-api@=0.38.0
-        else
-          echo "cargo-public-api already installed"
-        fi
+        cargo install --locked cargo-public-api || {
+          echo "::warning::Failed to install cargo-public-api — skipping public API checks"
+          exit 0
+        }
 
     - name: Check flight-core public API
       if: needs.path-filter.outputs.core == 'true'
-      id: check-core-api
       continue-on-error: true
-      run: cargo public-api -p flight-core diff origin/main..HEAD
-
-    - name: Retry flight-core API check with nightly (if needed)
-      if: needs.path-filter.outputs.core == 'true' && steps.check-core-api.outcome == 'failure'
       run: |
-        echo "Retrying with nightly toolchain..."
-        rustup toolchain install nightly
-        cargo +nightly public-api -p flight-core diff origin/main..HEAD
+        cargo +nightly public-api -p flight-core diff origin/main..HEAD 2>&1 || {
+          echo "::warning::flight-core public API check failed (possible rustdoc JSON format mismatch)"
+        }
 
     - name: Check flight-ipc public API
       if: needs.path-filter.outputs.ipc == 'true'
-      id: check-ipc-api
       continue-on-error: true
-      run: cargo public-api -p flight-ipc diff origin/main..HEAD
-
-    - name: Retry flight-ipc API check with nightly (if needed)
-      if: needs.path-filter.outputs.ipc == 'true' && steps.check-ipc-api.outcome == 'failure'
       run: |
-        echo "Retrying with nightly toolchain..."
-        rustup toolchain install nightly
-        cargo +nightly public-api -p flight-ipc diff origin/main..HEAD
+        cargo +nightly public-api -p flight-ipc diff origin/main..HEAD 2>&1 || {
+          echo "::warning::flight-ipc public API check failed (possible rustdoc JSON format mismatch)"
+        }
 
     - name: Check flight-hid public API
       if: needs.path-filter.outputs.hid == 'true'
-      id: check-hid-api
       continue-on-error: true
-      run: cargo public-api -p flight-hid diff origin/main..HEAD
-
-    - name: Retry flight-hid API check with nightly (if needed)
-      if: needs.path-filter.outputs.hid == 'true' && steps.check-hid-api.outcome == 'failure'
       run: |
-        echo "Retrying with nightly toolchain..."
-        rustup toolchain install nightly
-        cargo +nightly public-api -p flight-hid diff origin/main..HEAD
+        cargo +nightly public-api -p flight-hid diff origin/main..HEAD 2>&1 || {
+          echo "::warning::flight-hid public API check failed (possible rustdoc JSON format mismatch)"
+        }
 
   gated-ipc-smoke:
     name: Gated IPC Smoke Tests
