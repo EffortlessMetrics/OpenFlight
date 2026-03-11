@@ -16,42 +16,40 @@
 //!   10. Property-based tests (proptest)
 //!   11. Integration Scenarios
 
+mod common;
+
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::io;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
-use std::time::Duration;
 
+use common::deterministic_signing_key;
 use ed25519_dalek::{Signer, SigningKey};
-use proptest::prelude::*;
-use rand_core::OsRng;
 use sha2::{Digest, Sha256};
 
-use flight_updater::channels::{Channel, ChannelConfig, ChannelManager};
-use flight_updater::delta::{
-    calculate_delta, DeltaApplier, DeltaOperation, DeltaPatch, FileDelta,
-};
+use flight_updater::channels::{Channel, ChannelManager};
+use flight_updater::delta::{DeltaApplier, DeltaPatch, calculate_delta};
 use flight_updater::manifest::{
-    parse as parse_manifest, verify_signature as verify_manifest_signature, FileOperation,
-    FileUpdate, SemVer, UpdateManifest as SignedUpdateManifest,
+    FileOperation, FileUpdate, SemVer, UpdateManifest as SignedUpdateManifest,
+    parse as parse_manifest, verify_signature as verify_manifest_signature,
 };
 use flight_updater::policy::{
-    should_apply, CurrentState, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy,
+    CurrentState, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy, should_apply,
 };
 use flight_updater::rollback::{
-    ArtifactFile, FileSystem, UpdateJournal, UpdateRollbackConfig, UpdateRollbackManager,
-    UpdateState, VersionInfo, RealFileSystem,
+    ArtifactFile, FileSystem, RealFileSystem, UpdateJournal, UpdateRollbackConfig,
+    UpdateRollbackManager, UpdateState,
 };
 use flight_updater::signed_manifest::{
     Arch, ArtifactEntry as SmArtifactEntry, InstallerType, ManifestValidationError, Platform,
-    UpdateManifest as SmUpdateManifest, UpdatePolicy as SmUpdatePolicy,
+    UpdateManifest as SmUpdateManifest,
 };
 use flight_updater::update_manifest::{
-    compare_versions, parse_semver, ManifestUpdateManager, UpdateChannel,
-    UpdateManifest as UmUpdateManifest, UpdateRecord, VersionEntry,
+    ManifestUpdateManager, UpdateChannel, UpdateManifest as UmUpdateManifest, UpdateRecord,
+    VersionEntry, compare_versions, parse_semver,
 };
-use flight_updater::updater::{UpdateConfig, UpdateResult};
+use flight_updater::updater::UpdateResult;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Helpers
@@ -62,7 +60,7 @@ fn sha256_hex(data: &[u8]) -> String {
 }
 
 fn make_signed_manifest_with_key() -> (SignedUpdateManifest, SigningKey) {
-    let sk = SigningKey::generate(&mut OsRng);
+    let sk = deterministic_signing_key("flight-updater-depth-tests", "signed-manifest");
     let mut manifest = SignedUpdateManifest {
         version: SemVer::new(2, 0, 0),
         channel: Channel::Stable,
@@ -89,12 +87,6 @@ fn make_signed_manifest_with_key() -> (SignedUpdateManifest, SigningKey) {
     let sig = sk.sign(&msg);
     manifest.signature = hex::encode(sig.to_bytes());
     (manifest, sk)
-}
-
-fn sign_manifest(manifest: &mut SignedUpdateManifest, signing_key: &SigningKey) {
-    let msg = manifest.canonical_bytes();
-    let sig = signing_key.sign(&msg);
-    manifest.signature = hex::encode(sig.to_bytes());
 }
 
 fn make_version_entry(version: &str, channel: UpdateChannel) -> VersionEntry {
@@ -222,9 +214,7 @@ impl FileSystem for MockFs {
         self.files
             .borrow_mut()
             .retain(|k, _| !k.starts_with(&path_buf));
-        self.dirs
-            .borrow_mut()
-            .retain(|d| !d.starts_with(&path_buf));
+        self.dirs.borrow_mut().retain(|d| !d.starts_with(&path_buf));
         Ok(())
     }
 
@@ -341,7 +331,11 @@ mod manifest_parsing {
         let mut m = sample_sm_manifest();
         m.version = "not-a-version".into();
         let errors = m.validate();
-        assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::InvalidSemver(_))));
+        assert!(
+            errors
+                .iter()
+                .any(|e| matches!(e, ManifestValidationError::InvalidSemver(_)))
+        );
     }
 
     #[test]
@@ -349,7 +343,11 @@ mod manifest_parsing {
         let mut m = sample_sm_manifest();
         m.artifacts.clear();
         let errors = m.validate();
-        assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::EmptyArtifacts)));
+        assert!(
+            errors
+                .iter()
+                .any(|e| matches!(e, ManifestValidationError::EmptyArtifacts))
+        );
     }
 
     #[test]
@@ -357,7 +355,11 @@ mod manifest_parsing {
         let mut m = sample_sm_manifest();
         m.artifacts[0].sha256 = "too-short".into();
         let errors = m.validate();
-        assert!(errors.iter().any(|e| matches!(e, ManifestValidationError::InvalidSha256 { .. })));
+        assert!(
+            errors
+                .iter()
+                .any(|e| matches!(e, ManifestValidationError::InvalidSha256 { .. }))
+        );
     }
 
     #[test]
@@ -429,7 +431,7 @@ mod signature_verification {
     #[test]
     fn sig_wrong_key_rejects() {
         let (manifest, _sk) = make_signed_manifest_with_key();
-        let wrong_sk = SigningKey::generate(&mut OsRng);
+        let wrong_sk = deterministic_signing_key("flight-updater-depth-tests", "wrong-key");
         let wrong_pk_hex = hex::encode(wrong_sk.verifying_key().to_bytes());
         assert!(verify_manifest_signature(&manifest, &wrong_pk_hex).is_err());
     }
@@ -497,7 +499,10 @@ mod policy_engine {
     use super::*;
 
     fn auto_policy() -> ManifestUpdatePolicy {
-        ManifestUpdatePolicy { auto_apply: true, ..Default::default() }
+        ManifestUpdatePolicy {
+            auto_apply: true,
+            ..Default::default()
+        }
     }
 
     fn default_state() -> CurrentState {
@@ -512,18 +517,30 @@ mod policy_engine {
 
     #[test]
     fn policy_apply_when_all_conditions_met() {
-        assert_eq!(should_apply(&auto_policy(), &default_state()), UpdateDecision::Apply);
+        assert_eq!(
+            should_apply(&auto_policy(), &default_state()),
+            UpdateDecision::Apply
+        );
     }
 
     #[test]
     fn policy_skip_disallowed_channel() {
-        let state = CurrentState { update_channel: Channel::Canary, ..default_state() };
-        assert!(matches!(should_apply(&auto_policy(), &state), UpdateDecision::Skip(_)));
+        let state = CurrentState {
+            update_channel: Channel::Canary,
+            ..default_state()
+        };
+        assert!(matches!(
+            should_apply(&auto_policy(), &state),
+            UpdateDecision::Skip(_)
+        ));
     }
 
     #[test]
     fn mid_flight_protection_defers_update() {
-        let state = CurrentState { sim_running: true, ..default_state() };
+        let state = CurrentState {
+            sim_running: true,
+            ..default_state()
+        };
         let decision = should_apply(&auto_policy(), &state);
         assert!(matches!(decision, UpdateDecision::Defer(ref r) if r.contains("simulator")));
     }
@@ -561,8 +578,12 @@ mod rollback_system {
     fn rollback_journal_state_ordering() {
         let fs = MockFs::new_mock();
         let journal = UpdateJournal::new(PathBuf::from("/j.log"), fs);
-        journal.record(&UpdateState::Downloading, "1.0.0", "start").unwrap();
-        journal.record(&UpdateState::Complete, "1.0.0", "done").unwrap();
+        journal
+            .record(&UpdateState::Downloading, "1.0.0", "start")
+            .unwrap();
+        journal
+            .record(&UpdateState::Complete, "1.0.0", "done")
+            .unwrap();
         let entries = journal.entries().unwrap();
         assert_eq!(entries[0].state, UpdateState::Downloading);
         assert_eq!(entries[1].state, UpdateState::Complete);
@@ -575,7 +596,9 @@ mod rollback_system {
         fs.add_file("/app/backups/backup_001/bin.exe", b"good-v1");
         let config = mock_config("/app");
         let mut mgr = UpdateRollbackManager::new(config, fs).unwrap();
-        mgr.journal().record(&UpdateState::Installing, "2.0.0", "stuck").unwrap();
+        mgr.journal()
+            .record(&UpdateState::Installing, "2.0.0", "stuck")
+            .unwrap();
         let recovered = mgr.recover_on_startup().unwrap();
         assert!(recovered);
         assert_eq!(*mgr.state(), UpdateState::Idle);
@@ -657,12 +680,18 @@ mod progress_tracking {
     fn update_history_tracks_success_rate() {
         let mut mgr = ManifestUpdateManager::new("1.0.0", UpdateChannel::Stable);
         mgr.record_update(UpdateRecord {
-            from_version: "1.0.0".into(), to_version: "1.1.0".into(),
-            timestamp: 1000, success: true, was_delta: false,
+            from_version: "1.0.0".into(),
+            to_version: "1.1.0".into(),
+            timestamp: 1000,
+            success: true,
+            was_delta: false,
         });
         mgr.record_update(UpdateRecord {
-            from_version: "1.1.0".into(), to_version: "1.2.0".into(),
-            timestamp: 2000, success: false, was_delta: false,
+            from_version: "1.1.0".into(),
+            to_version: "1.2.0".into(),
+            timestamp: 2000,
+            success: false,
+            was_delta: false,
         });
         let rate = mgr.success_rate();
         assert!((rate - 0.5).abs() < 1e-10);
@@ -672,7 +701,9 @@ mod progress_tracking {
     fn journal_clear_works() {
         let fs = MockFs::new_mock();
         let journal = UpdateJournal::new(PathBuf::from("/j.log"), fs);
-        journal.record(&UpdateState::Downloading, "1.0.0", "dl").unwrap();
+        journal
+            .record(&UpdateState::Downloading, "1.0.0", "dl")
+            .unwrap();
         journal.clear().unwrap();
         assert!(journal.entries().unwrap().is_empty());
     }
@@ -724,8 +755,10 @@ mod integration_scenarios {
         std::fs::write(install_dir.join("app.bin"), b"v1").unwrap();
 
         let config = UpdateRollbackConfig {
-            backup_dir, install_dir: install_dir.clone(),
-            journal_path, max_backups: 3,
+            backup_dir,
+            install_dir: install_dir.clone(),
+            journal_path,
+            max_backups: 3,
         };
 
         let fs = RealFileSystem;
@@ -736,7 +769,8 @@ mod integration_scenarios {
         std::fs::write(&artifact_path, artifact_data).unwrap();
 
         let artifacts = vec![ArtifactFile {
-            path: artifact_path, expected_sha256: sha256_hex(artifact_data),
+            path: artifact_path,
+            expected_sha256: sha256_hex(artifact_data),
         }];
 
         mgr.apply_update(&artifacts, "2.0.0").unwrap();
