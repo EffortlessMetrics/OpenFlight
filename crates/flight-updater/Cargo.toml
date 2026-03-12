@@ -68,6 +68,7 @@ nix = { workspace = true }
 criterion = { workspace = true }
 proptest = { workspace = true }
 tempfile = { workspace = true }
+uselesskey = { version = "0.2.0", default-features = false, features = ["ed25519"] }
 
 [[bench]]
 name = "delta_apply"
