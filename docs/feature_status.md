@@ -407,7 +407,7 @@
 | INF-REQ-7 | AC-7.6 | WHEN new maintenance needs arise THEN they SHALL be encoded as tasks | specs/features/req_inf_2_to_12_gherkin_rollup.feature:40 | 1 | ✅ Complete |
 | INF-REQ-7 | AC-7.7 | WHEN tasks are completed THEN acceptance commands SHALL be re-run | specs/features/req_inf_2_to_12_gherkin_rollup.feature:40 | 1 | ✅ Complete |
 | INF-REQ-8 | AC-8.1 | WHEN setting up locally THEN the canonical environment SHALL be defined | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |
-| INF-REQ-8 | AC-8.2 | WHEN local environment starts THEN it SHALL build with Rust 1.92.0 and edition 2024 | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |
+| INF-REQ-8 | AC-8.2 | WHEN local environment starts THEN it SHALL build with Rust 1.93 and edition 2024 | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |
 | INF-REQ-8 | AC-8.3 | WHEN services are exposed THEN they SHALL use documented ports in invariants.yaml | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |
 | INF-REQ-8 | AC-8.4 | WHEN environment is started THEN source code SHALL be bind-mounted | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |
 | INF-REQ-8 | AC-8.5 | WHEN validating environment THEN health check endpoints SHALL return 200 | specs/features/req_inf_2_to_12_gherkin_rollup.feature:47 | 1 | ✅ Complete |

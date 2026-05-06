@@ -22,3 +22,6 @@ core-foundation = { workspace = true }
 core-foundation-sys = { workspace = true }
 
 [dev-dependencies]
+
+[lints]
+workspace = true

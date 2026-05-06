@@ -25,3 +25,6 @@ flight-hid-support = { path = "../flight-hid-support" }
 [dev-dependencies]
 insta = { workspace = true }
 proptest = { workspace = true }
+
+[lints]
+workspace = true

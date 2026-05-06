@@ -31,3 +31,6 @@ tracing.workspace = true
 hidapi = { workspace = true, optional = true }
 
 [dev-dependencies]
+
+[lints]
+workspace = true

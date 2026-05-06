@@ -105,3 +105,6 @@ required-features = ["examples-optin"]
 [[example]]
 name = "mixer_demo"
 required-features = ["examples-optin"]
+
+[lints]
+workspace = true

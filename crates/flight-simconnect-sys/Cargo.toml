@@ -32,3 +32,6 @@ cc.workspace = true
 default = ["dynamic"]
 dynamic = []
 static = []
+
+[lints]
+workspace = true

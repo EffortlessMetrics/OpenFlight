@@ -24,3 +24,6 @@ flight-process-detection = { path = "../flight-process-detection" }
 proptest.workspace = true
 tempfile.workspace = true
 toml.workspace = true
+
+[lints]
+workspace = true

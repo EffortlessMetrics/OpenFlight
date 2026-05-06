@@ -43,3 +43,6 @@ regex = { workspace = true }
 [[test]]
 name = "cucumber"
 harness = false
+
+[lints]
+workspace = true

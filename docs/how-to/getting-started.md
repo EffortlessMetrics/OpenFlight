@@ -17,14 +17,14 @@ connecting your first device, applying a profile, and running with a simulator.
 
 ### Rust Toolchain
 
-OpenFlight requires **Rust 1.92.0 or later** (2024 edition).
+OpenFlight requires **Rust 1.93 or later** (2024 edition).
 
 ```bash
 # Install via rustup (https://rustup.rs)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Verify version
-rustc --version   # Must be >= 1.92.0
+rustc --version   # Must be >= 1.93
 ```
 
 ### Platform Dependencies

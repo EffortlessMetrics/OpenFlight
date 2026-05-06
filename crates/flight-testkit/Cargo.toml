@@ -16,3 +16,6 @@ keywords = ["flight-sim", "openflight", "test", "mock"]
 flight-bus = { path = "../flight-bus" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[lints]
+workspace = true

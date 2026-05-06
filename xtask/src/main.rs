@@ -23,6 +23,7 @@ mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
 mod hotas;
+mod lint_policy;
 mod normalize_docs;
 mod quality_gates;
 mod release;
@@ -45,6 +46,9 @@ enum Commands {
 
     /// Full quality gate (check + benches, API, cross-ref)
     Validate,
+
+    /// Verify workspace Clippy policy wiring and ledgers
+    CheckLintPolicy,
 
     /// Generate feature status report
     AcStatus,
@@ -158,6 +162,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Check => check::run_check(),
         Commands::Validate => validate::run_validate(),
+        Commands::CheckLintPolicy => lint_policy::run_check_lint_policy(),
         Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
         Commands::ValidateInfra => validate_infra::run_validate_infra(),

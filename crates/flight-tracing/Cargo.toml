@@ -43,3 +43,6 @@ proptest.workspace = true
 default = ["etw", "tracepoints"]
 etw = []
 tracepoints = []
+
+[lints]
+workspace = true
