@@ -33,3 +33,6 @@ chrono = { workspace = true, features = ["serde"] }
 tempfile.workspace = true
 proptest = { workspace = true }
 flight-dcs-modules = { path = "../flight-dcs-modules" }
+
+[lints]
+workspace = true

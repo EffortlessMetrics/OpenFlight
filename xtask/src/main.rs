@@ -23,6 +23,7 @@ mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
 mod hotas;
+mod lint_policy;
 mod normalize_docs;
 mod quality_gates;
 mod release;
@@ -77,6 +78,18 @@ enum Commands {
 
     /// Generate compatibility matrix (COMPATIBILITY.md + JSON) from device/game manifests
     CompatMatrix,
+
+    /// Verify workspace Clippy lint policy and ledgers
+    CheckLintPolicy,
+
+    /// Verify panic-family allowlist schema
+    CheckNoPanicFamily,
+
+    /// Verify non-Rust file policy allowlist schema
+    CheckFilePolicy,
+
+    /// Print a compact policy status report
+    PolicyReport,
 
     /// Run code coverage report on core crates using cargo-llvm-cov
     Coverage {
@@ -190,6 +203,10 @@ fn main() -> Result<()> {
         Commands::GenCompat => compat::run_gen_compat(),
         Commands::GenerateCompat => compat::run_gen_compat(),
         Commands::CompatMatrix => compat::run_gen_compat(),
+        Commands::CheckLintPolicy => lint_policy::run_check_lint_policy(),
+        Commands::CheckNoPanicFamily => lint_policy::run_check_no_panic_family(),
+        Commands::CheckFilePolicy => lint_policy::run_check_file_policy(),
+        Commands::PolicyReport => lint_policy::run_policy_report(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),

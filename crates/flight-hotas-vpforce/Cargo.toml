@@ -24,3 +24,6 @@ flight-hid-support = { path = "../flight-hid-support" }
 
 [dev-dependencies]
 proptest = { workspace = true }
+
+[lints]
+workspace = true

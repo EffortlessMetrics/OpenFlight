@@ -24,3 +24,6 @@ tracing.workspace = true
 
 [dev-dependencies]
 flight-watchdog = { path = "../flight-watchdog" }
+
+[lints]
+workspace = true

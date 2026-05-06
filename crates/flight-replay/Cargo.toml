@@ -43,3 +43,6 @@ required-features = ["benches-optin"]
 default = []
 validation-suite = []  # Enable comprehensive validation features
 benches-optin = []
+
+[lints]
+workspace = true

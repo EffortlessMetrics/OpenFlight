@@ -48,3 +48,6 @@ required-features = ["tests-optin"]
 [[test]]
 name = "simple_dsl_test"
 required-features = ["tests-optin"]
+
+[lints]
+workspace = true

@@ -67,3 +67,6 @@ tokio-test.workspace = true
 flight-bus = { path = "../flight-bus" }
 axum-test.workspace = true
 insta.workspace = true
+
+[lints]
+workspace = true
