@@ -155,7 +155,11 @@ fn health_check_detects_missing_file() {
         .map(|e| &e.destination)
         .collect();
 
-    assert_eq!(missing.len(), 1, "health check must detect exactly one missing file");
+    assert_eq!(
+        missing.len(),
+        1,
+        "health check must detect exactly one missing file"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -208,12 +212,7 @@ fn dependency_check_validates_required_files() {
 fn dependency_check_binary_path_consistent_with_files() {
     // The service binary_path must correspond to a file in the manifest.
     let w = manifest::windows_manifest(Path::new(r"C:\FH"));
-    let bin_name = w
-        .service
-        .binary_path
-        .file_name()
-        .unwrap()
-        .to_string_lossy();
+    let bin_name = w.service.binary_path.file_name().unwrap().to_string_lossy();
     assert!(
         w.files
             .iter()
@@ -222,12 +221,7 @@ fn dependency_check_binary_path_consistent_with_files() {
     );
 
     let l = manifest::linux_manifest(Path::new("/"));
-    let bin_name = l
-        .service
-        .binary_path
-        .file_name()
-        .unwrap()
-        .to_string_lossy();
+    let bin_name = l.service.binary_path.file_name().unwrap().to_string_lossy();
     assert!(
         l.files
             .iter()
@@ -306,5 +300,8 @@ fn manifest_roundtrip_integrity() {
     let json2 = serde_json::to_string_pretty(&m2).unwrap();
     let v1: serde_json::Value = serde_json::from_str(&json1).unwrap();
     let v2: serde_json::Value = serde_json::from_str(&json2).unwrap();
-    assert_eq!(v1, v2, "manifest must roundtrip identically through JSON (semantic equality)");
+    assert_eq!(
+        v1, v2,
+        "manifest must roundtrip identically through JSON (semantic equality)"
+    );
 }

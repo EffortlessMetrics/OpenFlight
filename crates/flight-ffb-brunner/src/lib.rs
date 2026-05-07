@@ -31,9 +31,8 @@ pub mod protocol;
 pub mod safety;
 
 pub use effects::{
-    BrunnerEffect, ConstantForceParams, DamperParams, EffectComposite, EffectsFull,
-    FrictionParams, MAX_EFFECTS, PeriodicParams, PeriodicWaveform, SpringParams,
-    compute_effect_force,
+    BrunnerEffect, ConstantForceParams, DamperParams, EffectComposite, EffectsFull, FrictionParams,
+    MAX_EFFECTS, PeriodicParams, PeriodicWaveform, SpringParams, compute_effect_force,
 };
 pub use profiles::{AircraftCategory, BrunnerProfile, default_cls_e_profile};
 pub use protocol::{

@@ -255,7 +255,10 @@ fn rpm_normalized_with_zero_rpm_max_is_finite() {
     let norm = t.rpm_normalized();
     assert!(!norm.is_nan(), "should not be NaN");
     assert!(!norm.is_infinite(), "should not be infinite");
-    assert!((norm - 5000.0).abs() < f32::EPSILON, "expected 5000.0, got {norm}");
+    assert!(
+        (norm - 5000.0).abs() < f32::EPSILON,
+        "expected 5000.0, got {norm}"
+    );
 }
 
 #[test]
@@ -589,7 +592,10 @@ fn ffb_negative_vertical_g_produces_positive_rumble() {
         ..Default::default()
     };
     let out = translator.translate(&t);
-    assert!(out.rumble_amp > 0.0, "abs(vertical_g) should give positive rumble");
+    assert!(
+        out.rumble_amp > 0.0,
+        "abs(vertical_g) should give positive rumble"
+    );
     assert!((out.rumble_amp - 0.7).abs() < 1e-5);
 }
 
@@ -753,16 +759,15 @@ proptest! {
 #[test]
 fn e2e_high_speed_cornering() {
     let pkt = build_packet(
-        5,     // 5th gear
-        60.0,  // ~216 km/h
-        3.5,   // heavy right turn
-        -0.2,  // slight braking
-        0.05,  // minimal bumps
-        0.9,   // mostly on throttle
-        0.1,   // trailing brake
-        0.6,   // steering right
-        7500.0,
-        8500.0,
+        5,    // 5th gear
+        60.0, // ~216 km/h
+        3.5,  // heavy right turn
+        -0.2, // slight braking
+        0.05, // minimal bumps
+        0.9,  // mostly on throttle
+        0.1,  // trailing brake
+        0.6,  // steering right
+        7500.0, 8500.0,
     );
     let t = parse_generic_udp(&pkt).unwrap();
     let ffb = RacingFfbTranslator::new().translate(&t);

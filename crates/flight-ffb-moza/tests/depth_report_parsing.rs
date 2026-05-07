@@ -4,9 +4,7 @@
 //! Depth tests for Moza AB9 HID report parsing — covers boundary values,
 //! individual axis extremes, hat-switch states, and malformed data.
 
-use flight_ffb_moza::input::{
-    AB9_REPORT_LEN, Ab9Buttons, MozaParseError, parse_ab9_report,
-};
+use flight_ffb_moza::input::{AB9_REPORT_LEN, Ab9Buttons, MozaParseError, parse_ab9_report};
 
 fn make_report_full(
     roll: i16,
@@ -37,8 +35,16 @@ fn centred() -> [u8; AB9_REPORT_LEN] {
 fn negative_full_deflection_roll() {
     let r = make_report_full(i16::MIN, 0, 0, 0, 0, 0);
     let s = parse_ab9_report(&r).unwrap();
-    assert!(s.axes.roll <= -0.99, "roll should be ≈ −1.0, got {}", s.axes.roll);
-    assert!(s.axes.roll >= -1.0, "roll should be clamped to −1.0, got {}", s.axes.roll);
+    assert!(
+        s.axes.roll <= -0.99,
+        "roll should be ≈ −1.0, got {}",
+        s.axes.roll
+    );
+    assert!(
+        s.axes.roll >= -1.0,
+        "roll should be clamped to −1.0, got {}",
+        s.axes.roll
+    );
 }
 
 #[test]
@@ -72,7 +78,10 @@ fn small_positive_axis_value() {
 fn small_negative_axis_value() {
     let r = make_report_full(-1, 0, 0, 0, 0, 0);
     let s = parse_ab9_report(&r).unwrap();
-    assert!(s.axes.roll < 0.0, "negative LSB should be slightly negative");
+    assert!(
+        s.axes.roll < 0.0,
+        "negative LSB should be slightly negative"
+    );
     assert!(s.axes.roll > -0.001);
 }
 
@@ -125,7 +134,11 @@ fn hat_switch_all_directions() {
     for hat_val in 0..=7 {
         let r = make_report_full(0, 0, 0, 0, 0, hat_val);
         let s = parse_ab9_report(&r).unwrap();
-        assert_eq!(s.buttons.hat, hat_val, "hat direction {} not preserved", hat_val);
+        assert_eq!(
+            s.buttons.hat, hat_val,
+            "hat direction {} not preserved",
+            hat_val
+        );
     }
 }
 
@@ -146,9 +159,17 @@ fn each_button_individually() {
         let s = parse_ab9_report(&r).unwrap();
         for btn in 1u8..=16 {
             if btn == n {
-                assert!(s.buttons.is_pressed(btn), "button {} should be pressed", btn);
+                assert!(
+                    s.buttons.is_pressed(btn),
+                    "button {} should be pressed",
+                    btn
+                );
             } else {
-                assert!(!s.buttons.is_pressed(btn), "button {} should NOT be pressed", btn);
+                assert!(
+                    !s.buttons.is_pressed(btn),
+                    "button {} should NOT be pressed",
+                    btn
+                );
             }
         }
     }
@@ -156,9 +177,15 @@ fn each_button_individually() {
 
 #[test]
 fn button_out_of_range_returns_false() {
-    let b = Ab9Buttons { mask: 0xFFFF, hat: 0 };
+    let b = Ab9Buttons {
+        mask: 0xFFFF,
+        hat: 0,
+    };
     assert!(!b.is_pressed(0), "button 0 is out of range");
-    assert!(!b.is_pressed(17), "button 17 is out of range for 16-bit mask");
+    assert!(
+        !b.is_pressed(17),
+        "button 17 is out of range for 16-bit mask"
+    );
     assert!(!b.is_pressed(255), "button 255 is out of range");
 }
 
@@ -202,13 +229,21 @@ fn longer_report_parses_ignoring_extra_bytes() {
 fn one_byte_short_fails() {
     let data = vec![0x01u8; AB9_REPORT_LEN - 1];
     let err = parse_ab9_report(&data).unwrap_err();
-    assert!(matches!(err, MozaParseError::TooShort { expected: AB9_REPORT_LEN, got } if got == data.len()));
+    assert!(
+        matches!(err, MozaParseError::TooShort { expected: AB9_REPORT_LEN, got } if got == data.len())
+    );
 }
 
 #[test]
 fn empty_report_fails() {
     let err = parse_ab9_report(&[]).unwrap_err();
-    assert!(matches!(err, MozaParseError::TooShort { expected: AB9_REPORT_LEN, got: 0 }));
+    assert!(matches!(
+        err,
+        MozaParseError::TooShort {
+            expected: AB9_REPORT_LEN,
+            got: 0
+        }
+    ));
 }
 
 // ── Report ID tests ────────────────────────────────────────────────────
@@ -237,7 +272,10 @@ fn report_id_0xff_is_rejected() {
 
 #[test]
 fn error_display_too_short() {
-    let err = MozaParseError::TooShort { expected: 16, got: 4 };
+    let err = MozaParseError::TooShort {
+        expected: 16,
+        got: 4,
+    };
     let msg = err.to_string();
     assert!(msg.contains("16"), "should mention expected length");
     assert!(msg.contains("4"), "should mention actual length");

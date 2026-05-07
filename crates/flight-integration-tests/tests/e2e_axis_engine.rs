@@ -52,9 +52,7 @@ fn expected_standard_output(raw: f64) -> f64 {
 #[test]
 fn e2e_axis_raw_through_full_pipeline() {
     let pipeline = standard_pipeline();
-    let test_inputs: Vec<f64> = vec![
-        0.0, 0.02, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, -0.5, -1.0,
-    ];
+    let test_inputs: Vec<f64> = vec![0.0, 0.02, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, -0.5, -1.0];
 
     for &raw in &test_inputs {
         let out = pipeline.process(raw, 0.004);
@@ -76,7 +74,10 @@ fn e2e_axis_raw_through_full_pipeline() {
 
     // Full deflection
     let full = pipeline.process(1.0, 0.004);
-    assert!((full - 1.0).abs() < 1e-6, "1.0 input must produce 1.0 output");
+    assert!(
+        (full - 1.0).abs() < 1e-6,
+        "1.0 input must produce 1.0 output"
+    );
 }
 
 // ===========================================================================
@@ -193,11 +194,11 @@ fn e2e_axis_clamping_at_bounds() {
     // Values that would exceed ±1.0 after sensitivity multiplication
     let test_cases = [
         (0.5, 1.0),   // 0.5 * 3.0 = 1.5 → clamped to 1.0
-        (-0.5, -1.0),  // -0.5 * 3.0 = -1.5 → clamped to -1.0
-        (0.3, 0.9),    // 0.3 * 3.0 = 0.9 → not clamped
-        (1.0, 1.0),    // 1.0 * 3.0 = 3.0 → clamped to 1.0
-        (-1.0, -1.0),  // -1.0 * 3.0 = -3.0 → clamped to -1.0
-        (0.0, 0.0),    // 0 stays 0
+        (-0.5, -1.0), // -0.5 * 3.0 = -1.5 → clamped to -1.0
+        (0.3, 0.9),   // 0.3 * 3.0 = 0.9 → not clamped
+        (1.0, 1.0),   // 1.0 * 3.0 = 3.0 → clamped to 1.0
+        (-1.0, -1.0), // -1.0 * 3.0 = -3.0 → clamped to -1.0
+        (0.0, 0.0),   // 0 stays 0
     ];
 
     for &(input, expected) in &test_cases {

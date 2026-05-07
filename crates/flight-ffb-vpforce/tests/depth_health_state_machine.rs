@@ -92,7 +92,10 @@ fn custom_threshold_of_one() {
     let mut m = RhinoHealthMonitor::new().with_failure_threshold(1);
     assert!(!m.is_offline());
     m.record_failure();
-    assert!(m.is_offline(), "single failure should trigger offline at threshold 1");
+    assert!(
+        m.is_offline(),
+        "single failure should trigger offline at threshold 1"
+    );
 }
 
 #[test]
@@ -190,9 +193,12 @@ fn ten_percent_ghost_rate() {
 fn ghost_rate_includes_failures_in_total() {
     let mut m = RhinoHealthMonitor::new();
     m.record_success(true); // 1 ghost, 1 total
-    m.record_failure();      // 1 ghost, 2 total
+    m.record_failure(); // 1 ghost, 2 total
     let rate = m.status().ghost_rate;
-    assert!((rate - 0.5).abs() < 1e-6, "ghost_rate should be 0.5, got {rate}");
+    assert!(
+        (rate - 0.5).abs() < 1e-6,
+        "ghost_rate should be 0.5, got {rate}"
+    );
 }
 
 // ── Ghost rate health threshold ─────────────────────────────────────────
@@ -214,7 +220,10 @@ fn ghost_rate_at_threshold_unhealthy() {
     for i in 0..100 {
         m.record_success(i < 10);
     }
-    assert!(!m.status().is_healthy(), "10% ghost rate should be unhealthy");
+    assert!(
+        !m.status().is_healthy(),
+        "10% ghost rate should be unhealthy"
+    );
 }
 
 #[test]

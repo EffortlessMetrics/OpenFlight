@@ -6,8 +6,8 @@
 //! Advances only when explicitly told to, making tests fully reproducible.
 //! Backed by `Arc<AtomicU64>` so it can be shared across threads.
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 /// Microseconds per tick at the 250 Hz RT spine rate.
@@ -54,8 +54,10 @@ impl DeterministicClock {
 
     /// Advance the clock by `duration`.
     pub fn advance(&self, duration: Duration) {
-        self.time_us
-            .fetch_add(u64::try_from(duration.as_micros()).unwrap_or(u64::MAX), Ordering::Release);
+        self.time_us.fetch_add(
+            u64::try_from(duration.as_micros()).unwrap_or(u64::MAX),
+            Ordering::Release,
+        );
     }
 
     /// Advance the clock by `us` microseconds.

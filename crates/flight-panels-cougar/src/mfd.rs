@@ -562,12 +562,7 @@ mod tests {
             MfdButton::Bottom5,
         ];
         for (offset, btn) in bottom.iter().enumerate() {
-            assert_eq!(
-                btn.index(),
-                10 + offset,
-                "Bottom{} wrong index",
-                offset + 1
-            );
+            assert_eq!(btn.index(), 10 + offset, "Bottom{} wrong index", offset + 1);
         }
         // Left row = 15–19
         let left = [
@@ -875,12 +870,16 @@ mod tests {
     #[test]
     fn depth_profile_label_override_on_active_page() {
         let mut display = MfdDisplay::new();
-        display.current_page_mut().set_label(MfdButton::Top1, "OLD", false);
+        display
+            .current_page_mut()
+            .set_label(MfdButton::Top1, "OLD", false);
 
         assert_eq!(display.current_page().label(MfdButton::Top1).text, "OLD");
 
         // Override the label in-place
-        display.current_page_mut().set_label(MfdButton::Top1, "NEW", true);
+        display
+            .current_page_mut()
+            .set_label(MfdButton::Top1, "NEW", true);
         assert_eq!(display.current_page().label(MfdButton::Top1).text, "NEW");
         assert!(display.current_page().label(MfdButton::Top1).active);
     }

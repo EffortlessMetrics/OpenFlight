@@ -23,22 +23,21 @@ use flight_updater::{
     channels::{ChannelConfig, ChannelManager},
     delta::{DeltaApplier, DeltaOperation, DeltaPatch, FileDelta, calculate_delta},
     manifest::{
-        FileOperation, FileUpdate, SemVer,
-        UpdateManifest as SignedUpdateManifest,
+        FileOperation, FileUpdate, SemVer, UpdateManifest as SignedUpdateManifest,
         parse as parse_manifest, verify_signature as verify_manifest_signature,
     },
     policy::{CurrentState, UpdateDecision, UpdatePolicy as ManifestUpdatePolicy, should_apply},
     rollback::{
-        ArtifactFile, FileSystem, UpdateJournal, UpdateRollbackConfig,
-        UpdateRollbackManager, UpdateState, VersionInfo,
+        ArtifactFile, FileSystem, UpdateJournal, UpdateRollbackConfig, UpdateRollbackManager,
+        UpdateState, VersionInfo,
     },
     signed_manifest::{
-        ArtifactEntry as SmArtifactEntry, Arch, InstallerType, Platform,
+        Arch, ArtifactEntry as SmArtifactEntry, InstallerType, Platform,
         UpdateManifest as SmUpdateManifest,
     },
     update_manifest::{
-        ManifestUpdateManager, UpdateChannel, UpdateManifest as UmUpdateManifest,
-        UpdateRecord, VersionEntry, parse_semver,
+        ManifestUpdateManager, UpdateChannel, UpdateManifest as UmUpdateManifest, UpdateRecord,
+        VersionEntry, parse_semver,
     },
     updater::{UpdateConfig, UpdateResult},
 };
@@ -206,9 +205,7 @@ impl FileSystem for MockFs {
         self.files
             .borrow_mut()
             .retain(|k, _| !k.starts_with(&path_buf));
-        self.dirs
-            .borrow_mut()
-            .retain(|d| !d.starts_with(&path_buf));
+        self.dirs.borrow_mut().retain(|d| !d.starts_with(&path_buf));
         Ok(())
     }
 
@@ -356,7 +353,10 @@ fn manifest_mandatory_update_via_min_version() {
         update_version: SemVer::new(2, 0, 0),
         update_min_version: Some(SemVer::new(1, 5, 0)),
     };
-    assert!(matches!(should_apply(&policy, &state), UpdateDecision::Skip(_)));
+    assert!(matches!(
+        should_apply(&policy, &state),
+        UpdateDecision::Skip(_)
+    ));
 }
 
 /// 1.7 Manifest expiry: tampered version fails signature verification.
@@ -460,7 +460,11 @@ fn delta_patch_mixed_operations_size() {
     patch.add_new_file("brand_new.bin".into(), vec![2u8; 100]);
     patch.calculate_size();
 
-    assert_eq!(patch.patch_size, 50 + 30 + 100, "Insert(50) + Insert(30) + new(100)");
+    assert_eq!(
+        patch.patch_size,
+        50 + 30 + 100,
+        "Insert(50) + Insert(30) + new(100)"
+    );
 }
 
 /// 2.5 Rollback on failed patch: patch with no inserts/new-files has zero size.
@@ -473,7 +477,10 @@ fn delta_patch_empty_inserts_zero_size() {
         source_hash: "s".into(),
         target_hash: "t".into(),
         operations: vec![
-            DeltaOperation::Copy { src_offset: 0, length: 512 },
+            DeltaOperation::Copy {
+                src_offset: 0,
+                length: 512,
+            },
             DeltaOperation::Delete { length: 64 },
         ],
         compression: "none".into(),
@@ -494,7 +501,10 @@ fn delta_checksum_verification() {
     entry.sha256 = expected.clone();
 
     assert!(ManifestUpdateManager::verify_integrity(&entry, data));
-    assert!(!ManifestUpdateManager::verify_integrity(&entry, b"tampered"));
+    assert!(!ManifestUpdateManager::verify_integrity(
+        &entry,
+        b"tampered"
+    ));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -718,7 +728,10 @@ fn safety_defer_when_auto_apply_off() {
         update_version: SemVer::new(2, 0, 0),
         update_min_version: None,
     };
-    assert!(matches!(should_apply(&policy, &state), UpdateDecision::Defer(_)));
+    assert!(matches!(
+        should_apply(&policy, &state),
+        UpdateDecision::Defer(_)
+    ));
 }
 
 /// 5.3 Bandwidth throttle proxy: channel not in allowed list → skip.
@@ -736,7 +749,10 @@ fn safety_skip_disallowed_channel() {
         update_version: SemVer::new(2, 0, 0),
         update_min_version: None,
     };
-    assert!(matches!(should_apply(&policy, &state), UpdateDecision::Skip(_)));
+    assert!(matches!(
+        should_apply(&policy, &state),
+        UpdateDecision::Skip(_)
+    ));
 }
 
 /// 5.4 Disk space check proxy: already up-to-date → skip.
@@ -753,7 +769,10 @@ fn safety_skip_already_up_to_date() {
         update_version: SemVer::new(2, 0, 0),
         update_min_version: None,
     };
-    assert!(matches!(should_apply(&policy, &state), UpdateDecision::Skip(_)));
+    assert!(matches!(
+        should_apply(&policy, &state),
+        UpdateDecision::Skip(_)
+    ));
 }
 
 /// 5.5 In-use file handling: config validation rejects empty URL or key.
@@ -905,7 +924,10 @@ fn integration_manifest_to_policy_pipeline() {
     assert_eq!(found.version, "2.0.0");
 
     // 3. Verify integrity
-    assert!(ManifestUpdateManager::verify_integrity(&entry, b"update-payload"));
+    assert!(ManifestUpdateManager::verify_integrity(
+        &entry,
+        b"update-payload"
+    ));
 
     // 4. Policy decision
     let policy = ManifestUpdatePolicy {
@@ -986,8 +1008,12 @@ fn journal_clear_empties_entries() {
     let fs = MockFs::new_mock();
     let journal = UpdateJournal::new(PathBuf::from("/journal.log"), fs);
 
-    journal.record(&UpdateState::Downloading, "1.0.0", "dl").unwrap();
-    journal.record(&UpdateState::Complete, "1.0.0", "done").unwrap();
+    journal
+        .record(&UpdateState::Downloading, "1.0.0", "dl")
+        .unwrap();
+    journal
+        .record(&UpdateState::Complete, "1.0.0", "done")
+        .unwrap();
     assert_eq!(journal.entries().unwrap().len(), 2);
 
     journal.clear().unwrap();

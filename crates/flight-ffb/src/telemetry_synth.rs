@@ -213,8 +213,8 @@ impl RateLimiter {
 
     /// Apply smoothing to the output value
     fn apply_smoothing(&mut self, current: f32) -> f32 {
-        let smoothed = self.last_output * (1.0 - self.smoothing_factor)
-            + current * self.smoothing_factor;
+        let smoothed =
+            self.last_output * (1.0 - self.smoothing_factor) + current * self.smoothing_factor;
         self.last_output = smoothed;
         smoothed
     }
@@ -307,7 +307,10 @@ impl TelemetrySynthEngine {
     }
 
     /// Create a new telemetry synthesis engine with time source
-    pub fn with_time_source(config: TelemetrySynthConfig, time_source: Arc<dyn TimeSource>) -> Self {
+    pub fn with_time_source(
+        config: TelemetrySynthConfig,
+        time_source: Arc<dyn TimeSource>,
+    ) -> Self {
         let min_interval = Duration::from_millis(config.rate_limiting.min_interval_ms as u64);
         let smoothing_factor = config.rate_limiting.smoothing_factor;
         let now = time_source.now();

@@ -9,11 +9,11 @@
 
 #![allow(clippy::field_reassign_with_default)]
 
+use flight_session::recovery::RecoveryManager;
+use flight_session::state_persistence::StatePersistence;
 use flight_session::store::{
     CalibrationData, SessionState, SessionStore, ShutdownInfo, ShutdownReason, WindowPosition,
 };
-use flight_session::state_persistence::StatePersistence;
-use flight_session::recovery::RecoveryManager;
 
 use std::collections::HashSet;
 use tempfile::TempDir;
@@ -227,7 +227,10 @@ mod event_recording {
         sp.set_profile("test");
         sp.snapshot();
         let snap = sp.restore_by_index(0).unwrap();
-        assert!(snap.last_save_timestamp > 0, "timestamp should be set by snapshot()");
+        assert!(
+            snap.last_save_timestamp > 0,
+            "timestamp should be set by snapshot()"
+        );
     }
 
     #[test]
@@ -240,7 +243,10 @@ mod event_recording {
         let mut prev_ts = 0u64;
         for i in 0..5 {
             let ts = sp.restore_by_index(i).unwrap().last_save_timestamp;
-            assert!(ts >= prev_ts, "timestamps must be non-decreasing: {ts} < {prev_ts}");
+            assert!(
+                ts >= prev_ts,
+                "timestamps must be non-decreasing: {ts} < {prev_ts}"
+            );
             prev_ts = ts;
         }
     }
@@ -308,13 +314,28 @@ mod persistence_depth {
         let mut state = SessionState::default();
         state.active_profile = Some("combat".into());
         state.last_sim = Some("DCS".into());
-        state.device_assignments.insert("stick-1".into(), "pitch_roll".into());
-        state.window_positions.insert("main".into(), WindowPosition {
-            x: 100, y: 200, width: 1920, height: 1080,
-        });
-        state.calibration_data.insert("stick-1".into(), CalibrationData {
-            min: -1.0, max: 1.0, center: 0.0, deadzone: 0.05, timestamp: 1_700_000_000,
-        });
+        state
+            .device_assignments
+            .insert("stick-1".into(), "pitch_roll".into());
+        state.window_positions.insert(
+            "main".into(),
+            WindowPosition {
+                x: 100,
+                y: 200,
+                width: 1920,
+                height: 1080,
+            },
+        );
+        state.calibration_data.insert(
+            "stick-1".into(),
+            CalibrationData {
+                min: -1.0,
+                max: 1.0,
+                center: 0.0,
+                deadzone: 0.05,
+                timestamp: 1_700_000_000,
+            },
+        );
         state.last_shutdown = Some(ShutdownInfo {
             timestamp: 1_700_000_100,
             reason: ShutdownReason::Clean,
@@ -419,7 +440,11 @@ mod persistence_depth {
         for entry in entries {
             let path = entry.unwrap().path();
             let ext = path.extension().and_then(|e| e.to_str());
-            assert_ne!(ext, Some("tmp"), "temporary files should be cleaned up after save");
+            assert_ne!(
+                ext,
+                Some("tmp"),
+                "temporary files should be cleaned up after save"
+            );
         }
     }
 
@@ -454,7 +479,11 @@ mod persistence_depth {
         let dir = TempDir::new().unwrap();
         let store = SessionStore::new(dir.path().join("state.json"));
 
-        for reason in [ShutdownReason::Clean, ShutdownReason::Crash, ShutdownReason::Unknown] {
+        for reason in [
+            ShutdownReason::Clean,
+            ShutdownReason::Crash,
+            ShutdownReason::Unknown,
+        ] {
             let mut state = SessionState::default();
             state.last_shutdown = Some(ShutdownInfo {
                 timestamp: 12345,
@@ -538,7 +567,10 @@ mod concurrent_access {
             let loaded = store.load().unwrap().unwrap();
             let expected_profile = format!("profile_{i}");
             let expected_sim = format!("sim_{i}");
-            assert_eq!(loaded.active_profile.as_deref(), Some(expected_profile.as_str()));
+            assert_eq!(
+                loaded.active_profile.as_deref(),
+                Some(expected_profile.as_str())
+            );
             assert_eq!(loaded.last_sim.as_deref(), Some(expected_sim.as_str()));
         }
     }
@@ -556,10 +588,13 @@ mod concurrent_access {
                     let json = sp.to_json();
                     let state = StatePersistence::from_json(&json).unwrap();
                     assert_eq!(state.session_id, format!("thread-{i}"));
-                    assert_eq!(state.active_profile.as_deref(), Some(format!("profile_{i}").as_str()));
-                    })
-                    })
-                    .collect();
+                    assert_eq!(
+                        state.active_profile.as_deref(),
+                        Some(format!("profile_{i}").as_str())
+                    );
+                })
+            })
+            .collect();
         for h in handles {
             h.join().expect("thread panicked");
         }
@@ -639,8 +674,8 @@ mod cleanup_depth {
         std::fs::create_dir_all(&session_dir).unwrap();
         std::fs::write(session_dir.join("heartbeat"), "1000000000").unwrap();
 
-        let mgr = RecoveryManager::new(&session_dir)
-            .with_staleness_threshold(Duration::from_secs(10));
+        let mgr =
+            RecoveryManager::new(&session_dir).with_staleness_threshold(Duration::from_secs(10));
         assert!(mgr.is_heartbeat_stale().unwrap());
     }
 
@@ -657,7 +692,8 @@ mod cleanup_depth {
         let mgr = RecoveryManager::new(dir.path().join("session"));
 
         let state = SessionState::default();
-        mgr.save_and_mark_shutdown(&state, ShutdownReason::Clean).unwrap();
+        mgr.save_and_mark_shutdown(&state, ShutdownReason::Clean)
+            .unwrap();
 
         assert!(mgr.check_clean_shutdown().unwrap());
         let loaded = mgr.store().load().unwrap().unwrap();
@@ -670,7 +706,8 @@ mod cleanup_depth {
         let mgr = RecoveryManager::new(dir.path().join("session"));
 
         let state = SessionState::default();
-        mgr.save_and_mark_shutdown(&state, ShutdownReason::Crash).unwrap();
+        mgr.save_and_mark_shutdown(&state, ShutdownReason::Crash)
+            .unwrap();
 
         let loaded = mgr.store().load().unwrap().unwrap();
         assert_eq!(loaded.last_shutdown.unwrap().reason, ShutdownReason::Crash);
@@ -696,7 +733,8 @@ mod cleanup_depth {
         mgr.set_heartbeat().unwrap();
         let mut new_state = SessionState::default();
         new_state.active_profile = Some("clean_session".into());
-        mgr.save_and_mark_shutdown(&new_state, ShutdownReason::Clean).unwrap();
+        mgr.save_and_mark_shutdown(&new_state, ShutdownReason::Clean)
+            .unwrap();
 
         assert!(!mgr.needs_recovery().unwrap());
         let loaded = mgr.store().load().unwrap().unwrap();

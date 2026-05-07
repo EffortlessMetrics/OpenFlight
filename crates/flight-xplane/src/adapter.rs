@@ -225,11 +225,7 @@ impl XPlaneAdapter {
         *self.running.write().unwrap() = true;
 
         // Drive state machine: Disconnected → Connecting
-        Self::apply_event(
-            &self.state_machine,
-            &self.state,
-            AdapterEvent::SocketBound,
-        );
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
 
         // Test connection to X-Plane
         if let Err(err) = self.test_connection_with_retries().await {
@@ -242,11 +238,7 @@ impl XPlaneAdapter {
         }
 
         // Drive state machine: Connecting → Connected
-        Self::apply_event(
-            &self.state_machine,
-            &self.state,
-            AdapterEvent::SocketBound,
-        );
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound);
 
         // Start telemetry publishing task
         let publish_handle = self.start_telemetry_publisher().await?;
@@ -397,11 +389,7 @@ impl XPlaneAdapter {
                         connection_timeout.as_secs()
                     );
                     metrics_registry.inc_counter(ADAPTER_ERRORS_TOTAL, 1);
-                    Self::apply_event(
-                        &state_machine,
-                        &state,
-                        AdapterEvent::TelemetryTimeout,
-                    );
+                    Self::apply_event(&state_machine, &state, AdapterEvent::TelemetryTimeout);
                     // Publish a stale/invalid snapshot so subscribers know data is no longer valid.
                     // ValidityFlags are all-false by default, signalling safe_for_ffb=false.
                     let stale = BusSnapshot::new(SimId::XPlane, AircraftId::new("unknown"));
@@ -1245,11 +1233,7 @@ impl XPlaneAdapter {
     ///
     /// Drives Disconnected → Connecting → Connected progression.
     pub fn handle_socket_bound(&self) -> Option<XPlaneAdapterState> {
-        Self::apply_event(
-            &self.state_machine,
-            &self.state,
-            AdapterEvent::SocketBound,
-        )
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::SocketBound)
     }
 
     /// Notify the state machine of a socket-level error.
@@ -1265,11 +1249,7 @@ impl XPlaneAdapter {
 
     /// Notify the state machine of a graceful shutdown.
     pub fn handle_shutdown(&self) -> Option<XPlaneAdapterState> {
-        Self::apply_event(
-            &self.state_machine,
-            &self.state,
-            AdapterEvent::Shutdown,
-        )
+        Self::apply_event(&self.state_machine, &self.state, AdapterEvent::Shutdown)
     }
 
     /// Drive the state machine with an event and synchronize the common AdapterState.
@@ -1996,9 +1976,7 @@ mod tests {
 
         // process_telemetry should transition to Active and publish
         let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("C172"));
-        adapter
-            .process_telemetry(snapshot)
-            .expect("should succeed");
+        adapter.process_telemetry(snapshot).expect("should succeed");
         assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Active);
 
         let received = subscriber.try_recv().expect("recv");
@@ -2030,9 +2008,7 @@ mod tests {
             .expect("subscribe");
 
         // Trigger timeout — should transition Active → Stale
-        adapter
-            .handle_telemetry_timeout()
-            .expect("should succeed");
+        adapter.handle_telemetry_timeout().expect("should succeed");
         assert_eq!(adapter.xplane_state(), XPlaneAdapterState::Stale);
 
         // Subscriber should receive a stale (invalid) snapshot

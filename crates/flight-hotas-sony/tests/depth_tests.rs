@@ -5,9 +5,9 @@
 //! device identification, normalization edge cases, and error handling.
 
 use flight_hotas_sony::{
-    DUALSHOCK_3_PID, DUALSHOCK_4_V1_PID, DUALSHOCK_4_V2_PID, DUALSENSE_EDGE_PID,
-    DUALSENSE_MIN_REPORT_BYTES, DUALSENSE_PID, DS4_MIN_REPORT_BYTES, SONY_VENDOR_ID,
-    is_dualsense, is_dualshock, parse_ds4_report, parse_dualsense_report,
+    DS4_MIN_REPORT_BYTES, DUALSENSE_EDGE_PID, DUALSENSE_MIN_REPORT_BYTES, DUALSENSE_PID,
+    DUALSHOCK_3_PID, DUALSHOCK_4_V1_PID, DUALSHOCK_4_V2_PID, SONY_VENDOR_ID, is_dualsense,
+    is_dualshock, parse_ds4_report, parse_dualsense_report,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -131,11 +131,7 @@ fn ds4_right_stick_y_extremes() {
 fn ds4_r2_half_pressed() {
     let data = build_ds4(127, 127, 127, 127, 0, 128, 0x08, 0, 0);
     let s = parse_ds4_report(&data).unwrap();
-    assert!(
-        (0.49..=0.52).contains(&s.r2),
-        "r2 half pressed: {}",
-        s.r2
-    );
+    assert!((0.49..=0.52).contains(&s.r2), "r2 half pressed: {}", s.r2);
 }
 
 // ── DualShock 4 — button bitmask extraction ──────────────────────────────────
@@ -227,16 +223,8 @@ fn dualsense_stick_y_down() {
 fn dualsense_triggers_quarter_pressed() {
     let data = build_dualsense(127, 127, 127, 127, 64, 64, 0, 0, 0, 8);
     let s = parse_dualsense_report(&data).unwrap();
-    assert!(
-        (0.24..=0.26).contains(&s.l2),
-        "l2 quarter: {}",
-        s.l2
-    );
-    assert!(
-        (0.24..=0.26).contains(&s.r2),
-        "r2 quarter: {}",
-        s.r2
-    );
+    assert!((0.24..=0.26).contains(&s.l2), "l2 quarter: {}", s.l2);
+    assert!((0.24..=0.26).contains(&s.r2), "r2 quarter: {}", s.r2);
 }
 
 // ── DualSense — button bitmask ───────────────────────────────────────────────
@@ -325,7 +313,8 @@ fn dualsense_single_byte_error() {
 #[test]
 fn ds4_and_dualsense_center_agree() {
     let ds4 = parse_ds4_report(&build_ds4(127, 127, 127, 127, 0, 0, 0x08, 0, 0)).unwrap();
-    let ds = parse_dualsense_report(&build_dualsense(127, 127, 127, 127, 0, 0, 0, 0, 0, 8)).unwrap();
+    let ds =
+        parse_dualsense_report(&build_dualsense(127, 127, 127, 127, 0, 0, 0, 0, 0, 8)).unwrap();
     assert!(
         (ds4.left_x - ds.left_x).abs() < 0.001,
         "DS4 left_x {} vs DS left_x {}",

@@ -435,7 +435,11 @@ impl TrimController {
     /// Get spring ramp progress (0.0 to 1.0)
     pub fn get_spring_ramp_progress(&self) -> Option<f32> {
         if let Some(ramp_start) = self.spring_ramp_start {
-            let elapsed = self.time_source.now().duration_since(ramp_start).as_secs_f32();
+            let elapsed = self
+                .time_source
+                .now()
+                .duration_since(ramp_start)
+                .as_secs_f32();
             let total = self.spring_ramp_duration.as_secs_f32();
             Some((elapsed / total).min(1.0))
         } else {

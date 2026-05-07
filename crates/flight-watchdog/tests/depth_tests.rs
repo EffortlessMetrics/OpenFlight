@@ -10,16 +10,17 @@
 
 use std::time::Duration;
 
-use flight_watchdog::escalation::{EscalationAction, EscalationConfig, EscalationLadder, EscalationLevel};
-use flight_watchdog::health_aggregator::{
-    HealthAggregator, SubsystemCheckConfig, SubsystemHealth,
+use flight_watchdog::escalation::{
+    EscalationAction, EscalationConfig, EscalationLadder, EscalationLevel,
 };
+use flight_watchdog::health_aggregator::{HealthAggregator, SubsystemCheckConfig, SubsystemHealth};
 use flight_watchdog::health_check::{HealthCheckManager, HealthStatus};
 use flight_watchdog::monitor::{HealthEventKind, MonitorConfig, SystemMode, SystemMonitor};
 use flight_watchdog::recovery::{RecoveryAction, RecoveryPolicy};
 use flight_watchdog::supervisor::{
     DeadManStatus, DeadManSwitch, DeadManSwitchConfig, HardwareWatchdog, ProcessAlert,
-    ProcessMonitor, ProcessMonitorConfig, ProcessSnapshot, WatchdogTimerConfig, WatchdogTimerStatus,
+    ProcessMonitor, ProcessMonitorConfig, ProcessSnapshot, WatchdogTimerConfig,
+    WatchdogTimerStatus,
 };
 use flight_watchdog::{
     ComponentType, QuarantineStatus, SyntheticFault, WatchdogConfig, WatchdogEventType,
@@ -58,8 +59,7 @@ mod heartbeat {
     #[test]
     fn missing_heartbeat_leads_to_degraded_then_failed() {
         let mut agg = HealthAggregator::new();
-        let cfg = SubsystemCheckConfig::new("axis")
-            .with_failure_threshold(3);
+        let cfg = SubsystemCheckConfig::new("axis").with_failure_threshold(3);
         agg.register(cfg);
         agg.report_healthy("axis");
 
@@ -500,9 +500,7 @@ mod health_tracking {
     #[test]
     fn aggregator_failure_escalation() {
         let mut agg = HealthAggregator::new();
-        agg.register(
-            SubsystemCheckConfig::new("x").with_failure_threshold(2),
-        );
+        agg.register(SubsystemCheckConfig::new("x").with_failure_threshold(2));
         agg.report_healthy("x");
         agg.report_failure("x", "err");
         assert_eq!(agg.subsystem_health("x"), SubsystemHealth::Degraded);
@@ -532,7 +530,10 @@ mod health_tracking {
         let comp = ComponentType::UsbEndpoint("ep1".into());
 
         wd.register_component(comp.clone(), WatchdogConfig::default());
-        assert_eq!(wd.get_quarantine_status(&comp), Some(&QuarantineStatus::Active));
+        assert_eq!(
+            wd.get_quarantine_status(&comp),
+            Some(&QuarantineStatus::Active)
+        );
 
         // Monitor via heartbeat.
         wd.record_usb_success("ep1");
@@ -562,7 +563,10 @@ mod health_tracking {
 
         // Re-register overwrites state.
         wd.register_component(comp.clone(), WatchdogConfig::default());
-        assert_eq!(wd.get_quarantine_status(&comp), Some(&QuarantineStatus::Active));
+        assert_eq!(
+            wd.get_quarantine_status(&comp),
+            Some(&QuarantineStatus::Active)
+        );
         assert!(!wd.is_quarantined(&comp));
     }
 
@@ -756,14 +760,17 @@ mod timeout_tests {
         });
         std::thread::sleep(Duration::from_millis(10));
         let status = dms.check();
-        assert!(matches!(status, DeadManStatus::Triggered { .. }), "should trigger after exceeding threshold");
+        assert!(
+            matches!(status, DeadManStatus::Triggered { .. }),
+            "should trigger after exceeding threshold"
+        );
         assert_eq!(dms.total_triggers(), 1);
     }
 
     #[test]
     fn memory_pressure_detection() {
         let monitor = ProcessMonitor::new(ProcessMonitorConfig {
-            memory_warn_bytes: 256 * 1024 * 1024,      // 256 MB
+            memory_warn_bytes: 256 * 1024 * 1024,     // 256 MB
             memory_critical_bytes: 512 * 1024 * 1024, // 512 MB
             thread_warn_count: 1000,
             thread_critical_count: 2000,
@@ -898,11 +905,14 @@ mod integration {
             ..WatchdogConfig::default()
         };
         wd.register_component(axis.clone(), config.clone());
-        wd.register_component(ffb.clone(), WatchdogConfig {
-            max_consecutive_failures: 2,
-            max_execution_time: Duration::from_micros(100),
-            ..WatchdogConfig::default()
-        });
+        wd.register_component(
+            ffb.clone(),
+            WatchdogConfig {
+                max_consecutive_failures: 2,
+                max_execution_time: Duration::from_micros(100),
+                ..WatchdogConfig::default()
+            },
+        );
         wd.register_component(hid.clone(), config);
 
         let summary = wd.get_health_summary();
@@ -964,8 +974,16 @@ mod error_handling {
 
     #[test]
     fn component_type_display_name() {
-        assert!(ComponentType::UsbEndpoint("ep1".into()).display_name().contains("USB"));
-        assert!(ComponentType::NativePlugin("p1".into()).display_name().contains("Native"));
+        assert!(
+            ComponentType::UsbEndpoint("ep1".into())
+                .display_name()
+                .contains("USB")
+        );
+        assert!(
+            ComponentType::NativePlugin("p1".into())
+                .display_name()
+                .contains("Native")
+        );
     }
 }
 

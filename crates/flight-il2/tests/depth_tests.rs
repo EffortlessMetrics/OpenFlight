@@ -8,9 +8,9 @@
 //! round-trip serialization, and property-based invariants.
 
 use flight_il2::{
-    ConnectionState, GearState, Il2Adapter, Il2AdapterError, Il2AircraftType, Il2TelemetryFrame,
-    IL2_DEFAULT_PORT, IL2_MAGIC, MIN_FRAME_SIZE, SUPPORTED_VERSION, convert_frame_to_snapshot,
-    parse_telemetry_frame,
+    ConnectionState, GearState, IL2_DEFAULT_PORT, IL2_MAGIC, Il2Adapter, Il2AdapterError,
+    Il2AircraftType, Il2TelemetryFrame, MIN_FRAME_SIZE, SUPPORTED_VERSION,
+    convert_frame_to_snapshot, parse_telemetry_frame,
 };
 use proptest::prelude::*;
 
@@ -107,7 +107,15 @@ fn parse_negative_values() {
 
 #[test]
 fn parse_f32_max_values() {
-    let data = build_frame(f32::MAX, f32::MAX, f32::MAX, f32::MAX, f32::MAX, f32::MAX, 2);
+    let data = build_frame(
+        f32::MAX,
+        f32::MAX,
+        f32::MAX,
+        f32::MAX,
+        f32::MAX,
+        f32::MAX,
+        2,
+    );
     let frame = parse_telemetry_frame(&data).unwrap();
     assert_eq!(frame.pitch, f32::MAX);
     assert_eq!(frame.altitude, f32::MAX);
@@ -116,7 +124,15 @@ fn parse_f32_max_values() {
 
 #[test]
 fn parse_f32_min_positive_values() {
-    let data = build_frame(f32::MIN_POSITIVE, f32::MIN_POSITIVE, 0.0, f32::MIN_POSITIVE, 0.0, f32::MIN_POSITIVE, 0);
+    let data = build_frame(
+        f32::MIN_POSITIVE,
+        f32::MIN_POSITIVE,
+        0.0,
+        f32::MIN_POSITIVE,
+        0.0,
+        f32::MIN_POSITIVE,
+        0,
+    );
     let frame = parse_telemetry_frame(&data).unwrap();
     assert_eq!(frame.pitch, f32::MIN_POSITIVE);
     assert_eq!(frame.throttle, f32::MIN_POSITIVE);
@@ -242,7 +258,10 @@ fn error_display_messages_are_human_readable() {
 
     let e2 = Il2AdapterError::BadMagic { found: 0xDEADBEEF };
     let msg = format!("{e2}");
-    assert!(msg.contains("0xdeadbeef") || msg.contains("0xDEADBEEF"), "message: {msg}");
+    assert!(
+        msg.contains("0xdeadbeef") || msg.contains("0xDEADBEEF"),
+        "message: {msg}"
+    );
 
     let e3 = Il2AdapterError::UnsupportedVersion { found: 42 };
     let msg = format!("{e3}");
@@ -762,7 +781,10 @@ fn convert_frame_altitude_meters_to_feet() {
     let snap = convert_frame_to_snapshot(&frame).unwrap();
     // 1000m = 3280.84ft
     assert!((snap.environment.altitude - 3280.84).abs() < 1.0);
-    assert_eq!(snap.environment.altitude, snap.environment.pressure_altitude);
+    assert_eq!(
+        snap.environment.altitude,
+        snap.environment.pressure_altitude
+    );
 }
 
 #[test]
@@ -978,7 +1000,10 @@ fn throttle_just_inside_boundaries() {
 fn throttle_nan_sanitized_to_zero() {
     let data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, f32::NAN, 0);
     let frame = parse_telemetry_frame(&data).unwrap();
-    assert_eq!(frame.throttle, 0.0, "NaN throttle should be sanitized to 0.0");
+    assert_eq!(
+        frame.throttle, 0.0,
+        "NaN throttle should be sanitized to 0.0"
+    );
 }
 
 #[test]

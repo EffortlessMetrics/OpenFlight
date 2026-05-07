@@ -121,8 +121,5 @@ fn pll_lock_detection_transitions() {
     for _ in 0..3 {
         pll.tick(300_000.0);
     }
-    assert!(
-        !pll.locked(),
-        "PLL must unlock after 3 high-error ticks"
-    );
+    assert!(!pll.locked(), "PLL must unlock after 3 high-error ticks");
 }

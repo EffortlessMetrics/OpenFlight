@@ -107,7 +107,10 @@ impl TrimValidationSuite {
     }
 
     /// Create new trim validation suite with a custom time source
-    pub fn with_time_source(config: TrimValidationConfig, time_source: Arc<dyn TimeSource>) -> Self {
+    pub fn with_time_source(
+        config: TrimValidationConfig,
+        time_source: Arc<dyn TimeSource>,
+    ) -> Self {
         let blackbox_config = BlackboxConfig {
             max_entries: 50000, // Large buffer for validation
             pre_fault_duration: Duration::from_secs(5),
@@ -213,7 +216,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -283,7 +287,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -354,7 +359,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -424,7 +430,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -491,7 +498,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -544,7 +552,7 @@ impl TrimValidationSuite {
             if let TrimOutput::SpringCentered { frozen, .. } = output {
                 if !frozen {
                     return Err(
-                        "Spring should be frozen immediately after setpoint change".to_string(),
+                        "Spring should be frozen immediately after setpoint change".to_string()
                     );
                 }
                 measurements.push(1.0); // Frozen state
@@ -574,7 +582,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -660,7 +669,8 @@ impl TrimValidationSuite {
 
                 self.time_source.advance(sample_interval);
 
-                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration {
+                if self.time_source.now().duration_since(start_time) > self.config.max_test_duration
+                {
                     break;
                 }
             }
@@ -1322,7 +1332,10 @@ mod tests {
 
         let result = suite.test_ffb_rate_limiting();
 
-        assert!(result.passed, "FFB rate limiting should pass with fake time");
+        assert!(
+            result.passed,
+            "FFB rate limiting should pass with fake time"
+        );
         // With fake time, duration should be based on the advances (5000 * 1ms = 5s)
         assert!(
             result.duration >= Duration::from_secs(5),

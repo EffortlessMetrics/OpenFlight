@@ -6,13 +6,13 @@
 //! Tests the full pipeline: device detection → key event → action lookup →
 //! icon rendering → profile layout.
 
+use flight_streamdeck::layout::{Page, PageLayout};
+use flight_streamdeck::render::{IconRenderer, IconTheme};
 use flight_streamdeck::{
     ActionRegistry, AircraftType, Brightness, DeviceInfo, DeviceManager, DialAction, DialEvent,
     KeyEvent, ProfileLayout, ProfileManager, StreamDeckModel, TouchEvent, TouchType,
     validate_image_size,
 };
-use flight_streamdeck::render::{IconRenderer, IconTheme};
-use flight_streamdeck::layout::{Page, PageLayout};
 use flight_streamdeck::{AppVersion, VersionCompatibility};
 
 use std::collections::HashMap;
@@ -32,7 +32,10 @@ fn test_pipeline_key_press_to_icon() {
     });
 
     // 2. Simulate a key press
-    let event = KeyEvent { key_index: 0, pressed: true };
+    let event = KeyEvent {
+        key_index: 0,
+        pressed: true,
+    };
     let dev = mgr.get_device("sd-orig").unwrap();
     assert!(event.is_valid_for(dev.model));
 
@@ -66,11 +69,16 @@ fn test_pipeline_mk2_device() {
     assert_eq!(dev.model.key_count(), 15);
     assert_eq!(dev.model.product_id(), 0x0080);
 
-    let event = KeyEvent { key_index: 14, pressed: true };
+    let event = KeyEvent {
+        key_index: 14,
+        pressed: true,
+    };
     assert!(event.is_valid_for(dev.model));
 
     let renderer = IconRenderer::new(dev.model);
-    let icon = renderer.value_icon("HDG", "270", IconTheme::Navigation).unwrap();
+    let icon = renderer
+        .value_icon("HDG", "270", IconTheme::Navigation)
+        .unwrap();
     assert_eq!(icon.size, 72);
     assert!(validate_image_size(dev.model, 72, 72));
 }
@@ -92,16 +100,26 @@ fn test_pipeline_plus_dial_to_action() {
     assert!(dev.model.has_dials());
 
     // Dial rotate clockwise
-    let dial = DialEvent { dial_index: 0, action: DialAction::Rotate(1) };
+    let dial = DialEvent {
+        dial_index: 0,
+        action: DialAction::Rotate(1),
+    };
     assert!(dial.is_valid_for(dev.model));
 
     // Look up encoder action
     let registry = ActionRegistry::builtin();
     let enc = registry.get("com.flighthub.vor-obs-inc").unwrap();
-    assert_eq!(enc.behavior, flight_streamdeck::actions::ActionBehavior::Encoder);
+    assert_eq!(
+        enc.behavior,
+        flight_streamdeck::actions::ActionBehavior::Encoder
+    );
 
     // Touch event on LCD strip
-    let touch = TouchEvent { x: 200, y: 50, touch_type: TouchType::Tap };
+    let touch = TouchEvent {
+        x: 200,
+        y: 50,
+        touch_type: TouchType::Tap,
+    };
     assert!(touch.is_valid_for(dev.model));
 }
 
@@ -226,11 +244,25 @@ fn test_image_rendering_pipeline() {
 
     for (model, size) in model_sizes {
         // Correct size passes
-        assert!(validate_image_size(*model, *size, *size), "{:?}@{}x{}", model, size, size);
+        assert!(
+            validate_image_size(*model, *size, *size),
+            "{:?}@{}x{}",
+            model,
+            size,
+            size
+        );
 
         // Wrong size fails
-        assert!(!validate_image_size(*model, size + 1, *size), "{:?} mismatch", model);
-        assert!(!validate_image_size(*model, *size, size + 1), "{:?} mismatch", model);
+        assert!(
+            !validate_image_size(*model, size + 1, *size),
+            "{:?} mismatch",
+            model
+        );
+        assert!(
+            !validate_image_size(*model, *size, size + 1),
+            "{:?} mismatch",
+            model
+        );
 
         // Icon renderer agrees
         let renderer = IconRenderer::new(*model);

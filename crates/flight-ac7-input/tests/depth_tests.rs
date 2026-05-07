@@ -5,9 +5,8 @@
 //! generation, managed-block patching, install workflow, and edge cases.
 
 use flight_ac7_input::{
-    Ac7InputError, Ac7InputProfile, ActionBinding, AxisBinding, RcMode,
-    MANAGED_BLOCK_BEGIN, MANAGED_BLOCK_END,
-    apply_profile_to_existing, install_profile, render_managed_block,
+    Ac7InputError, Ac7InputProfile, ActionBinding, AxisBinding, MANAGED_BLOCK_BEGIN,
+    MANAGED_BLOCK_END, RcMode, apply_profile_to_existing, install_profile, render_managed_block,
     steam_input_hint,
 };
 use std::fs;
@@ -696,7 +695,11 @@ fn error_display_io_error() {
 fn default_profile_has_four_axis_bindings() {
     let p = Ac7InputProfile::default();
     assert_eq!(p.axis_bindings.len(), 4);
-    let names: Vec<&str> = p.axis_bindings.iter().map(|a| a.axis_name.as_str()).collect();
+    let names: Vec<&str> = p
+        .axis_bindings
+        .iter()
+        .map(|a| a.axis_name.as_str())
+        .collect();
     assert!(names.contains(&"Pitch"));
     assert!(names.contains(&"Roll"));
     assert!(names.contains(&"Yaw"));

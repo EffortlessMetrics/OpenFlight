@@ -18,20 +18,20 @@
 //! - Performance throughput
 //! - proptest: structured log fields, span durations, correlation IDs
 
+use flight_tracing::CounterSnapshot;
 use flight_tracing::correlation::{ChainCollector, CorrelatedEvent, CorrelationId, EventChain};
 use flight_tracing::counters::{HidStats, JitterStats, PerfCounters};
 use flight_tracing::events::{EventData, EventFilter, TraceEvent};
 use flight_tracing::log_rotation::{LogRotator, RotationConfig, RotationResult};
 use flight_tracing::regression::{RegressionDetector, Thresholds};
 use flight_tracing::spans::{
-    self, span_summary, FlightSpan, SpanCollector, AXIS_TICK, BUS_PUBLISH, FFB_COMPUTE, HID_READ,
-    PROFILE_COMPILE,
+    self, AXIS_TICK, BUS_PUBLISH, FFB_COMPUTE, FlightSpan, HID_READ, PROFILE_COMPILE,
+    SpanCollector, span_summary,
 };
 use flight_tracing::structured::{
     EventBuilder, EventContext, EventLevel, EventSink, FileSink, FlightEvent, MemorySink,
 };
 use flight_tracing::structured_log::{JsonLogFormatter, LogEntryBuilder, LogLevel, LogValue};
-use flight_tracing::CounterSnapshot;
 use proptest::prelude::*;
 use std::sync::Arc;
 use std::thread;
@@ -146,7 +146,10 @@ fn json_formatter_batch_single_entry_has_no_newlines() {
 
 #[test]
 fn log_value_display_all_variants() {
-    assert_eq!(LogValue::String("hello world".into()).to_string(), "hello world");
+    assert_eq!(
+        LogValue::String("hello world".into()).to_string(),
+        "hello world"
+    );
     assert_eq!(LogValue::Int(-42).to_string(), "-42");
     let float_zero = LogValue::Float(0.0).to_string();
     assert!(float_zero == "0" || float_zero == "0.0");
@@ -249,7 +252,13 @@ fn span_finish_returns_positive_duration() {
 
 #[test]
 fn span_name_round_trips() {
-    for name in [AXIS_TICK, HID_READ, BUS_PUBLISH, PROFILE_COMPILE, FFB_COMPUTE] {
+    for name in [
+        AXIS_TICK,
+        HID_READ,
+        BUS_PUBLISH,
+        PROFILE_COMPILE,
+        FFB_COMPUTE,
+    ] {
         let span = FlightSpan::begin(name);
         assert_eq!(span.name(), name);
         span.finish();

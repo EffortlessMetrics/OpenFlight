@@ -35,10 +35,7 @@ fn wrong_schema_version_rejected() {
 
 #[test]
 fn correct_schema_with_valid_rule_accepted() {
-    let schema = make_schema(vec![make_rule(
-        "gear_down",
-        "led.panel('GEAR').on()",
-    )]);
+    let schema = make_schema(vec![make_rule("gear_down", "led.panel('GEAR').on()")]);
     assert!(schema.validate().is_ok());
 }
 

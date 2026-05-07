@@ -220,9 +220,7 @@ pub struct TFlightStickState {
 /// Errors returned by T.Flight report parsing.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum TFlightStickParseError {
-    #[error(
-        "T.Flight report too short: expected at least {expected} bytes, got {actual}"
-    )]
+    #[error("T.Flight report too short: expected at least {expected} bytes, got {actual}")]
     TooShort { expected: usize, actual: usize },
 
     #[error(
@@ -305,9 +303,7 @@ pub fn parse_tflight_merged(data: &[u8]) -> Result<TFlightStickState, TFlightSti
 ///
 /// # Errors
 /// Returns [`TFlightStickParseError::TooShort`] if `data.len() < 9`.
-pub fn parse_tflight_separate(
-    data: &[u8],
-) -> Result<TFlightStickState, TFlightStickParseError> {
+pub fn parse_tflight_separate(data: &[u8]) -> Result<TFlightStickState, TFlightStickParseError> {
     if data.len() < TFLIGHT_SEPARATE_MIN_BYTES {
         return Err(TFlightStickParseError::TooShort {
             expected: TFLIGHT_SEPARATE_MIN_BYTES,
@@ -358,9 +354,7 @@ pub fn parse_tflight_auto(data: &[u8]) -> Result<TFlightStickState, TFlightStick
         });
     }
     if data.len() > TFLIGHT_SEPARATE_MIN_BYTES {
-        return Err(TFlightStickParseError::AmbiguousLength {
-            actual: data.len(),
-        });
+        return Err(TFlightStickParseError::AmbiguousLength { actual: data.len() });
     }
     if data.len() == TFLIGHT_MERGED_MIN_BYTES {
         parse_tflight_merged(data)
@@ -435,7 +429,11 @@ mod tests {
         let s = parse_tflight_merged(&r).unwrap();
         assert!(s.axes.x.abs() < 0.01, "x={}", s.axes.x);
         assert!(s.axes.y.abs() < 0.01, "y={}", s.axes.y);
-        assert!((s.axes.throttle - 0.502).abs() < 0.01, "thr={}", s.axes.throttle);
+        assert!(
+            (s.axes.throttle - 0.502).abs() < 0.01,
+            "thr={}",
+            s.axes.throttle
+        );
         assert!(s.axes.twist.abs() < 0.01, "twist={}", s.axes.twist);
         assert!(s.axes.rocker.is_none());
         assert_eq!(s.buttons.hat, TFlightHat::Center);
@@ -556,7 +554,10 @@ mod tests {
             assert!(s.buttons.button(n), "button {n} with mask 0x{mask:04X}");
             for other in 1..=12u8 {
                 if other != n {
-                    assert!(!s.buttons.button(other), "button {other} should not be set when only {n} is");
+                    assert!(
+                        !s.buttons.button(other),
+                        "button {other} should not be set when only {n} is"
+                    );
                 }
             }
         }

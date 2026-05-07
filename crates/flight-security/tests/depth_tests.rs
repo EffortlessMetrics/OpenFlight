@@ -31,7 +31,10 @@ fn mgr_allow_unsigned() -> SecurityManager {
     )
 }
 
-fn wasm_manifest(name: &str, caps: impl IntoIterator<Item = PluginCapability>) -> PluginCapabilityManifest {
+fn wasm_manifest(
+    name: &str,
+    caps: impl IntoIterator<Item = PluginCapability>,
+) -> PluginCapabilityManifest {
     PluginCapabilityManifest {
         name: name.to_string(),
         version: "1.0.0".to_string(),
@@ -42,7 +45,10 @@ fn wasm_manifest(name: &str, caps: impl IntoIterator<Item = PluginCapability>) -
     }
 }
 
-fn native_manifest(name: &str, caps: impl IntoIterator<Item = PluginCapability>) -> PluginCapabilityManifest {
+fn native_manifest(
+    name: &str,
+    caps: impl IntoIterator<Item = PluginCapability>,
+) -> PluginCapabilityManifest {
     PluginCapabilityManifest {
         name: name.to_string(),
         version: "1.0.0".to_string(),
@@ -87,8 +93,10 @@ mod capability_model {
     #[test]
     fn plugins_declare_required_capabilities() {
         let mut mgr = mgr_allow_unsigned();
-        let manifest =
-            wasm_manifest("sensor-reader", [PluginCapability::ReadBus, PluginCapability::EmitPanel]);
+        let manifest = wasm_manifest(
+            "sensor-reader",
+            [PluginCapability::ReadBus, PluginCapability::EmitPanel],
+        );
         mgr.validate_plugin(manifest).unwrap();
 
         assert!(mgr.check_capability("sensor-reader", &PluginCapability::ReadBus));
@@ -103,9 +111,15 @@ mod capability_model {
             .unwrap();
 
         // Granted
-        assert!(mgr.check_escalation("rw", &PluginCapability::ReadBus).is_ok());
+        assert!(
+            mgr.check_escalation("rw", &PluginCapability::ReadBus)
+                .is_ok()
+        );
         // Denied
-        assert!(mgr.check_escalation("rw", &PluginCapability::EmitPanel).is_err());
+        assert!(
+            mgr.check_escalation("rw", &PluginCapability::EmitPanel)
+                .is_err()
+        );
     }
 
     /// Capability check is all-or-nothing — a plugin must hold *every* capability
@@ -152,12 +166,10 @@ mod capability_model {
         let mut mgr = mgr_allow_unsigned();
 
         // Register a plugin with a subset of capabilities.
-        let granted: HashSet<PluginCapability> = [
-            PluginCapability::ReadBus,
-            PluginCapability::EmitPanel,
-        ]
-        .into_iter()
-        .collect();
+        let granted: HashSet<PluginCapability> =
+            [PluginCapability::ReadBus, PluginCapability::EmitPanel]
+                .into_iter()
+                .collect();
 
         mgr.validate_plugin(wasm_manifest("prop-test", granted.clone()))
             .unwrap();
@@ -324,7 +336,9 @@ mod sandbox_boundaries {
 
         assert!(policy.validate(&allowed_file).is_ok());
         assert!(
-            policy.validate(tmp.path().join("outside.txt").as_path()).is_err(),
+            policy
+                .validate(tmp.path().join("outside.txt").as_path())
+                .is_err(),
             "access outside sandbox root must be rejected"
         );
     }
@@ -349,11 +363,8 @@ mod sandbox_boundaries {
             allow_unsigned: true,
             ..SecurityConfig::default()
         };
-        let mgr = SecurityManager::with_config(
-            config,
-            TelemetryConfig::default(),
-            AclConfig::default(),
-        );
+        let mgr =
+            SecurityManager::with_config(config, TelemetryConfig::default(), AclConfig::default());
         // Verify the config was accepted and the manager is functional.
         let registry = mgr.get_plugin_registry();
         assert!(registry.is_empty(), "fresh registry should have no plugins");
@@ -388,7 +399,11 @@ mod audit_logging {
 
         let log = mgr.audit_log();
         // There should be at least the plugin-load success + the denied escalation.
-        assert!(log.len() >= 2, "expected ≥2 audit entries, got {}", log.len());
+        assert!(
+            log.len() >= 2,
+            "expected ≥2 audit entries, got {}",
+            log.len()
+        );
 
         let has_success = log
             .entries()
@@ -421,7 +436,10 @@ mod audit_logging {
         assert!(!denied_entries.is_empty());
         let entry = denied_entries.last().unwrap();
         assert_eq!(entry.actor, "ctx-log");
-        assert!(entry.details.is_some(), "denied entry should include details");
+        assert!(
+            entry.details.is_some(),
+            "denied entry should include details"
+        );
     }
 
     /// Audit-log export format: exported JSON is parseable and entries have expected fields.
@@ -476,7 +494,10 @@ mod audit_logging {
         assert_eq!(log.len(), capacity);
 
         let actors: Vec<&str> = log.entries().iter().map(|e| e.actor.as_str()).collect();
-        assert_eq!(actors, vec!["actor-5", "actor-6", "actor-7", "actor-8", "actor-9"]);
+        assert_eq!(
+            actors,
+            vec!["actor-5", "actor-6", "actor-7", "actor-8", "actor-9"]
+        );
 
         // `recent(3)` returns the 3 newest.
         let recent = log.recent(3);
@@ -774,8 +795,14 @@ mod integration_scenarios {
         mgr.validate_plugin(manifest).unwrap();
 
         // 2. Capability check — declared caps succeed
-        assert!(mgr.check_escalation("led-driver", &PluginCapability::ReadBus).is_ok());
-        assert!(mgr.check_escalation("led-driver", &PluginCapability::EmitPanel).is_ok());
+        assert!(
+            mgr.check_escalation("led-driver", &PluginCapability::ReadBus)
+                .is_ok()
+        );
+        assert!(
+            mgr.check_escalation("led-driver", &PluginCapability::EmitPanel)
+                .is_ok()
+        );
 
         // 3. Sandbox: undeclared cap denied
         assert!(
@@ -792,7 +819,10 @@ mod integration_scenarios {
             .iter()
             .filter(|e| e.outcome == AuditOutcome::Denied)
             .collect();
-        assert!(!denied.is_empty(), "denied escalation must appear in audit trail");
+        assert!(
+            !denied.is_empty(),
+            "denied escalation must appear in audit trail"
+        );
     }
 
     /// Update with signature verification: valid digest passes, tampered fails.
@@ -912,7 +942,10 @@ mod integration_scenarios {
         mgr.set_fs_policy(FsAccessPolicy::new(&[allowed_dir.clone()]));
 
         assert!(mgr.validate_fs_access(&file).is_ok());
-        assert!(mgr.validate_fs_access(&allowed_dir.join("..").join("secret")).is_err());
+        assert!(
+            mgr.validate_fs_access(&allowed_dir.join("..").join("secret"))
+                .is_err()
+        );
     }
 
     /// Multiple plugins registered in sequence don't interfere.
@@ -927,13 +960,31 @@ mod integration_scenarios {
         mgr.validate_plugin(wasm_manifest("p3", [PluginCapability::ReadProfiles]))
             .unwrap();
 
-        assert!(mgr.check_escalation("p1", &PluginCapability::ReadBus).is_ok());
-        assert!(mgr.check_escalation("p1", &PluginCapability::EmitPanel).is_err());
+        assert!(
+            mgr.check_escalation("p1", &PluginCapability::ReadBus)
+                .is_ok()
+        );
+        assert!(
+            mgr.check_escalation("p1", &PluginCapability::EmitPanel)
+                .is_err()
+        );
 
-        assert!(mgr.check_escalation("p2", &PluginCapability::EmitPanel).is_ok());
-        assert!(mgr.check_escalation("p2", &PluginCapability::ReadBus).is_err());
+        assert!(
+            mgr.check_escalation("p2", &PluginCapability::EmitPanel)
+                .is_ok()
+        );
+        assert!(
+            mgr.check_escalation("p2", &PluginCapability::ReadBus)
+                .is_err()
+        );
 
-        assert!(mgr.check_escalation("p3", &PluginCapability::ReadProfiles).is_ok());
-        assert!(mgr.check_escalation("p3", &PluginCapability::ReadBus).is_err());
+        assert!(
+            mgr.check_escalation("p3", &PluginCapability::ReadProfiles)
+                .is_ok()
+        );
+        assert!(
+            mgr.check_escalation("p3", &PluginCapability::ReadBus)
+                .is_err()
+        );
     }
 }

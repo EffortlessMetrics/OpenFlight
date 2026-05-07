@@ -146,7 +146,11 @@ impl ProfileLinter {
     #[must_use]
     pub fn rule_codes(&self) -> Vec<&str> {
         let mut sorted: Vec<&LintRule> = self.rules.iter().collect();
-        sorted.sort_by(|a, b| a.priority.cmp(&b.priority).then_with(|| a.code.cmp(&b.code)));
+        sorted.sort_by(|a, b| {
+            a.priority
+                .cmp(&b.priority)
+                .then_with(|| a.code.cmp(&b.code))
+        });
         sorted.iter().map(|r| r.code.as_str()).collect()
     }
 
@@ -156,7 +160,11 @@ impl ProfileLinter {
         let mut warnings = Vec::new();
         let mut errors = Vec::new();
         let mut sorted: Vec<&LintRule> = self.rules.iter().collect();
-        sorted.sort_by(|a, b| a.priority.cmp(&b.priority).then_with(|| a.code.cmp(&b.code)));
+        sorted.sort_by(|a, b| {
+            a.priority
+                .cmp(&b.priority)
+                .then_with(|| a.code.cmp(&b.code))
+        });
         for rule in sorted {
             if self.disabled_rules.contains(&rule.code) {
                 continue;
@@ -242,13 +250,11 @@ impl ProfileLinter {
                             fix: Some(FixSuggestion {
                                 description: format!("Add default value for '{field}'"),
                                 path: field.to_owned(),
-                                suggested_value: Some(Value::String(
-                                    if field == "version" {
-                                        "1.0".to_owned()
-                                    } else {
-                                        "unnamed".to_owned()
-                                    },
-                                )),
+                                suggested_value: Some(Value::String(if field == "version" {
+                                    "1.0".to_owned()
+                                } else {
+                                    "unnamed".to_owned()
+                                })),
                             }),
                         });
                     }
@@ -404,9 +410,7 @@ impl ProfileLinter {
                     for (i, axis) in axes.iter().enumerate() {
                         if let Some(name) = axis.get("assignment").and_then(Value::as_str)
                             && (name.is_empty()
-                                || !name
-                                    .chars()
-                                    .all(|c| c.is_ascii_alphanumeric() || c == '_'))
+                                || !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'))
                         {
                             errors.push(LintError {
                                 code: "E003".into(),
@@ -433,7 +437,9 @@ impl ProfileLinter {
             checker: Box::new(|profile| {
                 let mut errors = Vec::new();
                 if let Some(ver) = profile.get("version").and_then(Value::as_str) {
-                    let valid = ver.split('.').all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()));
+                    let valid = ver
+                        .split('.')
+                        .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()));
                     if !valid || ver.is_empty() {
                         errors.push(LintError {
                             code: "E004".into(),
@@ -465,7 +471,9 @@ impl ProfileLinter {
                         if has_curve && has_expo {
                             warnings.push(LintWarning {
                                 code: "W005".into(),
-                                message: "Axis has both 'curve' and 'expo' set; curve takes precedence".into(),
+                                message:
+                                    "Axis has both 'curve' and 'expo' set; curve takes precedence"
+                                        .into(),
                                 path: format!("axes[{i}]"),
                                 severity: Severity::Warning,
                                 fix: None,
@@ -1097,7 +1105,10 @@ mod tests {
         let executed = order.lock().unwrap();
         let x1_pos = executed.iter().position(|c| *c == "X001").unwrap();
         let x2_pos = executed.iter().position(|c| *c == "X002").unwrap();
-        assert!(x1_pos < x2_pos, "X001 (prio -10) should run before X002 (prio 100)");
+        assert!(
+            x1_pos < x2_pos,
+            "X001 (prio -10) should run before X002 (prio 100)"
+        );
     }
 
     #[test]

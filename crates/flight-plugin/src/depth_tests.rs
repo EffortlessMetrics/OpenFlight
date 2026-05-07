@@ -360,8 +360,7 @@ mod capability_system {
 
     #[test]
     fn check_capabilities_at_runtime() {
-        let granted =
-            CapabilitySet::from_caps([Capability::ReadAxes, Capability::ReadTelemetry]);
+        let granted = CapabilitySet::from_caps([Capability::ReadAxes, Capability::ReadTelemetry]);
         let requested = CapabilitySet::from_caps([Capability::ReadAxes]);
         assert!(CapabilityChecker::check(granted, requested).is_ok());
 
@@ -372,8 +371,7 @@ mod capability_system {
     #[test]
     fn deny_unauthorized_access() {
         let granted = CapabilitySet::from_caps([Capability::ReadAxes]);
-        let requested =
-            CapabilitySet::from_caps([Capability::ReadAxes, Capability::AccessNetwork]);
+        let requested = CapabilitySet::from_caps([Capability::ReadAxes, Capability::AccessNetwork]);
 
         let err = CapabilityChecker::check(granted, requested).unwrap_err();
         assert!(err.denied.contains(Capability::AccessNetwork));
@@ -679,8 +677,7 @@ mod inter_plugin_communication {
         // Verify capability sets properly encode producer/consumer roles
         let writer_caps =
             CapabilitySet::from_caps([Capability::WriteAxes, Capability::WriteButtons]);
-        let reader_caps =
-            CapabilitySet::from_caps([Capability::ReadAxes, Capability::ReadButtons]);
+        let reader_caps = CapabilitySet::from_caps([Capability::ReadAxes, Capability::ReadButtons]);
 
         // Writer cannot read, reader cannot write
         assert!(!writer_caps.contains(Capability::ReadAxes));

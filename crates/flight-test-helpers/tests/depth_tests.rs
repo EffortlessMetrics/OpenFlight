@@ -11,11 +11,11 @@ use flight_test_helpers::assert_helpers::{
     assert_no_inf, assert_no_nan, assert_symmetric_deadzone,
 };
 use flight_test_helpers::{
-    assert_approx_eq, assert_bounded_rate, assert_in_range, assert_monotonic, create_temp_dir,
-    wait_for_condition, DeterministicClock, DeviceFixtureBuilder, FakeDevice, FakeInput, FakeSim,
-    FakeSnapshot, ProfileFixtureBuilder, SnapshotResult, SnapshotStore, TelemetryFixtureBuilder,
-    TestConfigBuilder, TestDeviceBuilder, TestHarness, TraceComparator, TraceEvent,
-    TraceEventType, TracePlayer, TraceRecording, TraceSource,
+    DeterministicClock, DeviceFixtureBuilder, FakeDevice, FakeInput, FakeSim, FakeSnapshot,
+    ProfileFixtureBuilder, SnapshotResult, SnapshotStore, TelemetryFixtureBuilder,
+    TestConfigBuilder, TestDeviceBuilder, TestHarness, TraceComparator, TraceEvent, TraceEventType,
+    TracePlayer, TraceRecording, TraceSource, assert_approx_eq, assert_bounded_rate,
+    assert_in_range, assert_monotonic, create_temp_dir, wait_for_condition,
 };
 use std::time::Duration;
 
@@ -451,7 +451,10 @@ fn clock_mixed_advance_methods() {
 // ===========================================================================
 
 fn build_axis_trace(n: usize, interval_us: u64) -> TraceRecording {
-    assert!(n >= 2, "build_axis_trace requires n >= 2 to avoid division by zero");
+    assert!(
+        n >= 2,
+        "build_axis_trace requires n >= 2 to avoid division by zero"
+    );
     let mut rec = TraceRecording::new("axis_trace");
     for i in 0..n {
         rec.add_event(TraceEvent {
@@ -498,14 +501,8 @@ fn trace_record_and_verify_structure() {
     assert_eq!(rec.duration(), 12_000);
     assert_eq!(rec.events_of_type(TraceEventType::AxisInput).len(), 1);
     assert_eq!(rec.events_of_type(TraceEventType::ButtonPress).len(), 1);
-    assert_eq!(
-        rec.events_of_type(TraceEventType::TelemetryUpdate).len(),
-        1
-    );
-    assert_eq!(
-        rec.events_of_type(TraceEventType::ButtonRelease).len(),
-        1
-    );
+    assert_eq!(rec.events_of_type(TraceEventType::TelemetryUpdate).len(), 1);
+    assert_eq!(rec.events_of_type(TraceEventType::ButtonRelease).len(), 1);
     assert_eq!(rec.events_of_type(TraceEventType::SimEvent).len(), 0);
 }
 
@@ -893,8 +890,9 @@ fn test_device_builder_multiple_instances() {
 
 #[test]
 fn wait_for_condition_immediate_true() {
-    let result =
-        wait_for_condition(Duration::from_millis(100), Duration::from_millis(5), || true);
+    let result = wait_for_condition(Duration::from_millis(100), Duration::from_millis(5), || {
+        true
+    });
     assert!(result);
 }
 

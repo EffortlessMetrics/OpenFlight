@@ -8,9 +8,9 @@
 
 use flight_hid_support::device_support::{
     MFG_CROSSWIND_V1_PID, MFG_CROSSWIND_V2_PID, MFG_CROSSWIND_V3_PID, MFG_VENDOR_ID,
-    SAITEK_PRO_FLIGHT_RUDDER_PEDALS_PID, THRUSTMASTER_VENDOR_ID,
-    TFRP_RUDDER_PEDALS_PID, TPR_PENDULAR_RUDDER_PID, T_RUDDER_PID,
-    VKB_VENDOR_ID, VIRPIL_ACE_PEDALS_PID, VIRPIL_VENDOR_ID,
+    SAITEK_PRO_FLIGHT_RUDDER_PEDALS_PID, T_RUDDER_PID, TFRP_RUDDER_PEDALS_PID,
+    THRUSTMASTER_VENDOR_ID, TPR_PENDULAR_RUDDER_PID, VIRPIL_ACE_PEDALS_PID, VIRPIL_VENDOR_ID,
+    VKB_VENDOR_ID,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -24,26 +24,45 @@ fn mfg_vendor_id_is_correct() {
 
 #[test]
 fn mfg_crosswind_v1_pid() {
-    assert_eq!(MFG_CROSSWIND_V1_PID, 0x0001, "Crosswind V1 PID should be 0x0001");
+    assert_eq!(
+        MFG_CROSSWIND_V1_PID, 0x0001,
+        "Crosswind V1 PID should be 0x0001"
+    );
 }
 
 #[test]
 fn mfg_crosswind_v2_pid() {
-    assert_eq!(MFG_CROSSWIND_V2_PID, 0x0002, "Crosswind V2 PID should be 0x0002");
+    assert_eq!(
+        MFG_CROSSWIND_V2_PID, 0x0002,
+        "Crosswind V2 PID should be 0x0002"
+    );
 }
 
 #[test]
 fn mfg_crosswind_v3_pid() {
-    assert_eq!(MFG_CROSSWIND_V3_PID, 0x0004, "Crosswind V3 PID should be 0x0004");
+    assert_eq!(
+        MFG_CROSSWIND_V3_PID, 0x0004,
+        "Crosswind V3 PID should be 0x0004"
+    );
 }
 
 #[test]
 fn mfg_crosswind_versions_have_distinct_pids() {
-    let pids = [MFG_CROSSWIND_V1_PID, MFG_CROSSWIND_V2_PID, MFG_CROSSWIND_V3_PID];
+    let pids = [
+        MFG_CROSSWIND_V1_PID,
+        MFG_CROSSWIND_V2_PID,
+        MFG_CROSSWIND_V3_PID,
+    ];
     for (i, a) in pids.iter().enumerate() {
         for (j, b) in pids.iter().enumerate() {
             if i != j {
-                assert_ne!(a, b, "Crosswind V{} and V{} should have distinct PIDs", i + 1, j + 1);
+                assert_ne!(
+                    a,
+                    b,
+                    "Crosswind V{} and V{} should have distinct PIDs",
+                    i + 1,
+                    j + 1
+                );
             }
         }
     }
@@ -52,7 +71,11 @@ fn mfg_crosswind_versions_have_distinct_pids() {
 #[test]
 fn mfg_crosswind_pid_progression() {
     // V1 < V2 < V3 in PID numbering
-    let (v1, v2, v3) = (MFG_CROSSWIND_V1_PID, MFG_CROSSWIND_V2_PID, MFG_CROSSWIND_V3_PID);
+    let (v1, v2, v3) = (
+        MFG_CROSSWIND_V1_PID,
+        MFG_CROSSWIND_V2_PID,
+        MFG_CROSSWIND_V3_PID,
+    );
     assert!(v1 < v2, "V1 PID should be less than V2");
     assert!(v2 < v3, "V2 PID should be less than V3");
 }
@@ -106,7 +129,11 @@ fn known_pedal_vendor_ids_are_distinct() {
 
 #[test]
 fn thrustmaster_pedal_pids_are_distinct() {
-    let pids = [TFRP_RUDDER_PEDALS_PID, T_RUDDER_PID, TPR_PENDULAR_RUDDER_PID];
+    let pids = [
+        TFRP_RUDDER_PEDALS_PID,
+        T_RUDDER_PID,
+        TPR_PENDULAR_RUDDER_PID,
+    ];
     for (i, a) in pids.iter().enumerate() {
         for (j, b) in pids.iter().enumerate() {
             if i != j {
@@ -170,7 +197,12 @@ fn mfg_crosswind_vid_nonzero() {
 #[test]
 fn no_pedal_vendor_uses_vid_zero() {
     // VID 0x0000 is reserved by USB-IF
-    let vids: [u16; 4] = [MFG_VENDOR_ID, THRUSTMASTER_VENDOR_ID, VKB_VENDOR_ID, VIRPIL_VENDOR_ID];
+    let vids: [u16; 4] = [
+        MFG_VENDOR_ID,
+        THRUSTMASTER_VENDOR_ID,
+        VKB_VENDOR_ID,
+        VIRPIL_VENDOR_ID,
+    ];
     for vid in vids {
         assert_ne!(vid, 0, "VID {vid:#06X} must not be zero");
     }
@@ -181,5 +213,9 @@ fn crosswind_pid_v3_is_not_sequential_from_v2() {
     // V3 PID is 0x0004 (skips 0x0003), documenting this gap
     assert_eq!(MFG_CROSSWIND_V2_PID, 0x0002);
     assert_eq!(MFG_CROSSWIND_V3_PID, 0x0004);
-    assert_ne!(MFG_CROSSWIND_V3_PID, MFG_CROSSWIND_V2_PID + 1, "V3 PID skips 0x0003");
+    assert_ne!(
+        MFG_CROSSWIND_V3_PID,
+        MFG_CROSSWIND_V2_PID + 1,
+        "V3 PID skips 0x0003"
+    );
 }

@@ -691,7 +691,8 @@ async fn subscriber_receives_snapshots_across_state_transitions() {
         .subscribe(SubscriptionConfig::default())
         .expect("subscribe");
 
-    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+    let adapter =
+        XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
 
     // Drive to Connected (no bus publish yet)
     adapter.handle_socket_bound();
@@ -701,7 +702,10 @@ async fn subscriber_receives_snapshots_across_state_transitions() {
     let snapshot = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
     adapter.process_telemetry(snapshot).unwrap();
 
-    let received = subscriber.try_recv().unwrap().expect("should receive valid snapshot");
+    let received = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("should receive valid snapshot");
     assert_eq!(received.sim, SimId::XPlane);
     assert_eq!(received.aircraft.icao, "A320");
 
@@ -711,9 +715,18 @@ async fn subscriber_receives_snapshots_across_state_transitions() {
     // Timeout → Stale, publishes stale snapshot
     adapter.handle_telemetry_timeout().unwrap();
 
-    let stale = subscriber.try_recv().unwrap().expect("should receive stale snapshot");
-    assert!(!stale.validity.safe_for_ffb, "stale must not be safe for FFB");
-    assert_eq!(stale.aircraft.icao, "unknown", "stale uses 'unknown' aircraft");
+    let stale = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("should receive stale snapshot");
+    assert!(
+        !stale.validity.safe_for_ffb,
+        "stale must not be safe for FFB"
+    );
+    assert_eq!(
+        stale.aircraft.icao, "unknown",
+        "stale uses 'unknown' aircraft"
+    );
 
     // Wait for rate limiter again
     std::thread::sleep(std::time::Duration::from_millis(20));
@@ -722,7 +735,10 @@ async fn subscriber_receives_snapshots_across_state_transitions() {
     let recovery = BusSnapshot::new(SimId::XPlane, AircraftId::new("A320"));
     adapter.process_telemetry(recovery).unwrap();
 
-    let recovered = subscriber.try_recv().unwrap().expect("should receive recovery snapshot");
+    let recovered = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("should receive recovery snapshot");
     assert_eq!(recovered.aircraft.icao, "A320");
 }
 
@@ -741,7 +757,8 @@ async fn subscriber_receives_after_reconnect() {
         .subscribe(SubscriptionConfig::default())
         .expect("subscribe");
 
-    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+    let adapter =
+        XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
 
     // Drive to Active and send first snapshot
     adapter.handle_socket_bound();
@@ -764,8 +781,14 @@ async fn subscriber_receives_after_reconnect() {
     let snap2 = BusSnapshot::new(SimId::XPlane, AircraftId::new("B738"));
     adapter.process_telemetry(snap2).unwrap();
 
-    let received = subscriber.try_recv().unwrap().expect("snapshot after reconnect");
-    assert_eq!(received.aircraft.icao, "B738", "should receive data for new aircraft after reconnect");
+    let received = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("snapshot after reconnect");
+    assert_eq!(
+        received.aircraft.icao, "B738",
+        "should receive data for new aircraft after reconnect"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -789,7 +812,8 @@ async fn repeated_timeout_stays_stale_and_keeps_publishing() {
         .subscribe(SubscriptionConfig::default())
         .expect("subscribe");
 
-    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+    let adapter =
+        XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
 
     // Advance to Active
     adapter.handle_socket_bound();
@@ -823,17 +847,38 @@ async fn repeated_timeout_stays_stale_and_keeps_publishing() {
 async fn validity_flags_preserved_through_bus_publish() {
     let mut datarefs = make_critical_datarefs();
     // Add attitude
-    datarefs.insert("sim/flightmodel/position/theta".to_string(), DataRefValue::Float(5.0));
-    datarefs.insert("sim/flightmodel/position/phi".to_string(), DataRefValue::Float(10.0));
-    datarefs.insert("sim/flightmodel/position/psi".to_string(), DataRefValue::Float(90.0));
+    datarefs.insert(
+        "sim/flightmodel/position/theta".to_string(),
+        DataRefValue::Float(5.0),
+    );
+    datarefs.insert(
+        "sim/flightmodel/position/phi".to_string(),
+        DataRefValue::Float(10.0),
+    );
+    datarefs.insert(
+        "sim/flightmodel/position/psi".to_string(),
+        DataRefValue::Float(90.0),
+    );
     // Add angular rates
-    datarefs.insert("sim/flightmodel/position/P".to_string(), DataRefValue::Float(1.0));
-    datarefs.insert("sim/flightmodel/position/Q".to_string(), DataRefValue::Float(0.5));
-    datarefs.insert("sim/flightmodel/position/R".to_string(), DataRefValue::Float(0.2));
+    datarefs.insert(
+        "sim/flightmodel/position/P".to_string(),
+        DataRefValue::Float(1.0),
+    );
+    datarefs.insert(
+        "sim/flightmodel/position/Q".to_string(),
+        DataRefValue::Float(0.5),
+    );
+    datarefs.insert(
+        "sim/flightmodel/position/R".to_string(),
+        DataRefValue::Float(0.2),
+    );
 
     let raw = make_raw_data(datarefs);
     let snapshot = XPlaneAdapter::convert_raw_to_snapshot(raw, Instant::now()).unwrap();
-    assert!(snapshot.validity.safe_for_ffb, "source snapshot should be FFB-safe");
+    assert!(
+        snapshot.validity.safe_for_ffb,
+        "source snapshot should be FFB-safe"
+    );
 
     // Publish through bus and verify flags are preserved
     let publisher = make_publisher();
@@ -843,13 +888,20 @@ async fn validity_flags_preserved_through_bus_publish() {
         .subscribe(SubscriptionConfig::default())
         .expect("subscribe");
 
-    let adapter = XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
+    let adapter =
+        XPlaneAdapter::new(XPlaneAdapterConfig::default(), Arc::clone(&publisher)).unwrap();
     adapter.handle_socket_bound();
     adapter.handle_socket_bound();
     adapter.process_telemetry(snapshot).unwrap();
 
-    let received = subscriber.try_recv().unwrap().expect("should receive snapshot");
-    assert!(received.validity.safe_for_ffb, "FFB-safe flag must survive bus round-trip");
+    let received = subscriber
+        .try_recv()
+        .unwrap()
+        .expect("should receive snapshot");
+    assert!(
+        received.validity.safe_for_ffb,
+        "FFB-safe flag must survive bus round-trip"
+    );
     assert!(received.validity.attitude_valid);
     assert!(received.validity.angular_rates_valid);
     assert!(received.validity.velocities_valid);

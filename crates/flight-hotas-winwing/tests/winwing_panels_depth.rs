@@ -12,15 +12,15 @@
 //! 5. LED/annunciator control (on/off, blink, RGB, intensity)
 //! 6. Integration (sim state ↔ panel, roundtrip)
 
-use flight_hotas_winwing::protocol::{
-    BacklightSubCommand, CommandCategory, DetentName, DisplaySubCommand, FeatureReportFrame,
-    ProtocolError, build_backlight_all_rgb_command, build_backlight_single_command,
-    build_backlight_single_rgb_command, build_display_brightness_command,
-    build_display_clear_command, build_display_segment_command, build_display_text_command,
-    parse_detent_response, parse_feature_report, FEATURE_REPORT_ID, MAX_PAYLOAD_LEN,
-};
 use flight_hotas_winwing::profiles::{
     efis_panel_profile, fcu_panel_profile, profile_by_pid, take_off_panel_profile,
+};
+use flight_hotas_winwing::protocol::{
+    BacklightSubCommand, CommandCategory, DetentName, DisplaySubCommand, FEATURE_REPORT_ID,
+    FeatureReportFrame, MAX_PAYLOAD_LEN, ProtocolError, build_backlight_all_rgb_command,
+    build_backlight_single_command, build_backlight_single_rgb_command,
+    build_display_brightness_command, build_display_clear_command, build_display_segment_command,
+    build_display_text_command, parse_detent_response, parse_feature_report,
 };
 use flight_hotas_winwing::ufc_panel::{
     HUD_BUTTON_COUNT, MIN_REPORT_BYTES as UFC_MIN_REPORT, TOTAL_BUTTON_COUNT, UFC_BUTTON_COUNT,
@@ -192,8 +192,7 @@ fn protocol_feature_report_checksum_roundtrip() {
     // Build → serialise → parse should succeed for arbitrary payloads.
     for payload_len in [0, 1, 8, 32, MAX_PAYLOAD_LEN] {
         let payload: Vec<u8> = (0..payload_len).map(|i| i as u8).collect();
-        let frame =
-            FeatureReportFrame::new(CommandCategory::Backlight, 0x03, &payload).unwrap();
+        let frame = FeatureReportFrame::new(CommandCategory::Backlight, 0x03, &payload).unwrap();
         let parsed = parse_feature_report(frame.as_bytes()).unwrap();
         assert_eq!(parsed.payload, payload.as_slice());
     }
@@ -201,8 +200,7 @@ fn protocol_feature_report_checksum_roundtrip() {
 
 #[test]
 fn protocol_feature_report_corrupt_checksum() {
-    let frame =
-        FeatureReportFrame::new(CommandCategory::Display, 0x02, &[0xDE, 0xAD]).unwrap();
+    let frame = FeatureReportFrame::new(CommandCategory::Display, 0x02, &[0xDE, 0xAD]).unwrap();
     let mut bytes = frame.as_bytes().to_vec();
     let last = bytes.len() - 1;
     bytes[last] = bytes[last].wrapping_add(1); // Corrupt
@@ -574,7 +572,11 @@ fn pedestal_trim_wheel_detent_query_and_response() {
     // Trim wheel uses detent protocol to report center position.
     let center_pos = 32768u16.to_le_bytes();
     let payload = [
-        0, 0, center_pos[0], center_pos[1], 0, // lever 0, idle detent
+        0,
+        0,
+        center_pos[0],
+        center_pos[1],
+        0, // lever 0, idle detent
     ];
     let report = parse_detent_response(&payload).unwrap();
     assert_eq!(report.positions.len(), 1);

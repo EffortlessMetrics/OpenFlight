@@ -10,26 +10,25 @@
 
 use std::time::Duration;
 
-use flight_simconnect::connection::{
-    ConnectionConfig, ConnectionState,
-    ExponentialBackoff, HealthMonitor, SimConnectConnection,
-};
 use flight_simconnect::adapter_state::{
     SimConnectAdapterState, SimConnectEvent, SimConnectStateMachine, SimConnectTransitionError,
+};
+use flight_simconnect::aircraft_detection::{
+    AircraftDetectionEngine, AircraftEntry, MatchConfidence, SimAircraftData,
+};
+use flight_simconnect::connection::{
+    ConnectionConfig, ConnectionState, ExponentialBackoff, HealthMonitor, SimConnectConnection,
+};
+use flight_simconnect::control_injection::AxisId;
+use flight_simconnect::event_mapping::{
+    SIM_EVENT_CATALOG, SimEventCategory, SimEventMapper, catalog_by_category, catalog_lookup,
 };
 use flight_simconnect::simconnect_bridge::{
     BackendError, BridgeConfig, DispatchMessage, MockSimConnectBackend, SimConnectBackend,
     SimConnectBridge, VarSnapshot,
 };
-use flight_simconnect::aircraft_detection::{
-    AircraftDetectionEngine, AircraftEntry, MatchConfidence, SimAircraftData,
-};
-use flight_simconnect::var_registry::{SimVarCategory, SimVarRegistry};
-use flight_simconnect::event_mapping::{
-    SimEventCategory, SimEventMapper, SIM_EVENT_CATALOG, catalog_by_category, catalog_lookup,
-};
-use flight_simconnect::control_injection::AxisId;
 use flight_simconnect::subscription::CORE_SUBSCRIPTION_VARS;
+use flight_simconnect::var_registry::{SimVarCategory, SimVarRegistry};
 
 // ===========================================================================
 // Helpers
@@ -407,10 +406,7 @@ mod aircraft_detection {
         });
         assert_eq!(result.confidence, MatchConfidence::Exact);
         assert_eq!(result.icao, Some("A320".into()));
-        assert_eq!(
-            result.display_name,
-            Some("Airbus A320neo".into())
-        );
+        assert_eq!(result.display_name, Some("Airbus A320neo".into()));
     }
 
     /// Livery / community mod identification via title keywords.
@@ -737,9 +733,7 @@ mod protocol {
         assert!(defs[&DEF_TELEMETRY].len() > 1);
 
         // Aircraft definition has TITLE.
-        assert!(defs[&DEF_AIRCRAFT]
-            .iter()
-            .any(|(name, _)| name == "TITLE"));
+        assert!(defs[&DEF_AIRCRAFT].iter().any(|(name, _)| name == "TITLE"));
     }
 
     /// Error response handling: backend errors propagate correctly.

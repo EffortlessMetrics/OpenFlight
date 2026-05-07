@@ -11,11 +11,11 @@ use flight_hotas_honeycomb::profiles::{
     ALPHA_AXES, ALPHA_PROFILE, BRAVO_AXES, BRAVO_PROFILE, CHARLIE_PROFILE,
 };
 use flight_hotas_honeycomb::protocol::{
-    self, GearIndicatorState, MagnetoPosition, decode_toggle_switch, ToggleSwitchState,
+    self, GearIndicatorState, MagnetoPosition, ToggleSwitchState, decode_toggle_switch,
 };
 use flight_hotas_honeycomb::{
-    parse_alpha_report, parse_bravo_report, HONEYCOMB_ALPHA_YOKE_PID, HONEYCOMB_BRAVO_PID,
-    HONEYCOMB_VENDOR_ID,
+    HONEYCOMB_ALPHA_YOKE_PID, HONEYCOMB_BRAVO_PID, HONEYCOMB_VENDOR_ID, parse_alpha_report,
+    parse_bravo_report,
 };
 
 // ── Report builders ──────────────────────────────────────────────────────────
@@ -289,7 +289,10 @@ fn bravo_autopilot_mode_buttons_all_eight() {
     // All pressed simultaneously
     let all_ap: u64 = 0xFF;
     let state = parse_bravo_report(&bravo_report([0; 7], all_ap)).unwrap();
-    assert!(state.buttons.ap_master(), "AP master active with all AP buttons");
+    assert!(
+        state.buttons.ap_master(),
+        "AP master active with all AP buttons"
+    );
     for n in 1u8..=8 {
         assert!(state.buttons.is_pressed(n), "button {n} active");
     }
@@ -346,7 +349,11 @@ fn annunciator_master_warning_led() {
     let mut leds = BravoLedState::all_off();
     leds.master_warning = true;
     let report = serialize_led_report(&leds);
-    assert_eq!(report[2] & (1 << 6), 1 << 6, "master warning = bit 6 of byte 2");
+    assert_eq!(
+        report[2] & (1 << 6),
+        1 << 6,
+        "master warning = bit 6 of byte 2"
+    );
     // No other bits in byte 2 should be set
     assert_eq!(report[2] & !(1 << 6), 0);
     assert_eq!(report[1], 0);
@@ -374,7 +381,11 @@ fn annunciator_engine_fire_led() {
     let mut leds = BravoLedState::all_off();
     leds.engine_fire = true;
     let report = serialize_led_report(&leds);
-    assert_eq!(report[2] & (1 << 7), 1 << 7, "engine fire = bit 7 of byte 2");
+    assert_eq!(
+        report[2] & (1 << 7),
+        1 << 7,
+        "engine fire = bit 7 of byte 2"
+    );
     assert_eq!(report[2] & !(1 << 7), 0);
 }
 
@@ -553,8 +564,16 @@ fn profile_ga_alpha_defaults() {
     // Both axes should be bipolar (centred yoke)
     for axis in ALPHA_PROFILE.axes {
         assert!(axis.bipolar, "{} should be bipolar", axis.name);
-        assert!(axis.deadzone > 0.0, "{} should have non-zero deadzone", axis.name);
-        assert!(axis.expo > 0.0, "{} should have non-zero expo for GA", axis.name);
+        assert!(
+            axis.deadzone > 0.0,
+            "{} should have non-zero deadzone",
+            axis.name
+        );
+        assert!(
+            axis.expo > 0.0,
+            "{} should have non-zero expo for GA",
+            axis.name
+        );
     }
 
     // Verify sim var hints

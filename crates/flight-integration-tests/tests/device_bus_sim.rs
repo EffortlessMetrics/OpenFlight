@@ -138,12 +138,7 @@ fn e2e_hat_switch_maps_to_discrete_directions() {
     let mut sim = make_sim("DCS World");
 
     // Encode hat as 4 buttons: up=8, right=9, down=10, left=11
-    let hat_directions = [
-        ("UP", 8),
-        ("RIGHT", 9),
-        ("DOWN", 10),
-        ("LEFT", 11),
-    ];
+    let hat_directions = [("UP", 8), ("RIGHT", 9), ("DOWN", 10), ("LEFT", 11)];
 
     for &(dir_name, btn_idx) in &hat_directions {
         let mut buttons = vec![false; 16];

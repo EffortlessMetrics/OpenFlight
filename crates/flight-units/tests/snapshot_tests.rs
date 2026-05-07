@@ -21,7 +21,9 @@ fn snapshot_speed_conversion_table() {
     for kts in &knots_inputs {
         let mps = conversions::knots_to_mps(*kts);
         let kph = conversions::knots_to_kph(*kts);
-        table.push_str(&format!("{kts:>7.1} kt  →  {mps:>8.4} m/s  →  {kph:>8.4} kph\n"));
+        table.push_str(&format!(
+            "{kts:>7.1} kt  →  {mps:>8.4} m/s  →  {kph:>8.4} kph\n"
+        ));
     }
     insta::assert_snapshot!("speed_conversion_table", table);
 }
@@ -76,7 +78,9 @@ fn snapshot_angle_conversion_table() {
 #[test]
 fn snapshot_angle_normalization_table() {
     use flight_units::angles;
-    let inputs = [-720.0, -270.0, -180.0, -90.0, 0.0, 90.0, 180.0, 270.0, 360.0, 450.0, 720.0];
+    let inputs = [
+        -720.0, -270.0, -180.0, -90.0, 0.0, 90.0, 180.0, 270.0, 360.0, 450.0, 720.0,
+    ];
     let mut table = String::new();
     table.push_str("input → signed [-180,180] → unsigned [0,360)\n");
     table.push_str("─────────────────────────────────────────────\n");
@@ -107,9 +111,7 @@ fn snapshot_unit_value_debug_formats() {
         unit: ForceUnit::Newtons,
     };
 
-    let output = format!(
-        "Speed: {speed:?}\nAngle: {angle:?}\nForce: {force:?}"
-    );
+    let output = format!("Speed: {speed:?}\nAngle: {angle:?}\nForce: {force:?}");
     insta::assert_snapshot!("unit_value_debug_formats", output);
 }
 
@@ -134,8 +136,6 @@ fn snapshot_unit_value_json_serialization() {
     let angle_json = serde_json::to_string_pretty(&angle).unwrap();
     let force_json = serde_json::to_string_pretty(&force).unwrap();
 
-    let output = format!(
-        "Speed:\n{speed_json}\n\nAngle:\n{angle_json}\n\nForce:\n{force_json}"
-    );
+    let output = format!("Speed:\n{speed_json}\n\nAngle:\n{angle_json}\n\nForce:\n{force_json}");
     insta::assert_snapshot!("unit_value_json_serialization", output);
 }

@@ -15,40 +15,50 @@
 //! 5. Profile (DCS profile per device, combined HOTAS+pedals setup, shift layers)
 
 use flight_hotas_virpil::{
-    VIRPIL_AXIS_MAX, VIRPIL_VENDOR_ID,
+    AlphaPrimeVariant,
+    VIRPIL_ACE_PEDALS_PID,
+    VIRPIL_ACE_TORQ_PID,
+    VIRPIL_AXIS_MAX,
+    // Device IDs
+    VIRPIL_CM3_THROTTLE_PID,
+    VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
+    VIRPIL_MONGOOST_STICK_PID,
+    VIRPIL_ROTOR_TCS_PLUS_PID,
+    VIRPIL_VENDOR_ID,
+    VIRPIL_WARBRD_D_PID,
+    VIRPIL_WARBRD_PID,
+    VPC_ACE_PEDALS_MIN_REPORT_BYTES,
+    VPC_ACE_TORQ_MIN_REPORT_BYTES,
+    VPC_CM3_THROTTLE_MIN_REPORT_BYTES,
+    VPC_ROTOR_TCS_MIN_REPORT_BYTES,
+    VirpilModel,
+    // Grips
+    VpcAlphaHat,
+    WarBrdVariant,
+    is_virpil_device,
+    // Pedals
+    parse_ace_pedals_report,
+    // ACE Torq
+    parse_ace_torq_report,
+    parse_alpha_prime_report,
+    parse_alpha_report,
+    // Throttle
+    parse_cm3_throttle_report,
+    parse_mongoost_stick_report,
+    // Helicopter
+    parse_rotor_tcs_report,
+    parse_warbrd_report,
+    // Profiles
+    profiles::{
+        ACE_PEDALS_PROFILE, ALL_PROFILES, ALPHA_PROFILE, AxisRole, CM3_THROTTLE_PROFILE, HatType,
+        ROTOR_TCS_PROFILE, profile_for_pid,
+    },
     // Protocol
     protocol::{
         AXIS_MAX, AXIS_RESOLUTION_BITS, DEVICE_TABLE, INPUT_REPORT_ID, LED_REPORT_ID,
-        LED_REPORT_SIZE, LedColor, build_led_report, denormalize_axis, device_info,
-        normalize_axis,
+        LED_REPORT_SIZE, LedColor, build_led_report, denormalize_axis, device_info, normalize_axis,
     },
-    // Grips
-    VpcAlphaHat, parse_alpha_report,
-    AlphaPrimeVariant, parse_alpha_prime_report,
-    parse_mongoost_stick_report,
-    WarBrdVariant, parse_warbrd_report,
-    // Throttle
-    parse_cm3_throttle_report,
-    VPC_CM3_THROTTLE_MIN_REPORT_BYTES,
-    // Helicopter
-    parse_rotor_tcs_report,
-    VPC_ROTOR_TCS_MIN_REPORT_BYTES,
-    // ACE Torq
-    parse_ace_torq_report,
-    VPC_ACE_TORQ_MIN_REPORT_BYTES,
-    // Pedals
-    parse_ace_pedals_report,
-    VPC_ACE_PEDALS_MIN_REPORT_BYTES,
-    // Profiles
-    profiles::{
-        AxisRole, HatType, ALPHA_PROFILE, CM3_THROTTLE_PROFILE,
-        ACE_PEDALS_PROFILE, ROTOR_TCS_PROFILE, ALL_PROFILES, profile_for_pid,
-    },
-    // Device IDs
-    VIRPIL_CM3_THROTTLE_PID, VIRPIL_CONSTELLATION_ALPHA_LEFT_PID, VIRPIL_WARBRD_PID,
-    VIRPIL_WARBRD_D_PID, VIRPIL_MONGOOST_STICK_PID, VIRPIL_ACE_PEDALS_PID,
-    VIRPIL_ROTOR_TCS_PLUS_PID, VIRPIL_ACE_TORQ_PID,
-    VirpilModel, is_virpil_device, virpil_model,
+    virpil_model,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -109,7 +119,10 @@ fn ace_pedals_report(axes: [u16; 3], buttons: [u8; 2]) -> Vec<u8> {
 
 #[test]
 fn report_format_input_report_id_is_0x01() {
-    assert_eq!(INPUT_REPORT_ID, 0x01, "VIRPIL input reports use report_id 0x01");
+    assert_eq!(
+        INPUT_REPORT_ID, 0x01,
+        "VIRPIL input reports use report_id 0x01"
+    );
 }
 
 #[test]
@@ -175,7 +188,10 @@ fn report_format_mode_byte_hat_nibble_encoding() {
 fn report_format_device_type_identification_by_pid() {
     // Every known PID should resolve to a VirpilModel variant.
     let known_pids = [
-        (VIRPIL_CONSTELLATION_ALPHA_LEFT_PID, VirpilModel::ConstellationAlphaLeft),
+        (
+            VIRPIL_CONSTELLATION_ALPHA_LEFT_PID,
+            VirpilModel::ConstellationAlphaLeft,
+        ),
         (VIRPIL_MONGOOST_STICK_PID, VirpilModel::MongoostStick),
         (VIRPIL_WARBRD_PID, VirpilModel::WarBrd),
         (VIRPIL_WARBRD_D_PID, VirpilModel::WarBrdD),
@@ -223,7 +239,10 @@ fn report_format_all_device_table_entries_consistent_with_parsers() {
     assert_eq!(info_torq.min_report_bytes, VPC_ACE_TORQ_MIN_REPORT_BYTES);
 
     let info_pedals = device_info(VIRPIL_ACE_PEDALS_PID).unwrap();
-    assert_eq!(info_pedals.min_report_bytes, VPC_ACE_PEDALS_MIN_REPORT_BYTES);
+    assert_eq!(
+        info_pedals.min_report_bytes,
+        VPC_ACE_PEDALS_MIN_REPORT_BYTES
+    );
 }
 
 #[test]
@@ -346,7 +365,10 @@ fn throttle_dual_axis_independent_range() {
     let state = parse_cm3_throttle_report(&report).unwrap();
 
     assert_eq!(state.axes.left_throttle, 0.0, "left at idle");
-    assert!((state.axes.right_throttle - 1.0).abs() < 1e-4, "right at full");
+    assert!(
+        (state.axes.right_throttle - 1.0).abs() < 1e-4,
+        "right at full"
+    );
 }
 
 #[test]
@@ -440,12 +462,18 @@ fn heli_collective_full_range() {
     let state_up = parse_rotor_tcs_report(&report_up).unwrap();
 
     assert_eq!(state_down.axes.collective, 0.0, "collective full down");
-    assert!((state_up.axes.collective - 1.0).abs() < 1e-4, "collective full up");
+    assert!(
+        (state_up.axes.collective - 1.0).abs() < 1e-4,
+        "collective full up"
+    );
 
     // Midpoint hover
     let report_mid = rotor_tcs_report([VIRPIL_AXIS_MAX / 2, 0, 0], [0u8; 4]);
     let state_mid = parse_rotor_tcs_report(&report_mid).unwrap();
-    assert!((state_mid.axes.collective - 0.5).abs() < 0.01, "collective hover mid");
+    assert!(
+        (state_mid.axes.collective - 0.5).abs() < 0.01,
+        "collective hover mid"
+    );
 }
 
 #[test]
@@ -458,7 +486,10 @@ fn heli_twist_throttle_idle_cutoff() {
     let state_full = parse_rotor_tcs_report(&report_full).unwrap();
 
     assert_eq!(state_cutoff.axes.throttle_idle, 0.0, "idle cutoff");
-    assert!((state_full.axes.throttle_idle - 1.0).abs() < 1e-4, "full throttle");
+    assert!(
+        (state_full.axes.throttle_idle - 1.0).abs() < 1e-4,
+        "full throttle"
+    );
 }
 
 #[test]
@@ -579,7 +610,11 @@ fn profile_axis_centering_semantic_correctness() {
     for axis in ALPHA_PROFILE.axes {
         match axis.role {
             AxisRole::StickX | AxisRole::StickY | AxisRole::Twist => {
-                assert!(axis.centred, "{}: {} should be centred", ALPHA_PROFILE.name, axis.label);
+                assert!(
+                    axis.centred,
+                    "{}: {} should be centred",
+                    ALPHA_PROFILE.name, axis.label
+                );
             }
             _ => {}
         }
@@ -587,11 +622,22 @@ fn profile_axis_centering_semantic_correctness() {
 
     for axis in CM3_THROTTLE_PROFILE.axes {
         match axis.role {
-            AxisRole::ThrottleLeft | AxisRole::ThrottleRight | AxisRole::Flaps | AxisRole::Slider => {
-                assert!(!axis.centred, "{}: {} should NOT be centred", CM3_THROTTLE_PROFILE.name, axis.label);
+            AxisRole::ThrottleLeft
+            | AxisRole::ThrottleRight
+            | AxisRole::Flaps
+            | AxisRole::Slider => {
+                assert!(
+                    !axis.centred,
+                    "{}: {} should NOT be centred",
+                    CM3_THROTTLE_PROFILE.name, axis.label
+                );
             }
             AxisRole::SlewX | AxisRole::SlewY => {
-                assert!(axis.centred, "{}: {} should be centred", CM3_THROTTLE_PROFILE.name, axis.label);
+                assert!(
+                    axis.centred,
+                    "{}: {} should be centred",
+                    CM3_THROTTLE_PROFILE.name, axis.label
+                );
             }
             _ => {}
         }
@@ -626,8 +672,7 @@ fn profile_heli_setup_rotor_tcs_plus_ace_torq() {
     // Combined setup
     let total_axes = collective_profile.axes.len() + torq_profile.axes.len();
     assert_eq!(total_axes, 4, "4 axes in heli setup");
-    let total_buttons =
-        collective_profile.button_count as u32 + torq_profile.button_count as u32;
+    let total_buttons = collective_profile.button_count as u32 + torq_profile.button_count as u32;
     assert_eq!(total_buttons, 24 + 8, "32 buttons in heli setup");
 }
 
@@ -666,12 +711,24 @@ fn led_report_structure() {
 #[test]
 fn device_table_covers_all_major_product_families() {
     // Sticks, throttles, panels, pedals, heli — all represented
-    let has_stick = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::MongoostStick);
-    let has_alpha = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::ConstellationAlphaLeft);
-    let has_throttle = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::Cm3Throttle);
-    let has_pedals = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::AcePedals);
-    let has_heli = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::RotorTcsPlus);
-    let has_panel = DEVICE_TABLE.iter().any(|d| d.model == VirpilModel::ControlPanel1);
+    let has_stick = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::MongoostStick);
+    let has_alpha = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::ConstellationAlphaLeft);
+    let has_throttle = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::Cm3Throttle);
+    let has_pedals = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::AcePedals);
+    let has_heli = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::RotorTcsPlus);
+    let has_panel = DEVICE_TABLE
+        .iter()
+        .any(|d| d.model == VirpilModel::ControlPanel1);
 
     assert!(has_stick, "MongoosT stick in table");
     assert!(has_alpha, "Constellation Alpha in table");
@@ -703,6 +760,12 @@ fn ace_pedals_rudder_and_brakes_protocol() {
     let state = parse_ace_pedals_report(&report).unwrap();
 
     assert!((state.axes.rudder - 0.5).abs() < 0.01, "rudder centred");
-    assert!((state.axes.left_toe_brake - 0.5).abs() < 0.01, "left brake half");
-    assert!((state.axes.right_toe_brake - 1.0).abs() < 1e-4, "right brake full");
+    assert!(
+        (state.axes.left_toe_brake - 0.5).abs() < 0.01,
+        "left brake half"
+    );
+    assert!(
+        (state.axes.right_toe_brake - 1.0).abs() < 1e-4,
+        "right brake full"
+    );
 }

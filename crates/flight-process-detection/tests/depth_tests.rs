@@ -12,8 +12,8 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use flight_process_detection::{
-    DetectedProcess, DetectionMetrics, ProcessDetectionConfig, ProcessDetectionError,
-    ProcessDefinition, ProcessDetector, SimId, SystemProcess,
+    DetectedProcess, DetectionMetrics, ProcessDefinition, ProcessDetectionConfig,
+    ProcessDetectionError, ProcessDetector, SimId, SystemProcess,
 };
 use proptest::prelude::*;
 
@@ -34,7 +34,12 @@ fn make_system_process(pid: u32, name: &str, path: &str, title: Option<&str>) ->
     }
 }
 
-fn simple_definition(names: &[&str], titles: &[&str], paths: &[&str], conf: f32) -> ProcessDefinition {
+fn simple_definition(
+    names: &[&str],
+    titles: &[&str],
+    paths: &[&str],
+    conf: f32,
+) -> ProcessDefinition {
     ProcessDefinition {
         process_names: names.iter().map(|s| s.to_string()).collect(),
         window_titles: titles.iter().map(|s| s.to_string()).collect(),
@@ -303,9 +308,10 @@ fn elite_dangerous_definition_has_64bit_exe() {
         .get(&SimId::EliteDangerous)
         .cloned()
         .unwrap();
-    assert!(def
-        .process_names
-        .contains(&"EliteDangerous64.exe".to_string()));
+    assert!(
+        def.process_names
+            .contains(&"EliteDangerous64.exe".to_string())
+    );
 }
 
 #[test]
@@ -480,12 +486,7 @@ async fn window_detection_disabled_ignores_title() {
 
 #[tokio::test]
 async fn no_window_title_on_process_still_matches_by_name() {
-    let def = simple_definition(
-        &["X-Plane.exe"],
-        &["X-Plane"],
-        &[],
-        0.5,
-    );
+    let def = simple_definition(&["X-Plane.exe"], &["X-Plane"], &[], 0.5);
     let procs = vec![make_system_process(1, "X-Plane.exe", "", None)];
     let result = ProcessDetector::check_simulator_processes(SimId::XPlane, &def, &procs, true)
         .await
@@ -499,24 +500,25 @@ async fn no_window_title_on_process_still_matches_by_name() {
 
 #[tokio::test]
 async fn path_match_boosts_confidence() {
-    let def = simple_definition(
-        &["DCS.exe"],
-        &[],
-        &["DCS World"],
-        0.5,
-    );
+    let def = simple_definition(&["DCS.exe"], &[], &["DCS World"], 0.5);
     let procs_with_path = vec![make_system_process(
         1,
         "DCS.exe",
         "C:\\Games\\DCS World\\bin\\DCS.exe",
         None,
     )];
-    let procs_without_path = vec![make_system_process(1, "DCS.exe", "C:\\Other\\DCS.exe", None)];
+    let procs_without_path = vec![make_system_process(
+        1,
+        "DCS.exe",
+        "C:\\Other\\DCS.exe",
+        None,
+    )];
 
-    let with = ProcessDetector::check_simulator_processes(SimId::Dcs, &def, &procs_with_path, false)
-        .await
-        .unwrap()
-        .unwrap();
+    let with =
+        ProcessDetector::check_simulator_processes(SimId::Dcs, &def, &procs_with_path, false)
+            .await
+            .unwrap()
+            .unwrap();
     let without =
         ProcessDetector::check_simulator_processes(SimId::Dcs, &def, &procs_without_path, false)
             .await
@@ -527,12 +529,7 @@ async fn path_match_boosts_confidence() {
 
 #[tokio::test]
 async fn path_match_case_insensitive() {
-    let def = simple_definition(
-        &["DCS.exe"],
-        &[],
-        &["DCS World"],
-        0.5,
-    );
+    let def = simple_definition(&["DCS.exe"], &[], &["DCS World"], 0.5);
     let procs = vec![make_system_process(
         1,
         "DCS.exe",
@@ -555,7 +552,12 @@ async fn path_match_case_insensitive() {
 async fn below_min_confidence_yields_none() {
     // Only window title match gives 0.1, which is below 0.5 threshold
     let def = simple_definition(&[], &["Some Title"], &[], 0.5);
-    let procs = vec![make_system_process(1, "unrelated.exe", "", Some("Some Title"))];
+    let procs = vec![make_system_process(
+        1,
+        "unrelated.exe",
+        "",
+        Some("Some Title"),
+    )];
     let result = ProcessDetector::check_simulator_processes(SimId::Msfs, &def, &procs, true)
         .await
         .unwrap();
@@ -575,12 +577,7 @@ async fn confidence_exactly_at_threshold_passes() {
 
 #[tokio::test]
 async fn max_confidence_with_all_matches() {
-    let def = simple_definition(
-        &["sim.exe"],
-        &["My Sim"],
-        &["SimPath"],
-        0.5,
-    );
+    let def = simple_definition(&["sim.exe"], &["My Sim"], &["SimPath"], 0.5);
     let procs = vec![make_system_process(
         1,
         "sim.exe",
@@ -601,15 +598,10 @@ async fn max_confidence_with_all_matches() {
 
 #[tokio::test]
 async fn selects_highest_confidence_process() {
-    let def = simple_definition(
-        &["sim.exe"],
-        &[],
-        &["BestPath"],
-        0.5,
-    );
+    let def = simple_definition(&["sim.exe"], &[], &["BestPath"], 0.5);
     let procs = vec![
-        make_system_process(10, "sim.exe", "/other/sim.exe", None),     // 0.6
-        make_system_process(20, "sim.exe", "/BestPath/sim.exe", None),  // 0.9
+        make_system_process(10, "sim.exe", "/other/sim.exe", None), // 0.6
+        make_system_process(20, "sim.exe", "/BestPath/sim.exe", None), // 0.9
     ];
     let result = ProcessDetector::check_simulator_processes(SimId::Msfs, &def, &procs, false)
         .await
@@ -621,15 +613,15 @@ async fn selects_highest_confidence_process() {
 
 #[tokio::test]
 async fn multiple_candidates_picks_best() {
-    let def = simple_definition(
-        &["DCS.exe"],
-        &["DCS World"],
-        &["Eagle Dynamics"],
-        0.5,
-    );
+    let def = simple_definition(&["DCS.exe"], &["DCS World"], &["Eagle Dynamics"], 0.5);
     let procs = vec![
         make_system_process(1, "DCS.exe", "", None),
-        make_system_process(2, "DCS.exe", "C:\\Eagle Dynamics\\DCS.exe", Some("DCS World")),
+        make_system_process(
+            2,
+            "DCS.exe",
+            "C:\\Eagle Dynamics\\DCS.exe",
+            Some("DCS World"),
+        ),
     ];
     let result = ProcessDetector::check_simulator_processes(SimId::Dcs, &def, &procs, true)
         .await
@@ -649,10 +641,7 @@ async fn detect_multiple_sims_simultaneously() {
         SimId::Msfs,
         simple_definition(&["FlightSimulator.exe"], &[], &[], 0.5),
     );
-    defs.insert(
-        SimId::Dcs,
-        simple_definition(&["DCS.exe"], &[], &[], 0.5),
-    );
+    defs.insert(SimId::Dcs, simple_definition(&["DCS.exe"], &[], &[], 0.5));
     let config = ProcessDetectionConfig {
         detection_interval: Duration::from_secs(1),
         process_definitions: defs,
@@ -861,10 +850,7 @@ fn platform_has_expected_process_names() {
     #[cfg(target_os = "linux")]
     {
         // On Linux, X-Plane binary is "X-Plane-x86_64" (no .exe)
-        assert!(xplane
-            .process_names
-            .iter()
-            .any(|n| !n.ends_with(".exe")));
+        assert!(xplane.process_names.iter().any(|n| !n.ends_with(".exe")));
     }
 }
 

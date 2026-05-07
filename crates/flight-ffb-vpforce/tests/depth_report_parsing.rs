@@ -4,9 +4,7 @@
 //! Depth tests for VPforce Rhino HID report parsing — covers boundary values,
 //! individual axis extremes, hat-switch states, rocker axis, and malformed data.
 
-use flight_ffb_vpforce::input::{
-    RHINO_REPORT_LEN, RhinoButtons, RhinoParseError, parse_report,
-};
+use flight_ffb_vpforce::input::{RHINO_REPORT_LEN, RhinoButtons, RhinoParseError, parse_report};
 
 fn make_report_full(
     roll: i16,
@@ -40,7 +38,11 @@ fn centred() -> [u8; RHINO_REPORT_LEN] {
 fn negative_full_deflection_roll() {
     let r = make_report_full(i16::MIN, 0, 0, 0, 0, 0, 0);
     let s = parse_report(&r).unwrap();
-    assert!(s.axes.roll <= -0.99, "roll should be ≈−1.0, got {}", s.axes.roll);
+    assert!(
+        s.axes.roll <= -0.99,
+        "roll should be ≈−1.0, got {}",
+        s.axes.roll
+    );
     assert!(s.axes.roll >= -1.0);
 }
 
@@ -148,7 +150,11 @@ fn hat_switch_all_eight_directions() {
     for hat_val in 0..=7 {
         let r = make_report_full(0, 0, 0, 0, 0, 0, hat_val);
         let s = parse_report(&r).unwrap();
-        assert_eq!(s.buttons.hat, hat_val, "hat direction {} not preserved", hat_val);
+        assert_eq!(
+            s.buttons.hat, hat_val,
+            "hat direction {} not preserved",
+            hat_val
+        );
     }
 }
 
@@ -169,9 +175,18 @@ fn each_button_individually() {
         let s = parse_report(&r).unwrap();
         for btn in 1u8..=32 {
             if btn == n {
-                assert!(s.buttons.is_pressed(btn), "button {} should be pressed", btn);
+                assert!(
+                    s.buttons.is_pressed(btn),
+                    "button {} should be pressed",
+                    btn
+                );
             } else {
-                assert!(!s.buttons.is_pressed(btn), "button {} should NOT be pressed when only {} is set", btn, n);
+                assert!(
+                    !s.buttons.is_pressed(btn),
+                    "button {} should NOT be pressed when only {} is set",
+                    btn,
+                    n
+                );
             }
         }
     }
@@ -179,9 +194,15 @@ fn each_button_individually() {
 
 #[test]
 fn button_out_of_range_returns_false() {
-    let b = RhinoButtons { mask: u32::MAX, hat: 0 };
+    let b = RhinoButtons {
+        mask: u32::MAX,
+        hat: 0,
+    };
     assert!(!b.is_pressed(0), "button 0 is out of range");
-    assert!(!b.is_pressed(33), "button 33 is out of range for 32-bit mask");
+    assert!(
+        !b.is_pressed(33),
+        "button 33 is out of range for 32-bit mask"
+    );
     assert!(!b.is_pressed(255), "button 255 is out of range");
 }
 
@@ -210,7 +231,11 @@ fn high_buttons_16_to_32() {
     let r = make_report_full(0, 0, 0, 0, 0, mask, 0);
     let s = parse_report(&r).unwrap();
     for n in 1u8..=16 {
-        assert!(!s.buttons.is_pressed(n), "button {} should NOT be pressed", n);
+        assert!(
+            !s.buttons.is_pressed(n),
+            "button {} should NOT be pressed",
+            n
+        );
     }
     for n in 17u8..=32 {
         assert!(s.buttons.is_pressed(n), "button {} should be pressed", n);
@@ -239,13 +264,21 @@ fn longer_report_parses_ignoring_extra_bytes() {
 fn one_byte_short_fails() {
     let data = vec![0x01u8; RHINO_REPORT_LEN - 1];
     let err = parse_report(&data).unwrap_err();
-    assert!(matches!(err, RhinoParseError::TooShort { expected: RHINO_REPORT_LEN, got } if got == data.len()));
+    assert!(
+        matches!(err, RhinoParseError::TooShort { expected: RHINO_REPORT_LEN, got } if got == data.len())
+    );
 }
 
 #[test]
 fn empty_report_fails() {
     let err = parse_report(&[]).unwrap_err();
-    assert!(matches!(err, RhinoParseError::TooShort { expected: RHINO_REPORT_LEN, got: 0 }));
+    assert!(matches!(
+        err,
+        RhinoParseError::TooShort {
+            expected: RHINO_REPORT_LEN,
+            got: 0
+        }
+    ));
 }
 
 // ── Report ID tests ────────────────────────────────────────────────────
@@ -274,7 +307,10 @@ fn report_id_0xff_is_rejected() {
 
 #[test]
 fn error_display_too_short() {
-    let err = RhinoParseError::TooShort { expected: 20, got: 5 };
+    let err = RhinoParseError::TooShort {
+        expected: 20,
+        got: 5,
+    };
     let msg = err.to_string();
     assert!(msg.contains("20"), "should mention expected length");
     assert!(msg.contains("5"), "should mention actual length");
@@ -309,7 +345,10 @@ fn changing_roll_does_not_affect_pitch() {
     let r2 = make_report_full(i16::MAX, 1000, 0, 0, 0, 0, 0);
     let s1 = parse_report(&r1).unwrap();
     let s2 = parse_report(&r2).unwrap();
-    assert!((s1.axes.pitch - s2.axes.pitch).abs() < 1e-6, "pitch should be independent of roll");
+    assert!(
+        (s1.axes.pitch - s2.axes.pitch).abs() < 1e-6,
+        "pitch should be independent of roll"
+    );
 }
 
 #[test]
@@ -318,5 +357,8 @@ fn changing_throttle_does_not_affect_twist() {
     let r2 = make_report_full(0, 0, i16::MAX, 0, 5000, 0, 0);
     let s1 = parse_report(&r1).unwrap();
     let s2 = parse_report(&r2).unwrap();
-    assert!((s1.axes.twist - s2.axes.twist).abs() < 1e-6, "twist should be independent of throttle");
+    assert!(
+        (s1.axes.twist - s2.axes.twist).abs() < 1e-6,
+        "twist should be independent of throttle"
+    );
 }

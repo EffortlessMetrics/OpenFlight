@@ -246,7 +246,8 @@ mod tests {
         let scenario = parse_scenario(
             "double",
             "Given a value of 3\nWhen it is doubled\nThen the result is 6",
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&scenario, &reg);
         assert!(result.is_passed());
     }
@@ -258,10 +259,7 @@ mod tests {
         reg.when(r"^fail$", |_, _| StepOutcome::Failed("boom".to_string()));
         reg.then(r"^check$", |_, _| StepOutcome::Passed);
 
-        let scenario = parse_scenario(
-            "fail_test",
-            "Given setup\nWhen fail\nThen check",
-        ).unwrap();
+        let scenario = parse_scenario("fail_test", "Given setup\nWhen fail\nThen check").unwrap();
         let result = run_scenario(&scenario, &reg);
         assert_eq!(result.status, ScenarioStatus::Failed);
         assert!(matches!(
@@ -276,8 +274,6 @@ mod tests {
         let scenario = parse_scenario("undef", "Given something undefined").unwrap();
         let result = run_scenario(&scenario, &reg);
         assert_eq!(result.status, ScenarioStatus::Failed);
-        assert!(result.failures()[0]
-            .outcome
-            .is_failed());
+        assert!(result.failures()[0].outcome.is_failed());
     }
 }

@@ -252,8 +252,7 @@ impl ReportField {
 
     /// Returns `true` when this field describes a hat switch.
     pub fn is_hat(&self) -> bool {
-        self.usage_page == usage_page::GENERIC_DESKTOP
-            && self.usage == usage_desktop::HAT_SWITCH
+        self.usage_page == usage_page::GENERIC_DESKTOP && self.usage == usage_desktop::HAT_SWITCH
     }
 
     /// Returns `true` when this field describes an axis (multi-bit,
@@ -492,9 +491,8 @@ pub fn parse_descriptor(bytes: &[u8]) -> Result<ReportDescriptor, DescriptorErro
                         }
                     }
                     if rt == ReportType::Input {
-                        report_bits = report_bits.saturating_add(
-                            global.report_size.saturating_mul(global.report_count),
-                        );
+                        report_bits = report_bits
+                            .saturating_add(global.report_size.saturating_mul(global.report_count));
                     }
 
                     if let Some(col) = col_stack.last_mut() {
@@ -515,12 +513,9 @@ pub fn parse_descriptor(bytes: &[u8]) -> Result<ReportDescriptor, DescriptorErro
                     local.clear();
                 }
                 MAIN_END_COLLECTION => {
-                    let col =
-                        col_stack
-                            .pop()
-                            .ok_or(DescriptorError::UnmatchedEnd {
-                                offset: item_offset,
-                            })?;
+                    let col = col_stack.pop().ok_or(DescriptorError::UnmatchedEnd {
+                        offset: item_offset,
+                    })?;
                     if col_stack.is_empty() {
                         finished.push(col);
                     } else if let Some(parent) = col_stack.last_mut() {

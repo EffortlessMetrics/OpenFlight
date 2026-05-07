@@ -15,8 +15,7 @@ use flight_hotas_ch::protocol::{
 };
 use flight_hotas_ch::{
     CH_COMBAT_STICK_PID, CH_ECLIPSE_YOKE_PID, CH_FIGHTERSTICK_PID, CH_FLIGHT_YOKE_PID,
-    CH_PRO_PEDALS_PID, CH_PRO_THROTTLE_PID, CH_VENDOR_ID, ChError, ChModel, ch_model,
-    is_ch_device,
+    CH_PRO_PEDALS_PID, CH_PRO_THROTTLE_PID, CH_VENDOR_ID, ChError, ChModel, ch_model, is_ch_device,
 };
 use flight_hotas_ch::{
     COMBATSTICK_MIN_REPORT_BYTES, FIGHTERSTICK_MIN_REPORT_BYTES, PRO_PEDALS_MIN_REPORT_BYTES,
@@ -534,9 +533,15 @@ fn profile_throttle_axes_are_unipolar_stick_axes_are_bipolar() {
     let pedals = device_profile(ChDevice::ProPedals).unwrap();
     for ax in &pedals.axes {
         match ax.id {
-            "rudder" => assert!(matches!(ax.normalization, AxisNormalization::Bipolar { .. })),
+            "rudder" => assert!(matches!(
+                ax.normalization,
+                AxisNormalization::Bipolar { .. }
+            )),
             "left_toe" | "right_toe" => {
-                assert!(matches!(ax.normalization, AxisNormalization::Unipolar { .. }));
+                assert!(matches!(
+                    ax.normalization,
+                    AxisNormalization::Unipolar { .. }
+                ));
             }
             other => panic!("unexpected axis '{other}' in Pro Pedals profile"),
         }
@@ -615,12 +620,30 @@ fn quirk_report_id_always_0x01() {
 #[test]
 fn quirk_minimum_report_lengths_match_documentation() {
     // Verify the min report sizes are consistent with the documented formats.
-    assert_eq!(FIGHTERSTICK_MIN_REPORT_BYTES, 9, "Fighterstick: 1+2+2+2+1+1");
-    assert_eq!(COMBATSTICK_MIN_REPORT_BYTES, 9, "Combatstick: same as Fighterstick");
-    assert_eq!(PRO_THROTTLE_MIN_REPORT_BYTES, 9, "Pro Throttle: 1+2+2+2+1+1");
-    assert_eq!(PRO_PEDALS_MIN_REPORT_BYTES, 7, "Pro Pedals: 1+2+2+2 (no buttons)");
-    assert_eq!(ECLIPSE_YOKE_MIN_REPORT_BYTES, 11, "Eclipse Yoke: 1+2+2+2+1+1+1+1");
-    assert_eq!(FLIGHT_YOKE_MIN_REPORT_BYTES, 10, "Flight Yoke: 1+2+2+2+1+1+1");
+    assert_eq!(
+        FIGHTERSTICK_MIN_REPORT_BYTES, 9,
+        "Fighterstick: 1+2+2+2+1+1"
+    );
+    assert_eq!(
+        COMBATSTICK_MIN_REPORT_BYTES, 9,
+        "Combatstick: same as Fighterstick"
+    );
+    assert_eq!(
+        PRO_THROTTLE_MIN_REPORT_BYTES, 9,
+        "Pro Throttle: 1+2+2+2+1+1"
+    );
+    assert_eq!(
+        PRO_PEDALS_MIN_REPORT_BYTES, 7,
+        "Pro Pedals: 1+2+2+2 (no buttons)"
+    );
+    assert_eq!(
+        ECLIPSE_YOKE_MIN_REPORT_BYTES, 11,
+        "Eclipse Yoke: 1+2+2+2+1+1+1+1"
+    );
+    assert_eq!(
+        FLIGHT_YOKE_MIN_REPORT_BYTES, 10,
+        "Flight Yoke: 1+2+2+2+1+1+1"
+    );
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -681,7 +704,10 @@ fn boundary_oversized_report_accepted() {
     assert!(parse_flight_yoke(&big).is_ok());
 
     let s = parse_fighterstick(&big).unwrap();
-    assert_eq!(s.x, 65535, "x should read from bytes 1-2 regardless of size");
+    assert_eq!(
+        s.x, 65535,
+        "x should read from bytes 1-2 regardless of size"
+    );
 }
 
 #[test]

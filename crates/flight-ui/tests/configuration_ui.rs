@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use flight_ui::api::{api_router, ApiState};
+use flight_ui::api::{ApiState, api_router};
 use flight_ui::dashboard::{DashboardState, DeviceStatus, ProfileEntry};
 use flight_ui::settings::SettingsPanel;
 use flight_ui::websocket::WsBroadcast;
@@ -65,9 +65,15 @@ async fn profile_activate_multiple_times_last_wins() {
     let state = test_api_state();
     let srv = server(state.clone());
 
-    srv.post("/api/v1/profiles/combat/activate").await.assert_status_ok();
-    srv.post("/api/v1/profiles/landing/activate").await.assert_status_ok();
-    srv.post("/api/v1/profiles/cruise/activate").await.assert_status_ok();
+    srv.post("/api/v1/profiles/combat/activate")
+        .await
+        .assert_status_ok();
+    srv.post("/api/v1/profiles/landing/activate")
+        .await
+        .assert_status_ok();
+    srv.post("/api/v1/profiles/cruise/activate")
+        .await
+        .assert_status_ok();
 
     let resp = srv.get("/api/v1/profiles").await;
     resp.assert_status_ok();
@@ -87,10 +93,7 @@ async fn profile_activate_sends_broadcast() {
     // Broadcast should have sent an AdapterEvent for the profile change
     let msg = rx.try_recv().unwrap();
     match msg {
-        flight_ui::dashboard::WsMessage::AdapterEvent {
-            adapter,
-            connected,
-        } => {
+        flight_ui::dashboard::WsMessage::AdapterEvent { adapter, connected } => {
             assert_eq!(adapter, "profile");
             assert!(connected);
         }

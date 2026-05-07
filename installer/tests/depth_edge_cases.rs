@@ -202,7 +202,10 @@ fn cannot_operate_after_rollback() {
         tx.register_service("svc"),
         Err(TransactionError::AlreadyRolledBack)
     ));
-    assert!(matches!(tx.commit(), Err(TransactionError::AlreadyRolledBack)));
+    assert!(matches!(
+        tx.commit(),
+        Err(TransactionError::AlreadyRolledBack)
+    ));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

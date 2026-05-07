@@ -206,7 +206,9 @@ pub const RUDDER_AXIS_NAMES: &[&str] = &[
 /// `FlightPro` uses the flightstick preset (4 axes, matching its
 /// capabilities). `FlightUniversal` and `FlightYoke` use the Flight
 /// preset (6 axes).
-pub fn preset_for_device(device: crate::devices::VelocityOneDevice) -> &'static [RecommendedAxisConfig] {
+pub fn preset_for_device(
+    device: crate::devices::VelocityOneDevice,
+) -> &'static [RecommendedAxisConfig] {
     use crate::devices::VelocityOneDevice;
 
     static FLIGHT: &[RecommendedAxisConfig] = &[
@@ -313,8 +315,7 @@ pub fn preset_for_device(device: crate::devices::VelocityOneDevice) -> &'static 
         VelocityOneDevice::Flight
         | VelocityOneDevice::FlightUniversal
         | VelocityOneDevice::FlightYoke => FLIGHT,
-        VelocityOneDevice::FlightPro
-        | VelocityOneDevice::Flightstick => FLIGHTSTICK,
+        VelocityOneDevice::FlightPro | VelocityOneDevice::Flightstick => FLIGHTSTICK,
         VelocityOneDevice::Rudder => RUDDER,
     }
 }
@@ -442,7 +443,10 @@ mod tests {
     #[test]
     fn test_trim_wheel_has_no_deadzone_or_filter() {
         let config = flight_axis_config();
-        let trim = config.iter().find(|c| c.name == flight_axes::TRIM_WHEEL).unwrap();
+        let trim = config
+            .iter()
+            .find(|c| c.name == flight_axes::TRIM_WHEEL)
+            .unwrap();
         assert_eq!(trim.deadzone, 0.0);
         assert!(trim.filter_alpha.is_none());
         assert!(trim.slew_rate.is_none());

@@ -8,7 +8,7 @@
 //! error handling, and panel identification.
 
 use flight_panels_goflight::{
-    GoFlightError, GoFlightModule, GoFlightReport, GOFLIGHT_MIN_REPORT_BYTES, build_led_command,
+    GOFLIGHT_MIN_REPORT_BYTES, GoFlightError, GoFlightModule, GoFlightReport, build_led_command,
     parse_report,
 };
 
@@ -268,7 +268,10 @@ fn led_command_alternating_pattern() {
 fn led_command_report_id_always_0x01() {
     for leds in [0x0000, 0x00FF, 0xFF00, 0xFFFF, 0x1234, 0xABCD] {
         let cmd = build_led_command(leds);
-        assert_eq!(cmd[0], 0x01, "report ID must always be 0x01 for leds={leds:#06X}");
+        assert_eq!(
+            cmd[0], 0x01,
+            "report ID must always be 0x01 for leds={leds:#06X}"
+        );
     }
 }
 
@@ -310,7 +313,10 @@ fn led_patterns_for_seven_segment_digits() {
     for (pattern, label) in digit_patterns {
         let cmd = build_led_command(pattern);
         let roundtrip = u16::from_le_bytes([cmd[1], cmd[2]]);
-        assert_eq!(roundtrip, pattern, "digit pattern '{label}' must round-trip");
+        assert_eq!(
+            roundtrip, pattern,
+            "digit pattern '{label}' must round-trip"
+        );
     }
 }
 
@@ -320,7 +326,10 @@ fn led_read_back_from_report_matches_low_byte() {
     for leds_byte in [0x00, 0x01, 0x55, 0xAA, 0xFF] {
         let data = make_report(0x01, [0, 0, 0, 0], 0, leds_byte);
         let r = parse_report(&data, GoFlightModule::Gf46).unwrap();
-        assert_eq!(r.leds, leds_byte as u16, "LED readback for {leds_byte:#04X}");
+        assert_eq!(
+            r.leds, leds_byte as u16,
+            "LED readback for {leds_byte:#04X}"
+        );
     }
 }
 
@@ -329,7 +338,10 @@ fn led_report_value_capped_at_u8_range() {
     // Parsed LED state from report byte[7] is promoted to u16 but can never exceed 0xFF.
     let data = make_report(0x01, [0, 0, 0, 0], 0, 0xFF);
     let r = parse_report(&data, GoFlightModule::Gf46).unwrap();
-    assert!(r.leds <= 0xFF, "LED from report cannot exceed single-byte range");
+    assert!(
+        r.leds <= 0xFF,
+        "LED from report cannot exceed single-byte range"
+    );
 }
 
 // ── Error handling for malformed reports ─────────────────────────────────────
@@ -374,7 +386,13 @@ fn error_for_all_module_variants() {
     for module in ALL_MODULES {
         let err = parse_report(&short, module).unwrap_err();
         assert!(
-            matches!(err, GoFlightError::TooShort { expected: GOFLIGHT_MIN_REPORT_BYTES, actual: 3 }),
+            matches!(
+                err,
+                GoFlightError::TooShort {
+                    expected: GOFLIGHT_MIN_REPORT_BYTES,
+                    actual: 3
+                }
+            ),
             "module {module:?} should reject short report"
         );
     }
@@ -570,7 +588,10 @@ fn error_debug_format() {
         actual: 0,
     };
     let dbg = format!("{err:?}");
-    assert!(dbg.contains("TooShort"), "Debug should contain variant name");
+    assert!(
+        dbg.contains("TooShort"),
+        "Debug should contain variant name"
+    );
     assert!(dbg.contains("8"), "Debug should contain expected");
     assert!(dbg.contains("0"), "Debug should contain actual");
 }
@@ -614,5 +635,8 @@ fn report_debug() {
     let data = make_report(0x01, [0, 0, 0, 0], 0, 0);
     let r = parse_report(&data, GoFlightModule::Gf46).unwrap();
     let dbg = format!("{r:?}");
-    assert!(!dbg.is_empty(), "Debug output for GoFlightReport should not be empty");
+    assert!(
+        !dbg.is_empty(),
+        "Debug output for GoFlightReport should not be empty"
+    );
 }

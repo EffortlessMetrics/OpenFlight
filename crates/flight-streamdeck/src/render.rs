@@ -233,8 +233,7 @@ mod tests {
 
     #[test]
     fn test_key_icon_for_mk2() {
-        let icon =
-            KeyIcon::for_model(StreamDeckModel::Mk2, "AP", IconTheme::Autopilot).unwrap();
+        let icon = KeyIcon::for_model(StreamDeckModel::Mk2, "AP", IconTheme::Autopilot).unwrap();
         assert_eq!(icon.size, 72);
         assert_eq!(icon.label, "AP");
     }

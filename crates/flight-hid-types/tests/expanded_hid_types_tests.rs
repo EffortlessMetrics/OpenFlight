@@ -62,7 +62,10 @@ fn full_device_all_fields_populated() {
     assert_eq!(dev.device_path, "/dev/hidraw0");
     assert_eq!(dev.usage_page, 0x01);
     assert_eq!(dev.usage, 0x04);
-    assert_eq!(dev.report_descriptor.as_deref(), Some([0x05, 0x01, 0x09, 0x04].as_slice()));
+    assert_eq!(
+        dev.report_descriptor.as_deref(),
+        Some([0x05, 0x01, 0x09, 0x04].as_slice())
+    );
 }
 
 // ── Clone semantics ─────────────────────────────────────────────────────────

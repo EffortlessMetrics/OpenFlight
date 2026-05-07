@@ -12,24 +12,31 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use flight_service::{
-    // Service / config
-    FlightService, FlightServiceConfig, ServiceState,
-    // Safe mode
-    SafeModeConfig, SafeModeManager,
+    AdapterHealthInput,
     // Capability
-    CapabilityService, CapabilityServiceConfig,
+    CapabilityService,
+    CapabilityServiceConfig,
+    DeviceHealthInput,
+    // Service / config
+    FlightService,
+    FlightServiceConfig,
     // Health
-    HealthChecker, HealthStream, AdapterHealthInput, DeviceHealthInput,
-    MemoryHealthInput, SchedulerHealthInput, OverallStatus,
+    HealthChecker,
+    HealthStream,
+    MemoryHealthInput,
+    OverallStatus,
+    // Safe mode
+    SafeModeConfig,
+    SafeModeManager,
+    SchedulerHealthInput,
+    ServiceState,
     // Config validator
-    config_validator::{
-        ConfigValidator, PortRangeCheck, RequiredFieldCheck, NumericRangeCheck,
-    },
+    config_validator::{ConfigValidator, NumericRangeCheck, PortRangeCheck, RequiredFieldCheck},
     // Orchestrator
     orchestrator::{
-        ServiceOrchestrator, ServiceConfig, BootSequence, SubsystemHealth,
-        OrchestratorError, AdapterEvent, DeviceEvent,
-        SUBSYSTEM_BUS, SUBSYSTEM_SCHEDULER, SUBSYSTEM_ADAPTERS, SUBSYSTEM_WATCHDOG,
+        AdapterEvent, BootSequence, DeviceEvent, OrchestratorError, SUBSYSTEM_ADAPTERS,
+        SUBSYSTEM_BUS, SUBSYSTEM_SCHEDULER, SUBSYSTEM_WATCHDOG, ServiceConfig, ServiceOrchestrator,
+        SubsystemHealth,
     },
 };
 
@@ -120,7 +127,12 @@ mod startup_sequence {
         let names: Vec<&str> = orch.boot_order().iter().map(String::as_str).collect();
         assert_eq!(
             names,
-            vec![SUBSYSTEM_BUS, SUBSYSTEM_SCHEDULER, SUBSYSTEM_ADAPTERS, SUBSYSTEM_WATCHDOG]
+            vec![
+                SUBSYSTEM_BUS,
+                SUBSYSTEM_SCHEDULER,
+                SUBSYSTEM_ADAPTERS,
+                SUBSYSTEM_WATCHDOG
+            ]
         );
     }
 }
@@ -152,8 +164,7 @@ mod graceful_shutdown {
 
         // Drain all pending health events — at least one should mention shutdown
         let mut found_shutdown_event = false;
-        while let Ok(Ok(event)) =
-            tokio::time::timeout(Duration::from_millis(100), rx.recv()).await
+        while let Ok(Ok(event)) = tokio::time::timeout(Duration::from_millis(100), rx.recv()).await
         {
             if event.message.to_lowercase().contains("shutdown") {
                 found_shutdown_event = true;
@@ -265,10 +276,7 @@ mod profile_loading {
             schema: "flight.profile/1".to_string(),
             sim: None,
             aircraft: None,
-            axes: axes
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v))
-                .collect(),
+            axes: axes.into_iter().map(|(k, v)| (k.to_string(), v)).collect(),
             pof_overrides: None,
         }
     }
@@ -291,7 +299,11 @@ mod profile_loading {
 
         let profile = test_profile(vec![("pitch", basic_axis()), ("roll", basic_axis())]);
         let result = service.apply_profile(&profile).await;
-        assert!(result.is_ok(), "valid profile should apply: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "valid profile should apply: {:?}",
+            result.err()
+        );
 
         service.shutdown().await.unwrap();
     }
@@ -342,22 +354,28 @@ mod profile_loading {
         let profile = test_profile(vec![
             ("pitch", basic_axis()),
             ("roll", basic_axis()),
-            ("yaw", AxisConfig {
-                deadzone: Some(0.08),
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            }),
-            ("throttle", AxisConfig {
-                deadzone: Some(0.01),
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            }),
+            (
+                "yaw",
+                AxisConfig {
+                    deadzone: Some(0.08),
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            ),
+            (
+                "throttle",
+                AxisConfig {
+                    deadzone: Some(0.01),
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            ),
         ]);
         let result = service.apply_profile(&profile).await;
         assert!(result.is_ok(), "multi-axis profile should apply");
@@ -611,12 +629,8 @@ mod capability_service {
         let (svc, engines) = make_service_with_axes(&["pitch", "roll"]);
 
         // Set only pitch to kid mode
-        svc.set_capability_mode(
-            CapabilityMode::Kid,
-            Some(vec!["pitch".to_string()]),
-            true,
-        )
-        .unwrap();
+        svc.set_capability_mode(CapabilityMode::Kid, Some(vec!["pitch".to_string()]), true)
+            .unwrap();
 
         assert_eq!(engines[0].capability_mode(), CapabilityMode::Kid);
         assert_eq!(engines[1].capability_mode(), CapabilityMode::Full);
@@ -706,7 +720,9 @@ mod health_reporting {
     async fn critical_escalates_to_failed() {
         let health = HealthStream::new();
         health.register_component("ffb").await;
-        health.critical("ffb", "safety interlock tripped", None).await;
+        health
+            .critical("ffb", "safety interlock tripped", None)
+            .await;
 
         let status = health.get_health_status().await;
         assert_eq!(
@@ -1140,7 +1156,8 @@ mod error_recovery {
         let mut orch = ServiceOrchestrator::new(ServiceConfig::default());
         orch.start().unwrap();
 
-        orch.fail_subsystem(SUBSYSTEM_ADAPTERS, "sim crash").unwrap();
+        orch.fail_subsystem(SUBSYSTEM_ADAPTERS, "sim crash")
+            .unwrap();
 
         assert!(!orch.subsystem(SUBSYSTEM_ADAPTERS).unwrap().is_running());
         assert_eq!(

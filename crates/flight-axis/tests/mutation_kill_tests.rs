@@ -9,7 +9,7 @@ use flight_axis::curve::{
 use flight_axis::deadzone::{
     AsymmetricDeadzoneConfig, DeadzoneConfig, DeadzoneError, DeadzoneProcessor,
 };
-use flight_axis::mixer::{AxisMixer, MixMode, MAX_MIXER_INPUTS};
+use flight_axis::mixer::{AxisMixer, MAX_MIXER_INPUTS, MixMode};
 use flight_axis::normalize::{AxisNormalizer, NormalizeConfig, NormalizerBank};
 
 // ── Deadzone: boundary mutations ─────────────────────────────────────────
@@ -19,7 +19,11 @@ fn deadzone_boundary_exact_center_is_zero() {
     // Catches < vs <= mutation on `abs <= center`
     let config = DeadzoneConfig::center_only(0.1).unwrap();
     let proc = DeadzoneProcessor::new(config);
-    assert_eq!(proc.apply(0.1), 0.0, "exactly at center boundary must be zero");
+    assert_eq!(
+        proc.apply(0.1),
+        0.0,
+        "exactly at center boundary must be zero"
+    );
     assert_eq!(
         proc.apply(-0.1),
         0.0,
@@ -135,7 +139,11 @@ fn asymmetric_deadzone_exact_negative_boundary() {
 fn asymmetric_deadzone_zero_input_goes_positive_path() {
     // Catches >= vs > on `value >= 0.0` (zero should go to positive branch)
     let cfg = AsymmetricDeadzoneConfig::new(0.1, 0.5);
-    assert_eq!(cfg.apply(0.0), 0.0, "zero input must be in positive deadzone");
+    assert_eq!(
+        cfg.apply(0.0),
+        0.0,
+        "zero input must be in positive deadzone"
+    );
 }
 
 // ── Curve: boundary & arithmetic mutations ───────────────────────────────
@@ -176,24 +184,30 @@ fn curve_duplicate_x_values_rejected() {
 #[test]
 fn curve_point_at_exact_boundary_valid() {
     // Catches mutation on range check !(0.0..=1.0).contains
-    assert!(ResponseCurve::from_points(
-        vec![ControlPoint::new(0.0, 0.0), ControlPoint::new(1.0, 1.0)],
-        InterpolationMode::Linear,
-    )
-    .is_ok());
+    assert!(
+        ResponseCurve::from_points(
+            vec![ControlPoint::new(0.0, 0.0), ControlPoint::new(1.0, 1.0)],
+            InterpolationMode::Linear,
+        )
+        .is_ok()
+    );
 
     // Just outside
-    assert!(ResponseCurve::from_points(
-        vec![ControlPoint::new(-0.001, 0.0), ControlPoint::new(1.0, 1.0)],
-        InterpolationMode::Linear,
-    )
-    .is_err());
+    assert!(
+        ResponseCurve::from_points(
+            vec![ControlPoint::new(-0.001, 0.0), ControlPoint::new(1.0, 1.0)],
+            InterpolationMode::Linear,
+        )
+        .is_err()
+    );
 
-    assert!(ResponseCurve::from_points(
-        vec![ControlPoint::new(0.0, 0.0), ControlPoint::new(1.001, 1.0)],
-        InterpolationMode::Linear,
-    )
-    .is_err());
+    assert!(
+        ResponseCurve::from_points(
+            vec![ControlPoint::new(0.0, 0.0), ControlPoint::new(1.001, 1.0)],
+            InterpolationMode::Linear,
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -208,7 +222,10 @@ fn curve_is_monotone_detects_decrease() {
         InterpolationMode::Linear,
     )
     .unwrap();
-    assert!(!curve.is_monotone(), "decreasing segment must not be monotone");
+    assert!(
+        !curve.is_monotone(),
+        "decreasing segment must not be monotone"
+    );
 
     // Equal y values should still be monotone
     let flat = ResponseCurve::from_points(
@@ -262,7 +279,11 @@ fn normalize_exact_boundaries_not_clamped() {
     let mut n = AxisNormalizer::new(NormalizeConfig::default());
     assert_eq!(n.process(1.0), 1.0);
     assert_eq!(n.process(-1.0), -1.0);
-    assert_eq!(n.clamp_count(), 0, "boundary values must not increment clamp counter");
+    assert_eq!(
+        n.clamp_count(),
+        0,
+        "boundary values must not increment clamp counter"
+    );
 }
 
 #[test]
@@ -349,10 +370,7 @@ fn mixer_add_input_returns_false_at_max() {
     for _ in 0..MAX_MIXER_INPUTS {
         assert!(mixer.add_input(1.0), "should accept up to MAX");
     }
-    assert!(
-        !mixer.add_input(1.0),
-        "must reject beyond MAX_MIXER_INPUTS"
-    );
+    assert!(!mixer.add_input(1.0), "must reject beyond MAX_MIXER_INPUTS");
     assert_eq!(mixer.input_count(), MAX_MIXER_INPUTS);
 }
 

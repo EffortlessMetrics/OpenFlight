@@ -9,7 +9,7 @@ use std::path::Path;
 use std::time::Duration;
 
 use flight_blackbox::recorder::{
-    BlackboxRecorder, RecordEntry, RecorderConfig, EVENT_DATA_MAX, EVENT_SOURCE_MAX, SIM_ID_MAX,
+    BlackboxRecorder, EVENT_DATA_MAX, EVENT_SOURCE_MAX, RecordEntry, RecorderConfig, SIM_ID_MAX,
     SNAPSHOT_MAX,
 };
 use flight_blackbox::{
@@ -79,8 +79,7 @@ async fn recording_double_start_errors() {
         .await
         .unwrap_err();
     assert!(
-        err.to_string().contains("already started")
-            || err.to_string().contains("Already"),
+        err.to_string().contains("already started") || err.to_string().contains("Already"),
         "expected AlreadyStarted, got: {err}"
     );
     writer.stop().await.unwrap();
@@ -307,9 +306,7 @@ async fn playback_data_integrity() {
     // Write records with distinct payloads
     let payloads: Vec<Vec<u8>> = (0..10u8).map(|i| vec![i; (i as usize) + 1]).collect();
     for (i, payload) in payloads.iter().enumerate() {
-        writer
-            .record_axis_frame(i as u64 * 1000, payload)
-            .unwrap();
+        writer.record_axis_frame(i as u64 * 1000, payload).unwrap();
     }
 
     for _ in 0..32 {
@@ -433,9 +430,7 @@ async fn playback_export_roundtrip_counts() {
         writer.record_axis_frame(i * 1000, &[0x01]).unwrap();
     }
     for i in 0..3u64 {
-        writer
-            .record_bus_snapshot(i * 10_000, &[0x02])
-            .unwrap();
+        writer.record_bus_snapshot(i * 10_000, &[0x02]).unwrap();
     }
     writer.record_event(50_000, &[0x03]).unwrap();
 
@@ -521,7 +516,10 @@ async fn storage_file_naming_convention() {
     writer.stop_recording().await.unwrap();
 
     let filename = path.file_name().unwrap().to_str().unwrap();
-    assert!(filename.starts_with("flight_"), "filename should start with flight_");
+    assert!(
+        filename.starts_with("flight_"),
+        "filename should start with flight_"
+    );
     assert!(filename.ends_with(".fbb"), "filename should end with .fbb");
 }
 
@@ -609,7 +607,12 @@ fn rt_no_allocation_during_axis_recording() {
 
     // Fill beyond capacity — buffer must not reallocate
     for i in 0..5000u16 {
-        rec.record_axis(i, i as f64 / 5000.0, i as f64 / 5000.0, i as u64 * 4_000_000);
+        rec.record_axis(
+            i,
+            i as f64 / 5000.0,
+            i as f64 / 5000.0,
+            i as u64 * 4_000_000,
+        );
     }
 
     assert_eq!(
@@ -651,7 +654,11 @@ fn rt_no_allocation_during_mixed_recording() {
         }
     }
 
-    assert_eq!(rec.capacity(), cap_before, "no reallocation under mixed load");
+    assert_eq!(
+        rec.capacity(),
+        cap_before,
+        "no reallocation under mixed load"
+    );
     assert_eq!(rec.len(), 512);
     assert_eq!(rec.total_written(), 2000);
 }
@@ -734,9 +741,7 @@ async fn integration_full_pipeline_record_export() {
                 .unwrap();
         }
         if i == 50 {
-            writer
-                .record_event(i * 4_000_000, &[0xEE])
-                .unwrap();
+            writer.record_event(i * 4_000_000, &[0xEE]).unwrap();
         }
     }
 
@@ -818,7 +823,7 @@ async fn integration_export_json_serializable() {
 
 #[test]
 fn integration_recorder_export_json_roundtrip() {
-    use flight_blackbox::export::{export_json, RecorderExportDoc};
+    use flight_blackbox::export::{RecorderExportDoc, export_json};
 
     let dir = tempfile::tempdir().unwrap();
     let json_path = dir.path().join("test_export.json");
@@ -842,7 +847,7 @@ fn integration_recorder_export_json_roundtrip() {
 
 #[test]
 fn integration_recorder_export_binary_roundtrip() {
-    use flight_blackbox::export::{export_binary, RecorderExportDoc};
+    use flight_blackbox::export::{RecorderExportDoc, export_binary};
 
     let dir = tempfile::tempdir().unwrap();
     let bin_path = dir.path().join("test_export.bin");
@@ -1090,11 +1095,17 @@ fn stream_type_serialization_roundtrip() {
 #[test]
 fn config_defaults_are_sensible() {
     let cfg = BlackboxConfig::default();
-    assert!(cfg.max_file_size_mb >= 10, "should allow at least 10MB files");
+    assert!(
+        cfg.max_file_size_mb >= 10,
+        "should allow at least 10MB files"
+    );
     assert!(
         cfg.max_recording_duration >= Duration::from_secs(60),
         "should allow at least 60s recordings"
     );
-    assert!(!cfg.enable_compression, "compression should be off by default");
+    assert!(
+        !cfg.enable_compression,
+        "compression should be off by default"
+    );
     assert!(cfg.buffer_size > 0, "buffer must be nonzero");
 }

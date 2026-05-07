@@ -570,13 +570,34 @@ mod tests {
 
     #[test]
     fn test_known_pids() {
-        assert_eq!(StreamDeckModel::from_product_id(0x0060), Some(StreamDeckModel::Original));
-        assert_eq!(StreamDeckModel::from_product_id(0x0063), Some(StreamDeckModel::Mini));
-        assert_eq!(StreamDeckModel::from_product_id(0x006C), Some(StreamDeckModel::Xl));
-        assert_eq!(StreamDeckModel::from_product_id(0x0080), Some(StreamDeckModel::Mk2));
-        assert_eq!(StreamDeckModel::from_product_id(0x0084), Some(StreamDeckModel::Plus));
-        assert_eq!(StreamDeckModel::from_product_id(0x0086), Some(StreamDeckModel::Pedal));
-        assert_eq!(StreamDeckModel::from_product_id(0x009A), Some(StreamDeckModel::Neo));
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x0060),
+            Some(StreamDeckModel::Original)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x0063),
+            Some(StreamDeckModel::Mini)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x006C),
+            Some(StreamDeckModel::Xl)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x0080),
+            Some(StreamDeckModel::Mk2)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x0084),
+            Some(StreamDeckModel::Plus)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x0086),
+            Some(StreamDeckModel::Pedal)
+        );
+        assert_eq!(
+            StreamDeckModel::from_product_id(0x009A),
+            Some(StreamDeckModel::Neo)
+        );
     }
 
     #[test]
@@ -594,7 +615,10 @@ mod tests {
                     rows as u16 * cols as u16,
                     model.key_count() as u16,
                     "{:?} grid {}x{} != key_count {}",
-                    model, rows, cols, model.key_count()
+                    model,
+                    rows,
+                    cols,
+                    model.key_count()
                 );
             }
         }
@@ -812,18 +836,40 @@ mod tests {
     #[test]
     fn test_key_event_valid_for_all_models() {
         for model in StreamDeckModel::all() {
-            let last_valid = KeyEvent { key_index: model.key_count() - 1, pressed: true };
-            assert!(last_valid.is_valid_for(*model), "{:?} key {} should be valid", model, last_valid.key_index);
+            let last_valid = KeyEvent {
+                key_index: model.key_count() - 1,
+                pressed: true,
+            };
+            assert!(
+                last_valid.is_valid_for(*model),
+                "{:?} key {} should be valid",
+                model,
+                last_valid.key_index
+            );
 
-            let out_of_bounds = KeyEvent { key_index: model.key_count(), pressed: false };
-            assert!(!out_of_bounds.is_valid_for(*model), "{:?} key {} should be invalid", model, out_of_bounds.key_index);
+            let out_of_bounds = KeyEvent {
+                key_index: model.key_count(),
+                pressed: false,
+            };
+            assert!(
+                !out_of_bounds.is_valid_for(*model),
+                "{:?} key {} should be invalid",
+                model,
+                out_of_bounds.key_index
+            );
         }
     }
 
     #[test]
     fn test_key_event_press_release() {
-        let press = KeyEvent { key_index: 0, pressed: true };
-        let release = KeyEvent { key_index: 0, pressed: false };
+        let press = KeyEvent {
+            key_index: 0,
+            pressed: true,
+        };
+        let release = KeyEvent {
+            key_index: 0,
+            pressed: false,
+        };
         assert_ne!(press, release);
         assert!(press.is_valid_for(StreamDeckModel::Mini));
         assert!(release.is_valid_for(StreamDeckModel::Mini));
@@ -832,41 +878,101 @@ mod tests {
     #[test]
     fn test_key_event_original_15_keys() {
         for i in 0..15 {
-            assert!(KeyEvent { key_index: i, pressed: true }.is_valid_for(StreamDeckModel::Original));
+            assert!(
+                KeyEvent {
+                    key_index: i,
+                    pressed: true
+                }
+                .is_valid_for(StreamDeckModel::Original)
+            );
         }
-        assert!(!KeyEvent { key_index: 15, pressed: true }.is_valid_for(StreamDeckModel::Original));
+        assert!(
+            !KeyEvent {
+                key_index: 15,
+                pressed: true
+            }
+            .is_valid_for(StreamDeckModel::Original)
+        );
     }
 
     #[test]
     fn test_key_event_mini_6_keys() {
         for i in 0..6 {
-            assert!(KeyEvent { key_index: i, pressed: true }.is_valid_for(StreamDeckModel::Mini));
+            assert!(
+                KeyEvent {
+                    key_index: i,
+                    pressed: true
+                }
+                .is_valid_for(StreamDeckModel::Mini)
+            );
         }
-        assert!(!KeyEvent { key_index: 6, pressed: true }.is_valid_for(StreamDeckModel::Mini));
+        assert!(
+            !KeyEvent {
+                key_index: 6,
+                pressed: true
+            }
+            .is_valid_for(StreamDeckModel::Mini)
+        );
     }
 
     #[test]
     fn test_key_event_xl_32_keys() {
         for i in 0..32 {
-            assert!(KeyEvent { key_index: i, pressed: true }.is_valid_for(StreamDeckModel::Xl));
+            assert!(
+                KeyEvent {
+                    key_index: i,
+                    pressed: true
+                }
+                .is_valid_for(StreamDeckModel::Xl)
+            );
         }
-        assert!(!KeyEvent { key_index: 32, pressed: true }.is_valid_for(StreamDeckModel::Xl));
+        assert!(
+            !KeyEvent {
+                key_index: 32,
+                pressed: true
+            }
+            .is_valid_for(StreamDeckModel::Xl)
+        );
     }
 
     #[test]
     fn test_key_event_mk2_15_keys() {
         for i in 0..15 {
-            assert!(KeyEvent { key_index: i, pressed: true }.is_valid_for(StreamDeckModel::Mk2));
+            assert!(
+                KeyEvent {
+                    key_index: i,
+                    pressed: true
+                }
+                .is_valid_for(StreamDeckModel::Mk2)
+            );
         }
-        assert!(!KeyEvent { key_index: 15, pressed: true }.is_valid_for(StreamDeckModel::Mk2));
+        assert!(
+            !KeyEvent {
+                key_index: 15,
+                pressed: true
+            }
+            .is_valid_for(StreamDeckModel::Mk2)
+        );
     }
 
     #[test]
     fn test_key_event_pedal_3_keys() {
         for i in 0..3 {
-            assert!(KeyEvent { key_index: i, pressed: true }.is_valid_for(StreamDeckModel::Pedal));
+            assert!(
+                KeyEvent {
+                    key_index: i,
+                    pressed: true
+                }
+                .is_valid_for(StreamDeckModel::Pedal)
+            );
         }
-        assert!(!KeyEvent { key_index: 3, pressed: true }.is_valid_for(StreamDeckModel::Pedal));
+        assert!(
+            !KeyEvent {
+                key_index: 3,
+                pressed: true
+            }
+            .is_valid_for(StreamDeckModel::Pedal)
+        );
     }
 
     // ── Dial events ────────────────────────────────────────────────────
@@ -874,10 +980,16 @@ mod tests {
     #[test]
     fn test_dial_event_valid_for_plus() {
         for i in 0..4 {
-            let evt = DialEvent { dial_index: i, action: DialAction::Press };
+            let evt = DialEvent {
+                dial_index: i,
+                action: DialAction::Press,
+            };
             assert!(evt.is_valid_for(StreamDeckModel::Plus));
         }
-        let evt = DialEvent { dial_index: 4, action: DialAction::Press };
+        let evt = DialEvent {
+            dial_index: 4,
+            action: DialAction::Press,
+        };
         assert!(!evt.is_valid_for(StreamDeckModel::Plus));
     }
 
@@ -885,16 +997,29 @@ mod tests {
     fn test_dial_event_invalid_for_non_plus() {
         for model in StreamDeckModel::all() {
             if *model != StreamDeckModel::Plus {
-                let evt = DialEvent { dial_index: 0, action: DialAction::Rotate(1) };
-                assert!(!evt.is_valid_for(*model), "{:?} should not accept dials", model);
+                let evt = DialEvent {
+                    dial_index: 0,
+                    action: DialAction::Rotate(1),
+                };
+                assert!(
+                    !evt.is_valid_for(*model),
+                    "{:?} should not accept dials",
+                    model
+                );
             }
         }
     }
 
     #[test]
     fn test_dial_rotation_directions() {
-        let cw = DialEvent { dial_index: 0, action: DialAction::Rotate(1) };
-        let ccw = DialEvent { dial_index: 0, action: DialAction::Rotate(-1) };
+        let cw = DialEvent {
+            dial_index: 0,
+            action: DialAction::Rotate(1),
+        };
+        let ccw = DialEvent {
+            dial_index: 0,
+            action: DialAction::Rotate(-1),
+        };
         assert_ne!(cw, ccw);
         assert!(cw.is_valid_for(StreamDeckModel::Plus));
         assert!(ccw.is_valid_for(StreamDeckModel::Plus));
@@ -902,8 +1027,14 @@ mod tests {
 
     #[test]
     fn test_dial_press_release() {
-        let press = DialEvent { dial_index: 2, action: DialAction::Press };
-        let release = DialEvent { dial_index: 2, action: DialAction::Release };
+        let press = DialEvent {
+            dial_index: 2,
+            action: DialAction::Press,
+        };
+        let release = DialEvent {
+            dial_index: 2,
+            action: DialAction::Release,
+        };
         assert_ne!(press, release);
     }
 
@@ -911,22 +1042,38 @@ mod tests {
 
     #[test]
     fn test_touch_event_valid_for_plus() {
-        let evt = TouchEvent { x: 400, y: 50, touch_type: TouchType::Tap };
+        let evt = TouchEvent {
+            x: 400,
+            y: 50,
+            touch_type: TouchType::Tap,
+        };
         assert!(evt.is_valid_for(StreamDeckModel::Plus));
     }
 
     #[test]
     fn test_touch_event_out_of_bounds() {
-        let evt = TouchEvent { x: 800, y: 50, touch_type: TouchType::Tap };
+        let evt = TouchEvent {
+            x: 800,
+            y: 50,
+            touch_type: TouchType::Tap,
+        };
         assert!(!evt.is_valid_for(StreamDeckModel::Plus)); // x == width, out of bounds
 
-        let evt2 = TouchEvent { x: 0, y: 100, touch_type: TouchType::Tap };
+        let evt2 = TouchEvent {
+            x: 0,
+            y: 100,
+            touch_type: TouchType::Tap,
+        };
         assert!(!evt2.is_valid_for(StreamDeckModel::Plus)); // y == height
     }
 
     #[test]
     fn test_touch_event_invalid_for_no_lcd() {
-        let evt = TouchEvent { x: 0, y: 0, touch_type: TouchType::Tap };
+        let evt = TouchEvent {
+            x: 0,
+            y: 0,
+            touch_type: TouchType::Tap,
+        };
         assert!(!evt.is_valid_for(StreamDeckModel::Original));
         assert!(!evt.is_valid_for(StreamDeckModel::Pedal));
     }
@@ -934,8 +1081,12 @@ mod tests {
     #[test]
     fn test_touch_swipe() {
         let evt = TouchEvent {
-            x: 10, y: 10,
-            touch_type: TouchType::Swipe { end_x: 790, end_y: 10 },
+            x: 10,
+            y: 10,
+            touch_type: TouchType::Swipe {
+                end_x: 790,
+                end_y: 10,
+            },
         };
         assert!(evt.is_valid_for(StreamDeckModel::Plus));
     }
@@ -995,7 +1146,10 @@ mod tests {
 
     #[test]
     fn test_key_event_serialization_round_trip() {
-        let evt = KeyEvent { key_index: 7, pressed: true };
+        let evt = KeyEvent {
+            key_index: 7,
+            pressed: true,
+        };
         let json = serde_json::to_string(&evt).unwrap();
         let parsed: KeyEvent = serde_json::from_str(&json).unwrap();
         assert_eq!(evt, parsed);
@@ -1003,7 +1157,10 @@ mod tests {
 
     #[test]
     fn test_dial_event_serialization_round_trip() {
-        let evt = DialEvent { dial_index: 1, action: DialAction::Rotate(-3) };
+        let evt = DialEvent {
+            dial_index: 1,
+            action: DialAction::Rotate(-3),
+        };
         let json = serde_json::to_string(&evt).unwrap();
         let parsed: DialEvent = serde_json::from_str(&json).unwrap();
         assert_eq!(evt, parsed);
@@ -1012,8 +1169,12 @@ mod tests {
     #[test]
     fn test_touch_event_serialization_round_trip() {
         let evt = TouchEvent {
-            x: 123, y: 45,
-            touch_type: TouchType::Swipe { end_x: 456, end_y: 78 },
+            x: 123,
+            y: 45,
+            touch_type: TouchType::Swipe {
+                end_x: 456,
+                end_y: 78,
+            },
         };
         let json = serde_json::to_string(&evt).unwrap();
         let parsed: TouchEvent = serde_json::from_str(&json).unwrap();

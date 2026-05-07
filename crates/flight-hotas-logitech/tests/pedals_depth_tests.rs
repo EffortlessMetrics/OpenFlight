@@ -6,11 +6,9 @@
 //! Covers axis parsing, profile generation, device identification, and
 //! legacy device handling.
 
-use flight_hotas_logitech::profiles::{
-    rudder_pedals_profile, AxisKind, DeviceProfile,
-};
+use flight_hotas_logitech::profiles::{AxisKind, DeviceProfile, rudder_pedals_profile};
 use flight_hotas_logitech::protocol::{
-    DeviceId, LOGITECH_VID, SAITEK_VID, identify_device, DEVICE_TABLE,
+    DEVICE_TABLE, DeviceId, LOGITECH_VID, SAITEK_VID, identify_device,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -34,7 +32,10 @@ fn logitech_pedals_rudder_is_bipolar() {
 fn logitech_pedals_rudder_has_center_detent() {
     let p = rudder_pedals_profile();
     let rudder = p.axes.iter().find(|a| a.name == "Rudder").unwrap();
-    assert!(rudder.center_detent, "rudder should have center spring return");
+    assert!(
+        rudder.center_detent,
+        "rudder should have center spring return"
+    );
 }
 
 #[test]
@@ -43,7 +44,12 @@ fn logitech_pedals_toe_brakes_are_unipolar() {
     let brakes: Vec<_> = p.axes.iter().filter(|a| a.name.contains("Brake")).collect();
     assert_eq!(brakes.len(), 2, "should have left and right toe brakes");
     for brake in &brakes {
-        assert_eq!(brake.kind, AxisKind::Unipolar, "{} should be unipolar", brake.name);
+        assert_eq!(
+            brake.kind,
+            AxisKind::Unipolar,
+            "{} should be unipolar",
+            brake.name
+        );
     }
 }
 
@@ -51,7 +57,11 @@ fn logitech_pedals_toe_brakes_are_unipolar() {
 fn logitech_pedals_toe_brakes_no_center_detent() {
     let p = rudder_pedals_profile();
     for brake in p.axes.iter().filter(|a| a.name.contains("Brake")) {
-        assert!(!brake.center_detent, "{} should not have center detent", brake.name);
+        assert!(
+            !brake.center_detent,
+            "{} should not have center detent",
+            brake.name
+        );
     }
 }
 
@@ -72,7 +82,10 @@ fn logitech_pedals_axis_resolution_valid() {
 fn logitech_pedals_rudder_resolution_10bit() {
     let p = rudder_pedals_profile();
     let rudder = p.axes.iter().find(|a| a.name == "Rudder").unwrap();
-    assert_eq!(rudder.resolution_bits, 10, "Logitech rudder should be 10-bit");
+    assert_eq!(
+        rudder.resolution_bits, 10,
+        "Logitech rudder should be 10-bit"
+    );
 }
 
 #[test]
@@ -89,12 +102,20 @@ fn logitech_pedals_brake_resolution_8bit() {
 
 #[test]
 fn logitech_pedals_8bit_max_raw() {
-    assert_eq!(DeviceProfile::axis_max_raw(8), 255, "8-bit max should be 255");
+    assert_eq!(
+        DeviceProfile::axis_max_raw(8),
+        255,
+        "8-bit max should be 255"
+    );
 }
 
 #[test]
 fn logitech_pedals_10bit_max_raw() {
-    assert_eq!(DeviceProfile::axis_max_raw(10), 1023, "10-bit max should be 1023");
+    assert_eq!(
+        DeviceProfile::axis_max_raw(10),
+        1023,
+        "10-bit max should be 1023"
+    );
 }
 
 #[test]
@@ -131,7 +152,10 @@ fn logitech_pedals_profile_name() {
         "profile name should mention 'Rudder', got '{}'",
         p.name
     );
-    assert!(p.name.contains("Logitech"), "profile should mention 'Logitech'");
+    assert!(
+        p.name.contains("Logitech"),
+        "profile should mention 'Logitech'"
+    );
 }
 
 #[test]
@@ -149,7 +173,10 @@ fn logitech_pedals_no_hats() {
 #[test]
 fn logitech_pedals_no_rotaries() {
     let p = rudder_pedals_profile();
-    assert!(p.rotaries.is_empty(), "Logitech pedals have no rotary encoders");
+    assert!(
+        p.rotaries.is_empty(),
+        "Logitech pedals have no rotary encoders"
+    );
 }
 
 #[test]
@@ -176,21 +203,30 @@ fn logitech_pedals_axis_names_nonempty() {
 #[test]
 fn logitech_flight_rudder_pedals_vid_pid() {
     let info = identify_device(LOGITECH_VID, 0xC264);
-    assert!(info.is_some(), "Logitech Flight Rudder Pedals should be identifiable");
+    assert!(
+        info.is_some(),
+        "Logitech Flight Rudder Pedals should be identifiable"
+    );
     assert_eq!(info.unwrap().id, DeviceId::FlightRudderPedals);
 }
 
 #[test]
 fn saitek_pro_flight_rudder_pedals_vid_pid() {
     let info = identify_device(SAITEK_VID, 0x0763);
-    assert!(info.is_some(), "Saitek Pro Flight Rudder Pedals should be identifiable");
+    assert!(
+        info.is_some(),
+        "Saitek Pro Flight Rudder Pedals should be identifiable"
+    );
     assert_eq!(info.unwrap().id, DeviceId::ProFlightRudderPedals);
 }
 
 #[test]
 fn saitek_pro_flight_combat_rudder_vid_pid() {
     let info = identify_device(SAITEK_VID, 0x0764);
-    assert!(info.is_some(), "Saitek Pro Flight Combat Rudder should be identifiable");
+    assert!(
+        info.is_some(),
+        "Saitek Pro Flight Combat Rudder should be identifiable"
+    );
     assert_eq!(info.unwrap().id, DeviceId::ProFlightCombatRudder);
 }
 
@@ -213,7 +249,11 @@ fn logitech_pedal_devices_in_device_table() {
             )
         })
         .collect();
-    assert_eq!(rudder_entries.len(), 3, "should have 3 rudder pedal entries");
+    assert_eq!(
+        rudder_entries.len(),
+        3,
+        "should have 3 rudder pedal entries"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

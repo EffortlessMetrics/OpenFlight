@@ -84,10 +84,7 @@ fn e2e_trace_record_from_pipeline() {
     // Each input produces 2 events (input + output)
     assert_eq!(recording.event_count(), 100, "50 inputs × 2 events each");
     assert_eq!(recording.name, "pipeline-trace");
-    assert_eq!(
-        recording.device_id.as_deref(),
-        Some("Trace Stick")
-    );
+    assert_eq!(recording.device_id.as_deref(), Some("Trace Stick"));
 
     // Duration should be (50-1) × 4ms = 196ms = 196_000µs
     assert_eq!(recording.duration(), 196_000);
@@ -138,11 +135,7 @@ fn e2e_trace_replay_verify_outputs() {
 
     for (inp, out) in input_events.iter().zip(output_events.iter()) {
         let replayed = pipeline.process(inp.data[0], 0.004);
-        assert_approx_eq(
-            out.data[0],
-            replayed,
-            1e-10,
-        );
+        assert_approx_eq(out.data[0], replayed, 1e-10);
     }
 }
 
@@ -164,8 +157,7 @@ fn e2e_trace_serialization_roundtrip() {
         .expect("save must succeed");
 
     // Load back
-    let loaded =
-        TraceRecording::load_from_file(&trace_path).expect("load must succeed");
+    let loaded = TraceRecording::load_from_file(&trace_path).expect("load must succeed");
 
     // Verify all fields match
     assert_eq!(loaded.name, recording.name);
@@ -237,12 +229,10 @@ fn e2e_trace_golden_comparison() {
 
     // Verify golden snapshot store integration
     let mut store = SnapshotStore::new();
-    let golden_json =
-        serde_json::to_string_pretty(&trace_a).expect("serialize golden");
+    let golden_json = serde_json::to_string_pretty(&trace_a).expect("serialize golden");
     store.record("pipeline-golden", &golden_json);
 
-    let replay_json =
-        serde_json::to_string_pretty(&trace_b).expect("serialize replay");
+    let replay_json = serde_json::to_string_pretty(&trace_b).expect("serialize replay");
     let result = store.verify("pipeline-golden", &replay_json);
     assert_eq!(
         result,

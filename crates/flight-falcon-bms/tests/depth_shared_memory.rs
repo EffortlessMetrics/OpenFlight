@@ -10,7 +10,7 @@
 //! - Field offsets are stable after round-trip
 //! - Clone / Copy semantics
 
-use bytemuck::{bytes_of, try_from_bytes, Zeroable};
+use bytemuck::{Zeroable, bytes_of, try_from_bytes};
 use flight_falcon_bms::FlightData;
 use std::f32::consts;
 

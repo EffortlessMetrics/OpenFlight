@@ -56,9 +56,7 @@ impl ButtonDelta {
 
     /// Iterates over 1-indexed button numbers that were newly pressed.
     pub fn pressed_buttons(&self) -> ButtonIter {
-        ButtonIter {
-            mask: self.pressed,
-        }
+        ButtonIter { mask: self.pressed }
     }
 
     /// Iterates over 1-indexed button numbers that were newly released.

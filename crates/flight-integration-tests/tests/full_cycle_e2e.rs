@@ -70,9 +70,11 @@ async fn e2e_full_lifecycle_boot_to_axis_output() {
 
     // 3. Detect sim via bus
     let mut bus = BusPublisher::new(60.0);
-    let auto_switch =
-        AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
-    auto_switch.start(&mut bus).await.expect("auto-switch start");
+    let auto_switch = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+    auto_switch
+        .start(&mut bus)
+        .await
+        .expect("auto-switch start");
 
     let snap = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
     bus.publish(snap).expect("publish");

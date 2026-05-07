@@ -246,10 +246,7 @@ mod tests {
             OutputFormat::Json.error("Field 'axes[0].curve' is invalid", "VALIDATION_ERROR");
         let parsed: Value = serde_json::from_str(&result).unwrap();
         assert_eq!(parsed["success"], false);
-        assert!(parsed["error"]
-            .as_str()
-            .unwrap()
-            .contains("axes[0].curve"));
+        assert!(parsed["error"].as_str().unwrap().contains("axes[0].curve"));
         assert_eq!(parsed["error_code"], "VALIDATION_ERROR");
     }
 
@@ -331,10 +328,7 @@ mod tests {
 
     #[test]
     fn human_list_separates_items_with_newline() {
-        let items = vec![
-            json!({"name": "a"}),
-            json!({"name": "b"}),
-        ];
+        let items = vec![json!({"name": "a"}), json!({"name": "b"})];
         let result = OutputFormat::Human.list(items, None);
         // Both items present and separated
         assert!(result.contains("a"));

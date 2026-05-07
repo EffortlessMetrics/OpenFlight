@@ -46,7 +46,10 @@ fn trigger_config_corruption_enters_safe_mode() {
     mgr.update_health("config_validator", false);
     assert_eq!(mgr.current_level(), DegradationLevel::SafeMode);
     assert!(!mgr.can_operate());
-    assert!(mgr.degraded_features().contains(&"config_validator".to_owned()));
+    assert!(
+        mgr.degraded_features()
+            .contains(&"config_validator".to_owned())
+    );
 }
 
 /// All adapters failed → safe mode (via critical adapter component).
@@ -155,7 +158,10 @@ fn diagnostic_bundle_includes_system_info() {
     let info = &bundle.system_info;
     assert!(!info.os.is_empty(), "OS must be populated");
     assert!(!info.arch.is_empty(), "architecture must be populated");
-    assert!(!info.openflight_version.is_empty(), "version must be populated");
+    assert!(
+        !info.openflight_version.is_empty(),
+        "version must be populated"
+    );
 
     let text = bundle.to_text();
     assert!(text.contains("## System"));
@@ -367,7 +373,10 @@ async fn recovery_allows_clean_reinitialization() {
     // After shutdown, re-initialization should work cleanly (fresh state)
     let mut fresh = SafeModeManager::new(SafeModeConfig::default());
     let fresh_status = fresh.initialize().await.unwrap();
-    assert!(fresh_status.active, "fresh initialization should work after recovery");
+    assert!(
+        fresh_status.active,
+        "fresh initialization should work after recovery"
+    );
 }
 
 /// Recovery config allows FFB: safe mode config disables FFB via axis_only;
@@ -394,7 +403,10 @@ fn recovery_config_allows_ffb() {
         minimal_mode: false,
     };
     assert!(!recovery_config.axis_only, "recovery should allow FFB");
-    assert!(!recovery_config.minimal_mode, "recovery should exit minimal mode");
+    assert!(
+        !recovery_config.minimal_mode,
+        "recovery should exit minimal mode"
+    );
 }
 
 /// Recovery notifies connected clients: the diagnostic bundle captures the

@@ -9,20 +9,20 @@
 
 use std::time::{Duration, Instant};
 
-use flight_panels_saitek::bip::{BipLedColor, BipState, BIP_LEDS_PER_STRIP};
+use flight_panels_saitek::bip::{BIP_LEDS_PER_STRIP, BipLedColor, BipState};
 use flight_panels_saitek::multi_panel::{
-    LcdDisplay, ModeStateMachine, MultiPanelButtonState, MultiPanelLedMask, MultiPanelMode,
-    MultiPanelProtocol, MultiPanelState, encode_segment, led_bits, parse_multi_panel_input,
-    MULTI_PANEL_INPUT_MIN_BYTES, MULTI_PANEL_OUTPUT_BYTES,
+    LcdDisplay, MULTI_PANEL_INPUT_MIN_BYTES, MULTI_PANEL_OUTPUT_BYTES, ModeStateMachine,
+    MultiPanelButtonState, MultiPanelLedMask, MultiPanelMode, MultiPanelProtocol, MultiPanelState,
+    encode_segment, led_bits, parse_multi_panel_input,
 };
 use flight_panels_saitek::radio_panel::{
-    EncoderDelta, RadioDisplay, RadioPanelButtonState, RadioPanelProtocol,
-    parse_radio_panel_input, RADIO_PANEL_INPUT_MIN_BYTES, RADIO_PANEL_OUTPUT_BYTES,
+    EncoderDelta, RADIO_PANEL_INPUT_MIN_BYTES, RADIO_PANEL_OUTPUT_BYTES, RadioDisplay,
+    RadioPanelButtonState, RadioPanelProtocol, parse_radio_panel_input,
 };
 use flight_panels_saitek::switch_panel::{
-    GearLedColor, MagnetoPosition, SwitchDebounce, SwitchPanelGearLeds, SwitchPanelProtocol,
-    SwitchPanelSwitchState, gear_led_bits, parse_switch_panel_input,
-    SWITCH_PANEL_INPUT_MIN_BYTES, SWITCH_PANEL_OUTPUT_BYTES,
+    GearLedColor, MagnetoPosition, SWITCH_PANEL_INPUT_MIN_BYTES, SWITCH_PANEL_OUTPUT_BYTES,
+    SwitchDebounce, SwitchPanelGearLeds, SwitchPanelProtocol, SwitchPanelSwitchState,
+    gear_led_bits, parse_switch_panel_input,
 };
 
 use flight_panels_core::display;
@@ -126,10 +126,7 @@ fn depth_multi_display_led_sync() {
     assert_eq!(report[1], encode_segment('2'));
     assert_eq!(report[5], encode_segment('0'));
     // LED byte correct
-    assert_eq!(
-        report[11],
-        led_bits::ALT | led_bits::VS | led_bits::HDG
-    );
+    assert_eq!(report[11], led_bits::ALT | led_bits::VS | led_bits::HDG);
     // Reserved bytes zero
     for &b in &report[6..11] {
         assert_eq!(b, 0x00);
@@ -188,7 +185,8 @@ fn depth_multi_panel_led_flash_toggle() {
 
     assert_ne!(report_on[11], report_off[11], "LED byte must differ");
     assert_eq!(
-        &report_on[1..6], &report_off[1..6],
+        &report_on[1..6],
+        &report_off[1..6],
         "display bytes must be identical"
     );
 }
@@ -318,20 +316,30 @@ fn depth_radio_encoder_simultaneous_both() {
     let data = [0x00u8, 0x00, 0b0000_1010];
     let events = proto.parse_input(&data).unwrap();
 
-    let outer_cw = events.iter().filter(|e| matches!(
-        e,
-        PanelEvent::EncoderTick {
-            name: "OUTER",
-            delta: 1
-        }
-    )).count();
-    let inner_cw = events.iter().filter(|e| matches!(
-        e,
-        PanelEvent::EncoderTick {
-            name: "INNER",
-            delta: 1
-        }
-    )).count();
+    let outer_cw = events
+        .iter()
+        .filter(|e| {
+            matches!(
+                e,
+                PanelEvent::EncoderTick {
+                    name: "OUTER",
+                    delta: 1
+                }
+            )
+        })
+        .count();
+    let inner_cw = events
+        .iter()
+        .filter(|e| {
+            matches!(
+                e,
+                PanelEvent::EncoderTick {
+                    name: "INNER",
+                    delta: 1
+                }
+            )
+        })
+        .count();
 
     assert_eq!(outer_cw, 1, "one outer CW event");
     assert_eq!(inner_cw, 1, "one inner CW event");
@@ -346,14 +354,38 @@ fn depth_radio_encoder_simultaneous_both() {
 fn depth_switch_individual_toggle_mapping() {
     type SwitchAccessor = fn(&SwitchPanelSwitchState) -> bool;
     let switches: &[(u8, SwitchAccessor, &str)] = &[
-        (0b0000_0001, SwitchPanelSwitchState::master_battery, "MASTER_BAT"),
-        (0b0000_0010, SwitchPanelSwitchState::master_alternator, "MASTER_ALT"),
-        (0b0000_0100, SwitchPanelSwitchState::avionics_master, "AVIONICS"),
+        (
+            0b0000_0001,
+            SwitchPanelSwitchState::master_battery,
+            "MASTER_BAT",
+        ),
+        (
+            0b0000_0010,
+            SwitchPanelSwitchState::master_alternator,
+            "MASTER_ALT",
+        ),
+        (
+            0b0000_0100,
+            SwitchPanelSwitchState::avionics_master,
+            "AVIONICS",
+        ),
         (0b0000_1000, SwitchPanelSwitchState::fuel_pump, "FUEL_PUMP"),
         (0b0001_0000, SwitchPanelSwitchState::de_ice, "DE_ICE"),
-        (0b0010_0000, SwitchPanelSwitchState::pitot_heat, "PITOT_HEAT"),
-        (0b0100_0000, SwitchPanelSwitchState::cowl_flaps_closed, "COWL_FLAPS"),
-        (0b1000_0000, SwitchPanelSwitchState::panel_light, "PANEL_LIGHT"),
+        (
+            0b0010_0000,
+            SwitchPanelSwitchState::pitot_heat,
+            "PITOT_HEAT",
+        ),
+        (
+            0b0100_0000,
+            SwitchPanelSwitchState::cowl_flaps_closed,
+            "COWL_FLAPS",
+        ),
+        (
+            0b1000_0000,
+            SwitchPanelSwitchState::panel_light,
+            "PANEL_LIGHT",
+        ),
     ];
 
     for &(byte1, accessor, name) in switches {
@@ -363,7 +395,10 @@ fn depth_switch_individual_toggle_mapping() {
             "{name} should be ON with byte1={byte1:#010b}"
         );
         // All other switches should be off
-        let all_off = SwitchPanelSwitchState { byte1: !byte1, byte2: 0 };
+        let all_off = SwitchPanelSwitchState {
+            byte1: !byte1,
+            byte2: 0,
+        };
         assert!(
             !accessor(&all_off),
             "{name} should be OFF when only others are set"
@@ -388,7 +423,10 @@ fn depth_multi_panel_ap_buttons_individual() {
 
     for &(byte2, accessor, name) in buttons {
         let state = MultiPanelButtonState { byte1: 0, byte2 };
-        assert!(accessor(&state), "{name} should be pressed with byte2={byte2:#010b}");
+        assert!(
+            accessor(&state),
+            "{name} should be pressed with byte2={byte2:#010b}"
+        );
     }
 }
 
@@ -468,20 +506,32 @@ fn depth_switch_diff_multiple_simultaneous_changes() {
 
     assert!(events.iter().any(|e| matches!(
         e,
-        PanelEvent::SwitchChange { name: "MASTER_BAT", on: true }
+        PanelEvent::SwitchChange {
+            name: "MASTER_BAT",
+            on: true
+        }
     )));
     assert!(events.iter().any(|e| matches!(
         e,
-        PanelEvent::SwitchChange { name: "AVIONICS", on: true }
+        PanelEvent::SwitchChange {
+            name: "AVIONICS",
+            on: true
+        }
     )));
     assert!(events.iter().any(|e| matches!(
         e,
-        PanelEvent::SwitchChange { name: "GEAR", on: true }
+        PanelEvent::SwitchChange {
+            name: "GEAR",
+            on: true
+        }
     )));
     // MASTER_ALT was not changed
     assert!(!events.iter().any(|e| matches!(
         e,
-        PanelEvent::SwitchChange { name: "MASTER_ALT", .. }
+        PanelEvent::SwitchChange {
+            name: "MASTER_ALT",
+            ..
+        }
     )));
 }
 
@@ -559,7 +609,9 @@ fn depth_profile_button_to_sim_command() {
         let data = [0x00u8, 0x00, 1 << i];
         let events = proto.parse_input(&data).unwrap();
         assert!(
-            events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: n } if *n == name)),
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: n } if *n == name)),
             "bit {i} should produce ButtonPress for {name}"
         );
     }

@@ -600,8 +600,7 @@ mod export_depth {
         assert!(text.contains("# HELP http_requests_total Total HTTP requests"));
         assert!(text.contains("# TYPE http_requests_total counter"));
         assert!(
-            text.contains("http_requests_total 42")
-                || text.contains("http_requests_total 42.0")
+            text.contains("http_requests_total 42") || text.contains("http_requests_total 42.0")
         );
     }
 
@@ -646,10 +645,7 @@ mod export_depth {
             text.contains("lat_bucket{le=\"+Inf\"} 3")
                 || text.contains("lat_bucket{le=\"+Inf\"} 3.0")
         );
-        assert!(
-            text.contains("lat_count 3")
-                || text.contains("lat_count 3.0")
-        );
+        assert!(text.contains("lat_count 3") || text.contains("lat_count 3.0"));
     }
 
     #[test]

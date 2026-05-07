@@ -8,7 +8,7 @@
 
 use flight_writers::*;
 use proptest::prelude::*;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -99,7 +99,12 @@ fn make_replace_diff(target: PathBuf, content: &str) -> FileDiff {
     }
 }
 
-fn make_line_replace_diff(target: PathBuf, pattern: &str, replacement: &str, regex: bool) -> FileDiff {
+fn make_line_replace_diff(
+    target: PathBuf,
+    pattern: &str,
+    replacement: &str,
+    regex: bool,
+) -> FileDiff {
     FileDiff {
         file: target,
         operation: DiffOperation::LineReplace {
@@ -156,10 +161,7 @@ fn vt_lookup_variable_by_name() {
 fn vt_category_filtering_by_section() {
     let v = read_writer_json("msfs_1.36.0.json");
     let diffs = v["diffs"].as_array().unwrap();
-    let sections: Vec<&str> = diffs
-        .iter()
-        .filter_map(|d| d["section"].as_str())
-        .collect();
+    let sections: Vec<&str> = diffs.iter().filter_map(|d| d["section"].as_str()).collect();
     assert!(
         sections.iter().any(|s| s.contains("CONTROLS")),
         "MSFS table must have a CONTROLS section"
@@ -197,10 +199,7 @@ fn vt_unit_values_are_strings() {
 fn vt_version_string_present_in_all_tables() {
     for file in &["msfs_1.36.0.json", "xplane_12.0.json", "dcs_2.9.json"] {
         let v = read_writer_json(file);
-        assert!(
-            v["version"].is_string(),
-            "{file} must have a version field"
-        );
+        assert!(v["version"].is_string(), "{file} must have a version field");
         let ver = v["version"].as_str().unwrap();
         assert!(!ver.is_empty(), "{file}: version must not be empty");
     }
@@ -277,7 +276,9 @@ async fn wb_flush_produces_all_files() {
     let tmp = TempDir::new().unwrap();
     let applier = WriterApplier::new(tmp.path());
 
-    let targets: Vec<PathBuf> = (0..5).map(|i| tmp.path().join(format!("f{i}.ini"))).collect();
+    let targets: Vec<PathBuf> = (0..5)
+        .map(|i| tmp.path().join(format!("f{i}.ini")))
+        .collect();
     let diffs: Vec<FileDiff> = targets
         .iter()
         .map(|t| make_ini_diff_slice(t.clone(), "SEC", &[("key", "val")]))
@@ -449,9 +450,7 @@ async fn gf_coverage_matrix_tracks_areas() {
     let golden_dir = tmp.path().join("golden");
 
     for area in &["autopilot", "electrical", "fuel"] {
-        let test_dir = golden_dir
-            .join("xplane")
-            .join(format!("test_v12.0_{area}"));
+        let test_dir = golden_dir.join("xplane").join(format!("test_v12.0_{area}"));
         fs::create_dir_all(&test_dir).unwrap();
         fs::write(test_dir.join("input.json"), "{}").unwrap();
         let expected = test_dir.join("expected");
@@ -477,7 +476,11 @@ async fn dt_version_to_version_diff() {
 
     let target = tmp.path().join("panel.ini");
 
-    let v1 = make_ini_diff_slice(target.clone(), "PANEL", &[("rev", "1"), ("feature_a", "on")]);
+    let v1 = make_ini_diff_slice(
+        target.clone(),
+        "PANEL",
+        &[("rev", "1"), ("feature_a", "on")],
+    );
     applier.apply_diff(&v1, &backup).await.unwrap();
 
     let v2 = make_ini_diff_slice(
@@ -577,7 +580,11 @@ async fn ini_diff_adds_new_section_and_keys() {
     let backup = make_backup_dir(&tmp);
     let target = tmp.path().join("new.ini");
 
-    let diff = make_ini_diff(target.clone(), "NEW_SEC", vec![("key1", "val1"), ("key2", "val2")]);
+    let diff = make_ini_diff(
+        target.clone(),
+        "NEW_SEC",
+        vec![("key1", "val1"), ("key2", "val2")],
+    );
     applier.apply_diff(&diff, &backup).await.unwrap();
 
     let content = fs::read_to_string(&target).unwrap();

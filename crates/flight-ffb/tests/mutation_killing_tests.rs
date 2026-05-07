@@ -3,8 +3,7 @@
 // Each test asserts exact values to catch sign-flip, off-by-one, and logic mutations.
 
 use flight_ffb::effects::{
-    CompositeEffect, ConstantForceParams, EffectInput, EffectWatchdog, FfbEffect,
-    SpringParams,
+    CompositeEffect, ConstantForceParams, EffectInput, EffectWatchdog, FfbEffect, SpringParams,
 };
 use flight_ffb::ramp::EffectRamp;
 use flight_ffb::safety_envelope::{SafetyEnvelope, SafetyEnvelopeConfig};
@@ -55,8 +54,14 @@ fn spring_force_direction_correct() {
     );
 
     // Opposite signs — any sign mutation breaks this
-    assert!(force_pos < 0.0, "positive displacement must yield negative force");
-    assert!(force_neg > 0.0, "negative displacement must yield positive force");
+    assert!(
+        force_pos < 0.0,
+        "positive displacement must yield negative force"
+    );
+    assert!(
+        force_neg > 0.0,
+        "negative displacement must yield positive force"
+    );
 }
 
 /// Kills mutations that remove torque clamping or break the safe_for_ffb gate.
@@ -171,10 +176,7 @@ fn fade_in_timing_linear_progression() {
     }
 
     // After 10 tick() calls, current_tick=10 which equals duration
-    assert!(
-        ramp.is_complete(),
-        "ramp must be complete after 10 ticks"
-    );
+    assert!(ramp.is_complete(), "ramp must be complete after 10 ticks");
     // Next tick returns target since current_tick >= duration
     let v_final = ramp.tick();
     assert!(

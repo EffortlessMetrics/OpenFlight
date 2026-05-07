@@ -885,8 +885,10 @@ mod tests {
                         && (leds.raw() & gear_led_bits::NOSE_RED != 0);
                     let right_both = (leds.raw() & gear_led_bits::RIGHT_GREEN != 0)
                         && (leds.raw() & gear_led_bits::RIGHT_RED != 0);
-                    assert!(!left_both && !nose_both && !right_both,
-                        "green+red should never be set simultaneously");
+                    assert!(
+                        !left_both && !nose_both && !right_both,
+                        "green+red should never be set simultaneously"
+                    );
                 }
             }
         }
@@ -963,10 +965,7 @@ mod tests {
         for (name, bit, accessor) in switches {
             let data = [0x00u8, 1 << bit, 0x00];
             let state = parse_switch_panel_input(&data).unwrap();
-            assert!(
-                accessor(&state),
-                "switch {name} (bit {bit}) should be on"
-            );
+            assert!(accessor(&state), "switch {name} (bit {bit}) should be on");
 
             // All other switches should be off
             let data_off = [0x00u8, 0x00, 0x00];

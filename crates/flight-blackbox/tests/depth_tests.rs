@@ -14,20 +14,20 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use flight_blackbox::analysis::{
-    self, axis_statistics, detect_anomalies, event_timeline, Anomaly, AnomalyThresholds,
+    self, Anomaly, AnomalyThresholds, axis_statistics, detect_anomalies, event_timeline,
 };
 use flight_blackbox::export::{
-    self, export_binary, export_csv, export_json, summary, AxisRecordDto, EventRecordDto,
-    ExportEntry, FfbRecordDto, RecorderExportDoc, TelemetryRecordDto,
+    self, AxisRecordDto, EventRecordDto, ExportEntry, FfbRecordDto, RecorderExportDoc,
+    TelemetryRecordDto, export_binary, export_csv, export_json, summary,
 };
 use flight_blackbox::recorder::{
-    BlackboxRecorder, RecordEntry, RecorderConfig, EVENT_DATA_MAX, EVENT_SOURCE_MAX, SIM_ID_MAX,
+    BlackboxRecorder, EVENT_DATA_MAX, EVENT_SOURCE_MAX, RecordEntry, RecorderConfig, SIM_ID_MAX,
     SNAPSHOT_MAX,
 };
 use flight_blackbox::{
     BlackboxConfig, BlackboxError, BlackboxFooter, BlackboxHeader, BlackboxReader, BlackboxRecord,
-    BlackboxWriter, ExportDoc, IndexEntry, StreamType, FBB_ENDIAN_MARKER, FBB_FORMAT_VERSION,
-    FBB_MAGIC,
+    BlackboxWriter, ExportDoc, FBB_ENDIAN_MARKER, FBB_FORMAT_VERSION, FBB_MAGIC, IndexEntry,
+    StreamType,
 };
 
 use proptest::prelude::*;
@@ -420,9 +420,7 @@ async fn lifecycle_recording_during_active_simulation_data() {
         writer.record_axis_frame(ts, &axis_data).unwrap();
 
         if i % 4 == 0 {
-            writer
-                .record_bus_snapshot(ts, &[0x01, 0x02, 0x03])
-                .unwrap();
+            writer.record_bus_snapshot(ts, &[0x01, 0x02, 0x03]).unwrap();
         }
         if i % 25 == 0 {
             writer.record_event(ts, b"profile_change").unwrap();
@@ -456,9 +454,7 @@ async fn lifecycle_graceful_stop_flushes_pending_records() {
 
     // Write a batch of records
     for i in 0..10 {
-        writer
-            .record_axis_frame(i * 1000, &[i as u8])
-            .unwrap();
+        writer.record_axis_frame(i * 1000, &[i as u8]).unwrap();
     }
     drain_writer().await;
     writer.stop_recording().await.unwrap();
@@ -630,9 +626,7 @@ async fn format_timestamp_and_sequence_preserved() {
 
     let timestamps: Vec<u64> = (0..20).map(|i| i * 4_000_000).collect();
     for (i, &ts) in timestamps.iter().enumerate() {
-        writer
-            .record_axis_frame(ts, &[i as u8])
-            .unwrap();
+        writer.record_axis_frame(ts, &[i as u8]).unwrap();
     }
 
     drain_writer().await;
@@ -702,8 +696,7 @@ async fn writer_file_starts_with_length_prefixed_header() {
         "file must contain the full header payload"
     );
 
-    let header: BlackboxHeader =
-        postcard::from_bytes(&raw[4..4 + header_len]).unwrap();
+    let header: BlackboxHeader = postcard::from_bytes(&raw[4..4 + header_len]).unwrap();
     assert_eq!(header.magic, *FBB_MAGIC);
     assert_eq!(header.endian_marker, FBB_ENDIAN_MARKER);
     assert_eq!(header.format_version, FBB_FORMAT_VERSION);
@@ -1051,9 +1044,7 @@ async fn replay_forward_and_backward_iteration() {
         .unwrap();
 
     for i in 0u64..20 {
-        writer
-            .record_axis_frame(i * 4_000_000, &[i as u8])
-            .unwrap();
+        writer.record_axis_frame(i * 4_000_000, &[i as u8]).unwrap();
     }
 
     drain_writer().await;
@@ -1495,9 +1486,7 @@ async fn compression_rle_for_button_states() {
         .collect();
 
     for (i, &state) in states.iter().enumerate() {
-        writer
-            .record_event(i as u64 * 4_000_000, &[state])
-            .unwrap();
+        writer.record_event(i as u64 * 4_000_000, &[state]).unwrap();
     }
 
     drain_writer().await;
@@ -1656,8 +1645,7 @@ async fn validate_rejects_wrong_magic() {
     let raw = std::fs::read(&path).unwrap();
     let header_len = u32::from_le_bytes(raw[0..4].try_into().unwrap()) as usize;
     let header_payload = &raw[4..4 + header_len];
-    let mut header: BlackboxHeader =
-        postcard::from_bytes(header_payload).unwrap();
+    let mut header: BlackboxHeader = postcard::from_bytes(header_payload).unwrap();
     header.magic = *b"XXXX";
     let new_payload = postcard::to_stdvec(&header).unwrap();
     let new_len = new_payload.len() as u32;
@@ -1733,9 +1721,7 @@ async fn corruption_corrupted_frame_detected() {
     // Write enough records with larger payloads so the file is big enough
     // to corrupt record data without touching the header.
     for i in 0u64..20 {
-        writer
-            .record_axis_frame(i * 1000, &[i as u8; 32])
-            .unwrap();
+        writer.record_axis_frame(i * 1000, &[i as u8; 32]).unwrap();
     }
     drain_writer().await;
     writer.stop_recording().await.unwrap();
@@ -1848,10 +1834,7 @@ async fn reader_handles_truncated_record_payload() {
     // Truncate the file to corrupt the last record
     let metadata = std::fs::metadata(&path).unwrap();
     let truncated_len = metadata.len() - 2;
-    let file = std::fs::OpenOptions::new()
-        .write(true)
-        .open(&path)
-        .unwrap();
+    let file = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
     file.set_len(truncated_len).unwrap();
 
     let mut reader = BlackboxReader::open(&path).unwrap();
@@ -2078,10 +2061,7 @@ fn export_json_binary_csv_consistency() {
         serde_json::from_str(&std::fs::read_to_string(&json_path).unwrap()).unwrap();
     assert_eq!(json_doc.entry_count, 11);
 
-    let csv_lines = std::fs::read_to_string(&csv_path)
-        .unwrap()
-        .lines()
-        .count();
+    let csv_lines = std::fs::read_to_string(&csv_path).unwrap().lines().count();
     assert_eq!(csv_lines, 11);
 
     let bin_bytes = std::fs::read(&bin_path).unwrap();

@@ -7,7 +7,7 @@
 //! short-report rejection, and button-mask consistency.
 
 use flight_hotas_turtlebeach::{
-    FLIGHTDECK_MIN_REPORT_BYTES, FLIGHT_MIN_REPORT_BYTES, FLIGHTSTICK_MIN_REPORT_BYTES,
+    FLIGHT_MIN_REPORT_BYTES, FLIGHTDECK_MIN_REPORT_BYTES, FLIGHTSTICK_MIN_REPORT_BYTES,
     RUDDER_MIN_REPORT_BYTES, parse_flight_report, parse_flightdeck_report,
     parse_flightstick_report, parse_rudder_report,
 };
@@ -16,7 +16,7 @@ use proptest::prelude::*;
 // ── Report builders (shared) ─────────────────────────────────────────────────
 
 mod common;
-use common::{FlightInput, build_flight, make_flightstick, make_flightdeck, make_rudder};
+use common::{FlightInput, build_flight, make_flightdeck, make_flightstick, make_rudder};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // VelocityOne Flight (yoke) property tests

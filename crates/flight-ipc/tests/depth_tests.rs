@@ -16,18 +16,18 @@ use flight_ipc::handlers::{FlightServiceHandler, MockServiceContext, ServiceCont
 use flight_ipc::messages::{ComponentStatus, IpcMessage, ServiceState};
 use flight_ipc::negotiation::{self, Version};
 use flight_ipc::proto::flight_service_client::FlightServiceClient as GrpcClient;
-use flight_ipc::proto::flight_service_server::{FlightService as GrpcFlightService, FlightServiceServer as GrpcFlightServiceServer};
+use flight_ipc::proto::flight_service_server::{
+    FlightService as GrpcFlightService, FlightServiceServer as GrpcFlightServiceServer,
+};
 use flight_ipc::proto::{self, *};
 use flight_ipc::rate_limiter::{RateLimitConfig, RateLimitResult, RateLimiter};
 use flight_ipc::server::IpcServer;
-use flight_ipc::subscriptions::{
-    BroadcastMessage, SubscriptionFilter, SubscriptionManager, Topic,
-};
+use flight_ipc::subscriptions::{BroadcastMessage, SubscriptionFilter, SubscriptionManager, Topic};
 use flight_ipc::transport::{RetryPolicy, TransportConfig};
-use flight_ipc::{ClientConfig, IpcError, ServerConfig, PROTOCOL_VERSION, SUPPORTED_FEATURES};
+use flight_ipc::{ClientConfig, IpcError, PROTOCOL_VERSION, SUPPORTED_FEATURES, ServerConfig};
 
-use prost::Message;
 use proptest::prelude::*;
+use prost::Message;
 use tonic::Request;
 
 // ===========================================================================
@@ -414,7 +414,10 @@ mod service_methods {
         };
         health_tx.send(event).unwrap();
 
-        let received = tokio::time::timeout(Duration::from_secs(2), rx.recv()).await.unwrap().unwrap();
+        let received = tokio::time::timeout(Duration::from_secs(2), rx.recv())
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(received.message, "test");
 
         let _ = shutdown_tx.send(true);
@@ -451,7 +454,10 @@ mod resources {
         for _ in 0..3 {
             assert_eq!(rl.check("client-a"), RateLimitResult::Allowed);
         }
-        assert!(matches!(rl.check("client-a"), RateLimitResult::Limited { .. }));
+        assert!(matches!(
+            rl.check("client-a"),
+            RateLimitResult::Limited { .. }
+        ));
         assert_eq!(rl.check("client-b"), RateLimitResult::Allowed);
     }
 }
@@ -471,7 +477,10 @@ mod error_handling {
 
     #[test]
     fn ipc_error_variants() {
-        let err = IpcError::VersionMismatch { client: "2".into(), server: "1".into() };
+        let err = IpcError::VersionMismatch {
+            client: "2".into(),
+            server: "1".into(),
+        };
         assert!(err.to_string().contains("2"));
     }
 

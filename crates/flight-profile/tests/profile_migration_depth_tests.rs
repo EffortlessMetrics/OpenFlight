@@ -17,8 +17,8 @@
 
 use flight_profile::profile_migration::{MigrationError, MigrationRegistry, ProfileMigration};
 use flight_profile::{
-    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PofOverrides,
-    PROFILE_SCHEMA_VERSION, Profile,
+    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PROFILE_SCHEMA_VERSION,
+    PofOverrides, Profile,
 };
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -494,12 +494,7 @@ fn four_layer_cascade_merge() {
 
     // PoF override present
     let pof = merged.pof_overrides.as_ref().expect("pof must exist");
-    let approach_pitch = pof["approach"]
-        .axes
-        .as_ref()
-        .unwrap()
-        .get("pitch")
-        .unwrap();
+    let approach_pitch = pof["approach"].axes.as_ref().unwrap().get("pitch").unwrap();
     assert_eq!(approach_pitch.deadzone, Some(0.02));
     assert_eq!(approach_pitch.expo, Some(0.5));
 
@@ -582,7 +577,10 @@ fn migration_json_roundtrip_v1_to_v3() {
     let json_str = serde_json::to_string(&v3).unwrap();
     let restored: Value = serde_json::from_str(&json_str).unwrap();
 
-    assert_eq!(v3, restored, "migration result must survive JSON round-trip");
+    assert_eq!(
+        v3, restored,
+        "migration result must survive JSON round-trip"
+    );
 }
 
 /// Migrate v1 to v3, then migrate v3 to v3 (noop) — result unchanged.
@@ -872,7 +870,10 @@ fn json_roundtrip_full_profile() {
 
     let json = serde_json::to_string_pretty(&profile).unwrap();
     let restored: Profile = serde_json::from_str(&json).unwrap();
-    assert_eq!(profile, restored, "full profile must survive JSON round-trip");
+    assert_eq!(
+        profile, restored,
+        "full profile must survive JSON round-trip"
+    );
     assert!(restored.validate().is_ok());
 }
 
@@ -1178,7 +1179,10 @@ fn curve_single_point_rejected() {
         axes,
         ..empty_profile()
     };
-    assert!(p.validate().is_err(), "single-point curve should be invalid");
+    assert!(
+        p.validate().is_err(),
+        "single-point curve should be invalid"
+    );
 }
 
 /// Detent with zero width rejected.

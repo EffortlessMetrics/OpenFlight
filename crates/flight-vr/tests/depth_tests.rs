@@ -40,7 +40,10 @@ fn snapshot_with_pose(pose: HeadPose, quality: TrackingQuality, is_worn: bool) -
 #[test]
 fn zero_pose_has_all_fields_zero() {
     let p = HeadPose::zero();
-    assert_eq!((p.x, p.y, p.z, p.yaw, p.pitch, p.roll), (0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+    assert_eq!(
+        (p.x, p.y, p.z, p.yaw, p.pitch, p.roll),
+        (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    );
 }
 
 #[test]
@@ -175,7 +178,11 @@ fn tracking_quality_variants_differ() {
 
 #[test]
 fn snapshot_clone_preserves_fields() {
-    let snap = snapshot_with_pose(full_pose(1.0, 2.0, 3.0, 45.0, 0.0, 0.0), TrackingQuality::Good, true);
+    let snap = snapshot_with_pose(
+        full_pose(1.0, 2.0, 3.0, 45.0, 0.0, 0.0),
+        TrackingQuality::Good,
+        true,
+    );
     let cloned = snap.clone();
     assert_eq!(cloned.pose, snap.pose);
     assert_eq!(cloned.quality, snap.quality);
@@ -232,13 +239,15 @@ fn make_snapshot_not_worn() {
 
 #[test]
 fn mock_connected_backend_reports_connected() {
-    let backend = MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
+    let backend =
+        MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
     assert!(backend.is_connected());
 }
 
 #[test]
 fn mock_connected_backend_name() {
-    let backend = MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
+    let backend =
+        MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
     assert_eq!(backend.backend_name(), "MockVrBackend");
 }
 
@@ -296,18 +305,22 @@ fn mock_disconnected_poll_returns_not_connected() {
 
 #[test]
 fn adapter_initial_state_no_snapshot() {
-    let adapter = VrAdapter::new(MockVrBackend::new_connected(vec![
-        make_snapshot(0.0, TrackingQuality::Good, true),
-    ]));
+    let adapter = VrAdapter::new(MockVrBackend::new_connected(vec![make_snapshot(
+        0.0,
+        TrackingQuality::Good,
+        true,
+    )]));
     assert!(adapter.last_snapshot().is_none());
     assert!(!adapter.is_active());
 }
 
 #[test]
 fn adapter_update_caches_snapshot() {
-    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![
-        make_snapshot(55.0, TrackingQuality::Good, true),
-    ]));
+    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![make_snapshot(
+        55.0,
+        TrackingQuality::Good,
+        true,
+    )]));
     adapter.update().unwrap();
     let cached = adapter.last_snapshot().unwrap();
     assert_eq!(cached.pose.yaw, 55.0);
@@ -341,9 +354,11 @@ fn adapter_disconnected_does_not_cache() {
 
 #[test]
 fn adapter_is_active_after_successful_poll() {
-    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![
-        make_snapshot(0.0, TrackingQuality::Good, true),
-    ]));
+    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![make_snapshot(
+        0.0,
+        TrackingQuality::Good,
+        true,
+    )]));
     adapter.update().unwrap();
     assert!(adapter.is_active());
 }
@@ -393,18 +408,22 @@ fn vr_error_poll_failed_contains_reason() {
 
 #[test]
 fn adapter_degraded_quality_snapshot() {
-    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![
-        make_snapshot(0.0, TrackingQuality::Degraded, true),
-    ]));
+    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![make_snapshot(
+        0.0,
+        TrackingQuality::Degraded,
+        true,
+    )]));
     let snap = adapter.update().unwrap();
     assert_eq!(snap.quality, TrackingQuality::Degraded);
 }
 
 #[test]
 fn adapter_lost_quality_snapshot() {
-    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![
-        make_snapshot(0.0, TrackingQuality::Lost, false),
-    ]));
+    let mut adapter = VrAdapter::new(MockVrBackend::new_connected(vec![make_snapshot(
+        0.0,
+        TrackingQuality::Lost,
+        false,
+    )]));
     let snap = adapter.update().unwrap();
     assert_eq!(snap.quality, TrackingQuality::Lost);
     assert!(!snap.is_worn);
@@ -482,9 +501,8 @@ fn adapter_many_updates_cycles_correctly() {
 
 #[test]
 fn backend_trait_poll_returns_snapshot() {
-    let mut backend = MockVrBackend::new_connected(vec![
-        make_snapshot(33.0, TrackingQuality::Good, true),
-    ]);
+    let mut backend =
+        MockVrBackend::new_connected(vec![make_snapshot(33.0, TrackingQuality::Good, true)]);
     let snap = backend.poll().unwrap();
     assert_eq!(snap.pose.yaw, 33.0);
 }
@@ -499,7 +517,8 @@ fn backend_trait_is_connected() {
 
 #[test]
 fn backend_trait_backend_name() {
-    let backend = MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
+    let backend =
+        MockVrBackend::new_connected(vec![make_snapshot(0.0, TrackingQuality::Good, true)]);
     assert!(!backend.backend_name().is_empty());
 }
 

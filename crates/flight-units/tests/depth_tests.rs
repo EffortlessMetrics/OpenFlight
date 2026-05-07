@@ -6,7 +6,7 @@
 //! and property-based tests via proptest.
 
 use flight_units::conversions;
-use flight_units::{angles, Angle, AngleUnit, Force, ForceUnit, Speed, SpeedUnit, UnitValue};
+use flight_units::{Angle, AngleUnit, Force, ForceUnit, Speed, SpeedUnit, UnitValue, angles};
 use proptest::prelude::*;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -333,12 +333,20 @@ fn mps_to_fpm_descent() {
 
 #[test]
 fn normalize_signed_zero() {
-    assert!(approx(angles::normalize_degrees_signed(0.0), 0.0, TIGHT_EPS));
+    assert!(approx(
+        angles::normalize_degrees_signed(0.0),
+        0.0,
+        TIGHT_EPS
+    ));
 }
 
 #[test]
 fn normalize_signed_90() {
-    assert!(approx(angles::normalize_degrees_signed(90.0), 90.0, TIGHT_EPS));
+    assert!(approx(
+        angles::normalize_degrees_signed(90.0),
+        90.0,
+        TIGHT_EPS
+    ));
 }
 
 #[test]
@@ -362,7 +370,11 @@ fn normalize_signed_270() {
 
 #[test]
 fn normalize_signed_360() {
-    assert!(approx(angles::normalize_degrees_signed(360.0), 0.0, TIGHT_EPS));
+    assert!(approx(
+        angles::normalize_degrees_signed(360.0),
+        0.0,
+        TIGHT_EPS
+    ));
 }
 
 #[test]
@@ -376,12 +388,20 @@ fn normalize_signed_neg90() {
 
 #[test]
 fn normalize_signed_neg270() {
-    assert!(approx(angles::normalize_degrees_signed(-270.0), 90.0, TIGHT_EPS));
+    assert!(approx(
+        angles::normalize_degrees_signed(-270.0),
+        90.0,
+        TIGHT_EPS
+    ));
 }
 
 #[test]
 fn normalize_signed_720() {
-    assert!(approx(angles::normalize_degrees_signed(720.0), 0.0, TIGHT_EPS));
+    assert!(approx(
+        angles::normalize_degrees_signed(720.0),
+        0.0,
+        TIGHT_EPS
+    ));
 }
 
 #[test]
@@ -511,7 +531,10 @@ fn knots_to_mps_pos_inf() {
 
 #[test]
 fn knots_to_mps_neg_inf() {
-    assert_eq!(conversions::knots_to_mps(f32::NEG_INFINITY), f32::NEG_INFINITY);
+    assert_eq!(
+        conversions::knots_to_mps(f32::NEG_INFINITY),
+        f32::NEG_INFINITY
+    );
 }
 
 #[test]

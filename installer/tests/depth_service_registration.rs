@@ -95,10 +95,7 @@ fn windows_service_metadata_correct() {
         "Windows service must be auto-start for boot survival"
     );
     assert!(
-        m.service
-            .binary_path
-            .to_string_lossy()
-            .contains("flightd"),
+        m.service.binary_path.to_string_lossy().contains("flightd"),
         "service binary must reference flightd"
     );
 }

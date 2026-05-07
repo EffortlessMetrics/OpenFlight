@@ -8,9 +8,9 @@
 //! and Precision 2 SideWinder sticks (VID 0x045E).
 
 use flight_hotas_microsoft::{
-    MICROSOFT_VENDOR_ID, SIDEWINDER_FFB2_PID, SIDEWINDER_FFB_PRO_PID, SIDEWINDER_PRECISION_2_PID,
-    SidewinderFfbHat, SidewinderFfbInputState, SidewinderModel,
-    SidewinderP2Hat, is_sidewinder_device, parse_sidewinder_ffb2, parse_sidewinder_ffb_pro,
+    MICROSOFT_VENDOR_ID, SIDEWINDER_FFB_PRO_PID, SIDEWINDER_FFB2_PID, SIDEWINDER_PRECISION_2_PID,
+    SidewinderFfbHat, SidewinderFfbInputState, SidewinderModel, SidewinderP2Hat,
+    is_sidewinder_device, parse_sidewinder_ffb_pro, parse_sidewinder_ffb2,
     parse_sidewinder_precision2, sidewinder_model,
 };
 
@@ -48,8 +48,16 @@ fn idle_report() -> [u8; 7] {
 #[test]
 fn ffb2_effect_spring_center_produces_zero_offset() {
     let state = parse_sidewinder_ffb2(&idle_report()).unwrap();
-    assert!(state.axes.x.abs() < 0.01, "spring center X: {}", state.axes.x);
-    assert!(state.axes.y.abs() < 0.01, "spring center Y: {}", state.axes.y);
+    assert!(
+        state.axes.x.abs() < 0.01,
+        "spring center X: {}",
+        state.axes.x
+    );
+    assert!(
+        state.axes.y.abs() < 0.01,
+        "spring center Y: {}",
+        state.axes.y
+    );
 }
 
 /// FFB2 force direction: full deflection on one axis must produce ±1.0 while
@@ -150,27 +158,45 @@ fn axis_four_axes_full_range() {
     // Throttle
     let tmin = parse_sidewinder_ffb_pro(&build_report(512, 512, 128, 0, 8, 0)).unwrap();
     let tmax = parse_sidewinder_ffb_pro(&build_report(512, 512, 128, 255, 8, 0)).unwrap();
-    assert!(tmin.axes.throttle < 0.001, "throttle min: {}", tmin.axes.throttle);
-    assert!(tmax.axes.throttle > 0.999, "throttle max: {}", tmax.axes.throttle);
+    assert!(
+        tmin.axes.throttle < 0.001,
+        "throttle min: {}",
+        tmin.axes.throttle
+    );
+    assert!(
+        tmax.axes.throttle > 0.999,
+        "throttle max: {}",
+        tmax.axes.throttle
+    );
 }
 
 /// Twist rudder (Rz) on the FFB2: verify bipolar normalisation around center.
 #[test]
 fn axis_twist_rudder_bipolar_center() {
     let center = parse_sidewinder_ffb2(&build_report(512, 512, 128, 0, 8, 0)).unwrap();
-    assert!(center.axes.rz.abs() < 0.01, "twist center: {}", center.axes.rz);
+    assert!(
+        center.axes.rz.abs() < 0.01,
+        "twist center: {}",
+        center.axes.rz
+    );
 
     let quarter_left = parse_sidewinder_ffb2(&build_report(512, 512, 64, 0, 8, 0)).unwrap();
-    assert!(quarter_left.axes.rz < -0.45 && quarter_left.axes.rz > -0.55,
-        "twist quarter-left: {}", quarter_left.axes.rz);
+    assert!(
+        quarter_left.axes.rz < -0.45 && quarter_left.axes.rz > -0.55,
+        "twist quarter-left: {}",
+        quarter_left.axes.rz
+    );
 }
 
 /// Throttle slider: verify unipolar range 0.0..=1.0 with mid-travel check.
 #[test]
 fn axis_throttle_slider_unipolar_midrange() {
     let mid = parse_sidewinder_ffb_pro(&build_report(512, 512, 128, 128, 8, 0)).unwrap();
-    assert!(mid.axes.throttle > 0.49 && mid.axes.throttle < 0.51,
-        "throttle midpoint: {}", mid.axes.throttle);
+    assert!(
+        mid.axes.throttle > 0.49 && mid.axes.throttle < 0.51,
+        "throttle midpoint: {}",
+        mid.axes.throttle
+    );
 }
 
 /// Center calibration: axes centered (raw 512/512/128) must all be within ±0.01
@@ -215,8 +241,10 @@ fn button_eight_buttons_independent() {
         // No other button pressed
         for other in 1u8..=9 {
             if other != btn {
-                assert!(!s.buttons.button(other),
-                    "button {other} should NOT be pressed when only {btn} is");
+                assert!(
+                    !s.buttons.button(other),
+                    "button {other} should NOT be pressed when only {btn} is"
+                );
             }
         }
     }
@@ -273,8 +301,11 @@ fn button_debounce_stable_repeated_parse() {
 fn button_hat_center_high_nibbles() {
     for nibble in 8u8..=15 {
         let s = parse_sidewinder_ffb2(&build_report(512, 512, 128, 0, nibble, 0)).unwrap();
-        assert_eq!(s.buttons.hat, SidewinderFfbHat::Center,
-            "nibble {nibble} must map to Center");
+        assert_eq!(
+            s.buttons.hat,
+            SidewinderFfbHat::Center,
+            "nibble {nibble} must map to Center"
+        );
     }
 }
 
@@ -319,9 +350,18 @@ fn devid_wrong_vid_rejected() {
 /// Model discrimination: each PID must map to exactly one SidewinderModel variant.
 #[test]
 fn devid_model_discrimination() {
-    assert_eq!(sidewinder_model(SIDEWINDER_FFB_PRO_PID), Some(SidewinderModel::FfbPro));
-    assert_eq!(sidewinder_model(SIDEWINDER_FFB2_PID), Some(SidewinderModel::Ffb2));
-    assert_eq!(sidewinder_model(SIDEWINDER_PRECISION_2_PID), Some(SidewinderModel::Precision2));
+    assert_eq!(
+        sidewinder_model(SIDEWINDER_FFB_PRO_PID),
+        Some(SidewinderModel::FfbPro)
+    );
+    assert_eq!(
+        sidewinder_model(SIDEWINDER_FFB2_PID),
+        Some(SidewinderModel::Ffb2)
+    );
+    assert_eq!(
+        sidewinder_model(SIDEWINDER_PRECISION_2_PID),
+        Some(SidewinderModel::Precision2)
+    );
 }
 
 /// Unknown PIDs under the Microsoft VID must return None.
@@ -338,7 +378,10 @@ fn devid_unknown_pid_returns_none() {
 fn devid_legacy_ffb_capability_flag() {
     assert!(SidewinderModel::FfbPro.has_ffb(), "FFB Pro must have FFB");
     assert!(SidewinderModel::Ffb2.has_ffb(), "FFB 2 must have FFB");
-    assert!(!SidewinderModel::Precision2.has_ffb(), "Precision 2 has no FFB");
+    assert!(
+        !SidewinderModel::Precision2.has_ffb(),
+        "Precision 2 has no FFB"
+    );
 }
 
 /// VID constant must match the canonical Microsoft vendor ID.

@@ -12,7 +12,7 @@ use flight_axis::pipeline::{
 use flight_axis::{AxisEngine, AxisFrame, PipelineBuilder};
 use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
-use flight_core::profile::{AxisConfig, Profile, PROFILE_SCHEMA_VERSION};
+use flight_core::profile::{AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use flight_metrics::MetricsRegistry;
 use flight_test_helpers::{
     DeterministicClock, FakeDevice, FakeInput, FakeSim, assert_approx_eq, assert_in_range,
@@ -109,7 +109,10 @@ fn e2e_roundtrip_device_to_sim() {
     // Write to sim
     sim.send_command(&format!("PITCH={:.4}", received.control_inputs.pitch));
     sim.send_command(&format!("ROLL={:.4}", received.control_inputs.roll));
-    sim.send_command(&format!("THROTTLE={:.4}", received.control_inputs.throttle[0]));
+    sim.send_command(&format!(
+        "THROTTLE={:.4}",
+        received.control_inputs.throttle[0]
+    ));
 
     // Verify roundtrip values
     assert_approx_eq(received.control_inputs.pitch as f64, pitch, 1e-5);
@@ -327,7 +330,10 @@ fn e2e_roundtrip_multi_device_multi_sim() {
 
     // Both subscribers see both snapshots
     assert!(!msfs_received.is_empty(), "MSFS sub must receive snapshots");
-    assert!(!xplane_received.is_empty(), "X-Plane sub must receive snapshots");
+    assert!(
+        !xplane_received.is_empty(),
+        "X-Plane sub must receive snapshots"
+    );
 }
 
 // ===========================================================================

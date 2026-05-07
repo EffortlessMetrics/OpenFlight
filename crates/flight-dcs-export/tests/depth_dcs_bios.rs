@@ -17,9 +17,9 @@
 //! - String controls: start address + fixed max length
 
 use flight_dcs_export::control_injection::{
-    a10c, ah64d, f14b, f16c, fa18c, lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
-    AircraftAxisMapping, Clickable, DcsActionType, DcsControlCommand, DcsControlInjector,
-    WireParseError, A10C_AXES, F16C_AXES, FA18C_AXES,
+    A10C_AXES, AircraftAxisMapping, Clickable, DcsActionType, DcsControlCommand,
+    DcsControlInjector, F16C_AXES, FA18C_AXES, WireParseError, a10c, ah64d, f14b, f16c, fa18c,
+    lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
 };
 use flight_dcs_export::protocol::{
     parse_device_arg_block, parse_instrument_block, parse_telemetry_batch,
@@ -129,14 +129,8 @@ fn bios_multi_frame_assembly() {
     assert!(parse_bios_frame(&frame2, &mut state));
 
     // Both writes should be in state
-    assert_eq!(
-        u16::from_le_bytes([state[0x10], state[0x11]]),
-        0x1234
-    );
-    assert_eq!(
-        u16::from_le_bytes([state[0x20], state[0x21]]),
-        0xABCD
-    );
+    assert_eq!(u16::from_le_bytes([state[0x10], state[0x11]]), 0x1234);
+    assert_eq!(u16::from_le_bytes([state[0x20], state[0x21]]), 0xABCD);
 }
 
 /// Address extraction and masking per DCS-BIOS spec.
@@ -259,8 +253,7 @@ fn module_a10c_cdu_display_data() {
     // CDU numeric buttons 1–9 should map to device 24, command IDs 3001–3009
     for i in 1..=9u32 {
         let name = format!("CDU_{i}");
-        let cmd = a10c::lookup_command(&name)
-            .unwrap_or_else(|| panic!("CDU_{i} should exist"));
+        let cmd = a10c::lookup_command(&name).unwrap_or_else(|| panic!("CDU_{i} should exist"));
         assert_eq!(cmd.device_id, 24, "CDU_{i} device");
         assert_eq!(cmd.command_id, 3000 + i, "CDU_{i} command_id");
     }
@@ -277,8 +270,7 @@ fn module_fa18c_ufc_commands() {
 
     // UFC numeric pad: UFC_1 through UFC_0
     let ufc_names = [
-        "UFC_1", "UFC_2", "UFC_3", "UFC_4", "UFC_5", "UFC_6", "UFC_7", "UFC_8", "UFC_9",
-        "UFC_0",
+        "UFC_1", "UFC_2", "UFC_3", "UFC_4", "UFC_5", "UFC_6", "UFC_7", "UFC_8", "UFC_9", "UFC_0",
     ];
     let mut ids: HashSet<u32> = HashSet::new();
     for name in &ufc_names {
@@ -303,8 +295,7 @@ fn module_f16c_ded_icp_panel() {
     // ICP numeric pad
     for i in 0..=9 {
         let name = format!("ICP_{i}");
-        let cmd = f16c::lookup_command(&name)
-            .unwrap_or_else(|| panic!("ICP_{i} should exist"));
+        let cmd = f16c::lookup_command(&name).unwrap_or_else(|| panic!("ICP_{i} should exist"));
         assert_eq!(cmd.device_id, 17);
     }
 
@@ -751,8 +742,7 @@ fn display_stale_data_detection() {
     assert!(dt < stale_threshold, "data should NOT be stale");
 
     // Simulate stale data
-    let batch3 =
-        "HEADER:timestamp=101.0,model_time=51.0,aircraft=F-16C\naltitude_m=5010.0";
+    let batch3 = "HEADER:timestamp=101.0,model_time=51.0,aircraft=F-16C\naltitude_m=5010.0";
     let pkt3 = parse_telemetry_batch(batch3).unwrap();
     let dt_stale = pkt3.timestamp - pkt2.timestamp;
     assert!(

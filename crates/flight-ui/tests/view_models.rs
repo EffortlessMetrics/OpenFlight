@@ -214,10 +214,7 @@ fn adapter_event_disconnected_round_trip() {
     let json = serde_json::to_string(&msg).unwrap();
     let restored: WsMessage = serde_json::from_str(&json).unwrap();
     match restored {
-        WsMessage::AdapterEvent {
-            adapter,
-            connected,
-        } => {
+        WsMessage::AdapterEvent { adapter, connected } => {
             assert_eq!(adapter, "dcs-export");
             assert!(!connected);
         }

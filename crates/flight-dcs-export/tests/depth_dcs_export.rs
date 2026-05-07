@@ -11,22 +11,21 @@
 //!   5. Input injection (button press, axis set, switch toggle, keyboard cmd, batch)
 //!   6. Integration (full pipeline, snapshot format, field mapping)
 
+use flight_dcs_export::control_injection::{
+    Clickable, DcsActionType, DcsControlCommand, DcsControlInjector, a10c, ah64d, f14b, f16c,
+    fa18c, lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
+};
+use flight_dcs_export::export_lua::{DcsVariant, ExportLuaConfig, ExportLuaGenerator};
+use flight_dcs_export::protocol::{
+    DcsFlightData, dcs_to_ned, m_to_ft, ms_to_knots, parse_aircraft_type, parse_device_arg_block,
+    parse_export_line, parse_indicator_value, parse_instrument_block, parse_multi_value,
+    parse_position_data, parse_telemetry_batch, rad_to_deg,
+};
 use flight_dcs_export::{
     AircraftCategory, AxesProfile, CockpitSeat, DcsAdapterEvent, DcsAdapterState,
-    DcsAdapterStateMachine, DcsTransitionError, ModuleFidelity,
-    detect_aircraft, detect_axes_profile, detect_category,
+    DcsAdapterStateMachine, DcsTransitionError, ModuleFidelity, detect_aircraft,
+    detect_axes_profile, detect_category,
 };
-use flight_dcs_export::protocol::{
-    DcsFlightData, parse_device_arg_block, parse_export_line, parse_indicator_value,
-    parse_instrument_block, parse_multi_value, parse_position_data, parse_telemetry_batch,
-    parse_aircraft_type, dcs_to_ned, m_to_ft, ms_to_knots, rad_to_deg,
-};
-use flight_dcs_export::control_injection::{
-    DcsActionType, DcsControlCommand, DcsControlInjector, Clickable,
-    lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
-    fa18c, f16c, a10c, f14b, ah64d,
-};
-use flight_dcs_export::export_lua::{ExportLuaConfig, ExportLuaGenerator, DcsVariant};
 
 // ============================================================================
 // 1. Export.lua protocol parsing (8 tests)
@@ -452,14 +451,11 @@ fn aircraft_module_identification() {
 #[test]
 fn aircraft_flyable_vs_ai_detection() {
     // All FC3 modules should be recognized
-    for name in &["Su-25T", "Su-27", "Su-33", "MiG-29A", "MiG-29S", "F-15C", "J-11A", "Su-25"]
-    {
+    for name in &[
+        "Su-25T", "Su-27", "Su-33", "MiG-29A", "MiG-29S", "F-15C", "J-11A", "Su-25",
+    ] {
         let det = detect_aircraft(name);
-        assert_eq!(
-            det.fidelity,
-            ModuleFidelity::Fc3,
-            "{name} should be FC3"
-        );
+        assert_eq!(det.fidelity, ModuleFidelity::Fc3, "{name} should be FC3");
     }
 
     // AI aircraft (not in DB) → Mod fidelity
@@ -508,10 +504,7 @@ fn aircraft_axes_profile_and_category() {
     );
     assert_eq!(detect_axes_profile("TF-51D"), AxesProfile::Warbird4Axis);
     assert_eq!(detect_axes_profile("F-16C_50"), AxesProfile::StandardJet);
-    assert_eq!(
-        detect_axes_profile("UnknownMod"),
-        AxesProfile::StandardJet
-    ); // fallback
+    assert_eq!(detect_axes_profile("UnknownMod"), AxesProfile::StandardJet); // fallback
 
     assert_eq!(
         detect_category("FA-18C_hornet"),
@@ -521,10 +514,7 @@ fn aircraft_axes_profile_and_category() {
         detect_category("AH-64D_BLK_II"),
         Some(AircraftCategory::Helicopter)
     );
-    assert_eq!(
-        detect_category("TF-51D"),
-        Some(AircraftCategory::WarBird)
-    );
+    assert_eq!(detect_category("TF-51D"), Some(AircraftCategory::WarBird));
     assert_eq!(detect_category("UnknownMod"), None);
 
     // Aircraft type parsing strips pilot/copilot suffixes

@@ -11,13 +11,14 @@
 //!   5. Diagnostic bundle (system info, profiles, device states, error history,
 //!      bundle format/export)
 
+use flight_tracing::CounterSnapshot;
 use flight_tracing::correlation::{ChainCollector, CorrelatedEvent, CorrelationId};
 use flight_tracing::counters::PerfCounters;
 use flight_tracing::events::{EventFilter, TraceEvent};
+use flight_tracing::log_rotation::{LogRotator, RotationConfig, RotationResult};
 use flight_tracing::regression::RegressionDetector;
 use flight_tracing::spans::{
-    self, FlightSpan, SpanCollector, AXIS_TICK, BUS_PUBLISH, FFB_COMPUTE, HID_READ,
-    PROFILE_COMPILE,
+    self, AXIS_TICK, BUS_PUBLISH, FFB_COMPUTE, FlightSpan, HID_READ, PROFILE_COMPILE, SpanCollector,
 };
 use flight_tracing::structured::{
     EventBuilder, EventLevel, EventSink, FileSink, FlightEvent, MemorySink,
@@ -25,8 +26,6 @@ use flight_tracing::structured::{
 use flight_tracing::structured_log::{
     JsonLogFormatter, LogEntry, LogEntryBuilder, LogLevel, LogValue,
 };
-use flight_tracing::CounterSnapshot;
-use flight_tracing::log_rotation::{LogRotator, RotationConfig, RotationResult};
 
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -81,7 +80,10 @@ fn span_attributes_accessible_during_lifetime() {
     assert_eq!(span.name(), FFB_COMPUTE);
     thread::sleep(Duration::from_millis(1));
     let elapsed = span.elapsed_ns();
-    assert!(elapsed > 0, "elapsed_ns should be positive while span is active");
+    assert!(
+        elapsed > 0,
+        "elapsed_ns should be positive while span is active"
+    );
     let final_ns = span.finish();
     assert!(final_ns >= elapsed, "final duration >= mid-span elapsed");
 }
@@ -142,7 +144,10 @@ fn span_collector_reset_clears_all() {
     collector.record(HID_READ, 2_000);
     assert_eq!(collector.summary().len(), 2);
     collector.reset();
-    assert!(collector.summary().is_empty(), "reset must clear everything");
+    assert!(
+        collector.summary().is_empty(),
+        "reset must clear everything"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -536,7 +541,13 @@ fn diagnostic_snapshot_captures_session_metadata() {
 #[test]
 fn diagnostic_span_summaries_cover_all_operations() {
     let collector = SpanCollector::new(10_000);
-    let ops = [AXIS_TICK, HID_READ, BUS_PUBLISH, PROFILE_COMPILE, FFB_COMPUTE];
+    let ops = [
+        AXIS_TICK,
+        HID_READ,
+        BUS_PUBLISH,
+        PROFILE_COMPILE,
+        FFB_COMPUTE,
+    ];
 
     for (i, &op) in ops.iter().enumerate() {
         for j in 0..10 {

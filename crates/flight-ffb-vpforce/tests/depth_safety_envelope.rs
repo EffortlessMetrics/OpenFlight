@@ -15,7 +15,15 @@ fn decode_u16(buf: &[u8], offset: usize) -> u16 {
 #[test]
 fn constant_force_magnitude_never_exceeds_10000() {
     let test_magnitudes = [
-        0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 10.0, 100.0,
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0,
+        1.5,
+        2.0,
+        10.0,
+        100.0,
         f32::INFINITY,
     ];
     for &mag in &test_magnitudes {
@@ -134,8 +142,8 @@ fn sine_negative_magnitude_clamps_to_zero() {
 #[test]
 fn direction_angle_always_wraps_to_valid_range() {
     let test_angles = [
-        0.0, 90.0, 180.0, 270.0, 359.9, 360.0, 720.0,
-        -90.0, -180.0, -360.0, -720.0, 1000.0, -1000.0,
+        0.0, 90.0, 180.0, 270.0, 359.9, 360.0, 720.0, -90.0, -180.0, -360.0, -720.0, 1000.0,
+        -1000.0,
     ];
     for &angle in &test_angles {
         let b = serialize_effect(FfbEffect::ConstantForce {

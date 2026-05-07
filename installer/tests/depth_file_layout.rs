@@ -110,9 +110,11 @@ fn windows_msi_installs_to_correct_paths() {
     assert!(dests.iter().any(|d| d.ends_with("bin/flightd.exe")));
     assert!(dests.iter().any(|d| d.ends_with("bin/flightctl.exe")));
     assert!(dests.iter().any(|d| d.ends_with("config/config.toml")));
-    assert!(dests
-        .iter()
-        .any(|d| d.ends_with("config/default.profile.toml")));
+    assert!(
+        dests
+            .iter()
+            .any(|d| d.ends_with("config/default.profile.toml"))
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -132,12 +134,16 @@ fn linux_deb_installs_to_correct_paths() {
 
     assert!(dests.iter().any(|d| d.contains("usr/bin/flightd")));
     assert!(dests.iter().any(|d| d.contains("usr/bin/flightctl")));
-    assert!(dests
-        .iter()
-        .any(|d| d.contains("usr/share/flight-hub/99-flight-hub.rules")));
-    assert!(dests
-        .iter()
-        .any(|d| d.contains("usr/lib/systemd/user/flightd.service")));
+    assert!(
+        dests
+            .iter()
+            .any(|d| d.contains("usr/share/flight-hub/99-flight-hub.rules"))
+    );
+    assert!(
+        dests
+            .iter()
+            .any(|d| d.contains("usr/lib/systemd/user/flightd.service"))
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -158,7 +164,10 @@ fn windows_config_directory_created_on_install() {
     tx.commit().unwrap();
 
     let config_dir = prefix.join("config");
-    assert!(config_dir.is_dir(), "config directory must exist after install");
+    assert!(
+        config_dir.is_dir(),
+        "config directory must exist after install"
+    );
     assert!(
         config_dir.join("config.toml").exists(),
         "config.toml must exist inside config directory"
@@ -294,7 +303,11 @@ fn linux_udev_rules_contain_expected_vendors() {
             )
             .unwrap();
         } else if entry.source.to_string_lossy().contains("flightd.service") {
-            fs::write(&src, "[Unit]\nDescription=Flight Hub\n\n[Service]\nExecStart=/usr/bin/flightd\n").unwrap();
+            fs::write(
+                &src,
+                "[Unit]\nDescription=Flight Hub\n\n[Service]\nExecStart=/usr/bin/flightd\n",
+            )
+            .unwrap();
         } else {
             fs::write(&src, format!("placeholder:{}", entry.source.display())).unwrap();
         }
@@ -306,8 +319,14 @@ fn linux_udev_rules_contain_expected_vendors() {
 
     let udev = prefix.join("usr/share/flight-hub/99-flight-hub.rules");
     let content = fs::read_to_string(&udev).unwrap();
-    assert!(content.contains("hidraw"), "rules must reference hidraw subsystem");
-    assert!(content.contains("MODE"), "rules must set device permissions");
+    assert!(
+        content.contains("hidraw"),
+        "rules must reference hidraw subsystem"
+    );
+    assert!(
+        content.contains("MODE"),
+        "rules must set device permissions"
+    );
     assert!(content.contains("GROUP"), "rules must assign a group");
 }
 
@@ -321,13 +340,13 @@ fn windows_manifest_includes_shortcut_metadata() {
     // info and display name used by the installer are consistent.
     let m = manifest::windows_manifest(Path::new(r"C:\Program Files\Flight Hub"));
     assert_eq!(m.service.display_name, "Flight Hub Service");
-    assert_eq!(m.service.description, "Flight Hub input management service for flight simulation");
+    assert_eq!(
+        m.service.description,
+        "Flight Hub input management service for flight simulation"
+    );
     // Binary path should point to flightd.exe for the service / shortcut target.
     assert!(
-        m.service
-            .binary_path
-            .to_string_lossy()
-            .contains("flightd"),
+        m.service.binary_path.to_string_lossy().contains("flightd"),
         "service binary must reference flightd"
     );
 }

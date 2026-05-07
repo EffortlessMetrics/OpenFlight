@@ -53,48 +53,42 @@ fn default_axis_name(index: usize) -> String {
 pub fn register(registry: &mut StepRegistry) {
     // -- Given ----------------------------------------------------------
 
-    registry.given(
-        r"^a global profile with (\d+) axes$",
-        |ctx, caps| {
-            let n: usize = match caps[1].parse() {
-                Ok(v) => v,
-                Err(e) => return StepOutcome::Failed(format!("bad int: {e}")),
-            };
-            let profile = make_profile(n);
-            ctx.set("base_profile", profile);
-            StepOutcome::Passed
-        },
-    );
+    registry.given(r"^a global profile with (\d+) axes$", |ctx, caps| {
+        let n: usize = match caps[1].parse() {
+            Ok(v) => v,
+            Err(e) => return StepOutcome::Failed(format!("bad int: {e}")),
+        };
+        let profile = make_profile(n);
+        ctx.set("base_profile", profile);
+        StepOutcome::Passed
+    });
 
-    registry.given(
-        r#"^an aircraft overlay for "([^"]+)"$"#,
-        |ctx, caps| {
-            let name = &caps[1];
-            let mut overlay = Profile {
-                schema: PROFILE_SCHEMA_VERSION.to_string(),
-                sim: Some("msfs".to_string()),
-                aircraft: Some(flight_profile::AircraftId {
-                    icao: name.to_string(),
-                }),
-                axes: HashMap::new(),
-                pof_overrides: None,
-            };
-            // Overlay overrides pitch deadzone
-            overlay.axes.insert(
-                "pitch".to_string(),
-                AxisConfig {
-                    deadzone: Some(0.08),
-                    expo: Some(0.3),
-                    slew_rate: None,
-                    detents: vec![],
-                    curve: None,
-                    filter: None,
-                },
-            );
-            ctx.set("overlay_profile", overlay);
-            StepOutcome::Passed
-        },
-    );
+    registry.given(r#"^an aircraft overlay for "([^"]+)"$"#, |ctx, caps| {
+        let name = &caps[1];
+        let mut overlay = Profile {
+            schema: PROFILE_SCHEMA_VERSION.to_string(),
+            sim: Some("msfs".to_string()),
+            aircraft: Some(flight_profile::AircraftId {
+                icao: name.to_string(),
+            }),
+            axes: HashMap::new(),
+            pof_overrides: None,
+        };
+        // Overlay overrides pitch deadzone
+        overlay.axes.insert(
+            "pitch".to_string(),
+            AxisConfig {
+                deadzone: Some(0.08),
+                expo: Some(0.3),
+                slew_rate: None,
+                detents: vec![],
+                curve: None,
+                filter: None,
+            },
+        );
+        ctx.set("overlay_profile", overlay);
+        StepOutcome::Passed
+    });
 
     // -- When -----------------------------------------------------------
 

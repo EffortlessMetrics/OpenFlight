@@ -8,8 +8,8 @@ use flight_service::error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy};
 use flight_service::health::{
     HealthCategory, HealthCheck, HealthCheckReport, HealthEvent, HealthSeverity, OverallStatus,
 };
-use flight_service::safe_mode::{SafeModeConfig, SafeModeDiagnostic, ValidationResult};
 use flight_service::power::{PowerCheck, PowerCheckStatus, PowerStatus, RemediationStep};
+use flight_service::safe_mode::{SafeModeConfig, SafeModeDiagnostic, ValidationResult};
 use std::collections::HashMap;
 
 // ── Health report snapshots ─────────────────────────────────────────────────

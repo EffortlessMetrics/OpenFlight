@@ -7,9 +7,7 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use flight_ui::dashboard::{
-    AdapterStatus, DashboardState, DeviceStatus, HealthStatus, WsMessage,
-};
+use flight_ui::dashboard::{AdapterStatus, DashboardState, DeviceStatus, HealthStatus, WsMessage};
 use flight_ui::websocket::WsBroadcast;
 use tokio::sync::RwLock;
 

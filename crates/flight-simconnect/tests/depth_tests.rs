@@ -17,7 +17,7 @@ use flight_bus::types::{AircraftId, GForce, Mach, SimId, ValidatedAngle, Validat
 
 use flight_simconnect::aircraft_db::{AircraftType, MsfsAircraftDb};
 use flight_simconnect::event_mapping::{
-    SimEventCategory, SimEventMapper, SIM_EVENT_CATALOG, catalog_by_category, catalog_lookup,
+    SIM_EVENT_CATALOG, SimEventCategory, SimEventMapper, catalog_by_category, catalog_lookup,
 };
 use flight_simconnect::sanity_gate::{SanityGate, SanityGateConfig, SanityState};
 use flight_simconnect::var_registry::{SimVarCategory, SimVarRegistry};
@@ -68,11 +68,7 @@ fn drive_to_active(sm: &mut SimConnectStateMachine) {
 #[test]
 fn simvar_registry_has_at_least_63_entries() {
     let reg = SimVarRegistry::new();
-    assert!(
-        reg.len() >= 63,
-        "expected ≥63 SimVars, got {}",
-        reg.len()
-    );
+    assert!(reg.len() >= 63, "expected ≥63 SimVars, got {}", reg.len());
 }
 
 #[test]
@@ -196,7 +192,9 @@ fn simvar_specific_vars_exist_with_expected_units() {
         ("COM ACTIVE FREQUENCY:1", "mhz"),
     ];
     for &(name, unit) in checks {
-        let var = reg.get(name).unwrap_or_else(|| panic!("missing SimVar '{name}'"));
+        let var = reg
+            .get(name)
+            .unwrap_or_else(|| panic!("missing SimVar '{name}'"));
         assert_eq!(var.unit, unit, "wrong unit for '{name}'");
     }
 }
@@ -218,11 +216,7 @@ fn event_catalog_has_at_least_63_events() {
 fn event_catalog_lookup_every_event() {
     for ev in SIM_EVENT_CATALOG {
         let found = catalog_lookup(ev.name);
-        assert!(
-            found.is_some(),
-            "catalog_lookup failed for '{}'",
-            ev.name
-        );
+        assert!(found.is_some(), "catalog_lookup failed for '{}'", ev.name);
         assert_eq!(found.unwrap().name, ev.name);
     }
 }
@@ -256,11 +250,7 @@ fn event_all_categories_populated() {
     ];
     for cat in &categories {
         let events = catalog_by_category(*cat);
-        assert!(
-            !events.is_empty(),
-            "event category {:?} has no events",
-            cat
-        );
+        assert!(!events.is_empty(), "event category {:?} has no events", cat);
         for ev in &events {
             assert_eq!(ev.category, *cat);
         }
@@ -348,11 +338,7 @@ fn event_mapper_export_is_sorted() {
 #[test]
 fn aircraft_db_has_at_least_27_entries() {
     let db = MsfsAircraftDb::new();
-    assert!(
-        db.len() >= 27,
-        "expected ≥27 aircraft, got {}",
-        db.len()
-    );
+    assert!(db.len() >= 27, "expected ≥27 aircraft, got {}", db.len());
 }
 
 #[test]
@@ -396,12 +382,10 @@ fn aircraft_known_entries_have_correct_type() {
         ("DG1T", AircraftType::Glider),
     ];
     for &(icao, expected_type) in checks {
-        let info = db.get(icao).unwrap_or_else(|| panic!("missing aircraft '{icao}'"));
-        assert_eq!(
-            info.category, expected_type,
-            "wrong type for '{}'",
-            icao
-        );
+        let info = db
+            .get(icao)
+            .unwrap_or_else(|| panic!("missing aircraft '{icao}'"));
+        assert_eq!(info.category, expected_type, "wrong type for '{}'", icao);
     }
 }
 
@@ -439,11 +423,7 @@ fn aircraft_every_type_has_at_least_one_entry() {
     ];
     for ty in &types {
         let entries = db.by_type(*ty);
-        assert!(
-            !entries.is_empty(),
-            "aircraft type {:?} has no entries",
-            ty
-        );
+        assert!(!entries.is_empty(), "aircraft type {:?} has no entries", ty);
     }
 }
 
@@ -693,12 +673,9 @@ fn lifecycle_stale_and_recover() {
 #[test]
 fn lifecycle_shutdown_from_every_state() {
     for starting_event_chain in [
-        vec![], // Disconnected
-        vec![SimConnectEvent::OpenReceived], // Connecting
-        vec![
-            SimConnectEvent::OpenReceived,
-            SimConnectEvent::OpenReceived,
-        ], // Connected
+        vec![],                                                             // Disconnected
+        vec![SimConnectEvent::OpenReceived],                                // Connecting
+        vec![SimConnectEvent::OpenReceived, SimConnectEvent::OpenReceived], // Connected
         vec![
             SimConnectEvent::OpenReceived,
             SimConnectEvent::OpenReceived,
@@ -710,7 +687,7 @@ fn lifecycle_shutdown_from_every_state() {
             SimConnectEvent::AircraftDetected,
             SimConnectEvent::TelemetryTimeout,
         ], // Stale
-        vec![SimConnectEvent::ConnectionLost("e".into())], // Error
+        vec![SimConnectEvent::ConnectionLost("e".into())],                  // Error
     ] {
         let mut sm = SimConnectStateMachine::new(5000, 5);
         for ev in starting_event_chain {
@@ -773,7 +750,11 @@ fn property_simvar_lookup_is_deterministic() {
 
     for var in reg1.all() {
         let found = reg2.get(var.name);
-        assert!(found.is_some(), "determinism: '{}' missing in second registry", var.name);
+        assert!(
+            found.is_some(),
+            "determinism: '{}' missing in second registry",
+            var.name
+        );
         assert_eq!(found.unwrap(), var);
     }
     assert_eq!(reg1.len(), reg2.len());

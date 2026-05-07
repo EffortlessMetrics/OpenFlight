@@ -44,7 +44,11 @@ fn stage_sources(staging: &Path, manifest: &InstallManifest) {
                 .to_string()
         } else if entry.source.to_string_lossy().contains("config.toml") {
             "[general]\nlog_level = \"info\"\n".to_string()
-        } else if entry.source.to_string_lossy().contains("default.profile.toml") {
+        } else if entry
+            .source
+            .to_string_lossy()
+            .contains("default.profile.toml")
+        {
             "[profile]\nname = \"Default\"\n".to_string()
         } else {
             format!("binary-placeholder:{}", entry.source.display())
@@ -128,7 +132,10 @@ fn file_layout_windows_binary_locations() {
         .collect();
     assert!(names.contains("flightd.exe"));
     assert!(names.contains("flightctl.exe"));
-    assert!(bins.iter().all(|b| b.required), "all binaries must be required");
+    assert!(
+        bins.iter().all(|b| b.required),
+        "all binaries must be required"
+    );
 }
 
 #[test]
@@ -139,7 +146,10 @@ fn file_layout_config_directory_structure() {
         .iter()
         .filter(|f| f.destination.to_string_lossy().contains("config"))
         .collect();
-    assert!(configs.len() >= 2, "expected config.toml and default.profile.toml");
+    assert!(
+        configs.len() >= 2,
+        "expected config.toml and default.profile.toml"
+    );
     let names: HashSet<String> = configs
         .iter()
         .map(|c| {
@@ -160,9 +170,7 @@ fn file_layout_data_directory_in_cleanup() {
     let m = manifest::windows_manifest(prefix);
     // The install prefix itself should be in cleanup_paths for full removal
     assert!(
-        m.cleanup_paths
-            .iter()
-            .any(|p| *p == prefix.to_path_buf()),
+        m.cleanup_paths.iter().any(|p| *p == prefix.to_path_buf()),
         "install prefix must appear in cleanup_paths"
     );
 }
@@ -172,9 +180,7 @@ fn file_layout_log_directory_in_cleanup() {
     let prefix = Path::new(r"C:\FlightHub");
     let m = manifest::windows_manifest(prefix);
     assert!(
-        m.cleanup_paths
-            .iter()
-            .any(|p| *p == prefix.join("logs")),
+        m.cleanup_paths.iter().any(|p| *p == prefix.join("logs")),
         "explicit logs path must appear in cleanup_paths"
     );
 }
@@ -183,11 +189,16 @@ fn file_layout_log_directory_in_cleanup() {
 fn file_layout_plugin_directory_linux() {
     let m = manifest::linux_manifest(Path::new("/"));
     // The share directory acts as the plugin/data directory
-    let has_share = m
-        .files
-        .iter()
-        .any(|f| f.destination.to_string_lossy().replace('\\', "/").contains("usr/share/flight-hub"));
-    assert!(has_share, "linux manifest should install into usr/share/flight-hub");
+    let has_share = m.files.iter().any(|f| {
+        f.destination
+            .to_string_lossy()
+            .replace('\\', "/")
+            .contains("usr/share/flight-hub")
+    });
+    assert!(
+        has_share,
+        "linux manifest should install into usr/share/flight-hub"
+    );
 }
 
 #[test]
@@ -197,7 +208,10 @@ fn file_layout_udev_rules_linux() {
         .files
         .iter()
         .find(|f| f.source.to_string_lossy().contains("99-flight-hub.rules"));
-    assert!(udev.is_some(), "linux manifest must include udev rules file");
+    assert!(
+        udev.is_some(),
+        "linux manifest must include udev rules file"
+    );
     assert!(udev.unwrap().required, "udev rules must be required");
 }
 
@@ -220,9 +234,18 @@ fn service_systemd_unit_file_content() {
     let unit = prefix.join("usr/lib/systemd/user/flightd.service");
     assert!(unit.exists());
     let content = fs::read_to_string(&unit).unwrap();
-    assert!(content.contains("[Unit]"), "unit file missing [Unit] section");
-    assert!(content.contains("[Service]"), "unit file missing [Service] section");
-    assert!(content.contains("[Install]"), "unit file missing [Install] section");
+    assert!(
+        content.contains("[Unit]"),
+        "unit file missing [Unit] section"
+    );
+    assert!(
+        content.contains("[Service]"),
+        "unit file missing [Service] section"
+    );
+    assert!(
+        content.contains("[Install]"),
+        "unit file missing [Install] section"
+    );
     assert!(
         content.contains("ExecStart"),
         "unit file missing ExecStart directive"
@@ -241,10 +264,7 @@ fn service_linux_not_auto_start() {
 #[test]
 fn service_windows_auto_start() {
     let m = manifest::windows_manifest(Path::new(r"C:\FlightHub"));
-    assert!(
-        m.service.auto_start,
-        "Windows service should auto-start"
-    );
+    assert!(m.service.auto_start, "Windows service should auto-start");
 }
 
 #[test]
@@ -256,10 +276,7 @@ fn service_windows_registration_metadata() {
         !m.service.description.is_empty(),
         "service description must not be empty"
     );
-    assert_eq!(
-        m.service.binary_path,
-        PathBuf::from("bin/flightd.exe")
-    );
+    assert_eq!(m.service.binary_path, PathBuf::from("bin/flightd.exe"));
 }
 
 #[test]
@@ -276,11 +293,11 @@ fn service_enable_disable_via_transaction() {
     tx.commit().unwrap();
 
     let marker = prefix.join(".service_registered");
-    assert!(marker.exists(), "service should be registered after install");
-    assert_eq!(
-        fs::read_to_string(&marker).unwrap().trim(),
-        "FlightHub"
+    assert!(
+        marker.exists(),
+        "service should be registered after install"
     );
+    assert_eq!(fs::read_to_string(&marker).unwrap().trim(), "FlightHub");
 
     // Uninstall removes service marker
     perform_uninstall(&manifest, &prefix);
@@ -522,7 +539,11 @@ fn uninstall_clean_removes_all_non_preserved() {
     for entry in &manifest.files {
         let dest = &entry.destination;
         if preserved.contains(dest) {
-            assert!(dest.exists(), "preserved file was removed: {}", dest.display());
+            assert!(
+                dest.exists(),
+                "preserved file was removed: {}",
+                dest.display()
+            );
         } else {
             assert!(!dest.exists(), "file not removed: {}", dest.display());
         }
@@ -599,7 +620,10 @@ fn uninstall_service_cleanup() {
     assert!(marker.exists());
 
     perform_uninstall(&manifest, &prefix);
-    assert!(!marker.exists(), "service marker must be removed on uninstall");
+    assert!(
+        !marker.exists(),
+        "service marker must be removed on uninstall"
+    );
 }
 
 #[test]
@@ -625,7 +649,8 @@ fn uninstall_registry_cleanup_windows_manifest_has_cleanup_paths() {
 fn sim_msfs_addon_wix_feature_defined() {
     // The WiX Product.wxs defines an MSFS feature at level 1000
     // Verify the package manifest fixture reflects this
-    let fixture = include_str!("../../crates/flight-updater/tests/fixtures/installer/package_manifest.json");
+    let fixture =
+        include_str!("../../crates/flight-updater/tests/fixtures/installer/package_manifest.json");
     let parsed: serde_json::Value = serde_json::from_str(fixture).unwrap();
     let features = parsed["features"].as_object().unwrap();
     // Core feature is required
@@ -742,10 +767,7 @@ fn platform_msi_properties_from_wix() {
         wix.contains("InstallScope=\"perMachine\""),
         "MSI must be per-machine for service registration"
     );
-    assert!(
-        wix.contains("ProductName"),
-        "MSI must declare ProductName"
-    );
+    assert!(wix.contains("ProductName"), "MSI must declare ProductName");
 }
 
 #[test]
@@ -775,7 +797,10 @@ fn platform_postinst_prerm_scripts() {
     let postrm = include_str!("../debian/postrm");
 
     // postinst must handle 'configure' case
-    assert!(postinst.contains("configure"), "postinst must handle configure");
+    assert!(
+        postinst.contains("configure"),
+        "postinst must handle configure"
+    );
     assert!(
         postinst.contains("udevadm"),
         "postinst must reload udev rules"
@@ -788,10 +813,7 @@ fn platform_postinst_prerm_scripts() {
     // postrm must handle 'remove' and 'purge'
     assert!(postrm.contains("remove"), "postrm must handle remove");
     assert!(postrm.contains("purge"), "postrm must handle purge");
-    assert!(
-        postrm.contains("udevadm"),
-        "postrm must reload udev rules"
-    );
+    assert!(postrm.contains("udevadm"), "postrm must reload udev rules");
 }
 
 #[test]
@@ -881,7 +903,8 @@ fn transaction_multi_file_rollback_reverse_order() {
 
 #[test]
 fn registry_fixture_matches_wix_components() {
-    let fixture = include_str!("../../crates/flight-updater/tests/fixtures/installer/registry_entries.json");
+    let fixture =
+        include_str!("../../crates/flight-updater/tests/fixtures/installer/registry_entries.json");
     let parsed: serde_json::Value = serde_json::from_str(fixture).unwrap();
     let entries = parsed["entries"].as_array().unwrap();
 

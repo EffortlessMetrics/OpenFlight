@@ -7,21 +7,28 @@
 //! profile generation, and device identification for both the stick (VID 044F,
 //! PID 0402) and throttle (VID 044F, PID 0404).
 
-use flight_hotas_thrustmaster::profiles::{device_profile, AxisNormalization};
+use flight_hotas_thrustmaster::profiles::{AxisNormalization, device_profile};
 use flight_hotas_thrustmaster::protocol::{
-    build_led_report, identify_device, is_pinkie_held, is_throttle_split,
-    resolve_shifted_button, toggles, LedState, ThrustmasterDevice, VENDOR_ID,
-    WARTHOG_LED_REPORT_ID, WARTHOG_STICK_PHYSICAL_BUTTONS, WARTHOG_THROTTLE_PHYSICAL_BUTTONS,
+    LedState, ThrustmasterDevice, VENDOR_ID, WARTHOG_LED_REPORT_ID, WARTHOG_STICK_PHYSICAL_BUTTONS,
+    WARTHOG_THROTTLE_PHYSICAL_BUTTONS, build_led_report, identify_device, is_pinkie_held,
+    is_throttle_split, resolve_shifted_button, toggles,
 };
 use flight_hotas_thrustmaster::{
-    parse_warthog_stick, parse_warthog_throttle, WarthogHat, WarthogStickButtons,
-    WarthogThrottleButtons, WARTHOG_JOYSTICK_PID, WARTHOG_THROTTLE_PID,
-    WARTHOG_STICK_MIN_REPORT_BYTES, WARTHOG_THROTTLE_MIN_REPORT_BYTES,
+    WARTHOG_JOYSTICK_PID, WARTHOG_STICK_MIN_REPORT_BYTES, WARTHOG_THROTTLE_MIN_REPORT_BYTES,
+    WARTHOG_THROTTLE_PID, WarthogHat, WarthogStickButtons, WarthogThrottleButtons,
+    parse_warthog_stick, parse_warthog_throttle,
 };
 
 // ─── Report builders ────────────────────────────────────────────────────────
 
-fn stick_report(x: u16, y: u16, rz: u16, btn_low: u16, btn_high: u8, hat: u8) -> [u8; WARTHOG_STICK_MIN_REPORT_BYTES] {
+fn stick_report(
+    x: u16,
+    y: u16,
+    rz: u16,
+    btn_low: u16,
+    btn_high: u8,
+    hat: u8,
+) -> [u8; WARTHOG_STICK_MIN_REPORT_BYTES] {
     let mut r = [0u8; WARTHOG_STICK_MIN_REPORT_BYTES];
     r[0..2].copy_from_slice(&x.to_le_bytes());
     r[2..4].copy_from_slice(&y.to_le_bytes());
@@ -214,12 +221,10 @@ fn grip_buttons_pinky_switch() {
 /// Weapon release trigger (button 1) and mid-range button verification.
 #[test]
 fn grip_buttons_weapon_release_and_nws() {
-    let state =
-        parse_warthog_stick(&stick_report(32768, 32768, 32768, 0x0001, 0, 0xFF)).unwrap();
+    let state = parse_warthog_stick(&stick_report(32768, 32768, 32768, 0x0001, 0, 0xFF)).unwrap();
     assert!(state.buttons.button(1), "trigger / weapon release");
 
-    let state2 =
-        parse_warthog_stick(&stick_report(32768, 32768, 32768, 0x4000, 0, 0xFF)).unwrap();
+    let state2 = parse_warthog_stick(&stick_report(32768, 32768, 32768, 0x4000, 0, 0xFF)).unwrap();
     assert!(state2.buttons.button(15), "button 15");
 }
 
@@ -253,15 +258,31 @@ fn throttle_axes_dual_independent() {
         32768, 32768, 65535, 0, 32768, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(state.axes.throttle_left > 0.99, "left full: {}", state.axes.throttle_left);
-    assert!(state.axes.throttle_right < 0.001, "right idle: {}", state.axes.throttle_right);
+    assert!(
+        state.axes.throttle_left > 0.99,
+        "left full: {}",
+        state.axes.throttle_left
+    );
+    assert!(
+        state.axes.throttle_right < 0.001,
+        "right idle: {}",
+        state.axes.throttle_right
+    );
 
     let state2 = parse_warthog_throttle(&throttle_report(
         32768, 32768, 0, 65535, 32768, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(state2.axes.throttle_left < 0.001, "left idle: {}", state2.axes.throttle_left);
-    assert!(state2.axes.throttle_right > 0.99, "right full: {}", state2.axes.throttle_right);
+    assert!(
+        state2.axes.throttle_left < 0.001,
+        "left idle: {}",
+        state2.axes.throttle_left
+    );
+    assert!(
+        state2.axes.throttle_right > 0.99,
+        "right full: {}",
+        state2.axes.throttle_right
+    );
 }
 
 /// Combined throttle axis idle / full / mid-range.
@@ -271,13 +292,21 @@ fn throttle_axes_combined_friction() {
         32768, 32768, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(idle.axes.throttle_combined < 0.001, "combined idle: {}", idle.axes.throttle_combined);
+    assert!(
+        idle.axes.throttle_combined < 0.001,
+        "combined idle: {}",
+        idle.axes.throttle_combined
+    );
 
     let full = parse_warthog_throttle(&throttle_report(
         32768, 32768, 0, 0, 65535, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(full.axes.throttle_combined > 0.99, "combined full: {}", full.axes.throttle_combined);
+    assert!(
+        full.axes.throttle_combined > 0.99,
+        "combined full: {}",
+        full.axes.throttle_combined
+    );
 
     let mid = parse_warthog_throttle(&throttle_report(
         32768, 32768, 0, 0, 32768, 0, 0, 0, 0, 0xFF, 0xFF,
@@ -293,19 +322,33 @@ fn throttle_axes_combined_friction() {
 /// Slew control X/Y full bipolar range.
 #[test]
 fn throttle_axes_slew_control_xy() {
-    let left = parse_warthog_throttle(&throttle_report(
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF,
-    ))
-    .unwrap();
-    assert!(left.axes.slew_x < -0.99, "slew_x full left: {}", left.axes.slew_x);
-    assert!(left.axes.slew_y < -0.99, "slew_y full up: {}", left.axes.slew_y);
+    let left =
+        parse_warthog_throttle(&throttle_report(0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF)).unwrap();
+    assert!(
+        left.axes.slew_x < -0.99,
+        "slew_x full left: {}",
+        left.axes.slew_x
+    );
+    assert!(
+        left.axes.slew_y < -0.99,
+        "slew_y full up: {}",
+        left.axes.slew_y
+    );
 
     let right = parse_warthog_throttle(&throttle_report(
         65535, 65535, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(right.axes.slew_x > 0.99, "slew_x full right: {}", right.axes.slew_x);
-    assert!(right.axes.slew_y > 0.99, "slew_y full down: {}", right.axes.slew_y);
+    assert!(
+        right.axes.slew_x > 0.99,
+        "slew_x full right: {}",
+        right.axes.slew_x
+    );
+    assert!(
+        right.axes.slew_y > 0.99,
+        "slew_y full down: {}",
+        right.axes.slew_y
+    );
 }
 
 /// Micro-stick on throttle centered.
@@ -315,8 +358,16 @@ fn throttle_axes_microstick_centered() {
         32768, 32768, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(state.axes.slew_x.abs() < 0.01, "slew_x centered: {}", state.axes.slew_x);
-    assert!(state.axes.slew_y.abs() < 0.01, "slew_y centered: {}", state.axes.slew_y);
+    assert!(
+        state.axes.slew_x.abs() < 0.01,
+        "slew_x centered: {}",
+        state.axes.slew_x
+    );
+    assert!(
+        state.axes.slew_y.abs() < 0.01,
+        "slew_y centered: {}",
+        state.axes.slew_y
+    );
 }
 
 /// Reverse range: throttle at zero produces 0.0.
@@ -326,8 +377,16 @@ fn throttle_axes_reverse_range_zero() {
         32768, 32768, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF,
     ))
     .unwrap();
-    assert!(state.axes.throttle_left < 0.001, "left zero: {}", state.axes.throttle_left);
-    assert!(state.axes.throttle_right < 0.001, "right zero: {}", state.axes.throttle_right);
+    assert!(
+        state.axes.throttle_left < 0.001,
+        "left zero: {}",
+        state.axes.throttle_left
+    );
+    assert!(
+        state.axes.throttle_right < 0.001,
+        "right zero: {}",
+        state.axes.throttle_right
+    );
     assert!(
         state.axes.throttle_combined < 0.001,
         "combined zero: {}",
@@ -410,7 +469,11 @@ fn throttle_buttons_momentary_all_40() {
             32768, 32768, 0, 0, 0, btn_low, btn_mid, btn_high, 0, 0xFF, 0xFF,
         ))
         .unwrap();
-        assert!(state.buttons.button(n), "throttle button {} not detected", n);
+        assert!(
+            state.buttons.button(n),
+            "throttle button {} not detected",
+            n
+        );
         if n > 1 {
             assert!(
                 !state.buttons.button(n - 1),
@@ -600,7 +663,10 @@ fn profile_metadata_completeness() {
     let stick = device_profile(ThrustmasterDevice::WarthogJoystick).unwrap();
     assert_eq!(stick.name, "HOTAS Warthog Joystick");
     assert!(!stick.has_leds, "stick has no LEDs");
-    assert!(stick.notes.contains("Metal"), "stick notes mention Metal gimbal");
+    assert!(
+        stick.notes.contains("Metal"),
+        "stick notes mention Metal gimbal"
+    );
 
     let throttle = device_profile(ThrustmasterDevice::WarthogThrottle).unwrap();
     assert_eq!(throttle.name, "HOTAS Warthog Throttle");
@@ -641,7 +707,10 @@ fn device_id_stick_vs_throttle_discrimination() {
     let stick = identify_device(VENDOR_ID, 0x0402);
     let throttle = identify_device(VENDOR_ID, 0x0404);
 
-    assert_ne!(stick, throttle, "stick and throttle must be different devices");
+    assert_ne!(
+        stick, throttle,
+        "stick and throttle must be different devices"
+    );
     assert_eq!(stick, Some(ThrustmasterDevice::WarthogJoystick));
     assert_eq!(throttle, Some(ThrustmasterDevice::WarthogThrottle));
 }
@@ -677,7 +746,10 @@ fn throttle_split_merge_detection() {
     assert!(!is_throttle_split(0.5, 0.5), "merged");
     assert!(!is_throttle_split(0.5, 0.51), "within tolerance");
     assert!(is_throttle_split(0.2, 0.8), "clearly split");
-    assert!(is_throttle_split(0.0, 0.05), "small divergence past threshold");
+    assert!(
+        is_throttle_split(0.0, 0.05),
+        "small divergence past threshold"
+    );
 }
 
 /// Report length validation: too-short reports are rejected.
@@ -705,6 +777,12 @@ fn oversized_reports_accepted() {
 /// Device name lookup returns correct names for Warthog variants.
 #[test]
 fn device_names_correct() {
-    assert_eq!(ThrustmasterDevice::WarthogJoystick.name(), "HOTAS Warthog Joystick");
-    assert_eq!(ThrustmasterDevice::WarthogThrottle.name(), "HOTAS Warthog Throttle");
+    assert_eq!(
+        ThrustmasterDevice::WarthogJoystick.name(),
+        "HOTAS Warthog Joystick"
+    );
+    assert_eq!(
+        ThrustmasterDevice::WarthogThrottle.name(),
+        "HOTAS Warthog Throttle"
+    );
 }

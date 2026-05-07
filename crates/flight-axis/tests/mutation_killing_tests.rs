@@ -6,9 +6,7 @@ use flight_axis::curve::ExpoCurveConfig;
 use flight_axis::deadzone::{DeadzoneConfig, DeadzoneProcessor};
 use flight_axis::detent::{DetentConfig, DetentProcessor};
 use flight_axis::mixer::{AxisMixer, MixMode};
-use flight_axis::stages::{
-    CurveType, DeadzoneShape, RtAxisPipeline, SaturationStage, Stage,
-};
+use flight_axis::stages::{CurveType, DeadzoneShape, RtAxisPipeline, SaturationStage, Stage};
 
 const TOL: f32 = 1e-5;
 const TOL64: f64 = 1e-10;
@@ -146,8 +144,14 @@ fn pipeline_ordering_matters() {
     let result_b = pipeline_b.process(0.5);
 
     // Both should produce valid output, but different values
-    assert!(result_a.is_finite(), "pipeline A must produce finite output");
-    assert!(result_b.is_finite(), "pipeline B must produce finite output");
+    assert!(
+        result_a.is_finite(),
+        "pipeline A must produce finite output"
+    );
+    assert!(
+        result_b.is_finite(),
+        "pipeline B must produce finite output"
+    );
     assert!(
         (result_a - result_b).abs() > 1e-6,
         "different stage ordering must produce different results: A={result_a}, B={result_b}"
@@ -220,8 +224,5 @@ fn saturation_clips_to_exact_bounds() {
 
     // NaN → must return 0.0 (SaturationStage checks is_nan first)
     let nan_out = sat.process(f64::NAN);
-    assert_eq!(
-        nan_out, 0.0,
-        "NaN input must return 0.0, got {nan_out}"
-    );
+    assert_eq!(nan_out, 0.0, "NaN input must return 0.0, got {nan_out}");
 }

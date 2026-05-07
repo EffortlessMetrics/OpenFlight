@@ -17,8 +17,8 @@ mod tests {
     use crate::evaluator::RulesEvaluator;
     use crate::led::{LedBackend, LedController, LedState, LedTarget};
     use crate::protocol::*;
-    use flight_core::rules::{Action, Rule, RulesSchema};
     use flight_core::Result;
+    use flight_core::rules::{Action, Rule, RulesSchema};
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
@@ -703,22 +703,10 @@ mod tests {
         // Sim variable → display formatter → 5-char output
         type DisplayFn = Box<dyn Fn(f64) -> String>;
         let bindings: Vec<(&str, DisplayFn)> = vec![
-            (
-                "heading_mag",
-                Box::new(|v| format_heading(v as u16)),
-            ),
-            (
-                "altitude_ft",
-                Box::new(|v| format_altitude(v as i32)),
-            ),
-            (
-                "vs_fpm",
-                Box::new(|v| format_vs(v as i32)),
-            ),
-            (
-                "com1_freq_khz",
-                Box::new(|v| format_com_freq(v as u32)),
-            ),
+            ("heading_mag", Box::new(|v| format_heading(v as u16))),
+            ("altitude_ft", Box::new(|v| format_altitude(v as i32))),
+            ("vs_fpm", Box::new(|v| format_vs(v as i32))),
+            ("com1_freq_khz", Box::new(|v| format_com_freq(v as u32))),
         ];
 
         let sim_values: HashMap<&str, f64> = [
@@ -1187,9 +1175,7 @@ mod tests {
         // Decode responses
         assert_eq!(
             codec.decode(&[0x80, 0xAA]).unwrap(),
-            PanelResponse::StateData {
-                data: vec![0xAA]
-            }
+            PanelResponse::StateData { data: vec![0xAA] }
         );
         assert_eq!(codec.decode(&[0x81]).unwrap(), PanelResponse::Ack);
         assert!(matches!(

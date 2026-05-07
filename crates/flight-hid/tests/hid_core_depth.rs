@@ -172,10 +172,7 @@ mod device_enumeration {
         let scanner = MockScanner::new(vec![warthog_fp(), vkb_fp(), t16000m_fp()]);
         let mut disc = DeviceDiscovery::with_defaults(scanner, DeviceRegistry::new());
         let found = disc.scan();
-        let thrustmaster = found
-            .iter()
-            .filter(|d| d.fingerprint.vid == 0x044F)
-            .count();
+        let thrustmaster = found.iter().filter(|d| d.fingerprint.vid == 0x044F).count();
         assert_eq!(thrustmaster, 2);
     }
 
@@ -355,7 +352,10 @@ mod report_descriptor_parsing {
         let desc = descriptor_parser::parse_descriptor(&d).unwrap();
         // Nested items get flattened into the parent collection
         assert_eq!(desc.collections.len(), 1);
-        assert_eq!(desc.collections[0].collection_type, CollectionType::Application);
+        assert_eq!(
+            desc.collections[0].collection_type,
+            CollectionType::Application
+        );
         assert_eq!(desc.axis_count(), 1);
     }
 }
@@ -567,18 +567,21 @@ mod stable_device_id {
 
         let id1 = fp1.stable_id();
         let id2 = fp2.stable_id();
-        assert_eq!(
-            id1, id2,
-            "serial-based ID should survive USB port change"
-        );
+        assert_eq!(id1, id2, "serial-based ID should survive USB port change");
     }
 
     #[test]
     fn id_uniqueness_across_devices() {
-        let ids: Vec<StableDeviceId> = [warthog_fp(), vkb_fp(), t16000m_fp(), virpil_fp(), winwing_fp()]
-            .iter()
-            .map(|fp| fp.stable_id())
-            .collect();
+        let ids: Vec<StableDeviceId> = [
+            warthog_fp(),
+            vkb_fp(),
+            t16000m_fp(),
+            virpil_fp(),
+            winwing_fp(),
+        ]
+        .iter()
+        .map(|fp| fp.stable_id())
+        .collect();
 
         // All IDs should be distinct
         for i in 0..ids.len() {
@@ -791,7 +794,13 @@ mod cross_cutting {
     #[test]
     fn registry_round_trip_preserves_all_fingerprints() {
         let mut reg = DeviceRegistry::new();
-        let fps = [warthog_fp(), vkb_fp(), t16000m_fp(), virpil_fp(), winwing_fp()];
+        let fps = [
+            warthog_fp(),
+            vkb_fp(),
+            t16000m_fp(),
+            virpil_fp(),
+            winwing_fp(),
+        ];
         for fp in &fps {
             reg.register(fp.clone());
         }

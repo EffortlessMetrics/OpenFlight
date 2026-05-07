@@ -47,7 +47,9 @@ fn make_profile(aircraft: Option<&str>, deadzone: f32, expo: f32) -> Profile {
     Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: Some("msfs".to_string()),
-        aircraft: aircraft.map(|a| flight_core::profile::AircraftId { icao: a.to_string() }),
+        aircraft: aircraft.map(|a| flight_core::profile::AircraftId {
+            icao: a.to_string(),
+        }),
         axes,
         pof_overrides: None,
     }
@@ -77,8 +79,7 @@ fn pipeline_for_profile(profile: &Profile, axis: &str) -> AxisPipeline {
 #[tokio::test]
 async fn e2e_aircraft_detection_triggers_profile_switch() {
     let mut bus = BusPublisher::new(60.0);
-    let auto_switch =
-        AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+    let auto_switch = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
     auto_switch.start(&mut bus).await.expect("start");
 
     // Publish C172 detection
@@ -144,10 +145,8 @@ fn e2e_profile_load_changes_axis_curves() {
 #[test]
 fn e2e_profile_load_changes_button_mappings() {
     // Simulate two profiles with different button→command mappings
-    let default_mapping: HashMap<usize, &str> =
-        [(0, "TRIGGER_FIRE"), (1, "WEAPON_SELECT")].into();
-    let airliner_mapping: HashMap<usize, &str> =
-        [(0, "AP_DISCONNECT"), (1, "TOGA")].into();
+    let default_mapping: HashMap<usize, &str> = [(0, "TRIGGER_FIRE"), (1, "WEAPON_SELECT")].into();
+    let airliner_mapping: HashMap<usize, &str> = [(0, "AP_DISCONNECT"), (1, "TOGA")].into();
 
     let buttons_pressed = [0, 1];
 
@@ -190,8 +189,7 @@ async fn e2e_fallback_to_default_on_unknown_aircraft() {
 
     // Verify auto-switch ignores empty ICAO
     let mut bus = BusPublisher::new(60.0);
-    let auto_switch =
-        AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
+    let auto_switch = AircraftAutoSwitchService::new(AircraftAutoSwitchServiceConfig::default());
     auto_switch.start(&mut bus).await.expect("start");
 
     let empty_snap = BusSnapshot::new(SimId::Msfs, AircraftId::new(""));

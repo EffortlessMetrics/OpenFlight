@@ -8,8 +8,8 @@
 //! the unit-level tests in `lib.rs` do not cover.
 
 use flight_trackir::{
-    normalize_pose, parse_packet, HeadPose, PoseFilter, TrackIrAdapter, TrackIrError,
-    TrackIrPacket, PACKET_SIZE, TRACKIR_PORT,
+    HeadPose, PACKET_SIZE, PoseFilter, TRACKIR_PORT, TrackIrAdapter, TrackIrError, TrackIrPacket,
+    normalize_pose, parse_packet,
 };
 use std::thread;
 use std::time::Duration;
@@ -285,11 +285,7 @@ fn normalize_output_always_in_unit_range() {
                 roll: 0.0,
             });
             assert!((-1.0..=1.0).contains(&pose.x), "x={x} → {}", pose.x);
-            assert!(
-                (-1.0..=1.0).contains(&pose.yaw),
-                "yaw={yaw} → {}",
-                pose.yaw
-            );
+            assert!((-1.0..=1.0).contains(&pose.yaw), "yaw={yaw} → {}", pose.yaw);
         }
     }
 }

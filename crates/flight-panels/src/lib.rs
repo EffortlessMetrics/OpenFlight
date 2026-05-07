@@ -28,8 +28,8 @@ mod message_engine;
 pub mod protocol_handler;
 
 pub use message_engine::{
-    DisplayFormat, FrameError, LedColor, MessageDispatcher, MessageFrame, MessageHandler,
-    PanelMessage as EngineMessage, MAX_PAYLOAD,
+    DisplayFormat, FrameError, LedColor, MAX_PAYLOAD, MessageDispatcher, MessageFrame,
+    MessageHandler, PanelMessage as EngineMessage,
 };
 
 #[cfg(test)]

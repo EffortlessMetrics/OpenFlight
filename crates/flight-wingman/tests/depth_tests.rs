@@ -147,7 +147,10 @@ fn successive_snapshots_have_increasing_timestamps() {
     let mut a = started_adapter();
     let s1 = a.poll_once().unwrap().unwrap();
     let s2 = a.poll_once().unwrap().unwrap();
-    assert!(s2.timestamp >= s1.timestamp, "timestamps must be non-decreasing");
+    assert!(
+        s2.timestamp >= s1.timestamp,
+        "timestamps must be non-decreasing"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -163,10 +166,7 @@ fn send_axis_succeeds_when_started() {
 #[test]
 fn send_axis_not_started_is_err() {
     let mut a = default_adapter();
-    assert!(matches!(
-        a.send_axis(0, 0.5),
-        Err(WingmanError::NotStarted)
-    ));
+    assert!(matches!(a.send_axis(0, 0.5), Err(WingmanError::NotStarted)));
 }
 
 #[test]
@@ -181,10 +181,7 @@ fn send_axis_all_valid_indices() {
 fn send_axis_after_stop_is_err() {
     let mut a = started_adapter();
     a.stop();
-    assert!(matches!(
-        a.send_axis(0, 0.0),
-        Err(WingmanError::NotStarted)
-    ));
+    assert!(matches!(a.send_axis(0, 0.0), Err(WingmanError::NotStarted)));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -210,10 +207,7 @@ fn send_button_not_started_is_err() {
 fn send_button_all_valid_indices() {
     let mut a = started_adapter();
     for i in 0u8..32 {
-        assert!(
-            a.send_button(i, true).is_ok(),
-            "button {i} should be valid"
-        );
+        assert!(a.send_button(i, true).is_ok(), "button {i} should be valid");
     }
 }
 
@@ -430,10 +424,7 @@ fn stub_default_equals_new() {
 
 #[test]
 fn default_config_process_name() {
-    assert_eq!(
-        WingmanConfig::default().process_name,
-        "ProjectWingman.exe"
-    );
+    assert_eq!(WingmanConfig::default().process_name, "ProjectWingman.exe");
 }
 
 #[test]
@@ -539,7 +530,10 @@ fn metrics_registry_records_adapter_updates() {
         matches!(m, flight_metrics::Metric::Counter { name, .. }
             if name == flight_metrics::common::ADAPTER_UPDATES_TOTAL)
     });
-    assert!(counter.is_some(), "ADAPTER_UPDATES_TOTAL should be recorded");
+    assert!(
+        counter.is_some(),
+        "ADAPTER_UPDATES_TOTAL should be recorded"
+    );
 }
 
 #[test]

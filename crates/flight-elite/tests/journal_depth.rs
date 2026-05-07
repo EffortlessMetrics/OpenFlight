@@ -4,7 +4,7 @@
 //! Depth tests for Elite Dangerous journal file reader:
 //! file discovery, tailing, session switching, reset, edge cases.
 
-use filetime::{set_file_mtime, FileTime};
+use filetime::{FileTime, set_file_mtime};
 use flight_elite::journal::JournalReader;
 use flight_elite::protocol::JournalEvent;
 use std::io::Write;
@@ -50,7 +50,11 @@ fn find_latest_among_many_sessions() {
     for i in 1..=5 {
         let name = format!("Journal.2025060{i}120000.01.log");
         write_journal(&dir, &name, "");
-        set_file_mtime(dir.path().join(&name), FileTime::from_unix_time(1_000_000 + i64::from(i), 0)).unwrap();
+        set_file_mtime(
+            dir.path().join(&name),
+            FileTime::from_unix_time(1_000_000 + i64::from(i), 0),
+        )
+        .unwrap();
     }
     let latest = JournalReader::find_latest_journal(dir.path()).unwrap();
     assert!(latest.to_string_lossy().contains("20250605"));
@@ -85,7 +89,10 @@ fn read_new_events_single_event() {
     );
     // File needs a trailing newline for line-based reading
     let path = dir.path().join("Journal.20250101120000.01.log");
-    let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
+    let mut f = std::fs::OpenOptions::new()
+        .append(true)
+        .open(&path)
+        .unwrap();
     writeln!(f).unwrap();
     drop(f);
 
@@ -144,7 +151,10 @@ fn read_events_incremental_append() {
 
     // Append two more events.
     {
-        let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap();
         writeln!(
             f,
             r#"{{"timestamp":"2025-01-01T00:01:00Z","event":"Location","StarSystem":"Sol"}}"#
@@ -357,7 +367,10 @@ fn multiple_reads_after_incremental_writes() {
 
     // Append.
     {
-        let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
+        let mut f = std::fs::OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap();
         writeln!(
             f,
             r#"{{"timestamp":"T","event":"Undocked","StationName":"Port"}}"#

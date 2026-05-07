@@ -57,7 +57,11 @@ fn action_execution_produces_correct_action() {
     let compiled = schema.compile().expect("compilation must succeed");
     let actions = &compiled.bytecode.actions;
 
-    assert_eq!(actions.len(), 1, "expected exactly 1 action in the actions vec");
+    assert_eq!(
+        actions.len(),
+        1,
+        "expected exactly 1 action in the actions vec"
+    );
 
     match &actions[0] {
         Action::LedOn { target } => {
@@ -84,7 +88,10 @@ fn variable_binding_deterministic() {
         .get("altitude")
         .expect("variable_map must contain 'altitude'");
 
-    assert_ne!(ias_idx, alt_idx, "'ias' and 'altitude' must have different indices");
+    assert_ne!(
+        ias_idx, alt_idx,
+        "'ias' and 'altitude' must have different indices"
+    );
     assert!(
         ias_idx < alt_idx,
         "first-seen variable 'ias' (idx {ias_idx}) must have a lower index than 'altitude' (idx {alt_idx})"
@@ -104,7 +111,10 @@ fn operator_precedence_ge_not_gt() {
         .instructions
         .iter()
         .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::GreaterEqual)));
-    assert!(has_ge, "condition 'ias >= 200' must produce a Compare(GreaterEqual) instruction");
+    assert!(
+        has_ge,
+        "condition 'ias >= 200' must produce a Compare(GreaterEqual) instruction"
+    );
 
     let has_gt_in_ge = compiled_ge
         .bytecode
@@ -124,7 +134,10 @@ fn operator_precedence_ge_not_gt() {
         .instructions
         .iter()
         .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::Greater)));
-    assert!(has_gt, "condition 'ias > 200' must produce a Compare(Greater) instruction");
+    assert!(
+        has_gt,
+        "condition 'ias > 200' must produce a Compare(Greater) instruction"
+    );
 }
 
 /// 5. `!gear_down` must emit a `BytecodeOp::Not`; plain `gear_down` must not.
@@ -133,7 +146,9 @@ fn operator_precedence_ge_not_gt() {
 fn negation_inverts_boolean() {
     // Negated boolean
     let schema_neg = make_schema(vec![("!gear_down", "led.panel('gear').off()")]);
-    let compiled_neg = schema_neg.compile().expect("compilation of !gear_down must succeed");
+    let compiled_neg = schema_neg
+        .compile()
+        .expect("compilation of !gear_down must succeed");
     let has_not = compiled_neg
         .bytecode
         .instructions
@@ -143,7 +158,9 @@ fn negation_inverts_boolean() {
 
     // Non-negated boolean
     let schema_pos = make_schema(vec![("gear_down", "led.panel('gear').on()")]);
-    let compiled_pos = schema_pos.compile().expect("compilation of gear_down must succeed");
+    let compiled_pos = schema_pos
+        .compile()
+        .expect("compilation of gear_down must succeed");
     let has_not_pos = compiled_pos
         .bytecode
         .instructions

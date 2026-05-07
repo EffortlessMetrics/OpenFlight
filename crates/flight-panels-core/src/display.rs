@@ -430,7 +430,8 @@ mod tests {
         ];
         for (i, s) in outputs.iter().enumerate() {
             assert!(
-                s.chars().all(|c| c.is_ascii_digit() || c == ' ' || c == '-'),
+                s.chars()
+                    .all(|c| c.is_ascii_digit() || c == ' ' || c == '-'),
                 "output[{i}] = {:?} contains unexpected characters",
                 s
             );

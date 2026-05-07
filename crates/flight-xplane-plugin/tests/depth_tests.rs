@@ -604,9 +604,7 @@ fn protocol_malformed_json_is_error() {
 
 #[test]
 fn protocol_unknown_type_tag_is_error() {
-    assert!(
-        serde_json::from_str::<PluginMessage>(r#"{"type":"FooBar","id":1}"#).is_err()
-    );
+    assert!(serde_json::from_str::<PluginMessage>(r#"{"type":"FooBar","id":1}"#).is_err());
 }
 
 #[test]

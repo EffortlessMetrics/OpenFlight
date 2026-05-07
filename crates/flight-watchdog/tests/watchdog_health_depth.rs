@@ -11,16 +11,17 @@
 
 use std::time::{Duration, Instant};
 
-use flight_watchdog::escalation::{EscalationAction, EscalationConfig, EscalationLadder, EscalationLevel};
-use flight_watchdog::health_aggregator::{
-    HealthAggregator, SubsystemCheckConfig, SubsystemHealth,
+use flight_watchdog::escalation::{
+    EscalationAction, EscalationConfig, EscalationLadder, EscalationLevel,
 };
+use flight_watchdog::health_aggregator::{HealthAggregator, SubsystemCheckConfig, SubsystemHealth};
 use flight_watchdog::health_check::{HealthCheckManager, HealthStatus};
 use flight_watchdog::monitor::{MonitorConfig, SystemMode, SystemMonitor};
 use flight_watchdog::recovery::{RecoveryAction, RecoveryPolicy};
 use flight_watchdog::supervisor::{
     DeadManStatus, DeadManSwitch, DeadManSwitchConfig, HardwareWatchdog, ProcessAlert,
-    ProcessMonitor, ProcessMonitorConfig, ProcessSnapshot, WatchdogTimerConfig, WatchdogTimerStatus,
+    ProcessMonitor, ProcessMonitorConfig, ProcessSnapshot, WatchdogTimerConfig,
+    WatchdogTimerStatus,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -186,7 +187,11 @@ fn heartbeat_counter_accuracy_mixed() {
 
     assert_eq!(mon.total_received_ticks(), 17);
     assert_eq!(mon.total_missed_ticks(), 3);
-    assert_eq!(mon.consecutive_missed_ticks(), 0, "heartbeat after misses resets");
+    assert_eq!(
+        mon.consecutive_missed_ticks(),
+        0,
+        "heartbeat after misses resets"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -552,7 +557,11 @@ fn recovery_safe_mode_activation() {
 #[test]
 fn recovery_alert_user_on_escalation() {
     let mut policy = RecoveryPolicy::new();
-    policy.add_rule("panel", 2, RecoveryAction::AlertUser("Panel offline".into()));
+    policy.add_rule(
+        "panel",
+        2,
+        RecoveryAction::AlertUser("Panel offline".into()),
+    );
 
     assert_eq!(policy.evaluate("panel", 1), RecoveryAction::NoAction);
     assert_eq!(
@@ -846,7 +855,10 @@ fn integration_process_monitor_combined_alerts() {
         uptime: Duration::from_secs(1),
     });
     assert_eq!(alert.severity, ProcessAlert::Critical);
-    assert!(alert.messages.len() >= 2, "should have messages for both resources");
+    assert!(
+        alert.messages.len() >= 2,
+        "should have messages for both resources"
+    );
 }
 
 /// HealthCheckManager summary counts are accurate across mixed states.

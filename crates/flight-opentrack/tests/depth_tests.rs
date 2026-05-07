@@ -8,8 +8,8 @@
 //! serialization, error display, and property-based fuzzing.
 
 use flight_opentrack::{
-    parse_packet, pitch_to_normalized, yaw_to_normalized, HeadPosition, OpenTrackAdapter,
-    OpenTrackError, OPENTRACK_PACKET_SIZE, OPENTRACK_PORT,
+    HeadPosition, OPENTRACK_PACKET_SIZE, OPENTRACK_PORT, OpenTrackAdapter, OpenTrackError,
+    parse_packet, pitch_to_normalized, yaw_to_normalized,
 };
 use proptest::prelude::*;
 
@@ -244,14 +244,7 @@ fn all_nan_packet_is_rejected() {
 
 #[test]
 fn mixed_nan_and_infinity_is_rejected() {
-    let pkt = build_packet(
-        f64::NAN,
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-        0.0,
-        0.0,
-        0.0,
-    );
+    let pkt = build_packet(f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.0, 0.0);
     assert_eq!(parse_packet(&pkt), Err(OpenTrackError::NonFiniteValue));
 }
 
@@ -425,7 +418,8 @@ fn serde_json_field_names_match_struct() {
 
 #[test]
 fn serde_deserialize_from_known_json() {
-    let json = r#"{"x_mm":10.0,"y_mm":-5.0,"z_mm":3.5,"yaw_deg":45.0,"pitch_deg":-15.0,"roll_deg":2.0}"#;
+    let json =
+        r#"{"x_mm":10.0,"y_mm":-5.0,"z_mm":3.5,"yaw_deg":45.0,"pitch_deg":-15.0,"roll_deg":2.0}"#;
     let pos: HeadPosition = serde_json::from_str(json).unwrap();
     assert!((pos.x_mm - 10.0).abs() < 1e-10);
     assert!((pos.yaw_deg - 45.0).abs() < 1e-10);
