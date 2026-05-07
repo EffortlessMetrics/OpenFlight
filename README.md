@@ -1,6 +1,10 @@
 # Flight Hub
 
 [![Repo](https://img.shields.io/badge/repo-EffortlessMetrics%2FOpenFlight-blue?logo=github&style=flat-square)](https://github.com/EffortlessMetrics/OpenFlight)
+[![CI](https://github.com/EffortlessMetrics/OpenFlight/actions/workflows/ci.yml/badge.svg)](https://github.com/EffortlessMetrics/OpenFlight/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/gh/EffortlessMetrics/OpenFlight/branch/main/graph/badge.svg)](https://codecov.io/gh/EffortlessMetrics/OpenFlight)
+[![MSRV](https://img.shields.io/badge/MSRV-1.92.0-blue.svg)](Cargo.toml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
 Flight Hub is a PC flight simulation input management system written in Rust. It provides a unified control plane for flight controls, panels, force feedback devices, and simulator adapters.
 
@@ -21,6 +25,8 @@ Flight Hub is a PC flight simulation input management system written in Rust. It
 Flight Hub is an accessory/input manager that requires a simulator such as MSFS, X-Plane, or DCS. Experimental AC7 support is available via user-provided telemetry bridges. It does not emulate or replace any simulator.
 
 For simulator integration boundaries and compliance notes, see `docs/product-posture.md`.
+
+Codecov is execution-surface telemetry only; see [Coverage](docs/ci/coverage.md) for what the badge does and does not claim.
 
 ## Workspace Crates
 
