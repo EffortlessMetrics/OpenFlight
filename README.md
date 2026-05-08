@@ -64,7 +64,7 @@ Architecture Decision Records are under `docs/explanation/adr/`.
 
 ## Quick Start
 
-**Prerequisites:** Rust 1.92+, Windows SDK (Windows) or `libudev-dev` (Linux).
+**Prerequisites:** Rust 1.93+, Windows SDK (Windows) or `libudev-dev` (Linux).
 
 ```bash
 git clone https://github.com/EffortlessMetrics/OpenFlight.git

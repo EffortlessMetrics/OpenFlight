@@ -72,3 +72,6 @@ tempfile = { workspace = true }
 [[bench]]
 name = "delta_apply"
 harness = false
+
+[lints]
+workspace = true

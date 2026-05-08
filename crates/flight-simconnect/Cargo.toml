@@ -56,3 +56,6 @@ required-features = ["integration-tests", "serde"]
 
 [[test]]
 name = "adapter_integration_tests"
+
+[lints]
+workspace = true

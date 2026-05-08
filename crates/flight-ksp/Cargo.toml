@@ -29,3 +29,6 @@ chrono = { workspace = true, features = ["serde"] }
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "macros"] }
 proptest = { workspace = true }
+
+[lints]
+workspace = true

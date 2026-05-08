@@ -38,3 +38,6 @@ tempfile.workspace = true
 serde_yaml.workspace = true
 insta.workspace = true
 flight-axis = { path = "../flight-axis" }
+
+[lints]
+workspace = true

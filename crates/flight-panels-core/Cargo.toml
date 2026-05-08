@@ -22,3 +22,6 @@ test-helpers = []
 [dependencies]
 flight-core = { path = "../flight-core" }
 tracing.workspace = true
+
+[lints]
+workspace = true

@@ -22,3 +22,6 @@ crossbeam.workspace = true
 [dev-dependencies]
 proptest.workspace = true
 tokio-test.workspace = true
+
+[lints]
+workspace = true

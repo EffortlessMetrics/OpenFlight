@@ -46,3 +46,6 @@ insta.workspace = true
 [features]
 default = []
 testing = ["proptest"]
+
+[lints]
+workspace = true

@@ -20,3 +20,6 @@ categories = ["embedded", "hardware-support", "no-std"]
 
 [dev-dependencies]
 proptest = { workspace = true }
+
+[lints]
+workspace = true

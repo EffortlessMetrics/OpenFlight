@@ -12,6 +12,7 @@ clap = { version = "4.5.56", features = ["derive"] }
 serde = { workspace = true, features = ["derive"] }
 serde_yaml = { workspace = true }
 serde_json = { workspace = true }
+toml = { workspace = true }
 jsonschema = "0.40.2"
 walkdir = { workspace = true }
 regex = { workspace = true }
@@ -33,3 +34,6 @@ proptest = "1.9.0"
 cargo-lock = "11.0.1"
 insta = { workspace = true }
 serde_yaml = { workspace = true }
+
+[lints]
+workspace = true

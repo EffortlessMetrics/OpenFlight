@@ -91,3 +91,6 @@ required-features = ["ipc-examples"]
 [[test]]
 name = "integration_tests"
 required-features = ["ipc-tests"]
+
+[lints]
+workspace = true
