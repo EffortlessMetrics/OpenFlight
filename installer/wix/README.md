@@ -20,7 +20,7 @@ installer/wix/
 ├── License.rtf         # License text for installer UI (MIT/Apache-2.0)
 ├── banner.bmp          # Installer banner image (493x58 pixels)
 ├── dialog.bmp          # Installer dialog background (493x312 pixels)
-└── generate-images.py  # Script to regenerate placeholder images
+└── generate-images.rs  # Rust script to regenerate placeholder images
 ```
 
 ## UI Images
@@ -39,8 +39,7 @@ The installer requires two BMP images for the WiX UI:
 
 **Regenerating placeholders (optional):**
 ```powershell
-# Requires: pip install pillow
-python generate-images.py
+cargo +nightly -Zscript generate-images.rs
 ```
 
 ## Features

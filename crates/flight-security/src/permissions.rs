@@ -66,15 +66,13 @@ fn validate_unix_permissions(path: &Path, metadata: &std::fs::Metadata) -> crate
                 ),
             });
         }
-    } else {
-        if mode != 0o600 {
-            return Err(SecurityError::PolicyViolation {
-                reason: format!(
-                    "file {} has mode {mode:04o}; expected exactly 0600",
-                    path.display()
-                ),
-            });
-        }
+    } else if mode != 0o600 {
+        return Err(SecurityError::PolicyViolation {
+            reason: format!(
+                "file {} has mode {mode:04o}; expected exactly 0600",
+                path.display()
+            ),
+        });
     }
     Ok(())
 }

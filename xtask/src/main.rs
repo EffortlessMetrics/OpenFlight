@@ -11,6 +11,7 @@ use std::env;
 
 mod ac_status;
 mod bench_compare;
+mod build_deb;
 mod changelog;
 mod check;
 mod clean_worktrees;
@@ -19,6 +20,7 @@ mod config;
 mod coverage;
 mod cross_ref;
 mod device_report;
+mod fix_front_matter;
 mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
@@ -55,6 +57,9 @@ enum Commands {
     /// Validate infrastructure configurations
     ValidateInfra,
 
+    /// Repair docs/ front matter in place
+    FixFrontMatter,
+
     /// Validate a YAML file against a JSON schema (for testing)
     ValidateSchema {
         /// Path to the YAML file to validate
@@ -87,6 +92,15 @@ enum Commands {
         /// Minimum coverage percentage (default: 60%)
         #[arg(long)]
         threshold: Option<f64>,
+    },
+
+    /// Build the Debian package (.deb)
+    BuildDeb {
+        /// Package version string (defaults to workspace Cargo.toml version)
+        version: Option<String>,
+
+        /// Where to write the .deb file (defaults to installer/debian/output)
+        output_dir: Option<String>,
     },
 
     /// Prepare a new release (bump versions, update CHANGELOG, tag)
@@ -161,6 +175,7 @@ fn main() -> Result<()> {
         Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
         Commands::ValidateInfra => validate_infra::run_validate_infra(),
+        Commands::FixFrontMatter => fix_front_matter::run_fix_front_matter(),
         Commands::ValidateSchema {
             yaml_path,
             schema_path,
@@ -191,6 +206,10 @@ fn main() -> Result<()> {
         Commands::GenerateCompat => compat::run_gen_compat(),
         Commands::CompatMatrix => compat::run_gen_compat(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
+        Commands::BuildDeb {
+            version,
+            output_dir,
+        } => build_deb::run_build_deb(version.as_deref(), output_dir.as_deref()),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),
         Commands::CleanWorktrees { force } => clean_worktrees::run_clean_worktrees(force),

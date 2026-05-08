@@ -14,41 +14,21 @@ This directory contains the Debian package configuration for Flight Hub.
 
 ## Building the Package
 
-The package is built automatically by the release workflow. To build manually:
+The package is built automatically by the release workflow. To build manually from the repository root:
 
 ```bash
-# From the repository root
-VERSION="1.0.0"
-PKG_DIR="flight-hub_${VERSION}_amd64"
-
-# Create package structure
-mkdir -p "$PKG_DIR/DEBIAN"
-mkdir -p "$PKG_DIR/usr/bin"
-mkdir -p "$PKG_DIR/usr/share/flight-hub"
-mkdir -p "$PKG_DIR/usr/lib/systemd/user"
-
-# Copy control files
-cp installer/debian/control "$PKG_DIR/DEBIAN/"
-cp installer/debian/postinst "$PKG_DIR/DEBIAN/"
-cp installer/debian/postrm "$PKG_DIR/DEBIAN/"
-chmod +x "$PKG_DIR/DEBIAN/postinst" "$PKG_DIR/DEBIAN/postrm"
-
-# Update version in control file
-sed -i "s/{{VERSION}}/$VERSION/" "$PKG_DIR/DEBIAN/control"
-
-# Copy binaries
-cp target/release/flightd "$PKG_DIR/usr/bin/"
-cp target/release/flightctl "$PKG_DIR/usr/bin/"
-chmod +x "$PKG_DIR/usr/bin/"*
-
-# Copy support files
-cp installer/debian/99-flight-hub.rules "$PKG_DIR/usr/share/flight-hub/"
-cp installer/debian/flightd.service "$PKG_DIR/usr/lib/systemd/user/"
-cp scripts/setup-linux-rt.sh "$PKG_DIR/usr/share/flight-hub/"
-
-# Build package
-dpkg-deb --build "$PKG_DIR"
+cargo xtask build-deb
 ```
+
+Optional arguments and environment variables mirror the previous packaging flow:
+
+```bash
+cargo xtask build-deb 1.2.3 /tmp/packages
+SKIP_BUILD=1 cargo xtask build-deb        # skip cargo build, use existing binaries
+CONFIGURATION=debug cargo xtask build-deb # use target/debug binaries
+```
+
+The Rust builder stages the Debian control files, `flightd`/`flightctl` binaries, udev rules, systemd user service, and RT setup script before invoking `dpkg-deb`.
 
 ## Package Contents
 

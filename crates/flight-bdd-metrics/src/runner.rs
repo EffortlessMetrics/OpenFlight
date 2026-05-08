@@ -96,9 +96,7 @@ pub fn run_scenario(scenario: &Scenario, registry: &StepRegistry) -> ScenarioRes
         });
     }
 
-    let status = if step_results.is_empty() {
-        ScenarioStatus::Failed
-    } else if failed {
+    let status = if step_results.is_empty() || failed {
         ScenarioStatus::Failed
     } else if step_results.iter().all(|r| r.outcome.is_passed()) {
         ScenarioStatus::Passed

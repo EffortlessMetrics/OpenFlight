@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Double-curve detector and one-click fix via flight-writers.
 - **Packaging & Distribution**:
     - **Windows installer**: WiX 3.x MSI with per-machine scope, auto-start Windows service (FlightHub), service recovery policy, Start Menu + Desktop shortcuts, optional PATH registration (`installer/wix/`).
-    - **Linux packaging**: Debian `.deb` package with udev rules, systemd user service unit, postinst/postrm scripts, and automated `installer/debian/build.sh` build script.
+    - **Linux packaging**: Debian `.deb` package with udev rules, systemd user service unit, postinst/postrm scripts, and automated `cargo xtask build-deb` build command.
     - **Auto-update CLI**: `flightctl update check|channel|channels` subcommand exposing Stable/Beta/Canary channels with persisted per-user channel preference; backed by `flight-updater` crate (channels, rollback, delta patching, Ed25519 signature verification).
 - **Hardware Support — T.Flight HOTAS**:
     - **PC Mode Detector** (`flight-hotas-thrustmaster::pc_mode`): `PcModeDetector` classifies incoming HID reports by length to distinguish PC mode (≥8 bytes, Green LED) from Console mode (<8 bytes, Red LED); configurable confirmation threshold prevents false transitions; `console_mode_guidance()` returns step-by-step handshake instructions when console mode is detected.

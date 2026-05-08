@@ -152,7 +152,7 @@ pub fn windows_manifest(prefix: &Path) -> InstallManifest {
 
 /// Build the Linux (deb) install manifest rooted at `prefix`.
 ///
-/// Layout mirrors the `debian/build.sh` staging structure:
+/// Layout mirrors the `cargo xtask build-deb` staging structure:
 /// ```text
 /// <prefix>/usr/bin/flightd
 /// <prefix>/usr/bin/flightctl
