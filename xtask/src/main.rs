@@ -19,16 +19,19 @@ mod config;
 mod coverage;
 mod cross_ref;
 mod device_report;
+mod fix_front_matter;
 mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
 mod hotas;
+mod license_inventory;
 mod normalize_docs;
 mod quality_gates;
 mod release;
 mod schema;
 mod validate;
 mod validate_infra;
+mod wix_images;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -52,8 +55,17 @@ enum Commands {
     /// Normalize documentation front matter
     NormalizeDocs,
 
+    /// Repair docs front matter fields in-place
+    FixFrontMatter,
+
     /// Validate infrastructure configurations
     ValidateInfra,
+
+    /// Generate third-party license inventory files
+    LicenseInventory,
+
+    /// Generate placeholder WiX installer BMP images
+    WixImages,
 
     /// Validate a YAML file against a JSON schema (for testing)
     ValidateSchema {
@@ -160,7 +172,10 @@ fn main() -> Result<()> {
         Commands::Validate => validate::run_validate(),
         Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
+        Commands::FixFrontMatter => fix_front_matter::run_fix_front_matter(),
         Commands::ValidateInfra => validate_infra::run_validate_infra(),
+        Commands::LicenseInventory => license_inventory::run_license_inventory(),
+        Commands::WixImages => wix_images::run_wix_images(),
         Commands::ValidateSchema {
             yaml_path,
             schema_path,
