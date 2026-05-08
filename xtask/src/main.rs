@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use std::env;
+use std::{env, path::PathBuf};
 
 mod ac_status;
 mod bench_compare;
@@ -18,6 +18,7 @@ mod compat;
 mod config;
 mod coverage;
 mod cross_ref;
+mod debian_package;
 mod device_report;
 mod front_matter;
 mod fuzz_smoke;
@@ -29,6 +30,7 @@ mod release;
 mod schema;
 mod validate;
 mod validate_infra;
+mod wix_images;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -87,6 +89,30 @@ enum Commands {
         /// Minimum coverage percentage (default: 60%)
         #[arg(long)]
         threshold: Option<f64>,
+    },
+
+    /// Build the Debian package without the legacy shell wrapper
+    DebBuild {
+        /// Package version string (default: workspace package version)
+        version: Option<String>,
+
+        /// Where to write the .deb file (default: installer/debian/output)
+        output_dir: Option<PathBuf>,
+
+        /// Skip cargo build and use existing binaries
+        #[arg(long)]
+        skip_build: bool,
+
+        /// Cargo target configuration directory to package
+        #[arg(long, default_value = "release")]
+        configuration: String,
+    },
+
+    /// Generate placeholder BMP assets for the WiX installer
+    WixGenerateImages {
+        /// Directory where banner.bmp and dialog.bmp will be written
+        #[arg(long, default_value = "installer/wix")]
+        output_dir: PathBuf,
     },
 
     /// Prepare a new release (bump versions, update CHANGELOG, tag)
@@ -191,6 +217,15 @@ fn main() -> Result<()> {
         Commands::GenerateCompat => compat::run_gen_compat(),
         Commands::CompatMatrix => compat::run_gen_compat(),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
+        Commands::DebBuild {
+            version,
+            output_dir,
+            skip_build,
+            configuration,
+        } => debian_package::run_debian_build(version, output_dir, skip_build, &configuration),
+        Commands::WixGenerateImages { output_dir } => {
+            wix_images::run_wix_generate_images(&output_dir)
+        }
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),
         Commands::CleanWorktrees { force } => clean_worktrees::run_clean_worktrees(force),

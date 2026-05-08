@@ -151,11 +151,7 @@ The uninstaller:
 
 ### Debian Package
 
-The `control` file in `installer/debian/` contains a placeholder version (`1.0.0`). During the release build, the workflow dynamically updates this:
-
-```bash
-sed -i "s/^Version: .*/Version: $VERSION/" "$PKG_DIR/DEBIAN/control"
-```
+The `control` file in `installer/debian/` contains a `{{VERSION}}` placeholder. The Rust xtask package builder replaces it with the workspace version or an explicit override.
 
 ### MSI Package
 
@@ -172,29 +168,12 @@ The WiX build script reads the version from `Cargo.toml` or accepts it as a para
 The GitHub release workflow builds the deb package. For local testing:
 
 ```bash
-# Build binaries
-cargo build --release --workspace
+# Build binaries and assemble the package
+cargo xtask deb-build
 
-# Create package structure manually
-VERSION="1.0.0"
-PKG_DIR="flight-hub_${VERSION}_amd64"
-mkdir -p "$PKG_DIR/DEBIAN"
-mkdir -p "$PKG_DIR/usr/bin"
-mkdir -p "$PKG_DIR/usr/share/flight-hub"
-mkdir -p "$PKG_DIR/usr/lib/systemd/user"
-
-cp target/release/flightd "$PKG_DIR/usr/bin/"
-cp target/release/flightctl "$PKG_DIR/usr/bin/"
-cp installer/debian/control "$PKG_DIR/DEBIAN/"
-cp installer/debian/postinst "$PKG_DIR/DEBIAN/"
-cp installer/debian/postrm "$PKG_DIR/DEBIAN/"
-cp installer/debian/99-flight-hub.rules "$PKG_DIR/usr/share/flight-hub/"
-cp installer/debian/flightd.service "$PKG_DIR/usr/lib/systemd/user/"
-
-chmod +x "$PKG_DIR/DEBIAN/postinst" "$PKG_DIR/DEBIAN/postrm"
-sed -i "s/^Version: .*/Version: $VERSION/" "$PKG_DIR/DEBIAN/control"
-
-dpkg-deb --build "$PKG_DIR"
+# Optional overrides
+cargo xtask deb-build 1.2.3 /tmp/packages
+cargo xtask deb-build --skip-build
 ```
 
 ### Windows (.msi)
@@ -237,6 +216,7 @@ lessmsi l FlightHub-*.msi
 | `installer/debian/postrm` | Post-removal script |
 | `installer/debian/99-flight-hub.rules` | Udev rules for HID access |
 | `installer/debian/flightd.service` | Systemd user service unit |
+| `xtask/src/debian_package.rs` | Rust package assembly task |
 
 ### Windows
 
@@ -247,3 +227,4 @@ lessmsi l FlightHub-*.msi
 | `installer/wix/build.ps1` | Build script |
 | `installer/wix/banner.bmp` | Installer banner image (493×58) |
 | `installer/wix/dialog.bmp` | Installer dialog image (374×316) |
+| `xtask/src/wix_images.rs` | Rust placeholder image generator |
