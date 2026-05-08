@@ -49,3 +49,6 @@ examples-optin = []
 tempfile.workspace = true
 filetime.workspace = true
 proptest.workspace = true
+
+[lints]
+workspace = true

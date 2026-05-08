@@ -24,3 +24,6 @@ serde = { workspace = true, features = ["derive"] }
 [dev-dependencies]
 serde_json = { workspace = true }
 proptest = { workspace = true }
+
+[lints]
+workspace = true

@@ -23,3 +23,6 @@ tracing-subscriber = { workspace = true }
 
 [dev-dependencies]
 flight-axis = { workspace = true }
+
+[lints]
+workspace = true

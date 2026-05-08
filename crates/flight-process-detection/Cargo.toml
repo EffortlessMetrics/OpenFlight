@@ -33,3 +33,6 @@ x11rb = { workspace = true }
 proptest.workspace = true
 serde_json.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
+
+[lints]
+workspace = true
