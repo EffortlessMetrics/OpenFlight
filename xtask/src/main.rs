@@ -19,6 +19,7 @@ mod config;
 mod coverage;
 mod cross_ref;
 mod device_report;
+mod fix_front_matter;
 mod front_matter;
 mod fuzz_smoke;
 mod gherkin;
@@ -26,9 +27,11 @@ mod hotas;
 mod normalize_docs;
 mod quality_gates;
 mod release;
+mod review_telemetry;
 mod schema;
 mod validate;
 mod validate_infra;
+mod wix_images;
 
 #[derive(Parser)]
 #[command(name = "xtask")]
@@ -51,6 +54,9 @@ enum Commands {
 
     /// Normalize documentation front matter
     NormalizeDocs,
+
+    /// Rewrite docs/**/*.md front matter into the canonical schema
+    FixFrontMatter,
 
     /// Validate infrastructure configurations
     ValidateInfra,
@@ -77,6 +83,19 @@ enum Commands {
 
     /// Generate compatibility matrix (COMPATIBILITY.md + JSON) from device/game manifests
     CompatMatrix,
+
+    /// Regenerate WiX installer placeholder BMP images
+    GenerateWixImages,
+
+    /// Generate review telemetry from git numstat output
+    ReviewTelemetry {
+        /// Path to a git numstat input file
+        numstat: String,
+        /// Path to write telemetry JSON
+        json_out: String,
+        /// Path to write review-start markdown
+        markdown_out: String,
+    },
 
     /// Run code coverage report on core crates using cargo-llvm-cov
     Coverage {
@@ -160,6 +179,7 @@ fn main() -> Result<()> {
         Commands::Validate => validate::run_validate(),
         Commands::AcStatus => ac_status::run_ac_status(),
         Commands::NormalizeDocs => normalize_docs::run_normalize_docs(),
+        Commands::FixFrontMatter => fix_front_matter::run_fix_front_matter(),
         Commands::ValidateInfra => validate_infra::run_validate_infra(),
         Commands::ValidateSchema {
             yaml_path,
@@ -190,6 +210,12 @@ fn main() -> Result<()> {
         Commands::GenCompat => compat::run_gen_compat(),
         Commands::GenerateCompat => compat::run_gen_compat(),
         Commands::CompatMatrix => compat::run_gen_compat(),
+        Commands::GenerateWixImages => wix_images::run_generate_wix_images(),
+        Commands::ReviewTelemetry {
+            numstat,
+            json_out,
+            markdown_out,
+        } => review_telemetry::run_review_telemetry(&numstat, &json_out, &markdown_out),
         Commands::Coverage { html, threshold } => coverage::run_coverage(html, threshold),
         Commands::Release { version } => release::run_release(&version),
         Commands::DeviceReport { json } => device_report::run_device_report(json),

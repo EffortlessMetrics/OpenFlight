@@ -16,11 +16,10 @@ installer/wix/
 ├── Product.wxs         # Main WiX source - package definition, features, UI
 ├── Components.wxs      # Component definitions - files, directories, registry
 ├── build.ps1           # PowerShell build script for creating the MSI
-├── README.md           # This file
 ├── License.rtf         # License text for installer UI (MIT/Apache-2.0)
 ├── banner.bmp          # Installer banner image (493x58 pixels)
-├── dialog.bmp          # Installer dialog background (493x312 pixels)
-└── generate-images.py  # Script to regenerate placeholder images
+├── dialog.bmp          # Installer dialog background (374x316 pixels)
+└── README.md           # This file
 ```
 
 ## UI Images
@@ -30,7 +29,7 @@ The installer requires two BMP images for the WiX UI:
 | Image | Dimensions | Purpose |
 |-------|------------|---------|
 | `banner.bmp` | 493x58 | Displayed at the top of installer dialog pages |
-| `dialog.bmp` | 493x312 | Displayed on the left side of welcome/finish pages |
+| `dialog.bmp` | 374x316 | Displayed on the left side of welcome/finish pages |
 
 **Requirements:**
 - Format: 24-bit BMP (uncompressed)
@@ -39,8 +38,7 @@ The installer requires two BMP images for the WiX UI:
 
 **Regenerating placeholders (optional):**
 ```powershell
-# Requires: pip install pillow
-python generate-images.py
+cargo xtask generate-wix-images
 ```
 
 ## Features
