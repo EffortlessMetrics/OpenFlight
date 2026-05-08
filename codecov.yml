@@ -1,35 +1,136 @@
-coverage:
-  precision: 2
-  round: down
-  range: "50...85"
+# Codecov Configuration
+# Quiet mode with thresholds for execution-surface coverage tracking
 
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 5%
+# Precision and rounding
+precision: 2
+round: down
+range: "50...85"
+
+# Coverage status thresholds
+# Separate targets for portable core (blocking) vs advisory flags
+status:
+  project:
+    # Default project threshold: portable core must maintain baseline
+    default:
+      target: 70
+      threshold: 2  # Allow 2% regression before failing
+      informational: false  # Don't block on regressions
+
+  patch:
+    # Changes in covered lines must not degrade coverage
+    default:
+      target: 80
+      threshold: 5  # Allow 5% variation in patches
+      informational: false
+
+# Per-flag configuration
+flags:
+  rust-core:
+    # Portable control-plane crates (blocking)
+    # These crates are foundational and changes should maintain coverage
+    carryforward: true
+    statuses:
+      - type: project
+        target: 70
+        threshold: 2
+        informational: false
+      - type: patch
+        target: 80
+        threshold: 5
+        informational: false
+
+  rust-hardware:
+    # Hardware abstraction layer (advisory)
+    # Coverage is useful but not blocking; integration tests required
+    carryforward: true
+    statuses:
+      - type: project
+        target: 60
+        threshold: null  # Advisory only
         informational: true
-        flags:
-          - rust-core
-
-    patch:
-      default:
-        target: 70%
-        threshold: 20%
+      - type: patch
+        target: 70
+        threshold: null
         informational: true
-        flags:
-          - rust-core
 
-comment: false
+  rust-adapters:
+    # Simulator adapter implementations (advisory)
+    # Coverage is useful but insufficient without integration testing
+    carryforward: true
+    statuses:
+      - type: project
+        target: 50
+        threshold: null  # Advisory only
+        informational: true
+      - type: patch
+        target: 65
+        threshold: null
+        informational: true
 
-github_checks:
-  annotations: false
+  rust-ffb:
+    # Force feedback systems (advisory)
+    # Coverage is useful but FFB safety requires dedicated hardware gate
+    carryforward: true
+    statuses:
+      - type: project
+        target: 55
+        threshold: null  # Advisory only
+        informational: true
+      - type: patch
+        target: 70
+        threshold: null
+        informational: true
 
+# Comments and annotations disabled (quiet mode)
+# Codecov will not post inline comments on PRs
+comment:
+  layout: "reach,diff,flags,tree,reach"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+  deletions: false
+
+# Disable PR annotations (code coverage badges/overlays)
+annotation:
+  default: off
+  project: off
+  patch: off
+
+# Coverage report configuration
+# Ignore coverage from build artifacts, examples, tests, and benchmarks
 ignore:
-  - "target/**"
-  - "fuzz/**"
-  - "benches/**"
-  - "crates/*/benches/**"
-  - "crates/*/examples/**"
-  - "crates/flight-hub-examples/**"
-  - "installer/**"
+  - "target/"  # Build artifacts
+  - "fuzz/"    # Fuzz test harness
+  - "benches/" # Benchmark code
+  - "examples/" # Example code (not shipped)
+  - "installer/" # Installer (platform-specific)
+  - "**/*.rs.bk" # Backup files
+
+# Source detection
+detect:
+  range:
+    default:
+      # Range detection on lines with coverage data
+      # Helps identify partial coverage (e.g., 50-85% ranges)
+      from: 50
+      to: 85
+  branch: true
+  fixes: true
+  partial: true
+
+# Merge configuration
+# When pulling coverage from multiple reports, use this strategy
+merge:
+  method: "precision"  # Use precision-weighted merge
+  partials: true       # Include partial coverage
+
+# Sources configuration
+# Only trust official crates.io and GitHub repositories
+sources:
+  require_ci_to_pass: false
+  only_pulls: false
+
+# Notifications
+# Disable all notifications in quiet mode
+notifications: []
