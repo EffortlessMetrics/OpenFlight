@@ -3,27 +3,28 @@
 
 //! Service-owned T.Flight HOTAS runtime ingestion.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use flight_hid_support::HidDeviceInfo;
-use flight_hid_support::device_support::{
-    axis_mode_from_device_info, axis_mode_warning, driver_note, pc_mode_note,
-};
 use flight_hid_support::ghost_filter::GhostFilterStats;
 use flight_hotas_thrustmaster::{
     AxisMode, TFlightHealthMonitor, TFlightHealthStatus, TFlightInputHandler, TFlightInputState,
-    TFlightModel, TFlightYawPolicy, TFlightYawResolution, is_hotas4_legacy_pid, tflight_model,
+    TFlightModel, TFlightYawPolicy, TFlightYawResolution,
 };
 use tokio::sync::{RwLock, oneshot};
 use tokio::task::JoinHandle;
 
 use crate::health::HealthStream;
 
-const COMPONENT_NAME: &str = "input_hotas_tflight";
-const GHOST_WARNING_THRESHOLD: f64 = 0.05;
-const MERGED_MODE_GUIDANCE_THRESHOLD_REPORTS: u32 = 64;
+mod diagnostics;
+mod discovery;
+mod reports;
+
+pub(super) const COMPONENT_NAME: &str = "input_hotas_tflight";
+pub(super) const GHOST_WARNING_THRESHOLD: f64 = 0.05;
+pub(super) const MERGED_MODE_GUIDANCE_THRESHOLD_REPORTS: u32 = 64;
 
 /// Source abstraction for raw T.Flight reports.
 pub trait TFlightReportSource: Send + 'static {
@@ -136,17 +137,17 @@ pub struct TFlightSnapshot {
 }
 
 #[derive(Debug)]
-struct DeviceRuntimeState {
-    info: HidDeviceInfo,
-    snapshot_key: String,
-    model: TFlightModel,
-    handler: TFlightInputHandler,
-    monitor: TFlightHealthMonitor,
-    last_mode: AxisMode,
-    ghost_warning_active: bool,
-    merged_reports_streak: u32,
-    merged_mode_guidance_emitted: bool,
-    is_legacy_pid: bool,
+pub(super) struct DeviceRuntimeState {
+    pub(super) info: HidDeviceInfo,
+    pub(super) snapshot_key: String,
+    pub(super) model: TFlightModel,
+    pub(super) handler: TFlightInputHandler,
+    pub(super) monitor: TFlightHealthMonitor,
+    pub(super) last_mode: AxisMode,
+    pub(super) ghost_warning_active: bool,
+    pub(super) merged_reports_streak: u32,
+    pub(super) merged_mode_guidance_emitted: bool,
+    pub(super) is_legacy_pid: bool,
 }
 
 /// Background ingest runtime for T.Flight devices.
@@ -236,258 +237,11 @@ async fn poll_once(
     states: &mut HashMap<String, DeviceRuntimeState>,
     config: TFlightRuntimeConfig,
 ) {
-    let mut active_paths = HashSet::new();
-
-    for info in source.list_devices() {
-        let Some(model) = tflight_model(&info) else {
-            continue;
-        };
-
-        let path = info.device_path.clone();
-        active_paths.insert(path.clone());
-
-        if let Some(existing) = states.get_mut(&path) {
-            let axis_mode_hint = axis_mode_from_device_info(&info);
-            existing.info = info;
-            existing.handler.set_yaw_policy(config.yaw_policy);
-            existing.handler.set_axis_mode_hint(axis_mode_hint);
-            continue;
-        }
-
-        let axis_mode_hint = axis_mode_from_device_info(&info);
-        let has_descriptor = info.report_descriptor.is_some();
-        let is_legacy = is_hotas4_legacy_pid(&info);
-        let snapshot_key = info
-            .serial_number
-            .clone()
-            .unwrap_or_else(|| info.device_path.clone());
-        // Always start in Unknown so the handler auto-detects every report;
-        // the descriptor hint is advisory only (see fix for runtime AxisMode pinning).
-        let handler = TFlightInputHandler::with_axis_mode(model, AxisMode::Unknown)
-            .with_yaw_policy(config.yaw_policy)
-            .with_throttle_inversion(config.throttle_inversion)
-            .with_report_id(config.strip_report_id)
-            .with_axis_mode_hint(axis_mode_hint);
-        let monitor = TFlightHealthMonitor::new(model).with_legacy_pid(is_legacy);
-
-        states.insert(
-            path.clone(),
-            DeviceRuntimeState {
-                info,
-                snapshot_key: snapshot_key.clone(),
-                model,
-                handler,
-                monitor,
-                last_mode: AxisMode::Unknown,
-                ghost_warning_active: false,
-                merged_reports_streak: 0,
-                merged_mode_guidance_emitted: false,
-                is_legacy_pid: is_legacy,
-            },
-        );
-
-        if is_legacy {
-            health
-                .info(
-                    COMPONENT_NAME,
-                    &format!("{} detected via HOTAS 4 legacy PID", snapshot_key),
-                )
-                .await;
-        }
-
-        if axis_mode_hint != AxisMode::Unknown {
-            health
-                .info(
-                    COMPONENT_NAME,
-                    &format!(
-                        "{} descriptor advertises {} axis layout (auto-detection still active)",
-                        snapshot_key,
-                        axis_mode_hint.as_str()
-                    ),
-                )
-                .await;
-        }
-
-        if let Some(mode_warning) = axis_mode_warning(axis_mode_hint) {
-            health
-                .warning(
-                    COMPONENT_NAME,
-                    &format!(
-                        "{} descriptor hint indicates merged layout. {} {} {}",
-                        snapshot_key,
-                        mode_warning,
-                        pc_mode_note(model),
-                        driver_note()
-                    ),
-                )
-                .await;
-        } else if axis_mode_hint == AxisMode::Unknown && has_descriptor {
-            health
-                .warning(
-                    COMPONENT_NAME,
-                    &format!(
-                        "{} descriptor axis layout is ambiguous; runtime will rely on report-length detection. {} {}",
-                        snapshot_key,
-                        pc_mode_note(model),
-                        driver_note()
-                    ),
-                )
-                .await;
-        }
-    }
-
-    let removed_paths: Vec<String> = states
-        .keys()
-        .filter(|path| !active_paths.contains(*path))
-        .cloned()
-        .collect();
-
-    for path in removed_paths {
-        if let Some(removed) = states.remove(&path) {
-            snapshots.write().await.remove(&removed.snapshot_key);
-            health
-                .warning(
-                    COMPONENT_NAME,
-                    &format!("{} disconnected from runtime", removed.snapshot_key),
-                )
-                .await;
-        }
-    }
-
-    let paths: Vec<String> = states.keys().cloned().collect();
-    for path in paths {
-        let read_result = source.read_report(&path);
-
-        let mut info_messages: Vec<String> = Vec::new();
-        let mut warning_messages: Vec<String> = Vec::new();
-        let mut error_messages: Vec<String> = Vec::new();
-        let mut snapshot_update: Option<(String, TFlightSnapshot)> = None;
-
-        {
-            let Some(state) = states.get_mut(&path) else {
-                continue;
-            };
-
-            match read_result {
-                Ok(Some(report)) => match state.handler.try_parse_report(&report) {
-                    Ok(parsed) => {
-                        state.monitor.record_success();
-
-                        let current_mode = state.handler.current_axis_mode();
-                        if current_mode != state.last_mode {
-                            info_messages.push(format!(
-                                "{} axis mode changed: {} -> {}",
-                                state.snapshot_key,
-                                state.last_mode.as_str(),
-                                current_mode.as_str()
-                            ));
-                            state.last_mode = current_mode;
-                        }
-
-                        if current_mode == AxisMode::Merged {
-                            state.merged_reports_streak =
-                                state.merged_reports_streak.saturating_add(1);
-                            if !state.merged_mode_guidance_emitted
-                                && state.merged_reports_streak
-                                    >= MERGED_MODE_GUIDANCE_THRESHOLD_REPORTS
-                            {
-                                warning_messages.push(format!(
-                                    "{} is still in merged axis mode after {} reports. {}",
-                                    state.snapshot_key,
-                                    state.merged_reports_streak,
-                                    merged_mode_guidance(state.model)
-                                ));
-                                state.merged_mode_guidance_emitted = true;
-                            }
-                        } else {
-                            state.merged_reports_streak = 0;
-                            if state.merged_mode_guidance_emitted {
-                                info_messages.push(format!(
-                                    "{} full-axis mode detected; merged-mode guidance cleared",
-                                    state.snapshot_key
-                                ));
-                                state.merged_mode_guidance_emitted = false;
-                            }
-                        }
-
-                        let yaw = state.handler.resolve_yaw(&parsed);
-                        let ghost_rate = state.handler.ghost_rate();
-                        let ghost_stats = state.handler.ghost_stats();
-
-                        if ghost_rate > GHOST_WARNING_THRESHOLD && !state.ghost_warning_active {
-                            warning_messages.push(format!(
-                                "{} ghost input rate high: {:.2}%",
-                                state.snapshot_key,
-                                ghost_rate * 100.0
-                            ));
-                            state.ghost_warning_active = true;
-                        } else if ghost_rate <= (GHOST_WARNING_THRESHOLD * 0.5) {
-                            state.ghost_warning_active = false;
-                        }
-
-                        let health_status =
-                            state.monitor.status(true, ghost_rate, ghost_stats.clone());
-                        let snapshot = TFlightSnapshot {
-                            device_id: state.snapshot_key.clone(),
-                            device_path: state.info.device_path.clone(),
-                            model: health_status.device_type,
-                            axis_mode: current_mode,
-                            state: parsed,
-                            yaw,
-                            ghost_rate,
-                            ghost_stats,
-                            health: health_status,
-                            is_legacy_pid: state.is_legacy_pid,
-                            updated_at_epoch_ms: unix_epoch_ms_now(),
-                        };
-
-                        snapshot_update = Some((state.snapshot_key.clone(), snapshot));
-                    }
-                    Err(error) => {
-                        let threshold_reached = state.monitor.record_failure();
-                        error_messages.push(format!(
-                            "{} report parse failure: {}",
-                            state.snapshot_key, error
-                        ));
-                        if threshold_reached {
-                            error_messages.push(format!(
-                                "{} report parse failures exceeded threshold",
-                                state.snapshot_key
-                            ));
-                        }
-                    }
-                },
-                Ok(None) => {}
-                Err(error) => {
-                    let threshold_reached = state.monitor.record_failure();
-                    error_messages.push(format!("{} read failure: {}", state.snapshot_key, error));
-                    if threshold_reached {
-                        error_messages.push(format!(
-                            "{} read failures exceeded threshold",
-                            state.snapshot_key
-                        ));
-                    }
-                }
-            }
-        }
-
-        if let Some((snapshot_key, snapshot)) = snapshot_update {
-            snapshots.write().await.insert(snapshot_key, snapshot);
-        }
-
-        for message in info_messages {
-            health.info(COMPONENT_NAME, &message).await;
-        }
-        for message in warning_messages {
-            health.warning(COMPONENT_NAME, &message).await;
-        }
-        for message in error_messages {
-            health.error(COMPONENT_NAME, &message, None).await;
-        }
-    }
+    discovery::reconcile_devices(source, health, snapshots, states, config).await;
+    reports::poll_device_reports(source, health, snapshots, states).await;
 }
 
-fn merged_mode_guidance(model: TFlightModel) -> &'static str {
+pub(super) fn merged_mode_guidance(model: TFlightModel) -> &'static str {
     match model {
         TFlightModel::Hotas4 => {
             "If separate yaw/throttle axes are missing, switch HOTAS 4 to PC HID full-axis mode (hardware switch or hold Share+Option+PS while plugging in). On Linux, use a corrected descriptor setup such as hid-tflight4."
@@ -501,7 +255,7 @@ fn merged_mode_guidance(model: TFlightModel) -> &'static str {
     }
 }
 
-fn unix_epoch_ms_now() -> u64 {
+pub(super) fn unix_epoch_ms_now() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
