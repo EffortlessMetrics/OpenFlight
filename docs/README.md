@@ -116,6 +116,7 @@ This index is automatically generated from the front matter of all documentation
 |--------|-------|--------|--------------|-------|------|
 | DOC-META-GOVERNANCE | [Project Governance](../docs\GOVERNANCE.md) | active | INF-REQ-7 | - | - |
 | DOC-THIRD-PARTY-LICENSES | [Third-Party Licenses](../docs\reference\third-party-licenses.md) | active | INF-REQ-1 | - | - |
+| DOC-VERIFICATION | [Verification](../docs\VERIFICATION.md) | active | INF-REQ-5, INF-REQ-9 | - | - |
 
 ## Requirements
 
