@@ -101,6 +101,7 @@ This index is automatically generated from the front matter of all documentation
 | Doc ID | Title | Status | Requirements | Tasks | ADRs |
 |--------|-------|--------|--------------|-------|------|
 | DOC-CI-REQUIRED-CHECKS | [CI Required Checks Configuration](../docs\reference\ci-checks.md) | active | INF-REQ-9 | - | - |
+| DOC-VERIFICATION | [Verification](../docs\VERIFICATION.md) | active | INF-REQ-5, INF-REQ-9 | - | - |
 
 ### Flight HID
 
