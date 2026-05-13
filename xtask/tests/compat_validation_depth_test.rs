@@ -510,10 +510,9 @@ fn consistency_no_duplicate_vid_pid_in_fixtures() {
     assert_eq!(pid1, pid2);
 
     // Run duplicate-detection logic over the two fixture docs and assert it finds the dup
-    let fixture_docs = vec![
-        (&fixture_dir().join("devices").join("valid_tier1.yaml"), &doc1),
-        (&fixture_dir().join("devices").join("duplicate_vid_pid.yaml"), &doc2),
-    ];
+    let valid_tier1_path = fixture_dir().join("devices").join("valid_tier1.yaml");
+    let duplicate_vid_pid_path = fixture_dir().join("devices").join("duplicate_vid_pid.yaml");
+    let fixture_docs = vec![(&valid_tier1_path, &doc1), (&duplicate_vid_pid_path, &doc2)];
     let mut seen: HashMap<(u64, u64), PathBuf> = HashMap::new();
     let mut duplicate_count = 0usize;
     for (path, doc) in &fixture_docs {

@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use std::env;
 
 mod ac_status;
+mod badges;
 mod bench_compare;
 mod changelog;
 mod check;
@@ -26,6 +27,7 @@ mod hotas;
 mod normalize_docs;
 mod quality_gates;
 mod release;
+mod ripr_pr;
 mod schema;
 mod validate;
 mod validate_infra;
@@ -138,6 +140,39 @@ enum Commands {
         write: bool,
     },
 
+    /// Regenerate public Shields badge endpoint JSON
+    Badges {
+        /// Check committed endpoints for drift without updating badges/
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce PR-scoped RIPR repository exposure evidence
+    RiprPr {
+        /// Verify required target/ripr/pr artifacts instead of regenerating them
+        #[arg(long)]
+        check: bool,
+
+        /// Base revision for diff-scoped analysis
+        #[arg(long)]
+        base: Option<String>,
+    },
+
+    /// Produce PR-scoped RIPR review guidance artifacts
+    RiprReviewComments {
+        /// Verify required target/ripr/review artifacts instead of regenerating them
+        #[arg(long)]
+        check: bool,
+
+        /// Base revision for diff-scoped analysis
+        #[arg(long)]
+        base: Option<String>,
+
+        /// Head revision for diff-scoped analysis
+        #[arg(long)]
+        head: Option<String>,
+    },
+
     /// Prepare a release: generate changelog, bump versions, create tag
     PrepareRelease {
         /// Explicit version to release (e.g., 1.2.3). Mutually exclusive with --bump.
@@ -200,6 +235,11 @@ fn main() -> Result<()> {
             save_baseline,
         } => bench_compare::run_bench_compare(threshold, save_baseline),
         Commands::Changelog { since, write } => changelog::run_changelog(since.as_deref(), write),
+        Commands::Badges { check } => badges::run_badges(check),
+        Commands::RiprPr { check, base } => ripr_pr::run_ripr_pr(check, base.as_deref()),
+        Commands::RiprReviewComments { check, base, head } => {
+            ripr_pr::run_ripr_review_comments(check, base.as_deref(), head.as_deref())
+        }
         Commands::PrepareRelease { version, bump } => {
             let version = release::resolve_version(version, bump)?;
             release::run_prepare_release(&version)
