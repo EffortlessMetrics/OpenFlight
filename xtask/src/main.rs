@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use std::env;
 
 mod ac_status;
+mod badges;
 mod bench_compare;
 mod changelog;
 mod check;
@@ -26,6 +27,7 @@ mod hotas;
 mod normalize_docs;
 mod quality_gates;
 mod release;
+mod ripr;
 mod schema;
 mod validate;
 mod validate_infra;
@@ -127,6 +129,27 @@ enum Commands {
         save_baseline: bool,
     },
 
+    /// Regenerate public Shields endpoint JSON under badges/
+    Badges {
+        /// Check committed endpoints for drift without updating them
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce PR-scoped RIPR exposure evidence
+    RiprPr {
+        /// Check generated PR evidence output contract without updating it
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce RIPR changed-line review guidance
+    RiprReviewComments {
+        /// Check generated review guidance output contract without updating it
+        #[arg(long)]
+        check: bool,
+    },
+
     /// Generate changelog from conventional commits since the last tag
     Changelog {
         /// Git ref to start from (tag, commit, branch). Defaults to latest tag.
@@ -199,6 +222,9 @@ fn main() -> Result<()> {
             threshold,
             save_baseline,
         } => bench_compare::run_bench_compare(threshold, save_baseline),
+        Commands::Badges { check } => badges::run_badges(check),
+        Commands::RiprPr { check } => ripr::run_ripr_pr(check),
+        Commands::RiprReviewComments { check } => ripr::run_ripr_review_comments(check),
         Commands::Changelog { since, write } => changelog::run_changelog(since.as_deref(), write),
         Commands::PrepareRelease { version, bump } => {
             let version = release::resolve_version(version, bump)?;
