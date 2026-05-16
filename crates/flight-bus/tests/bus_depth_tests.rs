@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 use flight_bus::metrics::{BusMetrics, BusMetricsSnapshot};
 use flight_bus::routing::{
     BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter,
-    RoutePattern, SourceType, MAX_MATCHES, MAX_ROUTES,
+    RoutePattern, SourceType, Topic, MAX_MATCHES, MAX_ROUTES,
 };
 use flight_bus::types::{AircraftId, SimId};
 use flight_bus::{BusHealth, BusPublisher, BusSnapshot, SubscriptionConfig, assess_health};
@@ -125,6 +125,7 @@ fn pubsub_topic_filtering() {
         source_type: SourceType::Any,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     router.register_route(p_axis, EventFilter::pass_all(), 10);
 
@@ -133,6 +134,7 @@ fn pubsub_topic_filtering() {
         source_type: SourceType::Any,
         source_id: None,
         event_kind: Some(EventKind::ButtonPress),
+        topic: Topic::Any,
     };
     router.register_route(p_btn, EventFilter::pass_all(), 20);
 
@@ -363,6 +365,7 @@ fn event_type_axis() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 1);
 
@@ -381,6 +384,7 @@ fn event_type_button() {
         source_type: SourceType::Any,
         source_id: None,
         event_kind: Some(EventKind::ButtonPress),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 2);
 
@@ -400,6 +404,7 @@ fn event_type_device_connect_disconnect() {
         source_type: SourceType::Internal,
         source_id: None,
         event_kind: Some(EventKind::SystemStatus),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 3);
 
@@ -418,6 +423,7 @@ fn event_type_profile_change() {
         source_type: SourceType::Internal,
         source_id: Some(0),
         event_kind: Some(EventKind::SystemStatus),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 4);
 

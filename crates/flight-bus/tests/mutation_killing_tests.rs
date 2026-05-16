@@ -4,7 +4,7 @@
 
 use flight_bus::routing::{
     BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType,
+    SourceType, Topic,
 };
 
 /// Helper: create an AxisUpdate event from a Device source.
@@ -45,6 +45,7 @@ fn subscriber_receives_published_message_value() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     router.register_route(pattern, EventFilter::pass_all(), 42);
 
@@ -81,6 +82,7 @@ fn message_ordering_preserved() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
 
     // Register destination 10 first, then 20
@@ -106,6 +108,7 @@ fn queue_full_drops_not_silently_lost() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     let filter = EventFilter {
         rate_limit_hz: Some(2.0),
@@ -144,6 +147,7 @@ fn unsubscribe_stops_delivery() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     let route_id = router
         .register_route(pattern, EventFilter::pass_all(), 100)
@@ -178,6 +182,7 @@ fn topic_filtering_correctness() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::AxisUpdate),
+        topic: Topic::Any,
     };
     router.register_route(pattern_a, EventFilter::pass_all(), 1);
 
@@ -186,6 +191,7 @@ fn topic_filtering_correctness() {
         source_type: SourceType::Device,
         source_id: None,
         event_kind: Some(EventKind::ButtonPress),
+        topic: Topic::Any,
     };
     router.register_route(pattern_b, EventFilter::pass_all(), 2);
 

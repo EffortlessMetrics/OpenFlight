@@ -8,7 +8,7 @@
 use flight_bus::publisher::{BusPublisher, SubscriptionConfig};
 use flight_bus::routing::{
     BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType, MAX_ROUTES,
+    SourceType, Topic, MAX_ROUTES,
 };
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, SimId};
@@ -91,11 +91,13 @@ mod topic_routing {
             source_type: SourceType::Device,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
         let sim_pattern = RoutePattern {
             source_type: SourceType::Simulator,
             source_id: None,
             event_kind: None,
+            topic: Topic::Any,
         };
 
         router.register_route(device_pattern, EventFilter::pass_all(), 1);
@@ -149,6 +151,7 @@ mod topic_routing {
             source_type: SourceType::Device,
             source_id: None,
             event_kind: Some(EventKind::AxisUpdate),
+            topic: Topic::Any,
         };
 
         router.register_route(pattern, EventFilter::pass_all(), 10);
@@ -187,6 +190,7 @@ mod topic_routing {
                 source_type: SourceType::Device,
                 source_id: None,
                 event_kind: None,
+                topic: Topic::Any,
             };
 
             for i in 0..n_subs {
@@ -585,6 +589,7 @@ mod lifecycle {
             source_type: SourceType::Device,
             source_id: Some(1),
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(p1, EventFilter::pass_all(), 100);
 
@@ -593,6 +598,7 @@ mod lifecycle {
             source_type: SourceType::Device,
             source_id: Some(2),
             event_kind: None,
+            topic: Topic::Any,
         };
         router.register_route(p2, EventFilter::pass_all(), 200);
 
@@ -677,11 +683,13 @@ mod event_types {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: Some(EventKind::AxisUpdate),
+            topic: Topic::Any,
         };
         let telem_only = RoutePattern {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: Some(EventKind::TelemetryFrame),
+            topic: Topic::Any,
         };
         router.register_route(axis_only, EventFilter::pass_all(), 1);
         router.register_route(telem_only, EventFilter::pass_all(), 2);
@@ -700,6 +708,7 @@ mod event_types {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: Some(EventKind::TelemetryFrame),
+            topic: Topic::Any,
         };
         router.register_route(telem_only, EventFilter::pass_all(), 1);
 
@@ -717,6 +726,7 @@ mod event_types {
             source_type: SourceType::Any,
             source_id: None,
             event_kind: Some(EventKind::SystemStatus),
+            topic: Topic::Any,
         };
         router.register_route(status_only, EventFilter::pass_all(), 1);
 
