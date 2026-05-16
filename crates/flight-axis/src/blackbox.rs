@@ -702,4 +702,367 @@ mod tests {
         assert_eq!(conflict_data.description, "Test conflict");
         assert_eq!(conflict_data.combined_nonlinearity, 0.4);
     }
+
+    // ------------------------------------------------------------------
+    // Additional unit-test coverage for blackbox annotator.
+    // NOTE: Test code runs on the test harness thread, NOT the RT spine.
+    // Allocations (Vec/String) in these tests are explicitly OK per ADR-004
+    // because they execute off the real-time path.
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn test_default_impl_matches_new() {
+        // Default must mirror BlackboxAnnotator::new(): enabled, empty buffer.
+        let annotator: BlackboxAnnotator = Default::default();
+        assert!(annotator.is_enabled());
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_set_enabled_clears_buffer() {
+        // Disabling an annotator must drop any pending events.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100); // ensure flush is not triggered
+        annotator.annotate_conflict_cleared("axis", "test reason");
+        assert_eq!(annotator.get_buffered_events().len(), 1);
+
+        annotator.set_enabled(false);
+        assert!(!annotator.is_enabled());
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+
+        // Re-enabling should not resurrect anything.
+        annotator.set_enabled(true);
+        assert!(annotator.is_enabled());
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_clear_buffer_without_flush() {
+        // clear_buffer() must not invoke the flush path; it just empties.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_conflict_cleared("axis_a", "r1");
+        annotator.annotate_conflict_cleared("axis_b", "r2");
+        assert_eq!(annotator.get_buffered_events().len(), 2);
+
+        annotator.clear_buffer();
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_flush_empty_buffer_is_noop() {
+        // Flushing with nothing buffered should be safe.
+        let mut annotator = BlackboxAnnotator::new();
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+        annotator.flush();
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_annotate_conflict_cleared_event() {
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_conflict_cleared("yoke_pitch", "user_dismissed");
+        let events = annotator.get_buffered_events();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            BlackboxEvent::ConflictCleared {
+                axis_name, reason, ..
+            } => {
+                assert_eq!(axis_name, "yoke_pitch");
+                assert_eq!(reason, "user_dismissed");
+            }
+            other => panic!("Expected ConflictCleared, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_annotate_pre_fault_capture_event() {
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_pre_fault_capture("throttle_l", 2000, 500);
+        let events = annotator.get_buffered_events();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            BlackboxEvent::PreFaultCapture {
+                axis_name,
+                capture_duration_ms,
+                sample_count,
+                ..
+            } => {
+                assert_eq!(axis_name, "throttle_l");
+                assert_eq!(*capture_duration_ms, 2000);
+                assert_eq!(*sample_count, 500);
+            }
+            other => panic!("Expected PreFaultCapture, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_annotate_capability_mode_changed_all_modes() {
+        // Each CapabilityMode variant must map to the correct string label.
+        use flight_core::profile::CapabilityMode;
+        let cases = [
+            (CapabilityMode::Full, "full"),
+            (CapabilityMode::Demo, "demo"),
+            (CapabilityMode::Kid, "kid"),
+        ];
+        for (mode, expected) in cases {
+            let mut annotator = BlackboxAnnotator::new();
+            annotator.set_max_buffer_size(100);
+            annotator.annotate_capability_mode_changed("rudder", mode);
+            let events = annotator.get_buffered_events();
+            assert_eq!(events.len(), 1);
+            match &events[0] {
+                BlackboxEvent::CapabilityModeChanged {
+                    axis_name,
+                    old_mode,
+                    new_mode,
+                    ..
+                } => {
+                    assert_eq!(axis_name, "rudder");
+                    // Current implementation does not track previous mode.
+                    assert_eq!(old_mode, "unknown");
+                    assert_eq!(new_mode, expected);
+                }
+                other => panic!("Expected CapabilityModeChanged, got {:?}", other),
+            }
+        }
+    }
+
+    #[test]
+    fn test_annotate_output_clamped_all_modes() {
+        use flight_core::profile::CapabilityMode;
+        let cases = [
+            (CapabilityMode::Full, "full"),
+            (CapabilityMode::Demo, "demo"),
+            (CapabilityMode::Kid, "kid"),
+        ];
+        for (mode, expected) in cases {
+            let mut annotator = BlackboxAnnotator::new();
+            annotator.set_max_buffer_size(100);
+            annotator.annotate_output_clamped("aileron", 1.2, 1.0, mode);
+            let events = annotator.get_buffered_events();
+            assert_eq!(events.len(), 1);
+            match &events[0] {
+                BlackboxEvent::OutputClamped {
+                    axis_name,
+                    original_output,
+                    clamped_output,
+                    capability_mode,
+                    limit_type,
+                    ..
+                } => {
+                    assert_eq!(axis_name, "aileron");
+                    assert_eq!(*original_output, 1.2);
+                    assert_eq!(*clamped_output, 1.0);
+                    assert_eq!(capability_mode, expected);
+                    assert_eq!(limit_type, "max_axis_output");
+                }
+                other => panic!("Expected OutputClamped, got {:?}", other),
+            }
+        }
+    }
+
+    #[test]
+    fn test_resolution_failure_recorded() {
+        // success=false should still record an event, but as a failure.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        let details = ResolutionDetails::new(
+            "ApplyGainCompensation".to_string(),
+            HashMap::new(),
+            vec![],
+            None,
+            false,
+        );
+        annotator.annotate_resolution_applied("axis", "ApplyGainCompensation", false, details);
+        let events = annotator.get_buffered_events();
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            BlackboxEvent::ResolutionApplied {
+                success, details, ..
+            } => {
+                assert!(!*success);
+                assert!(!details.verification_passed);
+                assert!(details.backup_path.is_none());
+                assert!(details.affected_files.is_empty());
+            }
+            other => panic!("Expected ResolutionApplied, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_disabled_annotator_ignores_all_event_kinds() {
+        // When disabled, none of the annotate_* methods should buffer anything.
+        use flight_core::profile::CapabilityMode;
+        let mut annotator = BlackboxAnnotator::disabled();
+        let conflict = create_test_conflict();
+        let details = ResolutionDetails::new("X".to_string(), HashMap::new(), vec![], None, true);
+        annotator.annotate_conflict_detected("a", &conflict);
+        annotator.annotate_resolution_applied("a", "X", true, details);
+        annotator.annotate_conflict_cleared("a", "r");
+        annotator.annotate_pre_fault_capture("a", 1, 1);
+        annotator.annotate_capability_mode_changed("a", CapabilityMode::Full);
+        annotator.annotate_output_clamped("a", 1.0, 0.5, CapabilityMode::Kid);
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_set_max_buffer_size_triggers_flush() {
+        // Shrinking the buffer below current occupancy must auto-flush.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_conflict_cleared("axis_a", "r1");
+        annotator.annotate_conflict_cleared("axis_b", "r2");
+        annotator.annotate_conflict_cleared("axis_c", "r3");
+        assert_eq!(annotator.get_buffered_events().len(), 3);
+
+        // New max=2, occupancy=3 -> flush triggered.
+        annotator.set_max_buffer_size(2);
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_set_max_buffer_size_no_flush_when_under_limit() {
+        // Resizing larger or to an unmet limit must not flush.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_conflict_cleared("axis_a", "r1");
+        annotator.annotate_conflict_cleared("axis_b", "r2");
+        assert_eq!(annotator.get_buffered_events().len(), 2);
+
+        // New max=10, occupancy=2 -> no flush.
+        annotator.set_max_buffer_size(10);
+        assert_eq!(annotator.get_buffered_events().len(), 2);
+    }
+
+    #[test]
+    fn test_conflict_metadata_to_conflict_data_conversion() {
+        // ConflictMetadata-only conversion uses placeholder type/severity.
+        let metadata = ConflictMetadata {
+            sim_curve_strength: 0.7,
+            profile_curve_strength: 0.1,
+            combined_nonlinearity: 0.25,
+            test_inputs: vec![0.0, 0.25, 0.5, 0.75, 1.0],
+            expected_outputs: vec![0.0, 0.25, 0.5, 0.75, 1.0],
+            actual_outputs: vec![0.0, 0.20, 0.45, 0.70, 1.0],
+            detection_timestamp: Instant::now(),
+        };
+        let data: ConflictData = (&metadata).into();
+        assert_eq!(data.conflict_type, "Unknown");
+        assert_eq!(data.severity, "Unknown");
+        assert_eq!(data.description, "Metadata only");
+        assert_eq!(data.sim_curve_strength, 0.7);
+        assert_eq!(data.profile_curve_strength, 0.1);
+        assert_eq!(data.combined_nonlinearity, 0.25);
+        assert_eq!(data.test_inputs.len(), 5);
+        assert_eq!(data.expected_outputs.len(), 5);
+        assert_eq!(data.actual_outputs.len(), 5);
+    }
+
+    #[test]
+    fn test_resolution_details_new_defaults_metrics_to_none() {
+        let mut params = HashMap::new();
+        params.insert("strength".to_string(), "0.5".to_string());
+        let details = ResolutionDetails::new(
+            "ReduceCurveStrength".to_string(),
+            params.clone(),
+            vec!["axis.cfg".to_string()],
+            Some("/tmp/backup".to_string()),
+            true,
+        );
+        assert_eq!(details.resolution_type, "ReduceCurveStrength");
+        assert_eq!(
+            details.parameters.get("strength").map(String::as_str),
+            Some("0.5")
+        );
+        assert_eq!(details.affected_files, vec!["axis.cfg".to_string()]);
+        assert_eq!(details.backup_path.as_deref(), Some("/tmp/backup"));
+        assert!(details.verification_passed);
+        assert!(details.before_metrics.is_none());
+        assert!(details.after_metrics.is_none());
+    }
+
+    #[test]
+    fn test_resolution_details_with_metrics_attaches_both() {
+        let conflict = create_test_conflict();
+        let before: ConflictData = (&conflict).into();
+        let after: ConflictData = (&conflict).into();
+        let details = ResolutionDetails::new(
+            "DisableSimCurve".to_string(),
+            HashMap::new(),
+            vec![],
+            None,
+            true,
+        )
+        .with_metrics(Some(before), Some(after));
+        assert!(details.before_metrics.is_some());
+        assert!(details.after_metrics.is_some());
+
+        // Calling with_metrics with None should clear them back out.
+        let cleared = details.with_metrics(None, None);
+        assert!(cleared.before_metrics.is_none());
+        assert!(cleared.after_metrics.is_none());
+    }
+
+    #[test]
+    fn test_buffer_flush_threshold_exact_boundary() {
+        // Adding the Nth event when max=N must trigger a flush, not require N+1.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(3);
+        annotator.annotate_conflict_cleared("a", "1");
+        annotator.annotate_conflict_cleared("a", "2");
+        assert_eq!(annotator.get_buffered_events().len(), 2);
+        annotator.annotate_conflict_cleared("a", "3");
+        // The third push reaches len == max_buffer_size, which triggers flush.
+        assert_eq!(annotator.get_buffered_events().len(), 0);
+    }
+
+    #[test]
+    fn test_get_buffered_events_returns_chronological_order() {
+        // Events must be retained in insertion order before flush.
+        let mut annotator = BlackboxAnnotator::new();
+        annotator.set_max_buffer_size(100);
+        annotator.annotate_conflict_cleared("axis_a", "first");
+        annotator.annotate_conflict_cleared("axis_b", "second");
+        annotator.annotate_conflict_cleared("axis_c", "third");
+        let events = annotator.get_buffered_events();
+        assert_eq!(events.len(), 3);
+        let reasons: Vec<&str> = events
+            .iter()
+            .map(|e| match e {
+                BlackboxEvent::ConflictCleared { reason, .. } => reason.as_str(),
+                _ => panic!("unexpected variant"),
+            })
+            .collect();
+        assert_eq!(reasons, vec!["first", "second", "third"]);
+    }
+
+    #[test]
+    fn test_conflict_data_round_trips_input_vectors() {
+        // From<&CurveConflict> must preserve the full test_inputs/outputs vectors.
+        let conflict = create_test_conflict();
+        let data: ConflictData = (&conflict).into();
+        assert_eq!(data.test_inputs, vec![0.0, 0.5, 1.0]);
+        assert_eq!(data.expected_outputs, vec![0.0, 0.5, 1.0]);
+        assert_eq!(data.actual_outputs, vec![0.0, 0.3, 1.0]);
+        assert_eq!(data.sim_curve_strength, 0.3);
+        assert_eq!(data.profile_curve_strength, 0.2);
+    }
+
+    #[test]
+    fn test_unused_resolution_type_import_compiles() {
+        // Sanity: ConflictResolution / ResolutionType from the parent crate
+        // are reachable from the test module (used by existing tests via path).
+        // This guards against accidental visibility regressions.
+        let _ = ResolutionType::DisableSimCurve;
+        let _ = ConflictResolution {
+            resolution_type: ResolutionType::DisableProfileCurve,
+            description: "noop".to_string(),
+            estimated_improvement: 0.0,
+            requires_sim_restart: false,
+            parameters: HashMap::new(),
+        };
+    }
 }
