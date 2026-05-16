@@ -647,4 +647,431 @@ mod tests {
         assert_eq!(log[0].description, "Event 1");
         assert_eq!(log[1].description, "Event 2");
     }
+
+    // ---- Helpers ----
+
+    fn make_event(description: &str, severity: SecuritySeverity) -> AuditEvent {
+        AuditEvent {
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            event_type: AuditEventType::IpcConnection,
+            component: "test".to_string(),
+            description: description.to_string(),
+            metadata: HashMap::new(),
+            severity,
+        }
+    }
+
+    fn make_check(
+        name: &str,
+        status: VerificationStatus,
+        severity: SecuritySeverity,
+    ) -> SecurityCheck {
+        SecurityCheck {
+            name: name.to_string(),
+            category: SecurityCategory::IpcSecurity,
+            status,
+            description: format!("{} description", name),
+            details: None,
+            severity,
+            remediation: Some(format!("Fix {}", name)),
+        }
+    }
+
+    // ---- VerificationConfig::default ----
+
+    #[test]
+    fn test_verification_config_defaults() {
+        let cfg = VerificationConfig::default();
+        assert!(cfg.audit_logging_enabled);
+        assert_eq!(cfg.max_audit_events, 10000);
+        assert!(!cfg.fail_on_warnings);
+        assert!(cfg.skip_checks.is_empty());
+        assert!(cfg.custom_policies.is_empty());
+    }
+
+    // ---- SecurityVerifier::new / default ----
+
+    #[test]
+    fn test_security_verifier_new_has_empty_audit_log() {
+        let verifier = SecurityVerifier::new(VerificationConfig::default());
+        assert!(verifier.get_audit_log().is_empty());
+    }
+
+    #[test]
+    fn test_security_verifier_default_has_empty_audit_log() {
+        let verifier = SecurityVerifier::default();
+        assert!(verifier.get_audit_log().is_empty());
+    }
+
+    // ---- audit_event behaviour ----
+
+    #[test]
+    fn test_audit_event_noop_when_disabled() {
+        let config = VerificationConfig {
+            audit_logging_enabled: false,
+            ..Default::default()
+        };
+        let mut verifier = SecurityVerifier::new(config);
+        verifier.audit_event(make_event("ignored", SecuritySeverity::High));
+        assert!(verifier.get_audit_log().is_empty());
+    }
+
+    #[test]
+    fn test_audit_event_severity_routing_all_variants_appended() {
+        let mut verifier = SecurityVerifier::default();
+        verifier.audit_event(make_event("critical-evt", SecuritySeverity::Critical));
+        verifier.audit_event(make_event("high-evt", SecuritySeverity::High));
+        verifier.audit_event(make_event("medium-evt", SecuritySeverity::Medium));
+        verifier.audit_event(make_event("low-evt", SecuritySeverity::Low));
+        verifier.audit_event(make_event("info-evt", SecuritySeverity::Info));
+
+        let log = verifier.get_audit_log();
+        assert_eq!(log.len(), 5);
+        assert_eq!(log[0].description, "critical-evt");
+        assert_eq!(log[0].severity, SecuritySeverity::Critical);
+        assert_eq!(log[1].severity, SecuritySeverity::High);
+        assert_eq!(log[2].severity, SecuritySeverity::Medium);
+        assert_eq!(log[3].severity, SecuritySeverity::Low);
+        assert_eq!(log[4].severity, SecuritySeverity::Info);
+    }
+
+    #[test]
+    fn test_audit_log_trimming_capacity_one() {
+        let config = VerificationConfig {
+            max_audit_events: 1,
+            ..Default::default()
+        };
+        let mut verifier = SecurityVerifier::new(config);
+
+        for i in 0..5 {
+            verifier.audit_event(make_event(&format!("evt-{}", i), SecuritySeverity::Info));
+        }
+
+        let log = verifier.get_audit_log();
+        assert_eq!(log.len(), 1);
+        // FIFO trimming keeps the newest event
+        assert_eq!(log[0].description, "evt-4");
+    }
+
+    #[test]
+    fn test_audit_log_trimming_capacity_five_keeps_newest() {
+        let config = VerificationConfig {
+            max_audit_events: 5,
+            ..Default::default()
+        };
+        let mut verifier = SecurityVerifier::new(config);
+
+        for i in 0..10 {
+            verifier.audit_event(make_event(&format!("evt-{}", i), SecuritySeverity::Info));
+        }
+
+        let log = verifier.get_audit_log();
+        assert_eq!(log.len(), 5);
+        // Should retain the five newest: evt-5 .. evt-9
+        assert_eq!(log[0].description, "evt-5");
+        assert_eq!(log[4].description, "evt-9");
+    }
+
+    #[test]
+    fn test_audit_log_no_trim_when_below_capacity() {
+        let config = VerificationConfig {
+            max_audit_events: 10,
+            ..Default::default()
+        };
+        let mut verifier = SecurityVerifier::new(config);
+
+        for i in 0..3 {
+            verifier.audit_event(make_event(&format!("evt-{}", i), SecuritySeverity::Info));
+        }
+
+        assert_eq!(verifier.get_audit_log().len(), 3);
+    }
+
+    // ---- get_audit_log / clear_audit_log ----
+
+    #[test]
+    fn test_get_audit_log_initially_empty() {
+        let verifier = SecurityVerifier::default();
+        let log = verifier.get_audit_log();
+        assert!(log.is_empty());
+        assert_eq!(log.len(), 0);
+    }
+
+    #[test]
+    fn test_clear_audit_log_empties_buffer() {
+        let mut verifier = SecurityVerifier::default();
+        verifier.audit_event(make_event("a", SecuritySeverity::Info));
+        verifier.audit_event(make_event("b", SecuritySeverity::High));
+        verifier.audit_event(make_event("c", SecuritySeverity::Critical));
+        assert_eq!(verifier.get_audit_log().len(), 3);
+
+        verifier.clear_audit_log();
+        assert!(verifier.get_audit_log().is_empty());
+
+        // Clearing an already-empty log should remain safe
+        verifier.clear_audit_log();
+        assert!(verifier.get_audit_log().is_empty());
+    }
+
+    // ---- verify_security ----
+
+    #[tokio::test]
+    async fn test_verify_security_returns_pass_with_non_empty_checks() {
+        let mut verifier = SecurityVerifier::default();
+        let result = verifier.verify_security().await.unwrap();
+
+        assert_eq!(result.overall_status, VerificationStatus::Pass);
+        assert!(!result.checks.is_empty());
+        assert!(result.timestamp > 0);
+        // duration_ms exists and is accessible
+        let _: u64 = result.duration_ms;
+        // No failures means no recommendations should be generated
+        assert!(result.recommendations.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_verify_security_with_fail_on_warnings_still_pass() {
+        let config = VerificationConfig {
+            fail_on_warnings: true,
+            ..Default::default()
+        };
+        let mut verifier = SecurityVerifier::new(config);
+        let result = verifier.verify_security().await.unwrap();
+
+        // Stubs all return Pass, so even with fail_on_warnings=true the
+        // overall status remains Pass (no warnings present).
+        assert_eq!(result.overall_status, VerificationStatus::Pass);
+        assert!(!result.checks.is_empty());
+    }
+
+    // ---- generate_recommendations (private) ----
+
+    #[test]
+    fn test_generate_recommendations_empty_input() {
+        let verifier = SecurityVerifier::default();
+        let recs = verifier.generate_recommendations(&[]);
+        assert!(recs.is_empty());
+    }
+
+    #[test]
+    fn test_generate_recommendations_failed_critical() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![make_check(
+            "crit_check",
+            VerificationStatus::Fail,
+            SecuritySeverity::Critical,
+        )];
+        let recs = verifier.generate_recommendations(&checks);
+        assert_eq!(recs.len(), 1);
+        assert_eq!(recs[0].priority, RecommendationPriority::Critical);
+        assert!(recs[0].action_required);
+        assert_eq!(
+            recs[0].remediation_steps,
+            vec!["Fix crit_check".to_string()]
+        );
+        assert!(recs[0].title.contains("crit_check"));
+    }
+
+    #[test]
+    fn test_generate_recommendations_failed_high_requires_action() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![make_check(
+            "high_check",
+            VerificationStatus::Fail,
+            SecuritySeverity::High,
+        )];
+        let recs = verifier.generate_recommendations(&checks);
+        assert_eq!(recs.len(), 1);
+        assert_eq!(recs[0].priority, RecommendationPriority::High);
+        assert!(recs[0].action_required);
+    }
+
+    #[test]
+    fn test_generate_recommendations_failed_medium_no_action() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![make_check(
+            "med_check",
+            VerificationStatus::Fail,
+            SecuritySeverity::Medium,
+        )];
+        let recs = verifier.generate_recommendations(&checks);
+        assert_eq!(recs.len(), 1);
+        assert_eq!(recs[0].priority, RecommendationPriority::Medium);
+        assert!(!recs[0].action_required);
+    }
+
+    #[test]
+    fn test_generate_recommendations_failed_low_and_info_become_low_priority() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![
+            make_check("low_check", VerificationStatus::Fail, SecuritySeverity::Low),
+            make_check(
+                "info_check",
+                VerificationStatus::Fail,
+                SecuritySeverity::Info,
+            ),
+        ];
+        let recs = verifier.generate_recommendations(&checks);
+        assert_eq!(recs.len(), 2);
+        assert_eq!(recs[0].priority, RecommendationPriority::Low);
+        assert!(!recs[0].action_required);
+        assert_eq!(recs[1].priority, RecommendationPriority::Low);
+        assert!(!recs[1].action_required);
+    }
+
+    #[test]
+    fn test_generate_recommendations_pass_checks_skipped() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![
+            make_check("ok1", VerificationStatus::Pass, SecuritySeverity::Critical),
+            make_check("ok2", VerificationStatus::Pass, SecuritySeverity::High),
+            make_check(
+                "warned",
+                VerificationStatus::Warning,
+                SecuritySeverity::High,
+            ),
+            make_check(
+                "na",
+                VerificationStatus::NotApplicable,
+                SecuritySeverity::Medium,
+            ),
+        ];
+        let recs = verifier.generate_recommendations(&checks);
+        assert!(recs.is_empty());
+    }
+
+    #[test]
+    fn test_generate_recommendations_missing_remediation_yields_empty_steps() {
+        let verifier = SecurityVerifier::default();
+        let mut check = make_check(
+            "no_remediation",
+            VerificationStatus::Fail,
+            SecuritySeverity::High,
+        );
+        check.remediation = None;
+        let recs = verifier.generate_recommendations(std::slice::from_ref(&check));
+        assert_eq!(recs.len(), 1);
+        assert!(recs[0].remediation_steps.is_empty());
+    }
+
+    // ---- determine_overall_status (private) ----
+
+    #[test]
+    fn test_determine_overall_status_all_pass() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![
+            make_check("a", VerificationStatus::Pass, SecuritySeverity::Info),
+            make_check("b", VerificationStatus::Pass, SecuritySeverity::Low),
+        ];
+        assert_eq!(
+            verifier.determine_overall_status(&checks),
+            VerificationStatus::Pass
+        );
+    }
+
+    #[test]
+    fn test_determine_overall_status_empty_is_pass() {
+        let verifier = SecurityVerifier::default();
+        assert_eq!(
+            verifier.determine_overall_status(&[]),
+            VerificationStatus::Pass
+        );
+    }
+
+    #[test]
+    fn test_determine_overall_status_any_fail_is_fail() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![
+            make_check("ok", VerificationStatus::Pass, SecuritySeverity::Info),
+            make_check("bad", VerificationStatus::Fail, SecuritySeverity::High),
+            make_check("warned", VerificationStatus::Warning, SecuritySeverity::Low),
+        ];
+        assert_eq!(
+            verifier.determine_overall_status(&checks),
+            VerificationStatus::Fail
+        );
+    }
+
+    #[test]
+    fn test_determine_overall_status_warnings_with_fail_on_warnings_true() {
+        let config = VerificationConfig {
+            fail_on_warnings: true,
+            ..Default::default()
+        };
+        let verifier = SecurityVerifier::new(config);
+        let checks = vec![
+            make_check("ok", VerificationStatus::Pass, SecuritySeverity::Info),
+            make_check(
+                "warned",
+                VerificationStatus::Warning,
+                SecuritySeverity::Medium,
+            ),
+        ];
+        assert_eq!(
+            verifier.determine_overall_status(&checks),
+            VerificationStatus::Fail
+        );
+    }
+
+    #[test]
+    fn test_determine_overall_status_warnings_with_fail_on_warnings_false() {
+        let verifier = SecurityVerifier::default();
+        let checks = vec![
+            make_check("ok", VerificationStatus::Pass, SecuritySeverity::Info),
+            make_check(
+                "warned",
+                VerificationStatus::Warning,
+                SecuritySeverity::Medium,
+            ),
+        ];
+        assert_eq!(
+            verifier.determine_overall_status(&checks),
+            VerificationStatus::Warning
+        );
+    }
+
+    // ---- Serde round-trips ----
+
+    #[test]
+    fn test_security_check_serde_round_trip() {
+        let check = make_check(
+            "rt_check",
+            VerificationStatus::Warning,
+            SecuritySeverity::High,
+        );
+        let json = serde_json::to_string(&check).unwrap();
+        let parsed: SecurityCheck = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.name, check.name);
+        assert_eq!(parsed.category, check.category);
+        assert_eq!(parsed.status, check.status);
+        assert_eq!(parsed.description, check.description);
+        assert_eq!(parsed.details, check.details);
+        assert_eq!(parsed.severity, check.severity);
+        assert_eq!(parsed.remediation, check.remediation);
+    }
+
+    #[test]
+    fn test_audit_event_serde_round_trip() {
+        let mut metadata = HashMap::new();
+        metadata.insert("k1".to_string(), "v1".to_string());
+        let event = AuditEvent {
+            timestamp: 42,
+            event_type: AuditEventType::SecurityViolation,
+            component: "comp".to_string(),
+            description: "desc".to_string(),
+            metadata,
+            severity: SecuritySeverity::Critical,
+        };
+        let json = serde_json::to_string(&event).unwrap();
+        let parsed: AuditEvent = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.timestamp, event.timestamp);
+        assert_eq!(parsed.event_type, event.event_type);
+        assert_eq!(parsed.component, event.component);
+        assert_eq!(parsed.description, event.description);
+        assert_eq!(parsed.metadata, event.metadata);
+        assert_eq!(parsed.severity, event.severity);
+    }
 }
