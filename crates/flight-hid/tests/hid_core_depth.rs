@@ -13,7 +13,7 @@
 use flight_hid::descriptor_parser::{self, CollectionType, HidItemType};
 use flight_hid::device_id::DeviceId;
 use flight_hid::discovery::{DeviceDiscovery, DeviceEvent, MockScanner};
-use flight_hid::hotplug::{HotplugEvent, MockHotplugMonitor, ReconnectManager};
+use flight_hid::hotplug::{HotplugEvent, MockHotplugMonitor};
 use flight_hid::report_builder::HidReportBuilder;
 use flight_hid::stable_id::{DeviceFingerprint, DeviceRegistry, StableDeviceId};
 
@@ -632,6 +632,7 @@ mod stable_device_id {
 
 mod hot_plug {
     use super::*;
+    use flight_hid::HotplugMonitor;
 
     #[test]
     fn device_connect_event() {
