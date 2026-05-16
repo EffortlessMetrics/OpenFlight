@@ -44,6 +44,9 @@ mutants.out.old
 # CI/automation runs
 .runs/
 
+# Claude agent worktrees (ephemeral)
+.claude/worktrees/
+
 # Environment files
 .env
 .env.*
