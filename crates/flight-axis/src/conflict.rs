@@ -555,4 +555,337 @@ mod tests {
                 .any(|r| r.resolution_type == ResolutionType::DisableSimCurve)
         );
     }
+
+    fn make_analysis(combined: f32, sim: f32, profile: f32) -> LinearityAnalysis {
+        LinearityAnalysis {
+            mean_deviation: combined,
+            max_deviation: combined,
+            combined_nonlinearity: combined,
+            sim_curve_strength: sim,
+            profile_curve_strength: profile,
+            test_inputs: vec![0.0, 0.5, 1.0],
+            expected_outputs: vec![0.0, 0.5, 1.0],
+            actual_outputs: vec![0.0, 0.5, 1.0],
+        }
+    }
+
+    #[test]
+    fn test_config_defaults_are_sensible() {
+        let cfg = ConflictDetectorConfig::default();
+        assert_eq!(cfg.test_points, 11);
+        assert!((cfg.nonlinearity_threshold - 0.15).abs() < f32::EPSILON);
+        assert_eq!(cfg.sample_window_ms, 5000);
+        assert_eq!(cfg.min_samples, 50);
+        assert!(cfg.continuous_monitoring);
+    }
+
+    #[test]
+    fn test_detector_default_matches_new() {
+        let d1 = CurveConflictDetector::new();
+        let d2 = CurveConflictDetector::default();
+        assert_eq!(d1.get_all_conflicts().len(), 0);
+        assert_eq!(d2.get_all_conflicts().len(), 0);
+        assert!(d1.sample_buffer.is_empty());
+        assert!(d2.sample_buffer.is_empty());
+        assert!(d1.last_analysis.is_empty());
+        assert!(d1.analysis_in_progress.is_empty());
+    }
+
+    #[test]
+    fn test_with_config_preserves_values() {
+        let cfg = ConflictDetectorConfig {
+            test_points: 21,
+            nonlinearity_threshold: 0.25,
+            sample_window_ms: 2500,
+            min_samples: 10,
+            continuous_monitoring: false,
+        };
+        let detector = CurveConflictDetector::with_config(cfg);
+        assert_eq!(detector.config.test_points, 21);
+        assert_eq!(detector.config.min_samples, 10);
+        assert!(!detector.config.continuous_monitoring);
+    }
+
+    #[test]
+    fn test_get_conflicts_empty_before_analysis() {
+        let detector = CurveConflictDetector::new();
+        assert!(detector.get_conflicts("nonexistent").is_none());
+        assert!(detector.get_all_conflicts().is_empty());
+    }
+
+    #[test]
+    fn test_add_sample_multi_axis_isolation() {
+        let mut detector = CurveConflictDetector::new();
+        detector.add_sample("pitch", &AxisFrame::new(0.1, 1));
+        detector.add_sample("pitch", &AxisFrame::new(0.2, 2));
+        detector.add_sample("roll", &AxisFrame::new(0.3, 3));
+
+        assert_eq!(detector.sample_buffer["pitch"].len(), 2);
+        assert_eq!(detector.sample_buffer["roll"].len(), 1);
+        assert!(!detector.sample_buffer.contains_key("yaw"));
+    }
+
+    #[test]
+    fn test_add_sample_grows_buffer_past_min_samples_doubled() {
+        // Use small min_samples to verify trim path is exercised without
+        // shrinking the buffer (all samples are fresh).
+        let cfg = ConflictDetectorConfig {
+            min_samples: 4,
+            sample_window_ms: 60_000,
+            ..ConflictDetectorConfig::default()
+        };
+        let mut detector = CurveConflictDetector::with_config(cfg);
+
+        // Add more than min_samples * 2 = 8 samples; all timestamps are recent
+        // so retain() should keep them all.
+        for i in 0..20 {
+            let frame = AxisFrame::new(i as f32 * 0.05, i as u64);
+            detector.add_sample("axis", &frame);
+        }
+        assert_eq!(detector.sample_buffer["axis"].len(), 20);
+    }
+
+    #[test]
+    fn test_clear_conflicts_resets_state() {
+        let mut detector = CurveConflictDetector::new();
+        detector.add_sample("axis", &AxisFrame::new(0.5, 1));
+        // Inject synthetic conflict and analysis state to confirm clear wipes all.
+        let analysis = make_analysis(0.5, 0.3, 0.2);
+        let conflict = CurveConflict {
+            axis_name: "axis".to_string(),
+            conflict_type: ConflictType::DoubleCurve,
+            severity: ConflictSeverity::High,
+            description: detector.generate_description(&ConflictType::DoubleCurve, &analysis),
+            metadata: ConflictMetadata {
+                sim_curve_strength: 0.3,
+                profile_curve_strength: 0.2,
+                combined_nonlinearity: 0.5,
+                test_inputs: vec![],
+                expected_outputs: vec![],
+                actual_outputs: vec![],
+                detection_timestamp: Instant::now(),
+            },
+            suggested_resolutions: vec![],
+            detected_at: Instant::now(),
+        };
+        detector
+            .detected_conflicts
+            .insert("axis".to_string(), conflict);
+        detector
+            .last_analysis
+            .insert("axis".to_string(), Instant::now());
+
+        detector.clear_conflicts("axis");
+
+        assert!(!detector.detected_conflicts.contains_key("axis"));
+        assert!(!detector.sample_buffer.contains_key("axis"));
+        assert!(!detector.last_analysis.contains_key("axis"));
+    }
+
+    #[test]
+    fn test_analyze_samples_returns_none_below_min_samples() {
+        let detector = CurveConflictDetector::new();
+        let now = Instant::now();
+        let samples: Vec<SamplePoint> = (0..5)
+            .map(|i| SamplePoint {
+                input: i as f32 * 0.1,
+                output: i as f32 * 0.1,
+                timestamp: now,
+            })
+            .collect();
+        assert!(detector.analyze_samples("axis", &samples).is_none());
+    }
+
+    #[test]
+    fn test_analyze_samples_returns_none_for_linear_response() {
+        let cfg = ConflictDetectorConfig {
+            min_samples: 5,
+            ..ConflictDetectorConfig::default()
+        };
+        let detector = CurveConflictDetector::with_config(cfg);
+        let now = Instant::now();
+        let samples: Vec<SamplePoint> = (0..20)
+            .map(|i| {
+                let v = i as f32 / 19.0;
+                SamplePoint {
+                    input: v,
+                    output: v,
+                    timestamp: now,
+                }
+            })
+            .collect();
+        // Perfectly linear -> nonlinearity == 0 -> below threshold -> None.
+        assert!(detector.analyze_samples("axis", &samples).is_none());
+    }
+
+    #[test]
+    fn test_analyze_samples_detects_nonlinear_step_response() {
+        let cfg = ConflictDetectorConfig {
+            min_samples: 5,
+            nonlinearity_threshold: 0.15,
+            ..ConflictDetectorConfig::default()
+        };
+        let detector = CurveConflictDetector::with_config(cfg);
+        let now = Instant::now();
+        // Step-like response: outputs 0 for low inputs, jumps to 1 for high inputs.
+        let samples: Vec<SamplePoint> = (0..20)
+            .map(|i| {
+                let v = i as f32 / 19.0;
+                let out = if v < 0.5 { 0.0 } else { 1.0 };
+                SamplePoint {
+                    input: v,
+                    output: out,
+                    timestamp: now,
+                }
+            })
+            .collect();
+        let conflict = detector
+            .analyze_samples("step_axis", &samples)
+            .expect("step response should be detected");
+        assert_eq!(conflict.axis_name, "step_axis");
+        assert!(conflict.metadata.combined_nonlinearity > 0.15);
+        assert!(!conflict.suggested_resolutions.is_empty());
+    }
+
+    #[test]
+    fn test_analyze_linearity_handles_degenerate_input() {
+        let detector = CurveConflictDetector::new();
+        let now = Instant::now();
+        // All identical samples -> input_range = 0, output_range = 0; must not panic.
+        let samples: Vec<SamplePoint> = (0..10)
+            .map(|_| SamplePoint {
+                input: 0.5,
+                output: 0.5,
+                timestamp: now,
+            })
+            .collect();
+        let analysis = detector.analyze_linearity(&samples);
+        assert_eq!(analysis.combined_nonlinearity, 0.0);
+        assert_eq!(analysis.mean_deviation, 0.0);
+    }
+
+    #[test]
+    fn test_assess_severity_thresholds() {
+        let detector = CurveConflictDetector::new();
+        assert_eq!(
+            detector.assess_severity(&make_analysis(0.7, 0.0, 0.0)),
+            ConflictSeverity::Critical
+        );
+        assert_eq!(
+            detector.assess_severity(&make_analysis(0.5, 0.0, 0.0)),
+            ConflictSeverity::High
+        );
+        assert_eq!(
+            detector.assess_severity(&make_analysis(0.3, 0.0, 0.0)),
+            ConflictSeverity::Medium
+        );
+        assert_eq!(
+            detector.assess_severity(&make_analysis(0.1, 0.0, 0.0)),
+            ConflictSeverity::Low
+        );
+        // Boundary: equal to threshold falls through to lower bucket.
+        assert_eq!(
+            detector.assess_severity(&make_analysis(0.6, 0.0, 0.0)),
+            ConflictSeverity::High
+        );
+    }
+
+    #[test]
+    fn test_classify_conflict_branches() {
+        let detector = CurveConflictDetector::new();
+        assert_eq!(
+            detector.classify_conflict(&make_analysis(0.2, 0.4, 0.3)),
+            ConflictType::DoubleCurve
+        );
+        assert_eq!(
+            detector.classify_conflict(&make_analysis(0.5, 0.05, 0.05)),
+            ConflictType::ExcessiveNonlinearity
+        );
+        assert_eq!(
+            detector.classify_conflict(&make_analysis(0.2, 0.05, 0.05)),
+            ConflictType::OpposingCurves
+        );
+    }
+
+    #[test]
+    fn test_generate_description_per_type() {
+        let detector = CurveConflictDetector::new();
+        let analysis = make_analysis(0.42, 0.3, 0.2);
+
+        let double = detector.generate_description(&ConflictType::DoubleCurve, &analysis);
+        assert!(double.contains("simulator and profile curves"));
+        assert!(double.contains("42.0%"));
+
+        let excessive =
+            detector.generate_description(&ConflictType::ExcessiveNonlinearity, &analysis);
+        assert!(excessive.contains("non-linear response"));
+        assert!(excessive.contains("42.0%"));
+
+        let opposing = detector.generate_description(&ConflictType::OpposingCurves, &analysis);
+        assert!(opposing.contains("work against each other"));
+        assert!(opposing.contains("42.0%"));
+    }
+
+    #[test]
+    fn test_generate_resolutions_for_excessive_nonlinearity() {
+        let detector = CurveConflictDetector::new();
+        let analysis = make_analysis(0.5, 0.2, 0.2);
+        let resolutions =
+            detector.generate_resolutions(&ConflictType::ExcessiveNonlinearity, &analysis);
+        assert_eq!(resolutions.len(), 1);
+        assert_eq!(
+            resolutions[0].resolution_type,
+            ResolutionType::ReduceCurveStrength
+        );
+        assert_eq!(
+            resolutions[0]
+                .parameters
+                .get("target_strength")
+                .map(String::as_str),
+            Some("0.5")
+        );
+        assert!(!resolutions[0].requires_sim_restart);
+    }
+
+    #[test]
+    fn test_generate_resolutions_for_opposing_curves() {
+        let detector = CurveConflictDetector::new();
+        let analysis = make_analysis(0.5, 0.05, 0.05);
+        let resolutions = detector.generate_resolutions(&ConflictType::OpposingCurves, &analysis);
+        assert_eq!(resolutions.len(), 1);
+        assert_eq!(
+            resolutions[0].resolution_type,
+            ResolutionType::ApplyGainCompensation
+        );
+        let gain = resolutions[0]
+            .parameters
+            .get("gain_factor")
+            .expect("gain_factor parameter present");
+        let parsed: f32 = gain.parse().expect("gain_factor parses as f32");
+        // compensation = 1 / (1 + 0.5)
+        assert!((parsed - (1.0 / 1.5)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_severity_equality_and_ordering() {
+        assert_eq!(ConflictSeverity::Low, ConflictSeverity::Low);
+        assert!(ConflictSeverity::Low < ConflictSeverity::Medium);
+        assert!(ConflictSeverity::Critical >= ConflictSeverity::Critical);
+        let mut v = vec![
+            ConflictSeverity::Critical,
+            ConflictSeverity::Low,
+            ConflictSeverity::High,
+            ConflictSeverity::Medium,
+        ];
+        v.sort();
+        assert_eq!(
+            v,
+            vec![
+                ConflictSeverity::Low,
+                ConflictSeverity::Medium,
+                ConflictSeverity::High,
+                ConflictSeverity::Critical,
+            ]
+        );
+    }
 }
