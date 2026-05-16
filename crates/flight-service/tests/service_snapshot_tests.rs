@@ -8,8 +8,10 @@ use flight_service::error_taxonomy::{ErrorCategory, ErrorCode, ErrorTaxonomy};
 use flight_service::health::{
     HealthCategory, HealthCheck, HealthCheckReport, HealthEvent, HealthSeverity, OverallStatus,
 };
-use flight_service::safe_mode::{SafeModeConfig, SafeModeDiagnostic, ValidationResult};
 use flight_service::power::{PowerCheck, PowerCheckStatus, PowerStatus, RemediationStep};
+use flight_service::safe_mode::{
+    self as safe_mode_types, SafeModeConfig, SafeModeDiagnostic, ValidationResult,
+};
 use std::collections::HashMap;
 
 // ── Health report snapshots ─────────────────────────────────────────────────
@@ -141,6 +143,10 @@ fn snapshot_safe_mode_config_default_yaml() {
 fn snapshot_safe_mode_diagnostic_yaml() {
     let diag = SafeModeDiagnostic {
         reason: "FFB subsystem fault detected during startup".into(),
+        degradation_reasons: vec![
+            safe_mode_types::DegradationReason::HardwareFault,
+            safe_mode_types::DegradationReason::AdapterFailure,
+        ],
         failed_components: vec!["ffb-engine".into(), "hid-manager".into()],
         recommended_actions: vec![
             "Disconnect and reconnect force feedback device".into(),
