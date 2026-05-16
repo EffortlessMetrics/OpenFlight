@@ -280,8 +280,8 @@ impl ReleaseManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{Signer, SigningKey};
-    use rand_core::OsRng;
+    use ed25519_dalek::{Signer, SigningKey, pkcs8::DecodePrivateKey};
+    use uselesskey::{Ed25519FactoryExt, Ed25519Spec, Factory, Seed};
 
     // -- helpers ----------------------------------------------------------
 
@@ -323,6 +323,16 @@ mod tests {
             signature: String::new(),
             min_version: Some(SemVer::new(1, 0, 0)),
         }
+    }
+
+    fn signing_key_fixture(label: &str) -> SigningKey {
+        let seed =
+            Seed::from_env_value("flight-updater-manifest-tests").expect("test seed must be valid");
+        let factory = Factory::deterministic(seed);
+        let keypair = factory.ed25519(label, Ed25519Spec::new());
+
+        SigningKey::from_pkcs8_der(keypair.private_key_pkcs8_der().as_ref())
+            .expect("uselesskey should emit valid Ed25519 PKCS#8")
     }
 
     fn sign_manifest(manifest: &mut UpdateManifest, signing_key: &SigningKey) {
@@ -408,7 +418,7 @@ mod tests {
 
     #[test]
     fn verify_signature_valid_keypair() {
-        let sk = SigningKey::generate(&mut OsRng);
+        let sk = signing_key_fixture("valid-keypair");
         let pk_hex = hex::encode(sk.verifying_key().to_bytes());
 
         let mut manifest = unsigned_manifest();
@@ -419,8 +429,8 @@ mod tests {
 
     #[test]
     fn verify_signature_wrong_key_fails() {
-        let sk = SigningKey::generate(&mut OsRng);
-        let wrong_sk = SigningKey::generate(&mut OsRng);
+        let sk = signing_key_fixture("wrong-key-source");
+        let wrong_sk = signing_key_fixture("wrong-key-target");
         let wrong_pk_hex = hex::encode(wrong_sk.verifying_key().to_bytes());
 
         let mut manifest = unsigned_manifest();
@@ -431,7 +441,7 @@ mod tests {
 
     #[test]
     fn verify_signature_tampered_version_fails() {
-        let sk = SigningKey::generate(&mut OsRng);
+        let sk = signing_key_fixture("tampered-version");
         let pk_hex = hex::encode(sk.verifying_key().to_bytes());
 
         let mut manifest = unsigned_manifest();
@@ -443,7 +453,7 @@ mod tests {
 
     #[test]
     fn verify_signature_tampered_files_fails() {
-        let sk = SigningKey::generate(&mut OsRng);
+        let sk = signing_key_fixture("tampered-files");
         let pk_hex = hex::encode(sk.verifying_key().to_bytes());
 
         let mut manifest = unsigned_manifest();
@@ -467,7 +477,7 @@ mod tests {
 
     #[test]
     fn verify_signature_empty_signature_field() {
-        let sk = SigningKey::generate(&mut OsRng);
+        let sk = signing_key_fixture("empty-signature-field");
         let pk_hex = hex::encode(sk.verifying_key().to_bytes());
         let manifest = unsigned_manifest(); // signature is ""
         assert!(verify_signature(&manifest, &pk_hex).is_err());

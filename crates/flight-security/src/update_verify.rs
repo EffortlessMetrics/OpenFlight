@@ -59,12 +59,23 @@ pub fn verify_with_pinned_key(manifest: &[u8], signature: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{Signer, SigningKey};
+    use ed25519_dalek::{Signer, SigningKey, pkcs8::DecodePrivateKey};
+    use uselesskey::{Ed25519FactoryExt, Ed25519Spec, Factory, Seed};
 
-    /// Helper: generate a fresh Ed25519 keypair and sign `message`.
-    fn sign_message(message: &[u8]) -> (SigningKey, Vec<u8>, Vec<u8>) {
-        let mut csprng = rand_core::OsRng;
-        let sk = SigningKey::generate(&mut csprng);
+    /// Build a deterministic Ed25519 fixture without committing test keys.
+    fn signing_key_fixture(label: &str) -> SigningKey {
+        let seed =
+            Seed::from_env_value("flight-security-update-verify").expect("seed must be valid");
+        let factory = Factory::deterministic(seed);
+        let keypair = factory.ed25519(label, Ed25519Spec::new());
+
+        SigningKey::from_pkcs8_der(keypair.private_key_pkcs8_der().as_ref())
+            .expect("uselesskey should emit valid Ed25519 PKCS#8")
+    }
+
+    /// Helper: deterministically derive an Ed25519 keypair and sign `message`.
+    fn sign_message(label: &str, message: &[u8]) -> (SigningKey, Vec<u8>, Vec<u8>) {
+        let sk = signing_key_fixture(label);
         let sig = sk.sign(message);
         let pubkey = sk.verifying_key().to_bytes().to_vec();
         (sk, sig.to_bytes().to_vec(), pubkey)
@@ -75,14 +86,14 @@ mod tests {
     #[test]
     fn test_valid_signature() {
         let manifest = b"OpenFlight update manifest v4.0";
-        let (_sk, sig, pubkey) = sign_message(manifest);
+        let (_sk, sig, pubkey) = sign_message("valid-signature", manifest);
         assert!(verify_update_signature(manifest, &sig, &pubkey));
     }
 
     #[test]
     fn test_tampered_manifest_fails() {
         let manifest = b"original manifest";
-        let (_sk, sig, pubkey) = sign_message(manifest);
+        let (_sk, sig, pubkey) = sign_message("tampered-manifest", manifest);
         assert!(!verify_update_signature(
             b"tampered manifest",
             &sig,
@@ -93,36 +104,36 @@ mod tests {
     #[test]
     fn test_wrong_pubkey_fails() {
         let manifest = b"manifest";
-        let (_sk, sig, _pubkey) = sign_message(manifest);
-        let (_sk2, _sig2, other_pubkey) = sign_message(b"other");
+        let (_sk, sig, _pubkey) = sign_message("wrong-pubkey-source", manifest);
+        let (_sk2, _sig2, other_pubkey) = sign_message("wrong-pubkey-target", b"other");
         assert!(!verify_update_signature(manifest, &sig, &other_pubkey));
     }
 
     #[test]
     fn test_truncated_signature_fails() {
         let manifest = b"manifest";
-        let (_sk, sig, pubkey) = sign_message(manifest);
+        let (_sk, sig, pubkey) = sign_message("truncated-signature", manifest);
         assert!(!verify_update_signature(manifest, &sig[..32], &pubkey));
     }
 
     #[test]
     fn test_empty_signature_fails() {
         let manifest = b"manifest";
-        let (_sk, _sig, pubkey) = sign_message(manifest);
+        let (_sk, _sig, pubkey) = sign_message("empty-signature", manifest);
         assert!(!verify_update_signature(manifest, &[], &pubkey));
     }
 
     #[test]
     fn test_empty_pubkey_fails() {
         let manifest = b"manifest";
-        let (_sk, sig, _pubkey) = sign_message(manifest);
+        let (_sk, sig, _pubkey) = sign_message("empty-pubkey", manifest);
         assert!(!verify_update_signature(manifest, &sig, &[]));
     }
 
     #[test]
     fn test_all_zeros_pubkey_fails() {
         let manifest = b"manifest";
-        let (_sk, sig, _pubkey) = sign_message(manifest);
+        let (_sk, sig, _pubkey) = sign_message("zeros-pubkey", manifest);
         assert!(!verify_update_signature(manifest, &sig, &[0u8; 32]));
     }
 

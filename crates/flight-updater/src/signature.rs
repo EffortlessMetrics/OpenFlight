@@ -247,13 +247,23 @@ impl Default for SignatureManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ed25519_dalek::{Signer, SigningKey};
-    use rand_core::OsRng;
+    use ed25519_dalek::{Signer, SigningKey, pkcs8::DecodePrivateKey};
+    use uselesskey::{Ed25519FactoryExt, Ed25519Spec, Factory, Seed};
+
+    fn signing_key_fixture(label: &str) -> SigningKey {
+        let seed = Seed::from_env_value("flight-updater-signature-tests")
+            .expect("test seed must be valid");
+        let factory = Factory::deterministic(seed);
+        let keypair = factory.ed25519(label, Ed25519Spec::new());
+
+        SigningKey::from_pkcs8_der(keypair.private_key_pkcs8_der().as_ref())
+            .expect("uselesskey should emit valid Ed25519 PKCS#8")
+    }
 
     #[tokio::test]
     async fn test_signature_verification() {
         // Generate a test signing key
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("signature-verification");
         let verifying_key = signing_key.verifying_key();
 
         // Create test content
@@ -314,7 +324,7 @@ mod tests {
     /// (the Ed25519 signature no longer matches the modified message).
     #[tokio::test]
     async fn test_tampered_content_fails_verification() {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("tampered-content");
         let verifying_key = signing_key.verifying_key();
 
         let content = b"authentic update payload";
@@ -340,7 +350,7 @@ mod tests {
     /// Flipping one byte of the signature itself must also fail verification.
     #[tokio::test]
     async fn test_tampered_signature_bytes_fails_verification() {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("tampered-signature");
         let verifying_key = signing_key.verifying_key();
 
         let content = b"authentic update payload";
@@ -362,7 +372,7 @@ mod tests {
     /// (i.e. it must not panic or return an unexpected error).
     #[tokio::test]
     async fn test_empty_payload_verifies_gracefully() {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("empty-payload");
         let verifying_key = signing_key.verifying_key();
 
         let signature_bytes = signing_key.sign(b"");
@@ -381,8 +391,8 @@ mod tests {
     /// A signature produced by a *different* key must not verify against an empty payload.
     #[tokio::test]
     async fn test_wrong_key_rejects_empty_payload() {
-        let signing_key = SigningKey::generate(&mut OsRng);
-        let wrong_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("wrong-key-expected");
+        let wrong_key = signing_key_fixture("wrong-key-actual");
         let verifying_key = signing_key.verifying_key();
 
         let signature_bytes = wrong_key.sign(b"");
@@ -401,7 +411,7 @@ mod tests {
     /// An unsupported algorithm field must cause verify_content to return an Err.
     #[tokio::test]
     async fn test_unsupported_algorithm_returns_error() {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("unsupported-algorithm");
         let verifying_key = signing_key.verifying_key();
 
         let public_key_hex = hex::encode(verifying_key.to_bytes());
@@ -426,7 +436,7 @@ mod tests {
     /// Passing non-hex characters as the signature must return an Err rather than panic.
     #[tokio::test]
     async fn test_invalid_hex_signature_returns_error() {
-        let signing_key = SigningKey::generate(&mut OsRng);
+        let signing_key = signing_key_fixture("invalid-hex-signature");
         let verifying_key = signing_key.verifying_key();
 
         let public_key_hex = hex::encode(verifying_key.to_bytes());
