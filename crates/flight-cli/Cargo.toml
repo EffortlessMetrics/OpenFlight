@@ -43,3 +43,7 @@ dirs.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
+assert_cmd.workspace = true
+predicates.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
