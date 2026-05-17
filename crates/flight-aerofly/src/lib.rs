@@ -49,6 +49,16 @@ pub const AEROFLY_DEFAULT_PORT: u16 = 49002;
 /// Minimum valid binary frame size in bytes.
 pub const MIN_FRAME_SIZE: usize = 33;
 
+const MAGIC_OFFSET: usize = 0;
+const PITCH_OFFSET: usize = 4;
+const ROLL_OFFSET: usize = 8;
+const HEADING_OFFSET: usize = 12;
+const AIRSPEED_OFFSET: usize = 16;
+const ALTITUDE_OFFSET: usize = 20;
+const THROTTLE_OFFSET: usize = 24;
+const GEAR_OFFSET: usize = 28;
+const FLAPS_OFFSET: usize = 29;
+
 // ── Error type ────────────────────────────────────────────────────────────────
 
 /// Errors produced by the Aerofly FS adapter.
@@ -289,19 +299,19 @@ pub fn parse_telemetry(data: &[u8]) -> Result<AeroflyTelemetry, AeroflyAdapterEr
         return Err(AeroflyAdapterError::FrameTooShort { found: data.len() });
     }
 
-    let magic = read_u32_le(data, 0)?;
+    let magic = read_u32_le(data, MAGIC_OFFSET)?;
     if magic != AEROFLY_MAGIC {
         return Err(AeroflyAdapterError::BadMagic { found: magic });
     }
 
-    let pitch = read_f32_le(data, 4)?;
-    let roll = read_f32_le(data, 8)?;
-    let heading = read_f32_le(data, 12)?;
-    let airspeed = read_f32_le(data, 16)?;
-    let altitude = read_f32_le(data, 20)?;
-    let throttle_pos = read_f32_le(data, 24)?.clamp(0.0, 1.0);
-    let gear_down = data[28] != 0;
-    let flaps_ratio = read_f32_le(data, 29)?.clamp(0.0, 1.0);
+    let pitch = read_f32_le(data, PITCH_OFFSET)?;
+    let roll = read_f32_le(data, ROLL_OFFSET)?;
+    let heading = read_f32_le(data, HEADING_OFFSET)?;
+    let airspeed = read_f32_le(data, AIRSPEED_OFFSET)?;
+    let altitude = read_f32_le(data, ALTITUDE_OFFSET)?;
+    let throttle_pos = read_f32_le(data, THROTTLE_OFFSET)?.clamp(0.0, 1.0);
+    let gear_down = data[GEAR_OFFSET] != 0;
+    let flaps_ratio = read_f32_le(data, FLAPS_OFFSET)?.clamp(0.0, 1.0);
 
     tracing::trace!(
         pitch,
@@ -323,6 +333,27 @@ pub fn parse_telemetry(data: &[u8]) -> Result<AeroflyTelemetry, AeroflyAdapterEr
         flaps_ratio,
         vspeed_fpm: 0.0,
     })
+}
+
+/// Encode telemetry into the Aerofly binary UDP frame layout.
+///
+/// This is primarily useful for tests, replay fixtures, and simulator shims that
+/// need to generate a valid little-endian frame for [`parse_telemetry`].  Fields
+/// that do not exist in the binary protocol, such as
+/// [`AeroflyTelemetry::vspeed_fpm`], are intentionally omitted.
+#[must_use]
+pub fn encode_telemetry_frame(telemetry: &AeroflyTelemetry) -> [u8; MIN_FRAME_SIZE] {
+    let mut buf = [0u8; MIN_FRAME_SIZE];
+    write_u32_le(&mut buf, MAGIC_OFFSET, AEROFLY_MAGIC);
+    write_f32_le(&mut buf, PITCH_OFFSET, telemetry.pitch);
+    write_f32_le(&mut buf, ROLL_OFFSET, telemetry.roll);
+    write_f32_le(&mut buf, HEADING_OFFSET, telemetry.heading);
+    write_f32_le(&mut buf, AIRSPEED_OFFSET, telemetry.airspeed);
+    write_f32_le(&mut buf, ALTITUDE_OFFSET, telemetry.altitude);
+    write_f32_le(&mut buf, THROTTLE_OFFSET, telemetry.throttle_pos);
+    buf[GEAR_OFFSET] = u8::from(telemetry.gear_down);
+    write_f32_le(&mut buf, FLAPS_OFFSET, telemetry.flaps_ratio);
+    buf
 }
 
 /// Decode a JSON string into [`AeroflyTelemetry`].
@@ -398,6 +429,14 @@ pub fn parse_text_telemetry(text: &str) -> Result<AeroflyTelemetry, AeroflyAdapt
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
+fn write_f32_le(buf: &mut [u8], offset: usize, value: f32) {
+    buf[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
+}
+
+fn write_u32_le(buf: &mut [u8], offset: usize, value: u32) {
+    buf[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
+}
+
 fn read_f32_le(data: &[u8], offset: usize) -> Result<f32, AeroflyAdapterError> {
     let bytes: [u8; 4] = data
         .get(offset..offset + 4)
@@ -432,18 +471,18 @@ mod tests {
         throttle_pos: f32,
         gear_down: u8,
         flaps_ratio: f32,
-    ) -> Vec<u8> {
-        let mut buf = vec![0u8; MIN_FRAME_SIZE];
-        buf[0..4].copy_from_slice(&AEROFLY_MAGIC.to_le_bytes());
-        buf[4..8].copy_from_slice(&pitch.to_le_bytes());
-        buf[8..12].copy_from_slice(&roll.to_le_bytes());
-        buf[12..16].copy_from_slice(&heading.to_le_bytes());
-        buf[16..20].copy_from_slice(&airspeed.to_le_bytes());
-        buf[20..24].copy_from_slice(&altitude.to_le_bytes());
-        buf[24..28].copy_from_slice(&throttle_pos.to_le_bytes());
-        buf[28] = gear_down;
-        buf[29..33].copy_from_slice(&flaps_ratio.to_le_bytes());
-        buf
+    ) -> [u8; MIN_FRAME_SIZE] {
+        encode_telemetry_frame(&AeroflyTelemetry {
+            pitch,
+            roll,
+            heading,
+            airspeed,
+            altitude,
+            throttle_pos,
+            gear_down: gear_down != 0,
+            flaps_ratio,
+            vspeed_fpm: 0.0,
+        })
     }
 
     // ── parse_telemetry (binary) ─────────────────────────────────────────────

@@ -274,7 +274,7 @@ impl RollbackManager {
         }
 
         // Sort by timestamp (newest first)
-        backups.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        backups.sort_by_key(|backup| std::cmp::Reverse(backup.timestamp));
 
         Ok(backups)
     }
