@@ -6,31 +6,17 @@
 //! Proves: fake HID device → parse → normalize → bus publish,
 //! multi-device, disconnect/reconnect, and frequency adaptation.
 
-use flight_axis::pipeline::{AxisPipeline, ClampStage, CurveStage, DeadzoneStage};
 use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_test_helpers::{
     DeterministicClock, FakeDevice, FakeInput, assert_approx_eq, assert_in_range,
+    standard_axis_pipeline,
 };
 use std::time::Duration;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
 
 fn make_publisher() -> BusPublisher {
     BusPublisher::new(60.0)
@@ -64,7 +50,7 @@ fn e2e_device_parse_normalize_bus_publish() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut publisher = make_publisher();
     let mut sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
 
@@ -88,7 +74,10 @@ fn e2e_device_parse_normalize_bus_publish() {
         assert_in_range(snap.control_inputs.pitch as f64, -1.0, 1.0);
         received += 1;
     }
-    assert!(received > 0, "subscriber must receive at least one snapshot");
+    assert!(
+        received > 0,
+        "subscriber must receive at least one snapshot"
+    );
 }
 
 // ===========================================================================
@@ -119,7 +108,7 @@ fn e2e_multiple_devices_simultaneous_publish() {
         delay_ms: 4,
     });
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     let stick_input = stick.next_input().unwrap();
     let throttle_input = throttle.next_input().unwrap();
@@ -169,7 +158,7 @@ fn e2e_device_disconnect_mid_stream() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut last_valid_output = 0.0_f64;
     let mut processed_before_disconnect = 0;
 
@@ -198,7 +187,11 @@ fn e2e_device_disconnect_mid_stream() {
     publisher.publish(snap).expect("publish last valid");
 
     let received = sub.try_recv().unwrap().expect("must receive");
-    assert_approx_eq(received.control_inputs.pitch as f64, last_valid_output, 1e-5);
+    assert_approx_eq(
+        received.control_inputs.pitch as f64,
+        last_valid_output,
+        1e-5,
+    );
 }
 
 // ===========================================================================
@@ -216,7 +209,7 @@ fn e2e_device_reconnect_recovery() {
         delay_ms: 4,
     });
     let input1 = device.next_input().unwrap();
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let out1 = pipeline.process(input1.axes[0], 0.004);
     assert!(out1 > 0.0, "pre-disconnect output must be positive");
 
@@ -235,7 +228,10 @@ fn e2e_device_reconnect_recovery() {
 
     let input2 = device.next_input().unwrap();
     let out2 = pipeline.process(input2.axes[0], 0.004);
-    assert!(out2 > out1, "post-reconnect output must be larger (0.7 > 0.5)");
+    assert!(
+        out2 > out1,
+        "post-reconnect output must be larger (0.7 > 0.5)"
+    );
     assert!(out2.is_finite());
     assert_in_range(out2, -1.0, 1.0);
 
@@ -269,7 +265,7 @@ fn e2e_high_frequency_device_downsampling() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut clock = DeterministicClock::new(0);
     let mut all_outputs = Vec::new();
     let mut downsampled_outputs = Vec::new();
@@ -326,7 +322,7 @@ fn e2e_low_frequency_device_interpolation() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     // Interpolate to 250Hz (5 samples per input frame)
     let mut interpolated = Vec::new();

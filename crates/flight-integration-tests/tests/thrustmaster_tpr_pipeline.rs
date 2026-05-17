@@ -9,11 +9,11 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
 use flight_hotas_thrustmaster::{TPR_MIN_REPORT_BYTES, parse_tpr_report};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -23,17 +23,6 @@ fn make_tpr_report(rz: u16, z: u16, rx: u16) -> Vec<u8> {
     data.extend_from_slice(&z.to_le_bytes());
     data.extend_from_slice(&rx.to_le_bytes());
     data
-}
-
-/// Publish a snapshot through a fresh bus and return the first received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── TPR Rudder Pedals tests ───────────────────────────────────────────────────

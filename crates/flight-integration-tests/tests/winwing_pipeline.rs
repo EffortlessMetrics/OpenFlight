@@ -9,13 +9,13 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
 use flight_hotas_winwing::{
     F16EX_REPORT_LEN, SUPER_TAURUS_REPORT_LEN, parse_f16ex_stick_report, parse_super_taurus_report,
 };
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -34,17 +34,6 @@ fn make_super_taurus_report(tl: u16, tr: u16) -> [u8; SUPER_TAURUS_REPORT_LEN] {
     r[1..3].copy_from_slice(&tl.to_le_bytes());
     r[3..5].copy_from_slice(&tr.to_le_bytes());
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the first received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── F-16EX Stick tests ────────────────────────────────────────────────────────

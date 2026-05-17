@@ -9,7 +9,6 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
@@ -17,6 +16,7 @@ use flight_hotas_honeycomb::{
     HONEYCOMB_ALPHA_YOKE_PID, HONEYCOMB_VENDOR_ID,
     alpha::{ALPHA_REPORT_LEN, AlphaParseError, parse_alpha_report},
 };
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -44,17 +44,6 @@ fn make_alpha_report(roll: u16, pitch: u16, buttons: u64, hat: u8) -> [u8; ALPHA
     r[9] = ((buttons >> 32) & 0xFF) as u8;
     r[10] = hat & 0x0F;
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── Honeycomb Alpha Yoke tests ────────────────────────────────────────────────

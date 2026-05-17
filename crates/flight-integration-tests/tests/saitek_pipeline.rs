@@ -11,11 +11,11 @@
 //! panel variant in this crate.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
 use flight_hotas_saitek::{HotasInputHandler, SaitekHotasType};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,24 +54,13 @@ fn make_x55_stick_report(x: u16, y: u16, buttons: u32) -> [u8; 12] {
     r
 }
 
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
-}
-
 // ── Saitek X52 / X55 / X56 tests ─────────────────────────────────────────────
 
-/// Smoke-test: centred X52 report parses without error and axes are near zero.
+/// Smoke-test: centred X52 report parses without error.
 #[test]
 fn saitek_x52_parses_centred_report() {
     let mut handler = HotasInputHandler::new(SaitekHotasType::X52);
-    // 11-bit centre ≈ 0x400 (1024); throttle centre ≈ 127.
+    // 11-bit centre ≈ 0x400 (1024); throttle centre ≈ 127 in the [0.0, 1.0] range.
     let report = make_x52_report(0x400, 0x400, 127, 0);
     let state = handler.parse_report(&report);
 
@@ -86,8 +75,8 @@ fn saitek_x52_parses_centred_report() {
         state.axes.stick_y
     );
     assert!(
-        state.axes.throttle.abs() < 0.01,
-        "centred throttle should be ~0.0, got {}",
+        (state.axes.throttle - 0.5).abs() < 0.01,
+        "centred throttle should be ~0.5, got {}",
         state.axes.throttle
     );
     assert_eq!(state.buttons.primary, 0, "no buttons should be pressed");

@@ -6,29 +6,15 @@
 //! Proves: raw → deadzone → curve → expo → output, profile switch,
 //! multi-axis, clamping, tick timing, and latency measurement.
 
-use flight_axis::pipeline::{
-    AxisPipeline, ClampStage, CurveStage, DeadzoneStage, SensitivityStage,
-};
+use flight_axis::pipeline::{AxisPipeline, ClampStage, SensitivityStage};
 use flight_axis::{AxisEngine, AxisFrame, PipelineBuilder};
-use flight_test_helpers::{DeterministicClock, assert_approx_eq, assert_in_range};
+use flight_test_helpers::{
+    DeterministicClock, assert_approx_eq, assert_in_range, standard_axis_pipeline,
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
 
 fn expected_standard_output(raw: f64) -> f64 {
     let dz_inner = 0.05_f64;
@@ -51,10 +37,8 @@ fn expected_standard_output(raw: f64) -> f64 {
 
 #[test]
 fn e2e_axis_raw_through_full_pipeline() {
-    let pipeline = standard_pipeline();
-    let test_inputs: Vec<f64> = vec![
-        0.0, 0.02, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, -0.5, -1.0,
-    ];
+    let pipeline = standard_axis_pipeline();
+    let test_inputs: Vec<f64> = vec![0.0, 0.02, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, -0.5, -1.0];
 
     for &raw in &test_inputs {
         let out = pipeline.process(raw, 0.004);
@@ -76,7 +60,10 @@ fn e2e_axis_raw_through_full_pipeline() {
 
     // Full deflection
     let full = pipeline.process(1.0, 0.004);
-    assert!((full - 1.0).abs() < 1e-6, "1.0 input must produce 1.0 output");
+    assert!(
+        (full - 1.0).abs() < 1e-6,
+        "1.0 input must produce 1.0 output"
+    );
 }
 
 // ===========================================================================
@@ -193,11 +180,11 @@ fn e2e_axis_clamping_at_bounds() {
     // Values that would exceed ±1.0 after sensitivity multiplication
     let test_cases = [
         (0.5, 1.0),   // 0.5 * 3.0 = 1.5 → clamped to 1.0
-        (-0.5, -1.0),  // -0.5 * 3.0 = -1.5 → clamped to -1.0
-        (0.3, 0.9),    // 0.3 * 3.0 = 0.9 → not clamped
-        (1.0, 1.0),    // 1.0 * 3.0 = 3.0 → clamped to 1.0
-        (-1.0, -1.0),  // -1.0 * 3.0 = -3.0 → clamped to -1.0
-        (0.0, 0.0),    // 0 stays 0
+        (-0.5, -1.0), // -0.5 * 3.0 = -1.5 → clamped to -1.0
+        (0.3, 0.9),   // 0.3 * 3.0 = 0.9 → not clamped
+        (1.0, 1.0),   // 1.0 * 3.0 = 3.0 → clamped to 1.0
+        (-1.0, -1.0), // -1.0 * 3.0 = -3.0 → clamped to -1.0
+        (0.0, 0.0),   // 0 stays 0
     ];
 
     for &(input, expected) in &test_cases {

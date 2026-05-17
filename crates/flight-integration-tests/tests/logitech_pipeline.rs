@@ -9,11 +9,11 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
 use flight_hotas_logitech::{EXTREME_3D_PRO_MIN_REPORT_BYTES, parse_extreme_3d_pro};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -49,17 +49,6 @@ fn build_extreme_3d_pro_report(
     data[5] = ((buttons >> 5) as u8 & 0x7F) | ((hat & 0x01) << 7);
     data[6] = (hat >> 1) & 0x07;
     data
-}
-
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── Logitech Extreme 3D Pro tests ─────────────────────────────────────────────

@@ -267,17 +267,13 @@ impl PipelineCompiler {
         }
 
         let mut pipeline = Pipeline::new();
-        let mut node_id = 1u32;
-
         // Generate function pointers for each node
-        for node in &self.nodes {
+        for (node_id, node) in (1u32..).zip(self.nodes.iter()) {
             let step_fn = self.generate_step_function(node.clone())?;
             let state_size = node.state_size();
             let node_type = node.node_type();
 
             pipeline.add_compiled_node(step_fn, NodeId(node_id), node_type, state_size);
-
-            node_id += 1;
         }
 
         // Store nodes for state initialization

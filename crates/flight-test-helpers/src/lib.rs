@@ -27,7 +27,7 @@ pub use fixture_builder::{
     TelemetryFixtureBuilder,
 };
 pub use fixtures::{TestConfig, TestConfigBuilder, TestDeviceBuilder};
-pub use integration::TestHarness;
+pub use integration::{TestHarness, publish_and_receive, standard_axis_pipeline};
 pub use snapshot::{SnapshotResult, SnapshotStore};
 pub use trace_replay::{
     TimedEvent, TraceComparator, TraceDiff, TraceEvent, TraceEventType, TraceMismatch,

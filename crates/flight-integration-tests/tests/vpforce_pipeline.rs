@@ -9,11 +9,11 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
 use flight_hotas_vpforce::{RHINO_MIN_REPORT_BYTES, parse_rhino_report};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -34,17 +34,6 @@ fn make_rhino_report(axes: [i16; 6], buttons: u32, hat: u8) -> [u8; RHINO_MIN_RE
     r[13..17].copy_from_slice(&btn);
     r[17] = hat;
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the first received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── VPforce Rhino tests ───────────────────────────────────────────────────────

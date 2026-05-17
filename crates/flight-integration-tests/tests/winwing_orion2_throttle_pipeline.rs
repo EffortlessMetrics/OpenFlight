@@ -9,11 +9,11 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
 use flight_hotas_winwing::{ORION2_THROTTLE_REPORT_BYTES, parse_orion2_throttle_report};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -23,17 +23,6 @@ fn make_orion2_throttle_report(tl: u16, tr: u16) -> [u8; ORION2_THROTTLE_REPORT_
     r[1..3].copy_from_slice(&tl.to_le_bytes());
     r[3..5].copy_from_slice(&tr.to_le_bytes());
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the first received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── Orion 2 Throttle tests ────────────────────────────────────────────────────
