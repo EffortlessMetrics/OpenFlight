@@ -8,8 +8,8 @@
 //! and property-based invariants.
 
 use flight_aerofly::{
-    AEROFLY_DEFAULT_PORT, AEROFLY_MAGIC, AeroflyAdapter, AeroflyAdapterError,
-    AeroflyAircraftType, AeroflyTelemetry, MIN_FRAME_SIZE, parse_json_telemetry,
+    AEROFLY_DEFAULT_PORT, AEROFLY_MAGIC, AeroflyAdapter, AeroflyAdapterError, AeroflyAircraftType,
+    AeroflyTelemetry, MIN_FRAME_SIZE, encode_telemetry_frame, parse_json_telemetry,
     parse_telemetry, parse_text_telemetry,
 };
 use proptest::prelude::*;
@@ -26,17 +26,18 @@ fn build_frame(
     gear_down: u8,
     flaps_ratio: f32,
 ) -> Vec<u8> {
-    let mut buf = vec![0u8; MIN_FRAME_SIZE];
-    buf[0..4].copy_from_slice(&AEROFLY_MAGIC.to_le_bytes());
-    buf[4..8].copy_from_slice(&pitch.to_le_bytes());
-    buf[8..12].copy_from_slice(&roll.to_le_bytes());
-    buf[12..16].copy_from_slice(&heading.to_le_bytes());
-    buf[16..20].copy_from_slice(&airspeed.to_le_bytes());
-    buf[20..24].copy_from_slice(&altitude.to_le_bytes());
-    buf[24..28].copy_from_slice(&throttle_pos.to_le_bytes());
-    buf[28] = gear_down;
-    buf[29..33].copy_from_slice(&flaps_ratio.to_le_bytes());
-    buf
+    encode_telemetry_frame(&AeroflyTelemetry {
+        pitch,
+        roll,
+        heading,
+        airspeed,
+        altitude,
+        throttle_pos,
+        gear_down: gear_down != 0,
+        flaps_ratio,
+        vspeed_fpm: 0.0,
+    })
+    .to_vec()
 }
 
 fn telemetry_to_text(t: &AeroflyTelemetry) -> String {
@@ -152,7 +153,13 @@ fn truncated_at_each_field_boundary() {
 
 #[test]
 fn magic_variants_all_rejected() {
-    let magics: [u32; 5] = [0x0000_0000, 0xFFFF_FFFF, 0x4146_4652, 0x5346_4641, 0x4146_4654];
+    let magics: [u32; 5] = [
+        0x0000_0000,
+        0xFFFF_FFFF,
+        0x4146_4652,
+        0x5346_4641,
+        0x4146_4654,
+    ];
     for magic in magics {
         let mut data = build_frame(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0);
         data[0..4].copy_from_slice(&magic.to_le_bytes());
@@ -282,9 +289,7 @@ fn error_display_frame_too_short() {
 
 #[test]
 fn error_display_bad_magic() {
-    let err = AeroflyAdapterError::BadMagic {
-        found: 0xDEAD_BEEF,
-    };
+    let err = AeroflyAdapterError::BadMagic { found: 0xDEAD_BEEF };
     let msg = err.to_string();
     assert!(msg.contains("0xdeadbeef") || msg.contains("DEADBEEF") || msg.contains("deadbeef"));
 }
@@ -598,7 +603,10 @@ fn conversion_pitch_roll_symmetry() {
         roll: -45.0,
         ..Default::default()
     };
-    assert!((t.pitch_rad() + t.roll_rad()).abs() < 0.001, "±45° should cancel");
+    assert!(
+        (t.pitch_rad() + t.roll_rad()).abs() < 0.001,
+        "±45° should cancel"
+    );
 }
 
 // ── Property-based tests ───────────────────────────────────────────────────────
@@ -746,7 +754,10 @@ fn telemetry_clone_is_independent() {
     };
     let t2 = t1.clone();
     t1.pitch = 20.0;
-    assert!((t2.pitch - 10.0).abs() < 0.01, "clone should be independent");
+    assert!(
+        (t2.pitch - 10.0).abs() < 0.01,
+        "clone should be independent"
+    );
     assert!((t1.pitch - 20.0).abs() < 0.01);
 }
 
@@ -768,5 +779,8 @@ fn telemetry_debug_contains_field_names() {
 #[test]
 fn adapter_port_accessible() {
     let adapter = AeroflyAdapter::new();
-    assert_eq!(adapter.port, AEROFLY_DEFAULT_PORT, "default port should match constant");
+    assert_eq!(
+        adapter.port, AEROFLY_DEFAULT_PORT,
+        "default port should match constant"
+    );
 }
