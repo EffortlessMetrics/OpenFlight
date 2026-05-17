@@ -3,6 +3,11 @@
 
 //! Property-based tests for VKB STECS, Gladiator NXT EVO, and STECS Modern Throttle parsing.
 
+mod common;
+
+use common::{
+    joystick_report_fields, sem_thq_report, stecs_mt_report, stecs_report_fields, t_rudder_report,
+};
 use flight_hotas_vkb::{
     GladiatorInputHandler, GladiatorParseError, GunfighterInputHandler, GunfighterParseError,
     GunfighterVariant, SemThqInputHandler, SemThqParseError, StecsInputHandler, StecsMtParseError,
@@ -11,63 +16,6 @@ use flight_hotas_vkb::{
     VkbGladiatorVariant, VkbStecsVariant, parse_stecs_mt_report,
 };
 use proptest::prelude::*;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-fn make_stecs_report(rx: u16, ry: u16, x: u16, y: u16, z: u16, buttons: u32) -> [u8; 14] {
-    let mut r = [0u8; 14];
-    r[0..2].copy_from_slice(&rx.to_le_bytes());
-    r[2..4].copy_from_slice(&ry.to_le_bytes());
-    r[4..6].copy_from_slice(&x.to_le_bytes());
-    r[6..8].copy_from_slice(&y.to_le_bytes());
-    r[8..10].copy_from_slice(&z.to_le_bytes());
-    r[10..14].copy_from_slice(&buttons.to_le_bytes());
-    r
-}
-
-#[allow(clippy::too_many_arguments)]
-fn make_gladiator_report(
-    roll: u16,
-    pitch: u16,
-    yaw: u16,
-    mini_x: u16,
-    mini_y: u16,
-    throttle: u16,
-    btn_lo: u32,
-    btn_hi: u32,
-    hat: u8,
-) -> [u8; 21] {
-    let mut r = [0u8; 21];
-    r[0..2].copy_from_slice(&roll.to_le_bytes());
-    r[2..4].copy_from_slice(&pitch.to_le_bytes());
-    r[4..6].copy_from_slice(&yaw.to_le_bytes());
-    r[6..8].copy_from_slice(&mini_x.to_le_bytes());
-    r[8..10].copy_from_slice(&mini_y.to_le_bytes());
-    r[10..12].copy_from_slice(&throttle.to_le_bytes());
-    r[12..16].copy_from_slice(&btn_lo.to_le_bytes());
-    r[16..20].copy_from_slice(&btn_hi.to_le_bytes());
-    r[20] = hat;
-    r
-}
-
-fn make_stecs_mt_report(
-    throttle: u16,
-    mini_left: u16,
-    mini_right: u16,
-    rotary: u16,
-    word0: u32,
-    word1: u32,
-) -> [u8; VKC_STECS_MT_MIN_REPORT_BYTES] {
-    let mut r = [0u8; VKC_STECS_MT_MIN_REPORT_BYTES];
-    r[0] = 0x01;
-    r[1..3].copy_from_slice(&throttle.to_le_bytes());
-    r[3..5].copy_from_slice(&mini_left.to_le_bytes());
-    r[5..7].copy_from_slice(&mini_right.to_le_bytes());
-    r[7..9].copy_from_slice(&rotary.to_le_bytes());
-    r[9..13].copy_from_slice(&word0.to_le_bytes());
-    r[13..17].copy_from_slice(&word1.to_le_bytes());
-    r
-}
 
 // ─── STECS Interface ──────────────────────────────────────────────────────────
 
@@ -82,7 +30,7 @@ proptest! {
         z  in 0u16..=u16::MAX,
     ) {
         let handler = StecsInputHandler::new(VkbStecsVariant::RightSpaceThrottleGripStandard);
-        let report = make_stecs_report(rx, ry, x, y, z, 0);
+        let report = stecs_report_fields(rx, ry, x, y, z, 0);
         let state = handler.parse_interface_report(&report).unwrap();
         let axes = state.axes.expect("axes must be present in a 14-byte report");
         prop_assert!((0.0..=1.0).contains(&axes.rx), "rx={}", axes.rx);
@@ -102,7 +50,7 @@ proptest! {
         z  in 0u16..=u16::MAX,
     ) {
         let handler = StecsInputHandler::new(VkbStecsVariant::LeftSpaceThrottleGripMini);
-        let report = make_stecs_report(rx, ry, x, y, z, 0);
+        let report = stecs_report_fields(rx, ry, x, y, z, 0);
         let state = handler.parse_interface_report(&report).unwrap();
         let axes = state.axes.expect("axes must be present");
         prop_assert!(axes.rx.is_finite(), "rx not finite");
@@ -130,7 +78,7 @@ proptest! {
     #[test]
     fn prop_stecs_button_mask_round_trips(mask in 0u32..=u32::MAX) {
         let handler = StecsInputHandler::new(VkbStecsVariant::RightSpaceThrottleGripStandard);
-        let report = make_stecs_report(0, 0, 0, 0, 0, mask);
+        let report = stecs_report_fields(0, 0, 0, 0, 0, mask);
         let state = handler.parse_interface_report(&report).unwrap();
         prop_assert_eq!(state.buttons, mask);
     }
@@ -149,7 +97,7 @@ proptest! {
         my    in 0u16..=u16::MAX,
     ) {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-        let report = make_gladiator_report(roll, pitch, yaw, mx, my, 0x8000, 0, 0, 0xFF);
+        let report = joystick_report_fields(roll, pitch, yaw, mx, my, 0x8000, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((-1.0..=1.0).contains(&state.axes.roll),   "roll={}",   state.axes.roll);
         prop_assert!((-1.0..=1.0).contains(&state.axes.pitch),  "pitch={}",  state.axes.pitch);
@@ -163,7 +111,7 @@ proptest! {
     fn prop_gladiator_throttle_in_range(throttle in 0u16..=u16::MAX) {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
         let report =
-            make_gladiator_report(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
+            joystick_report_fields(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!(
             (0.0..=1.0).contains(&state.axes.throttle),
@@ -181,7 +129,7 @@ proptest! {
     ) {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
         let report =
-            make_gladiator_report(roll, pitch, yaw, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
+            joystick_report_fields(roll, pitch, yaw, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!(state.axes.roll.is_finite(),     "roll not finite");
         prop_assert!(state.axes.pitch.is_finite(),    "pitch not finite");
@@ -211,7 +159,7 @@ proptest! {
     ) {
         let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
         let report =
-            make_gladiator_report(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, btn_lo, btn_hi, 0xFF);
+            joystick_report_fields(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, btn_lo, btn_hi, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         for bit in 0..32usize {
             let expected = ((btn_lo >> bit) & 1) != 0;
@@ -235,7 +183,7 @@ proptest! {
         mini_right in 0u16..=u16::MAX,
         rotary     in 0u16..=u16::MAX,
     ) {
-        let report = make_stecs_mt_report(throttle, mini_left, mini_right, rotary, 0, 0);
+        let report = stecs_mt_report(throttle, mini_left, mini_right, rotary, 0, 0);
         let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
         prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
         prop_assert!((0.0..=1.0).contains(&state.axes.mini_left));
@@ -251,7 +199,7 @@ proptest! {
         mini_right in 0u16..=u16::MAX,
         rotary     in 0u16..=u16::MAX,
     ) {
-        let report = make_stecs_mt_report(throttle, mini_left, mini_right, rotary, 0, 0);
+        let report = stecs_mt_report(throttle, mini_left, mini_right, rotary, 0, 0);
         let state = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
         prop_assert!(state.axes.throttle.is_finite(),   "throttle not finite");
         prop_assert!(state.axes.mini_left.is_finite(),  "mini_left not finite");
@@ -278,7 +226,7 @@ proptest! {
         word0 in 0u32..=u32::MAX,
         word1 in 0u32..=u32::MAX,
     ) {
-        let report = make_stecs_mt_report(0, 0, 0, 0, word0, word1);
+        let report = stecs_mt_report(0, 0, 0, 0, word0, word1);
         let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
         prop_assert_eq!(state.buttons.word0, word0);
         prop_assert_eq!(state.buttons.word1, word1);
@@ -294,7 +242,7 @@ fn vendor_id_is_vkb() {
 
 #[test]
 fn stecs_mt_variant_mini_preserved() {
-    let report = make_stecs_mt_report(0, 0, 0, 0, 0, 0);
+    let report = stecs_mt_report(0, 0, 0, 0, 0, 0);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
     assert_eq!(state.variant, StecsMtVariant::Mini);
 }
@@ -304,7 +252,8 @@ fn gladiator_hat_nibble_range() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     // Hat nibbles 0..=7 produce Some, 8..=15 produce None (centred).
     for nibble in 0u8..=15 {
-        let report = make_gladiator_report(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, 0, 0, nibble);
+        let report =
+            joystick_report_fields(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, 0, 0, nibble);
         let state = handler.parse_report(&report).unwrap();
         if nibble <= 7 {
             assert!(
@@ -322,21 +271,6 @@ fn gladiator_hat_nibble_range() {
 
 // ─── Gunfighter ───────────────────────────────────────────────────────────────
 
-fn make_gunfighter_report_prop(
-    roll: u16,
-    pitch: u16,
-    yaw: u16,
-    mx: u16,
-    my: u16,
-    throttle: u16,
-    btn_lo: u32,
-    btn_hi: u32,
-    hat: u8,
-) -> [u8; 21] {
-    // Same layout as Gladiator
-    make_gladiator_report(roll, pitch, yaw, mx, my, throttle, btn_lo, btn_hi, hat)
-}
-
 proptest! {
     /// Gunfighter signed axes are always in [-1.0, 1.0].
     #[test]
@@ -348,7 +282,7 @@ proptest! {
         my    in 0u16..=u16::MAX,
     ) {
         let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
-        let report = make_gunfighter_report_prop(roll, pitch, yaw, mx, my, 0x8000, 0, 0, 0xFF);
+        let report = joystick_report_fields(roll, pitch, yaw, mx, my, 0x8000, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((-1.0..=1.0).contains(&state.axes.roll));
         prop_assert!((-1.0..=1.0).contains(&state.axes.pitch));
@@ -361,7 +295,7 @@ proptest! {
     #[test]
     fn prop_gunfighter_throttle_in_range(throttle in 0u16..=u16::MAX) {
         let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
-        let report = make_gunfighter_report_prop(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
+        let report = joystick_report_fields(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, throttle, 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((0.0..=1.0).contains(&state.axes.throttle));
     }
@@ -373,7 +307,7 @@ proptest! {
         btn_hi in 0u32..=u32::MAX,
     ) {
         let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
-        let report = make_gunfighter_report_prop(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, btn_lo, btn_hi, 0xFF);
+        let report = joystick_report_fields(0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0, btn_lo, btn_hi, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         for bit in 0..32usize {
             let expected = ((btn_lo >> bit) & 1) != 0;
@@ -402,16 +336,6 @@ proptest! {
 
 // ─── SEM THQ ──────────────────────────────────────────────────────────────────
 
-fn make_sem_thq_report_prop(axes: [u16; 4], btn_lo: u32, btn_hi: u32) -> [u8; 16] {
-    let mut r = [0u8; 16];
-    for (i, &v) in axes.iter().enumerate() {
-        r[i * 2..i * 2 + 2].copy_from_slice(&v.to_le_bytes());
-    }
-    r[8..12].copy_from_slice(&btn_lo.to_le_bytes());
-    r[12..16].copy_from_slice(&btn_hi.to_le_bytes());
-    r
-}
-
 proptest! {
     /// SEM THQ axes are always in [0.0, 1.0].
     #[test]
@@ -422,7 +346,7 @@ proptest! {
         rr in 0u16..=u16::MAX,
     ) {
         let handler = SemThqInputHandler::new();
-        let report = make_sem_thq_report_prop([tl, tr, rl, rr], 0, 0);
+        let report = sem_thq_report([tl, tr, rl, rr], 0, 0);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((0.0..=1.0).contains(&state.axes.throttle_left));
         prop_assert!((0.0..=1.0).contains(&state.axes.throttle_right));
@@ -439,7 +363,7 @@ proptest! {
         rr in 0u16..=u16::MAX,
     ) {
         let handler = SemThqInputHandler::new();
-        let report = make_sem_thq_report_prop([tl, tr, rl, rr], 0, 0);
+        let report = sem_thq_report([tl, tr, rl, rr], 0, 0);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!(state.axes.throttle_left.is_finite());
         prop_assert!(state.axes.throttle_right.is_finite());
@@ -454,7 +378,7 @@ proptest! {
         btn_hi in 0u32..=u32::MAX,
     ) {
         let handler = SemThqInputHandler::new();
-        let report = make_sem_thq_report_prop([0; 4], btn_lo, btn_hi);
+        let report = sem_thq_report([0; 4], btn_lo, btn_hi);
         let state = handler.parse_report(&report).unwrap();
         for bit in 0..32usize {
             let expected = ((btn_lo >> bit) & 1) != 0;
@@ -483,18 +407,6 @@ proptest! {
 
 // ─── T-Rudder ─────────────────────────────────────────────────────────────────
 
-fn make_t_rudder_report_prop(
-    left: u16,
-    right: u16,
-    rudder: u16,
-) -> [u8; T_RUDDER_MIN_PAYLOAD_BYTES] {
-    let mut r = [0u8; T_RUDDER_MIN_PAYLOAD_BYTES];
-    r[0..2].copy_from_slice(&left.to_le_bytes());
-    r[2..4].copy_from_slice(&right.to_le_bytes());
-    r[4..6].copy_from_slice(&rudder.to_le_bytes());
-    r
-}
-
 proptest! {
     /// T-Rudder toe brakes are always in [0.0, 1.0].
     #[test]
@@ -503,7 +415,7 @@ proptest! {
         right in 0u16..=u16::MAX,
     ) {
         let handler = TRudderInputHandler::new(TRudderVariant::Mk4);
-        let report = make_t_rudder_report_prop(left, right, 0x8000);
+        let report = t_rudder_report(left, right, 0x8000);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((0.0..=1.0).contains(&state.axes.left_toe_brake));
         prop_assert!((0.0..=1.0).contains(&state.axes.right_toe_brake));
@@ -513,7 +425,7 @@ proptest! {
     #[test]
     fn prop_t_rudder_rudder_in_range(rudder in 0u16..=u16::MAX) {
         let handler = TRudderInputHandler::new(TRudderVariant::Mk5);
-        let report = make_t_rudder_report_prop(0, 0, rudder);
+        let report = t_rudder_report(0, 0, rudder);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!((-1.0..=1.0).contains(&state.axes.rudder));
     }
@@ -526,7 +438,7 @@ proptest! {
         rudder in 0u16..=u16::MAX,
     ) {
         let handler = TRudderInputHandler::new(TRudderVariant::Mk4);
-        let report = make_t_rudder_report_prop(left, right, rudder);
+        let report = t_rudder_report(left, right, rudder);
         let state = handler.parse_report(&report).unwrap();
         prop_assert!(state.axes.left_toe_brake.is_finite());
         prop_assert!(state.axes.right_toe_brake.is_finite());
@@ -554,7 +466,7 @@ proptest! {
 #[test]
 fn round_trip_gladiator_parse_serialize_parse() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-    let original = make_gladiator_report(
+    let original = joystick_report_fields(
         0x1234,
         0x5678,
         0xABCD,
@@ -614,8 +526,7 @@ fn round_trip_gladiator_parse_serialize_parse() {
 #[test]
 fn round_trip_sem_thq_parse_serialize_parse() {
     let handler = SemThqInputHandler::new();
-    let original =
-        make_sem_thq_report_prop([0x1234, 0x5678, 0xABCD, 0xEF01], 0xDEAD_BEEF, 0xCAFE_BABE);
+    let original = sem_thq_report([0x1234, 0x5678, 0xABCD, 0xEF01], 0xDEAD_BEEF, 0xCAFE_BABE);
     let state1 = handler.parse_report(&original).unwrap();
 
     let encode_unsigned = |v: f32| -> u16 { (v * u16::MAX as f32).round() as u16 };
@@ -649,7 +560,7 @@ fn round_trip_sem_thq_parse_serialize_parse() {
 #[test]
 fn round_trip_t_rudder_parse_serialize_parse() {
     let handler = TRudderInputHandler::new(TRudderVariant::Mk4);
-    let original = make_t_rudder_report_prop(0x1234, 0x5678, 0xABCD);
+    let original = t_rudder_report(0x1234, 0x5678, 0xABCD);
     let state1 = handler.parse_report(&original).unwrap();
 
     let encode_unsigned = |v: f32| -> u16 { (v * u16::MAX as f32).round() as u16 };

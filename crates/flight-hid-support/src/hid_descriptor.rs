@@ -129,11 +129,9 @@ pub fn extract_usages(descriptor: &[u8]) -> Vec<HidUsage> {
                     _ => {}
                 }
             }
-            0x01 => {
-                // Global
-                if tag == GLOBAL_TAG_USAGE_PAGE {
-                    usage_page = value as u16;
-                }
+            0x01 if tag == GLOBAL_TAG_USAGE_PAGE => {
+                // Global Usage Page
+                usage_page = value as u16;
             }
             0x02 => {
                 // Local

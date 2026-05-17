@@ -6,71 +6,10 @@
 //! These integration tests exercise cross-module interactions, edge cases,
 //! boundary conditions, and multi-step workflows across all VKB device families.
 
+mod common;
+
+use common::{joystick_report, stecs_mt_report, stecs_report};
 use flight_hotas_vkb::*;
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Helper functions
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/// Build a Gladiator NXT EVO HID report (21 bytes, no report ID prefix).
-fn make_gladiator_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
-    let mut report = vec![0u8; 21];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[12..16].copy_from_slice(&btn_lo.to_le_bytes());
-    report[16..20].copy_from_slice(&btn_hi.to_le_bytes());
-    report[20] = hat_byte;
-    report
-}
-
-/// Build a STECS interface report: 14 bytes (5 axes + 4 button bytes).
-fn make_stecs_report_with_axes(axes: [u16; 5], buttons: u32) -> Vec<u8> {
-    let mut report = vec![0u8; 14];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[10..14].copy_from_slice(&buttons.to_le_bytes());
-    report
-}
-
-/// Build a STECS Modern Throttle report (17 bytes, includes report ID byte).
-fn make_stecs_mt_report(
-    throttle: u16,
-    mini_left: u16,
-    mini_right: u16,
-    rotary: u16,
-    word0: u32,
-    word1: u32,
-) -> Vec<u8> {
-    let mut data = vec![0x01u8]; // report_id
-    data.extend_from_slice(&throttle.to_le_bytes());
-    data.extend_from_slice(&mini_left.to_le_bytes());
-    data.extend_from_slice(&mini_right.to_le_bytes());
-    data.extend_from_slice(&rotary.to_le_bytes());
-    data.extend_from_slice(&word0.to_le_bytes());
-    data.extend_from_slice(&word1.to_le_bytes());
-    data
-}
-
-/// Build a Gunfighter HID report (21 bytes).
-fn make_gunfighter_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
-    let mut report = vec![0u8; 21];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[12..16].copy_from_slice(&btn_lo.to_le_bytes());
-    report[16..20].copy_from_slice(&btn_hi.to_le_bytes());
-    report[20] = hat_byte;
-    report
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. STECS aggregator — multi-VC merge workflows
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -79,7 +18,7 @@ fn make_gunfighter_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8
 fn stecs_aggregator_begin_poll_clears_previous_state() {
     let mut agg = StecsInputAggregator::new(VkbStecsVariant::RightSpaceThrottleGripStandard);
     agg.begin_poll();
-    agg.merge_interface_report(0, &make_stecs_report_with_axes([0xFFFF; 5], 0xFF))
+    agg.merge_interface_report(0, &stecs_report([0xFFFF; 5], 0xFF))
         .unwrap();
     assert!(agg.snapshot().axes.is_some());
 
@@ -138,11 +77,11 @@ fn stecs_aggregator_vc0_axes_preferred_over_vc1() {
     agg.begin_poll();
 
     // Feed VC1 first with low axis values
-    let vc1_report = make_stecs_report_with_axes([0x1000, 0x1000, 0x1000, 0x1000, 0x1000], 0);
+    let vc1_report = stecs_report([0x1000, 0x1000, 0x1000, 0x1000, 0x1000], 0);
     agg.merge_interface_report(1, &vc1_report).unwrap();
 
     // Feed VC0 with high axis values
-    let vc0_report = make_stecs_report_with_axes([0xE000, 0xE000, 0xE000, 0xE000, 0xE000], 0);
+    let vc0_report = stecs_report([0xE000, 0xE000, 0xE000, 0xE000, 0xE000], 0);
     agg.merge_interface_report(0, &vc0_report).unwrap();
 
     let axes = agg.snapshot().axes.expect("axes from VC0 expected");
@@ -159,7 +98,7 @@ fn stecs_aggregator_vc1_axes_used_if_vc0_has_no_axes() {
     agg.merge_interface_report(0, &[0x00, 0x00, 0x00, 0x00])
         .unwrap();
     // VC1: full report with axes
-    let vc1 = make_stecs_report_with_axes([0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0);
+    let vc1 = stecs_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0);
     agg.merge_interface_report(1, &vc1).unwrap();
 
     let axes = agg.snapshot().axes.expect("should have VC1 axes");
@@ -240,7 +179,7 @@ fn stecs_multiple_polls_are_independent() {
 #[test]
 fn gladiator_full_negative_deflection() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-    let report = make_gladiator_report([0x0000, 0x0000, 0x0000, 0x8000, 0x8000, 0], 0, 0, 0xFF);
+    let report = joystick_report([0x0000, 0x0000, 0x0000, 0x8000, 0x8000, 0], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!(
         (state.axes.roll - (-1.0)).abs() < 0.01,
@@ -256,8 +195,7 @@ fn gladiator_full_negative_deflection() {
 #[test]
 fn gladiator_full_positive_deflection() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
-    let report =
-        make_gladiator_report([0xFFFF, 0xFFFF, 0xFFFF, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
+    let report = joystick_report([0xFFFF, 0xFFFF, 0xFFFF, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - 1.0).abs() < 0.01);
     assert!((state.axes.pitch - 1.0).abs() < 0.01);
@@ -268,7 +206,7 @@ fn gladiator_full_positive_deflection() {
 #[test]
 fn gladiator_all_64_buttons_pressable() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-    let report = make_gladiator_report(
+    let report = joystick_report(
         [0x8000; 6],
         u32::MAX, // buttons 1–32
         u32::MAX, // buttons 33–64
@@ -283,7 +221,7 @@ fn gladiator_all_64_buttons_pressable() {
 #[test]
 fn gladiator_no_buttons_when_zero() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
-    let report = make_gladiator_report([0x8000; 6], 0, 0, 0xFF);
+    let report = joystick_report([0x8000; 6], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!(state.pressed_buttons().is_empty());
 }
@@ -293,7 +231,7 @@ fn gladiator_hat_all_8_directions() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     for direction in 0u8..=7 {
         let hat_byte = 0xF0 | direction; // hat0 = direction, hat1 = centred
-        let report = make_gladiator_report([0x8000; 6], 0, 0, hat_byte);
+        let report = joystick_report([0x8000; 6], 0, 0, hat_byte);
         let state = handler.parse_report(&report).unwrap();
         assert_eq!(
             state.hats[0],
@@ -308,7 +246,7 @@ fn gladiator_hat_all_8_directions() {
 fn gladiator_both_hats_active() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     let hat_byte = 0x40; // hat0=N(0), hat1=S(4)
-    let report = make_gladiator_report([0x8000; 6], 0, 0, hat_byte);
+    let report = joystick_report([0x8000; 6], 0, 0, hat_byte);
     let state = handler.parse_report(&report).unwrap();
     assert_eq!(state.hats[0], Some(HatDirection(0)));
     assert_eq!(state.hats[1], Some(HatDirection(4)));
@@ -331,7 +269,7 @@ fn gladiator_minimum_report_axes_only() {
 fn gladiator_variant_preserved_in_state() {
     let handler_r = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     let handler_l = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
-    let report = make_gladiator_report([0x8000; 6], 0, 0, 0xFF);
+    let report = joystick_report([0x8000; 6], 0, 0, 0xFF);
     assert_eq!(
         handler_r.parse_report(&report).unwrap().variant,
         VkbGladiatorVariant::NxtEvoRight
@@ -353,7 +291,7 @@ fn gunfighter_all_variants_parse_same_report() {
         GunfighterVariant::SpaceGunfighter,
         GunfighterVariant::SpaceGunfighterLeft,
     ];
-    let report = make_gunfighter_report([0x8000; 6], 0x01, 0, 0xFF);
+    let report = joystick_report([0x8000; 6], 0x01, 0, 0xFF);
     for variant in variants {
         let handler = GunfighterInputHandler::new(variant);
         let state = handler.parse_report(&report).unwrap();
@@ -365,8 +303,7 @@ fn gunfighter_all_variants_parse_same_report() {
 #[test]
 fn gunfighter_full_deflection_all_axes() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighter);
-    let report =
-        make_gunfighter_report([0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
+    let report = joystick_report([0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - 1.0).abs() < 0.01);
     assert!((state.axes.pitch - (-1.0)).abs() < 0.01);
@@ -380,7 +317,7 @@ fn gunfighter_full_deflection_all_axes() {
 fn gunfighter_hat_both_active() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
     // hat0=E(2), hat1=W(6)
-    let report = make_gunfighter_report([0x8000; 6], 0, 0, 0x62);
+    let report = joystick_report([0x8000; 6], 0, 0, 0x62);
     let state = handler.parse_report(&report).unwrap();
     assert_eq!(state.hats[0], Some(2));
     assert_eq!(state.hats[1], Some(6));
@@ -389,7 +326,7 @@ fn gunfighter_hat_both_active() {
 #[test]
 fn gunfighter_all_64_buttons() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::SpaceGunfighterLeft);
-    let report = make_gunfighter_report([0x8000; 6], u32::MAX, u32::MAX, 0xFF);
+    let report = joystick_report([0x8000; 6], u32::MAX, u32::MAX, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert_eq!(state.pressed_buttons().len(), 64);
 }
@@ -466,7 +403,7 @@ fn sem_thq_default_handler_same_as_new() {
 
 #[test]
 fn stecs_mt_midpoint_axes() {
-    let report = make_stecs_mt_report(0x8000, 0x8000, 0x8000, 0x8000, 0, 0);
+    let report = stecs_mt_report(0x8000, 0x8000, 0x8000, 0x8000, 0, 0);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
     assert!((state.axes.throttle - 0.5).abs() < 0.01);
     assert!((state.axes.mini_left - 0.5).abs() < 0.01);
@@ -476,7 +413,7 @@ fn stecs_mt_midpoint_axes() {
 
 #[test]
 fn stecs_mt_all_buttons_pressed_produces_64() {
-    let report = make_stecs_mt_report(0, 0, 0, 0, u32::MAX, u32::MAX);
+    let report = stecs_mt_report(0, 0, 0, 0, u32::MAX, u32::MAX);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
     let pressed = state.buttons.pressed();
     assert_eq!(pressed.len(), 64);
@@ -489,7 +426,7 @@ fn stecs_mt_scattered_buttons() {
     // Buttons 1, 16, 33, 48
     let word0 = (1u32 << 0) | (1u32 << 15);
     let word1 = (1u32 << 0) | (1u32 << 15);
-    let report = make_stecs_mt_report(0, 0, 0, 0, word0, word1);
+    let report = stecs_mt_report(0, 0, 0, 0, word0, word1);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Mini).unwrap();
     assert!(state.buttons.is_pressed(1));
     assert!(state.buttons.is_pressed(16));
@@ -520,7 +457,7 @@ fn stecs_mt_boundary_16_bytes_too_short() {
 
 #[test]
 fn stecs_mt_extra_bytes_ignored() {
-    let mut report = make_stecs_mt_report(0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0);
+    let mut report = stecs_mt_report(0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0).to_vec();
     report.extend_from_slice(&[0xDE, 0xAD, 0xBE, 0xEF]);
     let state = parse_stecs_mt_report(&report, StecsMtVariant::Max).unwrap();
     assert!((state.axes.throttle - 1.0).abs() < 1e-4);

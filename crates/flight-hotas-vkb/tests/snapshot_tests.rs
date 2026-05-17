@@ -7,49 +7,14 @@
 //! known input values.  Any change to the struct layout, normalisation formula,
 //! or enum variant naming will surface as a diff before it reaches users.
 
+mod common;
+
+use common::{joystick_report, sem_thq_report, stecs_mt_report, t_rudder_report};
 use flight_hotas_vkb::{
     GladiatorInputHandler, GunfighterInputHandler, GunfighterVariant, SemThqInputHandler,
     StecsInputHandler, StecsMtVariant, TRudderInputHandler, TRudderVariant, VkbGladiatorVariant,
     VkbStecsVariant, parse_stecs_mt_report,
 };
-
-// ── report builders ───────────────────────────────────────────────────────────
-
-/// Build a 21-byte Gladiator NXT EVO report.
-///
-/// Layout: 6×u16-LE axes (roll, pitch, yaw, mini_x, mini_y, throttle),
-/// 2×u32-LE button words, 1 hat byte.
-fn gladiator_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
-    let mut report = vec![0u8; 21];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[12..16].copy_from_slice(&btn_lo.to_le_bytes());
-    report[16..20].copy_from_slice(&btn_hi.to_le_bytes());
-    report[20] = hat_byte;
-    report
-}
-
-/// Build a 17-byte STECS Modern Throttle report (including the report_id byte).
-fn stecs_mt_report(
-    throttle: u16,
-    mini_left: u16,
-    mini_right: u16,
-    rotary: u16,
-    w0: u32,
-    w1: u32,
-) -> Vec<u8> {
-    let mut data = vec![0x01u8]; // report_id
-    data.extend_from_slice(&throttle.to_le_bytes());
-    data.extend_from_slice(&mini_left.to_le_bytes());
-    data.extend_from_slice(&mini_right.to_le_bytes());
-    data.extend_from_slice(&rotary.to_le_bytes());
-    data.extend_from_slice(&w0.to_le_bytes());
-    data.extend_from_slice(&w1.to_le_bytes());
-    data
-}
 
 // ── Gladiator NXT EVO snapshots ───────────────────────────────────────────────
 
@@ -59,7 +24,7 @@ fn stecs_mt_report(
 /// no buttons pressed, both hats centred (0xFF).
 #[test]
 fn snapshot_gladiator_nxt_evo_right_neutral() {
-    let report = gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+    let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
     let state = handler.parse_report(&report).expect("valid report");
     insta::assert_debug_snapshot!("gladiator_nxt_evo_right_neutral", state);
@@ -71,7 +36,7 @@ fn snapshot_gladiator_nxt_evo_right_neutral() {
 /// no buttons, hats centred.
 #[test]
 fn snapshot_gladiator_nxt_evo_left_full_throttle() {
-    let report = gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
+    let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0xFFFF], 0, 0, 0xFF);
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoLeft);
     let state = handler.parse_report(&report).expect("valid report");
     insta::assert_debug_snapshot!("gladiator_nxt_evo_left_full_throttle", state);
@@ -134,7 +99,7 @@ fn snapshot_stecs_mt_max_full() {
 /// Pin the parsed state of the Gunfighter MCG Pro at neutral position.
 #[test]
 fn snapshot_gunfighter_mcg_neutral() {
-    let report = gladiator_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+    let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
     let state = handler.parse_report(&report).expect("valid report");
     insta::assert_debug_snapshot!("gunfighter_mcg_neutral", state);
@@ -143,7 +108,7 @@ fn snapshot_gunfighter_mcg_neutral() {
 /// Pin the parsed state of the Gunfighter with full deflection and buttons.
 #[test]
 fn snapshot_gunfighter_full_deflection_with_buttons() {
-    let report = gladiator_report(
+    let report = joystick_report(
         [0xFFFF, 0x0000, 0xFFFF, 0x0000, 0xFFFF, 0xFFFF],
         0x8000_0001, // buttons 1 and 32
         0x0000_0004, // button 35
@@ -155,19 +120,6 @@ fn snapshot_gunfighter_full_deflection_with_buttons() {
 }
 
 // ── SEM THQ snapshots ────────────────────────────────────────────────────────
-
-/// Build a 16-byte SEM THQ report.
-fn sem_thq_report(axes: [u16; 4], btn_lo: u32, btn_hi: u32) -> Vec<u8> {
-    let mut report = vec![0u8; 16];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[8..12].copy_from_slice(&btn_lo.to_le_bytes());
-    report[12..16].copy_from_slice(&btn_hi.to_le_bytes());
-    report
-}
 
 /// Pin the SEM THQ at idle position.
 #[test]
@@ -188,15 +140,6 @@ fn snapshot_sem_thq_full_throttle_buttons() {
 }
 
 // ── T-Rudder snapshots ───────────────────────────────────────────────────────
-
-/// Build a 6-byte T-Rudder report.
-fn t_rudder_report(left: u16, right: u16, rudder: u16) -> Vec<u8> {
-    let mut data = Vec::with_capacity(6);
-    data.extend_from_slice(&left.to_le_bytes());
-    data.extend_from_slice(&right.to_le_bytes());
-    data.extend_from_slice(&rudder.to_le_bytes());
-    data
-}
 
 /// Pin T-Rudder Mk.IV at idle (brakes released, rudder centred).
 #[test]

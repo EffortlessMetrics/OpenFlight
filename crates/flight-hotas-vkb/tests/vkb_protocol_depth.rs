@@ -7,51 +7,51 @@
 //! profile mappings, and device discovery for VKB joystick-class devices.
 
 use flight_hotas_vkb::{
-    // Protocol types
-    GunfighterInputHandler, GunfighterVariant,
-    VKB_AXIS_16BIT, VKB_JOYSTICK_STANDARD_LAYOUT, VKB_LED_REPORT_ID, VKB_SEM_THQ_LAYOUT,
-    VkbDeviceFamily, VkbLedColor, VkbLedIndex,
-    build_led_command, is_vkb_joystick, report_layout_for_family, vkb_device_family,
-    GLADIATOR_NXT_EVO_SHIFT, GUNFIGHTER_MCG_SHIFT,
-    // Input types
-    GladiatorInputHandler, HatDirection, VkbGladiatorVariant,
     // Profile types
-    AxisNormMode, ButtonKind, HatKind,
-    all_profiles, gladiator_nxt_evo_profile, gunfighter_mcg_profile, profile_for_pid,
-    sem_thq_profile, stecs_throttle_profile, t_rudder_profile,
+    AxisNormMode,
+    ButtonKind,
+    GLADIATOR_NXT_EVO_SHIFT,
+    GUNFIGHTER_MCG_SHIFT,
+    // Input types
+    GladiatorInputHandler,
+    // Protocol types
+    GunfighterInputHandler,
+    GunfighterVariant,
+    HatDirection,
+    HatKind,
+    VKB_AXIS_16BIT,
+    VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+    VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+    VKB_JOYSTICK_STANDARD_LAYOUT,
+    VKB_LED_REPORT_ID,
+    VKB_SEM_THQ_LAYOUT,
     // Device IDs
-    VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_LEFT_PID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+    VKB_VENDOR_ID,
+    VkbDeviceFamily,
+    VkbGladiatorVariant,
+    VkbLedColor,
+    VkbLedIndex,
+    all_profiles,
+    build_led_command,
+    gladiator_nxt_evo_profile,
+    gunfighter_mcg_profile,
+    is_vkb_joystick,
+    profile_for_pid,
+    report_layout_for_family,
+    sem_thq_profile,
+    stecs_throttle_profile,
+    t_rudder_profile,
+    vkb_device_family,
 };
 
+mod common;
+
+use common::{joystick_report, with_report_id};
 use flight_hid_support::device_support::{
     VKB_GLADIATOR_MK2_PID, VKB_GLADIATOR_MODERN_COMBAT_PRO_PID,
-    VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID,
-    VKB_NXT_SEM_THQ_PID, VKB_SPACE_GUNFIGHTER_LEFT_PID, VKB_SPACE_GUNFIGHTER_PID,
-    VKB_STECS_RIGHT_SPACE_STANDARD_PID,
+    VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VKB_NXT_SEM_THQ_PID,
+    VKB_SPACE_GUNFIGHTER_LEFT_PID, VKB_SPACE_GUNFIGHTER_PID, VKB_STECS_RIGHT_SPACE_STANDARD_PID,
 };
-
-// ─── Report builders ──────────────────────────────────────────────────────────
-
-/// Build a standard 21-byte VKB joystick report (Gladiator / Gunfighter layout).
-fn make_joystick_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8) -> Vec<u8> {
-    let mut report = vec![0u8; 21];
-    for (i, &v) in axes.iter().enumerate() {
-        let bytes = v.to_le_bytes();
-        report[i * 2] = bytes[0];
-        report[i * 2 + 1] = bytes[1];
-    }
-    report[12..16].copy_from_slice(&btn_lo.to_le_bytes());
-    report[16..20].copy_from_slice(&btn_hi.to_le_bytes());
-    report[20] = hat_byte;
-    report
-}
-
-/// Prepend a report-ID byte to a payload.
-fn with_report_id(id: u8, payload: &[u8]) -> Vec<u8> {
-    let mut r = vec![id];
-    r.extend_from_slice(payload);
-    r
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. NJoy32 protocol tests (8)
@@ -67,7 +67,7 @@ fn njoy32_report_format_standard_21_bytes() {
     assert!(layout.has_hat_byte);
 
     // Verify a full-size report parses on both Gladiator and Gunfighter
-    let report = make_joystick_report([0x8000; 6], 0, 0, 0xFF);
+    let report = joystick_report([0x8000; 6], 0, 0, 0xFF);
     assert_eq!(report.len(), 21);
 
     let glad = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
@@ -85,7 +85,7 @@ fn njoy32_axis_resolution_16bit() {
     assert_eq!(VKB_AXIS_16BIT.logical_max, 0xFFFF);
 
     // Zero raw → minimum normalised
-    let report = make_joystick_report([0x0000; 6], 0, 0, 0xFF);
+    let report = joystick_report([0x0000; 6], 0, 0, 0xFF);
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
     let state = handler.parse_report(&report).unwrap();
     // Signed axes: 0x0000 → -1.0
@@ -102,23 +102,20 @@ fn njoy32_button_matrix_decoding_64_buttons() {
     // Set every other button in both words
     let btn_lo = 0xAAAA_AAAAu32; // bits 1,3,5,...,31
     let btn_hi = 0x5555_5555u32; // bits 0,2,4,...,30 → buttons 33,35,...,63
-    let report = make_joystick_report([0x8000; 6], btn_lo, btn_hi, 0xFF);
+    let report = joystick_report([0x8000; 6], btn_lo, btn_hi, 0xFF);
     let state = handler.parse_report(&report).unwrap();
 
     // Verify word 0: even-indexed bits (0-indexed) are set
     for bit in 0..32usize {
         let expected = ((btn_lo >> bit) & 1) != 0;
-        assert_eq!(
-            state.buttons[bit], expected,
-            "button {} mismatch",
-            bit + 1
-        );
+        assert_eq!(state.buttons[bit], expected, "button {} mismatch", bit + 1);
     }
     // Verify word 1
     for bit in 0..32usize {
         let expected = ((btn_hi >> bit) & 1) != 0;
         assert_eq!(
-            state.buttons[32 + bit], expected,
+            state.buttons[32 + bit],
+            expected,
             "button {} mismatch",
             33 + bit
         );
@@ -177,14 +174,29 @@ fn njoy32_firmware_version_detection_by_family() {
     // Each PID maps to a unique device family — this is how firmware
     // generation / version class is discriminated.
     let families = [
-        (VKB_GLADIATOR_NXT_EVO_RIGHT_PID, VkbDeviceFamily::GladiatorNxtEvo),
-        (VKB_GLADIATOR_NXT_EVO_LEFT_PID, VkbDeviceFamily::GladiatorNxtEvo),
-        (VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID, VkbDeviceFamily::Gunfighter),
+        (
+            VKB_GLADIATOR_NXT_EVO_RIGHT_PID,
+            VkbDeviceFamily::GladiatorNxtEvo,
+        ),
+        (
+            VKB_GLADIATOR_NXT_EVO_LEFT_PID,
+            VkbDeviceFamily::GladiatorNxtEvo,
+        ),
+        (
+            VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID,
+            VkbDeviceFamily::Gunfighter,
+        ),
         (VKB_SPACE_GUNFIGHTER_PID, VkbDeviceFamily::Gunfighter),
         (VKB_SPACE_GUNFIGHTER_LEFT_PID, VkbDeviceFamily::Gunfighter),
-        (VKB_GLADIATOR_MODERN_COMBAT_PRO_PID, VkbDeviceFamily::GladiatorMcp),
+        (
+            VKB_GLADIATOR_MODERN_COMBAT_PRO_PID,
+            VkbDeviceFamily::GladiatorMcp,
+        ),
         (VKB_NXT_SEM_THQ_PID, VkbDeviceFamily::SemThq),
-        (VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID, VkbDeviceFamily::GladiatorNxtEvoSem),
+        (
+            VKB_GLADIATOR_NXT_EVO_RIGHT_SEM_PID,
+            VkbDeviceFamily::GladiatorNxtEvoSem,
+        ),
         (VKB_GLADIATOR_MK2_PID, VkbDeviceFamily::GladiatorMk2),
     ];
     for (pid, expected_family) in &families {
@@ -200,16 +212,27 @@ fn njoy32_firmware_version_detection_by_family() {
 /// NJoy32 report with report-ID prefix byte is correctly stripped.
 #[test]
 fn njoy32_report_id_prefix_stripping() {
-    let payload = make_joystick_report([0xFFFF, 0x0000, 0x8000, 0x8000, 0x8000, 0xFFFF], 0x01, 0, 0xFF);
+    let payload = joystick_report(
+        [0xFFFF, 0x0000, 0x8000, 0x8000, 0x8000, 0xFFFF],
+        0x01,
+        0,
+        0xFF,
+    );
     let report = with_report_id(0x01, &payload);
 
-    let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro)
-        .with_report_id(true);
+    let handler =
+        GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro).with_report_id(true);
     let state = handler.parse_report(&report).unwrap();
 
     assert!((state.axes.roll - 1.0).abs() < 0.01, "roll should be ~1.0");
-    assert!((state.axes.pitch - (-1.0)).abs() < 0.01, "pitch should be ~-1.0");
-    assert!((state.axes.throttle - 1.0).abs() < 0.001, "throttle should be ~1.0");
+    assert!(
+        (state.axes.pitch - (-1.0)).abs() < 0.01,
+        "pitch should be ~-1.0"
+    );
+    assert!(
+        (state.axes.throttle - 1.0).abs() < 0.001,
+        "throttle should be ~1.0"
+    );
     assert!(state.buttons[0], "button 1 should be pressed");
 }
 
@@ -223,19 +246,19 @@ fn axis_16bit_resolution_boundaries() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
 
     // Minimum (0x0000): signed → -1.0, unsigned → 0.0
-    let report = make_joystick_report([0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000], 0, 0, 0xFF);
+    let report = joystick_report([0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - (-1.0)).abs() < 0.001);
     assert!(state.axes.throttle.abs() < 0.001);
 
     // Maximum (0xFFFF): signed → ~1.0, unsigned → ~1.0
-    let report = make_joystick_report([0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
+    let report = joystick_report([0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!((state.axes.roll - 1.0).abs() < 0.01);
     assert!((state.axes.throttle - 1.0).abs() < 0.001);
 
     // Midpoint (0x8000): signed → ~0.0, unsigned → ~0.5
-    let report = make_joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
+    let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!(state.axes.roll.abs() < 0.01);
     assert!((state.axes.throttle - 0.5).abs() < 0.01);
@@ -257,7 +280,11 @@ fn axis_calibration_data_consistent_offsets() {
             "axis '{}' offset mismatch vs '{}'",
             g.name, f.name
         );
-        assert_eq!(g.name, f.name, "axis name mismatch at offset {}", g.report_offset);
+        assert_eq!(
+            g.name, f.name,
+            "axis name mismatch at offset {}",
+            g.report_offset
+        );
         assert_eq!(g.mode, f.mode, "axis '{}' norm mode mismatch", g.name);
     }
 }
@@ -266,16 +293,32 @@ fn axis_calibration_data_consistent_offsets() {
 #[test]
 fn axis_center_detection_signed() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
-    let report = make_joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+    let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
 
     // All signed axes should be very close to 0.0
     let tolerance = 0.001;
-    assert!(state.axes.roll.abs() < tolerance, "roll={}", state.axes.roll);
-    assert!(state.axes.pitch.abs() < tolerance, "pitch={}", state.axes.pitch);
+    assert!(
+        state.axes.roll.abs() < tolerance,
+        "roll={}",
+        state.axes.roll
+    );
+    assert!(
+        state.axes.pitch.abs() < tolerance,
+        "pitch={}",
+        state.axes.pitch
+    );
     assert!(state.axes.yaw.abs() < tolerance, "yaw={}", state.axes.yaw);
-    assert!(state.axes.mini_x.abs() < tolerance, "mini_x={}", state.axes.mini_x);
-    assert!(state.axes.mini_y.abs() < tolerance, "mini_y={}", state.axes.mini_y);
+    assert!(
+        state.axes.mini_x.abs() < tolerance,
+        "mini_x={}",
+        state.axes.mini_x
+    );
+    assert!(
+        state.axes.mini_y.abs() < tolerance,
+        "mini_y={}",
+        state.axes.mini_y
+    );
 }
 
 /// Linearity: axis output scales proportionally with input.
@@ -292,7 +335,7 @@ fn axis_linearity_check() {
         (0xFFFF, 1.0),
     ];
     for (raw, expected) in &quarters {
-        let report = make_joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, *raw], 0, 0, 0xFF);
+        let report = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, *raw], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         assert!(
             (state.axes.throttle - expected).abs() < 0.01,
@@ -310,7 +353,7 @@ fn axis_full_range_sweep() {
 
     for step in 0..=255u16 {
         let raw = step * 256; // 0x0000, 0x0100, ..., 0xFF00
-        let report = make_joystick_report([raw, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
+        let report = joystick_report([raw, 0x8000, 0x8000, 0x8000, 0x8000, 0x0000], 0, 0, 0xFF);
         let state = handler.parse_report(&report).unwrap();
         // Roll should be monotonically increasing
         assert!(
@@ -330,8 +373,8 @@ fn axis_micro_sensitivity() {
     let handler = GunfighterInputHandler::new(GunfighterVariant::ModernCombatPro);
 
     // Two adjacent raw values should produce different normalised results
-    let report_a = make_joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
-    let report_b = make_joystick_report([0x8001, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
+    let report_a = joystick_report([0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
+    let report_b = joystick_report([0x8001, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000], 0, 0, 0xFF);
     let state_a = handler.parse_report(&report_a).unwrap();
     let state_b = handler.parse_report(&report_b).unwrap();
 
@@ -371,7 +414,9 @@ fn button_matrix_physical_layout_gladiator() {
 
     // Buttons 7-18 are hat directions
     for n in 7..=18 {
-        let btn = profile.button_by_number(n).unwrap_or_else(|| panic!("button {n}"));
+        let btn = profile
+            .button_by_number(n)
+            .unwrap_or_else(|| panic!("button {n}"));
         assert_eq!(
             btn.kind,
             ButtonKind::HatDirection,
@@ -412,7 +457,7 @@ fn button_matrix_hat_4way_8way_decoding() {
     // 8 cardinal/diagonal directions (0=N, 1=NE, 2=E, ..., 7=NW)
     for dir in 0u8..=7 {
         let hat_byte = 0xF0 | dir; // hat0 = dir, hat1 = centred
-        let report = make_joystick_report([0x8000; 6], 0, 0, hat_byte);
+        let report = joystick_report([0x8000; 6], 0, 0, hat_byte);
         let state = handler.parse_report(&report).unwrap();
         assert_eq!(
             state.hats[0],
@@ -424,7 +469,7 @@ fn button_matrix_hat_4way_8way_decoding() {
 
     // Both hats active simultaneously
     let hat_byte = 0x40; // hat0 = N(0), hat1 = S(4)
-    let report = make_joystick_report([0x8000; 6], 0, 0, hat_byte);
+    let report = joystick_report([0x8000; 6], 0, 0, hat_byte);
     let state = handler.parse_report(&report).unwrap();
     assert_eq!(state.hats[0], Some(HatDirection(0)), "hat0 = N");
     assert_eq!(state.hats[1], Some(HatDirection(4)), "hat1 = S");
@@ -442,13 +487,14 @@ fn button_matrix_shift_register_combinations() {
         } else {
             (0u32, 1u32 << (bit - 32))
         };
-        let report = make_joystick_report([0x8000; 6], btn_lo, btn_hi, 0xFF);
+        let report = joystick_report([0x8000; 6], btn_lo, btn_hi, 0xFF);
         let state = handler.parse_report(&report).unwrap();
 
         // Exactly one button pressed
         let pressed = state.pressed_buttons();
         assert_eq!(
-            pressed.len(), 1,
+            pressed.len(),
+            1,
             "bit {bit}: expected exactly 1 button, got {:?}",
             pressed
         );
@@ -466,12 +512,12 @@ fn button_matrix_virtual_buttons_pressed_list() {
     let handler = GladiatorInputHandler::new(VkbGladiatorVariant::NxtEvoRight);
 
     // No buttons pressed
-    let report = make_joystick_report([0x8000; 6], 0, 0, 0xFF);
+    let report = joystick_report([0x8000; 6], 0, 0, 0xFF);
     let state = handler.parse_report(&report).unwrap();
     assert!(state.pressed_buttons().is_empty());
 
     // Buttons 1, 16, 33, 64
-    let report = make_joystick_report(
+    let report = joystick_report(
         [0x8000; 6],
         0x0000_8001, // bit 0 (btn 1) + bit 15 (btn 16)
         0x8000_0001, // bit 0 (btn 33) + bit 31 (btn 64)
@@ -489,13 +535,16 @@ fn button_matrix_hat_centred_all_nibble_values() {
     // Nibbles 0-7 should produce Some (valid direction), 8-15 should produce None (centred)
     for high_nibble in 0u8..=15 {
         let hat_byte = (high_nibble << 4) | 0x0F; // hat0 = centred, hat1 = high_nibble
-        let report = make_joystick_report([0x8000; 6], 0, 0, hat_byte);
+        let report = joystick_report([0x8000; 6], 0, 0, hat_byte);
         let state = handler.parse_report(&report).unwrap();
         assert_eq!(state.hats[0], None, "hat0 nibble 0xF should be None");
         if high_nibble <= 7 {
             assert!(state.hats[1].is_some());
         } else {
-            assert_eq!(state.hats[1], None, "hat1 nibble 0x{high_nibble:X} should be None");
+            assert_eq!(
+                state.hats[1], None,
+                "hat1 nibble 0x{high_nibble:X} should be None"
+            );
         }
     }
 }
@@ -532,13 +581,21 @@ fn profile_dcs_gunfighter_controls() {
     let gun = gunfighter_mcg_profile();
 
     // DCS-critical controls: castle switch for sensor management
-    let castle_buttons: Vec<_> = gun.buttons.iter()
+    let castle_buttons: Vec<_> = gun
+        .buttons
+        .iter()
         .filter(|b| b.name.contains("Castle"))
         .collect();
-    assert!(castle_buttons.len() >= 4, "should have castle Up/Right/Down/Left + Press");
+    assert!(
+        castle_buttons.len() >= 4,
+        "should have castle Up/Right/Down/Left + Press"
+    );
 
     // Folding trigger for weapon release
-    let folding = gun.buttons.iter().find(|b| b.name.contains("Folding Trigger"));
+    let folding = gun
+        .buttons
+        .iter()
+        .find(|b| b.name.contains("Folding Trigger"));
     assert!(folding.is_some(), "MCG should have folding trigger");
     assert_eq!(folding.unwrap().kind, ButtonKind::Trigger);
 
@@ -562,10 +619,15 @@ fn profile_msfs_gladiator_controls() {
     assert_eq!(throttle.unwrap().mode, AxisNormMode::Unsigned);
 
     // Encoder CW/CCW for heading/altitude adjustments
-    let encoder_buttons: Vec<_> = glad.buttons.iter()
+    let encoder_buttons: Vec<_> = glad
+        .buttons
+        .iter()
         .filter(|b| b.kind == ButtonKind::Encoder)
         .collect();
-    assert!(encoder_buttons.len() >= 2, "should have at least CW+CCW encoder buttons");
+    assert!(
+        encoder_buttons.len() >= 2,
+        "should have at least CW+CCW encoder buttons"
+    );
 
     // Hat switches for view control
     assert!(glad.hat_count() >= 1, "should have at least one POV hat");
@@ -607,11 +669,15 @@ fn profile_model_specific_axis_counts() {
 fn profile_pid_lookup_comprehensive() {
     // Gladiator NXT EVO
     assert_eq!(
-        profile_for_pid(VKB_GLADIATOR_NXT_EVO_RIGHT_PID).unwrap().device_name,
+        profile_for_pid(VKB_GLADIATOR_NXT_EVO_RIGHT_PID)
+            .unwrap()
+            .device_name,
         "VKB Gladiator NXT EVO"
     );
     assert_eq!(
-        profile_for_pid(VKB_GLADIATOR_NXT_EVO_LEFT_PID).unwrap().device_name,
+        profile_for_pid(VKB_GLADIATOR_NXT_EVO_LEFT_PID)
+            .unwrap()
+            .device_name,
         "VKB Gladiator NXT EVO"
     );
 
@@ -647,12 +713,21 @@ fn discovery_vkb_vid_matching() {
     assert_eq!(VKB_VENDOR_ID, 0x231D);
 
     // Correct VID + known PID → true
-    assert!(is_vkb_joystick(VKB_VENDOR_ID, VKB_GLADIATOR_NXT_EVO_RIGHT_PID));
-    assert!(is_vkb_joystick(VKB_VENDOR_ID, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID));
+    assert!(is_vkb_joystick(
+        VKB_VENDOR_ID,
+        VKB_GLADIATOR_NXT_EVO_RIGHT_PID
+    ));
+    assert!(is_vkb_joystick(
+        VKB_VENDOR_ID,
+        VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID
+    ));
 
     // Wrong VID → false even with valid PID
     assert!(!is_vkb_joystick(0x0000, VKB_GLADIATOR_NXT_EVO_RIGHT_PID));
-    assert!(!is_vkb_joystick(0x046D, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID)); // Logitech VID
+    assert!(!is_vkb_joystick(
+        0x046D,
+        VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID
+    )); // Logitech VID
 
     // Correct VID + unknown PID → false
     assert!(!is_vkb_joystick(VKB_VENDOR_ID, 0xFFFF));
@@ -753,8 +828,14 @@ fn discovery_device_family_names() {
 #[test]
 fn discovery_unknown_pids_rejected() {
     // Wrong VID
-    assert_eq!(vkb_device_family(0x0000, VKB_GLADIATOR_NXT_EVO_RIGHT_PID), None);
-    assert_eq!(vkb_device_family(0x046D, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID), None);
+    assert_eq!(
+        vkb_device_family(0x0000, VKB_GLADIATOR_NXT_EVO_RIGHT_PID),
+        None
+    );
+    assert_eq!(
+        vkb_device_family(0x046D, VKB_GUNFIGHTER_MODERN_COMBAT_PRO_PID),
+        None
+    );
 
     // Unknown PIDs (STECS Modern Throttle PIDs are not in the joystick family classifier)
     assert_eq!(VkbDeviceFamily::from_pid(0x0000), None);
