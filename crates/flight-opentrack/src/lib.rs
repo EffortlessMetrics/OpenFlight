@@ -33,6 +33,13 @@ pub const OPENTRACK_PORT: u16 = 4242;
 /// Exact size of an OpenTrack UDP packet in bytes (6 × 8).
 pub const OPENTRACK_PACKET_SIZE: usize = 48;
 
+const X_OFFSET: usize = 0;
+const Y_OFFSET: usize = 8;
+const Z_OFFSET: usize = 16;
+const YAW_OFFSET: usize = 24;
+const PITCH_OFFSET: usize = 32;
+const ROLL_OFFSET: usize = 40;
+
 // ── Error type ────────────────────────────────────────────────────────────────
 
 /// Errors produced by the OpenTrack adapter.
@@ -147,12 +154,12 @@ pub fn parse_packet(data: &[u8]) -> Result<HeadPosition, OpenTrackError> {
         return Err(OpenTrackError::PacketTooShort { actual: data.len() });
     }
 
-    let x = read_f64_le(data, 0);
-    let y = read_f64_le(data, 8);
-    let z = read_f64_le(data, 16);
-    let yaw = read_f64_le(data, 24);
-    let pitch = read_f64_le(data, 32);
-    let roll = read_f64_le(data, 40);
+    let x = read_f64_le(data, X_OFFSET);
+    let y = read_f64_le(data, Y_OFFSET);
+    let z = read_f64_le(data, Z_OFFSET);
+    let yaw = read_f64_le(data, YAW_OFFSET);
+    let pitch = read_f64_le(data, PITCH_OFFSET);
+    let roll = read_f64_le(data, ROLL_OFFSET);
 
     if [x, y, z, yaw, pitch, roll].iter().any(|v| !v.is_finite()) {
         return Err(OpenTrackError::NonFiniteValue);
@@ -168,6 +175,23 @@ pub fn parse_packet(data: &[u8]) -> Result<HeadPosition, OpenTrackError> {
         pitch_deg: pitch,
         roll_deg: roll,
     })
+}
+
+/// Encode a head-position sample into the OpenTrack UDP packet layout.
+///
+/// The resulting packet is little-endian and can be round-tripped through
+/// [`parse_packet`].  This centralizes fixture and replay packet generation so
+/// tests do not need to duplicate byte-offset knowledge.
+#[must_use]
+pub fn encode_packet(position: &HeadPosition) -> [u8; OPENTRACK_PACKET_SIZE] {
+    let mut buf = [0u8; OPENTRACK_PACKET_SIZE];
+    write_f64_le(&mut buf, X_OFFSET, position.x_mm);
+    write_f64_le(&mut buf, Y_OFFSET, position.y_mm);
+    write_f64_le(&mut buf, Z_OFFSET, position.z_mm);
+    write_f64_le(&mut buf, YAW_OFFSET, position.yaw_deg);
+    write_f64_le(&mut buf, PITCH_OFFSET, position.pitch_deg);
+    write_f64_le(&mut buf, ROLL_OFFSET, position.roll_deg);
+    buf
 }
 
 // ── Normalization helpers ─────────────────────────────────────────────────────
@@ -188,6 +212,10 @@ pub fn pitch_to_normalized(pitch_deg: f64) -> f64 {
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
+fn write_f64_le(buf: &mut [u8], offset: usize, value: f64) {
+    buf[offset..offset + 8].copy_from_slice(&value.to_le_bytes());
+}
+
 fn read_f64_le(data: &[u8], offset: usize) -> f64 {
     let bytes: [u8; 8] = data[offset..offset + 8].try_into().unwrap();
     f64::from_le_bytes(bytes)
@@ -202,14 +230,15 @@ mod tests {
 
     /// Build a valid 48-byte OpenTrack packet from six f64 values.
     fn build_packet(x: f64, y: f64, z: f64, yaw: f64, pitch: f64, roll: f64) -> Vec<u8> {
-        let mut buf = vec![0u8; OPENTRACK_PACKET_SIZE];
-        buf[0..8].copy_from_slice(&x.to_le_bytes());
-        buf[8..16].copy_from_slice(&y.to_le_bytes());
-        buf[16..24].copy_from_slice(&z.to_le_bytes());
-        buf[24..32].copy_from_slice(&yaw.to_le_bytes());
-        buf[32..40].copy_from_slice(&pitch.to_le_bytes());
-        buf[40..48].copy_from_slice(&roll.to_le_bytes());
-        buf
+        encode_packet(&HeadPosition {
+            x_mm: x,
+            y_mm: y,
+            z_mm: z,
+            yaw_deg: yaw,
+            pitch_deg: pitch,
+            roll_deg: roll,
+        })
+        .to_vec()
     }
 
     // ── parse_packet ─────────────────────────────────────────────────────────

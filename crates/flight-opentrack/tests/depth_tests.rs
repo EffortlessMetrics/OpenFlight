@@ -8,8 +8,8 @@
 //! serialization, error display, and property-based fuzzing.
 
 use flight_opentrack::{
-    parse_packet, pitch_to_normalized, yaw_to_normalized, HeadPosition, OpenTrackAdapter,
-    OpenTrackError, OPENTRACK_PACKET_SIZE, OPENTRACK_PORT,
+    HeadPosition, OPENTRACK_PACKET_SIZE, OPENTRACK_PORT, OpenTrackAdapter, OpenTrackError,
+    encode_packet, parse_packet, pitch_to_normalized, yaw_to_normalized,
 };
 use proptest::prelude::*;
 
@@ -17,14 +17,15 @@ use proptest::prelude::*;
 
 /// Build a valid 48-byte OpenTrack packet from six f64 values.
 fn build_packet(x: f64, y: f64, z: f64, yaw: f64, pitch: f64, roll: f64) -> Vec<u8> {
-    let mut buf = vec![0u8; OPENTRACK_PACKET_SIZE];
-    buf[0..8].copy_from_slice(&x.to_le_bytes());
-    buf[8..16].copy_from_slice(&y.to_le_bytes());
-    buf[16..24].copy_from_slice(&z.to_le_bytes());
-    buf[24..32].copy_from_slice(&yaw.to_le_bytes());
-    buf[32..40].copy_from_slice(&pitch.to_le_bytes());
-    buf[40..48].copy_from_slice(&roll.to_le_bytes());
-    buf
+    encode_packet(&HeadPosition {
+        x_mm: x,
+        y_mm: y,
+        z_mm: z,
+        yaw_deg: yaw,
+        pitch_deg: pitch,
+        roll_deg: roll,
+    })
+    .to_vec()
 }
 
 /// Inject a single f64 at a given field index (0–5) into an otherwise-zero packet.
@@ -244,14 +245,7 @@ fn all_nan_packet_is_rejected() {
 
 #[test]
 fn mixed_nan_and_infinity_is_rejected() {
-    let pkt = build_packet(
-        f64::NAN,
-        f64::INFINITY,
-        f64::NEG_INFINITY,
-        0.0,
-        0.0,
-        0.0,
-    );
+    let pkt = build_packet(f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 0.0, 0.0, 0.0);
     assert_eq!(parse_packet(&pkt), Err(OpenTrackError::NonFiniteValue));
 }
 
@@ -425,7 +419,8 @@ fn serde_json_field_names_match_struct() {
 
 #[test]
 fn serde_deserialize_from_known_json() {
-    let json = r#"{"x_mm":10.0,"y_mm":-5.0,"z_mm":3.5,"yaw_deg":45.0,"pitch_deg":-15.0,"roll_deg":2.0}"#;
+    let json =
+        r#"{"x_mm":10.0,"y_mm":-5.0,"z_mm":3.5,"yaw_deg":45.0,"pitch_deg":-15.0,"roll_deg":2.0}"#;
     let pos: HeadPosition = serde_json::from_str(json).unwrap();
     assert!((pos.x_mm - 10.0).abs() < 1e-10);
     assert!((pos.yaw_deg - 45.0).abs() < 1e-10);
