@@ -7,7 +7,7 @@
 //! adapter API — no real network socket or simulator process is needed.
 
 use flight_aerofly::{
-    AEROFLY_MAGIC, AeroflyAdapter, AeroflyAdapterError, AeroflyTelemetry, MIN_FRAME_SIZE,
+    AeroflyAdapter, AeroflyAdapterError, AeroflyTelemetry, encode_telemetry_frame,
     parse_json_telemetry, parse_telemetry, parse_text_telemetry,
 };
 
@@ -23,17 +23,18 @@ fn build_frame(
     gear_down: u8,
     flaps_ratio: f32,
 ) -> Vec<u8> {
-    let mut buf = vec![0u8; MIN_FRAME_SIZE];
-    buf[0..4].copy_from_slice(&AEROFLY_MAGIC.to_le_bytes());
-    buf[4..8].copy_from_slice(&pitch.to_le_bytes());
-    buf[8..12].copy_from_slice(&roll.to_le_bytes());
-    buf[12..16].copy_from_slice(&heading.to_le_bytes());
-    buf[16..20].copy_from_slice(&airspeed.to_le_bytes());
-    buf[20..24].copy_from_slice(&altitude.to_le_bytes());
-    buf[24..28].copy_from_slice(&throttle_pos.to_le_bytes());
-    buf[28] = gear_down;
-    buf[29..33].copy_from_slice(&flaps_ratio.to_le_bytes());
-    buf
+    encode_telemetry_frame(&AeroflyTelemetry {
+        pitch,
+        roll,
+        heading,
+        airspeed,
+        altitude,
+        throttle_pos,
+        gear_down: gear_down != 0,
+        flaps_ratio,
+        vspeed_fpm: 0.0,
+    })
+    .to_vec()
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
