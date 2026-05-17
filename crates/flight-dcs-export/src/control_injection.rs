@@ -47,44 +47,38 @@ pub struct DcsControlCommand {
 }
 
 impl DcsControlCommand {
-    /// Create an axis command.
-    pub fn axis(device_id: u32, command_id: u32, value: f64) -> Self {
+    fn new(device_id: u32, command_id: u32, value: f64, action_type: DcsActionType) -> Self {
         Self {
             device_id,
             command_id,
-            value: value.clamp(-1.0, 1.0),
-            action_type: DcsActionType::Axis,
+            value,
+            action_type,
         }
+    }
+
+    /// Create an axis command.
+    pub fn axis(device_id: u32, command_id: u32, value: f64) -> Self {
+        Self::new(
+            device_id,
+            command_id,
+            value.clamp(-1.0, 1.0),
+            DcsActionType::Axis,
+        )
     }
 
     /// Create a button press command.
     pub fn button_press(device_id: u32, command_id: u32) -> Self {
-        Self {
-            device_id,
-            command_id,
-            value: 1.0,
-            action_type: DcsActionType::ButtonPress,
-        }
+        Self::new(device_id, command_id, 1.0, DcsActionType::ButtonPress)
     }
 
     /// Create a button release command.
     pub fn button_release(device_id: u32, command_id: u32) -> Self {
-        Self {
-            device_id,
-            command_id,
-            value: 0.0,
-            action_type: DcsActionType::ButtonRelease,
-        }
+        Self::new(device_id, command_id, 0.0, DcsActionType::ButtonRelease)
     }
 
     /// Create a toggle command.
     pub fn toggle(device_id: u32, command_id: u32) -> Self {
-        Self {
-            device_id,
-            command_id,
-            value: 1.0,
-            action_type: DcsActionType::Toggle,
-        }
+        Self::new(device_id, command_id, 1.0, DcsActionType::Toggle)
     }
 
     /// Serialize this command to the DCS wire-format line (without trailing newline).
@@ -266,12 +260,37 @@ pub struct DcsDevice {
     pub name: &'static str,
 }
 
+impl DcsDevice {
+    /// Create a DCS device definition.
+    pub const fn new(id: u32, name: &'static str) -> Self {
+        Self { id, name }
+    }
+}
+
 /// A clickable cockpit command.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DcsCommandDef {
     pub device_id: u32,
     pub command_id: u32,
     pub name: &'static str,
+}
+
+impl DcsCommandDef {
+    /// Create a clickable cockpit command definition.
+    pub const fn new(device_id: u32, command_id: u32, name: &'static str) -> Self {
+        Self {
+            device_id,
+            command_id,
+            name,
+        }
+    }
+}
+
+fn lookup_command_in(
+    commands: &'static [DcsCommandDef],
+    name: &str,
+) -> Option<&'static DcsCommandDef> {
+    commands.iter().find(|c| c.name == name)
 }
 
 /// Well-known named axes shared across modules.
@@ -307,399 +326,139 @@ pub fn all_axis_names() -> Vec<&'static str> {
 
 /// F/A-18C device IDs.
 pub mod fa18c {
-    use super::{DcsCommandDef, DcsDevice};
+    use super::{DcsCommandDef, DcsDevice, lookup_command_in};
 
-    pub const UFC: DcsDevice = DcsDevice {
-        id: 25,
-        name: "UFC",
-    };
-    pub const HOTAS: DcsDevice = DcsDevice {
-        id: 12,
-        name: "HOTAS",
-    };
-    pub const IFEI: DcsDevice = DcsDevice {
-        id: 36,
-        name: "IFEI",
-    };
-    pub const LEFT_DDI: DcsDevice = DcsDevice {
-        id: 35,
-        name: "Left DDI",
-    };
-    pub const RIGHT_DDI: DcsDevice = DcsDevice {
-        id: 37,
-        name: "Right DDI",
-    };
+    pub const UFC: DcsDevice = DcsDevice::new(25, "UFC");
+    pub const HOTAS: DcsDevice = DcsDevice::new(12, "HOTAS");
+    pub const IFEI: DcsDevice = DcsDevice::new(36, "IFEI");
+    pub const LEFT_DDI: DcsDevice = DcsDevice::new(35, "Left DDI");
+    pub const RIGHT_DDI: DcsDevice = DcsDevice::new(37, "Right DDI");
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3001,
-            name: "UFC_1",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3002,
-            name: "UFC_2",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3003,
-            name: "UFC_3",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3004,
-            name: "UFC_4",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3005,
-            name: "UFC_5",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3006,
-            name: "UFC_6",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3007,
-            name: "UFC_7",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3008,
-            name: "UFC_8",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3009,
-            name: "UFC_9",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3010,
-            name: "UFC_0",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3018,
-            name: "UFC_ENT",
-        },
-        DcsCommandDef {
-            device_id: 25,
-            command_id: 3019,
-            name: "UFC_CLR",
-        },
-        DcsCommandDef {
-            device_id: 12,
-            command_id: 3200,
-            name: "MASTER_ARM_ON",
-        },
-        DcsCommandDef {
-            device_id: 12,
-            command_id: 3201,
-            name: "MASTER_ARM_OFF",
-        },
+        DcsCommandDef::new(25, 3001, "UFC_1"),
+        DcsCommandDef::new(25, 3002, "UFC_2"),
+        DcsCommandDef::new(25, 3003, "UFC_3"),
+        DcsCommandDef::new(25, 3004, "UFC_4"),
+        DcsCommandDef::new(25, 3005, "UFC_5"),
+        DcsCommandDef::new(25, 3006, "UFC_6"),
+        DcsCommandDef::new(25, 3007, "UFC_7"),
+        DcsCommandDef::new(25, 3008, "UFC_8"),
+        DcsCommandDef::new(25, 3009, "UFC_9"),
+        DcsCommandDef::new(25, 3010, "UFC_0"),
+        DcsCommandDef::new(25, 3018, "UFC_ENT"),
+        DcsCommandDef::new(25, 3019, "UFC_CLR"),
+        DcsCommandDef::new(12, 3200, "MASTER_ARM_ON"),
+        DcsCommandDef::new(12, 3201, "MASTER_ARM_OFF"),
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
-        COMMANDS.iter().find(|c| c.name == name)
+        lookup_command_in(COMMANDS, name)
     }
 }
 
 // --- F-16C Viper -------------------------------------------------------------
 
 pub mod f16c {
-    use super::{DcsCommandDef, DcsDevice};
+    use super::{DcsCommandDef, DcsDevice, lookup_command_in};
 
-    pub const ICP: DcsDevice = DcsDevice {
-        id: 17,
-        name: "ICP",
-    };
-    pub const UFC: DcsDevice = DcsDevice {
-        id: 17,
-        name: "UFC",
-    };
-    pub const HOTAS: DcsDevice = DcsDevice {
-        id: 12,
-        name: "HOTAS",
-    };
+    pub const ICP: DcsDevice = DcsDevice::new(17, "ICP");
+    pub const UFC: DcsDevice = DcsDevice::new(17, "UFC");
+    pub const HOTAS: DcsDevice = DcsDevice::new(12, "HOTAS");
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3001,
-            name: "ICP_0",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3002,
-            name: "ICP_1",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3003,
-            name: "ICP_2",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3004,
-            name: "ICP_3",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3005,
-            name: "ICP_4",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3006,
-            name: "ICP_5",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3007,
-            name: "ICP_6",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3008,
-            name: "ICP_7",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3009,
-            name: "ICP_8",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3010,
-            name: "ICP_9",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3011,
-            name: "ICP_ENTR",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3012,
-            name: "ICP_RCL",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3015,
-            name: "ICP_DCS_UP",
-        },
-        DcsCommandDef {
-            device_id: 17,
-            command_id: 3016,
-            name: "ICP_DCS_DOWN",
-        },
-        DcsCommandDef {
-            device_id: 12,
-            command_id: 3100,
-            name: "MASTER_ARM_TOGGLE",
-        },
+        DcsCommandDef::new(17, 3001, "ICP_0"),
+        DcsCommandDef::new(17, 3002, "ICP_1"),
+        DcsCommandDef::new(17, 3003, "ICP_2"),
+        DcsCommandDef::new(17, 3004, "ICP_3"),
+        DcsCommandDef::new(17, 3005, "ICP_4"),
+        DcsCommandDef::new(17, 3006, "ICP_5"),
+        DcsCommandDef::new(17, 3007, "ICP_6"),
+        DcsCommandDef::new(17, 3008, "ICP_7"),
+        DcsCommandDef::new(17, 3009, "ICP_8"),
+        DcsCommandDef::new(17, 3010, "ICP_9"),
+        DcsCommandDef::new(17, 3011, "ICP_ENTR"),
+        DcsCommandDef::new(17, 3012, "ICP_RCL"),
+        DcsCommandDef::new(17, 3015, "ICP_DCS_UP"),
+        DcsCommandDef::new(17, 3016, "ICP_DCS_DOWN"),
+        DcsCommandDef::new(12, 3100, "MASTER_ARM_TOGGLE"),
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
-        COMMANDS.iter().find(|c| c.name == name)
+        lookup_command_in(COMMANDS, name)
     }
 }
 
 // --- A-10C / A-10C II --------------------------------------------------------
 
 pub mod a10c {
-    use super::{DcsCommandDef, DcsDevice};
+    use super::{DcsCommandDef, DcsDevice, lookup_command_in};
 
-    pub const CDU: DcsDevice = DcsDevice {
-        id: 24,
-        name: "CDU",
-    };
-    pub const HOTAS: DcsDevice = DcsDevice {
-        id: 12,
-        name: "HOTAS",
-    };
-    pub const CMSP: DcsDevice = DcsDevice {
-        id: 39,
-        name: "CMSP",
-    };
+    pub const CDU: DcsDevice = DcsDevice::new(24, "CDU");
+    pub const HOTAS: DcsDevice = DcsDevice::new(12, "HOTAS");
+    pub const CMSP: DcsDevice = DcsDevice::new(39, "CMSP");
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3001,
-            name: "CDU_1",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3002,
-            name: "CDU_2",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3003,
-            name: "CDU_3",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3004,
-            name: "CDU_4",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3005,
-            name: "CDU_5",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3006,
-            name: "CDU_6",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3007,
-            name: "CDU_7",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3008,
-            name: "CDU_8",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3009,
-            name: "CDU_9",
-        },
-        DcsCommandDef {
-            device_id: 24,
-            command_id: 3010,
-            name: "CDU_0",
-        },
-        DcsCommandDef {
-            device_id: 12,
-            command_id: 3250,
-            name: "MASTER_ARM_ON",
-        },
-        DcsCommandDef {
-            device_id: 12,
-            command_id: 3251,
-            name: "MASTER_ARM_OFF",
-        },
-        DcsCommandDef {
-            device_id: 39,
-            command_id: 3001,
-            name: "CMSP_JMR",
-        },
-        DcsCommandDef {
-            device_id: 39,
-            command_id: 3002,
-            name: "CMSP_MWS",
-        },
+        DcsCommandDef::new(24, 3001, "CDU_1"),
+        DcsCommandDef::new(24, 3002, "CDU_2"),
+        DcsCommandDef::new(24, 3003, "CDU_3"),
+        DcsCommandDef::new(24, 3004, "CDU_4"),
+        DcsCommandDef::new(24, 3005, "CDU_5"),
+        DcsCommandDef::new(24, 3006, "CDU_6"),
+        DcsCommandDef::new(24, 3007, "CDU_7"),
+        DcsCommandDef::new(24, 3008, "CDU_8"),
+        DcsCommandDef::new(24, 3009, "CDU_9"),
+        DcsCommandDef::new(24, 3010, "CDU_0"),
+        DcsCommandDef::new(12, 3250, "MASTER_ARM_ON"),
+        DcsCommandDef::new(12, 3251, "MASTER_ARM_OFF"),
+        DcsCommandDef::new(39, 3001, "CMSP_JMR"),
+        DcsCommandDef::new(39, 3002, "CMSP_MWS"),
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
-        COMMANDS.iter().find(|c| c.name == name)
+        lookup_command_in(COMMANDS, name)
     }
 }
 
 // --- F-14B Tomcat ------------------------------------------------------------
 
 pub mod f14b {
-    use super::{DcsCommandDef, DcsDevice};
+    use super::{DcsCommandDef, DcsDevice, lookup_command_in};
 
-    pub const PILOT_STICK: DcsDevice = DcsDevice {
-        id: 0,
-        name: "Pilot Stick",
-    };
-    pub const RIO_CAP: DcsDevice = DcsDevice {
-        id: 42,
-        name: "RIO CAP",
-    };
+    pub const PILOT_STICK: DcsDevice = DcsDevice::new(0, "Pilot Stick");
+    pub const RIO_CAP: DcsDevice = DcsDevice::new(42, "RIO CAP");
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef {
-            device_id: 0,
-            command_id: 3014,
-            name: "WING_SWEEP_AUTO",
-        },
-        DcsCommandDef {
-            device_id: 0,
-            command_id: 3015,
-            name: "WING_SWEEP_MANUAL",
-        },
-        DcsCommandDef {
-            device_id: 42,
-            command_id: 3100,
-            name: "RIO_CAP_TID_MODE",
-        },
-        DcsCommandDef {
-            device_id: 42,
-            command_id: 3101,
-            name: "RIO_CAP_LAUNCH",
-        },
+        DcsCommandDef::new(0, 3014, "WING_SWEEP_AUTO"),
+        DcsCommandDef::new(0, 3015, "WING_SWEEP_MANUAL"),
+        DcsCommandDef::new(42, 3100, "RIO_CAP_TID_MODE"),
+        DcsCommandDef::new(42, 3101, "RIO_CAP_LAUNCH"),
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
-        COMMANDS.iter().find(|c| c.name == name)
+        lookup_command_in(COMMANDS, name)
     }
 }
 
 // --- AH-64D Apache -----------------------------------------------------------
 
 pub mod ah64d {
-    use super::{DcsCommandDef, DcsDevice};
+    use super::{DcsCommandDef, DcsDevice, lookup_command_in};
 
-    pub const PILOT_KU: DcsDevice = DcsDevice {
-        id: 29,
-        name: "Pilot KU",
-    };
-    pub const CPG_KU: DcsDevice = DcsDevice {
-        id: 30,
-        name: "CPG KU",
-    };
-    pub const PILOT_TEDAC: DcsDevice = DcsDevice {
-        id: 28,
-        name: "Pilot TEDAC",
-    };
+    pub const PILOT_KU: DcsDevice = DcsDevice::new(29, "Pilot KU");
+    pub const CPG_KU: DcsDevice = DcsDevice::new(30, "CPG KU");
+    pub const PILOT_TEDAC: DcsDevice = DcsDevice::new(28, "Pilot TEDAC");
 
     pub static COMMANDS: &[DcsCommandDef] = &[
-        DcsCommandDef {
-            device_id: 29,
-            command_id: 3001,
-            name: "PLT_KU_A",
-        },
-        DcsCommandDef {
-            device_id: 29,
-            command_id: 3026,
-            name: "PLT_KU_ENT",
-        },
-        DcsCommandDef {
-            device_id: 29,
-            command_id: 3027,
-            name: "PLT_KU_CLR",
-        },
-        DcsCommandDef {
-            device_id: 30,
-            command_id: 3001,
-            name: "CPG_KU_A",
-        },
-        DcsCommandDef {
-            device_id: 30,
-            command_id: 3026,
-            name: "CPG_KU_ENT",
-        },
-        DcsCommandDef {
-            device_id: 30,
-            command_id: 3027,
-            name: "CPG_KU_CLR",
-        },
+        DcsCommandDef::new(29, 3001, "PLT_KU_A"),
+        DcsCommandDef::new(29, 3026, "PLT_KU_ENT"),
+        DcsCommandDef::new(29, 3027, "PLT_KU_CLR"),
+        DcsCommandDef::new(30, 3001, "CPG_KU_A"),
+        DcsCommandDef::new(30, 3026, "CPG_KU_ENT"),
+        DcsCommandDef::new(30, 3027, "CPG_KU_CLR"),
     ];
 
     pub fn lookup_command(name: &str) -> Option<&'static DcsCommandDef> {
-        COMMANDS.iter().find(|c| c.name == name)
+        lookup_command_in(COMMANDS, name)
     }
 }
 
@@ -858,86 +617,44 @@ pub struct AircraftAxisMapping {
     pub command_id: u32,
 }
 
+impl AircraftAxisMapping {
+    /// Create an aircraft-specific bus-axis mapping.
+    pub const fn new(bus_axis: &'static str, device_id: u32, command_id: u32) -> Self {
+        Self {
+            bus_axis,
+            device_id,
+            command_id,
+        }
+    }
+}
+
+const PITCH_AXIS: AircraftAxisMapping = AircraftAxisMapping::new("pitch", 0, 2001);
+const ROLL_AXIS: AircraftAxisMapping = AircraftAxisMapping::new("roll", 0, 2002);
+const YAW_AXIS: AircraftAxisMapping = AircraftAxisMapping::new("yaw", 0, 2003);
+const THROTTLE_AXIS: AircraftAxisMapping = AircraftAxisMapping::new("throttle", 0, 2004);
+const THROTTLE_LEFT_AXIS: AircraftAxisMapping = AircraftAxisMapping::new("throttle_left", 0, 2005);
+const THROTTLE_RIGHT_AXIS: AircraftAxisMapping =
+    AircraftAxisMapping::new("throttle_right", 0, 2006);
+
 /// F/A-18C Hornet axis mappings.
 pub static FA18C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping {
-        bus_axis: "pitch",
-        device_id: 0,
-        command_id: 2001,
-    },
-    AircraftAxisMapping {
-        bus_axis: "roll",
-        device_id: 0,
-        command_id: 2002,
-    },
-    AircraftAxisMapping {
-        bus_axis: "yaw",
-        device_id: 0,
-        command_id: 2003,
-    },
-    AircraftAxisMapping {
-        bus_axis: "throttle_left",
-        device_id: 0,
-        command_id: 2005,
-    },
-    AircraftAxisMapping {
-        bus_axis: "throttle_right",
-        device_id: 0,
-        command_id: 2006,
-    },
+    PITCH_AXIS,
+    ROLL_AXIS,
+    YAW_AXIS,
+    THROTTLE_LEFT_AXIS,
+    THROTTLE_RIGHT_AXIS,
 ];
 
 /// F-16C Viper axis mappings.
-pub static F16C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping {
-        bus_axis: "pitch",
-        device_id: 0,
-        command_id: 2001,
-    },
-    AircraftAxisMapping {
-        bus_axis: "roll",
-        device_id: 0,
-        command_id: 2002,
-    },
-    AircraftAxisMapping {
-        bus_axis: "yaw",
-        device_id: 0,
-        command_id: 2003,
-    },
-    AircraftAxisMapping {
-        bus_axis: "throttle",
-        device_id: 0,
-        command_id: 2004,
-    },
-];
+pub static F16C_AXES: &[AircraftAxisMapping] = &[PITCH_AXIS, ROLL_AXIS, YAW_AXIS, THROTTLE_AXIS];
 
 /// A-10C Warthog axis mappings.
 pub static A10C_AXES: &[AircraftAxisMapping] = &[
-    AircraftAxisMapping {
-        bus_axis: "pitch",
-        device_id: 0,
-        command_id: 2001,
-    },
-    AircraftAxisMapping {
-        bus_axis: "roll",
-        device_id: 0,
-        command_id: 2002,
-    },
-    AircraftAxisMapping {
-        bus_axis: "yaw",
-        device_id: 0,
-        command_id: 2003,
-    },
-    AircraftAxisMapping {
-        bus_axis: "throttle_left",
-        device_id: 0,
-        command_id: 2005,
-    },
-    AircraftAxisMapping {
-        bus_axis: "throttle_right",
-        device_id: 0,
-        command_id: 2006,
-    },
+    PITCH_AXIS,
+    ROLL_AXIS,
+    YAW_AXIS,
+    THROTTLE_LEFT_AXIS,
+    THROTTLE_RIGHT_AXIS,
 ];
 
 /// Look up per-aircraft axis mapping by module name and bus axis.
