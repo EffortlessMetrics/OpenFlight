@@ -6,14 +6,13 @@
 //! Proves: device disconnect, sim disconnect, profile load failure, service
 //! restart recovery, and watchdog trigger/recovery all work correctly.
 
-use flight_axis::pipeline::{AxisPipeline, ClampStage, CurveStage, DeadzoneStage};
 use flight_axis::{AxisEngine, AxisFrame, InputValidator, PipelineBuilder};
 use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_core::profile::{AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use flight_service::{FlightService, FlightServiceConfig, ServiceState};
 use flight_test_helpers::{
-    FakeDevice, FakeInput, FakeSim, assert_approx_eq, assert_in_range,
+    FakeDevice, FakeInput, FakeSim, assert_approx_eq, assert_in_range, standard_axis_pipeline,
 };
 use flight_watchdog::supervisor::{
     DeadManStatus, DeadManSwitch, DeadManSwitchConfig, HardwareWatchdog, WatchdogTimerConfig,
@@ -29,20 +28,6 @@ use std::time::Duration;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
 
 fn test_profile() -> Profile {
     let mut axes = HashMap::new();
@@ -75,7 +60,7 @@ fn e2e_device_disconnect_mid_flight_pipeline_holds_last_value() {
     let mut device = FakeDevice::new("HOTAS", 0x044F, 0xB10A, 4, 12);
     device.connect();
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     // Process a valid input
     device.enqueue_input(FakeInput {
@@ -98,11 +83,7 @@ fn e2e_device_disconnect_mid_flight_pipeline_holds_last_value() {
 
     // Simulate NaN from disconnected device
     let sanitised = validator.update(f32::NAN);
-    assert_approx_eq(
-        sanitised as f64,
-        last_valid_output,
-        1e-5,
-    );
+    assert_approx_eq(sanitised as f64, last_valid_output, 1e-5);
 
     // Reconnect
     device.connect();
@@ -195,11 +176,7 @@ fn e2e_invalid_profile_rejected_pipeline_unchanged() {
     engine.process(&mut frame2).expect("process still works");
     let output_after = frame2.out;
 
-    assert_approx_eq(
-        output_v1 as f64,
-        output_after as f64,
-        1e-6,
-    );
+    assert_approx_eq(output_v1 as f64, output_after as f64, 1e-6);
 }
 
 // ===========================================================================
@@ -332,8 +309,7 @@ fn e2e_watchdog_nan_guard_detects_bad_values() {
     );
 
     // Inf detection
-    let inf_event =
-        watchdog.check_nan_guard(f32::INFINITY, "pitch_output", component.clone());
+    let inf_event = watchdog.check_nan_guard(f32::INFINITY, "pitch_output", component.clone());
     assert!(inf_event.is_some(), "Inf must trigger guard");
 }
 

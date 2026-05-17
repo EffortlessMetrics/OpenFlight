@@ -13,6 +13,7 @@ categories.workspace = true
 keywords = ["flight-sim", "openflight", "test", "helpers"]
 
 [dependencies]
+flight-axis = { workspace = true }
 flight-adapter-common = { workspace = true }
 flight-bus = { path = "../flight-bus" }
 flight-device-common = { workspace = true }
@@ -20,6 +21,3 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tempfile = { workspace = true }
 tracing-subscriber = { workspace = true }
-
-[dev-dependencies]
-flight-axis = { workspace = true }

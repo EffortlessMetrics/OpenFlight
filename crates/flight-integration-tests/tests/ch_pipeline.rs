@@ -9,7 +9,6 @@
 //! round-trip for a snapshot originating from a CH device session.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
@@ -20,19 +19,9 @@ use flight_hotas_ch::{
     is_ch_device,
     presets::recommended_preset,
 };
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
-}
 
 // ── CH Products device identification tests ───────────────────────────────────
 

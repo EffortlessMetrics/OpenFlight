@@ -9,11 +9,11 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
 use flight_hotas_brunner::{CLS_E_MIN_REPORT_BYTES, parse_cls_e_report};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -36,17 +36,6 @@ fn make_cls_e_report(roll: i16, pitch: i16, buttons: u32) -> [u8; CLS_E_MIN_REPO
     r[7] = btn[2];
     r[8] = btn[3];
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── Brunner CLS-E tests ───────────────────────────────────────────────────────

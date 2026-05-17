@@ -9,12 +9,12 @@
 //! round-tripped values match the originally parsed axes.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::{BusSnapshot, ControlInputs},
     types::{AircraftId, SimId},
 };
 use flight_hotas_thrustmaster::t16000m::T16000M_MIN_REPORT_BYTES;
 use flight_hotas_thrustmaster::{TFRP_MIN_REPORT_BYTES, parse_t16000m_report, parse_tfrp_report};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,17 +35,6 @@ fn make_t16000m_report(x: u16, y: u16, rz: u16, slider: u16, buttons: u16, hat: 
     r[8..10].copy_from_slice(&buttons.to_le_bytes());
     r[10] = hat;
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the first received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── TFRP Rudder Pedals tests ──────────────────────────────────────────────────

@@ -11,25 +11,11 @@ use flight_axis::pipeline::{
     AxisPipeline, ClampStage, CurveStage, DeadzoneStage, SensitivityStage, SmoothingStage,
 };
 use flight_axis::{AxisEngine, AxisFrame, InputValidator, PipelineBuilder};
-use flight_test_helpers::{DeterministicClock, FakeDevice, FakeInput};
+use flight_test_helpers::{DeterministicClock, FakeDevice, FakeInput, standard_axis_pipeline};
 
 // ---------------------------------------------------------------------------
 // Helper: build a standard deadzone → curve → clamp pipeline
 // ---------------------------------------------------------------------------
-
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
 
 // ===========================================================================
 // 1. Raw input → deadzone → curve → output
@@ -37,7 +23,7 @@ fn standard_pipeline() -> AxisPipeline {
 
 #[test]
 fn deadzone_then_curve_end_to_end() {
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     // Input within deadzone → output must be zero
     let out = pipeline.process(0.03, 0.004);
@@ -72,8 +58,8 @@ fn deadzone_then_curve_end_to_end() {
 
 #[test]
 fn multiple_axes_independent() {
-    let pitch = standard_pipeline();
-    let roll = standard_pipeline();
+    let pitch = standard_axis_pipeline();
+    let roll = standard_axis_pipeline();
 
     // Feed different values into each axis
     let pitch_out = pitch.process(0.8, 0.004);
@@ -108,7 +94,7 @@ fn multiple_axes_independent() {
 
 #[test]
 fn zero_input_produces_zero() {
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let out = pipeline.process(0.0, 0.004);
     assert!(
         out.abs() < f64::EPSILON,
@@ -118,7 +104,7 @@ fn zero_input_produces_zero() {
 
 #[test]
 fn maximum_positive_deflection() {
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let out = pipeline.process(1.0, 0.004);
     assert!(
         (out - 1.0).abs() < 1e-10,
@@ -128,7 +114,7 @@ fn maximum_positive_deflection() {
 
 #[test]
 fn maximum_negative_deflection() {
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let out = pipeline.process(-1.0, 0.004);
     assert!(
         (out - (-1.0)).abs() < 1e-10,
@@ -159,7 +145,7 @@ fn nan_rejection_via_input_validator() {
 #[test]
 fn nan_does_not_propagate_through_pipeline() {
     let mut validator = InputValidator::new();
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     // Inject NaN — validator replaces with 0.0 (no prior valid)
     let clean = validator.update(f32::NAN) as f64;
@@ -193,7 +179,7 @@ fn fake_device_stream_through_pipeline() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut outputs = Vec::new();
 
     while let Some(input) = device.next_input() {
@@ -228,9 +214,9 @@ fn three_axis_device_processes_independently() {
         delay_ms: 4,
     });
 
-    let pitch_pipe = standard_pipeline();
-    let roll_pipe = standard_pipeline();
-    let yaw_pipe = standard_pipeline();
+    let pitch_pipe = standard_axis_pipeline();
+    let roll_pipe = standard_axis_pipeline();
+    let yaw_pipe = standard_axis_pipeline();
 
     let input = device.next_input().unwrap();
     let pitch_out = pitch_pipe.process(input.axes[0], 0.004);

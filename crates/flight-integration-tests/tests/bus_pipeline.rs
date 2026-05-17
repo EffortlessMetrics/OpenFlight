@@ -7,12 +7,11 @@
 //! processing, fake devices, and deterministic timing to prove end-to-end
 //! data flow through the bus.
 
-use flight_axis::pipeline::{AxisPipeline, ClampStage, CurveStage, DeadzoneStage};
 use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_test_helpers::{
     DeterministicClock, DeviceFixtureBuilder, FakeDevice, FakeInput, assert_approx_eq,
-    assert_in_range,
+    assert_in_range, standard_axis_pipeline,
 };
 use std::time::Duration;
 
@@ -28,20 +27,6 @@ fn tick() {
     std::thread::sleep(Duration::from_millis(25));
 }
 
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
-
 // ===========================================================================
 // 1. Single publisher, single subscriber — axis snapshot round-trip
 // ===========================================================================
@@ -51,7 +36,7 @@ fn bus_publish_axis_snapshot_received_by_subscriber() {
     let mut publisher = make_publisher();
     let mut sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let processed_pitch = pipeline.process(0.6, 0.004);
 
     let mut snapshot = BusSnapshot::new(SimId::Msfs, AircraftId::new("C172"));
@@ -108,7 +93,7 @@ fn bus_250hz_axis_stream_through_pipeline_and_bus() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut publisher = make_publisher();
     let mut sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
     let mut received_values = Vec::new();
@@ -165,7 +150,7 @@ fn bus_device_fixture_through_pipeline_to_subscriber() {
         .build();
 
     // Simulate axis values from the fixture
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut publisher = make_publisher();
     let mut sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
 

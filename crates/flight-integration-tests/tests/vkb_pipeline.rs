@@ -8,11 +8,11 @@
 //! and asserts that axis and button values are correct.
 
 use flight_bus::{
-    BusPublisher, SubscriptionConfig,
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
 use flight_hotas_vkb::{GladiatorInputHandler, VkbGladiatorVariant};
+use flight_test_helpers::publish_and_receive;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -36,17 +36,6 @@ fn make_gladiator_report(axes: [u16; 6], btn_lo: u32, btn_hi: u32, hat_byte: u8)
     r[16..20].copy_from_slice(&btn_hi.to_le_bytes());
     r[20] = hat_byte;
     r
-}
-
-/// Publish a snapshot through a fresh bus and return the received snapshot.
-fn publish_and_receive(snapshot: BusSnapshot) -> BusSnapshot {
-    let mut publisher = BusPublisher::new(60.0);
-    let mut subscriber = publisher.subscribe(SubscriptionConfig::default()).unwrap();
-    publisher.publish(snapshot).expect("publish must succeed");
-    subscriber
-        .try_recv()
-        .expect("channel must not error")
-        .expect("snapshot must be present after publish")
 }
 
 // ── VKB Gladiator NXT EVO tests ───────────────────────────────────────────────

@@ -14,26 +14,12 @@ use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_test_helpers::{
     DeterministicClock, FakeDevice, FakeInput, assert_approx_eq, assert_bounded_rate,
-    assert_in_range, assert_monotonic,
+    assert_in_range, assert_monotonic, standard_axis_pipeline,
 };
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-fn standard_pipeline() -> AxisPipeline {
-    let mut pipeline = AxisPipeline::new();
-    pipeline.add_stage(Box::new(DeadzoneStage {
-        inner: 0.05,
-        outer: 1.0,
-    }));
-    pipeline.add_stage(Box::new(CurveStage { expo: 0.3 }));
-    pipeline.add_stage(Box::new(ClampStage {
-        min: -1.0,
-        max: 1.0,
-    }));
-    pipeline
-}
 
 fn make_publisher() -> BusPublisher {
     BusPublisher::new(60.0)
@@ -78,7 +64,7 @@ fn e2e_fake_device_ramp_through_pipeline() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut outputs = Vec::new();
 
     while let Some(input) = device.next_input() {
@@ -109,7 +95,7 @@ fn e2e_negative_ramp_through_pipeline() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut outputs = Vec::new();
 
     while let Some(input) = device.next_input() {
@@ -137,7 +123,7 @@ fn e2e_four_axes_process_independently() {
         delay_ms: 4,
     });
 
-    let pipelines: Vec<AxisPipeline> = (0..4).map(|_| standard_pipeline()).collect();
+    let pipelines: Vec<AxisPipeline> = (0..4).map(|_| standard_axis_pipeline()).collect();
     let input = device.next_input().unwrap();
     let outputs: Vec<f64> = input
         .axes
@@ -169,7 +155,7 @@ fn e2e_pipeline_output_published_to_bus_subscriber() {
         delay_ms: 4,
     });
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let input = device.next_input().unwrap();
     let processed = pipeline.process(input.axes[0], 0.004);
 
@@ -191,7 +177,7 @@ fn e2e_pipeline_output_published_to_bus_subscriber() {
 
 #[test]
 fn e2e_multiple_subscribers_receive_pipeline_output() {
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let processed = pipeline.process(0.6, 0.004);
 
     let mut publisher = make_publisher();
@@ -230,7 +216,7 @@ fn e2e_250hz_deterministic_timing_full_pipeline() {
         });
     }
 
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
     let mut timestamps = Vec::new();
     let mut outputs = Vec::new();
 
@@ -301,7 +287,7 @@ fn e2e_compiled_pipeline_250hz_with_engine() {
 #[test]
 fn e2e_nan_rejected_at_validator_layer() {
     let mut validator = InputValidator::new();
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     // Feed valid baseline
     validator.update(0.5);
@@ -318,7 +304,7 @@ fn e2e_nan_rejected_at_validator_layer() {
 #[test]
 fn e2e_inf_rejected_at_validator_layer() {
     let mut validator = InputValidator::new();
-    let pipeline = standard_pipeline();
+    let pipeline = standard_axis_pipeline();
 
     let sanitised = validator.update(f32::INFINITY);
     assert_eq!(sanitised, 1.0, "+Inf clamped to 1.0");
