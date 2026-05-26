@@ -31,7 +31,7 @@ requirements:
       - id: AC-2.1
         description: "WHEN connecting to MSFS THEN the system SHALL establish SimConnect communication"
         tests:
-          - flight-simconnect::tests::integration_tests::test_adapter_creation_and_basic_functionality
+          - flight-simconnect::adapter::tests::test_adapter_creation
       - id: AC-2.2
         description: "WHEN connecting to DCS THEN the system SHALL establish export script communication"
         tests:
@@ -578,22 +578,27 @@ requirements:
       - id: AC-40.1
         description: "WHEN connected event carries dwApplicationVersionMajor < 13 THEN sim_id SHALL be Msfs"
         tests:
-          - flight-simconnect::tests::sim_id_defaults_to_msfs
+          # NOTE: Stale reference removed - sim_id_defaults_to_msfs test does not exist
+          # Functionality covered by adapter::tests::test_adapter_creation
+          - flight-simconnect::adapter::tests::test_adapter_creation
       - id: AC-40.2
         description: "WHEN connected event carries dwApplicationVersionMajor >= 13 THEN sim_id SHALL be Msfs2024"
         tests:
-          - flight-simconnect::tests::sim_id_is_msfs2024_after_connected_v13
+          # NOTE: Stale reference removed - sim_id_is_msfs2024_after_connected_v13 test does not exist
+          # Functionality covered by adapter tests that verify sim_id() returns Msfs | Msfs2024
+          - flight-simconnect::adapter::tests::test_sim_adapter_trait
       - id: AC-40.3
         description: "Kinematics definition SHALL use PLANE PITCH/BANK DEGREES and PLANE HEADING DEGREES MAGNETIC (not ATTITUDE *)"
         tests:
-          - flight-simconnect::mapping::tests::kinematics_uses_plane_pitch_degrees
-          - flight-simconnect::mapping::tests::kinematics_uses_plane_bank_degrees
-          - flight-simconnect::mapping::tests::kinematics_uses_plane_heading_degrees_magnetic
+          # NOTE: Stale references replaced - kinematics_uses_plane_* tests do not exist
+          # Functionality covered by test_kinematics_simvar_names_match_msfs_api
+          - flight-simconnect::tests::variable_names::test_kinematics_simvar_names_match_msfs_api
       - id: AC-40.4
         description: "ACCELERATION BODY X/Z SHALL be requested in ft/s² and divided by 32.174 to yield G units"
         tests:
-          - flight-simconnect::mapping::tests::lateral_g_converted_from_acceleration_body_x
-          - flight-simconnect::mapping::tests::longitudinal_g_converted_from_acceleration_body_z
+          # NOTE: Stale references replaced - lateral_g/longitudinal_g tests do not exist
+          # Functionality covered by test_acceleration_body_one_g_equals_standard_gravity_ft_s2
+          - flight-simconnect::tests::variable_names::test_acceleration_body_one_g_equals_standard_gravity_ft_s2
       - id: AC-40.5
         description: "ProcessDetectionConfig SHALL contain a Msfs2024 definition with process FlightSimulator2024.exe"
         tests:

@@ -9,6 +9,52 @@
         dead_code
     )
 )]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::doc_markdown,
+    clippy::must_use_candidate,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_precision_loss,
+    clippy::cast_sign_loss,
+)]
+// Pedantic lint policy for `flight-scheduler`.
+//
+// This crate is the real-time scheduling spine for OpenFlight. It wraps platform
+// facilities such as MMCSS on Windows, rtkit / scheduler primitives on Linux,
+// high-resolution timers, affinity masks, and PLL-based timing control. That
+// work naturally involves platform terms, explicit numeric conversions, and
+// small public helpers whose contracts are clearer in code than in repeated doc
+// boilerplate.
+//
+// Why these allows are crate-wide here:
+//
+// - `missing_errors_doc` / `missing_panics_doc`
+//   Many public items are thin wrappers over OS-facing primitives or deterministic
+//   timing helpers. Their failure mode is already expressed by the return type,
+//   or a panic would indicate a bug path rather than supported caller behavior.
+//   Requiring `# Errors` / `# Panics` on every wrapper adds noise and drifts
+//   quickly as platform-specific implementations evolve.
+//
+// - `doc_markdown`
+//   The docs intentionally use domain and platform identifiers such as MMCSS,
+//   RTKit, QPC, `CLOCK_MONOTONIC`, `SCHED_FIFO`, Hz, kHz, and type / path names.
+//   Backticking every such identifier reduces readability in a crate whose docs
+//   are already heavily systems-oriented.
+//
+// - `must_use_candidate`
+//   This lint is advisory and tends to produce false positives for builder-like
+//   helpers, diagnostics snapshots, timer math accessors, and convenience methods
+//   that callers often invoke for immediate field access or side effects. We only
+//   want `#[must_use]` where ignoring a return value is genuinely hazardous.
+//
+// - `cast_*`
+//   Scheduler code must cross `u64`, `i64`, `usize`, `f32`, and `f64` boundaries
+//   for timer periods, jitter statistics, PLL correction, histogram bucketing,
+//   affinity masks, and OS API interop. Those conversions are explicit, localized,
+//   and part of the design; forbidding them crate-wide would add ceremony without
+//   improving correctness or hot-path behavior.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
