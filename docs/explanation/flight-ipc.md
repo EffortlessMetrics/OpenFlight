@@ -11,90 +11,143 @@ links:
 
 # Flight IPC Concepts
 
-The `flight-ipc` crate provides inter-process communication infrastructure for Flight Hub, enabling the service, CLI, and UI to communicate efficiently and reliably.
+`flight-ipc` is OpenFlight's typed boundary between the daemon and local clients such as `flightctl` and future external control-stream consumers.
 
-## Overview
+The crate already contains protobuf/gRPC types, client/server helpers, feature negotiation, retry/timeout machinery, and platform transport abstractions. Those pieces are not all wired into the production daemon yet. This document distinguishes the current implementation from the production contract so a library capability is not mistaken for an installed product capability.
 
-Flight IPC is responsible for:
-- gRPC-based client-server communication
-- Protocol buffer schema management
-- Connection lifecycle and health monitoring
-- API versioning and backward compatibility
+See [Product and Evidence Boundaries](product-boundaries.md) for the wider runtime and release model.
 
-## Key Components
+## Current implementation state
 
-### gRPC Service
+On current `main`:
 
-The gRPC service layer provides:
-- Type-safe RPC definitions via Protocol Buffers
-- Bidirectional streaming for real-time updates
-- Connection multiplexing over a single TCP connection
-- Built-in retry and timeout handling
+- protobuf definitions live in `crates/flight-ipc/proto/flight.v1.proto`;
+- tonic client/server wrappers can run over a loopback TCP endpoint;
+- the legacy/default client connects to `127.0.0.1:50051`;
+- named-pipe and Unix-socket transport types exist in the transport module but are not the transport used by the production `IpcServer` path;
+- `ServerConfig` contains platform-style default endpoint strings, but `IpcServer::start` currently accepts a TCP `SocketAddr`;
+- the standalone production-style IPC constructor creates a HID device manager and a mock profile manager rather than receiving the runtime owned by `flightd`;
+- several service-context operations have successful empty/default implementations intended for testability;
+- `flightd` does not currently start this IPC server as part of its lifecycle.
 
-### Protocol Buffers
+These are implementation seams to finish, not release guarantees.
 
-The IPC protocol is defined in `proto/flight.v1.proto` and includes:
-- Device management RPCs (list, configure, status)
-- Profile management RPCs (load, validate, switch)
-- Health check and monitoring RPCs
-- Streaming telemetry subscriptions
+## Production contract
 
-### Client Library
+The production boundary is one per-user `flightd` runtime exposed through current-user local IPC.
 
-The client library provides:
-- Automatic connection management
-- Request/response helpers
-- Streaming subscription utilities
-- Error handling and retry logic
+```text
+flightd
+  owns RuntimeHandle
+       |
+       +-- devices / profiles / health / metrics / adapters
+       +-- optional control-stream hub
+       +-- optional flight-control runtime
+       |
+       v
+local IPC server
+       |
+       +-- flightctl
+       +-- external versioned consumers
+```
 
-### Server Framework
+IPC handlers delegate to the same runtime state that `flightd` owns. They do not create a second hardware manager, profile manager, control hub, or safety state.
 
-The server framework handles:
-- Service registration and routing
-- Request authentication and authorization
-- Concurrent request handling
-- Graceful shutdown
+This work is tracked by #311–#314.
 
-## API Versioning
+## Local transport
 
-Flight IPC follows semantic versioning for the protocol:
-- Major version changes indicate breaking changes
-- Minor version changes add backward-compatible features
-- Patch versions fix bugs without API changes
+The default product boundary is local and user-scoped.
 
-The system supports multiple protocol versions simultaneously during transitions.
+### Windows
 
-## Performance Characteristics
+The production endpoint should use a named pipe or equivalent local transport with an ACL that grants access to the current user by default.
 
-- Connection establishment: < 50ms
-- RPC latency: < 5ms p99 for local connections
-- Streaming throughput: > 10k messages/sec
-- Memory overhead: < 1MB per client connection
+### Linux
 
-## Security
+The production endpoint should use a Unix-domain socket under the current user's runtime directory with user-scoped permissions and explicit stale-socket cleanup.
 
-IPC communication includes:
-- Local-only binding by default (127.0.0.1)
-- Optional TLS for remote connections
-- Request validation and sanitization
-- Rate limiting per client
+### Test/development transport
 
-## Related Requirements
+Loopback TCP remains useful for deterministic tests and development harnesses. It should be an explicit transport selection rather than the default installed trust boundary.
 
-This component implements **REQ-4: Multi-Process Architecture**, which specifies the requirements for service isolation and inter-process communication.
+## Protocol and feature negotiation
 
-## Related Components
+Protocol versioning protects structural compatibility. Capability negotiation protects runtime compatibility.
 
-- `flight-service`: Main service that hosts the gRPC server
-- `flight-cli`: Command-line client using the IPC library
-- `flight-ui`: GUI client using the IPC library
+A feature is not advertised merely because its code compiled. Negotiation is derived from initialized backing subsystems and distinguishes states such as:
 
-## Testing
+```text
+enabled
+available but disabled
+degraded
+unavailable
+unsupported
+```
 
-Flight IPC includes:
-- Unit tests for protocol encoding/decoding
-- Integration tests with client/server pairs
-- API compatibility tests
-- Performance benchmarks
-- Breaking change detection
+A client therefore does not need to infer capability from package version alone.
 
+`control_stream_v1` follows this generic negotiation model; it does not introduce a separate application-specific capability system.
+
+## Mutation and read paths
+
+Production mutations should use an explicit acknowledged runtime command boundary. A successful RPC means the backing runtime accepted the operation and can identify the resulting state or generation.
+
+Read-heavy calls should use stable snapshots where possible. Long-lived streams use bounded channels and explicit continuity semantics rather than unbounded buffering.
+
+Examples:
+
+- profile apply returns the accepted effective generation/hash;
+- metrics report runtime counters rather than a zero-filled schema placeholder;
+- disabled adapter/output features return a typed disabled/unavailable result rather than simulated success;
+- health subscription forwards actual runtime health events.
+
+## External control streams
+
+The generic external control stream is non-real-time and observe-only. Its IPC ordering is:
+
+```text
+descriptor
+-> non-actionable baseline
+-> ordered events
+-> explicit gap/reset/disconnect when continuity changes
+```
+
+Tonic/protobuf/network work remains outside the protected 250 Hz flight-control path. The control stream consumes bounded observations from service-owned state; it is not an intermediate stage of axis processing.
+
+See #300, #302, #305, and #306.
+
+## Security properties
+
+The default IPC design aims for:
+
+- local-only exposure;
+- current-user access by default;
+- bounded connection/request/stream resources;
+- explicit feature/version negotiation;
+- no implicit privileged whole-product daemon requirement;
+- narrow, separately designed privilege boundaries if a future hardware helper requires elevation.
+
+Remote administration, multi-user network authentication, and internet-facing APIs are separate product decisions and are not implied by the local IPC crate.
+
+## Testing boundaries
+
+IPC evidence is layered:
+
+1. protobuf round-trip and handler unit tests;
+2. explicit mock-server client tests;
+3. runtime-backed integration tests using simulated sources;
+4. installed daemon/client smoke through the platform local endpoint;
+5. package upgrade/restart/rollback receipts for released contracts.
+
+A passing mock TCP test establishes client/server protocol behavior. It does not by itself establish the installed Windows named-pipe or Linux Unix-socket lifecycle.
+
+## Related work
+
+- Installed daemon substrate: #311
+- Canonical config and paths: #312
+- RuntimeHandle and daemon-owned IPC: #313
+- Local transport and truthful capability negotiation: #314
+- Control-stream IPC: #302
+- Package/release authority: #318
+- Evidence states: #319
