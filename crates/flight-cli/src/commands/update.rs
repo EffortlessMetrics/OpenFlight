@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // SPDX-FileCopyrightText: Copyright (c) 2024 Flight Hub Team
 
-//! `flightctl update` — update channel management and update checking
+//! `flightctl update` — local update preferences and update capability status.
+//!
+//! Automatic update checking is not currently a released OpenFlight capability.
+//! Channel preferences remain local configuration, but `update check` fails
+//! explicitly until the signed manifest/key/endpoint path is production-ready.
 
 use crate::{client_manager::ClientManager, output::OutputFormat};
 use clap::Subcommand;
-use flight_updater::channels::{Channel, ChannelConfig};
+use flight_updater::channels::Channel;
 use serde_json::json;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -49,29 +53,29 @@ fn save_prefs(prefs: &UpdatePrefs) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Update channel management subcommands
+/// Update channel management subcommands.
 #[derive(Subcommand)]
 pub enum ChannelAction {
-    /// Show the current update channel
+    /// Show the locally saved update-channel preference.
     Show,
-    /// Set the update channel
+    /// Set the locally saved update-channel preference.
     Set {
-        /// Channel to switch to: stable, beta, canary
+        /// Channel preference to save: stable, beta, canary.
         channel: String,
     },
 }
 
-/// `flightctl update` subcommands
+/// `flightctl update` subcommands.
 #[derive(Subcommand)]
 pub enum UpdateAction {
-    /// Check for available updates on the current channel
+    /// Check for available updates on the current channel.
     Check,
-    /// Manage the update channel
+    /// Manage the local update-channel preference.
     Channel {
         #[command(subcommand)]
         action: ChannelAction,
     },
-    /// Show update channels and their configuration
+    /// Show known channel preference values and updater availability.
     Channels,
 }
 
@@ -82,43 +86,20 @@ pub async fn execute(
     _client: &ClientManager,
 ) -> anyhow::Result<Option<String>> {
     match action {
-        UpdateAction::Check => check_for_updates(output).await,
+        UpdateAction::Check => check_for_updates().await,
         UpdateAction::Channel { action } => channel_command(action, output),
         UpdateAction::Channels => show_channels(output),
     }
 }
 
-async fn check_for_updates(output: OutputFormat) -> anyhow::Result<Option<String>> {
+async fn check_for_updates() -> anyhow::Result<Option<String>> {
     let prefs = load_prefs();
     let channel = Channel::from_str(&prefs.channel).unwrap_or(Channel::Stable);
 
-    let channel_url = match channel {
-        Channel::Stable => "https://updates.flight-hub.dev/stable",
-        Channel::Beta => "https://updates.flight-hub.dev/beta",
-        Channel::Canary => "https://updates.flight-hub.dev/canary",
-    };
-
-    let current = env!("CARGO_PKG_VERSION");
-
-    match output {
-        OutputFormat::Json => Ok(Some(
-            json!({
-                "success": true,
-                "current_version": current,
-                "channel": channel.to_string(),
-                "update_url": channel_url,
-                "note": "Connect flightd to enable live update checks"
-            })
-            .to_string(),
-        )),
-        OutputFormat::Human => Ok(Some(format!(
-            "Current version : {current}\n\
-             Channel         : {channel}\n\
-             Update endpoint : {channel_url}\n\
-             \n\
-             Note: Start flightd and run `flightctl update check` again to query the update server."
-        ))),
-    }
+    anyhow::bail!(
+        "Update checks are unavailable: the '{}' channel preference is saved locally, but OpenFlight does not yet ship a production signed update manifest, trusted channel key, and live update endpoint",
+        channel
+    )
 }
 
 fn channel_command(action: &ChannelAction, output: OutputFormat) -> anyhow::Result<Option<String>> {
@@ -133,16 +114,23 @@ fn show_current_channel(output: OutputFormat) -> anyhow::Result<Option<String>> 
     let channel = Channel::from_str(&prefs.channel).unwrap_or(Channel::Stable);
     match output {
         OutputFormat::Json => Ok(Some(
-            json!({ "success": true, "channel": channel.to_string() }).to_string(),
+            json!({
+                "success": true,
+                "channel_preference": channel.to_string(),
+                "update_check_available": false
+            })
+            .to_string(),
         )),
-        OutputFormat::Human => Ok(Some(format!("Update channel: {channel}"))),
+        OutputFormat::Human => Ok(Some(format!(
+            "Saved update channel preference: {channel}\nUpdate checks available: no"
+        ))),
     }
 }
 
 fn set_channel(channel_str: &str, output: OutputFormat) -> anyhow::Result<Option<String>> {
     let channel = Channel::from_str(channel_str).map_err(|_| {
         anyhow::anyhow!(
-            "Unknown channel '{}'. Valid channels: stable, beta, canary",
+            "Unknown channel '{}'. Valid preferences: stable, beta, canary",
             channel_str
         )
     })?;
@@ -156,74 +144,59 @@ fn set_channel(channel_str: &str, output: OutputFormat) -> anyhow::Result<Option
         OutputFormat::Json => Ok(Some(
             json!({
                 "success": true,
-                "previous_channel": old,
-                "channel": channel.to_string()
+                "previous_channel_preference": old,
+                "channel_preference": channel.to_string(),
+                "update_check_available": false
             })
             .to_string(),
         )),
-        OutputFormat::Human => Ok(Some(format!("Update channel changed: {old} → {channel}"))),
+        OutputFormat::Human => Ok(Some(format!(
+            "Saved update channel preference: {old} -> {channel}\nUpdate checks available: no"
+        ))),
     }
 }
 
 fn show_channels(output: OutputFormat) -> anyhow::Result<Option<String>> {
     let prefs = load_prefs();
-    let current = prefs.channel.clone();
+    let current = Channel::from_str(&prefs.channel).unwrap_or(Channel::Stable);
 
-    let channels = vec![
-        (
-            Channel::Stable,
-            "Stable",
-            "Thoroughly tested. Recommended for all users.",
-            24u64,
-        ),
-        (
-            Channel::Beta,
-            "Beta",
-            "Feature-complete; undergoing final testing.",
-            12,
-        ),
-        (
-            Channel::Canary,
-            "Canary",
-            "Latest features; may be unstable.",
-            6,
-        ),
-    ];
+    let channels = [Channel::Stable, Channel::Beta, Channel::Canary];
 
     match output {
         OutputFormat::Json => {
             let list: Vec<_> = channels
                 .iter()
-                .map(|(ch, name, desc, freq)| {
+                .map(|channel| {
                     json!({
-                        "channel": ch.to_string(),
-                        "name": name,
-                        "description": desc,
-                        "check_frequency_hours": freq,
-                        "active": ch.to_string() == current
+                        "channel": channel.to_string(),
+                        "active_preference": *channel == current,
+                        "update_check_available": false
                     })
                 })
                 .collect();
             Ok(Some(
-                json!({ "success": true, "channels": list }).to_string(),
+                json!({
+                    "success": true,
+                    "channels": list,
+                    "note": "These are local preference values only; production update checking is not available."
+                })
+                .to_string(),
             ))
         }
         OutputFormat::Human => {
-            let mut lines = vec!["Available update channels:".to_string(), String::new()];
-            for (ch, name, desc, freq) in &channels {
-                let marker = if ch.to_string() == current {
-                    " ●"
-                } else {
-                    "  "
-                };
-                lines.push(format!(
-                    "{marker} {name:<8} ({ch}) — {desc} (checks every {freq}h)"
-                ));
+            let mut lines = vec![
+                "Known update channel preferences:".to_string(),
+                String::new(),
+            ];
+            for channel in channels {
+                let marker = if channel == current { "*" } else { " " };
+                lines.push(format!("{marker} {channel}"));
             }
             lines.push(String::new());
-            lines.push(format!("Active channel: {current}"));
+            lines.push("Update checks available: no".to_string());
             lines.push(
-                "Switch channel: flightctl update channel set <stable|beta|canary>".to_string(),
+                "The saved preference will become operational only after OpenFlight ships a trusted signed update service."
+                    .to_string(),
             );
             Ok(Some(lines.join("\n")))
         }
@@ -251,5 +224,29 @@ mod tests {
     fn test_prefs_default() {
         let p = UpdatePrefs::default();
         assert_eq!(p.channel, "stable");
+    }
+
+    #[tokio::test]
+    async fn update_check_is_explicitly_unavailable() {
+        let error = check_for_updates()
+            .await
+            .expect_err("update check must not report a synthetic endpoint success");
+        let message = error.to_string();
+
+        assert!(message.contains("unavailable"));
+        assert!(message.contains("signed update manifest"));
+        assert!(message.contains("trusted channel key"));
+    }
+
+    #[test]
+    fn channel_list_does_not_claim_release_quality_or_live_endpoints() {
+        let output = show_channels(OutputFormat::Json).expect("channel list should render");
+        let rendered = output.expect("channel list should have output");
+        let value: serde_json::Value = serde_json::from_str(&rendered).expect("valid json");
+
+        assert_eq!(value["success"], true);
+        assert_eq!(value["channels"][0]["update_check_available"], false);
+        assert!(!rendered.contains("Thoroughly tested"));
+        assert!(!rendered.contains("updates.flight-hub.dev"));
     }
 }
