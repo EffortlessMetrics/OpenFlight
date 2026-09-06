@@ -21,8 +21,8 @@ use std::time::{Duration, Instant};
 
 use flight_bus::metrics::{BusMetrics, BusMetricsSnapshot};
 use flight_bus::routing::{
-    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter,
-    RoutePattern, SourceType, MAX_MATCHES, MAX_ROUTES,
+    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, MAX_MATCHES,
+    MAX_ROUTES, RoutePattern, SourceType,
 };
 use flight_bus::types::{AircraftId, SimId};
 use flight_bus::{BusHealth, BusPublisher, BusSnapshot, SubscriptionConfig, assess_health};
@@ -50,10 +50,7 @@ fn axis_event(value: f64, priority: EventPriority, ts: u64) -> BusEvent {
         EventKind::AxisUpdate,
         priority,
         ts,
-        EventPayload::Axis {
-            axis_id: 0,
-            value,
-        },
+        EventPayload::Axis { axis_id: 0, value },
     )
 }
 
@@ -141,11 +138,17 @@ fn pubsub_topic_filtering() {
 
     let m_axis = router.route_event(&axis);
     assert!(m_axis.contains(10), "axis route should match axis event");
-    assert!(!m_axis.contains(20), "button route should not match axis event");
+    assert!(
+        !m_axis.contains(20),
+        "button route should not match axis event"
+    );
 
     let m_btn = router.route_event(&btn);
     assert!(m_btn.contains(20), "button route should match button event");
-    assert!(!m_btn.contains(10), "axis route should not match button event");
+    assert!(
+        !m_btn.contains(10),
+        "axis route should not match button event"
+    );
 }
 
 /// Wildcard pattern matches events from any source.
@@ -154,9 +157,24 @@ fn pubsub_wildcard_subscription() {
     let mut router = EventRouter::new();
     router.register_route(RoutePattern::any(), EventFilter::pass_all(), 1);
 
-    for src in [SourceType::Device, SourceType::Simulator, SourceType::Internal] {
-        let e = BusEvent::new(src, 42, EventKind::AxisUpdate, EventPriority::Normal, 1000, EventPayload::Empty);
-        assert_eq!(router.route_event(&e).len(), 1, "wildcard should match {src:?}");
+    for src in [
+        SourceType::Device,
+        SourceType::Simulator,
+        SourceType::Internal,
+    ] {
+        let e = BusEvent::new(
+            src,
+            42,
+            EventKind::AxisUpdate,
+            EventPriority::Normal,
+            1000,
+            EventPayload::Empty,
+        );
+        assert_eq!(
+            router.route_event(&e).len(),
+            1,
+            "wildcard should match {src:?}"
+        );
     }
 }
 
@@ -202,7 +220,10 @@ fn pubsub_publish_to_no_subscribers() {
     assert_eq!(pub_.subscriber_count(), 0);
 
     let result = pub_.publish(valid_snapshot());
-    assert!(result.is_ok(), "publish to empty subscriber list should succeed");
+    assert!(
+        result.is_ok(),
+        "publish to empty subscriber list should succeed"
+    );
 }
 
 /// A subscriber created after a publish does not receive old data.
@@ -212,7 +233,10 @@ fn pubsub_late_subscriber_no_history() {
     pub_.publish(valid_snapshot()).unwrap();
 
     let mut late = pub_.subscribe(SubscriptionConfig::default()).unwrap();
-    assert!(late.try_recv().unwrap().is_none(), "late subscriber should see no history");
+    assert!(
+        late.try_recv().unwrap().is_none(),
+        "late subscriber should see no history"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -223,15 +247,18 @@ fn pubsub_late_subscriber_no_history() {
 #[test]
 fn queue_spsc_correctness() {
     let mut pub_ = make_publisher();
-    let mut sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 64,
-        max_rate_hz: 60.0,
-        drop_on_full: true,
-    }).unwrap();
+    let mut sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 64,
+            max_rate_hz: 60.0,
+            drop_on_full: true,
+        })
+        .unwrap();
 
     let count = 5;
     for i in 0..count {
-        pub_.publish(snapshot_for(SimId::Msfs, &format!("T{i}"))).unwrap();
+        pub_.publish(snapshot_for(SimId::Msfs, &format!("T{i}")))
+            .unwrap();
         std::thread::sleep(Duration::from_millis(20));
     }
 
@@ -275,11 +302,13 @@ fn queue_mpsc_fan_in_metrics() {
 #[test]
 fn queue_full_drop_tail() {
     let mut pub_ = make_publisher();
-    let _sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 2,
-        drop_on_full: true,
-        max_rate_hz: 60.0,
-    }).unwrap();
+    let _sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 2,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        })
+        .unwrap();
 
     // Fill the buffer (2 slots)
     pub_.publish(valid_snapshot()).unwrap();
@@ -457,7 +486,10 @@ fn event_type_health() {
         slow_subscribers: 1,
         peak_queue_depth: 50,
     };
-    assert!(matches!(assess_health(&degraded), BusHealth::Degraded { .. }));
+    assert!(matches!(
+        assess_health(&degraded),
+        BusHealth::Degraded { .. }
+    ));
 
     // Unhealthy: 10% drops
     let unhealthy = BusMetricsSnapshot {
@@ -467,7 +499,10 @@ fn event_type_health() {
         slow_subscribers: 3,
         peak_queue_depth: 100,
     };
-    assert!(matches!(assess_health(&unhealthy), BusHealth::Unhealthy { .. }));
+    assert!(matches!(
+        assess_health(&unhealthy),
+        BusHealth::Unhealthy { .. }
+    ));
 }
 
 /// Custom/system events with Empty payload route correctly.
@@ -498,11 +533,13 @@ fn event_type_custom_system() {
 #[test]
 fn backpressure_slow_consumer_doesnt_block_producer() {
     let mut pub_ = make_publisher();
-    let _slow_sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 2,
-        drop_on_full: true,
-        max_rate_hz: 60.0,
-    }).unwrap();
+    let _slow_sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 2,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        })
+        .unwrap();
 
     // Publish many times — none should block or return Err
     for _ in 0..10 {
@@ -516,11 +553,13 @@ fn backpressure_slow_consumer_doesnt_block_producer() {
 #[test]
 fn backpressure_drop_tail_policy() {
     let mut pub_ = make_publisher();
-    let mut sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 1,
-        drop_on_full: true,
-        max_rate_hz: 60.0,
-    }).unwrap();
+    let mut sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 1,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        })
+        .unwrap();
 
     // Fill buffer (1 slot)
     pub_.publish(valid_snapshot()).unwrap();
@@ -532,7 +571,10 @@ fn backpressure_drop_tail_policy() {
         std::thread::sleep(Duration::from_millis(20));
     }
 
-    assert!(pub_.drop_count() >= 1, "drop-tail should have discarded messages");
+    assert!(
+        pub_.drop_count() >= 1,
+        "drop-tail should have discarded messages"
+    );
 
     // Consumer still receives the first message
     assert!(sub.try_recv().unwrap().is_some());
@@ -542,11 +584,13 @@ fn backpressure_drop_tail_policy() {
 #[test]
 fn backpressure_consumer_catch_up() {
     let mut pub_ = make_publisher();
-    let mut sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 4,
-        drop_on_full: true,
-        max_rate_hz: 60.0,
-    }).unwrap();
+    let mut sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 4,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        })
+        .unwrap();
 
     // Publish 4 messages (fills buffer)
     for _ in 0..4 {
@@ -569,11 +613,13 @@ fn backpressure_consumer_catch_up() {
 #[test]
 fn backpressure_queue_capacity_limits() {
     let mut pub_ = make_publisher();
-    let _sub = pub_.subscribe(SubscriptionConfig {
-        buffer_size: 3,
-        drop_on_full: true,
-        max_rate_hz: 60.0,
-    }).unwrap();
+    let _sub = pub_
+        .subscribe(SubscriptionConfig {
+            buffer_size: 3,
+            drop_on_full: true,
+            max_rate_hz: 60.0,
+        })
+        .unwrap();
 
     // Fill exactly 3 slots
     for _ in 0..3 {
@@ -584,7 +630,10 @@ fn backpressure_queue_capacity_limits() {
 
     // 4th should trigger a drop
     pub_.publish(valid_snapshot()).unwrap();
-    assert!(pub_.drop_count() >= 1, "exceeding capacity should trigger drop");
+    assert!(
+        pub_.drop_count() >= 1,
+        "exceeding capacity should trigger drop"
+    );
 }
 
 /// EventRouter backpressure drops low-priority events but never drops Critical/High.
@@ -602,11 +651,21 @@ fn backpressure_priority_based_dropping() {
     let high = axis_event(0.5, EventPriority::High, 4000);
     let critical = axis_event(0.5, EventPriority::Critical, 5000);
 
-    assert!(router.route_event(&bg).is_empty(), "Background dropped at 80%");
+    assert!(
+        router.route_event(&bg).is_empty(),
+        "Background dropped at 80%"
+    );
     assert!(router.route_event(&low).is_empty(), "Low dropped at 80%");
-    assert!(router.route_event(&normal).is_empty(), "Normal dropped at 80%");
+    assert!(
+        router.route_event(&normal).is_empty(),
+        "Normal dropped at 80%"
+    );
     assert_eq!(router.route_event(&high).len(), 1, "High never dropped");
-    assert_eq!(router.route_event(&critical).len(), 1, "Critical never dropped");
+    assert_eq!(
+        router.route_event(&critical).len(),
+        1,
+        "Critical never dropped"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -705,7 +764,8 @@ fn rt_safety_publisher_doesnt_block() {
                 buffer_size: 1,
                 drop_on_full: true,
                 max_rate_hz: 60.0,
-            }).unwrap()
+            })
+            .unwrap()
         })
         .collect();
 
@@ -739,9 +799,11 @@ fn rt_safety_consistent_state_after_overflow() {
     }
 
     // Attempting to add beyond capacity returns None
-    assert!(router
-        .register_route(RoutePattern::any(), EventFilter::pass_all(), 999)
-        .is_none());
+    assert!(
+        router
+            .register_route(RoutePattern::any(), EventFilter::pass_all(), 999)
+            .is_none()
+    );
 
     // Router still functions correctly for existing routes
     let event = axis_event(0.5, EventPriority::Normal, 1000);

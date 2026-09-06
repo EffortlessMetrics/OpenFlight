@@ -34,13 +34,9 @@ impl From<EventPayload> for PayloadSnapshot {
     fn from(p: EventPayload) -> Self {
         match p {
             EventPayload::Axis { axis_id, value } => PayloadSnapshot::Axis { axis_id, value },
-            EventPayload::Button {
-                button_id,
-                pressed,
-            } => PayloadSnapshot::Button {
-                button_id,
-                pressed,
-            },
+            EventPayload::Button { button_id, pressed } => {
+                PayloadSnapshot::Button { button_id, pressed }
+            }
             EventPayload::Telemetry { field_id, value } => {
                 PayloadSnapshot::Telemetry { field_id, value }
             }
@@ -162,10 +158,7 @@ impl TraceRecorder {
         F: Fn(&TimestampedEvent) -> bool,
     {
         for (i, evt) in self.events.iter().enumerate() {
-            assert!(
-                !predicate(evt),
-                "unexpected event at index {i}: {evt:?}"
-            );
+            assert!(!predicate(evt), "unexpected event at index {i}: {evt:?}");
         }
     }
 
@@ -247,10 +240,7 @@ mod tests {
             EventKind::ButtonPress,
             EventPriority::Normal,
             ts,
-            EventPayload::Button {
-                button_id,
-                pressed,
-            },
+            EventPayload::Button { button_id, pressed },
         )
     }
 
@@ -327,11 +317,12 @@ mod tests {
     fn event_matcher_with_payload() {
         let mut rec = TraceRecorder::new();
         rec.record(&axis_event(3, 0.75, 1000));
-        rec.assert_event_sequence(&[EventMatcher::kind("AxisUpdate")
-            .with_payload(PayloadSnapshot::Axis {
+        rec.assert_event_sequence(&[EventMatcher::kind("AxisUpdate").with_payload(
+            PayloadSnapshot::Axis {
                 axis_id: 3,
                 value: 0.75,
-            })]);
+            },
+        )]);
     }
 
     #[test]

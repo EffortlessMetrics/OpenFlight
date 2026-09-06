@@ -12,11 +12,7 @@ pub enum SignalPattern {
     /// Constant value on every sample.
     Constant(f64),
     /// Linear ramp from `start` to `end` over `steps` samples, then repeats.
-    Ramp {
-        start: f64,
-        end: f64,
-        steps: u32,
-    },
+    Ramp { start: f64, end: f64, steps: u32 },
     /// Sine wave with given `amplitude`, `frequency_hz`, and `phase` (radians).
     Sine {
         amplitude: f64,
@@ -24,17 +20,9 @@ pub enum SignalPattern {
         phase: f64,
     },
     /// Pseudo-random values in `[min, max]` from a deterministic seed.
-    RandomSeeded {
-        seed: u64,
-        min: f64,
-        max: f64,
-    },
+    RandomSeeded { seed: u64, min: f64, max: f64 },
     /// Alternates between `low` and `high` every `period` samples.
-    Step {
-        low: f64,
-        high: f64,
-        period: u32,
-    },
+    Step { low: f64, high: f64, period: u32 },
 }
 
 /// Fault types that can be injected into device reports.
@@ -160,7 +148,9 @@ impl FakeDevice {
             }
             SignalPattern::RandomSeeded { seed, min, max } => {
                 // Simple xorshift64 for determinism.
-                let mut state = seed.wrapping_add(idx).wrapping_mul(6_364_136_223_846_793_005);
+                let mut state = seed
+                    .wrapping_add(idx)
+                    .wrapping_mul(6_364_136_223_846_793_005);
                 state ^= state >> 12;
                 state ^= state << 25;
                 state ^= state >> 27;
@@ -168,11 +158,7 @@ impl FakeDevice {
                 let norm = (state as f64) / (u64::MAX as f64);
                 min + (max - min) * norm
             }
-            SignalPattern::Step {
-                low,
-                high,
-                period,
-            } => {
+            SignalPattern::Step { low, high, period } => {
                 if period == 0 {
                     return low;
                 }
@@ -321,7 +307,9 @@ mod tests {
                 },
             )
             .build();
-        let values: Vec<f64> = (0..250).map(|_| dev.next_report().unwrap().axes[0]).collect();
+        let values: Vec<f64> = (0..250)
+            .map(|_| dev.next_report().unwrap().axes[0])
+            .collect();
         // First sample at t=0 should be ~0
         assert!(values[0].abs() < 0.1);
         // Should have positive and negative values

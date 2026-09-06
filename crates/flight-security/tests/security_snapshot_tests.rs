@@ -62,19 +62,15 @@ fn snapshot_verification_result_all_pass() {
 fn snapshot_verification_result_with_warnings() {
     let result = SecurityVerificationResult {
         overall_status: VerificationStatus::Warning,
-        checks: vec![
-            SecurityCheck {
-                name: "File system access policy".into(),
-                category: SecurityCategory::FileSystemAccess,
-                status: VerificationStatus::Warning,
-                description: "Plugin 'nav-helper' has broad file system access".into(),
-                details: Some("Allowed paths: /home/user/*, /tmp/*".into()),
-                severity: SecuritySeverity::Medium,
-                remediation: Some(
-                    "Restrict file system access to specific directories".into(),
-                ),
-            },
-        ],
+        checks: vec![SecurityCheck {
+            name: "File system access policy".into(),
+            category: SecurityCategory::FileSystemAccess,
+            status: VerificationStatus::Warning,
+            description: "Plugin 'nav-helper' has broad file system access".into(),
+            details: Some("Allowed paths: /home/user/*, /tmp/*".into()),
+            severity: SecuritySeverity::Medium,
+            remediation: Some("Restrict file system access to specific directories".into()),
+        }],
         audit_events: vec![AuditEvent {
             timestamp: 1700000000,
             event_type: AuditEventType::FileAccess,

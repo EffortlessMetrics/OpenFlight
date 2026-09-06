@@ -6,8 +6,8 @@
 
 use flight_writers::curve_conflict::{
     BackupInfo, CcConfigDiff, CcDiffOperation, CcVerificationTest, CcWriterConfig,
-    CurveConflictError, CurveConflictWriter, VerificationResult, VerificationTestType,
-    WriteResult, WritersConfig,
+    CurveConflictError, CurveConflictWriter, VerificationResult, VerificationTestType, WriteResult,
+    WritersConfig,
 };
 use flight_writers::types::*;
 use std::collections::HashMap;
@@ -25,7 +25,11 @@ fn simulator_type_display() {
 
 #[test]
 fn simulator_type_serde_roundtrip() {
-    for sim in [SimulatorType::MSFS, SimulatorType::XPlane, SimulatorType::DCS] {
+    for sim in [
+        SimulatorType::MSFS,
+        SimulatorType::XPlane,
+        SimulatorType::DCS,
+    ] {
         let json = serde_json::to_string(&sim).unwrap();
         let restored: SimulatorType = serde_json::from_str(&json).unwrap();
         assert_eq!(sim, restored);

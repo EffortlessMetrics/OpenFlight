@@ -12,9 +12,7 @@ use flight_bus::types::SimId;
 use flight_bus::{AircraftId, BusPublisher, BusSnapshot, SubscriptionConfig};
 use flight_core::profile::{AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use flight_service::{FlightService, FlightServiceConfig, ServiceState};
-use flight_test_helpers::{
-    FakeDevice, FakeInput, FakeSim, assert_approx_eq, assert_in_range,
-};
+use flight_test_helpers::{FakeDevice, FakeInput, FakeSim, assert_approx_eq, assert_in_range};
 use flight_watchdog::supervisor::{
     DeadManStatus, DeadManSwitch, DeadManSwitchConfig, HardwareWatchdog, WatchdogTimerConfig,
     WatchdogTimerStatus,
@@ -98,11 +96,7 @@ fn e2e_device_disconnect_mid_flight_pipeline_holds_last_value() {
 
     // Simulate NaN from disconnected device
     let sanitised = validator.update(f32::NAN);
-    assert_approx_eq(
-        sanitised as f64,
-        last_valid_output,
-        1e-5,
-    );
+    assert_approx_eq(sanitised as f64, last_valid_output, 1e-5);
 
     // Reconnect
     device.connect();
@@ -195,11 +189,7 @@ fn e2e_invalid_profile_rejected_pipeline_unchanged() {
     engine.process(&mut frame2).expect("process still works");
     let output_after = frame2.out;
 
-    assert_approx_eq(
-        output_v1 as f64,
-        output_after as f64,
-        1e-6,
-    );
+    assert_approx_eq(output_v1 as f64, output_after as f64, 1e-6);
 }
 
 // ===========================================================================
@@ -332,8 +322,7 @@ fn e2e_watchdog_nan_guard_detects_bad_values() {
     );
 
     // Inf detection
-    let inf_event =
-        watchdog.check_nan_guard(f32::INFINITY, "pitch_output", component.clone());
+    let inf_event = watchdog.check_nan_guard(f32::INFINITY, "pitch_output", component.clone());
     assert!(inf_event.is_some(), "Inf must trigger guard");
 }
 

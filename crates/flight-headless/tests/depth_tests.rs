@@ -8,8 +8,8 @@
 //! property-based validation of the headless runner.
 
 use flight_headless::{HeadlessConfig, HeadlessResult, HeadlessRunner, OutputFormat};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 // ===========================================================================

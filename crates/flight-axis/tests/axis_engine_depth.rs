@@ -9,13 +9,9 @@
 use std::sync::Arc;
 use std::time::Instant;
 
+use flight_axis::curve::{ControlPoint, ExpoCurveConfig, InterpolationMode, ResponseCurve};
 use flight_axis::deadzone::{AsymmetricDeadzoneConfig, DeadzoneConfig, DeadzoneProcessor};
-use flight_axis::curve::{
-    ControlPoint, ExpoCurveConfig, InterpolationMode, ResponseCurve,
-};
-use flight_axis::detent::{
-    DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor,
-};
+use flight_axis::detent::{DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor};
 use flight_axis::mixer::{AxisMixer, MixMode};
 use flight_axis::pipeline::{
     AxisPipeline, ClampStage, CurveStage, DeadzoneStage, SensitivityStage,
@@ -77,14 +73,20 @@ mod deadzone_depth {
         let out_pos = cfg.apply(0.5);
         // (0.5 − 0.05) / (1.0 − 0.05) = 0.45 / 0.95
         let expected_pos = 0.45_f32 / 0.95;
-        assert!(approx32(out_pos, expected_pos), "pos: expected {expected_pos}, got {out_pos}");
+        assert!(
+            approx32(out_pos, expected_pos),
+            "pos: expected {expected_pos}, got {out_pos}"
+        );
 
         // Negative side: 15% deadzone
         assert_eq!(cfg.apply(-0.1), 0.0);
         let out_neg = cfg.apply(-0.5);
         // (-0.5 + 0.15) / (1.0 − 0.15) = -0.35 / 0.85
         let expected_neg = -0.35_f32 / 0.85;
-        assert!(approx32(out_neg, expected_neg), "neg: expected {expected_neg}, got {out_neg}");
+        assert!(
+            approx32(out_neg, expected_neg),
+            "neg: expected {expected_neg}, got {out_neg}"
+        );
 
         assert!(!cfg.is_symmetric());
     }
@@ -99,7 +101,10 @@ mod deadzone_depth {
         // Just outside deadzone on positive side
         let just_outside = proc.apply(0.21);
         assert!(just_outside > 0.0, "should be positive just outside dz");
-        assert!(just_outside < 0.1, "should be small just outside dz: {just_outside}");
+        assert!(
+            just_outside < 0.1,
+            "should be small just outside dz: {just_outside}"
+        );
 
         // Midpoint of active range: input = 0.2 + 0.35 = 0.55
         let mid = proc.apply(0.55);
@@ -116,10 +121,7 @@ mod deadzone_depth {
         let proc = DeadzoneProcessor::new(DeadzoneConfig::default());
         for &v in &[-1.0_f32, -0.5, -0.01, 0.0, 0.01, 0.5, 1.0] {
             let out = proc.apply(v);
-            assert!(
-                approx32(out, v),
-                "zero dz: input={v}, output={out}"
-            );
+            assert!(approx32(out, v), "zero dz: input={v}, output={out}");
         }
     }
 
@@ -136,7 +138,10 @@ mod deadzone_depth {
 
         // Just outside should be very small but positive
         let out = proc.apply(0.5);
-        assert!(out > 0.0 && out < 0.05, "expected small positive, got {out}");
+        assert!(
+            out > 0.0 && out < 0.05,
+            "expected small positive, got {out}"
+        );
     }
 
     /// Edge-of-deadzone: value exactly at boundary transitions correctly.
@@ -152,14 +157,20 @@ mod deadzone_depth {
         // Epsilon outside boundary: should be tiny positive
         let epsilon_over = proc.apply(0.1 + 0.001);
         assert!(epsilon_over > 0.0, "just outside should be >0");
-        assert!(epsilon_over < 0.01, "just outside should be small: {epsilon_over}");
+        assert!(
+            epsilon_over < 0.01,
+            "just outside should be small: {epsilon_over}"
+        );
 
         // Verify continuity: values just outside converge to 0 as they approach boundary
         let deltas = [0.001_f32, 0.005, 0.01, 0.05];
         let mut prev_out = 0.0_f32;
         for &d in &deltas {
             let out = proc.apply(0.1 + d);
-            assert!(out > prev_out, "monotonicity: d={d}, out={out} should be > {prev_out}");
+            assert!(
+                out > prev_out,
+                "monotonicity: d={d}, out={out} should be > {prev_out}"
+            );
             prev_out = out;
         }
     }
@@ -207,7 +218,10 @@ mod curve_depth {
         for &v in &[0.2_f32, 0.5, 0.8] {
             let pos = expo.apply(v);
             let neg = expo.apply(-v);
-            assert!(approx32(pos + neg, 0.0), "antisymmetry: v={v}, pos={pos}, neg={neg}");
+            assert!(
+                approx32(pos + neg, 0.0),
+                "antisymmetry: v={v}, pos={pos}, neg={neg}"
+            );
         }
     }
 
@@ -247,10 +261,10 @@ mod curve_depth {
         let curve = ResponseCurve::from_points(
             vec![
                 ControlPoint::new(0.0, 0.0),
-                ControlPoint::new(0.3, 0.1),  // slow start
-                ControlPoint::new(0.5, 0.5),  // steep middle
-                ControlPoint::new(0.7, 0.9),  // steep middle
-                ControlPoint::new(1.0, 1.0),  // slow end
+                ControlPoint::new(0.3, 0.1), // slow start
+                ControlPoint::new(0.5, 0.5), // steep middle
+                ControlPoint::new(0.7, 0.9), // steep middle
+                ControlPoint::new(1.0, 1.0), // slow end
             ],
             InterpolationMode::MonotoneCubic,
         )
@@ -321,8 +335,8 @@ mod curve_depth {
             ControlPoint::new(1.0, 1.0),
         ];
 
-        let curve = ResponseCurve::from_points(pts.clone(), InterpolationMode::CubicHermite)
-            .unwrap();
+        let curve =
+            ResponseCurve::from_points(pts.clone(), InterpolationMode::CubicHermite).unwrap();
 
         // Cubic Hermite must pass through all control points
         for pt in &pts {
@@ -330,7 +344,9 @@ mod curve_depth {
             assert!(
                 approx32(y, pt.y),
                 "CubicHermite should pass through ({}, {}), got {}",
-                pt.x, pt.y, y
+                pt.x,
+                pt.y,
+                y
             );
         }
 
@@ -341,10 +357,7 @@ mod curve_depth {
         while x <= 1.0 {
             let y = curve.evaluate(x);
             let dy = (y - prev_y).abs();
-            assert!(
-                dy < 0.1,
-                "jump too large at x={x}: dy={dy}"
-            );
+            assert!(dy < 0.1, "jump too large at x={x}: dy={dy}");
             prev_y = y;
             x += step;
         }
@@ -420,9 +433,9 @@ mod detent_depth {
     #[test]
     fn multi_detent_axis_with_hysteresis() {
         let mut proc = RtDetentProcessor::<4>::new();
-        proc.add(DetentBand::new(0.0, 0.05, 0.02));   // idle
-        proc.add(DetentBand::new(0.5, 0.05, 0.02));   // cruise
-        proc.add(DetentBand::new(1.0, 0.05, 0.02));   // TOGA
+        proc.add(DetentBand::new(0.0, 0.05, 0.02)); // idle
+        proc.add(DetentBand::new(0.5, 0.05, 0.02)); // cruise
+        proc.add(DetentBand::new(1.0, 0.05, 0.02)); // TOGA
 
         // Engage idle
         assert_eq!(proc.process(0.03), 0.0);
@@ -448,10 +461,7 @@ mod detent_depth {
     /// Detent snap range: values exactly at boundary snap correctly.
     #[test]
     fn detent_snap_range_boundary_behavior() {
-        let mut proc = DetentProcessor::new(
-            DetentConfig::new()
-                .add(0.5, 0.1, "center")
-        );
+        let mut proc = DetentProcessor::new(DetentConfig::new().add(0.5, 0.1, "center"));
 
         // Well inside snap range
         assert_eq!(proc.apply(0.45), 0.5);
@@ -610,10 +620,16 @@ mod pipeline_depth {
     #[test]
     fn full_pipeline_raw_to_output() {
         let mut pipeline = AxisPipeline::new();
-        pipeline.add_stage(Box::new(DeadzoneStage { inner: 0.05, outer: 1.0 }));
+        pipeline.add_stage(Box::new(DeadzoneStage {
+            inner: 0.05,
+            outer: 1.0,
+        }));
         pipeline.add_stage(Box::new(CurveStage { expo: 0.5 }));
         pipeline.add_stage(Box::new(SensitivityStage { multiplier: 1.0 }));
-        pipeline.add_stage(Box::new(ClampStage { min: -1.0, max: 1.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
 
         // Input within deadzone → 0
         let out = pipeline.process(0.03, 0.004);
@@ -621,11 +637,17 @@ mod pipeline_depth {
 
         // Input outside deadzone: processed through curve and sensitivity
         let out2 = pipeline.process(0.5, 0.004);
-        assert!(out2 > 0.0 && out2 <= 1.0, "should produce valid output: {out2}");
+        assert!(
+            out2 > 0.0 && out2 <= 1.0,
+            "should produce valid output: {out2}"
+        );
 
         // Full deflection
         let out3 = pipeline.process(1.0, 0.004);
-        assert!(approx(out3, 1.0), "full deflection should map to 1.0: {out3}");
+        assert!(
+            approx(out3, 1.0),
+            "full deflection should map to 1.0: {out3}"
+        );
 
         // Verify stage names
         assert_eq!(
@@ -733,7 +755,11 @@ mod pipeline_depth {
         let mut frame3 = AxisFrame::new(0.1, 3_000_000);
         engine.process(&mut frame3).unwrap();
         // Linear curve should pass through
-        assert!(approx32(frame3.out, 0.1), "linear curve: got {}", frame3.out);
+        assert!(
+            approx32(frame3.out, 0.1),
+            "linear curve: got {}",
+            frame3.out
+        );
 
         assert_eq!(engine.swap_ack_count(), 2);
     }
@@ -791,7 +817,10 @@ mod pipeline_depth {
     fn axis_enable_disable_mid_run() {
         let mut pipeline = AxisPipeline::new();
         pipeline.add_stage(Box::new(SensitivityStage { multiplier: 2.0 }));
-        pipeline.add_stage(Box::new(ClampStage { min: -1.0, max: 1.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
 
         // Active: 0.3 * 2.0 = 0.6
         let out = pipeline.process(0.3, 0.004);
@@ -853,9 +882,15 @@ mod pipeline_depth {
     #[test]
     fn diagnostics_per_stage_io() {
         let mut pipeline = AxisPipeline::new();
-        pipeline.add_stage(Box::new(DeadzoneStage { inner: 0.1, outer: 1.0 }));
+        pipeline.add_stage(Box::new(DeadzoneStage {
+            inner: 0.1,
+            outer: 1.0,
+        }));
         pipeline.add_stage(Box::new(CurveStage { expo: 1.0 }));
-        pipeline.add_stage(Box::new(ClampStage { min: -1.0, max: 1.0 }));
+        pipeline.add_stage(Box::new(ClampStage {
+            min: -1.0,
+            max: 1.0,
+        }));
 
         let diag = pipeline.diagnostics(0.55, 0.004);
         assert_eq!(diag.len(), 3);
@@ -998,10 +1033,7 @@ mod zero_allocation_depth {
         let mut prev = outputs[50];
         for &out in &outputs[51..] {
             // Slew rate + smoothing may delay, but should generally trend up
-            assert!(
-                out >= prev - 0.2,
-                "unexpected drop: prev={prev}, out={out}"
-            );
+            assert!(out >= prev - 0.2, "unexpected drop: prev={prev}, out={out}");
             prev = out;
         }
     }
@@ -1034,18 +1066,12 @@ mod zero_allocation_depth {
         let avg_us = total_us / frame_count as u128;
 
         // Average should be well under 100µs per frame
-        assert!(
-            avg_us < 100,
-            "average processing time too high: {avg_us}µs"
-        );
+        assert!(avg_us < 100, "average processing time too high: {avg_us}µs");
 
         // Max should be under 500µs (0.5ms RT budget)
         // Note: in CI environments this may occasionally spike due to scheduling
         // so we use a generous budget
-        assert!(
-            max_us < 5000,
-            "max processing time too high: {max_us}µs"
-        );
+        assert!(max_us < 5000, "max processing time too high: {max_us}µs");
 
         // Verify total throughput: 2500 frames should complete in well under 1 second
         let total_ms = total_us / 1000;

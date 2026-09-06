@@ -8,16 +8,16 @@ use flight_bus::{
     snapshot::BusSnapshot,
     types::{AircraftId, SimId},
 };
+use flight_ksp::mapping::{KspRawTelemetry, apply_telemetry, situation};
 use flight_ksp::{
     KspAdapter, KspConfig, KspControls, KspError,
     protocol::{
-        Argument, ConnectionRequest, ConnectionResponse, KrpcError, ProcedureCall,
-        ProcedureResult, Request, Response, connection_request, connection_response,
-        decode_bool, decode_double, decode_float, decode_int32, decode_object, decode_string,
-        encode_bool, encode_float, encode_object,
+        Argument, ConnectionRequest, ConnectionResponse, KrpcError, ProcedureCall, ProcedureResult,
+        Request, Response, connection_request, connection_response, decode_bool, decode_double,
+        decode_float, decode_int32, decode_object, decode_string, encode_bool, encode_float,
+        encode_object,
     },
 };
-use flight_ksp::mapping::{KspRawTelemetry, apply_telemetry, situation};
 use prost::Message;
 use std::time::Duration;
 
@@ -625,7 +625,11 @@ fn all_situation_constants_are_unique() {
     let mut unique = situations.to_vec();
     unique.sort();
     unique.dedup();
-    assert_eq!(unique.len(), situations.len(), "situation constants must be unique");
+    assert_eq!(
+        unique.len(),
+        situations.len(),
+        "situation constants must be unique"
+    );
 }
 
 #[test]
@@ -729,7 +733,10 @@ fn telemetry_nan_vertical_speed_is_skipped() {
             ..Default::default()
         },
     );
-    assert_eq!(snap.kinematics.vertical_speed, before, "NaN should not overwrite vertical_speed");
+    assert_eq!(
+        snap.kinematics.vertical_speed, before,
+        "NaN should not overwrite vertical_speed"
+    );
 }
 
 #[test]
@@ -743,7 +750,10 @@ fn telemetry_inf_altitude_coerced_to_zero() {
             ..Default::default()
         },
     );
-    assert!(snap.environment.altitude.is_finite(), "altitude must be finite after Inf input");
+    assert!(
+        snap.environment.altitude.is_finite(),
+        "altitude must be finite after Inf input"
+    );
     assert_eq!(snap.environment.altitude, 0.0);
 }
 
@@ -952,7 +962,9 @@ fn error_from_io_conversion() {
 #[test]
 fn error_from_decode_conversion() {
     // Provoke a real prost::DecodeError by decoding invalid data as a message
-    let bad_data = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02];
+    let bad_data = [
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02,
+    ];
     let result = ConnectionResponse::decode(bad_data.as_slice());
     let decode_err = result.expect_err("decoding invalid ConnectionResponse data should fail");
     let ksp_err: KspError = decode_err.into();
@@ -975,7 +987,10 @@ fn error_is_debug() {
 #[tokio::test]
 async fn adapter_initial_state() {
     let adapter = KspAdapter::new(KspConfig::default());
-    assert_eq!(adapter.state().await, flight_adapter_common::AdapterState::Disconnected);
+    assert_eq!(
+        adapter.state().await,
+        flight_adapter_common::AdapterState::Disconnected
+    );
     assert!(adapter.current_snapshot().await.is_none());
 }
 
@@ -989,7 +1004,10 @@ async fn adapter_sim_id() {
 async fn adapter_stop_clears_state() {
     let adapter = KspAdapter::new(KspConfig::default());
     adapter.stop().await;
-    assert_eq!(adapter.state().await, flight_adapter_common::AdapterState::Disconnected);
+    assert_eq!(
+        adapter.state().await,
+        flight_adapter_common::AdapterState::Disconnected
+    );
     assert!(adapter.current_snapshot().await.is_none());
 }
 
@@ -1008,7 +1026,10 @@ async fn adapter_multiple_stop_calls_safe() {
     for _ in 0..5 {
         adapter.stop().await;
     }
-    assert_eq!(adapter.state().await, flight_adapter_common::AdapterState::Disconnected);
+    assert_eq!(
+        adapter.state().await,
+        flight_adapter_common::AdapterState::Disconnected
+    );
 }
 
 // ── Config serialization ────────────────────────────────────────────────────

@@ -6,15 +6,11 @@
 //! Covers device enumeration, stable IDs, HID report parsing, descriptor
 //! handling, device capabilities, and error recovery paths.
 
-use flight_hid::descriptor_parser::{
-    self, CollectionType, DescriptorError, HidItemType,
-};
+use flight_hid::descriptor_parser::{self, CollectionType, DescriptorError, HidItemType};
 use flight_hid::device_id::DeviceId;
 use flight_hid::discovery::{DeviceDiscovery, DeviceEvent, MockScanner};
 use flight_hid::report_builder::HidReportBuilder;
-use flight_hid::stable_id::{
-    DeviceFingerprint, DeviceRegistry, MatchStrictness, StableDeviceId,
-};
+use flight_hid::stable_id::{DeviceFingerprint, DeviceRegistry, MatchStrictness, StableDeviceId};
 use flight_hid::{HidAdapter, HidDeviceInfo, HidOperationResult};
 use flight_watchdog::WatchdogSystem;
 use std::sync::{Arc, Mutex};
@@ -395,10 +391,7 @@ mod stable_ids {
     fn device_id_matches_ignores_missing_interface() {
         let a = DeviceId::new(0x044F, 0x0402, None, 0x01, 0x04, Some(0));
         let b = DeviceId::new(0x044F, 0x0402, None, 0x01, 0x04, None);
-        assert!(
-            a.matches(&b),
-            "missing interface should not prevent match"
-        );
+        assert!(a.matches(&b), "missing interface should not prevent match");
     }
 
     #[test]
@@ -518,14 +511,8 @@ mod report_parsing {
         let report_min = HidReportBuilder::new(2).set_u16_le(0, 0x0000).build();
         let report_max = HidReportBuilder::new(2).set_u16_le(0, 0xFFFF).build();
 
-        assert_eq!(
-            u16::from_le_bytes([report_min[0], report_min[1]]),
-            0x0000
-        );
-        assert_eq!(
-            u16::from_le_bytes([report_max[0], report_max[1]]),
-            0xFFFF
-        );
+        assert_eq!(u16::from_le_bytes([report_min[0], report_min[1]]), 0x0000);
+        assert_eq!(u16::from_le_bytes([report_max[0], report_max[1]]), 0xFFFF);
     }
 
     #[test]
@@ -884,8 +871,10 @@ mod error_handling {
 
     #[test]
     fn registry_load_invalid_json_returns_error() {
-        let dir = std::env::temp_dir()
-            .join(format!("flight_hid_depth_test_invalid_{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!(
+            "flight_hid_depth_test_invalid_{}",
+            std::process::id()
+        ));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("bad.json");
         std::fs::write(&path, "{{invalid json}}").unwrap();
@@ -908,7 +897,10 @@ mod error_handling {
 
         for err in &errors {
             let msg = format!("{err}");
-            assert!(!msg.is_empty(), "error Display must produce non-empty string");
+            assert!(
+                !msg.is_empty(),
+                "error Display must produce non-empty string"
+            );
         }
     }
 

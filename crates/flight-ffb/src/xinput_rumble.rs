@@ -852,7 +852,8 @@ mod tests {
     #[test]
     fn test_ffb_output_router_xinput_routing() {
         let time_source = Arc::new(FakeTimeSource::new());
-        let mut router = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
+        let mut router =
+            FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
 
         let effect = crate::EffectOutput {
             torque_nm: 2.0,
@@ -1225,17 +1226,20 @@ mod tests {
     fn test_router_stop_all_backends() {
         let time_source = Arc::new(FakeTimeSource::new());
         // None backend
-        let mut router_none = FfbOutputRouter::new(FfbBackend::None, None, time_source.clone()).unwrap();
+        let mut router_none =
+            FfbOutputRouter::new(FfbBackend::None, None, time_source.clone()).unwrap();
         assert!(router_none.stop().is_ok());
 
         // DirectInput backend
-        let mut router_di = FfbOutputRouter::new(FfbBackend::DirectInput, None, time_source.clone()).unwrap();
+        let mut router_di =
+            FfbOutputRouter::new(FfbBackend::DirectInput, None, time_source.clone()).unwrap();
         assert!(router_di.stop().is_ok());
 
         // XInput backend (Windows only)
         #[cfg(target_os = "windows")]
         {
-            let mut router_xi = FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
+            let mut router_xi =
+                FfbOutputRouter::new(FfbBackend::XInputRumble, Some(0), time_source).unwrap();
             assert!(router_xi.stop().is_ok());
         }
     }

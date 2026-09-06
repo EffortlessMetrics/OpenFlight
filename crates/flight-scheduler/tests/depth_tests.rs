@@ -4,8 +4,8 @@
 //! Depth tests for flight-scheduler: timing discipline, configuration,
 //! state machine, property tests, and zero-allocation verification.
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -463,18 +463,15 @@ mod configuration {
 
         // Verify the three priority levels are distinct via platform handle
         let backend = MockMmcssBackend::new_success();
-        let h_normal =
-            request_rt_priority_mmcss(backend, RtPriority::Normal).unwrap();
+        let h_normal = request_rt_priority_mmcss(backend, RtPriority::Normal).unwrap();
         assert_eq!(h_normal.level(), RtPriority::Normal);
 
         let backend = MockMmcssBackend::new_success();
-        let h_elevated =
-            request_rt_priority_mmcss(backend, RtPriority::Elevated).unwrap();
+        let h_elevated = request_rt_priority_mmcss(backend, RtPriority::Elevated).unwrap();
         assert_eq!(h_elevated.level(), RtPriority::Elevated);
 
         let backend = MockMmcssBackend::new_success();
-        let h_rt =
-            request_rt_priority_mmcss(backend, RtPriority::Realtime).unwrap();
+        let h_rt = request_rt_priority_mmcss(backend, RtPriority::Realtime).unwrap();
         assert_eq!(h_rt.level(), RtPriority::Realtime);
 
         assert_ne!(h_normal.level(), h_elevated.level());
@@ -727,7 +724,10 @@ mod state_machine {
         thread::sleep(Duration::from_millis(5));
 
         let result = sched.wait_for_tick();
-        assert!(result.missed, "tick should be flagged as missed after stall");
+        assert!(
+            result.missed,
+            "tick should be flagged as missed after stall"
+        );
         assert!(
             sched.get_stats().missed_ticks > 0,
             "missed_ticks counter should be > 0"
@@ -1191,8 +1191,8 @@ mod integration {
     #[test]
     fn pll_lock_unlock_hysteresis() {
         let nominal = 4_000_000.0;
-        let mut pll = PhaseLockLoop::new(0.1, 0.001, nominal)
-            .with_lock_detection(50_000.0, 200_000.0, 5);
+        let mut pll =
+            PhaseLockLoop::new(0.1, 0.001, nominal).with_lock_detection(50_000.0, 200_000.0, 5);
 
         // Lock.
         for _ in 0..50 {

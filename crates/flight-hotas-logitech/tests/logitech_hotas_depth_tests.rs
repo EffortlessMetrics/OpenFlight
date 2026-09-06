@@ -7,18 +7,17 @@
 //! MFD display protocol, LED/RGB control, mode switching, rotary encoders,
 //! profile semantics, and VID/PID device identification.
 
-use flight_hotas_logitech::protocol::{
-    self, DeviceId, RgbColor, X52BlinkPattern, X52LedColor, X52LedId, X52Mode, X56RgbZone,
-    identify_device, mfd_clear_all, mfd_encode_text, mfd_set_brightness, mfd_write_line,
-    resolve_mode_button, x52_led_command, x56_rgb_set_all, x56_rgb_set_zone, LOGITECH_VID,
-    MAD_CATZ_VID, MFD_LINE_COUNT, MFD_LINE_LENGTH, MFD_LINE_REPORT_SIZE, SAITEK_VID,
-    X56_RGB_REPORT_SIZE,
-};
-use flight_hotas_logitech::profiles::{
-    x52_profile, x56_profile, flight_yoke_profile, rudder_pedals_profile, AxisKind,
-    DeviceProfile,
-};
 use flight_hotas_logitech::parse_extreme_3d_pro;
+use flight_hotas_logitech::profiles::{
+    AxisKind, DeviceProfile, flight_yoke_profile, rudder_pedals_profile, x52_profile, x56_profile,
+};
+use flight_hotas_logitech::protocol::{
+    self, DeviceId, LOGITECH_VID, MAD_CATZ_VID, MFD_LINE_COUNT, MFD_LINE_LENGTH,
+    MFD_LINE_REPORT_SIZE, RgbColor, SAITEK_VID, X52BlinkPattern, X52LedColor, X52LedId, X52Mode,
+    X56_RGB_REPORT_SIZE, X56RgbZone, identify_device, mfd_clear_all, mfd_encode_text,
+    mfd_set_brightness, mfd_write_line, resolve_mode_button, x52_led_command, x56_rgb_set_all,
+    x56_rgb_set_zone,
+};
 
 // ── Helper: Build Extreme 3D Pro reports ──────────────────────────────────────
 
@@ -127,12 +126,7 @@ fn x52_pro_mode_switch_three_modes() {
     let p = x52_profile();
     assert_eq!(p.mode_button_labels.len(), 3);
     for (i, labels) in p.mode_button_labels.iter().enumerate() {
-        assert_eq!(
-            labels.mode.index(),
-            i,
-            "mode labels out of order at {}",
-            i
-        );
+        assert_eq!(labels.mode.index(), i, "mode labels out of order at {}", i);
         assert!(labels.labels.len() > 1, "mode {} should have labels", i);
     }
 }
@@ -263,8 +257,14 @@ fn x52_pro_led_color() {
     let blink = X52BlinkPattern::new(X52LedId::Fire, X52LedColor::Red, 500);
     let (_, _, _, on_color) = blink.command_for_phase(true);
     let (_, _, _, off_color) = blink.command_for_phase(false);
-    assert_eq!(on_color, protocol::x52_led_color_code(X52LedColor::Red) as u16);
-    assert_eq!(off_color, protocol::x52_led_color_code(X52LedColor::Off) as u16);
+    assert_eq!(
+        on_color,
+        protocol::x52_led_color_code(X52LedColor::Red) as u16
+    );
+    assert_eq!(
+        off_color,
+        protocol::x52_led_color_code(X52LedColor::Off) as u16
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -421,7 +421,13 @@ fn x56_rhino_rgb_presets() {
     let p = x56_profile();
     assert!(p.rgb_presets.len() >= 5);
 
-    let expected_presets = ["Default Blue", "Combat Red", "Night Green", "Amber Warm", "Off"];
+    let expected_presets = [
+        "Default Blue",
+        "Combat Red",
+        "Night Green",
+        "Amber Warm",
+        "Off",
+    ];
     for name in &expected_presets {
         assert!(
             p.rgb_presets.iter().any(|pr| pr.name == *name),
@@ -513,11 +519,7 @@ fn extreme3dpro_throttle_slider() {
     // Mid
     let data = build_e3dp_report(512, 512, 128, 64, 0, 8);
     let mid = parse_extreme_3d_pro(&data).unwrap().axes.throttle;
-    assert!(
-        (mid - 64.0 / 127.0).abs() < 0.02,
-        "throttle mid: {}",
-        mid
-    );
+    assert!((mid - 64.0 / 127.0).abs() < 0.02, "throttle mid: {}", mid);
 
     // Always unipolar (0.0..=1.0)
     for raw in (0..=127).step_by(10) {
@@ -660,8 +662,16 @@ fn profile_model_specific_axis_counts() {
     let yoke = flight_yoke_profile();
     let rudder = rudder_pedals_profile();
 
-    assert_eq!(x52.axes.len(), 9, "X52: 3 stick + throttle + 2 rotary + 2 mouse + slider");
-    assert_eq!(x56.axes.len(), 9, "X56: 3 stick + 4 mini-stick + 2 throttle");
+    assert_eq!(
+        x52.axes.len(),
+        9,
+        "X52: 3 stick + throttle + 2 rotary + 2 mouse + slider"
+    );
+    assert_eq!(
+        x56.axes.len(),
+        9,
+        "X56: 3 stick + 4 mini-stick + 2 throttle"
+    );
     assert_eq!(yoke.axes.len(), 8, "Yoke: 5 yoke + 3 throttle quadrant");
     assert_eq!(rudder.axes.len(), 3, "Rudder: 2 brakes + rudder");
 
@@ -718,7 +728,12 @@ fn profile_serialization() {
     ];
     for p in &profiles {
         let json = serde_json::to_string(p);
-        assert!(json.is_ok(), "{} should serialize: {:?}", p.name, json.err());
+        assert!(
+            json.is_ok(),
+            "{} should serialize: {:?}",
+            p.name,
+            json.err()
+        );
         let s = json.unwrap();
         assert!(s.contains(p.name));
         assert!(!s.is_empty());

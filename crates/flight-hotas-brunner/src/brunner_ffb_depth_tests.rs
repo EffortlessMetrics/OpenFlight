@@ -11,7 +11,7 @@
 //! resolution and up to 500 Hz update rate, supporting spring, damper,
 //! friction, constant force, and periodic effects.
 
-use crate::{parse_cls_e_report, CLS_E_MIN_REPORT_BYTES};
+use crate::{CLS_E_MIN_REPORT_BYTES, parse_cls_e_report};
 use flight_ffb::effects::{
     CompositeEffect, ConstantForceParams, DamperParams, EffectInput, FfbEffect, ForceScaling,
     FrictionParams, PeriodicParams, RampParams, SpringParams, Waveform,
@@ -89,7 +89,10 @@ fn force_calc_spring_restoring_force() {
     // Yoke displaced 50% right → force should push left (negative).
     let input = cls_e_input(0.5, 0.0, 0.0);
     let force = spring.compute(&input);
-    assert!(force < 0.0, "spring should push back toward center, got {force}");
+    assert!(
+        force < 0.0,
+        "spring should push back toward center, got {force}"
+    );
     assert!(
         (force - -0.4).abs() < 1e-5,
         "spring force should be −coeff*displacement = −0.4, got {force}"
@@ -155,10 +158,7 @@ fn force_calc_composite_forces() {
         }),
         1.0,
     );
-    composite.add(
-        FfbEffect::Damper(DamperParams { coefficient: 0.3 }),
-        1.0,
-    );
+    composite.add(FfbEffect::Damper(DamperParams { coefficient: 0.3 }), 1.0);
     composite.add(
         FfbEffect::ConstantForce(ConstantForceParams { magnitude: 0.1 }),
         1.0,
@@ -680,7 +680,10 @@ fn protocol_effect_destroy() {
         1.0,
     );
     let input = cls_e_input(0.0, 0.0, 0.0);
-    assert!(composite.compute(&input).abs() > 0.1, "should have force before destroy");
+    assert!(
+        composite.compute(&input).abs() > 0.1,
+        "should have force before destroy"
+    );
 
     composite.clear();
     assert!(composite.is_empty());
@@ -697,11 +700,13 @@ fn protocol_vid_pid_constants() {
     assert_eq!(CLS_E_PID, 0x0063, "CLS-E PID mismatch");
     // Verify re-exported identifiers from flight-hid-support match.
     assert_eq!(
-        crate::BRUNNER_VENDOR_ID, BRUNNER_VID,
+        crate::BRUNNER_VENDOR_ID,
+        BRUNNER_VID,
         "re-exported VID should match"
     );
     assert_eq!(
-        crate::BRUNNER_CLS_E_YOKE_PID, CLS_E_PID,
+        crate::BRUNNER_CLS_E_YOKE_PID,
+        CLS_E_PID,
         "re-exported PID should match"
     );
 }
@@ -753,10 +758,7 @@ fn safety_emergency_stop() {
         !mgr.current_state().allows_torque(),
         "faulted state must not allow torque"
     );
-    assert_eq!(
-        mgr.current_state().max_torque_nm(CLS_E_MAX_TORQUE_NM),
-        0.0
-    );
+    assert_eq!(mgr.current_state().max_torque_nm(CLS_E_MAX_TORQUE_NM), 0.0);
 
     // Transient fault → clearable.
     mgr.clear_fault().unwrap();

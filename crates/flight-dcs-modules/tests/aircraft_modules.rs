@@ -461,14 +461,20 @@ fn discovery_variable_lookup_by_name() {
     // Look up a control across different aircraft by iterating.
     let found: Vec<&str> = loader
         .all_modules()
-        .filter_map(|m| m.find_control("UFC_SCRATCHPAD").map(|_| m.aircraft.as_str()))
+        .filter_map(|m| {
+            m.find_control("UFC_SCRATCHPAD")
+                .map(|_| m.aircraft.as_str())
+        })
         .collect();
     assert_eq!(found, vec!["F/A-18C"]);
 
     // Non-existent control should not appear in any module.
     let missing: Vec<&str> = loader
         .all_modules()
-        .filter_map(|m| m.find_control("DOES_NOT_EXIST").map(|_| m.aircraft.as_str()))
+        .filter_map(|m| {
+            m.find_control("DOES_NOT_EXIST")
+                .map(|_| m.aircraft.as_str())
+        })
         .collect();
     assert!(missing.is_empty());
 }

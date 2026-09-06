@@ -650,14 +650,22 @@ fn tflight_merged_centered_axes_near_zero() {
 fn tflight_merged_full_throttle() {
     let r = make_tflight_merged(32768, 32768, 255, 128, 0, 0);
     let s = parse_tflight_merged(&r).unwrap();
-    assert!((s.axes.throttle - 1.0).abs() < 0.01, "full throttle: {}", s.axes.throttle);
+    assert!(
+        (s.axes.throttle - 1.0).abs() < 0.01,
+        "full throttle: {}",
+        s.axes.throttle
+    );
 }
 
 #[test]
 fn tflight_merged_idle_throttle() {
     let r = make_tflight_merged(32768, 32768, 0, 128, 0, 0);
     let s = parse_tflight_merged(&r).unwrap();
-    assert!(s.axes.throttle.abs() < 0.01, "idle throttle: {}", s.axes.throttle);
+    assert!(
+        s.axes.throttle.abs() < 0.01,
+        "idle throttle: {}",
+        s.axes.throttle
+    );
 }
 
 #[test]
@@ -668,7 +676,12 @@ fn tflight_merged_hat_directions() {
         if dir == 0 {
             assert_eq!(s.buttons.hat, TFlightHat::Center);
         } else {
-            assert_ne!(s.buttons.hat, TFlightHat::Center, "hat {} should not be center", dir);
+            assert_ne!(
+                s.buttons.hat,
+                TFlightHat::Center,
+                "hat {} should not be center",
+                dir
+            );
         }
     }
 }

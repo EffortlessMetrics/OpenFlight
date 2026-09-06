@@ -251,7 +251,10 @@ fn stop_all_report_format() {
     let b = serialize_effect(FfbEffect::StopAll);
     assert_eq!(b[0], 0xFF, "StopAll must use 0xFF report ID");
     // Remaining bytes should be zero
-    assert!(b[1..].iter().all(|&byte| byte == 0), "StopAll payload should be all zeros");
+    assert!(
+        b[1..].iter().all(|&byte| byte == 0),
+        "StopAll payload should be all zeros"
+    );
 }
 
 // ── Report layout ───────────────────────────────────────────────────────
@@ -259,15 +262,26 @@ fn stop_all_report_format() {
 #[test]
 fn all_effects_produce_correct_length() {
     let effects = [
-        FfbEffect::ConstantForce { direction_deg: 45.0, magnitude: 0.5 },
+        FfbEffect::ConstantForce {
+            direction_deg: 45.0,
+            magnitude: 0.5,
+        },
         FfbEffect::Spring { coefficient: 0.5 },
         FfbEffect::Damper { coefficient: 0.5 },
-        FfbEffect::Sine { frequency_hz: 50.0, magnitude: 0.5 },
+        FfbEffect::Sine {
+            frequency_hz: 50.0,
+            magnitude: 0.5,
+        },
         FfbEffect::StopAll,
     ];
     for effect in &effects {
         let b = serialize_effect(*effect);
-        assert_eq!(b.len(), FFB_REPORT_LEN, "effect {:?} produced wrong length", effect);
+        assert_eq!(
+            b.len(),
+            FFB_REPORT_LEN,
+            "effect {:?} produced wrong length",
+            effect
+        );
     }
 }
 
@@ -314,16 +328,28 @@ fn ffb_effect_debug() {
 
 #[test]
 fn ffb_effect_clone() {
-    let effect = FfbEffect::ConstantForce { direction_deg: 90.0, magnitude: 0.5 };
+    let effect = FfbEffect::ConstantForce {
+        direction_deg: 90.0,
+        magnitude: 0.5,
+    };
     let cloned = effect.clone();
     assert_eq!(effect, cloned);
 }
 
 #[test]
 fn ffb_effect_equality() {
-    let a = FfbEffect::Sine { frequency_hz: 50.0, magnitude: 0.5 };
-    let b = FfbEffect::Sine { frequency_hz: 50.0, magnitude: 0.5 };
-    let c = FfbEffect::Sine { frequency_hz: 60.0, magnitude: 0.5 };
+    let a = FfbEffect::Sine {
+        frequency_hz: 50.0,
+        magnitude: 0.5,
+    };
+    let b = FfbEffect::Sine {
+        frequency_hz: 50.0,
+        magnitude: 0.5,
+    };
+    let c = FfbEffect::Sine {
+        frequency_hz: 60.0,
+        magnitude: 0.5,
+    };
     assert_eq!(a, b);
     assert_ne!(a, c);
 }

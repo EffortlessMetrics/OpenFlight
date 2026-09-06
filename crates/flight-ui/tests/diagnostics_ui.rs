@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use flight_ui::api::{api_router, ApiState};
+use flight_ui::api::{ApiState, api_router};
 use flight_ui::dashboard::{AdapterStatus, DashboardState, DeviceStatus, HealthStatus};
 use flight_ui::integration_docs::{InstallerSummary, ValidationResult};
 use flight_ui::websocket::WsBroadcast;

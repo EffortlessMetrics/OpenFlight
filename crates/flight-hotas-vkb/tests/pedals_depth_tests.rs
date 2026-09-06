@@ -6,10 +6,8 @@
 //! Covers profile structure, axis mapping, device identification, and
 //! T-Rudder-specific quirks (single-axis twist mapping, toe brake modes).
 
-use flight_hotas_vkb::profiles::{
-    AxisNormMode, all_profiles, profile_for_pid, t_rudder_profile,
-};
 use flight_hid_support::device_support::VKB_VENDOR_ID;
+use flight_hotas_vkb::profiles::{AxisNormMode, all_profiles, profile_for_pid, t_rudder_profile};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. Axis parsing — profile-based axis mapping tests
@@ -35,14 +33,18 @@ fn t_rudder_rudder_axis_is_signed() {
 #[test]
 fn t_rudder_left_toe_brake_is_unsigned() {
     let p = t_rudder_profile();
-    let left = p.axis_by_name("left_toe_brake").expect("missing left_toe_brake");
+    let left = p
+        .axis_by_name("left_toe_brake")
+        .expect("missing left_toe_brake");
     assert_eq!(left.mode, AxisNormMode::Unsigned);
 }
 
 #[test]
 fn t_rudder_right_toe_brake_is_unsigned() {
     let p = t_rudder_profile();
-    let right = p.axis_by_name("right_toe_brake").expect("missing right_toe_brake");
+    let right = p
+        .axis_by_name("right_toe_brake")
+        .expect("missing right_toe_brake");
     assert_eq!(right.mode, AxisNormMode::Unsigned);
 }
 
@@ -90,8 +92,11 @@ fn t_rudder_no_dead_center_confusion() {
     // Verify that the rudder's signed mode means center=0x8000→0.0
     let p = t_rudder_profile();
     let rudder = p.axis_by_name("rudder").unwrap();
-    assert_eq!(rudder.mode, AxisNormMode::Signed,
-        "signed mode implies 0x0000→-1.0, 0x8000→0.0, 0xFFFF→1.0");
+    assert_eq!(
+        rudder.mode,
+        AxisNormMode::Signed,
+        "signed mode implies 0x0000→-1.0, 0x8000→0.0, 0xFFFF→1.0"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -112,7 +117,11 @@ fn t_rudder_axes_cover_expected_positions() {
 fn t_rudder_axes_have_descriptions() {
     let p = t_rudder_profile();
     for axis in p.axes {
-        assert!(!axis.description.is_empty(), "axis '{}' should have a description", axis.name);
+        assert!(
+            !axis.description.is_empty(),
+            "axis '{}' should have a description",
+            axis.name
+        );
     }
 }
 

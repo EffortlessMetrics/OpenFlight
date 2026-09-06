@@ -10,7 +10,7 @@
 //! - Struct identity after mutation
 
 use approx::assert_relative_eq;
-use bytemuck::{try_from_bytes, Zeroable};
+use bytemuck::{Zeroable, try_from_bytes};
 use flight_falcon_bms::{BmsError, FalconBmsAdapter, FlightData, SharedMemoryReader};
 
 #[repr(align(4))]
@@ -51,7 +51,11 @@ fn known_bit_pattern_for_one_float() {
     let fd: &FlightData = try_from_bytes(&buf.0).unwrap();
     assert_eq!(fd.pitch, 1.0);
     // pitch=1.0, normalized = 1.0/π ≈ 0.3183
-    assert_relative_eq!(fd.pitch_normalized(), 1.0 / std::f32::consts::PI, epsilon = 1e-6);
+    assert_relative_eq!(
+        fd.pitch_normalized(),
+        1.0 / std::f32::consts::PI,
+        epsilon = 1e-6
+    );
 }
 
 #[test]
@@ -99,7 +103,10 @@ fn epsilon_pitch_near_zero() {
     let mut fd = FlightData::zeroed();
     fd.pitch = f32::EPSILON;
     let result = fd.pitch_normalized();
-    assert!(result.abs() < 1e-6, "epsilon pitch should normalise near zero");
+    assert!(
+        result.abs() < 1e-6,
+        "epsilon pitch should normalise near zero"
+    );
 }
 
 #[test]
@@ -172,10 +179,7 @@ impl SucceedOnceWithData {
 
 impl SharedMemoryReader for SucceedOnceWithData {
     fn read_flight_data(&self) -> Result<FlightData, BmsError> {
-        if self
-            .used
-            .swap(true, std::sync::atomic::Ordering::Relaxed)
-        {
+        if self.used.swap(true, std::sync::atomic::Ordering::Relaxed) {
             Err(BmsError::InvalidData)
         } else {
             Ok(self.data)

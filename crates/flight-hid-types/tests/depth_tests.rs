@@ -138,10 +138,7 @@ fn collection_type_from_value_known() {
     );
     assert_eq!(CollectionType::from_value(0x02), CollectionType::Logical);
     assert_eq!(CollectionType::from_value(0x03), CollectionType::Report);
-    assert_eq!(
-        CollectionType::from_value(0x04),
-        CollectionType::NamedArray
-    );
+    assert_eq!(CollectionType::from_value(0x04), CollectionType::NamedArray);
     assert_eq!(
         CollectionType::from_value(0x05),
         CollectionType::UsageSwitch
@@ -260,12 +257,7 @@ fn report_field_is_button() {
 
 #[test]
 fn report_field_is_hat() {
-    let f = make_field(
-        usage_page::GENERIC_DESKTOP,
-        usage_desktop::HAT_SWITCH,
-        4,
-        1,
-    );
+    let f = make_field(usage_page::GENERIC_DESKTOP, usage_desktop::HAT_SWITCH, 4, 1);
     assert!(f.is_hat());
     assert!(!f.is_button());
     assert!(!f.is_axis());
@@ -458,7 +450,11 @@ fn all_fields_returns_every_field() {
     let desc = parse_descriptor(&joystick_descriptor(2, 8)).unwrap();
     let fields = desc.all_fields();
     // 2 axes merged into 1 field, 8 buttons = 1 field, padding = 1 field
-    assert!(fields.len() >= 2, "expected at least 2 fields, got {}", fields.len());
+    assert!(
+        fields.len() >= 2,
+        "expected at least 2 fields, got {}",
+        fields.len()
+    );
 }
 
 #[test]

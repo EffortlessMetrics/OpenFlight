@@ -128,7 +128,17 @@ mod envelope_limiting {
         let mut env = SafetyEnvelope::new(config).unwrap();
 
         let inputs = [
-            0.0, 1.0, -1.0, 100.0, -100.0, 8.0, -8.0, 0.001, -0.001, f32::MAX, f32::MIN,
+            0.0,
+            1.0,
+            -1.0,
+            100.0,
+            -100.0,
+            8.0,
+            -8.0,
+            0.001,
+            -0.001,
+            f32::MAX,
+            f32::MIN,
         ];
         for &input in &inputs {
             if input.is_finite() {
@@ -256,7 +266,10 @@ mod safety_interlock_tests {
 
         // Trip
         il.emergency_stop();
-        assert_eq!(il.check_force(50.0), SafetyInterlockResult::EmergencyStopped);
+        assert_eq!(
+            il.check_force(50.0),
+            SafetyInterlockResult::EmergencyStopped
+        );
 
         // Release
         il.release_emergency_stop();
@@ -420,7 +433,10 @@ mod force_synthesis {
 
         // At t=0.25 (quarter period) → sin(π/2) = 1
         let f1 = eff.compute(&input_at(0.0, 0.0, 0.25, 0));
-        assert!((f1 - 1.0).abs() < 1e-5, "sine at t=0.25 should be ~1, got {f1}");
+        assert!(
+            (f1 - 1.0).abs() < 1e-5,
+            "sine at t=0.25 should be ~1, got {f1}"
+        );
 
         // At t=0.5 → sin(π) ≈ 0
         let f2 = eff.compute(&input_at(0.0, 0.0, 0.5, 0));
@@ -718,8 +734,11 @@ mod mode_negotiation_tests {
         let mut mgr = SafetyStateManager::new();
 
         // Full → HighTorque (full FFB)
-        mgr.transition_to(SafetyState::HighTorque, TransitionReason::UserEnableHighTorque)
-            .unwrap();
+        mgr.transition_to(
+            SafetyState::HighTorque,
+            TransitionReason::UserEnableHighTorque,
+        )
+        .unwrap();
         assert!(mgr.current_state().allows_high_torque());
 
         // → SafeTorque (demo-like reduced)
@@ -882,7 +901,9 @@ mod property_tests {
         let mut il = SafetyInterlock::new(config);
 
         // Ramp up gradually so last_output is near the test values
-        let forces = [0.0, 50.0, 80.0, 99.9, 100.0, 100.1, 200.0, -50.0, -100.1, -200.0];
+        let forces = [
+            0.0, 50.0, 80.0, 99.9, 100.0, 100.1, 200.0, -50.0, -100.1, -200.0,
+        ];
         for &f in &forces {
             let result = il.check_force(f);
             let output = match result {
@@ -967,7 +988,10 @@ mod property_tests {
         ];
 
         for reason in &reasons {
-            assert!(!reason.error_code().is_empty(), "{reason:?} has no error code");
+            assert!(
+                !reason.error_code().is_empty(),
+                "{reason:?} has no error code"
+            );
             assert!(
                 !reason.description().is_empty(),
                 "{reason:?} has no description"

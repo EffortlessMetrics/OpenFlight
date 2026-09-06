@@ -70,16 +70,16 @@ fn ace_pedals_14bit_resolution() {
     assert_eq!(VIRPIL_AXIS_MAX, 16384);
     let a = parse_ace_pedals_report(&make_ace_report([1000, 0, 0], [0; 2])).unwrap();
     let b = parse_ace_pedals_report(&make_ace_report([1001, 0, 0], [0; 2])).unwrap();
-    assert_ne!(a.axes.rudder, b.axes.rudder, "14-bit resolution distinguishes adjacent values");
+    assert_ne!(
+        a.axes.rudder, b.axes.rudder,
+        "14-bit resolution distinguishes adjacent values"
+    );
 }
 
 #[test]
 fn ace_pedals_midpoint_rudder() {
-    let state = parse_ace_pedals_report(&make_ace_report(
-        [VIRPIL_AXIS_MAX / 2, 0, 0],
-        [0; 2],
-    ))
-    .unwrap();
+    let state =
+        parse_ace_pedals_report(&make_ace_report([VIRPIL_AXIS_MAX / 2, 0, 0], [0; 2])).unwrap();
     assert!(
         (state.axes.rudder - 0.5).abs() < 0.01,
         "midpoint should be ~0.5, got {}",
@@ -91,7 +91,10 @@ fn ace_pedals_midpoint_rudder() {
 fn ace_pedals_above_max_clamped() {
     // Values > VIRPIL_AXIS_MAX should clamp to 1.0
     let state = parse_ace_pedals_report(&make_ace_report([65535, 65535, 65535], [0; 2])).unwrap();
-    assert!((state.axes.rudder - 1.0).abs() < 1e-4, "above max should clamp to 1.0");
+    assert!(
+        (state.axes.rudder - 1.0).abs() < 1e-4,
+        "above max should clamp to 1.0"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -117,7 +120,10 @@ fn ace_pedals_no_hysteresis_in_parser() {
     let up = parse_ace_pedals_report(&make_ace_report([5000, 0, 0], [0; 2])).unwrap();
     let _peak = parse_ace_pedals_report(&make_ace_report([10000, 0, 0], [0; 2])).unwrap();
     let down = parse_ace_pedals_report(&make_ace_report([5000, 0, 0], [0; 2])).unwrap();
-    assert_eq!(up.axes.rudder, down.axes.rudder, "parser should have no hysteresis");
+    assert_eq!(
+        up.axes.rudder, down.axes.rudder,
+        "parser should have no hysteresis"
+    );
 }
 
 #[test]
@@ -146,11 +152,17 @@ fn ace_pedals_button_individual_bits() {
         let mut buttons = [0u8; 2];
         buttons[byte_idx] = 1 << bit;
         let state = parse_ace_pedals_report(&make_ace_report([0; 3], buttons)).unwrap();
-        assert!(state.buttons.is_pressed(btn), "button {btn} should be pressed");
+        assert!(
+            state.buttons.is_pressed(btn),
+            "button {btn} should be pressed"
+        );
         // Others should not be pressed
         for other in 1..=16u8 {
             if other != btn {
-                assert!(!state.buttons.is_pressed(other), "button {other} should not be pressed when only {btn} is set");
+                assert!(
+                    !state.buttons.is_pressed(other),
+                    "button {other} should not be pressed when only {btn} is set"
+                );
             }
         }
     }
@@ -179,7 +191,10 @@ fn virpil_ace_pedals_pid_correct() {
 
 #[test]
 fn ace_pedals_min_report_size() {
-    assert_eq!(VPC_ACE_PEDALS_MIN_REPORT_BYTES, 9, "ACE pedals report: 1 ID + 6 axes + 2 buttons");
+    assert_eq!(
+        VPC_ACE_PEDALS_MIN_REPORT_BYTES, 9,
+        "ACE pedals report: 1 ID + 6 axes + 2 buttons"
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -195,7 +210,10 @@ fn ace_pedals_error_on_empty() {
 fn ace_pedals_error_on_short_report() {
     for len in 0..VPC_ACE_PEDALS_MIN_REPORT_BYTES {
         let data = vec![0x01; len];
-        assert!(parse_ace_pedals_report(&data).is_err(), "len={len} should fail");
+        assert!(
+            parse_ace_pedals_report(&data).is_err(),
+            "len={len} should fail"
+        );
     }
 }
 

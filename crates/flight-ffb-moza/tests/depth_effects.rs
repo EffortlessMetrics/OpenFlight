@@ -126,7 +126,10 @@ fn large_positive_clamped_to_max() {
 
 #[test]
 fn large_negative_clamped_to_min() {
-    let cmd = TorqueCommand { x: -100.0, y: -50.0 };
+    let cmd = TorqueCommand {
+        x: -100.0,
+        y: -50.0,
+    };
     let r = cmd.to_report();
     assert_eq!(decode_x(&r), -32767);
     assert_eq!(decode_y(&r), -32767);

@@ -4,7 +4,9 @@
 //! Depth tests for Elite Dangerous protocol types:
 //! round-trip serialization, edge cases, flag combinations, and parsing robustness.
 
-use flight_elite::protocol::{EliteFlags, FuelStatus, JournalEvent, StatusJson, parse_journal_line};
+use flight_elite::protocol::{
+    EliteFlags, FuelStatus, JournalEvent, StatusJson, parse_journal_line,
+};
 
 // ── EliteFlags ──────────────────────────────────────────────────────────────
 
@@ -288,9 +290,7 @@ fn journal_event_liftoff_roundtrip() {
 
 #[test]
 fn journal_event_refuel_all_roundtrip() {
-    let event = JournalEvent::RefuelAll {
-        amount: Some(24.5),
-    };
+    let event = JournalEvent::RefuelAll { amount: Some(24.5) };
     let json = serde_json::to_string(&event).unwrap();
     let parsed: JournalEvent = serde_json::from_str(&json).unwrap();
     assert_eq!(event, parsed);
@@ -373,7 +373,8 @@ fn parse_docked_event() {
 
 #[test]
 fn parse_undocked_event() {
-    let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Undocked","StationName":"Coriolis"}"#;
+    let line =
+        r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Undocked","StationName":"Coriolis"}"#;
     match parse_journal_line(line) {
         Some(JournalEvent::Undocked { station_name }) => {
             assert_eq!(station_name, "Coriolis");
@@ -414,8 +415,7 @@ fn parse_liftoff_without_coordinates() {
 
 #[test]
 fn parse_location_without_star_pos() {
-    let line =
-        r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Location","StarSystem":"Sol"}"#;
+    let line = r#"{"timestamp":"2025-01-01T00:00:00Z","event":"Location","StarSystem":"Sol"}"#;
     match parse_journal_line(line) {
         Some(JournalEvent::Location {
             star_system,

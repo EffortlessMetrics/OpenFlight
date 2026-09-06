@@ -5,8 +5,8 @@
 //! property tests, and snapshot tests.
 
 use flight_rules::{
-    Action, BytecodeOp, CompareOp, CompiledRules, Condition, Rule, RuleDefaults,
-    RulesCompiler, RulesSchema, check_conflicts,
+    Action, BytecodeOp, CompareOp, CompiledRules, Condition, Rule, RuleDefaults, RulesCompiler,
+    RulesSchema, check_conflicts,
 };
 use std::collections::HashMap;
 
@@ -340,14 +340,18 @@ mod parser_actions {
         let a = compiler()
             .parse_action("led.panel('X').blink(rate_hz=2.5)")
             .unwrap();
-        assert!(matches!(&a, Action::LedBlink { rate_hz, .. } if (rate_hz - 2.5).abs() < f32::EPSILON));
+        assert!(
+            matches!(&a, Action::LedBlink { rate_hz, .. } if (rate_hz - 2.5).abs() < f32::EPSILON)
+        );
     }
 
     // ── Error paths ─────────────────────────────────────────────────────
 
     #[test]
     fn unknown_action_is_error() {
-        let e = compiler().parse_action("set_led master_warning on").unwrap_err();
+        let e = compiler()
+            .parse_action("set_led master_warning on")
+            .unwrap_err();
         assert!(e.to_string().contains("Unsupported action"));
     }
 
@@ -390,21 +394,25 @@ mod compilation {
     #[test]
     fn compiled_bytecode_contains_jump_false_guard() {
         let compiled = compile_one("ias > 100", "led.indexer.on()").unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::JumpFalse(_))));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::JumpFalse(_)))
+        );
     }
 
     #[test]
     fn compiled_bytecode_contains_action() {
         let compiled = compile_one("gear_down", "led.panel('GEAR').on()").unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Action(_))));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Action(_)))
+        );
         assert_eq!(compiled.bytecode.actions.len(), 1);
         assert!(matches!(
             &compiled.bytecode.actions[0],
@@ -417,12 +425,14 @@ mod compilation {
         let compiled = compile_one("altitude > 10000", "led.indexer.on()").unwrap();
         let instrs = &compiled.bytecode.instructions;
         assert!(instrs.iter().any(|op| matches!(op, BytecodeOp::LoadVar(_))));
-        assert!(instrs
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::LoadConst(v) if (*v - 10000.0).abs() < f32::EPSILON)));
-        assert!(instrs
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::Greater))));
+        assert!(instrs.iter().any(
+            |op| matches!(op, BytecodeOp::LoadConst(v) if (*v - 10000.0).abs() < f32::EPSILON)
+        ));
+        assert!(
+            instrs
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::Greater)))
+        );
     }
 
     #[test]
@@ -430,42 +440,52 @@ mod compilation {
         let compiled = compile_one("gear_down", "led.indexer.on()").unwrap();
         let instrs = &compiled.bytecode.instructions;
         // Boolean is: LoadVar, LoadConst(0.0), Compare(NotEqual)
-        assert!(instrs
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::LoadConst(v) if *v == 0.0)));
-        assert!(instrs
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::NotEqual))));
+        assert!(
+            instrs
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::LoadConst(v) if *v == 0.0))
+        );
+        assert!(
+            instrs
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Compare(CompareOp::NotEqual)))
+        );
     }
 
     #[test]
     fn negated_boolean_emits_not() {
         let compiled = compile_one("!gear_down", "led.indexer.on()").unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Not)));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Not))
+        );
     }
 
     #[test]
     fn and_condition_emits_and_op() {
         let compiled = compile_one("gear_down and ias < 200", "led.indexer.on()").unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::And)));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::And))
+        );
     }
 
     #[test]
     fn or_condition_emits_or_op() {
         let compiled = compile_one("gear_down or ias > 200", "led.indexer.on()").unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Or)));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Or))
+        );
     }
 
     #[test]
@@ -504,18 +524,19 @@ mod compilation {
             }),
         };
         let compiled = s.compile().unwrap();
-        assert!(compiled
-            .bytecode
-            .instructions
-            .iter()
-            .any(|op| matches!(op, BytecodeOp::Hysteresis(_))));
+        assert!(
+            compiled
+                .bytecode
+                .instructions
+                .iter()
+                .any(|op| matches!(op, BytecodeOp::Hysteresis(_)))
+        );
         assert!(!compiled.bytecode.hysteresis_bands.is_empty());
     }
 
     #[test]
     fn variable_map_assigns_indices() {
-        let compiled =
-            compile_one("gear_down and ias < 200", "led.panel('GEAR').on()").unwrap();
+        let compiled = compile_one("gear_down and ias < 200", "led.panel('GEAR').on()").unwrap();
         assert!(compiled.bytecode.variable_map.contains_key("gear_down"));
         assert!(compiled.bytecode.variable_map.contains_key("ias"));
         let idx1 = compiled.bytecode.variable_map["gear_down"];
@@ -691,8 +712,18 @@ mod schema_validation {
             ("!x", "led.panel('Z').brightness(0.5)"),
         ];
         for (when, act) in &cases {
-            assert!(validate_one(when, act).is_ok(), "validate failed: {} → {}", when, act);
-            assert!(compile_one(when, act).is_ok(), "compile failed: {} → {}", when, act);
+            assert!(
+                validate_one(when, act).is_ok(),
+                "validate failed: {} → {}",
+                when,
+                act
+            );
+            assert!(
+                compile_one(when, act).is_ok(),
+                "compile failed: {} → {}",
+                when,
+                act
+            );
         }
     }
 
@@ -713,7 +744,12 @@ mod schema_validation {
             );
             // Empty strings short-circuit before compile, but compile also handles them
             let s = schema(vec![rule(when, act)]);
-            assert!(s.compile().is_err(), "compile should fail for: {} → {}", when, act);
+            assert!(
+                s.compile().is_err(),
+                "compile should fail for: {} → {}",
+                when,
+                act
+            );
         }
     }
 

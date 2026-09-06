@@ -52,21 +52,21 @@ pub fn register(registry: &mut StepRegistry) {
 
     // -- When -----------------------------------------------------------
 
-    registry.when(
-        r#"^event "([^"]+)" is published$"#,
-        |ctx, caps| {
-            let topic = caps[1].to_string();
-            let router = match ctx.get::<EventRouter>("event_router") {
-                Some(r) => r,
-                None => return StepOutcome::Failed("no event_router in context".to_string()),
-            };
-            let matched = router.route_event(&topic, None, 1);
-            ctx.set("last_route_match_count", matched.len());
-            ctx.set("last_event_topic", topic);
-            ctx.set("last_matched_subscribers", matched.iter().map(|s| s.to_string()).collect::<Vec<_>>());
-            StepOutcome::Passed
-        },
-    );
+    registry.when(r#"^event "([^"]+)" is published$"#, |ctx, caps| {
+        let topic = caps[1].to_string();
+        let router = match ctx.get::<EventRouter>("event_router") {
+            Some(r) => r,
+            None => return StepOutcome::Failed("no event_router in context".to_string()),
+        };
+        let matched = router.route_event(&topic, None, 1);
+        ctx.set("last_route_match_count", matched.len());
+        ctx.set("last_event_topic", topic);
+        ctx.set(
+            "last_matched_subscribers",
+            matched.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+        );
+        StepOutcome::Passed
+    });
 
     // -- Then -----------------------------------------------------------
 
@@ -101,36 +101,31 @@ pub fn register(registry: &mut StepRegistry) {
             };
             match ctx.get::<usize>("last_route_match_count") {
                 Some(actual) if *actual == expected => StepOutcome::Passed,
-                Some(actual) => StepOutcome::Failed(format!(
-                    "expected {expected} subscriber(s), got {actual}"
-                )),
+                Some(actual) => {
+                    StepOutcome::Failed(format!("expected {expected} subscriber(s), got {actual}"))
+                }
                 None => StepOutcome::Failed("no route result in context".to_string()),
             }
         },
     );
 
-    registry.then(
-        r"^the router should have (\d+) routes?$",
-        |ctx, caps| {
-            let expected: usize = match caps[1].parse() {
-                Ok(v) => v,
-                Err(e) => return StepOutcome::Failed(format!("bad int: {e}")),
-            };
-            match ctx.get::<EventRouter>("event_router") {
-                Some(router) => {
-                    let count = router.route_count();
-                    if count == expected {
-                        StepOutcome::Passed
-                    } else {
-                        StepOutcome::Failed(format!(
-                            "expected {expected} route(s), got {count}"
-                        ))
-                    }
+    registry.then(r"^the router should have (\d+) routes?$", |ctx, caps| {
+        let expected: usize = match caps[1].parse() {
+            Ok(v) => v,
+            Err(e) => return StepOutcome::Failed(format!("bad int: {e}")),
+        };
+        match ctx.get::<EventRouter>("event_router") {
+            Some(router) => {
+                let count = router.route_count();
+                if count == expected {
+                    StepOutcome::Passed
+                } else {
+                    StepOutcome::Failed(format!("expected {expected} route(s), got {count}"))
                 }
-                None => StepOutcome::Failed("no event_router in context".to_string()),
             }
-        },
-    );
+            None => StepOutcome::Failed("no event_router in context".to_string()),
+        }
+    });
 }
 
 #[cfg(test)]
@@ -155,7 +150,8 @@ mod tests {
 When event "axis.pitch" is published
 Then subscriber should receive event "axis.pitch"
 And the event should be routed to 1 subscriber"#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -169,7 +165,8 @@ And the event should be routed to 1 subscriber"#,
 When event "button.trigger" is published
 Then subscriber should receive event "button.trigger"
 "#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -181,9 +178,9 @@ Then subscriber should receive event "button.trigger"
             "route_count",
             r#"Given the event bus is running
 Then the router should have 1 route"#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
 }
-

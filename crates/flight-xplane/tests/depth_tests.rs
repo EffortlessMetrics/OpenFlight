@@ -8,18 +8,27 @@
 //! management.
 
 use flight_xplane::{
-    // UDP protocol
-    build_cmnd_command, build_dref_command, parse_data_packet, parse_rref_response, ParseError,
+    // State machine
+    AdapterEvent,
+    AdapterStateMachine,
+    // Aircraft database
+    AircraftCategory,
+    AircraftDatabase,
     // Dataref database
-    DatarefDatabase, DatarefType,
+    DatarefDatabase,
     // Dataref subscription management
     DatarefManager,
-    // Aircraft database
-    AircraftCategory, AircraftDatabase,
+    DatarefType,
     // Aircraft detection
     EnhancedAircraftDetector,
-    // State machine
-    AdapterEvent, AdapterStateMachine, TransitionError, XPlaneAdapterState,
+    ParseError,
+    TransitionError,
+    XPlaneAdapterState,
+    // UDP protocol
+    build_cmnd_command,
+    build_dref_command,
+    parse_data_packet,
+    parse_rref_response,
 };
 use std::collections::HashMap;
 
@@ -875,11 +884,11 @@ mod aircraft_database_depth {
     #[test]
     fn some_aircraft_have_custom_datarefs() {
         let db = AircraftDatabase::new();
-        let has_custom = db
-            .all()
-            .iter()
-            .any(|e| !e.custom_datarefs.is_empty());
-        assert!(has_custom, "at least one aircraft should have custom datarefs");
+        let has_custom = db.all().iter().any(|e| !e.custom_datarefs.is_empty());
+        assert!(
+            has_custom,
+            "at least one aircraft should have custom datarefs"
+        );
     }
 
     #[test]
@@ -921,7 +930,11 @@ mod aircraft_database_depth {
         let original_len = paths.len();
         paths.sort();
         paths.dedup();
-        assert_eq!(paths.len(), original_len, "duplicate acf_path entries found");
+        assert_eq!(
+            paths.len(),
+            original_len,
+            "duplicate acf_path entries found"
+        );
     }
 
     // ── Enhanced aircraft detection with ICAO / alias ────────────────
@@ -940,10 +953,7 @@ mod aircraft_database_depth {
         let mut det = EnhancedAircraftDetector::with_default_db();
         det.add_alias("MYAC", "B738");
         let mut raw = HashMap::new();
-        raw.insert(
-            "sim/aircraft/view/acf_ICAO".to_string(),
-            "MYAC".to_string(),
-        );
+        raw.insert("sim/aircraft/view/acf_ICAO".to_string(), "MYAC".to_string());
         raw.insert(
             "sim/aircraft/view/acf_descrip".to_string(),
             "My Custom 737".to_string(),
@@ -956,10 +966,7 @@ mod aircraft_database_depth {
     fn unknown_icao_falls_back_to_no_db_match() {
         let mut det = EnhancedAircraftDetector::with_default_db();
         let mut raw = HashMap::new();
-        raw.insert(
-            "sim/aircraft/view/acf_ICAO".to_string(),
-            "ZZZZ".to_string(),
-        );
+        raw.insert("sim/aircraft/view/acf_ICAO".to_string(), "ZZZZ".to_string());
         raw.insert(
             "sim/aircraft/view/acf_descrip".to_string(),
             "Totally Unknown".to_string(),
@@ -1156,8 +1163,7 @@ mod state_machine_depth {
         // Error
         {
             let mut m = sm();
-            m.transition(AdapterEvent::SocketError("e".into()))
-                .unwrap();
+            m.transition(AdapterEvent::SocketError("e".into())).unwrap();
             let s = m.transition(AdapterEvent::Shutdown).unwrap();
             assert_eq!(s, XPlaneAdapterState::Disconnected);
             assert_eq!(m.error_count(), 0);

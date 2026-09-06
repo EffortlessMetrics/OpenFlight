@@ -38,8 +38,14 @@ mod force_calculation {
             saturation: 1.0,
         });
 
-        let small = EffectInput { position: 0.2, ..rest_input() };
-        let large = EffectInput { position: 0.8, ..rest_input() };
+        let small = EffectInput {
+            position: 0.2,
+            ..rest_input()
+        };
+        let large = EffectInput {
+            position: 0.8,
+            ..rest_input()
+        };
 
         let f_small = spring.compute(&small);
         let f_large = spring.compute(&large);
@@ -58,15 +64,24 @@ mod force_calculation {
     fn damper_effect_opposes_velocity() {
         let damper = FfbEffect::Damper(DamperParams { coefficient: 0.7 });
 
-        let fwd = EffectInput { velocity: 1.0, ..rest_input() };
-        let bwd = EffectInput { velocity: -1.0, ..rest_input() };
+        let fwd = EffectInput {
+            velocity: 1.0,
+            ..rest_input()
+        };
+        let bwd = EffectInput {
+            velocity: -1.0,
+            ..rest_input()
+        };
 
         let f_fwd = damper.compute(&fwd);
         let f_bwd = damper.compute(&bwd);
 
         assert!(f_fwd < 0.0, "damper opposes forward velocity");
         assert!(f_bwd > 0.0, "damper opposes backward velocity");
-        assert!((f_fwd.abs() - f_bwd.abs()).abs() < 1e-6, "symmetric damping");
+        assert!(
+            (f_fwd.abs() - f_bwd.abs()).abs() < 1e-6,
+            "symmetric damping"
+        );
     }
 
     // ── 1.3 Friction effect ──────────────────────────────────────────────
@@ -74,15 +89,27 @@ mod force_calculation {
     fn friction_effect_constant_magnitude_opposing_motion() {
         let friction = FfbEffect::Friction(FrictionParams { coefficient: 0.6 });
 
-        let slow = EffectInput { velocity: 0.05, ..rest_input() };
-        let fast = EffectInput { velocity: 0.95, ..rest_input() };
+        let slow = EffectInput {
+            velocity: 0.05,
+            ..rest_input()
+        };
+        let fast = EffectInput {
+            velocity: 0.95,
+            ..rest_input()
+        };
 
         let f_slow = friction.compute(&slow);
         let f_fast = friction.compute(&fast);
 
         assert!(f_slow < 0.0, "friction opposes motion");
-        assert!((f_slow.abs() - f_fast.abs()).abs() < 1e-6, "friction is constant magnitude");
-        assert!((f_slow.abs() - 0.6).abs() < 1e-6, "friction equals coefficient");
+        assert!(
+            (f_slow.abs() - f_fast.abs()).abs() < 1e-6,
+            "friction is constant magnitude"
+        );
+        assert!(
+            (f_slow.abs() - 0.6).abs() < 1e-6,
+            "friction equals coefficient"
+        );
     }
 
     // ── 1.4 Constant force ──────────────────────────────────────────────
@@ -92,16 +119,28 @@ mod force_calculation {
 
         let positions = [-1.0, -0.5, 0.0, 0.5, 1.0];
         for pos in positions {
-            let input = EffectInput { position: pos, velocity: pos, ..rest_input() };
+            let input = EffectInput {
+                position: pos,
+                velocity: pos,
+                ..rest_input()
+            };
             let f = effect.compute(&input);
-            assert!((f - 0.75).abs() < 1e-6, "constant force independent of input state");
+            assert!(
+                (f - 0.75).abs() < 1e-6,
+                "constant force independent of input state"
+            );
         }
     }
 
     // ── 1.5 Periodic effects (sine/square/triangle/sawtooth) ─────────────
     #[test]
     fn periodic_effects_all_waveforms_bounded() {
-        let waveforms = [Waveform::Sine, Waveform::Square, Waveform::Triangle, Waveform::Sawtooth];
+        let waveforms = [
+            Waveform::Sine,
+            Waveform::Square,
+            Waveform::Triangle,
+            Waveform::Sawtooth,
+        ];
 
         for wf in waveforms {
             let effect = FfbEffect::Periodic(PeriodicParams {
@@ -115,12 +154,17 @@ mod force_calculation {
             // Sample at many phases
             for i in 0..100 {
                 let t = i as f32 * 0.001; // 0..0.1s
-                let input = EffectInput { elapsed_s: t, ..rest_input() };
+                let input = EffectInput {
+                    elapsed_s: t,
+                    ..rest_input()
+                };
                 let f = effect.compute(&input);
                 assert!(
                     f >= -1.0 && f <= 1.0,
                     "{:?} waveform out of bounds at t={}: {}",
-                    wf, t, f
+                    wf,
+                    t,
+                    f
                 );
             }
         }
@@ -135,15 +179,30 @@ mod force_calculation {
             duration_ticks: 100,
         });
 
-        let at_start = EffectInput { tick: 0, ..rest_input() };
-        let at_mid = EffectInput { tick: 50, ..rest_input() };
-        let at_end = EffectInput { tick: 100, ..rest_input() };
-        let past_end = EffectInput { tick: 150, ..rest_input() };
+        let at_start = EffectInput {
+            tick: 0,
+            ..rest_input()
+        };
+        let at_mid = EffectInput {
+            tick: 50,
+            ..rest_input()
+        };
+        let at_end = EffectInput {
+            tick: 100,
+            ..rest_input()
+        };
+        let past_end = EffectInput {
+            tick: 150,
+            ..rest_input()
+        };
 
         assert!((ramp.compute(&at_start) - -0.5).abs() < 1e-6);
         assert!((ramp.compute(&at_mid) - 0.0).abs() < 1e-6);
         assert!((ramp.compute(&at_end) - 0.5).abs() < 1e-6);
-        assert!((ramp.compute(&past_end) - 0.5).abs() < 1e-6, "ramp clamps at end");
+        assert!(
+            (ramp.compute(&past_end) - 0.5).abs() < 1e-6,
+            "ramp clamps at end"
+        );
     }
 
     // ── 1.7 Combined effects ────────────────────────────────────────────
@@ -166,7 +225,10 @@ mod force_calculation {
             1.0,
         );
 
-        let input = EffectInput { position: 0.6, ..rest_input() };
+        let input = EffectInput {
+            position: 0.6,
+            ..rest_input()
+        };
         let combined = composite.compute(&input);
 
         // Spring: -1.0 * 0.6 = -0.6, at 50% gain → -0.3
@@ -217,8 +279,8 @@ mod force_calculation {
 // 2. SAFETY ENVELOPE (6 tests)
 // ═══════════════════════════════════════════════════════════════════════════════
 mod safety_envelope {
+    use crate::safety::{FaultReason, SafetyState, SafetyStateManager, TransitionReason};
     use crate::safety_envelope::{SafetyEnvelope, SafetyEnvelopeConfig};
-    use crate::safety::{SafetyState, SafetyStateManager, FaultReason, TransitionReason};
     use crate::safety_interlock::{SafetyConfig, SafetyInterlock, SafetyInterlockResult};
     use std::time::Duration;
 
@@ -251,7 +313,7 @@ mod safety_envelope {
     fn safety_rate_of_change_limiting() {
         let config = SafetyEnvelopeConfig {
             max_torque_nm: 20.0,
-            max_slew_rate_nm_per_s: 10.0,   // 10 Nm/s
+            max_slew_rate_nm_per_s: 10.0, // 10 Nm/s
             max_jerk_nm_per_s2: 100_000.0,
             fault_ramp_time: Duration::from_millis(50),
             timestep_s: 0.004,
@@ -350,8 +412,11 @@ mod safety_envelope {
         assert_eq!(mgr.current_state(), SafetyState::SafeTorque);
 
         // SafeTorque → HighTorque
-        mgr.transition_to(SafetyState::HighTorque, TransitionReason::UserEnableHighTorque)
-            .unwrap();
+        mgr.transition_to(
+            SafetyState::HighTorque,
+            TransitionReason::UserEnableHighTorque,
+        )
+        .unwrap();
         assert!(mgr.current_state().allows_high_torque());
 
         // HighTorque → Faulted
@@ -361,8 +426,11 @@ mod safety_envelope {
 
         // Faulted → HighTorque MUST fail
         assert!(
-            mgr.transition_to(SafetyState::HighTorque, TransitionReason::UserEnableHighTorque)
-                .is_err()
+            mgr.transition_to(
+                SafetyState::HighTorque,
+                TransitionReason::UserEnableHighTorque
+            )
+            .is_err()
         );
 
         // Hardware-critical fault cannot be cleared without power cycle
@@ -435,7 +503,10 @@ mod effect_lifecycle {
         // Re-start
         mgr.set_active(handle, true);
         let f = sched.compute(&mgr, &rest_input());
-        assert!((f - 0.8).abs() < 1e-6, "restarted effect should produce force");
+        assert!(
+            (f - 0.8).abs() < 1e-6,
+            "restarted effect should produce force"
+        );
     }
 
     // ── 3.3 Update parameters ───────────────────────────────────────────
@@ -609,7 +680,10 @@ mod telemetry_input {
     #[test]
     fn telemetry_stall_buffet_config_threshold() {
         let config = TelemetrySynthConfig::default();
-        assert!(config.stall_buffet.aoa_threshold_deg > 0.0, "AoA threshold must be positive");
+        assert!(
+            config.stall_buffet.aoa_threshold_deg > 0.0,
+            "AoA threshold must be positive"
+        );
         assert!(
             config.stall_buffet.max_intensity <= 1.0,
             "intensity must be normalized"
@@ -736,7 +810,10 @@ mod rt_safety {
             EffectPriority::Ambient,
             1.0,
         );
-        assert!(overflow.is_none(), "pool must reject when full, not allocate");
+        assert!(
+            overflow.is_none(),
+            "pool must reject when full, not allocate"
+        );
     }
 
     // ── 6.3 Atomic state (effect watchdog) ──────────────────────────────
@@ -824,10 +901,13 @@ mod rt_safety {
                 i
             );
         }
-        assert!(!comp.add(
-            FfbEffect::ConstantForce(ConstantForceParams { magnitude: 0.1 }),
-            1.0,
-        ), "should reject 9th effect gracefully");
+        assert!(
+            !comp.add(
+                FfbEffect::ConstantForce(ConstantForceParams { magnitude: 0.1 }),
+                1.0,
+            ),
+            "should reject 9th effect gracefully"
+        );
         assert_eq!(comp.len(), 8);
 
         // Compute still works and is clamped

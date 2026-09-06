@@ -17,24 +17,21 @@ use flight_axis::{AxisEngine, AxisFrame};
 pub fn register(registry: &mut StepRegistry) {
     // -- Given ----------------------------------------------------------
 
-    registry.given(
-        r"^an axis with deadzone (-?\d+\.?\d*)$",
-        |ctx, caps| {
-            let dz: f32 = match caps[1].parse() {
-                Ok(v) => v,
-                Err(e) => return StepOutcome::Failed(format!("bad float: {e}")),
-            };
-            match DeadzoneConfig::center_only(dz) {
-                Ok(cfg) => {
-                    let proc = DeadzoneProcessor::new(cfg);
-                    ctx.set("deadzone_proc", proc);
-                    ctx.set("deadzone_value", dz);
-                    StepOutcome::Passed
-                }
-                Err(e) => StepOutcome::Failed(format!("invalid deadzone: {e}")),
+    registry.given(r"^an axis with deadzone (-?\d+\.?\d*)$", |ctx, caps| {
+        let dz: f32 = match caps[1].parse() {
+            Ok(v) => v,
+            Err(e) => return StepOutcome::Failed(format!("bad float: {e}")),
+        };
+        match DeadzoneConfig::center_only(dz) {
+            Ok(cfg) => {
+                let proc = DeadzoneProcessor::new(cfg);
+                ctx.set("deadzone_proc", proc);
+                ctx.set("deadzone_value", dz);
+                StepOutcome::Passed
             }
-        },
-    );
+            Err(e) => StepOutcome::Failed(format!("invalid deadzone: {e}")),
+        }
+    });
 
     registry.given(
         r"^an axis with S-curve exponent (-?\d+\.?\d*)$",
@@ -56,38 +53,35 @@ pub fn register(registry: &mut StepRegistry) {
 
     // -- When -----------------------------------------------------------
 
-    registry.when(
-        r"^input (-?\d+\.?\d*) is processed$",
-        |ctx, caps| {
-            let input: f32 = match caps[1].parse() {
-                Ok(v) => v,
-                Err(e) => return StepOutcome::Failed(format!("bad float: {e}")),
-            };
+    registry.when(r"^input (-?\d+\.?\d*) is processed$", |ctx, caps| {
+        let input: f32 = match caps[1].parse() {
+            Ok(v) => v,
+            Err(e) => return StepOutcome::Failed(format!("bad float: {e}")),
+        };
 
-            // If a deadzone processor exists, use it
-            if let Some(proc) = ctx.get::<DeadzoneProcessor>("deadzone_proc") {
-                let output = proc.apply(input);
-                ctx.set("axis_output", output);
-                return StepOutcome::Passed;
-            }
+        // If a deadzone processor exists, use it
+        if let Some(proc) = ctx.get::<DeadzoneProcessor>("deadzone_proc") {
+            let output = proc.apply(input);
+            ctx.set("axis_output", output);
+            return StepOutcome::Passed;
+        }
 
-            // Otherwise use the axis engine
-            if let Some(engine) = ctx.get::<AxisEngine>("axis_engine") {
-                let mut frame = AxisFrame::new(input, 1000);
-                match engine.process(&mut frame) {
-                    Ok(()) => {
-                        ctx.set("axis_output", frame.out);
-                        StepOutcome::Passed
-                    }
-                    Err(e) => StepOutcome::Failed(format!("engine error: {e}")),
+        // Otherwise use the axis engine
+        if let Some(engine) = ctx.get::<AxisEngine>("axis_engine") {
+            let mut frame = AxisFrame::new(input, 1000);
+            match engine.process(&mut frame) {
+                Ok(()) => {
+                    ctx.set("axis_output", frame.out);
+                    StepOutcome::Passed
                 }
-            } else {
-                // Bare input – just store the raw value
-                ctx.set("axis_output", input);
-                StepOutcome::Passed
+                Err(e) => StepOutcome::Failed(format!("engine error: {e}")),
             }
-        },
-    );
+        } else {
+            // Bare input – just store the raw value
+            ctx.set("axis_output", input);
+            StepOutcome::Passed
+        }
+    });
 
     // -- Then -----------------------------------------------------------
 
@@ -150,7 +144,11 @@ mod tests {
             "Given an axis with deadzone 0.05\nWhen input 0.02 is processed\nThen output should be zero",
         ).unwrap();
         let result = run_scenario(&s, &reg);
-        assert!(result.is_passed(), "step results: {:?}", result.step_results);
+        assert!(
+            result.is_passed(),
+            "step results: {:?}",
+            result.step_results
+        );
     }
 
     #[test]
@@ -161,7 +159,11 @@ mod tests {
             "Given an axis with deadzone 0.05\nWhen input 1.0 is processed\nThen output should be 1.0 ±0.001",
         ).unwrap();
         let result = run_scenario(&s, &reg);
-        assert!(result.is_passed(), "step results: {:?}", result.step_results);
+        assert!(
+            result.is_passed(),
+            "step results: {:?}",
+            result.step_results
+        );
     }
 
     #[test]
@@ -172,7 +174,11 @@ mod tests {
             "Given an axis with deadzone 0.1\nWhen input -0.05 is processed\nThen output should be zero",
         ).unwrap();
         let result = run_scenario(&s, &reg);
-        assert!(result.is_passed(), "step results: {:?}", result.step_results);
+        assert!(
+            result.is_passed(),
+            "step results: {:?}",
+            result.step_results
+        );
     }
 
     #[test]
@@ -183,6 +189,10 @@ mod tests {
             "Given the axis engine is ready\nWhen input 0.75 is processed\nThen output should be 0.75 ±0.01",
         ).unwrap();
         let result = run_scenario(&s, &reg);
-        assert!(result.is_passed(), "step results: {:?}", result.step_results);
+        assert!(
+            result.is_passed(),
+            "step results: {:?}",
+            result.step_results
+        );
     }
 }

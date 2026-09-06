@@ -13,14 +13,13 @@ use flight_core::circuit_breaker::{
 use flight_core::error::FlightError;
 use flight_core::error_catalog::{ErrorCatalog, ErrorCategory};
 use flight_core::profile::{
-    AircraftId, AxisConfig, CapabilityContext, CapabilityMode, CurvePoint,
-    DetentZone, FilterConfig, PofOverrides, Profile, PROFILE_SCHEMA_VERSION,
+    AircraftId, AxisConfig, CapabilityContext, CapabilityMode, CurvePoint, DetentZone,
+    FilterConfig, PROFILE_SCHEMA_VERSION, PofOverrides, Profile,
 };
 use flight_core::profile_watcher::ReloadNotifier;
 use flight_core::{
-    AutoSwitchConfig, DetectionMetrics, PhaseOfFlight, PofHysteresisConfig,
-    ProcessDetectionConfig, ProcessDetectionError, SessionError, SimId, SwitchMetrics,
-    WatchdogConfig,
+    AutoSwitchConfig, DetectionMetrics, PhaseOfFlight, PofHysteresisConfig, ProcessDetectionConfig,
+    ProcessDetectionError, SessionError, SimId, SwitchMetrics, WatchdogConfig,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -35,16 +34,32 @@ mod error_catalog {
         let all = ErrorCatalog::all();
         let mut seen = HashSet::new();
         for info in all {
-            assert!(seen.insert(info.code), "Duplicate error code: {}", info.code);
+            assert!(
+                seen.insert(info.code),
+                "Duplicate error code: {}",
+                info.code
+            );
         }
     }
 
     #[test]
     fn every_error_code_has_non_empty_description() {
         for info in ErrorCatalog::all() {
-            assert!(!info.description.is_empty(), "code {} has empty description", info.code);
-            assert!(!info.message.is_empty(), "code {} has empty message", info.code);
-            assert!(!info.resolution.is_empty(), "code {} has empty resolution", info.code);
+            assert!(
+                !info.description.is_empty(),
+                "code {} has empty description",
+                info.code
+            );
+            assert!(
+                !info.message.is_empty(),
+                "code {} has empty message",
+                info.code
+            );
+            assert!(
+                !info.resolution.is_empty(),
+                "code {} has empty resolution",
+                info.code
+            );
         }
     }
 
@@ -54,7 +69,12 @@ mod error_catalog {
             let parts: Vec<&str> = info.code.split('-').collect();
             assert_eq!(parts.len(), 2, "code '{}' should be XXX-NNN", info.code);
             assert_eq!(parts[0].len(), 3, "prefix '{}' should be 3 chars", parts[0]);
-            assert_eq!(parts[1].len(), 3, "number '{}' should be 3 digits", parts[1]);
+            assert_eq!(
+                parts[1].len(),
+                3,
+                "number '{}' should be 3 digits",
+                parts[1]
+            );
             assert!(
                 parts[0].chars().all(|c| c.is_ascii_uppercase()),
                 "prefix should be uppercase: {}",
@@ -82,11 +102,7 @@ mod error_catalog {
         ];
         for cat in categories {
             let entries = ErrorCatalog::by_category(cat);
-            assert!(
-                entries.len() >= 1,
-                "Category {:?} has no entries",
-                cat,
-            );
+            assert!(entries.len() >= 1, "Category {:?} has no entries", cat,);
         }
     }
 
@@ -276,9 +292,9 @@ mod aircraft_types {
         ];
         for phase in phases {
             let display = phase.to_string();
-            let parsed: PhaseOfFlight = display.parse().unwrap_or_else(|_| {
-                panic!("Failed to parse '{}' back to PhaseOfFlight", display)
-            });
+            let parsed: PhaseOfFlight = display
+                .parse()
+                .unwrap_or_else(|_| panic!("Failed to parse '{}' back to PhaseOfFlight", display));
             assert_eq!(phase, parsed);
         }
     }
@@ -294,9 +310,9 @@ mod aircraft_types {
             ("GOAROUND", PhaseOfFlight::GoAround),
         ];
         for (input, expected) in cases {
-            let parsed: PhaseOfFlight = input.parse().unwrap_or_else(|_| {
-                panic!("Failed to parse '{}'", input)
-            });
+            let parsed: PhaseOfFlight = input
+                .parse()
+                .unwrap_or_else(|_| panic!("Failed to parse '{}'", input));
             assert_eq!(parsed, expected, "input '{}' mismatch", input);
         }
     }
@@ -505,7 +521,11 @@ mod profile_management {
         let global = global_profile();
         let sim = sim_profile();
         let aircraft = aircraft_profile();
-        let merged = global.merge_with(&sim).unwrap().merge_with(&aircraft).unwrap();
+        let merged = global
+            .merge_with(&sim)
+            .unwrap()
+            .merge_with(&aircraft)
+            .unwrap();
 
         let pitch = merged.axes.get("pitch").unwrap();
         // Aircraft's expo (0.5) wins over sim's (0.4) and global's (0.3)
@@ -544,29 +564,37 @@ mod profile_management {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: Some("msfs".to_string()),
             aircraft: None,
-            axes: [("pitch".to_string(), AxisConfig {
-                deadzone: Some(0.05),
-                expo: Some(0.3),
-                slew_rate: Some(2.0),
-                detents: vec![],
-                curve: None,
-                filter: None,
-            })]
+            axes: [(
+                "pitch".to_string(),
+                AxisConfig {
+                    deadzone: Some(0.05),
+                    expo: Some(0.3),
+                    slew_rate: Some(2.0),
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
         let specific = Profile {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: Some("msfs".to_string()),
-            aircraft: Some(AircraftId { icao: "B738".to_string() }),
-            axes: [("pitch".to_string(), AxisConfig {
-                deadzone: Some(0.02),
-                expo: None,
-                slew_rate: Some(3.0),
-                detents: vec![],
-                curve: None,
-                filter: None,
-            })]
+            aircraft: Some(AircraftId {
+                icao: "B738".to_string(),
+            }),
+            axes: [(
+                "pitch".to_string(),
+                AxisConfig {
+                    deadzone: Some(0.02),
+                    expo: None,
+                    slew_rate: Some(3.0),
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
@@ -666,14 +694,17 @@ mod profile_management {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: None,
             aircraft: None,
-            axes: [("any".to_string(), AxisConfig {
-                deadzone: None,
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: None,
-            })]
+            axes: [(
+                "any".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: None,
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
@@ -756,7 +787,9 @@ mod event_types {
     #[test]
     fn session_error_variants() {
         let err = SessionError::Configuration("bad config".into());
-        assert!(err.to_string().contains("bad config") || err.to_string().contains("Configuration"));
+        assert!(
+            err.to_string().contains("bad config") || err.to_string().contains("Configuration")
+        );
 
         let err = SessionError::AutoSwitch("failed".into());
         assert!(!err.to_string().is_empty());
@@ -776,8 +809,7 @@ mod event_types {
         let ok: flight_core::Result<u32> = Ok(42);
         assert_eq!(ok.unwrap(), 42);
 
-        let err: flight_core::Result<u32> =
-            Err(FlightError::Configuration("fail".into()));
+        let err: flight_core::Result<u32> = Err(FlightError::Configuration("fail".into()));
         assert!(err.is_err());
     }
 }
@@ -804,8 +836,14 @@ mod config_types {
                 role: "center".to_string(),
             }],
             curve: Some(vec![
-                CurvePoint { input: 0.0, output: 0.0 },
-                CurvePoint { input: 1.0, output: 1.0 },
+                CurvePoint {
+                    input: 0.0,
+                    output: 0.0,
+                },
+                CurvePoint {
+                    input: 1.0,
+                    output: 1.0,
+                },
             ]),
             filter: Some(FilterConfig {
                 alpha: 0.9,
@@ -824,25 +862,35 @@ mod config_types {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: None,
             aircraft: None,
-            axes: [("x".to_string(), AxisConfig {
-                deadzone: None,
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: None,
-                filter: Some(FilterConfig {
-                    alpha: 0.5,
-                    spike_threshold: None,
-                    max_spike_count: None,
-                }),
-            })]
+            axes: [(
+                "x".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: None,
+                    filter: Some(FilterConfig {
+                        alpha: 0.5,
+                        spike_threshold: None,
+                        max_spike_count: None,
+                    }),
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
         assert!(profile.validate().is_ok());
 
         // Invalid alpha > 1.0
-        profile.axes.get_mut("x").unwrap().filter.as_mut().unwrap().alpha = 1.5;
+        profile
+            .axes
+            .get_mut("x")
+            .unwrap()
+            .filter
+            .as_mut()
+            .unwrap()
+            .alpha = 1.5;
         assert!(profile.validate().is_err());
     }
 
@@ -852,18 +900,21 @@ mod config_types {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: None,
             aircraft: None,
-            axes: [("throttle".to_string(), AxisConfig {
-                deadzone: None,
-                expo: None,
-                slew_rate: None,
-                detents: vec![DetentZone {
-                    position: 0.5,
-                    width: 0.05,
-                    role: "idle".to_string(),
-                }],
-                curve: None,
-                filter: None,
-            })]
+            axes: [(
+                "throttle".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![DetentZone {
+                        position: 0.5,
+                        width: 0.05,
+                        role: "idle".to_string(),
+                    }],
+                    curve: None,
+                    filter: None,
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
@@ -880,19 +931,34 @@ mod config_types {
             schema: PROFILE_SCHEMA_VERSION.to_string(),
             sim: None,
             aircraft: None,
-            axes: [("x".to_string(), AxisConfig {
-                deadzone: None,
-                expo: None,
-                slew_rate: None,
-                detents: vec![],
-                curve: Some(vec![
-                    CurvePoint { input: 0.0, output: 0.0 },
-                    CurvePoint { input: 0.5, output: 0.5 },
-                    CurvePoint { input: 0.5, output: 0.9 }, // duplicate input
-                    CurvePoint { input: 1.0, output: 1.0 },
-                ]),
-                filter: None,
-            })]
+            axes: [(
+                "x".to_string(),
+                AxisConfig {
+                    deadzone: None,
+                    expo: None,
+                    slew_rate: None,
+                    detents: vec![],
+                    curve: Some(vec![
+                        CurvePoint {
+                            input: 0.0,
+                            output: 0.0,
+                        },
+                        CurvePoint {
+                            input: 0.5,
+                            output: 0.5,
+                        },
+                        CurvePoint {
+                            input: 0.5,
+                            output: 0.9,
+                        }, // duplicate input
+                        CurvePoint {
+                            input: 1.0,
+                            output: 1.0,
+                        },
+                    ]),
+                    filter: None,
+                },
+            )]
             .into(),
             pof_overrides: None,
         };
@@ -1029,7 +1095,11 @@ mod config_types {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("cal.toml");
         let mut store = CalibrationStore::new();
-        store.set(0x044F, 0xB10A, vec![AxisCalibration::new(0, 0, 65535, 32767)]);
+        store.set(
+            0x044F,
+            0xB10A,
+            vec![AxisCalibration::new(0, 0, 65535, 32767)],
+        );
         store.save_to_file(&path).unwrap();
         let loaded = CalibrationStore::load_from_file(&path).unwrap();
         assert_eq!(loaded.device_count(), 1);

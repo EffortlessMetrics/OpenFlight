@@ -7,7 +7,7 @@
 //! slew-rate limiters.  The goal is a profile that *always* compiles and
 //! gives the pilot predictable, monotonic control authority.
 
-use crate::{AircraftId, AxisConfig, Profile, PROFILE_SCHEMA_VERSION};
+use crate::{AircraftId, AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use std::collections::HashMap;
 
 // ── Axis-level constants ────────────────────────────────────────────────────

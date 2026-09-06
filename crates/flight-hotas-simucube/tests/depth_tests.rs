@@ -5,9 +5,9 @@
 //! model detection, encoder normalization, torque commands, and error handling.
 
 use flight_hotas_simucube::{
-    ENCODER_CENTER, ENCODER_MAX, SC2_PRO_PID, SC2_REPORT_MIN_LEN, SC2_SPORT_PID,
-    SC2_ULTIMATE_PID, SIMUCUBE_VENDOR_ID, SimucubeError, SimucubeModel, SimucubeReport,
-    TorqueCommand, normalize_angle, parse_report,
+    ENCODER_CENTER, ENCODER_MAX, SC2_PRO_PID, SC2_REPORT_MIN_LEN, SC2_SPORT_PID, SC2_ULTIMATE_PID,
+    SIMUCUBE_VENDOR_ID, SimucubeError, SimucubeModel, SimucubeReport, TorqueCommand,
+    normalize_angle, parse_report,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -16,7 +16,9 @@ fn build_report(encoder: u32, velocity: i16, torque: i16) -> Vec<u8> {
     let enc = encoder.to_le_bytes();
     let vel = velocity.to_le_bytes();
     let tq = torque.to_le_bytes();
-    vec![0x01, enc[0], enc[1], enc[2], enc[3], vel[0], vel[1], tq[0], tq[1]]
+    vec![
+        0x01, enc[0], enc[1], enc[2], enc[3], vel[0], vel[1], tq[0], tq[1],
+    ]
 }
 
 fn build_report_no_torque(encoder: u32, velocity: i16) -> Vec<u8> {
@@ -47,9 +49,18 @@ fn report_min_len_is_seven() {
 
 #[test]
 fn model_from_pid_all_variants() {
-    assert_eq!(SimucubeModel::from_pid(SC2_SPORT_PID), Some(SimucubeModel::Sport));
-    assert_eq!(SimucubeModel::from_pid(SC2_PRO_PID), Some(SimucubeModel::Pro));
-    assert_eq!(SimucubeModel::from_pid(SC2_ULTIMATE_PID), Some(SimucubeModel::Ultimate));
+    assert_eq!(
+        SimucubeModel::from_pid(SC2_SPORT_PID),
+        Some(SimucubeModel::Sport)
+    );
+    assert_eq!(
+        SimucubeModel::from_pid(SC2_PRO_PID),
+        Some(SimucubeModel::Pro)
+    );
+    assert_eq!(
+        SimucubeModel::from_pid(SC2_ULTIMATE_PID),
+        Some(SimucubeModel::Ultimate)
+    );
 }
 
 #[test]
@@ -61,7 +72,11 @@ fn model_from_pid_unknown_returns_none() {
 
 #[test]
 fn model_pid_round_trip_all() {
-    for model in [SimucubeModel::Sport, SimucubeModel::Pro, SimucubeModel::Ultimate] {
+    for model in [
+        SimucubeModel::Sport,
+        SimucubeModel::Pro,
+        SimucubeModel::Ultimate,
+    ] {
         assert_eq!(SimucubeModel::from_pid(model.pid()), Some(model));
     }
 }
@@ -92,7 +107,10 @@ fn parse_encoder_boundaries() {
     let min_data = build_report(0, 0, 0);
     let max_data = build_report(ENCODER_MAX, 0, 0);
     assert_eq!(parse_report(&min_data).unwrap().encoder_position, 0);
-    assert_eq!(parse_report(&max_data).unwrap().encoder_position, ENCODER_MAX);
+    assert_eq!(
+        parse_report(&max_data).unwrap().encoder_position,
+        ENCODER_MAX
+    );
 }
 
 #[test]
@@ -185,7 +203,10 @@ fn parse_empty_too_short() {
 
 #[test]
 fn parse_one_byte_too_short() {
-    assert_eq!(parse_report(&[0x01]), Err(SimucubeError::TooShort { got: 1 }));
+    assert_eq!(
+        parse_report(&[0x01]),
+        Err(SimucubeError::TooShort { got: 1 })
+    );
 }
 
 #[test]
@@ -200,14 +221,20 @@ fn parse_six_bytes_too_short() {
 fn parse_unknown_report_id_zero() {
     let mut data = build_report(0, 0, 0);
     data[0] = 0x00;
-    assert_eq!(parse_report(&data), Err(SimucubeError::UnknownReportId { id: 0x00 }));
+    assert_eq!(
+        parse_report(&data),
+        Err(SimucubeError::UnknownReportId { id: 0x00 })
+    );
 }
 
 #[test]
 fn parse_unknown_report_id_ff() {
     let mut data = build_report(0, 0, 0);
     data[0] = 0xFF;
-    assert_eq!(parse_report(&data), Err(SimucubeError::UnknownReportId { id: 0xFF }));
+    assert_eq!(
+        parse_report(&data),
+        Err(SimucubeError::UnknownReportId { id: 0xFF })
+    );
 }
 
 #[test]
@@ -215,14 +242,20 @@ fn error_display_too_short() {
     let e = SimucubeError::TooShort { got: 3 };
     let msg = format!("{e}");
     assert!(msg.contains("too short"), "error message: {msg}");
-    assert!(msg.contains("3"), "error message should contain actual length: {msg}");
+    assert!(
+        msg.contains("3"),
+        "error message should contain actual length: {msg}"
+    );
 }
 
 #[test]
 fn error_display_unknown_id() {
     let e = SimucubeError::UnknownReportId { id: 0xAB };
     let msg = format!("{e}");
-    assert!(msg.contains("AB") || msg.contains("ab"), "should show hex id: {msg}");
+    assert!(
+        msg.contains("AB") || msg.contains("ab"),
+        "should show hex id: {msg}"
+    );
 }
 
 // ── normalize_angle ──────────────────────────────────────────────────────────

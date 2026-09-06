@@ -4,7 +4,7 @@
 //! Depth tests for Moza AB9 safety envelope — verifies torque clamping,
 //! boundary behaviour, and ensures hardware over-drive cannot occur.
 
-use flight_ffb_moza::effects::{TorqueCommand, TORQUE_REPORT_LEN};
+use flight_ffb_moza::effects::{TORQUE_REPORT_LEN, TorqueCommand};
 
 fn decode_x(r: &[u8; TORQUE_REPORT_LEN]) -> i16 {
     i16::from_le_bytes([r[1], r[2]])
@@ -34,19 +34,49 @@ fn exactly_minus_one_is_safe() {
 fn just_outside_range_is_unsafe() {
     assert!(!TorqueCommand { x: 1.001, y: 0.0 }.is_safe());
     assert!(!TorqueCommand { x: 0.0, y: -1.001 }.is_safe());
-    assert!(!TorqueCommand { x: -1.001, y: 1.001 }.is_safe());
+    assert!(
+        !TorqueCommand {
+            x: -1.001,
+            y: 1.001
+        }
+        .is_safe()
+    );
 }
 
 #[test]
 fn infinity_is_unsafe() {
-    assert!(!TorqueCommand { x: f32::INFINITY, y: 0.0 }.is_safe());
-    assert!(!TorqueCommand { x: 0.0, y: f32::NEG_INFINITY }.is_safe());
+    assert!(
+        !TorqueCommand {
+            x: f32::INFINITY,
+            y: 0.0
+        }
+        .is_safe()
+    );
+    assert!(
+        !TorqueCommand {
+            x: 0.0,
+            y: f32::NEG_INFINITY
+        }
+        .is_safe()
+    );
 }
 
 #[test]
 fn nan_is_unsafe() {
-    assert!(!TorqueCommand { x: f32::NAN, y: 0.0 }.is_safe());
-    assert!(!TorqueCommand { x: 0.0, y: f32::NAN }.is_safe());
+    assert!(
+        !TorqueCommand {
+            x: f32::NAN,
+            y: 0.0
+        }
+        .is_safe()
+    );
+    assert!(
+        !TorqueCommand {
+            x: 0.0,
+            y: f32::NAN
+        }
+        .is_safe()
+    );
 }
 
 // ── Clamping prevents hardware over-drive ───────────────────────────────
@@ -73,7 +103,10 @@ fn clamping_limits_negative_overflow() {
 
 #[test]
 fn infinity_clamped_in_report() {
-    let cmd = TorqueCommand { x: f32::INFINITY, y: f32::NEG_INFINITY };
+    let cmd = TorqueCommand {
+        x: f32::INFINITY,
+        y: f32::NEG_INFINITY,
+    };
     let r = cmd.to_report();
     let x = decode_x(&r);
     let y = decode_y(&r);
@@ -85,7 +118,10 @@ fn infinity_clamped_in_report() {
 fn nan_clamped_in_report() {
     // In Rust, f32::clamp propagates NaN and float→int casts saturate,
     // so (f32::NAN * 32767.0) as i16 is defined to be 0.
-    let cmd = TorqueCommand { x: f32::NAN, y: f32::NAN };
+    let cmd = TorqueCommand {
+        x: f32::NAN,
+        y: f32::NAN,
+    };
     let r = cmd.to_report();
     let x = decode_x(&r) as i32;
     let y = decode_y(&r) as i32;
@@ -99,8 +135,19 @@ fn nan_clamped_in_report() {
 #[test]
 fn extreme_torque_values_always_produce_valid_i16() {
     let test_values = [
-        0.0, 0.5, -0.5, 1.0, -1.0, 0.999, -0.999,
-        2.0, -2.0, 100.0, -100.0, f32::INFINITY, f32::NEG_INFINITY,
+        0.0,
+        0.5,
+        -0.5,
+        1.0,
+        -1.0,
+        0.999,
+        -0.999,
+        2.0,
+        -2.0,
+        100.0,
+        -100.0,
+        f32::INFINITY,
+        f32::NEG_INFINITY,
     ];
     for &x in &test_values {
         for &y in &test_values {

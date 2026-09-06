@@ -596,11 +596,7 @@ mod tests {
         ];
         for msg in &messages {
             let encoded = codec.encode(msg);
-            assert!(
-                encoded.is_some(),
-                "encode should succeed for {:?}",
-                msg
-            );
+            assert!(encoded.is_some(), "encode should succeed for {:?}", msg);
             assert!(!encoded.unwrap().is_empty());
         }
     }
@@ -740,13 +736,7 @@ mod tests {
 
         // Phase 3: Update loop — send display + LED updates
         for i in 0..10 {
-            let text = [
-                0x3F,
-                0x06,
-                0x5B,
-                0x4F,
-                (0x60 + i as u8) & 0x7F,
-            ];
+            let text = [0x3F, 0x06, 0x5B, 0x4F, (0x60 + i as u8) & 0x7F];
             conn.send(&PanelMessage::WriteDisplay { row: 0, text })
                 .unwrap();
             let resp = conn.receive(Duration::from_millis(100)).unwrap();
@@ -784,7 +774,10 @@ mod tests {
     fn test_panel_protocol_parse_all_zeros() {
         let panel = MockPanel;
         let events = panel.parse_input(&[0x00, 0x00]).unwrap();
-        assert!(events.is_empty(), "all-zeros report should produce no events");
+        assert!(
+            events.is_empty(),
+            "all-zeros report should produce no events"
+        );
     }
 
     #[test]

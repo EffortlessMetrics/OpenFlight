@@ -8,7 +8,7 @@
 //! Run `cargo insta review` to accept new or changed snapshots.
 
 use flight_writers::{
-    CcWriterConfig, CcConfigDiff, CcDiffOperation, CcVerificationTest, VerificationTestType,
+    CcConfigDiff, CcDiffOperation, CcVerificationTest, CcWriterConfig, VerificationTestType,
     WritersConfig,
 };
 use flight_writers::{
@@ -179,7 +179,11 @@ fn snapshot_cc_writer_config_json() {
 
 #[test]
 fn snapshot_simulator_type_display() {
-    let types = [SimulatorType::MSFS, SimulatorType::XPlane, SimulatorType::DCS];
+    let types = [
+        SimulatorType::MSFS,
+        SimulatorType::XPlane,
+        SimulatorType::DCS,
+    ];
     let output: Vec<String> = types.iter().map(|t| format!("{t}")).collect();
     insta::assert_debug_snapshot!("simulator_type_display", output);
 }

@@ -213,10 +213,7 @@ fn all_shipped_modules_have_positive_stick_throw() {
     let loader = loader_with_shipped_modules();
     for name in loader.aircraft_names() {
         let m = loader.get(name).unwrap();
-        assert!(
-            m.stick_throw > 0.0,
-            "{name}: stick throw must be positive"
-        );
+        assert!(m.stick_throw > 0.0, "{name}: stick throw must be positive");
     }
 }
 
@@ -380,10 +377,7 @@ fn wrong_type_for_axis_count_is_parse_error() {
 
 #[test]
 fn module_error_io_display() {
-    let err = ModuleError::Io(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        "test",
-    ));
+    let err = ModuleError::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "test"));
     let msg = format!("{err}");
     assert!(msg.contains("I/O error"));
 }
@@ -540,16 +534,8 @@ fn dcs_module_debug_contains_aircraft() {
 #[test]
 fn duplicate_aircraft_in_same_dir_last_wins() {
     let dir = TempDir::new().unwrap();
-    write_module(
-        dir.path(),
-        "v1.toml",
-        &toml_for("Dup", 3, 20.0, &["old"]),
-    );
-    write_module(
-        dir.path(),
-        "v2.toml",
-        &toml_for("Dup", 5, 40.0, &["new"]),
-    );
+    write_module(dir.path(), "v1.toml", &toml_for("Dup", 3, 20.0, &["old"]));
+    write_module(dir.path(), "v2.toml", &toml_for("Dup", 5, 40.0, &["new"]));
     let mut loader = ModuleLoader::new();
     loader.load_from_dir(dir.path()).unwrap();
     // Only one entry for "Dup"

@@ -53,7 +53,10 @@ impl StepContext {
 
     /// Check whether `key` exists in the context.
     pub fn contains(&self, key: &str) -> bool {
-        self.data.lock().unwrap_or_else(|e| e.into_inner()).contains_key(key)
+        self.data
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .contains_key(key)
     }
 
     /// Remove all stored data (called between scenarios).

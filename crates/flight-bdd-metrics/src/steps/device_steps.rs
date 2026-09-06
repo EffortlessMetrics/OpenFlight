@@ -81,18 +81,15 @@ fn parse_hid_report(hex: &str) -> Result<ParsedReport, String> {
 pub fn register(registry: &mut StepRegistry) {
     // -- Given ----------------------------------------------------------
 
-    registry.given(
-        r#"^a "([^"]+)" "([^"]+)" is connected$"#,
-        |ctx, caps| {
-            let vendor = &caps[1];
-            let model = &caps[2];
-            let device = mock_device(vendor, model);
-            ctx.set("device_vendor_id", device.vendor_id);
-            ctx.set("device_product_id", device.product_id);
-            ctx.set("device_info", device);
-            StepOutcome::Passed
-        },
-    );
+    registry.given(r#"^a "([^"]+)" "([^"]+)" is connected$"#, |ctx, caps| {
+        let vendor = &caps[1];
+        let model = &caps[2];
+        let device = mock_device(vendor, model);
+        ctx.set("device_vendor_id", device.vendor_id);
+        ctx.set("device_product_id", device.product_id);
+        ctx.set("device_info", device);
+        StepOutcome::Passed
+    });
 
     // -- When -----------------------------------------------------------
 
@@ -179,7 +176,8 @@ pub fn register(registry: &mut StepRegistry) {
             match ctx.get::<u16>("device_vendor_id") {
                 Some(vid) if *vid == expected => StepOutcome::Passed,
                 Some(vid) => StepOutcome::Failed(format!(
-                    "expected vendor 0x{expected:04X}, got 0x{:04X}", *vid
+                    "expected vendor 0x{expected:04X}, got 0x{:04X}",
+                    *vid
                 )),
                 None => StepOutcome::Failed("no device in context".to_string()),
             }
@@ -205,7 +203,8 @@ mod tests {
             "connect",
             r#"Given a "Thrustmaster" "T.Flight HOTAS 4" is connected
 Then the device vendor ID should be 0x044F"#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -219,7 +218,8 @@ Then the device vendor ID should be 0x044F"#,
             r#"Given a "VKB" "Gladiator NXT EVO" is connected
 When the device sends HID report FF 7F 00 00 FF FF
 Then axis "X" should read 0.0 ±0.01"#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }
@@ -234,7 +234,8 @@ Then axis "X" should read 0.0 ±0.01"#,
 When the device sends HID report 00 00 00 00 00 00 01
 Then button 1 should be pressed
 And button 2 should be released"#,
-        ).unwrap();
+        )
+        .unwrap();
         let result = run_scenario(&s, &reg);
         assert!(result.is_passed(), "{:?}", result.step_results);
     }

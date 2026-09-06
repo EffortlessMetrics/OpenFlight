@@ -186,28 +186,19 @@ fn sync_conflict_resolution_all_three_modes() {
     let engine = SyncEngine::with_strategy(MockCloudBackend::new(), ConflictStrategy::Manual);
 
     // UseLocal
-    let mut plan = engine.plan(
-        &[state("a", "la", 1)],
-        &[state("a", "ra", 2)],
-    );
+    let mut plan = engine.plan(&[state("a", "la", 1)], &[state("a", "ra", 2)]);
     plan.resolve_conflict("a", ConflictResolution::UseLocal);
     assert_eq!(plan.uploads.len(), 1);
     assert!(plan.conflicts.is_empty());
 
     // UseRemote
-    let mut plan = engine.plan(
-        &[state("b", "lb", 1)],
-        &[state("b", "rb", 2)],
-    );
+    let mut plan = engine.plan(&[state("b", "lb", 1)], &[state("b", "rb", 2)]);
     plan.resolve_conflict("b", ConflictResolution::UseRemote);
     assert_eq!(plan.downloads.len(), 1);
     assert!(plan.conflicts.is_empty());
 
     // Skip
-    let mut plan = engine.plan(
-        &[state("c", "lc", 1)],
-        &[state("c", "rc", 2)],
-    );
+    let mut plan = engine.plan(&[state("c", "lc", 1)], &[state("c", "rc", 2)]);
     plan.resolve_conflict("c", ConflictResolution::Skip);
     assert!(plan.is_empty());
 }
@@ -253,14 +244,8 @@ async fn sync_retry_upload_after_failure_is_idempotent() {
 #[test]
 fn sync_offline_queue_plan_is_pure() {
     let engine = SyncEngine::new(MockCloudBackend::new());
-    let local = vec![
-        state("a", "ha", 100),
-        state("b", "hb", 200),
-    ];
-    let remote = vec![
-        state("b", "hb-remote", 300),
-        state("c", "hc", 400),
-    ];
+    let local = vec![state("a", "ha", 100), state("b", "hb", 200)];
+    let remote = vec![state("b", "hb-remote", 300), state("c", "hc", 400)];
 
     let plan = engine.plan(&local, &remote);
 
@@ -292,7 +277,11 @@ fn sync_batch_mixed_scenario() {
     let plan = engine.plan(&local, &remote);
 
     let up_ids: Vec<&str> = plan.uploads.iter().map(|a| a.profile_id.as_str()).collect();
-    let dn_ids: Vec<&str> = plan.downloads.iter().map(|a| a.profile_id.as_str()).collect();
+    let dn_ids: Vec<&str> = plan
+        .downloads
+        .iter()
+        .map(|a| a.profile_id.as_str())
+        .collect();
 
     assert!(up_ids.contains(&"upload-me"));
     assert!(up_ids.contains(&"lww-local"));
@@ -373,7 +362,10 @@ async fn storage_filesystem_persistence() {
     let tmp = tempfile_dir();
     let backend = FileSystemBackend::new(&tmp);
 
-    backend.upload("persist-1", b"important data").await.unwrap();
+    backend
+        .upload("persist-1", b"important data")
+        .await
+        .unwrap();
 
     // Verify file actually exists on disk
     let data_path = tmp.join("persist-1.dat");
@@ -510,11 +502,8 @@ fn merge_conflict_to_upload() {
 /// Field-level merge: sanitize preserves axis-level config during merge.
 #[test]
 fn merge_field_level_preserves_axis_config() {
-    let profile = profile_with_axes(&[
-        ("pitch", 0.05, 0.3),
-        ("roll", 0.1, 0.5),
-        ("yaw", 0.02, 0.1),
-    ]);
+    let profile =
+        profile_with_axes(&[("pitch", 0.05, 0.3), ("roll", 0.1, 0.5), ("yaw", 0.02, 0.1)]);
     let sanitized = sanitize_for_upload(&profile);
 
     // All three axes with their exact values must survive

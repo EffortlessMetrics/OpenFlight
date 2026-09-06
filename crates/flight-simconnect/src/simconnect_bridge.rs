@@ -88,11 +88,7 @@ pub trait SimConnectBackend {
     /// Subscribe to a system event (e.g. AircraftLoaded).
     fn subscribe_system_event(&mut self, event_id: u32, event_name: &str) -> BackendResult<()>;
     /// Write SimVar values back to the sim object (SimConnect_SetDataOnSimObject).
-    fn set_data_on_sim_object(
-        &mut self,
-        define_id: u32,
-        values: &[f64],
-    ) -> BackendResult<()>;
+    fn set_data_on_sim_object(&mut self, define_id: u32, values: &[f64]) -> BackendResult<()>;
     /// Poll for the next dispatch message (non-blocking).
     fn get_next_dispatch(&mut self) -> BackendResult<Option<DispatchMessage>>;
 }
@@ -256,11 +252,7 @@ impl SimConnectBackend for MockSimConnectBackend {
         Ok(())
     }
 
-    fn set_data_on_sim_object(
-        &mut self,
-        define_id: u32,
-        values: &[f64],
-    ) -> BackendResult<()> {
+    fn set_data_on_sim_object(&mut self, define_id: u32, values: &[f64]) -> BackendResult<()> {
         if !self.opened {
             return Err(BackendError::ConnectionLost("not open".into()));
         }

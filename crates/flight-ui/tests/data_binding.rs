@@ -219,10 +219,7 @@ async fn health_change_broadcast_delivery() {
 
     let msg = rx.try_recv().unwrap();
     match msg {
-        WsMessage::AdapterEvent {
-            adapter,
-            connected,
-        } => {
+        WsMessage::AdapterEvent { adapter, connected } => {
             assert_eq!(adapter, "health");
             assert!(!connected);
         }

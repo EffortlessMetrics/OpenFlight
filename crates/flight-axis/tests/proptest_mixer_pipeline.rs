@@ -12,9 +12,9 @@
 
 use flight_axis::{
     AxisFrame, PipelineBuilder,
-    mixer::{AxisMixer, MixMode},
-    deadzone::{DeadzoneConfig, DeadzoneProcessor},
     curve::ExpoCurveConfig,
+    deadzone::{DeadzoneConfig, DeadzoneProcessor},
+    mixer::{AxisMixer, MixMode},
 };
 use proptest::prelude::*;
 

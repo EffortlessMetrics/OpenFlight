@@ -7,20 +7,19 @@
 //! panel identification, HID report framing, and integration scenarios.
 
 use flight_panels_saitek::multi_panel::{
-    self, LcdDisplay, ModeStateMachine, MultiPanelButtonState, MultiPanelLedMask,
-    MultiPanelProtocol, MultiPanelState, MULTI_PANEL_OUTPUT_BYTES, MULTI_PANEL_PID,
-    MULTI_PANEL_VID, encode_segment, led_bits, parse_multi_panel_input,
+    self, LcdDisplay, MULTI_PANEL_OUTPUT_BYTES, MULTI_PANEL_PID, MULTI_PANEL_VID, ModeStateMachine,
+    MultiPanelButtonState, MultiPanelLedMask, MultiPanelProtocol, MultiPanelState, encode_segment,
+    led_bits, parse_multi_panel_input,
 };
 use flight_panels_saitek::radio_panel::{
-    EncoderDelta, RadioDisplay, RadioMode, RadioPanelButtonState, RadioPanelProtocol,
-    RadioPanelState, RADIO_PANEL_OUTPUT_BYTES, RADIO_PANEL_PID, RADIO_PANEL_VID,
-    parse_radio_panel_input,
+    EncoderDelta, RADIO_PANEL_OUTPUT_BYTES, RADIO_PANEL_PID, RADIO_PANEL_VID, RadioDisplay,
+    RadioMode, RadioPanelButtonState, RadioPanelProtocol, RadioPanelState, parse_radio_panel_input,
 };
 use flight_panels_saitek::saitek::PanelType;
 use flight_panels_saitek::switch_panel::{
-    GearLedColor, MagnetoPosition, SwitchDebounce, SwitchPanelGearLeds, SwitchPanelProtocol,
-    SwitchPanelState, SwitchPanelSwitchState, SWITCH_PANEL_OUTPUT_BYTES, SWITCH_PANEL_PID,
-    SWITCH_PANEL_VID, gear_led_bits, parse_switch_panel_input,
+    GearLedColor, MagnetoPosition, SWITCH_PANEL_OUTPUT_BYTES, SWITCH_PANEL_PID, SWITCH_PANEL_VID,
+    SwitchDebounce, SwitchPanelGearLeds, SwitchPanelProtocol, SwitchPanelState,
+    SwitchPanelSwitchState, gear_led_bits, parse_switch_panel_input,
 };
 
 use flight_panels_core::protocol::{PanelEvent, PanelId, PanelProtocol};
@@ -282,7 +281,11 @@ mod led_control {
         let green = SwitchPanelGearLeds::ALL_GREEN;
         let red = SwitchPanelGearLeds::ALL_RED;
         // No bit overlap
-        assert_eq!(green.raw() & red.raw(), 0, "green and red bits must not overlap");
+        assert_eq!(
+            green.raw() & red.raw(),
+            0,
+            "green and red bits must not overlap"
+        );
     }
 }
 
@@ -411,10 +414,7 @@ mod switch_state {
         let t0 = Instant::now();
 
         // Initial state: everything off
-        let state0 = SwitchPanelSwitchState {
-            byte1: 0,
-            byte2: 0,
-        };
+        let state0 = SwitchPanelSwitchState { byte1: 0, byte2: 0 };
         let events0 = proto.diff_with_debounce(&state0, t0);
         assert!(events0.is_empty(), "no change from default");
 
@@ -453,9 +453,11 @@ mod switch_state {
             }
         )));
         // Gear unchanged → no GEAR event
-        assert!(!events2
-            .iter()
-            .any(|e| matches!(e, PanelEvent::SwitchChange { name: "GEAR", .. })));
+        assert!(
+            !events2
+                .iter()
+                .any(|e| matches!(e, PanelEvent::SwitchChange { name: "GEAR", .. }))
+        );
     }
 
     /// diff_with_debounce suppresses bouncing switch changes.
@@ -473,10 +475,7 @@ mod switch_state {
         assert_eq!(events.len(), 1, "first change accepted");
 
         // Bounce: fuel pump off within 50ms → should be suppressed
-        let state_off = SwitchPanelSwitchState {
-            byte1: 0,
-            byte2: 0,
-        };
+        let state_off = SwitchPanelSwitchState { byte1: 0, byte2: 0 };
         let events = proto.diff_with_debounce(&state_off, t0 + Duration::from_millis(10));
         // The FUEL_PUMP event should be debounced (rejected)
         assert!(
@@ -502,9 +501,18 @@ mod panel_identification {
     /// VID/PID → panel type for all known Saitek panels.
     #[test]
     fn vid_pid_to_panel_type() {
-        assert_eq!(PanelType::from_product_id(0x0D05), Some(PanelType::RadioPanel));
-        assert_eq!(PanelType::from_product_id(0x0D06), Some(PanelType::MultiPanel));
-        assert_eq!(PanelType::from_product_id(0x0D67), Some(PanelType::SwitchPanel));
+        assert_eq!(
+            PanelType::from_product_id(0x0D05),
+            Some(PanelType::RadioPanel)
+        );
+        assert_eq!(
+            PanelType::from_product_id(0x0D06),
+            Some(PanelType::MultiPanel)
+        );
+        assert_eq!(
+            PanelType::from_product_id(0x0D67),
+            Some(PanelType::SwitchPanel)
+        );
         assert_eq!(PanelType::from_product_id(0x0B4E), Some(PanelType::BIP));
         assert_eq!(PanelType::from_product_id(0x0A2F), Some(PanelType::FIP));
     }
@@ -540,11 +548,7 @@ mod panel_identification {
     /// Radio, Multi, Switch panel variants have distinct PIDs.
     #[test]
     fn panel_variants_distinct() {
-        let pids = [
-            RADIO_PANEL_PID,
-            MULTI_PANEL_PID,
-            SWITCH_PANEL_PID,
-        ];
+        let pids = [RADIO_PANEL_PID, MULTI_PANEL_PID, SWITCH_PANEL_PID];
         let unique: std::collections::HashSet<_> = pids.iter().collect();
         assert_eq!(unique.len(), pids.len(), "all panel PIDs must be distinct");
     }
@@ -855,21 +859,27 @@ mod integration {
         // Radio: ACT_STBY button + mode selector
         let radio = RadioPanelProtocol;
         let events = radio.parse_input(&[0x00, 0x03, 0b0000_0001]).unwrap();
-        assert!(events
-            .iter()
-            .any(|e| matches!(e, PanelEvent::ButtonPress { name: "ACT_STBY" })));
-        assert!(events
-            .iter()
-            .any(|e| matches!(e, PanelEvent::SelectorChange { name: "MODE", .. })));
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "ACT_STBY" }))
+        );
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::SelectorChange { name: "MODE", .. }))
+        );
 
         // Multi: AP button + encoder CW
         let multi = MultiPanelProtocol;
         let events = multi
             .parse_input(&[0x00, 0b0100_0000, 0b0000_0001])
             .unwrap();
-        assert!(events
-            .iter()
-            .any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" })));
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" }))
+        );
         assert!(events.iter().any(|e| matches!(
             e,
             PanelEvent::EncoderTick {

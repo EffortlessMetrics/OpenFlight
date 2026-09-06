@@ -15,8 +15,7 @@ pub mod golden;
 pub mod trace_recorder;
 
 pub use assertions::{
-    assert_axis_in_range, assert_jitter_p99, assert_latency_under, assert_monotonic,
-    assert_no_nan,
+    assert_axis_in_range, assert_jitter_p99, assert_latency_under, assert_monotonic, assert_no_nan,
 };
 pub use deterministic_clock::DeterministicClock;
 pub use fake_device::{FakeDeviceBuilder, FaultType, SignalPattern};

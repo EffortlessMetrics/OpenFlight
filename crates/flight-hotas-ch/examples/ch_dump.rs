@@ -12,9 +12,9 @@
 //! ```
 
 use flight_hotas_ch::{
-    identify_device, normalize_axis, normalize_pedal, normalize_throttle, parse_combatstick,
-    parse_eclipse_yoke, parse_fighterstick, parse_flight_yoke, parse_pro_pedals,
-    parse_pro_throttle, CH_VENDOR_ID,
+    CH_VENDOR_ID, identify_device, normalize_axis, normalize_pedal, normalize_throttle,
+    parse_combatstick, parse_eclipse_yoke, parse_fighterstick, parse_flight_yoke, parse_pro_pedals,
+    parse_pro_throttle,
 };
 
 fn main() {
@@ -23,7 +23,10 @@ fn main() {
     // --- Fighterstick (PID 0x00F3) ---
     let pid = 0x00F3u16;
     let device = identify_device(CH_VENDOR_ID, pid);
-    println!("Device: {:?} (VID={CH_VENDOR_ID:#06x} PID={pid:#06x})", device);
+    println!(
+        "Device: {:?} (VID={CH_VENDOR_ID:#06x} PID={pid:#06x})",
+        device
+    );
 
     let report = [0x01, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x10];
     let state = parse_fighterstick(&report).unwrap();
@@ -39,7 +42,10 @@ fn main() {
     let report = [0x01, 0xFF, 0xFF, 0x00, 0x80, 0x00, 0x80, 0x05, 0x30];
     let state = parse_pro_throttle(&report).unwrap();
     println!("\n  {state}");
-    println!("  Throttle normalized: {:.3}", normalize_throttle(state.throttle_main));
+    println!(
+        "  Throttle normalized: {:.3}",
+        normalize_throttle(state.throttle_main)
+    );
 
     // --- Pro Pedals (PID 0x00F2) ---
     let report = [0x01, 0x00, 0x80, 0xFF, 0xFF, 0x00, 0x00];
@@ -58,7 +64,9 @@ fn main() {
     println!("\n  {state}");
 
     // --- Eclipse Yoke (PID 0x0051) ---
-    let report = [0x01, 0x00, 0x80, 0x00, 0x80, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00];
+    let report = [
+        0x01, 0x00, 0x80, 0x00, 0x80, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+    ];
     let state = parse_eclipse_yoke(&report).unwrap();
     println!("\n  {state}");
 

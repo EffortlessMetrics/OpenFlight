@@ -6,12 +6,11 @@
 //! Covers axis parsing, calibration properties, profile generation,
 //! device identification, and TFRP-specific quirks (plastic flex compensation).
 
-use flight_hotas_thrustmaster::profiles::{device_profile, AxisNormalization};
+use flight_hotas_thrustmaster::profiles::{AxisNormalization, device_profile};
 use flight_hotas_thrustmaster::protocol::{ThrustmasterDevice, VENDOR_ID, identify_device};
 use flight_hotas_thrustmaster::{
-    TFRP_MIN_REPORT_BYTES, THRUSTMASTER_VENDOR_ID, TFRP_RUDDER_PEDALS_PID, T_RUDDER_PID,
-    TPR_PENDULAR_RUDDER_PID, TPR_PENDULAR_RUDDER_BULK_PID,
-    parse_tfrp_report, parse_tpr_report,
+    T_RUDDER_PID, TFRP_MIN_REPORT_BYTES, TFRP_RUDDER_PEDALS_PID, THRUSTMASTER_VENDOR_ID,
+    TPR_PENDULAR_RUDDER_BULK_PID, TPR_PENDULAR_RUDDER_PID, parse_tfrp_report, parse_tpr_report,
 };
 use proptest::prelude::*;
 
@@ -36,14 +35,23 @@ fn tfrp_rudder_axis_full_range() {
     let right = parse_tfrp_report(&make_tfrp_report(65535, 0, 0)).unwrap();
 
     assert_eq!(left.axes.rudder, 0.0, "full-left rudder should be 0.0");
-    assert!((center.axes.rudder - 0.5).abs() < 0.01, "center rudder should be ~0.5");
-    assert!((right.axes.rudder - 1.0).abs() < 1e-4, "full-right rudder should be 1.0");
+    assert!(
+        (center.axes.rudder - 0.5).abs() < 0.01,
+        "center rudder should be ~0.5"
+    );
+    assert!(
+        (right.axes.rudder - 1.0).abs() < 1e-4,
+        "full-right rudder should be 1.0"
+    );
 }
 
 #[test]
 fn tfrp_left_toe_brake_independent() {
     let state = parse_tfrp_report(&make_tfrp_report(32767, 0, 65535)).unwrap();
-    assert!((state.axes.left_pedal - 1.0).abs() < 1e-4, "left toe fully pressed");
+    assert!(
+        (state.axes.left_pedal - 1.0).abs() < 1e-4,
+        "left toe fully pressed"
+    );
     assert_eq!(state.axes.right_pedal, 0.0, "right toe released");
     assert!((state.axes.rudder - 0.5).abs() < 0.01, "rudder at center");
 }
@@ -51,7 +59,10 @@ fn tfrp_left_toe_brake_independent() {
 #[test]
 fn tfrp_right_toe_brake_independent() {
     let state = parse_tfrp_report(&make_tfrp_report(32767, 65535, 0)).unwrap();
-    assert!((state.axes.right_pedal - 1.0).abs() < 1e-4, "right toe fully pressed");
+    assert!(
+        (state.axes.right_pedal - 1.0).abs() < 1e-4,
+        "right toe fully pressed"
+    );
     assert_eq!(state.axes.left_pedal, 0.0, "left toe released");
 }
 
@@ -67,8 +78,14 @@ fn tfrp_combined_mode_rudder_with_brakes() {
     // In combined mode, rudder moves while toe brakes are pressed
     let state = parse_tfrp_report(&make_tfrp_report(65535, 32767, 32767)).unwrap();
     assert!((state.axes.rudder - 1.0).abs() < 1e-4, "full right rudder");
-    assert!((state.axes.right_pedal - 0.5).abs() < 0.01, "right brake half");
-    assert!((state.axes.left_pedal - 0.5).abs() < 0.01, "left brake half");
+    assert!(
+        (state.axes.right_pedal - 0.5).abs() < 0.01,
+        "right brake half"
+    );
+    assert!(
+        (state.axes.left_pedal - 0.5).abs() < 0.01,
+        "left brake half"
+    );
 }
 
 #[test]
@@ -76,7 +93,10 @@ fn tfrp_axis_resolution_16bit() {
     // Verify 16-bit resolution: adjacent values produce different outputs
     let a = parse_tfrp_report(&make_tfrp_report(1000, 0, 0)).unwrap();
     let b = parse_tfrp_report(&make_tfrp_report(1001, 0, 0)).unwrap();
-    assert_ne!(a.axes.rudder, b.axes.rudder, "16-bit resolution must distinguish adjacent values");
+    assert_ne!(
+        a.axes.rudder, b.axes.rudder,
+        "16-bit resolution must distinguish adjacent values"
+    );
 }
 
 #[test]
@@ -225,7 +245,10 @@ fn tfrp_profile_no_buttons_or_hats() {
 fn tpr_profile_differs_from_tfrp() {
     let tfrp = device_profile(ThrustmasterDevice::TfrpRudderPedals).unwrap();
     let tpr = device_profile(ThrustmasterDevice::TprPendular).unwrap();
-    assert_ne!(tfrp.name, tpr.name, "TFRP and TPR should have different names");
+    assert_ne!(
+        tfrp.name, tpr.name,
+        "TFRP and TPR should have different names"
+    );
     // TPR has no filter (pendular design, no plastic flex)
     for ax in &tpr.axes {
         assert!(
@@ -266,15 +289,26 @@ fn tpr_bulk_vid_pid_identification() {
 
 #[test]
 fn thrustmaster_pedal_model_discrimination() {
-    let pids = [TFRP_RUDDER_PEDALS_PID, T_RUDDER_PID, TPR_PENDULAR_RUDDER_PID, TPR_PENDULAR_RUDDER_BULK_PID];
+    let pids = [
+        TFRP_RUDDER_PEDALS_PID,
+        T_RUDDER_PID,
+        TPR_PENDULAR_RUDDER_PID,
+        TPR_PENDULAR_RUDDER_BULK_PID,
+    ];
     let devices: Vec<_> = pids
         .iter()
         .map(|&pid| identify_device(VENDOR_ID, pid).unwrap())
         .collect();
     // TFRP and T-Rudder are distinct
-    assert_ne!(devices[0], devices[1], "TFRP and T-Rudder should be distinct");
+    assert_ne!(
+        devices[0], devices[1],
+        "TFRP and T-Rudder should be distinct"
+    );
     // TPR standard and bulk are distinct
-    assert_ne!(devices[2], devices[3], "TPR standard and bulk should be distinct");
+    assert_ne!(
+        devices[2], devices[3],
+        "TPR standard and bulk should be distinct"
+    );
     assert_eq!(THRUSTMASTER_VENDOR_ID, 0x044F, "VID should be 0x044F");
 }
 
@@ -286,7 +320,9 @@ fn thrustmaster_pedal_model_discrimination() {
 fn tfrp_plastic_flex_filter_present() {
     let p = device_profile(ThrustmasterDevice::TfrpRudderPedals).unwrap();
     let rudder = p.axes.iter().find(|a| a.id == "rudder").unwrap();
-    let alpha = rudder.filter_alpha.expect("TFRP rudder must have EMA filter for plastic flex");
+    let alpha = rudder
+        .filter_alpha
+        .expect("TFRP rudder must have EMA filter for plastic flex");
     assert!(
         (0.05..=0.20).contains(&alpha),
         "TFRP filter alpha {} out of expected range for plastic flex compensation",
@@ -298,7 +334,12 @@ fn tfrp_plastic_flex_filter_present() {
 fn tfrp_plastic_flex_higher_deadzone_than_tpr() {
     let tfrp = device_profile(ThrustmasterDevice::TfrpRudderPedals).unwrap();
     let tpr = device_profile(ThrustmasterDevice::TprPendular).unwrap();
-    let tfrp_dz = tfrp.axes.iter().find(|a| a.id == "rudder").unwrap().deadzone;
+    let tfrp_dz = tfrp
+        .axes
+        .iter()
+        .find(|a| a.id == "rudder")
+        .unwrap()
+        .deadzone;
     let tpr_dz = tpr.axes.iter().find(|a| a.id == "rudder").unwrap().deadzone;
     assert!(
         tfrp_dz >= tpr_dz,

@@ -941,7 +941,10 @@ pub struct FaultStatistics {
 
 impl Default for FaultDetector {
     fn default() -> Self {
-        Self::new(Duration::from_millis(50), Arc::new(crate::DefaultTimeSource))
+        Self::new(
+            Duration::from_millis(50),
+            Arc::new(crate::DefaultTimeSource),
+        )
     }
 }
 

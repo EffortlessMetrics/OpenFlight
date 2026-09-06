@@ -1093,10 +1093,7 @@ mod tests {
         // Every digit 0-9 should produce non-zero segment encoding
         for digit in '0'..='9' {
             let encoded = encode_segment(digit);
-            assert_ne!(
-                encoded, 0x00,
-                "digit '{digit}' should not encode to blank"
-            );
+            assert_ne!(encoded, 0x00, "digit '{digit}' should not encode to blank");
         }
     }
 
@@ -1122,8 +1119,20 @@ mod tests {
                 delta: 1
             }
         )));
-        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" })));
-        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "HDG" })));
-        assert!(events.iter().any(|e| matches!(e, PanelEvent::ButtonPress { name: "NAV" })));
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "AP" }))
+        );
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "HDG" }))
+        );
+        assert!(
+            events
+                .iter()
+                .any(|e| matches!(e, PanelEvent::ButtonPress { name: "NAV" }))
+        );
     }
 }

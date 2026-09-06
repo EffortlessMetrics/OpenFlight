@@ -11,9 +11,7 @@
 //!   5. Schema validation (5 tests)
 //!   6. Property tests (5 tests)
 
-use flight_rules::{
-    check_conflicts, Action, BytecodeOp, Rule, RuleDefaults, RulesSchema,
-};
+use flight_rules::{Action, BytecodeOp, Rule, RuleDefaults, RulesSchema, check_conflicts};
 use std::collections::HashMap;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -57,13 +55,16 @@ fn cond_simple_comparison_greater_than() {
     let compiled = compile_ok(&schema(vec![rule("ias > 250", "led.indexer.on()")]));
     let bc = &compiled.bytecode;
     // Must have LoadVar, LoadConst(250.0), Compare(Greater)
-    assert!(bc.instructions.iter().any(
-        |op| matches!(op, BytecodeOp::LoadConst(v) if (*v - 250.0).abs() < f32::EPSILON)
-    ));
-    assert!(bc
-        .instructions
-        .iter()
-        .any(|op| matches!(op, BytecodeOp::LoadVar(_))));
+    assert!(
+        bc.instructions
+            .iter()
+            .any(|op| matches!(op, BytecodeOp::LoadConst(v) if (*v - 250.0).abs() < f32::EPSILON))
+    );
+    assert!(
+        bc.instructions
+            .iter()
+            .any(|op| matches!(op, BytecodeOp::LoadVar(_)))
+    );
 }
 
 #[test]
@@ -75,7 +76,9 @@ fn cond_and_two_clauses() {
     let bc = &compiled.bytecode;
     // AND condition should emit And bytecode op
     assert!(
-        bc.instructions.iter().any(|op| matches!(op, BytecodeOp::And)),
+        bc.instructions
+            .iter()
+            .any(|op| matches!(op, BytecodeOp::And)),
         "AND condition must emit And op: {:?}",
         bc.instructions
     );
@@ -89,7 +92,9 @@ fn cond_or_two_clauses() {
     )]));
     let bc = &compiled.bytecode;
     assert!(
-        bc.instructions.iter().any(|op| matches!(op, BytecodeOp::Or)),
+        bc.instructions
+            .iter()
+            .any(|op| matches!(op, BytecodeOp::Or)),
         "OR condition must emit Or op: {:?}",
         bc.instructions
     );
@@ -104,14 +109,21 @@ fn cond_nested_and_three_clauses() {
     )]));
     let bc = &compiled.bytecode;
     // Three variables should be registered
-    assert!(bc.variable_map.len() >= 3, "expected ≥3 variables, got {}", bc.variable_map.len());
+    assert!(
+        bc.variable_map.len() >= 3,
+        "expected ≥3 variables, got {}",
+        bc.variable_map.len()
+    );
     // Should have And ops for chaining
     let and_count = bc
         .instructions
         .iter()
         .filter(|op| matches!(op, BytecodeOp::And))
         .count();
-    assert!(and_count >= 1, "chained AND should have ≥1 And op, got {and_count}");
+    assert!(
+        and_count >= 1,
+        "chained AND should have ≥1 And op, got {and_count}"
+    );
 }
 
 #[test]
@@ -162,10 +174,10 @@ fn cond_numeric_range_all_operators() {
 fn cond_malformed_condition_rejection() {
     let bad = [
         "ias > notanumber",
-        "ias>=200",            // missing spaces
-        "> 100",               // missing variable
-        "altitude <",          // missing value
-        "altitude < < 100",    // double operator
+        "ias>=200",         // missing spaces
+        "> 100",            // missing variable
+        "altitude <",       // missing value
+        "altitude < < 100", // double operator
     ];
     for cond in &bad {
         let result = schema(vec![rule(cond, "led.indexer.on()")]).validate();
@@ -182,24 +194,14 @@ fn cond_malformed_condition_rejection() {
 
 #[test]
 fn action_led_on() {
-    let compiled = compile_ok(&schema(vec![rule(
-        "gear_down",
-        "led.panel('GEAR').on()",
-    )]));
-    assert!(
-        matches!(&compiled.bytecode.actions[0], Action::LedOn { target } if target == "GEAR")
-    );
+    let compiled = compile_ok(&schema(vec![rule("gear_down", "led.panel('GEAR').on()")]));
+    assert!(matches!(&compiled.bytecode.actions[0], Action::LedOn { target } if target == "GEAR"));
 }
 
 #[test]
 fn action_led_off() {
-    let compiled = compile_ok(&schema(vec![rule(
-        "gear_down",
-        "led.panel('GEAR').off()",
-    )]));
-    assert!(
-        matches!(&compiled.bytecode.actions[0], Action::LedOff { target } if target == "GEAR")
-    );
+    let compiled = compile_ok(&schema(vec![rule("gear_down", "led.panel('GEAR').off()")]));
+    assert!(matches!(&compiled.bytecode.actions[0], Action::LedOff { target } if target == "GEAR"));
 }
 
 #[test]
@@ -224,10 +226,7 @@ fn action_led_brightness() {
         "led.panel('TAXI').brightness(0.6)",
     )]));
     match &compiled.bytecode.actions[0] {
-        Action::LedBrightness {
-            target,
-            brightness,
-        } => {
+        Action::LedBrightness { target, brightness } => {
             assert_eq!(target, "TAXI");
             assert!((*brightness - 0.6).abs() < 1e-5);
         }
@@ -261,11 +260,11 @@ fn action_indexer_shorthand() {
 fn action_malformed_rejection() {
     let bad = [
         "not.a.real.action()",
-        "led.panel('GEAR')",        // missing method call
-        "led.panel('GEAR').fly()",   // unknown method
-        "led.indexer.dance()",       // unknown method
-        "",                          // empty
-        "   ",                       // whitespace only
+        "led.panel('GEAR')",       // missing method call
+        "led.panel('GEAR').fly()", // unknown method
+        "led.indexer.dance()",     // unknown method
+        "",                        // empty
+        "   ",                     // whitespace only
     ];
     for act in &bad {
         let result = schema(vec![rule("gear_down", act)]).validate();
@@ -338,7 +337,11 @@ fn compile_action_to_bytecode_action_index() {
             }
         })
         .collect();
-    assert_eq!(action_ops, vec![0, 1], "action indices should be sequential");
+    assert_eq!(
+        action_ops,
+        vec![0, 1],
+        "action indices should be sequential"
+    );
     assert_eq!(bc.actions.len(), 2);
 }
 
@@ -434,10 +437,7 @@ fn eval_simple_rule_has_jump_false_guard() {
 #[test]
 fn eval_complex_condition_chain_produces_correct_op_count() {
     // "a and b and c" → 3 boolean conditions + AND chaining + JumpFalse guards
-    let compiled = compile_ok(&schema(vec![rule(
-        "a and b and c",
-        "led.indexer.on()",
-    )]));
+    let compiled = compile_ok(&schema(vec![rule("a and b and c", "led.indexer.on()")]));
     let bc = &compiled.bytecode;
     let load_var_count = bc
         .instructions
@@ -483,7 +483,10 @@ fn eval_multi_rule_state_independence() {
     let beta_idx = bc.variable_map.get("beta");
     assert!(alpha_idx.is_some(), "alpha should be in variable_map");
     assert!(beta_idx.is_some(), "beta should be in variable_map");
-    assert_ne!(alpha_idx, beta_idx, "different variables should have different indices");
+    assert_ne!(
+        alpha_idx, beta_idx,
+        "different variables should have different indices"
+    );
 }
 
 #[test]
@@ -535,9 +538,9 @@ fn schema_empty_action_rejected() {
 #[test]
 fn schema_syntax_error_message_includes_rule_number() {
     let s = schema(vec![
-        rule("gear_down", "led.indexer.on()"),       // valid
-        rule("ias > abc", "led.indexer.on()"),        // invalid
-        rule("flaps > 0.5", "led.indexer.on()"),      // valid
+        rule("gear_down", "led.indexer.on()"),   // valid
+        rule("ias > abc", "led.indexer.on()"),   // invalid
+        rule("flaps > 0.5", "led.indexer.on()"), // valid
     ]);
     let err = s.validate().unwrap_err();
     let msg = err.to_string();
@@ -692,7 +695,10 @@ fn integration_conflict_detection_with_compilation() {
 
     // Both rules should still compile
     let s = schema(rules);
-    assert!(s.compile().is_ok(), "conflicting rules should still compile");
+    assert!(
+        s.compile().is_ok(),
+        "conflicting rules should still compile"
+    );
 }
 
 #[test]
@@ -719,10 +725,7 @@ fn integration_multi_rule_variable_dedup() {
 #[test]
 fn integration_negated_enum_state() {
     // "gear != UP" should map to negated boolean "gear_UP"
-    let compiled = compile_ok(&schema(vec![rule(
-        "gear != UP",
-        "led.panel('GEAR').on()",
-    )]));
+    let compiled = compile_ok(&schema(vec![rule("gear != UP", "led.panel('GEAR').on()")]));
     let bc = &compiled.bytecode;
     assert!(
         bc.variable_map.contains_key("gear_UP"),
@@ -741,7 +744,13 @@ fn integration_negated_enum_state() {
 fn integration_empty_ruleset_compiles_to_empty_program() {
     let compiled = compile_ok(&schema(vec![]));
     let bc = &compiled.bytecode;
-    assert!(bc.instructions.is_empty(), "empty ruleset → empty instructions");
+    assert!(
+        bc.instructions.is_empty(),
+        "empty ruleset → empty instructions"
+    );
     assert!(bc.actions.is_empty(), "empty ruleset → empty actions");
-    assert!(bc.variable_map.is_empty(), "empty ruleset → empty variable_map");
+    assert!(
+        bc.variable_map.is_empty(),
+        "empty ruleset → empty variable_map"
+    );
 }

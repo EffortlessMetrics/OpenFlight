@@ -16,11 +16,12 @@ use flight_axis::deadzone::{
 };
 use flight_axis::detent::{DetentBand, DetentConfig, DetentProcessor, RtDetentProcessor};
 use flight_axis::mixer::{AxisMixer, MixMode};
-use flight_axis::pipeline::{AxisPipeline, ClampStage, CurveStage, DeadzoneStage, SensitivityStage};
+use flight_axis::pipeline::{
+    AxisPipeline, ClampStage, CurveStage, DeadzoneStage, SensitivityStage,
+};
 use flight_axis::stages::{
-    CurveStage as RtCurveStage, CurveType, DeadzoneShape,
-    DeadzoneStage as RtDeadzoneStage, DetentPosition, DetentStage as RtDetentStage,
-    RtAxisPipeline, Stage, StageSlot,
+    CurveStage as RtCurveStage, CurveType, DeadzoneShape, DeadzoneStage as RtDeadzoneStage,
+    DetentPosition, DetentStage as RtDetentStage, RtAxisPipeline, Stage, StageSlot,
 };
 use flight_axis::{AxisEngine, AxisFrame};
 use proptest::prelude::*;
@@ -351,10 +352,7 @@ mod detent_tests {
         assert_eq!(proc.process(0.56), 0.5);
         // Exit past hysteresis
         let out = proc.process(0.58);
-        assert!(
-            approx_f32(out, 0.58),
-            "should exit detent: {out}"
-        );
+        assert!(approx_f32(out, 0.58), "should exit detent: {out}");
     }
 
     #[test]
@@ -563,7 +561,10 @@ mod pipeline_tests {
             .clamp(-1.0, 1.0)
             .build();
         let out2 = pipeline2.process(0.02);
-        assert!(approx_f64(out2, 0.0), "after swap: deadzone should zero out");
+        assert!(
+            approx_f64(out2, 0.0),
+            "after swap: deadzone should zero out"
+        );
     }
 
     #[test]
@@ -847,10 +848,7 @@ mod zero_alloc_tests {
     #[test]
     fn rt_detent_processor_is_stack_allocated() {
         let size = std::mem::size_of::<RtDetentProcessor<4>>();
-        assert!(
-            size < 1024,
-            "RtDetentProcessor<4> too large: {size} bytes"
-        );
+        assert!(size < 1024, "RtDetentProcessor<4> too large: {size} bytes");
     }
 
     #[test]
@@ -897,10 +895,7 @@ mod zero_alloc_tests {
         let outputs2: Vec<f64> = inputs.iter().map(|&v| pipeline2.process(v)).collect();
 
         for (i, (&o1, &o2)) in outputs1.iter().zip(outputs2.iter()).enumerate() {
-            assert!(
-                approx_f64(o1, o2),
-                "tick {i}: {o1} != {o2}"
-            );
+            assert!(approx_f64(o1, o2), "tick {i}: {o1} != {o2}");
         }
     }
 
@@ -962,10 +957,7 @@ mod throughput_tests {
         for i in 0..1000 {
             let input = ((i as f64) * 0.001 * std::f64::consts::PI).sin();
             let out2 = pipeline2.process(input);
-            assert!(
-                approx_f64(outputs[i], out2),
-                "tick {i}: non-deterministic"
-            );
+            assert!(approx_f64(outputs[i], out2), "tick {i}: non-deterministic");
         }
     }
 

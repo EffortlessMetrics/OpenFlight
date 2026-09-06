@@ -12,8 +12,7 @@
 
 use flight_ffb::{
     effects::{
-        CompositeEffect, ConstantForceParams, DamperParams, EffectInput, FfbEffect,
-        SpringParams,
+        CompositeEffect, ConstantForceParams, DamperParams, EffectInput, FfbEffect, SpringParams,
     },
     ramp::EffectRamp,
     safety_envelope::{SafetyEnvelope, SafetyEnvelopeConfig},

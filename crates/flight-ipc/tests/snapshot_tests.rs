@@ -8,7 +8,7 @@
 //! Run `cargo insta review` to accept new or changed snapshots.
 
 use flight_ipc::messages::{ComponentStatus, IpcMessage, ServiceState};
-use flight_ipc::{ClientConfig, ServerConfig, PROTOCOL_VERSION, SUPPORTED_FEATURES};
+use flight_ipc::{ClientConfig, PROTOCOL_VERSION, SUPPORTED_FEATURES, ServerConfig};
 
 // ── IpcMessage JSON format snapshots (every variant) ─────────────────────────
 

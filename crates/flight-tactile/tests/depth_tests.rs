@@ -6,20 +6,22 @@
 //! Covers: motor control, effect zones, effect patterns, safety,
 //! configuration, and integration with the telemetry pipeline.
 
+use parking_lot::RwLock;
 use std::sync::Arc;
 use std::time::Duration;
-use parking_lot::RwLock;
 
 use flight_bus::{
     AircraftId, BusSnapshot, EngineData, HeloData, Percentage, SimId, ValidatedAngle,
     ValidatedSpeed,
 };
-use flight_tactile::engine::{MAX_EFFECTS, TICK_RATE_HZ, TactileEffect, TactileEngine, TexturePattern};
-use flight_tactile::effects::{EffectEvent, EffectIntensity, EffectProcessor, EffectType};
-use flight_tactile::mixer::{TactileMixer, FrequencyBand};
 use flight_tactile::channel::{ChannelId, ChannelMapping, ChannelRouter};
+use flight_tactile::effects::{EffectEvent, EffectIntensity, EffectProcessor, EffectType};
+use flight_tactile::engine::{
+    MAX_EFFECTS, TICK_RATE_HZ, TactileEffect, TactileEngine, TexturePattern,
+};
+use flight_tactile::mixer::{FrequencyBand, TactileMixer};
 use flight_tactile::presets::TactilePresets;
-use flight_tactile::{TactileConfig, TactileManager, TactileBridge};
+use flight_tactile::{TactileBridge, TactileConfig, TactileManager};
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -173,12 +175,14 @@ mod motor_driver {
         }
         assert_eq!(engine.active_count(), MAX_EFFECTS);
 
-        assert!(engine
-            .add_effect(TactileEffect::Impact {
-                magnitude: 0.5,
-                decay_rate: 5.0,
-            })
-            .is_none());
+        assert!(
+            engine
+                .add_effect(TactileEffect::Impact {
+                    magnitude: 0.5,
+                    decay_rate: 5.0,
+                })
+                .is_none()
+        );
 
         let v = engine.tick();
         assert!((-1.0..=1.0).contains(&v));
@@ -188,12 +192,18 @@ mod motor_driver {
     fn set_intensity_via_slot_gain() {
         let mut mixer = TactileMixer::new();
         let slot = mixer
-            .add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 })
+            .add_effect(TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 5.0,
+            })
             .unwrap();
 
         mixer.set_slot_gain(slot, 0.75);
         let out = mixer.tick();
-        assert!((out.combined - 0.75).abs() < 0.02, "intensity should scale with slot gain");
+        assert!(
+            (out.combined - 0.75).abs() < 0.02,
+            "intensity should scale with slot gain"
+        );
     }
 
     #[test]
@@ -254,12 +264,19 @@ mod motor_driver {
     #[test]
     fn multiple_motors_via_band_separation() {
         let mut mixer = TactileMixer::new();
-        mixer.add_effect(TactileEffect::Impact { magnitude: 0.5, decay_rate: 5.0 });
+        mixer.add_effect(TactileEffect::Impact {
+            magnitude: 0.5,
+            decay_rate: 5.0,
+        });
         mixer.add_effect(TactileEffect::Rumble {
-            frequency_hz: 80.0, amplitude: 0.5, duration_ticks: 100,
+            frequency_hz: 80.0,
+            amplitude: 0.5,
+            duration_ticks: 100,
         });
         mixer.add_effect(TactileEffect::Texture {
-            frequency_hz: 200.0, amplitude: 0.5, pattern: TexturePattern::Square,
+            frequency_hz: 200.0,
+            amplitude: 0.5,
+            pattern: TexturePattern::Square,
         });
 
         let out = mixer.tick();
@@ -271,7 +288,10 @@ mod motor_driver {
     fn ramp_up_via_increasing_gain() {
         let mut mixer = TactileMixer::new();
         let slot = mixer
-            .add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 0.1 })
+            .add_effect(TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 0.1,
+            })
             .unwrap();
 
         let mut prev = 0.0_f64;
@@ -288,7 +308,10 @@ mod motor_driver {
     fn ramp_down_via_decreasing_gain() {
         let mut mixer = TactileMixer::new();
         let slot = mixer
-            .add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 0.01 })
+            .add_effect(TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 0.01,
+            })
             .unwrap();
 
         mixer.set_slot_gain(slot, 1.0);
@@ -309,23 +332,35 @@ mod motor_driver {
         let mut engine = TactileEngine::new();
         for _ in 0..MAX_EFFECTS {
             engine.add_effect(TactileEffect::Rumble {
-                frequency_hz: 50.0, amplitude: 1.0, duration_ticks: 10000,
+                frequency_hz: 50.0,
+                amplitude: 1.0,
+                duration_ticks: 10000,
             });
         }
         assert_eq!(engine.active_count(), MAX_EFFECTS);
 
         engine.clear();
         assert_eq!(engine.active_count(), 0);
-        assert_eq!(engine.tick(), 0.0, "after emergency stop output must be zero");
+        assert_eq!(
+            engine.tick(),
+            0.0,
+            "after emergency stop output must be zero"
+        );
     }
 
     #[test]
     fn engine_effect_tracks_rpm() {
         let mut engine = TactileEngine::new();
-        engine.add_effect(TactileEffect::Engine { rpm: 1800.0, amplitude: 0.5 });
+        engine.add_effect(TactileEffect::Engine {
+            rpm: 1800.0,
+            amplitude: 0.5,
+        });
 
         let expected_freq = 1800.0 / 60.0;
-        let effect = TactileEffect::Engine { rpm: 1800.0, amplitude: 0.5 };
+        let effect = TactileEffect::Engine {
+            rpm: 1800.0,
+            amplitude: 0.5,
+        };
         assert!((effect.frequency_hz() - expected_freq).abs() < 0.01);
 
         let samples = collect_samples(&mut engine, 50);
@@ -371,7 +406,11 @@ mod motor_driver {
             decay_rate: 5.0,
         });
         engine.remove_effect(MAX_EFFECTS + 10);
-        assert_eq!(engine.active_count(), 1, "out-of-bounds remove must be no-op");
+        assert_eq!(
+            engine.active_count(),
+            1,
+            "out-of-bounds remove must be no-op"
+        );
     }
 
     #[test]
@@ -403,7 +442,10 @@ mod zone_routing {
         let outputs = router.process_events(vec![evt]);
 
         let seat_out = outputs.iter().find(|o| o.channel_id == seat_ch).unwrap();
-        assert!(seat_out.intensity.value() > 0.5, "seat should feel touchdown");
+        assert!(
+            seat_out.intensity.value() > 0.5,
+            "seat should feel touchdown"
+        );
     }
 
     #[test]
@@ -498,12 +540,30 @@ mod zone_routing {
     #[test]
     fn map_zones_to_motors_defaults() {
         let mapping = ChannelMapping::new();
-        assert_eq!(mapping.get_channel(EffectType::Touchdown), Some(ChannelId::new(0)));
-        assert_eq!(mapping.get_channel(EffectType::GroundRoll), Some(ChannelId::new(1)));
-        assert_eq!(mapping.get_channel(EffectType::StallBuffet), Some(ChannelId::new(2)));
-        assert_eq!(mapping.get_channel(EffectType::EngineVibration), Some(ChannelId::new(3)));
-        assert_eq!(mapping.get_channel(EffectType::GearWarning), Some(ChannelId::new(4)));
-        assert_eq!(mapping.get_channel(EffectType::RotorVibration), Some(ChannelId::new(5)));
+        assert_eq!(
+            mapping.get_channel(EffectType::Touchdown),
+            Some(ChannelId::new(0))
+        );
+        assert_eq!(
+            mapping.get_channel(EffectType::GroundRoll),
+            Some(ChannelId::new(1))
+        );
+        assert_eq!(
+            mapping.get_channel(EffectType::StallBuffet),
+            Some(ChannelId::new(2))
+        );
+        assert_eq!(
+            mapping.get_channel(EffectType::EngineVibration),
+            Some(ChannelId::new(3))
+        );
+        assert_eq!(
+            mapping.get_channel(EffectType::GearWarning),
+            Some(ChannelId::new(4))
+        );
+        assert_eq!(
+            mapping.get_channel(EffectType::RotorVibration),
+            Some(ChannelId::new(5))
+        );
     }
 
     #[test]
@@ -516,8 +576,14 @@ mod zone_routing {
 
         let outputs = router.process_events(vec![e1, e2]);
 
-        let td = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
-        let sb = outputs.iter().find(|o| o.channel_id == ChannelId::new(2)).unwrap();
+        let td = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
+        let sb = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(2))
+            .unwrap();
         assert!((td.intensity.value() - 0.9).abs() < 0.01);
         assert!((sb.intensity.value() - 0.4).abs() < 0.01);
     }
@@ -534,7 +600,10 @@ mod zone_routing {
         let e2 = EffectEvent::new(EffectType::GearWarning, EffectIntensity::new(0.8).unwrap());
 
         let outputs = router.process_events(vec![e1, e2]);
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
         assert!((ch0.intensity.value() - 0.8).abs() < 0.01);
     }
 
@@ -550,7 +619,11 @@ mod zone_routing {
 
         let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0));
         match ch0 {
-            Some(o) => assert_eq!(o.intensity.value(), 0.0, "unmapped effect should yield zero"),
+            Some(o) => assert_eq!(
+                o.intensity.value(),
+                0.0,
+                "unmapped effect should yield zero"
+            ),
             None => {}
         }
     }
@@ -564,8 +637,15 @@ mod zone_routing {
         let e = EffectEvent::new(EffectType::Touchdown, EffectIntensity::new(1.0).unwrap());
         let outputs = router.process_events(vec![e]);
 
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
-        assert_eq!(ch0.intensity.value(), 0.0, "disabled channel must output zero");
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
+        assert_eq!(
+            ch0.intensity.value(),
+            0.0,
+            "disabled channel must output zero"
+        );
     }
 
     #[test]
@@ -576,7 +656,10 @@ mod zone_routing {
 
         let e = EffectEvent::new(EffectType::Touchdown, EffectIntensity::new(1.0).unwrap());
         let outputs = router.process_events(vec![e]);
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
         assert_eq!(ch0.intensity.value(), 0.0);
 
         let mut new_mapping = ChannelMapping::new();
@@ -585,8 +668,14 @@ mod zone_routing {
 
         let e = EffectEvent::new(EffectType::Touchdown, EffectIntensity::new(0.7).unwrap());
         let outputs = router.process_events(vec![e]);
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
-        assert!(ch0.intensity.value() > 0.5, "re-enabled channel must route again");
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
+        assert!(
+            ch0.intensity.value() > 0.5,
+            "re-enabled channel must route again"
+        );
     }
 
     #[test]
@@ -598,8 +687,14 @@ mod zone_routing {
         let e = EffectEvent::new(EffectType::Touchdown, EffectIntensity::new(1.0).unwrap());
         let outputs = router.process_events(vec![e]);
 
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
-        assert!((ch0.intensity.value() - 0.5).abs() < 0.01, "gain should halve intensity");
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
+        assert!(
+            (ch0.intensity.value() - 0.5).abs() < 0.01,
+            "gain should halve intensity"
+        );
     }
 
     #[test]
@@ -607,7 +702,11 @@ mod zone_routing {
         let mapping = ChannelMapping::new();
         let mut router = ChannelRouter::new(mapping);
         let outputs = router.process_events(Vec::new());
-        assert_eq!(outputs.len(), 8, "default mapping must produce 8 channel outputs");
+        assert_eq!(
+            outputs.len(),
+            8,
+            "default mapping must produce 8 channel outputs"
+        );
     }
 
     #[test]
@@ -691,7 +790,10 @@ mod effect_patterns {
             TactileEffect::Texture { amplitude, .. } => amplitude,
             _ => panic!("expected Texture"),
         };
-        assert!(amp_fast > amp_slow, "faster speed \u{2192} stronger texture");
+        assert!(
+            amp_fast > amp_slow,
+            "faster speed \u{2192} stronger texture"
+        );
     }
 
     #[test]
@@ -707,7 +809,10 @@ mod effect_patterns {
             TactileEffect::Texture { amplitude, .. } => amplitude,
             _ => panic!("expected Texture"),
         };
-        assert!(amp_severe > amp_mild, "deeper stall \u{2192} stronger buffet");
+        assert!(
+            amp_severe > amp_mild,
+            "deeper stall \u{2192} stronger buffet"
+        );
     }
 
     #[test]
@@ -800,13 +905,20 @@ mod effect_patterns {
         for _ in 0..3 {
             engine.tick();
         }
-        assert_eq!(engine.active_count(), 0, "rumble should expire after exact duration");
+        assert_eq!(
+            engine.active_count(),
+            0,
+            "rumble should expire after exact duration"
+        );
     }
 
     #[test]
     fn pulse_via_impact_decay() {
         let mut engine = TactileEngine::new();
-        engine.add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 20.0 });
+        engine.add_effect(TactileEffect::Impact {
+            magnitude: 1.0,
+            decay_rate: 20.0,
+        });
 
         let s1 = engine.tick();
         let s2 = engine.tick();
@@ -819,17 +931,26 @@ mod effect_patterns {
     #[test]
     fn constant_effect_via_low_decay_impact() {
         let mut engine = TactileEngine::new();
-        engine.add_effect(TactileEffect::Impact { magnitude: 0.5, decay_rate: 0.001 });
+        engine.add_effect(TactileEffect::Impact {
+            magnitude: 0.5,
+            decay_rate: 0.001,
+        });
 
         let samples = collect_samples(&mut engine, 10);
         let variance: f64 = samples.iter().map(|s| (s - 0.5).powi(2)).sum::<f64>() / 10.0;
-        assert!(variance < 0.01, "near-constant effect should have low variance");
+        assert!(
+            variance < 0.01,
+            "near-constant effect should have low variance"
+        );
     }
 
     #[test]
     fn sine_wave_engine_produces_periodic_output() {
         let mut engine = TactileEngine::new();
-        engine.add_effect(TactileEffect::Engine { rpm: 3000.0, amplitude: 0.8 });
+        engine.add_effect(TactileEffect::Engine {
+            rpm: 3000.0,
+            amplitude: 0.8,
+        });
 
         let samples = collect_samples(&mut engine, 10);
         assert!(
@@ -849,7 +970,10 @@ mod effect_patterns {
 
         let samples = collect_samples(&mut engine, 10);
         let rising = samples.windows(2).filter(|w| w[1] >= w[0]).count();
-        assert!(rising >= 5, "sawtooth should be mostly rising within a cycle");
+        assert!(
+            rising >= 5,
+            "sawtooth should be mostly rising within a cycle"
+        );
     }
 
     #[test]
@@ -864,22 +988,35 @@ mod effect_patterns {
         let samples = collect_samples(&mut engine, 10);
         let positive_count = samples.iter().filter(|&&s| s > 0.0).count();
         let negative_count = samples.iter().filter(|&&s| s < 0.0).count();
-        assert!(positive_count >= 3 && negative_count >= 3, "square should be \u{2248}50% duty cycle");
+        assert!(
+            positive_count >= 3 && negative_count >= 3,
+            "square should be \u{2248}50% duty cycle"
+        );
     }
 
     #[test]
     fn composability_multiple_effects_mix() {
         let mut mixer = TactileMixer::new();
-        mixer.add_effect(TactileEffect::Impact { magnitude: 0.3, decay_rate: 5.0 });
+        mixer.add_effect(TactileEffect::Impact {
+            magnitude: 0.3,
+            decay_rate: 5.0,
+        });
         mixer.add_effect(TactileEffect::Rumble {
-            frequency_hz: 80.0, amplitude: 0.2, duration_ticks: 100,
+            frequency_hz: 80.0,
+            amplitude: 0.2,
+            duration_ticks: 100,
         });
         mixer.add_effect(TactileEffect::Texture {
-            frequency_hz: 200.0, amplitude: 0.1, pattern: TexturePattern::Triangle,
+            frequency_hz: 200.0,
+            amplitude: 0.1,
+            pattern: TexturePattern::Triangle,
         });
 
         let out = mixer.tick();
-        assert!(out.combined.abs() > 0.0, "composed effects should produce output");
+        assert!(
+            out.combined.abs() > 0.0,
+            "composed effects should produce output"
+        );
         assert!(out.low.abs() > 0.0, "impact contributes to low band");
         assert_eq!(mixer.active_count(), 3);
     }
@@ -894,7 +1031,10 @@ mod effect_patterns {
         }
         match TactilePresets::turbulence(5.0) {
             TactileEffect::Texture { amplitude, .. } => {
-                assert!(amplitude <= 0.7 + 1e-9, "clamped intensity \u{2192} max amplitude");
+                assert!(
+                    amplitude <= 0.7 + 1e-9,
+                    "clamped intensity \u{2192} max amplitude"
+                );
             }
             _ => panic!("expected Texture"),
         }
@@ -906,7 +1046,10 @@ mod effect_patterns {
         engine.add_effect(TactilePresets::weapon_fire());
 
         let first = engine.tick();
-        assert!((first - 1.0).abs() < 0.01, "weapon fire starts at magnitude 1.0");
+        assert!(
+            (first - 1.0).abs() < 0.01,
+            "weapon fire starts at magnitude 1.0"
+        );
 
         for _ in 0..9 {
             engine.tick();
@@ -959,7 +1102,10 @@ mod timing {
     fn fade_in_via_progressive_gain() {
         let mut mixer = TactileMixer::new();
         let slot = mixer
-            .add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 0.001 })
+            .add_effect(TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 0.001,
+            })
             .unwrap();
 
         let mut outputs = Vec::new();
@@ -970,7 +1116,10 @@ mod timing {
         }
 
         for w in outputs.windows(2) {
-            assert!(w[1] >= w[0] * 0.8, "fade-in should produce non-decreasing output");
+            assert!(
+                w[1] >= w[0] * 0.8,
+                "fade-in should produce non-decreasing output"
+            );
         }
     }
 
@@ -978,7 +1127,10 @@ mod timing {
     fn fade_out_via_progressive_gain() {
         let mut mixer = TactileMixer::new();
         let slot = mixer
-            .add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 0.001 })
+            .add_effect(TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 0.001,
+            })
             .unwrap();
 
         mixer.set_slot_gain(slot, 1.0);
@@ -991,7 +1143,10 @@ mod timing {
             outputs.push(mixer.tick().combined.abs());
         }
 
-        assert!(outputs.last().unwrap().abs() < 0.05, "fade-out should end near zero");
+        assert!(
+            outputs.last().unwrap().abs() < 0.05,
+            "fade-out should end near zero"
+        );
     }
 
     #[test]
@@ -1009,9 +1164,15 @@ mod timing {
             assert!(v.abs() < 0.01, "during delay, output should be ~zero");
         }
 
-        let slot = engine.add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 });
+        let slot = engine.add_effect(TactileEffect::Impact {
+            magnitude: 1.0,
+            decay_rate: 5.0,
+        });
         assert!(slot.is_some(), "slot should be reusable after delay");
-        assert!(engine.tick().abs() > 0.5, "real effect should fire after delay");
+        assert!(
+            engine.tick().abs() > 0.5,
+            "real effect should fire after delay"
+        );
     }
 
     #[test]
@@ -1033,7 +1194,10 @@ mod timing {
             }
             std::thread::sleep(Duration::from_millis(10));
         }
-        assert!(event.remaining_duration().is_none(), "no remaining duration after expiry");
+        assert!(
+            event.remaining_duration().is_none(),
+            "no remaining duration after expiry"
+        );
     }
 
     #[test]
@@ -1050,7 +1214,10 @@ mod timing {
 
     #[test]
     fn effect_event_no_duration_never_expires() {
-        let event = EffectEvent::new(EffectType::EngineVibration, EffectIntensity::new(0.5).unwrap());
+        let event = EffectEvent::new(
+            EffectType::EngineVibration,
+            EffectIntensity::new(0.5).unwrap(),
+        );
         assert!(!event.is_expired(), "no-duration event must never expire");
         assert!(event.remaining_duration().is_none());
     }
@@ -1150,13 +1317,33 @@ mod safety {
 
     #[test]
     fn frequency_bounds_validation() {
-        assert_eq!(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 }.frequency_hz(), 20.0);
-        assert_eq!(TactileEffect::Engine { rpm: 0.0, amplitude: 0.5 }.frequency_hz(), 0.0);
+        assert_eq!(
+            TactileEffect::Impact {
+                magnitude: 1.0,
+                decay_rate: 5.0
+            }
+            .frequency_hz(),
+            20.0
+        );
+        assert_eq!(
+            TactileEffect::Engine {
+                rpm: 0.0,
+                amplitude: 0.5
+            }
+            .frequency_hz(),
+            0.0
+        );
 
         let mut engine = TactileEngine::new();
-        engine.add_effect(TactileEffect::Engine { rpm: 60000.0, amplitude: 0.5 });
+        engine.add_effect(TactileEffect::Engine {
+            rpm: 60000.0,
+            amplitude: 0.5,
+        });
         let v = engine.tick();
-        assert!((-1.0..=1.0).contains(&v), "extreme frequency must still clamp");
+        assert!(
+            (-1.0..=1.0).contains(&v),
+            "extreme frequency must still clamp"
+        );
     }
 
     #[test]
@@ -1164,15 +1351,24 @@ mod safety {
         let mut engine = TactileEngine::new();
         for i in 0..MAX_EFFECTS {
             assert!(
-                engine.add_effect(TactileEffect::Rumble {
-                    frequency_hz: 50.0, amplitude: 0.1, duration_ticks: 1000,
-                }).is_some(),
+                engine
+                    .add_effect(TactileEffect::Rumble {
+                        frequency_hz: 50.0,
+                        amplitude: 0.1,
+                        duration_ticks: 1000,
+                    })
+                    .is_some(),
                 "slot {i} should succeed"
             );
         }
 
         assert!(
-            engine.add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 }).is_none(),
+            engine
+                .add_effect(TactileEffect::Impact {
+                    magnitude: 1.0,
+                    decay_rate: 5.0
+                })
+                .is_none(),
             "exceeding MAX_EFFECTS must return None"
         );
         assert_eq!(engine.active_count(), MAX_EFFECTS);
@@ -1210,7 +1406,10 @@ mod integration {
         let touchdown = events
             .iter()
             .find(|e| e.effect_type == EffectType::Touchdown);
-        assert!(touchdown.is_some(), "touchdown must fire on air\u{2192}ground");
+        assert!(
+            touchdown.is_some(),
+            "touchdown must fire on air\u{2192}ground"
+        );
         assert!(touchdown.unwrap().intensity.value() > 0.0);
     }
 
@@ -1248,7 +1447,9 @@ mod integration {
         });
 
         assert!(
-            !events.iter().any(|e| e.effect_type == EffectType::GroundRoll),
+            !events
+                .iter()
+                .any(|e| e.effect_type == EffectType::GroundRoll),
             "disabled effect must be filtered out"
         );
     }
@@ -1272,9 +1473,18 @@ mod integration {
 
         let outputs = router.process_events(events);
 
-        let ch0 = outputs.iter().find(|o| o.channel_id == ChannelId::new(0)).unwrap();
-        let ch2 = outputs.iter().find(|o| o.channel_id == ChannelId::new(2)).unwrap();
-        let ch4 = outputs.iter().find(|o| o.channel_id == ChannelId::new(4)).unwrap();
+        let ch0 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(0))
+            .unwrap();
+        let ch2 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(2))
+            .unwrap();
+        let ch4 = outputs
+            .iter()
+            .find(|o| o.channel_id == ChannelId::new(4))
+            .unwrap();
 
         assert!(ch0.intensity.value() > 0.5);
         assert!(ch2.intensity.value() > 0.3);
@@ -1310,7 +1520,10 @@ mod integration {
         snapshot.environment.altitude = 5.0;
         let events = processor.process(&snapshot);
 
-        let td_events: Vec<_> = events.iter().filter(|e| e.effect_type == EffectType::Touchdown).collect();
+        let td_events: Vec<_> = events
+            .iter()
+            .filter(|e| e.effect_type == EffectType::Touchdown)
+            .collect();
         assert!(!td_events.is_empty());
         assert!(td_events[0].intensity.value() > 0.0);
     }
@@ -1324,7 +1537,10 @@ mod integration {
         snapshot.kinematics.ias = ValidatedSpeed::new_knots(60.0).unwrap();
 
         let events = processor.process(&snapshot);
-        let stall: Vec<_> = events.iter().filter(|e| e.effect_type == EffectType::StallBuffet).collect();
+        let stall: Vec<_> = events
+            .iter()
+            .filter(|e| e.effect_type == EffectType::StallBuffet)
+            .collect();
         assert_eq!(stall.len(), 1);
         assert!((stall[0].intensity.value() - 0.4).abs() < 0.1);
     }
@@ -1355,12 +1571,24 @@ mod integration {
     fn profile_based_configuration() {
         let config = TactileConfig::default();
 
-        assert!(config.effect_enabled.get(&EffectType::Touchdown).copied().unwrap());
-        assert!(config.effect_enabled.get(&EffectType::GroundRoll).copied().unwrap());
+        assert!(
+            config
+                .effect_enabled
+                .get(&EffectType::Touchdown)
+                .copied()
+                .unwrap()
+        );
+        assert!(
+            config
+                .effect_enabled
+                .get(&EffectType::GroundRoll)
+                .copied()
+                .unwrap()
+        );
 
         let mut manager = TactileManager::new();
         assert!(manager.initialize(config.clone()).is_ok());
-        
+
         let mut new_config = config;
         new_config.update_rate_hz = 30.0;
         assert!(manager.update_config(new_config).is_ok());
@@ -1370,9 +1598,20 @@ mod integration {
     #[test]
     fn mixer_band_separation_low_mid_high() {
         let mut mixer = TactileMixer::new();
-        mixer.add_effect(TactileEffect::Impact { magnitude: 0.5, decay_rate: 5.0 });
-        mixer.add_effect(TactileEffect::Rumble { frequency_hz: 80.0, amplitude: 0.5, duration_ticks: 100 });
-        mixer.add_effect(TactileEffect::Texture { frequency_hz: 200.0, amplitude: 0.5, pattern: TexturePattern::Square });
+        mixer.add_effect(TactileEffect::Impact {
+            magnitude: 0.5,
+            decay_rate: 5.0,
+        });
+        mixer.add_effect(TactileEffect::Rumble {
+            frequency_hz: 80.0,
+            amplitude: 0.5,
+            duration_ticks: 100,
+        });
+        mixer.add_effect(TactileEffect::Texture {
+            frequency_hz: 200.0,
+            amplitude: 0.5,
+            pattern: TexturePattern::Square,
+        });
 
         let out = mixer.tick();
         assert!(out.low.abs() > 0.1);
@@ -1382,14 +1621,23 @@ mod integration {
     fn effect_slot_reuse_after_expiry() {
         let mut engine = TactileEngine::new();
         for _ in 0..MAX_EFFECTS {
-            engine.add_effect(TactileEffect::Rumble { frequency_hz: 50.0, amplitude: 0.1, duration_ticks: 5 });
+            engine.add_effect(TactileEffect::Rumble {
+                frequency_hz: 50.0,
+                amplitude: 0.1,
+                duration_ticks: 5,
+            });
         }
         assert_eq!(engine.active_count(), MAX_EFFECTS);
 
-        for _ in 0..5 { engine.tick(); }
+        for _ in 0..5 {
+            engine.tick();
+        }
         assert_eq!(engine.active_count(), 0);
 
-        let slot = engine.add_effect(TactileEffect::Impact { magnitude: 0.5, decay_rate: 5.0 });
+        let slot = engine.add_effect(TactileEffect::Impact {
+            magnitude: 0.5,
+            decay_rate: 5.0,
+        });
         assert!(slot.is_some());
     }
 
@@ -1397,7 +1645,10 @@ mod integration {
     fn mixer_zero_master_gain_silences_output() {
         let mut mixer = TactileMixer::new();
         mixer.set_master_gain(0.0);
-        mixer.add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 });
+        mixer.add_effect(TactileEffect::Impact {
+            magnitude: 1.0,
+            decay_rate: 5.0,
+        });
         let out = mixer.tick();
         assert_eq!(out.combined, 0.0);
     }
@@ -1406,7 +1657,10 @@ mod integration {
     fn mixer_band_gain_zeroes_specific_band() {
         let mut mixer = TactileMixer::new();
         mixer.set_band_gain(FrequencyBand::Low, 0.0);
-        mixer.add_effect(TactileEffect::Impact { magnitude: 1.0, decay_rate: 5.0 });
+        mixer.add_effect(TactileEffect::Impact {
+            magnitude: 1.0,
+            decay_rate: 5.0,
+        });
         let out = mixer.tick();
         assert_eq!(out.low, 0.0);
     }
@@ -1429,7 +1683,13 @@ mod integration {
 
         snap.environment.altitude = 10.0;
         snap.kinematics.vertical_speed = -250.0;
-        let gentle_int = processor.process(&snap).iter().find(|e| e.effect_type == EffectType::Touchdown).unwrap().intensity.value();
+        let gentle_int = processor
+            .process(&snap)
+            .iter()
+            .find(|e| e.effect_type == EffectType::Touchdown)
+            .unwrap()
+            .intensity
+            .value();
 
         snap.environment.altitude = 200.0;
         snap.kinematics.vertical_speed = -300.0;
@@ -1437,7 +1697,13 @@ mod integration {
 
         snap.environment.altitude = 10.0;
         snap.kinematics.vertical_speed = -500.0;
-        let hard_int = processor.process(&snap).iter().find(|e| e.effect_type == EffectType::Touchdown).unwrap().intensity.value();
+        let hard_int = processor
+            .process(&snap)
+            .iter()
+            .find(|e| e.effect_type == EffectType::Touchdown)
+            .unwrap()
+            .intensity
+            .value();
 
         assert!(hard_int > gentle_int);
     }

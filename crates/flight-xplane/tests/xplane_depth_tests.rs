@@ -13,32 +13,40 @@
 //! 7. Plugin protocol (encode/decode, discovery, heartbeat)
 
 use flight_xplane::{
-    // UDP protocol
-    ParseError,
-    build_dref_command, parse_data_packet, parse_rref_response,
-    // Dataref system
-    DatarefManager,
     // Adapter state machine
-    AdapterEvent, AdapterStateMachine, TransitionError, XPlaneAdapterState,
-    // Dataref database
-    DatarefDatabase, DatarefType,
+    AdapterEvent,
+    AdapterStateMachine,
+    // Enhanced aircraft detection
+    AircraftChange,
     // Aircraft detection (base)
     AircraftDetector,
+    // Dataref database
+    DatarefDatabase,
+    // Dataref system
+    DatarefManager,
+    DatarefType,
+    EnhancedAircraftDetector,
+    EnhancedAircraftId,
+    // UDP protocol
+    ParseError,
+    TransitionError,
+    XPlaneAdapterState,
     aircraft::AircraftType,
-    // Enhanced aircraft detection
-    AircraftChange, EnhancedAircraftDetector, EnhancedAircraftId,
     aircraft_detection::{
         DATAREF_ACF_DESCRIP, DATAREF_ACF_FILE_PATH, DATAREF_ACF_ICAO, DATAREF_ACF_LIVERY,
     },
+    build_dref_command,
     // Control injection
-    control_injection::{ControlInjectorConfig, XPlaneControlInjector, ControlInjectionError},
-    // Plugin protocol
-    plugin_protocol::{
-        self, DatarefEntry, PluginDiscovery, PluginDiscoveryState,
-        PluginProtoMessage, ProtocolError, SubscriptionRequest,
-    },
+    control_injection::{ControlInjectionError, ControlInjectorConfig, XPlaneControlInjector},
     // DataRef value type
     dataref::DataRefValue,
+    parse_data_packet,
+    parse_rref_response,
+    // Plugin protocol
+    plugin_protocol::{
+        self, DatarefEntry, PluginDiscovery, PluginDiscoveryState, PluginProtoMessage,
+        ProtocolError, SubscriptionRequest,
+    },
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -128,13 +136,7 @@ fn udp_rref_request_format_is_413_bytes() {
 
 #[test]
 fn udp_rref_response_multiple_ids_parsed_correctly() {
-    let pkt = make_rref_packet(&[
-        (0, 250.0),
-        (1, 35000.0),
-        (2, 0.82),
-        (3, -3.5),
-        (4, 180.0),
-    ]);
+    let pkt = make_rref_packet(&[(0, 250.0), (1, 35000.0), (2, 0.82), (3, -3.5), (4, 180.0)]);
     let entries = parse_rref_response(&pkt).unwrap();
     assert_eq!(entries.len(), 5);
     assert_eq!(entries[0], (0, 250.0));
@@ -144,9 +146,7 @@ fn udp_rref_response_multiple_ids_parsed_correctly() {
 
 #[test]
 fn udp_data_packet_multi_group_preserves_order() {
-    let groups: Vec<(u32, [f32; 8])> = (0..10)
-        .map(|i| (i, [i as f32; 8]))
-        .collect();
+    let groups: Vec<(u32, [f32; 8])> = (0..10).map(|i| (i, [i as f32; 8])).collect();
     let pkt = make_data_packet(&groups);
     let parsed = parse_data_packet(&pkt).unwrap();
     assert_eq!(parsed.data_groups.len(), 10);
@@ -187,7 +187,16 @@ fn udp_endianness_little_endian_round_trip() {
     assert!((decoded - value).abs() < 0.01);
 
     // DATA packet endianness
-    let vals = [f32::MIN_POSITIVE, f32::MAX, -0.0, 1.0e-38, 0.0, 0.0, 0.0, 0.0];
+    let vals = [
+        f32::MIN_POSITIVE,
+        f32::MAX,
+        -0.0,
+        1.0e-38,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+    ];
     let data_pkt = make_data_packet(&[(99, vals)]);
     let parsed = parse_data_packet(&data_pkt).unwrap();
     assert_eq!(parsed.data_groups[0].values[0], f32::MIN_POSITIVE);
@@ -217,8 +226,13 @@ fn dataref_register_by_path() {
     let mut mgr = DatarefManager::new();
     mgr.subscribe("sim/flightmodel/position/indicated_airspeed", 20.0);
     assert!(mgr.is_subscribed("sim/flightmodel/position/indicated_airspeed"));
-    let sub = mgr.get_subscription("sim/flightmodel/position/indicated_airspeed").unwrap();
-    assert_eq!(sub.dataref_path, "sim/flightmodel/position/indicated_airspeed");
+    let sub = mgr
+        .get_subscription("sim/flightmodel/position/indicated_airspeed")
+        .unwrap();
+    assert_eq!(
+        sub.dataref_path,
+        "sim/flightmodel/position/indicated_airspeed"
+    );
     assert_eq!(sub.update_rate_hz, 20.0);
 }
 
@@ -255,8 +269,14 @@ fn dataref_type_conversion_int_float_double() {
     assert_eq!(format!("{}", DataRefValue::Float(1.5)), "1.5");
     assert_eq!(format!("{}", DataRefValue::Int(42)), "42");
     assert_eq!(format!("{}", DataRefValue::Double(2.719)), "2.719");
-    assert_eq!(format!("{}", DataRefValue::FloatArray(vec![1.0, 2.0])), "[1.0, 2.0]");
-    assert_eq!(format!("{}", DataRefValue::IntArray(vec![10, 20])), "[10, 20]");
+    assert_eq!(
+        format!("{}", DataRefValue::FloatArray(vec![1.0, 2.0])),
+        "[1.0, 2.0]"
+    );
+    assert_eq!(
+        format!("{}", DataRefValue::IntArray(vec![10, 20])),
+        "[10, 20]"
+    );
 }
 
 #[test]
@@ -324,7 +344,8 @@ fn sm_udp_timeout_detection_via_stale_threshold() {
 fn sm_reconnect_logic_error_to_connecting() {
     let mut sm = AdapterStateMachine::new(2000, 3);
     // Error → Connecting (retry within limit)
-    sm.transition(AdapterEvent::SocketError("lost".into())).unwrap();
+    sm.transition(AdapterEvent::SocketError("lost".into()))
+        .unwrap();
     assert_eq!(sm.state(), XPlaneAdapterState::Error);
     assert_eq!(sm.error_count(), 1);
 
@@ -335,12 +356,17 @@ fn sm_reconnect_logic_error_to_connecting() {
 #[test]
 fn sm_reconnect_retries_exhausted() {
     let mut sm = AdapterStateMachine::new(2000, 2);
-    sm.transition(AdapterEvent::SocketError("e1".into())).unwrap();
-    sm.transition(AdapterEvent::SocketError("e2".into())).unwrap();
+    sm.transition(AdapterEvent::SocketError("e1".into()))
+        .unwrap();
+    sm.transition(AdapterEvent::SocketError("e2".into()))
+        .unwrap();
     assert_eq!(sm.error_count(), 2);
 
     let err = sm.transition(AdapterEvent::SocketBound).unwrap_err();
-    assert!(matches!(err, TransitionError::RetriesExhausted { max_retries: 2 }));
+    assert!(matches!(
+        err,
+        TransitionError::RetriesExhausted { max_retries: 2 }
+    ));
 }
 
 #[test]
@@ -390,10 +416,14 @@ fn bus_publish_frequency_20hz_datarefs_registered_at_rate() {
     mgr.subscribe("sim/flightmodel/position/indicated_airspeed", 20.0);
     mgr.subscribe("sim/flightmodel/position/theta", 20.0);
 
-    let sub = mgr.get_subscription("sim/flightmodel/position/indicated_airspeed").unwrap();
+    let sub = mgr
+        .get_subscription("sim/flightmodel/position/indicated_airspeed")
+        .unwrap();
     assert_eq!(sub.update_rate_hz, 20.0);
 
-    let sub2 = mgr.get_subscription("sim/flightmodel/position/theta").unwrap();
+    let sub2 = mgr
+        .get_subscription("sim/flightmodel/position/theta")
+        .unwrap();
     assert_eq!(sub2.update_rate_hz, 20.0);
 }
 
@@ -401,7 +431,10 @@ fn bus_publish_frequency_20hz_datarefs_registered_at_rate() {
 fn bus_stale_detection_no_value_returns_none() {
     let mgr = DatarefManager::new();
     // Not subscribed, no value
-    assert_eq!(mgr.get_value("sim/flightmodel/position/indicated_airspeed"), None);
+    assert_eq!(
+        mgr.get_value("sim/flightmodel/position/indicated_airspeed"),
+        None
+    );
 }
 
 #[test]
@@ -499,7 +532,9 @@ fn aircraft_type_classification_by_icao_and_title() {
 
     // Direct ICAO mappings
     assert_eq!(
-        detector.get_aircraft_capabilities(AircraftType::Fighter).len(),
+        detector
+            .get_aircraft_capabilities(AircraftType::Fighter)
+            .len(),
         4
     );
 
@@ -521,7 +556,10 @@ fn aircraft_type_classification_by_icao_and_title() {
 async fn inject_command_once_sends_cmnd_packet() {
     let (mut injector, receiver) = loopback_injector().await;
 
-    injector.send_command("sim/autopilot/heading_up").await.unwrap();
+    injector
+        .send_command("sim/autopilot/heading_up")
+        .await
+        .unwrap();
 
     let mut buf = [0u8; 1024];
     let n = receiver.recv(&mut buf).await.unwrap();
@@ -560,13 +598,21 @@ async fn inject_axis_value_clamped_and_sent() {
     let mut buf = [0u8; 1024];
     receiver.recv(&mut buf).await.unwrap();
     let val = f32::from_le_bytes([buf[5], buf[6], buf[7], buf[8]]);
-    assert!((val - 1.0).abs() < f32::EPSILON, "expected 1.0, got {}", val);
+    assert!(
+        (val - 1.0).abs() < f32::EPSILON,
+        "expected 1.0, got {}",
+        val
+    );
 
     // Negative clamp: value < -1.0 should be clamped to -1.0
     injector.set_axis(1, -5.0).await.unwrap();
     receiver.recv(&mut buf).await.unwrap();
     let val2 = f32::from_le_bytes([buf[5], buf[6], buf[7], buf[8]]);
-    assert!((val2 - (-1.0)).abs() < f32::EPSILON, "expected -1.0, got {}", val2);
+    assert!(
+        (val2 - (-1.0)).abs() < f32::EPSILON,
+        "expected -1.0, got {}",
+        val2
+    );
 }
 
 #[tokio::test]
@@ -689,7 +735,8 @@ fn plugin_proto_encode_decode_error() {
 
 #[test]
 fn plugin_proto_decode_bad_magic_rejected() {
-    let mut buf = plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
+    let mut buf =
+        plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
     buf[0] = b'X';
     let err = plugin_protocol::decode(&buf).unwrap_err();
     assert!(matches!(err, ProtocolError::BadMagic { .. }));
@@ -697,18 +744,26 @@ fn plugin_proto_decode_bad_magic_rejected() {
 
 #[test]
 fn plugin_proto_decode_wrong_version_rejected() {
-    let mut buf = plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
+    let mut buf =
+        plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
     buf[4] = 99;
     let err = plugin_protocol::decode(&buf).unwrap_err();
-    assert!(matches!(err, ProtocolError::UnsupportedVersion { version: 99 }));
+    assert!(matches!(
+        err,
+        ProtocolError::UnsupportedVersion { version: 99 }
+    ));
 }
 
 #[test]
 fn plugin_proto_decode_unknown_message_type_rejected() {
-    let mut buf = plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
+    let mut buf =
+        plugin_protocol::encode(&PluginProtoMessage::Heartbeat { timestamp_us: 0 }).unwrap();
     buf[5] = 0x99;
     let err = plugin_protocol::decode(&buf).unwrap_err();
-    assert!(matches!(err, ProtocolError::UnknownMessageType { type_byte: 0x99 }));
+    assert!(matches!(
+        err,
+        ProtocolError::UnknownMessageType { type_byte: 0x99 }
+    ));
 }
 
 #[test]
@@ -899,7 +954,10 @@ fn enhanced_detect_livery_change() {
 #[tokio::test]
 async fn inject_rejects_nan_value() {
     let (mut injector, _receiver) = loopback_injector().await;
-    let err = injector.set_dataref("sim/test", f32::NAN).await.unwrap_err();
+    let err = injector
+        .set_dataref("sim/test", f32::NAN)
+        .await
+        .unwrap_err();
     assert!(matches!(err, ControlInjectionError::InvalidValue { .. }));
 }
 

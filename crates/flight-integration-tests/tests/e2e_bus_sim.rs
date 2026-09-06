@@ -54,14 +54,8 @@ fn e2e_bus_snapshot_to_sim_variable_write() {
 
     // Subscriber receives and "writes" to sim
     let received = sub.try_recv().unwrap().expect("must receive");
-    sim.send_command(&format!(
-        "SET_PITCH={}",
-        received.control_inputs.pitch
-    ));
-    sim.send_command(&format!(
-        "SET_ROLL={}",
-        received.control_inputs.roll
-    ));
+    sim.send_command(&format!("SET_PITCH={}", received.control_inputs.pitch));
+    sim.send_command(&format!("SET_ROLL={}", received.control_inputs.roll));
     sim.send_command(&format!(
         "SET_THROTTLE={}",
         received.control_inputs.throttle[0]

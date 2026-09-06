@@ -112,9 +112,7 @@ async fn given_joystick_and_throttle_connected(world: &mut FlightWorld) {
     }
 }
 
-#[given(
-    "the first-time device discovery has found a joystick with 3 axes and 12 buttons"
-)]
+#[given("the first-time device discovery has found a joystick with 3 axes and 12 buttons")]
 async fn given_discovery_found_joystick(world: &mut FlightWorld) {
     let state = FirstTimeSetupState {
         fresh_install: true,
@@ -242,7 +240,9 @@ async fn then_global_profile_with_axis_mappings(world: &mut FlightWorld) {
     assert!(state.default_profile_created);
 }
 
-#[then("the profile SHALL use conservative deadzones (3% pitch/roll, 5% yaw) and expo response curves")]
+#[then(
+    "the profile SHALL use conservative deadzones (3% pitch/roll, 5% yaw) and expo response curves"
+)]
 async fn then_profile_conservative_defaults(_world: &mut FlightWorld) {
     // Validated via profile schema; see crates/flight-service/src/first_run.rs
     // for actual defaults: pitch/roll 3% + 0.2 expo, yaw 5%.
@@ -295,11 +295,7 @@ async fn given_service_with_global_profile(world: &mut FlightWorld) {
 }
 
 #[given(expr = "a profile named {string} exists with a deadzone of {int}%")]
-async fn given_profile_with_deadzone(
-    world: &mut FlightWorld,
-    name: String,
-    deadzone: i32,
-) {
+async fn given_profile_with_deadzone(world: &mut FlightWorld, name: String, deadzone: i32) {
     world.profile_lifecycle = Some(ProfileLifecycleState {
         profile_name: name,
         created: true,
@@ -317,9 +313,7 @@ async fn given_active_profile_and_global(world: &mut FlightWorld, name: String) 
     });
 }
 
-#[given(
-    expr = "a profile named {string} exists with axis curves, deadzones, and button mappings"
-)]
+#[given(expr = "a profile named {string} exists with axis curves, deadzones, and button mappings")]
 async fn given_profile_with_full_config(world: &mut FlightWorld, name: String) {
     world.profile_lifecycle = Some(ProfileLifecycleState {
         profile_name: name,
@@ -392,9 +386,7 @@ async fn then_profile_persisted(world: &mut FlightWorld) {
 #[then("the profile SHALL be validated against the profile schema")]
 async fn then_profile_validated(_world: &mut FlightWorld) {}
 
-#[then(
-    expr = "a {string} event SHALL be emitted on the bus with the profile name"
-)]
+#[then(expr = "a {string} event SHALL be emitted on the bus with the profile name")]
 async fn then_event_with_profile_name(_world: &mut FlightWorld, _event: String) {}
 
 #[then("the updated profile SHALL be saved and schema-validated")]
@@ -468,13 +460,8 @@ async fn given_joystick_connected_processing(world: &mut FlightWorld) {
     });
 }
 
-#[given(
-    expr = "a joystick was connected with profile {string} and then unplugged"
-)]
-async fn given_joystick_was_connected_then_unplugged(
-    world: &mut FlightWorld,
-    _profile: String,
-) {
+#[given(expr = "a joystick was connected with profile {string} and then unplugged")]
+async fn given_joystick_was_connected_then_unplugged(world: &mut FlightWorld, _profile: String) {
     world.device_hotplug = Some(DeviceHotplugState {
         disconnected_device: Some("USB Joystick".into()),
         ..Default::default()
@@ -530,9 +517,11 @@ async fn when_new_throttle_connected(world: &mut FlightWorld) {
 #[when("a joystick, throttle, and rudder pedals are connected via a USB hub")]
 async fn when_multiple_devices_connected(world: &mut FlightWorld) {
     if let Some(ref mut state) = world.device_hotplug {
-        state
-            .connected_devices
-            .extend(["Joystick".into(), "Throttle".into(), "Rudder Pedals".into()]);
+        state.connected_devices.extend([
+            "Joystick".into(),
+            "Throttle".into(),
+            "Rudder Pedals".into(),
+        ]);
     }
 }
 
@@ -557,7 +546,11 @@ async fn then_axes_to_neutral(world: &mut FlightWorld) {
 #[then("the device SHALL be removed from the active device list")]
 async fn then_device_removed(world: &mut FlightWorld) {
     let state = world.device_hotplug.as_ref().expect("hotplug state");
-    assert!(!state.connected_devices.contains(&"USB Joystick".to_string()));
+    assert!(
+        !state
+            .connected_devices
+            .contains(&"USB Joystick".to_string())
+    );
 }
 
 #[then("the device SHALL be re-detected within 2 seconds")]
@@ -693,15 +686,8 @@ async fn then_msfs_connected(world: &mut FlightWorld, _seconds: i32) {
     assert_eq!(state.connected_sim.as_deref(), Some("MSFS"));
 }
 
-#[then(
-    expr = "a {string} event SHALL be emitted with simulator identifier {string}"
-)]
-async fn then_sim_event_with_id(
-    _world: &mut FlightWorld,
-    _event: String,
-    _sim_id: String,
-) {
-}
+#[then(expr = "a {string} event SHALL be emitted with simulator identifier {string}")]
+async fn then_sim_event_with_id(_world: &mut FlightWorld, _event: String, _sim_id: String) {}
 
 #[then("the telemetry bus SHALL begin receiving MSFS flight data")]
 async fn then_msfs_telemetry(world: &mut FlightWorld) {
@@ -745,15 +731,8 @@ async fn then_msfs_auto_reconnect(world: &mut FlightWorld) {
 #[then("the previously active profile SHALL be restored")]
 async fn then_profile_restored(_world: &mut FlightWorld) {}
 
-#[then(
-    expr = "the aircraft detector SHALL emit an {string} event within {int} ms"
-)]
-async fn then_aircraft_event(
-    _world: &mut FlightWorld,
-    _event: String,
-    _ms: i32,
-) {
-}
+#[then(expr = "the aircraft detector SHALL emit an {string} event within {int} ms")]
+async fn then_aircraft_event(_world: &mut FlightWorld, _event: String, _ms: i32) {}
 
 #[then("the profile cascade SHALL merge the F-18-specific overrides")]
 async fn then_f18_cascade(world: &mut FlightWorld) {
@@ -826,9 +805,7 @@ async fn then_safe_mode_activated(world: &mut FlightWorld) {
     assert!(state.active);
 }
 
-#[then(
-    expr = "a {string} event SHALL be emitted on the bus with the failure reason"
-)]
+#[then(expr = "a {string} event SHALL be emitted on the bus with the failure reason")]
 async fn then_event_with_failure_reason(_world: &mut FlightWorld, _event: String) {}
 
 #[then("the failure reason SHALL be logged at ERROR level")]
@@ -907,11 +884,7 @@ async fn given_update_downloaded(world: &mut FlightWorld, version: String) {
 #[given(
     expr = "version {string} was installed and the rollback directory contains version {string}"
 )]
-async fn given_version_with_rollback(
-    world: &mut FlightWorld,
-    current: String,
-    rollback: String,
-) {
+async fn given_version_with_rollback(world: &mut FlightWorld, current: String, rollback: String) {
     world.update_journey = Some(UpdateJourneyState {
         current_version: current,
         rollback_version: Some(rollback),
@@ -951,9 +924,7 @@ async fn when_trigger_rollback(world: &mut FlightWorld) {
 #[then("the updater SHALL query the configured update server")]
 async fn then_query_update_server(_world: &mut FlightWorld) {}
 
-#[then(
-    expr = "if version {string} is available it SHALL be reported with release notes"
-)]
+#[then(expr = "if version {string} is available it SHALL be reported with release notes")]
 async fn then_version_available(world: &mut FlightWorld, version: String) {
     let state = world.update_journey.as_ref().expect("update state");
     assert_eq!(state.available_version.as_deref(), Some(version.as_str()));
@@ -977,9 +948,7 @@ async fn then_restart_new_version(world: &mut FlightWorld) {
     assert_eq!(state.current_version, "1.3.0");
 }
 
-#[then(
-    expr = "a {string} event SHALL be emitted with old and new version numbers"
-)]
+#[then(expr = "a {string} event SHALL be emitted with old and new version numbers")]
 async fn then_update_event_versions(_world: &mut FlightWorld, _event: String) {}
 
 #[then(expr = "the updater SHALL restore the backed-up version {string} files")]

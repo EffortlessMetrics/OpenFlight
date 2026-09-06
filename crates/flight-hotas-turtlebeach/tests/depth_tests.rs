@@ -7,25 +7,40 @@
 //! device identification for the full VelocityOne product family.
 
 use flight_hotas_turtlebeach::{
-    // Device database
-    TURTLE_BEACH_VID, VelocityOneDevice, capabilities, identify_device, is_turtle_beach_device,
+    DisplayCommand,
+    DisplayPage,
     // Protocol — Flight (yoke)
-    FLIGHT_MIN_REPORT_BYTES, decode_all_toggles, decode_toggle_switch,
-    parse_flight_report, serialize_gear_led_report, serialize_display_command,
-    FlightLedState, GearLedState, ToggleSwitchPosition, TrimWheelTracker,
-    DisplayCommand, DisplayPage,
+    FLIGHT_MIN_REPORT_BYTES,
     // Protocol — Flightstick
-    FLIGHTSTICK_MIN_REPORT_BYTES, parse_flightstick_report,
+    FLIGHTSTICK_MIN_REPORT_BYTES,
+    FlightLedState,
+    GearLedState,
+    RUDDER_MIN_REPORT_BYTES,
+    // Device database
+    TURTLE_BEACH_VID,
+    ToggleSwitchPosition,
+    TrimWheelTracker,
+    VelocityOneDevice,
+    capabilities,
+    decode_all_toggles,
+    decode_toggle_switch,
+    identify_device,
+    is_turtle_beach_device,
+    parse_flight_report,
     // Legacy (VID 0x1432) — Flightdeck / Rudder
-    parse_flightdeck_report, parse_rudder_report, RUDDER_MIN_REPORT_BYTES,
+    parse_flightdeck_report,
+    parse_flightstick_report,
+    parse_rudder_report,
     // Profiles
     profile_for_device,
+    serialize_display_command,
+    serialize_gear_led_report,
 };
 
 // ── Report builders (shared) ─────────────────────────────────────────────────
 
 mod common;
-use common::{FlightInput, build_flight, make_flightstick, make_flightdeck, make_rudder};
+use common::{FlightInput, build_flight, make_flightdeck, make_flightstick, make_rudder};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. DEVICE IDENTIFICATION — VID/PID matching, model discrimination
@@ -55,10 +70,19 @@ fn vid_pid_matching_all_known_devices() {
         (0x3085, VelocityOneDevice::FlightYoke),
     ];
     for (pid, expected) in known {
-        assert!(is_turtle_beach_device(TURTLE_BEACH_VID, pid),
-            "VID/PID 0x{:04X}/0x{:04X} should be recognised", TURTLE_BEACH_VID, pid);
-        assert_eq!(identify_device(pid), Some(expected),
-            "PID 0x{:04X} should identify as {:?}", pid, expected);
+        assert!(
+            is_turtle_beach_device(TURTLE_BEACH_VID, pid),
+            "VID/PID 0x{:04X}/0x{:04X} should be recognised",
+            TURTLE_BEACH_VID,
+            pid
+        );
+        assert_eq!(
+            identify_device(pid),
+            Some(expected),
+            "PID 0x{:04X} should identify as {:?}",
+            pid,
+            expected
+        );
     }
 }
 
@@ -211,12 +235,18 @@ fn capabilities_toggle_count_matches_profile_primary() {
 #[test]
 fn combined_unit_detection_flight_has_all_features() {
     let caps = capabilities(VelocityOneDevice::Flight);
-    assert_eq!(caps.axes, 6, "Flight should have 6 axes (yoke 2 + rudder twist + throttle 2 + trim)");
+    assert_eq!(
+        caps.axes, 6,
+        "Flight should have 6 axes (yoke 2 + rudder twist + throttle 2 + trim)"
+    );
     assert!(caps.has_leds, "Flight should have gear LEDs");
     assert!(caps.has_display, "Flight should have a display");
     assert!(caps.has_trim_wheel, "Flight should have a trim wheel");
     assert!(caps.has_gear_lever, "Flight should have a gear lever");
-    assert!(caps.toggle_switch_count >= 7, "Flight should have ≥7 toggle switches");
+    assert!(
+        caps.toggle_switch_count >= 7,
+        "Flight should have ≥7 toggle switches"
+    );
 }
 
 #[test]
@@ -266,14 +296,25 @@ fn profile_vendor_id_matches_turtle_beach_vid() {
 
 #[test]
 fn profile_axis_count_within_capabilities() {
-    for device in [VelocityOneDevice::Flight, VelocityOneDevice::Flightstick, VelocityOneDevice::Rudder] {
+    for device in [
+        VelocityOneDevice::Flight,
+        VelocityOneDevice::Flightstick,
+        VelocityOneDevice::Rudder,
+    ] {
         let profile = profile_for_device(device);
         let caps = capabilities(device);
-        assert!(profile.axes.len() <= usize::from(caps.axes),
+        assert!(
+            profile.axes.len() <= usize::from(caps.axes),
             "profile axis count should not exceed capabilities for {:?}: profile={} caps={}",
-            device, profile.axes.len(), caps.axes);
-        assert!(!profile.axes.is_empty(),
-            "profile should have at least one axis for {:?}", device);
+            device,
+            profile.axes.len(),
+            caps.axes
+        );
+        assert!(
+            !profile.axes.is_empty(),
+            "profile should have at least one axis for {:?}",
+            device
+        );
     }
 }
 
@@ -339,64 +380,157 @@ fn profile_button_numbers_unique() {
 
 #[test]
 fn yoke_pitch_full_range() {
-    let fwd = parse_flight_report(&build_flight(&FlightInput { pitch: 0, ..Default::default() })).unwrap();
-    let back = parse_flight_report(&build_flight(&FlightInput { pitch: 4095, ..Default::default() })).unwrap();
-    assert!(fwd.pitch < -0.99, "full forward pitch should be ~-1.0, got {}", fwd.pitch);
-    assert!(back.pitch > 0.99, "full back pitch should be ~1.0, got {}", back.pitch);
+    let fwd = parse_flight_report(&build_flight(&FlightInput {
+        pitch: 0,
+        ..Default::default()
+    }))
+    .unwrap();
+    let back = parse_flight_report(&build_flight(&FlightInput {
+        pitch: 4095,
+        ..Default::default()
+    }))
+    .unwrap();
+    assert!(
+        fwd.pitch < -0.99,
+        "full forward pitch should be ~-1.0, got {}",
+        fwd.pitch
+    );
+    assert!(
+        back.pitch > 0.99,
+        "full back pitch should be ~1.0, got {}",
+        back.pitch
+    );
 }
 
 #[test]
 fn yoke_roll_full_range() {
-    let left = parse_flight_report(&build_flight(&FlightInput { roll: 0, ..Default::default() })).unwrap();
-    let right = parse_flight_report(&build_flight(&FlightInput { roll: 4095, ..Default::default() })).unwrap();
-    assert!(left.roll < -0.99, "full left roll should be ~-1.0, got {}", left.roll);
-    assert!(right.roll > 0.99, "full right roll should be ~1.0, got {}", right.roll);
+    let left = parse_flight_report(&build_flight(&FlightInput {
+        roll: 0,
+        ..Default::default()
+    }))
+    .unwrap();
+    let right = parse_flight_report(&build_flight(&FlightInput {
+        roll: 4095,
+        ..Default::default()
+    }))
+    .unwrap();
+    assert!(
+        left.roll < -0.99,
+        "full left roll should be ~-1.0, got {}",
+        left.roll
+    );
+    assert!(
+        right.roll > 0.99,
+        "full right roll should be ~1.0, got {}",
+        right.roll
+    );
 }
 
 #[test]
 fn yoke_center_calibration() {
     let r = parse_flight_report(&build_flight(&FlightInput::default())).unwrap();
-    assert!(r.roll.abs() < 0.001, "roll center should be ~0, got {}", r.roll);
-    assert!(r.pitch.abs() < 0.001, "pitch center should be ~0, got {}", r.pitch);
-    assert!(r.rudder_twist.abs() < 0.001, "rudder_twist center should be ~0, got {}", r.rudder_twist);
+    assert!(
+        r.roll.abs() < 0.001,
+        "roll center should be ~0, got {}",
+        r.roll
+    );
+    assert!(
+        r.pitch.abs() < 0.001,
+        "pitch center should be ~0, got {}",
+        r.pitch
+    );
+    assert!(
+        r.rudder_twist.abs() < 0.001,
+        "rudder_twist center should be ~0, got {}",
+        r.rudder_twist
+    );
 }
 
 #[test]
 fn yoke_linearity_quarter_deflections() {
-    let q1 = parse_flight_report(&build_flight(&FlightInput { roll: 1024, ..Default::default() })).unwrap();
-    let q3 = parse_flight_report(&build_flight(&FlightInput { roll: 3072, ..Default::default() })).unwrap();
+    let q1 = parse_flight_report(&build_flight(&FlightInput {
+        roll: 1024,
+        ..Default::default()
+    }))
+    .unwrap();
+    let q3 = parse_flight_report(&build_flight(&FlightInput {
+        roll: 3072,
+        ..Default::default()
+    }))
+    .unwrap();
     // Quarter deflections should be roughly symmetric around center
-    assert!((q1.roll + q3.roll).abs() < 0.01,
-        "quarter deflections should be symmetric: left={}, right={}", q1.roll, q3.roll);
+    assert!(
+        (q1.roll + q3.roll).abs() < 0.01,
+        "quarter deflections should be symmetric: left={}, right={}",
+        q1.roll,
+        q3.roll
+    );
     // Quarter deflection should be ~0.5 magnitude
-    assert!(q1.roll < -0.45 && q1.roll > -0.55,
-        "25% left roll should be ~-0.5, got {}", q1.roll);
+    assert!(
+        q1.roll < -0.45 && q1.roll > -0.55,
+        "25% left roll should be ~-0.5, got {}",
+        q1.roll
+    );
 }
 
 #[test]
 fn yoke_12bit_resolution_distinguishes_adjacent_values() {
     let a = parse_flight_report(&build_flight(&FlightInput::default())).unwrap();
-    let b = parse_flight_report(&build_flight(&FlightInput { roll: 2049, ..Default::default() })).unwrap();
+    let b = parse_flight_report(&build_flight(&FlightInput {
+        roll: 2049,
+        ..Default::default()
+    }))
+    .unwrap();
     let diff = (b.roll - a.roll).abs();
-    assert!(diff > 0.0, "adjacent 12-bit values should produce different outputs");
+    assert!(
+        diff > 0.0,
+        "adjacent 12-bit values should produce different outputs"
+    );
     // 1 LSB in 12-bit ≈ 1/2048 ≈ 0.000488
     assert!(diff < 0.002, "1 LSB delta should be small, got {}", diff);
 }
 
 #[test]
 fn throttle_lever_independence() {
-    let left_only = parse_flight_report(&build_flight(&FlightInput { tl: 255, ..Default::default() })).unwrap();
-    let right_only = parse_flight_report(&build_flight(&FlightInput { tr: 255, ..Default::default() })).unwrap();
-    assert!(left_only.throttle_left > 0.99, "left throttle full, got {}", left_only.throttle_left);
-    assert!(left_only.throttle_right < 0.01, "right should be idle when only left pushed");
-    assert!(right_only.throttle_right > 0.99, "right throttle full, got {}", right_only.throttle_right);
-    assert!(right_only.throttle_left < 0.01, "left should be idle when only right pushed");
+    let left_only = parse_flight_report(&build_flight(&FlightInput {
+        tl: 255,
+        ..Default::default()
+    }))
+    .unwrap();
+    let right_only = parse_flight_report(&build_flight(&FlightInput {
+        tr: 255,
+        ..Default::default()
+    }))
+    .unwrap();
+    assert!(
+        left_only.throttle_left > 0.99,
+        "left throttle full, got {}",
+        left_only.throttle_left
+    );
+    assert!(
+        left_only.throttle_right < 0.01,
+        "right should be idle when only left pushed"
+    );
+    assert!(
+        right_only.throttle_right > 0.99,
+        "right throttle full, got {}",
+        right_only.throttle_right
+    );
+    assert!(
+        right_only.throttle_left < 0.01,
+        "left should be idle when only right pushed"
+    );
 }
 
 #[test]
 fn throttle_idle_to_full_range() {
     let idle = parse_flight_report(&build_flight(&FlightInput::default())).unwrap();
-    let full = parse_flight_report(&build_flight(&FlightInput { tl: 255, tr: 255, ..Default::default() })).unwrap();
+    let full = parse_flight_report(&build_flight(&FlightInput {
+        tl: 255,
+        tr: 255,
+        ..Default::default()
+    }))
+    .unwrap();
     assert!(idle.throttle_left < 0.01, "idle left should be ~0.0");
     assert!(idle.throttle_right < 0.01, "idle right should be ~0.0");
     assert!(full.throttle_left > 0.99, "full left should be ~1.0");
@@ -405,20 +539,40 @@ fn throttle_idle_to_full_range() {
 
 #[test]
 fn throttle_mid_position() {
-    let mid = parse_flight_report(&build_flight(&FlightInput { tl: 128, tr: 128, ..Default::default() })).unwrap();
-    assert!((mid.throttle_left - 0.502).abs() < 0.01,
-        "50% throttle_left should be ~0.502, got {}", mid.throttle_left);
-    assert!((mid.throttle_right - 0.502).abs() < 0.01,
-        "50% throttle_right should be ~0.502, got {}", mid.throttle_right);
+    let mid = parse_flight_report(&build_flight(&FlightInput {
+        tl: 128,
+        tr: 128,
+        ..Default::default()
+    }))
+    .unwrap();
+    assert!(
+        (mid.throttle_left - 0.502).abs() < 0.01,
+        "50% throttle_left should be ~0.502, got {}",
+        mid.throttle_left
+    );
+    assert!(
+        (mid.throttle_right - 0.502).abs() < 0.01,
+        "50% throttle_right should be ~0.502, got {}",
+        mid.throttle_right
+    );
 }
 
 #[test]
 fn flight_throttle_monotonically_increases() {
     let mut prev_left = -1.0f32;
     for raw in (0u8..=255).step_by(16) {
-        let r = parse_flight_report(&build_flight(&FlightInput { tl: raw, ..Default::default() })).unwrap();
-        assert!(r.throttle_left >= prev_left,
-            "throttle should be monotonically increasing: raw={} gave {} < {}", raw, r.throttle_left, prev_left);
+        let r = parse_flight_report(&build_flight(&FlightInput {
+            tl: raw,
+            ..Default::default()
+        }))
+        .unwrap();
+        assert!(
+            r.throttle_left >= prev_left,
+            "throttle should be monotonically increasing: raw={} gave {} < {}",
+            raw,
+            r.throttle_left,
+            prev_left
+        );
         prev_left = r.throttle_left;
     }
 }
@@ -427,7 +581,11 @@ fn flight_throttle_monotonically_increases() {
 fn flight_roll_monotonically_increases() {
     let mut prev = -2.0f32;
     for raw in (0..=4095u16).step_by(16) {
-        let r = parse_flight_report(&build_flight(&FlightInput { roll: raw, ..Default::default() })).unwrap();
+        let r = parse_flight_report(&build_flight(&FlightInput {
+            roll: raw,
+            ..Default::default()
+        }))
+        .unwrap();
         assert!(
             r.roll >= prev,
             "roll not monotonic: raw={raw}, prev={prev}, cur={}",
@@ -439,7 +597,15 @@ fn flight_roll_monotonically_increases() {
 
 #[test]
 fn flight_report_minimum_axis_values() {
-    let data = build_flight(&FlightInput { roll: 0, pitch: 0, rudder: 0, tl: 0, tr: 0, trim: 0, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        roll: 0,
+        pitch: 0,
+        rudder: 0,
+        tl: 0,
+        tr: 0,
+        trim: 0,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     assert!(r.roll < -0.99);
     assert!(r.pitch < -0.99);
@@ -451,7 +617,15 @@ fn flight_report_minimum_axis_values() {
 
 #[test]
 fn flight_report_maximum_axis_values() {
-    let data = build_flight(&FlightInput { roll: 4095, pitch: 4095, rudder: 4095, tl: 255, tr: 255, trim: 4095, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        roll: 4095,
+        pitch: 4095,
+        rudder: 4095,
+        tl: 255,
+        tr: 255,
+        trim: 4095,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     assert!(r.roll > 0.99);
     assert!(r.pitch > 0.99);
@@ -463,7 +637,10 @@ fn flight_report_maximum_axis_values() {
 
 #[test]
 fn flight_report_oversized_12bit_value_clamped() {
-    let data = build_flight(&FlightInput { roll: 8000, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        roll: 8000,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     assert!(r.roll <= 1.0);
 }
@@ -471,7 +648,11 @@ fn flight_report_oversized_12bit_value_clamped() {
 #[test]
 fn flight_report_extra_bytes_ignored() {
     let mut data = [0u8; 32];
-    let base = build_flight(&FlightInput { tl: 128, tr: 128, ..Default::default() });
+    let base = build_flight(&FlightInput {
+        tl: 128,
+        tr: 128,
+        ..Default::default()
+    });
     data[..20].copy_from_slice(&base);
     data[20..].fill(0xFF);
     let r = parse_flight_report(&data).unwrap();
@@ -500,7 +681,10 @@ fn flight_report_one_below_min_length() {
 
 #[test]
 fn flight_report_all_buttons_set() {
-    let data = build_flight(&FlightInput { buttons: u64::MAX, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        buttons: u64::MAX,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     assert_eq!(r.buttons, u64::MAX);
 }
@@ -509,7 +693,10 @@ fn flight_report_all_buttons_set() {
 fn flight_report_single_button_bits() {
     for bit in 0..64u32 {
         let mask: u64 = 1 << bit;
-        let data = build_flight(&FlightInput { buttons: mask, ..Default::default() });
+        let data = build_flight(&FlightInput {
+            buttons: mask,
+            ..Default::default()
+        });
         let r = parse_flight_report(&data).unwrap();
         assert_eq!(r.buttons, mask, "button bit {bit} not preserved");
     }
@@ -530,7 +717,10 @@ fn flight_report_hat_all_directions() {
         (15, 0), // centred (any ≥8)
     ];
     for &(raw_hat, expected) in expected_dirs {
-        let data = build_flight(&FlightInput { hat: raw_hat, ..Default::default() });
+        let data = build_flight(&FlightInput {
+            hat: raw_hat,
+            ..Default::default()
+        });
         let r = parse_flight_report(&data).unwrap();
         assert_eq!(r.hat, expected, "hat raw={raw_hat} expected={expected}");
     }
@@ -539,8 +729,18 @@ fn flight_report_hat_all_directions() {
 #[test]
 fn hat_switch_directions_flight() {
     for raw_hat in 0u8..=7 {
-        let r = parse_flight_report(&build_flight(&FlightInput { hat: raw_hat, ..Default::default() })).unwrap();
-        assert_eq!(r.hat, raw_hat + 1, "raw hat {} should map to {}", raw_hat, raw_hat + 1);
+        let r = parse_flight_report(&build_flight(&FlightInput {
+            hat: raw_hat,
+            ..Default::default()
+        }))
+        .unwrap();
+        assert_eq!(
+            r.hat,
+            raw_hat + 1,
+            "raw hat {} should map to {}",
+            raw_hat,
+            raw_hat + 1
+        );
     }
     let r = parse_flight_report(&build_flight(&FlightInput::default())).unwrap();
     assert_eq!(r.hat, 0, "hat ≥8 should map to 0 (centered)");
@@ -550,7 +750,12 @@ fn hat_switch_directions_flight() {
 fn toggle_switches_individual_and_batch() {
     let all_on = decode_all_toggles(0x7F);
     for (i, t) in all_on.iter().enumerate() {
-        assert_eq!(*t, ToggleSwitchPosition::On, "switch {} should be on", i + 1);
+        assert_eq!(
+            *t,
+            ToggleSwitchPosition::On,
+            "switch {} should be on",
+            i + 1
+        );
     }
     let alt = decode_all_toggles(0b0101_0101);
     assert_eq!(alt[0], ToggleSwitchPosition::On);
@@ -562,7 +767,10 @@ fn toggle_switches_individual_and_batch() {
 #[test]
 fn toggle_switches_round_trip_through_report() {
     for mask in 0..=0x7Fu8 {
-        let data = build_flight(&FlightInput { toggles: mask, ..Default::default() });
+        let data = build_flight(&FlightInput {
+            toggles: mask,
+            ..Default::default()
+        });
         let r = parse_flight_report(&data).unwrap();
         let decoded = decode_all_toggles(r.toggle_switches);
         for sw in 1..=7u8 {
@@ -582,7 +790,10 @@ fn toggle_switches_round_trip_through_report() {
 
 #[test]
 fn toggle_high_bit_masked_in_report() {
-    let data = build_flight(&FlightInput { toggles: 0xFF, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        toggles: 0xFF,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     assert_eq!(r.toggle_switches, 0x7F, "bit 7 should be masked off");
 }
@@ -601,16 +812,28 @@ fn gear_switch_up_down_transit() {
     let gear_down_mask: u64 = 1 << 31;
     let gear_up_mask: u64 = 1 << 30;
 
-    assert_eq!(GearLedState::from_button_mask(gear_down_mask), GearLedState::Down);
-    assert_eq!(GearLedState::from_button_mask(gear_up_mask), GearLedState::Up);
+    assert_eq!(
+        GearLedState::from_button_mask(gear_down_mask),
+        GearLedState::Down
+    );
+    assert_eq!(
+        GearLedState::from_button_mask(gear_up_mask),
+        GearLedState::Up
+    );
     assert_eq!(GearLedState::from_button_mask(0), GearLedState::Transit);
-    assert_eq!(GearLedState::from_button_mask(gear_down_mask | gear_up_mask), GearLedState::Down);
+    assert_eq!(
+        GearLedState::from_button_mask(gear_down_mask | gear_up_mask),
+        GearLedState::Down
+    );
 }
 
 #[test]
 fn gear_state_from_flight_report_down() {
     let mask: u64 = 1 << 31;
-    let data = build_flight(&FlightInput { buttons: mask, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        buttons: mask,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     let gear = GearLedState::from_button_mask(r.buttons);
     assert_eq!(gear, GearLedState::Down);
@@ -619,7 +842,10 @@ fn gear_state_from_flight_report_down() {
 #[test]
 fn gear_state_from_flight_report_up() {
     let mask: u64 = 1 << 30;
-    let data = build_flight(&FlightInput { buttons: mask, ..Default::default() });
+    let data = build_flight(&FlightInput {
+        buttons: mask,
+        ..Default::default()
+    });
     let r = parse_flight_report(&data).unwrap();
     let gear = GearLedState::from_button_mask(r.buttons);
     assert_eq!(gear, GearLedState::Up);
@@ -721,7 +947,10 @@ fn display_command_all_pages() {
         (DisplayPage::Custom, 3),
     ];
     for (page, expected_byte) in pages {
-        let cmd = DisplayCommand { page, brightness: 128 };
+        let cmd = DisplayCommand {
+            page,
+            brightness: 128,
+        };
         let report = serialize_display_command(&cmd);
         assert_eq!(report[0], 0x02, "report ID");
         assert_eq!(report[1], 0x01, "command type");
@@ -751,7 +980,10 @@ fn flight_report_too_short_errors() {
         let data = vec![0u8; len];
         let err = parse_flight_report(&data).unwrap_err();
         match err {
-            flight_hotas_turtlebeach::velocityone::TurtleBeachError::TooShort { expected, actual } => {
+            flight_hotas_turtlebeach::velocityone::TurtleBeachError::TooShort {
+                expected,
+                actual,
+            } => {
                 assert_eq!(expected, FLIGHT_MIN_REPORT_BYTES);
                 assert_eq!(actual, len);
             }
@@ -776,8 +1008,15 @@ fn flightstick_buttons_16bit_mask() {
 #[test]
 fn hat_switch_directions_flightstick() {
     for raw_hat in 0u8..=7 {
-        let r = parse_flightstick_report(&make_flightstick(2048, 2048, 2048, 0, 0, raw_hat)).unwrap();
-        assert_eq!(r.hat, raw_hat + 1, "raw hat {} should map to {}", raw_hat, raw_hat + 1);
+        let r =
+            parse_flightstick_report(&make_flightstick(2048, 2048, 2048, 0, 0, raw_hat)).unwrap();
+        assert_eq!(
+            r.hat,
+            raw_hat + 1,
+            "raw hat {} should map to {}",
+            raw_hat,
+            raw_hat + 1
+        );
     }
     let r = parse_flightstick_report(&make_flightstick(2048, 2048, 2048, 0, 0, 15)).unwrap();
     assert_eq!(r.hat, 0, "hat ≥8 should map to 0 (centered)");
@@ -862,7 +1101,10 @@ fn flightstick_report_too_short_errors() {
         let data = vec![0u8; len];
         let err = parse_flightstick_report(&data).unwrap_err();
         match err {
-            flight_hotas_turtlebeach::velocityone::TurtleBeachError::TooShort { expected, actual } => {
+            flight_hotas_turtlebeach::velocityone::TurtleBeachError::TooShort {
+                expected,
+                actual,
+            } => {
                 assert_eq!(expected, FLIGHTSTICK_MIN_REPORT_BYTES);
                 assert_eq!(actual, len);
             }
@@ -926,7 +1168,11 @@ fn flightdeck_report_too_short_error_message() {
 #[test]
 fn rudder_center_calibration() {
     let r = parse_rudder_report(&make_rudder(32767, 0, 0)).unwrap();
-    assert!(r.rudder.abs() < 0.001, "rudder center should be ~0, got {}", r.rudder);
+    assert!(
+        r.rudder.abs() < 0.001,
+        "rudder center should be ~0, got {}",
+        r.rudder
+    );
     assert!(r.brake_left < 0.01, "brake_left at rest should be ~0");
     assert!(r.brake_right < 0.01, "brake_right at rest should be ~0");
 }
@@ -935,8 +1181,16 @@ fn rudder_center_calibration() {
 fn rudder_full_deflection_left_right() {
     let left = parse_rudder_report(&make_rudder(0, 0, 0)).unwrap();
     let right = parse_rudder_report(&make_rudder(65535, 0, 0)).unwrap();
-    assert!(left.rudder < -0.99, "full left rudder should be ~-1.0, got {}", left.rudder);
-    assert!(right.rudder > 0.99, "full right rudder should be ~1.0, got {}", right.rudder);
+    assert!(
+        left.rudder < -0.99,
+        "full left rudder should be ~-1.0, got {}",
+        left.rudder
+    );
+    assert!(
+        right.rudder > 0.99,
+        "full right rudder should be ~1.0, got {}",
+        right.rudder
+    );
 }
 
 #[test]
@@ -958,26 +1212,58 @@ fn rudder_report_full_deflections() {
 fn rudder_differential_toe_brakes() {
     let left_brake = parse_rudder_report(&make_rudder(32767, 255, 0)).unwrap();
     let right_brake = parse_rudder_report(&make_rudder(32767, 0, 255)).unwrap();
-    assert!(left_brake.brake_left > 0.99, "full left brake should be ~1.0");
+    assert!(
+        left_brake.brake_left > 0.99,
+        "full left brake should be ~1.0"
+    );
     assert!(left_brake.brake_right < 0.01, "right brake should be off");
-    assert!(right_brake.brake_right > 0.99, "full right brake should be ~1.0");
+    assert!(
+        right_brake.brake_right > 0.99,
+        "full right brake should be ~1.0"
+    );
     assert!(right_brake.brake_left < 0.01, "left brake should be off");
 }
 
 #[test]
 fn rudder_small_inputs_near_center() {
     let slight = parse_rudder_report(&make_rudder(32770, 2, 2)).unwrap();
-    assert!(slight.rudder.abs() < 0.01, "tiny rudder deflection should be near 0, got {}", slight.rudder);
-    assert!(slight.brake_left < 0.01, "tiny brake_left should be near 0, got {}", slight.brake_left);
-    assert!(slight.brake_right < 0.01, "tiny brake_right should be near 0, got {}", slight.brake_right);
+    assert!(
+        slight.rudder.abs() < 0.01,
+        "tiny rudder deflection should be near 0, got {}",
+        slight.rudder
+    );
+    assert!(
+        slight.brake_left < 0.01,
+        "tiny brake_left should be near 0, got {}",
+        slight.brake_left
+    );
+    assert!(
+        slight.brake_right < 0.01,
+        "tiny brake_right should be near 0, got {}",
+        slight.brake_right
+    );
 }
 
 #[test]
 fn rudder_twist_on_yoke_full_range() {
-    let left = parse_flight_report(&build_flight(&FlightInput { rudder: 0, ..Default::default() })).unwrap();
-    let right = parse_flight_report(&build_flight(&FlightInput { rudder: 4095, ..Default::default() })).unwrap();
-    assert!(left.rudder_twist < -0.99, "full left rudder twist should be ~-1.0");
-    assert!(right.rudder_twist > 0.99, "full right rudder twist should be ~1.0");
+    let left = parse_flight_report(&build_flight(&FlightInput {
+        rudder: 0,
+        ..Default::default()
+    }))
+    .unwrap();
+    let right = parse_flight_report(&build_flight(&FlightInput {
+        rudder: 4095,
+        ..Default::default()
+    }))
+    .unwrap();
+    assert!(
+        left.rudder_twist < -0.99,
+        "full left rudder twist should be ~-1.0"
+    );
+    assert!(
+        right.rudder_twist > 0.99,
+        "full right rudder twist should be ~1.0"
+    );
 }
 
 #[test]
@@ -1034,7 +1320,10 @@ fn trim_wheel_tracker_reset_reestablishes_baseline() {
 fn trim_wheel_with_flight_report_integration() {
     let mut tracker = TrimWheelTracker::new();
 
-    let data1 = build_flight(&FlightInput { trim: 2048, ..Default::default() });
+    let data1 = build_flight(&FlightInput {
+        trim: 2048,
+        ..Default::default()
+    });
     let _r1 = parse_flight_report(&data1).unwrap();
     // Derive raw trim from report bytes (LE u16 at offset 8)
     let raw_trim1 = u16::from_le_bytes([data1[8], data1[9]]);
@@ -1042,7 +1331,10 @@ fn trim_wheel_with_flight_report_integration() {
     assert_eq!(delta1, 0, "first update should return 0");
 
     // Simulate trim nose-up movement via a second report
-    let data2 = build_flight(&FlightInput { trim: 2148, ..Default::default() });
+    let data2 = build_flight(&FlightInput {
+        trim: 2148,
+        ..Default::default()
+    });
     let _r2 = parse_flight_report(&data2).unwrap();
     let raw_trim2 = u16::from_le_bytes([data2[8], data2[9]]);
     let delta2 = tracker.update(raw_trim2);

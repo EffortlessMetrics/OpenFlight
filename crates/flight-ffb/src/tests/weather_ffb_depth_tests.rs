@@ -8,9 +8,9 @@
 //! `weather_ffb`, `crosswind`, `ground_effect`, and `wheel_shimmy` modules.
 
 use crate::crosswind::compute_crosswind_forces;
-use crate::ground_effect::{ground_effect_modifier, GroundEffectConfig};
+use crate::ground_effect::{GroundEffectConfig, ground_effect_modifier};
 use crate::weather_ffb::{FfbForces, WeatherData, WeatherFfbBridge, WeatherFfbConfig};
-use crate::wheel_shimmy::{compute_wheel_shimmy, WheelShimmyConfig};
+use crate::wheel_shimmy::{WheelShimmyConfig, compute_wheel_shimmy};
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -622,12 +622,7 @@ fn property_crosswind_forces_bounded_across_inputs() {
         for dir in (0..=360).step_by(15) {
             for heading in (0..=360).step_by(45) {
                 for ias in [0.0_f32, 3.0, 6.0, 80.0, 300.0] {
-                    let out = compute_crosswind_forces(
-                        speed,
-                        dir as f32,
-                        heading as f32,
-                        ias,
-                    );
+                    let out = compute_crosswind_forces(speed, dir as f32, heading as f32, ias);
                     assert!(
                         (-1.0..=1.0).contains(&out.yaw_force),
                         "yaw out of bounds: {} for speed={speed},dir={dir},hdg={heading},ias={ias}",

@@ -904,8 +904,10 @@ impl FfbEngine {
 
     /// Run trim validation suite
     pub fn run_trim_validation(&mut self) -> Vec<TrimValidationResult> {
-        let mut validation_suite =
-            TrimValidationSuite::with_time_source(TrimValidationConfig::default(), self.time_source.clone());
+        let mut validation_suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig::default(),
+            self.time_source.clone(),
+        );
         validation_suite.run_complete_validation()
     }
 

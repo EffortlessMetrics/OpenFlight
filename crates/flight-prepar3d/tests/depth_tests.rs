@@ -312,8 +312,14 @@ fn level_cruise_data_accepted() {
     let mut adapter = connected_adapter("5.4");
     assert!(adapter.process_data(level_cruise()));
     let data = adapter.last_data().unwrap();
-    assert!((data.pitch_rad).abs() < 0.01, "level cruise should be ~0 pitch");
-    assert!((data.roll_rad).abs() < 0.01, "level cruise should be ~0 roll");
+    assert!(
+        (data.pitch_rad).abs() < 0.01,
+        "level cruise should be ~0 pitch"
+    );
+    assert!(
+        (data.roll_rad).abs() < 0.01,
+        "level cruise should be ~0 roll"
+    );
 }
 
 #[test]
@@ -435,7 +441,10 @@ fn error_version_mismatch_display() {
         found: "4.5".to_string(),
     };
     let msg = err.to_string();
-    assert!(msg.contains("5.4"), "should contain expected version: {msg}");
+    assert!(
+        msg.contains("5.4"),
+        "should contain expected version: {msg}"
+    );
     assert!(msg.contains("4.5"), "should contain found version: {msg}");
 }
 

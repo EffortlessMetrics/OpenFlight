@@ -846,7 +846,10 @@ mod tests {
         let diag = manager.build_diagnostic(&results);
         assert!(diag.failed_components.is_empty());
         assert!(diag.reason.contains("operator request"));
-        assert_eq!(diag.degradation_reasons, vec![DegradationReason::OperatorRequest]);
+        assert_eq!(
+            diag.degradation_reasons,
+            vec![DegradationReason::OperatorRequest]
+        );
     }
 
     #[test]
@@ -942,7 +945,10 @@ mod tests {
         assert_eq!(diag.validation_snapshot.len(), 2);
         assert_eq!(
             diag.degradation_reasons,
-            vec![DegradationReason::PowerCritical, DegradationReason::ConfigCorrupt]
+            vec![
+                DegradationReason::PowerCritical,
+                DegradationReason::ConfigCorrupt
+            ]
         );
     }
 
@@ -1002,7 +1008,10 @@ mod tests {
             execution_time_ms: 3,
         }];
         let diag = manager.build_diagnostic(&results);
-        assert!(diag.degradation_reasons.contains(&DegradationReason::HardwareFault));
+        assert!(
+            diag.degradation_reasons
+                .contains(&DegradationReason::HardwareFault)
+        );
     }
 
     #[test]
@@ -1015,7 +1024,10 @@ mod tests {
             execution_time_ms: 5,
         }];
         let diag = manager.build_diagnostic(&results);
-        assert!(diag.degradation_reasons.contains(&DegradationReason::AdapterFailure));
+        assert!(
+            diag.degradation_reasons
+                .contains(&DegradationReason::AdapterFailure)
+        );
     }
 
     #[test]

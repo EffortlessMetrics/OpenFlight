@@ -649,8 +649,7 @@ mod tests {
 
     #[test]
     fn parse_sim_configure_verify_subcommand() {
-        let cli = Cli::try_parse_from(["flightctl", "sim", "configure", "msfs", "verify"])
-            .unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "sim", "configure", "msfs", "verify"]).unwrap();
         assert!(matches!(
             cli.command,
             Commands::Sim {
@@ -661,8 +660,7 @@ mod tests {
 
     #[test]
     fn parse_torque_unlock_subcommand() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "torque", "unlock", "dev-ffb"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "torque", "unlock", "dev-ffb"]).unwrap();
         if let Commands::Torque {
             action:
                 commands::TorqueAction::Unlock {
@@ -680,8 +678,7 @@ mod tests {
 
     #[test]
     fn parse_torque_set_mode_subcommand() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "torque", "set-mode", "demo"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "torque", "set-mode", "demo"]).unwrap();
         if let Commands::Torque {
             action: commands::TorqueAction::SetMode { mode, .. },
         } = cli.command
@@ -694,8 +691,7 @@ mod tests {
 
     #[test]
     fn parse_metrics_snapshot_subcommand() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "metrics", "snapshot"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "metrics", "snapshot"]).unwrap();
         assert!(matches!(
             cli.command,
             Commands::Metrics {
@@ -736,8 +732,7 @@ mod tests {
 
     #[test]
     fn parse_panels_verify_subcommand() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "panels", "verify"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "panels", "verify"]).unwrap();
         assert!(matches!(
             cli.command,
             Commands::Panels {
@@ -810,18 +805,16 @@ mod tests {
 
     #[test]
     fn error_to_code_transport_error() {
-        let ipc_err = flight_ipc::IpcError::Transport(
-            flight_ipc::transport::TransportError::Timeout,
-        );
+        let ipc_err =
+            flight_ipc::IpcError::Transport(flight_ipc::transport::TransportError::Timeout);
         let err: anyhow::Error = ipc_err.into();
         assert_eq!(error_to_code(&err), "TRANSPORT_ERROR");
     }
 
     #[test]
     fn error_to_exit_code_transport_is_five() {
-        let ipc_err = flight_ipc::IpcError::Transport(
-            flight_ipc::transport::TransportError::Timeout,
-        );
+        let ipc_err =
+            flight_ipc::IpcError::Transport(flight_ipc::transport::TransportError::Timeout);
         let err: anyhow::Error = ipc_err.into();
         assert_eq!(error_to_exit_code(&err), 5);
     }
@@ -831,8 +824,7 @@ mod tests {
     #[test]
     fn json_flag_overrides_human_output() {
         let mut cli =
-            Cli::try_parse_from(["flightctl", "--output", "human", "--json", "status"])
-                .unwrap();
+            Cli::try_parse_from(["flightctl", "--output", "human", "--json", "status"]).unwrap();
         if cli.json {
             cli.output = OutputFormat::Json;
         }
@@ -841,8 +833,7 @@ mod tests {
 
     #[test]
     fn output_short_flag_o() {
-        let cli =
-            Cli::try_parse_from(["flightctl", "-o", "json", "status"]).unwrap();
+        let cli = Cli::try_parse_from(["flightctl", "-o", "json", "status"]).unwrap();
         assert!(matches!(cli.output, OutputFormat::Json));
     }
 }

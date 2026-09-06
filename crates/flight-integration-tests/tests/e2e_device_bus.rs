@@ -88,7 +88,10 @@ fn e2e_device_parse_normalize_bus_publish() {
         assert_in_range(snap.control_inputs.pitch as f64, -1.0, 1.0);
         received += 1;
     }
-    assert!(received > 0, "subscriber must receive at least one snapshot");
+    assert!(
+        received > 0,
+        "subscriber must receive at least one snapshot"
+    );
 }
 
 // ===========================================================================
@@ -198,7 +201,11 @@ fn e2e_device_disconnect_mid_stream() {
     publisher.publish(snap).expect("publish last valid");
 
     let received = sub.try_recv().unwrap().expect("must receive");
-    assert_approx_eq(received.control_inputs.pitch as f64, last_valid_output, 1e-5);
+    assert_approx_eq(
+        received.control_inputs.pitch as f64,
+        last_valid_output,
+        1e-5,
+    );
 }
 
 // ===========================================================================
@@ -235,7 +242,10 @@ fn e2e_device_reconnect_recovery() {
 
     let input2 = device.next_input().unwrap();
     let out2 = pipeline.process(input2.axes[0], 0.004);
-    assert!(out2 > out1, "post-reconnect output must be larger (0.7 > 0.5)");
+    assert!(
+        out2 > out1,
+        "post-reconnect output must be larger (0.7 > 0.5)"
+    );
     assert!(out2.is_finite());
     assert_in_range(out2, -1.0, 1.0);
 

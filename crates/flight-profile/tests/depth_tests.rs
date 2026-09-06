@@ -9,8 +9,8 @@ use std::collections::HashMap;
 use flight_profile::hot_reload::{FileState, HotReloadTracker, ReloadAction};
 use flight_profile::profile_migration::{MigrationError, MigrationRegistry, ProfileMigration};
 use flight_profile::{
-    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PofOverrides, Profile,
-    PROFILE_SCHEMA_VERSION,
+    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PROFILE_SCHEMA_VERSION,
+    PofOverrides, Profile,
 };
 use serde_json::{Value, json};
 
@@ -387,7 +387,10 @@ mod migration {
     #[test]
     fn future_version_rejects_downgrade() {
         let reg = MigrationRegistry::new();
-        assert!(!reg.can_migrate("v3", "v1"), "downgrade should not be possible");
+        assert!(
+            !reg.can_migrate("v3", "v1"),
+            "downgrade should not be possible"
+        );
         let err = reg.migrate(json!({}), "v3", "v1").unwrap_err();
         assert!(matches!(err, MigrationError::UnsupportedVersion(_)));
     }
@@ -523,7 +526,11 @@ mod cascade_merge {
 
         let merged = global.merge_with(&specific).unwrap();
         let pitch = merged.axes.get("pitch").unwrap();
-        assert_eq!(pitch.deadzone, Some(0.01), "specific should override global");
+        assert_eq!(
+            pitch.deadzone,
+            Some(0.01),
+            "specific should override global"
+        );
         assert_eq!(pitch.expo, Some(0.9), "specific should override global");
         // slew_rate: specific=None → falls back to global
         assert_eq!(pitch.slew_rate, Some(1.0));
@@ -610,7 +617,10 @@ mod cascade_merge {
         );
         // Add a conflicting key: overlay's "takeoff" should override base's "takeoff"
         let mut overlay_hyst = HashMap::new();
-        overlay_hyst.insert("delay".to_string(), HashMap::from([("value".to_string(), 5.0)]));
+        overlay_hyst.insert(
+            "delay".to_string(),
+            HashMap::from([("value".to_string(), 5.0)]),
+        );
         pof2.insert(
             "takeoff".to_string(),
             PofOverrides {
@@ -646,7 +656,10 @@ mod validation_depth {
         p.axes.get_mut("pitch").unwrap().deadzone = Some(0.6);
         let err = p.validate().unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("deadzone"), "error should mention deadzone: {msg}");
+        assert!(
+            msg.contains("deadzone"),
+            "error should mention deadzone: {msg}"
+        );
     }
 
     #[test]
@@ -896,8 +909,8 @@ mod round_trip {
         }"#;
         // serde ignores unknown fields by default (unless deny_unknown_fields is set).
         // Profile does not use deny_unknown_fields, so this should succeed.
-        let p: Profile = serde_json::from_str(json_str)
-            .expect("Profile should deserialize with unknown fields");
+        let p: Profile =
+            serde_json::from_str(json_str).expect("Profile should deserialize with unknown fields");
         assert_eq!(p.schema, PROFILE_SCHEMA_VERSION);
     }
 

@@ -97,10 +97,7 @@ fn validate_device_fields(doc: &serde_yaml::Value) -> Vec<String> {
         ("device.name", &doc["device"]["name"]),
         ("device.vendor", &doc["device"]["vendor"]),
         ("device.usb.vendor_id", &doc["device"]["usb"]["vendor_id"]),
-        (
-            "device.usb.product_id",
-            &doc["device"]["usb"]["product_id"],
-        ),
+        ("device.usb.product_id", &doc["device"]["usb"]["product_id"]),
         ("capabilities.axes", &doc["capabilities"]["axes"]),
         ("capabilities.buttons", &doc["capabilities"]["buttons"]),
         (
@@ -162,7 +159,10 @@ fn validate_game_fields(doc: &serde_yaml::Value) -> Vec<String> {
 fn device_schema_required_fields_present() {
     let doc = parse_yaml(&fixture_dir().join("devices").join("valid_tier1.yaml"));
     let errors = validate_device_fields(&doc);
-    assert!(errors.is_empty(), "valid tier-1 device has errors: {errors:?}");
+    assert!(
+        errors.is_empty(),
+        "valid tier-1 device has errors: {errors:?}"
+    );
 }
 
 #[test]
@@ -203,10 +203,7 @@ fn device_schema_test_coverage_fields() {
         doc["support"]["test_coverage"]["simulated"].as_bool(),
         Some(true)
     );
-    assert_eq!(
-        doc["support"]["test_coverage"]["hil"].as_bool(),
-        Some(true)
-    );
+    assert_eq!(doc["support"]["test_coverage"]["hil"].as_bool(), Some(true));
 }
 
 #[test]
@@ -214,7 +211,10 @@ fn device_schema_malformed_yaml_rejected() {
     let path = fixture_dir().join("invalid").join("malformed.yaml");
     let text = std::fs::read_to_string(&path).expect("read fixture");
     let result: Result<serde_yaml::Value, _> = serde_yaml::from_str(&text);
-    assert!(result.is_err(), "malformed YAML must not parse successfully");
+    assert!(
+        result.is_err(),
+        "malformed YAML must not parse successfully"
+    );
 }
 
 // ===========================================================================
@@ -225,7 +225,10 @@ fn device_schema_malformed_yaml_rejected() {
 fn game_schema_required_fields_present() {
     let doc = parse_yaml(&fixture_dir().join("games").join("valid_tier1.yaml"));
     let errors = validate_game_fields(&doc);
-    assert!(errors.is_empty(), "valid tier-1 game has errors: {errors:?}");
+    assert!(
+        errors.is_empty(),
+        "valid tier-1 game has errors: {errors:?}"
+    );
 }
 
 #[test]
@@ -307,10 +310,7 @@ fn tier_1_requires_test_coverage() {
                 .as_bool()
                 .unwrap_or(false);
             if !sim && !hil {
-                failures.push(format!(
-                    "{}: tier 1 but no test coverage",
-                    path.display()
-                ));
+                failures.push(format!("{}: tier 1 but no test coverage", path.display()));
             }
         }
     }
@@ -437,10 +437,7 @@ fn matrix_json_device_count_matches_summary() {
     let text = std::fs::read_to_string(&json_path).expect("read JSON");
     let doc: serde_json::Value = serde_json::from_str(&text).expect("parse JSON");
 
-    let json_count = doc["devices"]
-        .as_array()
-        .map(|a| a.len())
-        .unwrap_or(0);
+    let json_count = doc["devices"].as_array().map(|a| a.len()).unwrap_or(0);
     let summary_count = doc["summary"]["total_devices"].as_u64().unwrap_or(0) as usize;
     assert_eq!(
         json_count, summary_count,
@@ -458,10 +455,7 @@ fn matrix_game_count_matches_manifests() {
     let text = std::fs::read_to_string(&json_path).expect("read JSON");
     let doc: serde_json::Value = serde_json::from_str(&text).expect("parse JSON");
 
-    let json_count = doc["games"]
-        .as_array()
-        .map(|a| a.len())
-        .unwrap_or(0);
+    let json_count = doc["games"].as_array().map(|a| a.len()).unwrap_or(0);
     let summary_count = doc["summary"]["total_games"].as_u64().unwrap_or(0) as usize;
     assert_eq!(
         json_count, summary_count,
@@ -511,8 +505,14 @@ fn consistency_no_duplicate_vid_pid_in_fixtures() {
 
     // Run duplicate-detection logic over the two fixture docs and assert it finds the dup
     let fixture_docs = vec![
-        (&fixture_dir().join("devices").join("valid_tier1.yaml"), &doc1),
-        (&fixture_dir().join("devices").join("duplicate_vid_pid.yaml"), &doc2),
+        (
+            &fixture_dir().join("devices").join("valid_tier1.yaml"),
+            &doc1,
+        ),
+        (
+            &fixture_dir().join("devices").join("duplicate_vid_pid.yaml"),
+            &doc2,
+        ),
     ];
     let mut seen: HashMap<(u64, u64), PathBuf> = HashMap::new();
     let mut duplicate_count = 0usize;
@@ -574,10 +574,7 @@ fn consistency_all_games_have_integration_mechanism() {
             Err(_) => continue,
         };
         if doc["integration"]["mechanism"].as_str().is_none() {
-            missing.push(format!(
-                "{}: missing integration.mechanism",
-                path.display()
-            ));
+            missing.push(format!("{}: missing integration.mechanism", path.display()));
         }
     }
     assert!(
@@ -657,7 +654,9 @@ fn device_schema_missing_vid_pid_detected() {
 #[test]
 fn device_schema_missing_capabilities_detected() {
     let doc = parse_yaml(
-        &fixture_dir().join("devices").join("missing_capabilities.yaml"),
+        &fixture_dir()
+            .join("devices")
+            .join("missing_capabilities.yaml"),
     );
     let errors = validate_device_fields(&doc);
     assert!(
@@ -712,10 +711,7 @@ fn not_a_mapping_yaml_produces_validation_errors() {
 #[test]
 fn real_game_manifests_all_parse() {
     let games = collect_yaml(&compat_games_dir());
-    assert!(
-        !games.is_empty(),
-        "should have at least one game manifest"
-    );
+    assert!(!games.is_empty(), "should have at least one game manifest");
     let mut parse_failures = Vec::new();
     for path in &games {
         let text = match std::fs::read_to_string(path) {

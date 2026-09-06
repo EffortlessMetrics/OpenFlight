@@ -6,9 +6,12 @@
 //! G27/G25 and G29/G920/G923 wheels.
 
 use flight_hotas_logitech_wheel::{
-    WheelError, normalize_pedal, normalize_wheel, parse_g27, parse_g29,
+    WheelError,
     g27::{G25_PID, G27_PID, G27_REPORT_ID, G27_REPORT_LEN},
-    g29::{G29_PID, G29_REPORT_ID, G29_REPORT_LEN, G920_PID, G923_PS_PID, G923_XBOX_PID, LOGITECH_VID},
+    g29::{
+        G29_PID, G29_REPORT_ID, G29_REPORT_LEN, G920_PID, G923_PS_PID, G923_XBOX_PID, LOGITECH_VID,
+    },
+    normalize_pedal, normalize_wheel, parse_g27, parse_g29,
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -40,7 +43,14 @@ fn logitech_vid_is_correct() {
 
 #[test]
 fn all_pids_are_distinct() {
-    let pids = [G29_PID, G920_PID, G923_PS_PID, G923_XBOX_PID, G27_PID, G25_PID];
+    let pids = [
+        G29_PID,
+        G920_PID,
+        G923_PS_PID,
+        G923_XBOX_PID,
+        G27_PID,
+        G25_PID,
+    ];
     for i in 0..pids.len() {
         for j in (i + 1)..pids.len() {
             assert_ne!(pids[i], pids[j], "PIDs at index {i} and {j} must differ");
@@ -136,7 +146,13 @@ fn g29_too_short_all_lengths() {
     for len in 0..G29_REPORT_LEN {
         let data = vec![0x01; len];
         let err = parse_g29(&data).unwrap_err();
-        assert_eq!(err, WheelError::TooShort { need: G29_REPORT_LEN, got: len });
+        assert_eq!(
+            err,
+            WheelError::TooShort {
+                need: G29_REPORT_LEN,
+                got: len
+            }
+        );
     }
 }
 
@@ -220,7 +236,13 @@ fn g27_too_short_all_lengths() {
     for len in 0..G27_REPORT_LEN {
         let data = vec![0x01; len];
         let err = parse_g27(&data).unwrap_err();
-        assert_eq!(err, WheelError::TooShort { need: G27_REPORT_LEN, got: len });
+        assert_eq!(
+            err,
+            WheelError::TooShort {
+                need: G27_REPORT_LEN,
+                got: len
+            }
+        );
     }
 }
 
@@ -316,7 +338,10 @@ fn error_invalid_id_display() {
     let e = WheelError::InvalidReportId(0xAB);
     let msg = format!("{e}");
     assert!(
-        msg.contains("0xab") || msg.contains("0xAB") || msg.contains("0x00ab") || msg.contains("0x00AB"),
+        msg.contains("0xab")
+            || msg.contains("0xAB")
+            || msg.contains("0x00ab")
+            || msg.contains("0x00AB"),
         "{msg}"
     );
 }

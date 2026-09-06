@@ -1197,7 +1197,8 @@ fn test_complete_fault_detection_flow() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_statistics_tracking() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
+    let mut detector =
+        FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record multiple faults
     detector.record_fault(FaultType::UsbStall);
@@ -1230,7 +1231,8 @@ fn test_fault_statistics_tracking() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_storm_detection() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
+    let mut detector =
+        FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record many faults quickly
     for i in 0..15 {
@@ -1298,7 +1300,8 @@ fn test_pre_fault_capture_data() {
 /// **Validates: Requirements FFB-SAFETY-01.5-14**
 #[test]
 fn test_fault_rate_excessive() {
-    let mut detector = FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
+    let mut detector =
+        FaultDetector::new(Duration::from_millis(50), Arc::new(FakeTimeSource::new()));
 
     // Record 5 USB stall faults
     for _ in 0..5 {

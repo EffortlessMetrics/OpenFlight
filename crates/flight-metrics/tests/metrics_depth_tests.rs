@@ -277,7 +277,10 @@ fn gauge_extreme_f64_values() {
     // Subnormal
     let subnormal = 5e-324_f64;
     reg.set_gauge("sub", subnormal);
-    assert_eq!(reg.gauge_value("sub").unwrap().to_bits(), subnormal.to_bits());
+    assert_eq!(
+        reg.gauge_value("sub").unwrap().to_bits(),
+        subnormal.to_bits()
+    );
 }
 
 /// GaugeHandle concurrent increment/decrement under contention converges.
@@ -423,8 +426,14 @@ fn snapshot_timestamp_validity() {
     let snap = collector.snapshot();
     let after = SystemTime::now();
 
-    assert!(snap.timestamp >= before, "snapshot timestamp before window start");
-    assert!(snap.timestamp <= after, "snapshot timestamp after window end");
+    assert!(
+        snap.timestamp >= before,
+        "snapshot timestamp before window start"
+    );
+    assert!(
+        snap.timestamp <= after,
+        "snapshot timestamp after window end"
+    );
 }
 
 /// PrometheusRegistry supports multiple metric families (counter + gauge)
@@ -564,7 +573,10 @@ fn integration_axis_engine_latency_metrics() {
         fm.axis_processing_latency_us.observe(lat);
     }
 
-    assert_eq!(fm.axis_processing_latency_us.count(), latencies.len() as u64);
+    assert_eq!(
+        fm.axis_processing_latency_us.count(),
+        latencies.len() as u64
+    );
     let sum: f64 = latencies.iter().sum();
     assert!((fm.axis_processing_latency_us.sum() - sum).abs() < f64::EPSILON);
 
@@ -888,7 +900,11 @@ fn device_metric_names_distinct_per_layer() {
     // Each layer should have a unique operations_total name
     let ops: Vec<_> = all.iter().map(|m| m.operations_total).collect();
     let unique: std::collections::HashSet<_> = ops.iter().collect();
-    assert_eq!(ops.len(), unique.len(), "operations_total names must be unique per layer");
+    assert_eq!(
+        ops.len(),
+        unique.len(),
+        "operations_total names must be unique per layer"
+    );
 }
 
 /// Common metric name constants are non-empty.
@@ -896,13 +912,29 @@ fn device_metric_names_distinct_per_layer() {
 fn common_metric_names_non_empty() {
     use flight_metrics::common::*;
     let names = [
-        SIM_FRAMES_TOTAL, SIM_ERRORS_TOTAL, SIM_CONNECTION_STATE, SIM_DATA_RATE_HZ,
-        SIM_LAST_PACKET_AGE_MS, SIM_FRAME_LATENCY_MS, SIM_PROFILE_SWITCHES_TOTAL,
-        FFB_EFFECTS_APPLIED_TOTAL, FFB_FAULT_COUNT_TOTAL, FFB_ENVELOPE_CLAMP_TOTAL,
-        FFB_EMERGENCY_STOP_TOTAL, FFB_MAX_TORQUE_NM, FFB_CURRENT_TORQUE_NM,
-        FFB_EFFECT_LATENCY_MS, RT_TICKS_TOTAL, RT_MISSED_DEADLINES_TOTAL, RT_JITTER_US,
-        AXIS_PROCESSING_LATENCY_US, BUS_EVENTS_PER_SECOND, BUS_EVENTS_TOTAL,
-        DEVICES_CONNECTED_COUNT, WATCHDOG_DMS_TRIGGERS_TOTAL, WATCHDOG_HW_TIMEOUTS_TOTAL,
+        SIM_FRAMES_TOTAL,
+        SIM_ERRORS_TOTAL,
+        SIM_CONNECTION_STATE,
+        SIM_DATA_RATE_HZ,
+        SIM_LAST_PACKET_AGE_MS,
+        SIM_FRAME_LATENCY_MS,
+        SIM_PROFILE_SWITCHES_TOTAL,
+        FFB_EFFECTS_APPLIED_TOTAL,
+        FFB_FAULT_COUNT_TOTAL,
+        FFB_ENVELOPE_CLAMP_TOTAL,
+        FFB_EMERGENCY_STOP_TOTAL,
+        FFB_MAX_TORQUE_NM,
+        FFB_CURRENT_TORQUE_NM,
+        FFB_EFFECT_LATENCY_MS,
+        RT_TICKS_TOTAL,
+        RT_MISSED_DEADLINES_TOTAL,
+        RT_JITTER_US,
+        AXIS_PROCESSING_LATENCY_US,
+        BUS_EVENTS_PER_SECOND,
+        BUS_EVENTS_TOTAL,
+        DEVICES_CONNECTED_COUNT,
+        WATCHDOG_DMS_TRIGGERS_TOTAL,
+        WATCHDOG_HW_TIMEOUTS_TOTAL,
     ];
     for name in &names {
         assert!(!name.is_empty(), "metric name must not be empty");
@@ -1154,7 +1186,10 @@ fn dashboard_axis_latency_histogram() {
         reg.observe(AXIS_PROCESSING_LATENCY_US, i as f64 * 10.0);
     }
     let dash = MetricsDashboard::from_snapshot(&reg.snapshot());
-    let lat = dash.axis.processing_latency_us.expect("axis latency must exist");
+    let lat = dash
+        .axis
+        .processing_latency_us
+        .expect("axis latency must exist");
     assert_eq!(lat.count, 20);
     assert_eq!(lat.min, 10.0);
     assert_eq!(lat.max, 200.0);

@@ -184,8 +184,7 @@ impl MockAdapter {
             AdapterState::Disconnected | AdapterState::Error => {
                 self.state = AdapterState::Connecting;
                 self.state = AdapterState::Error;
-                self.last_error =
-                    Some(AdapterError::Timeout("connection timed out".to_string()));
+                self.last_error = Some(AdapterError::Timeout("connection timed out".to_string()));
                 Err(AdapterError::Timeout("connection timed out".to_string()))
             }
             _ => Err(AdapterError::NotConnected),
@@ -344,11 +343,7 @@ fn state_machine_timeout_on_connecting() {
 
 #[test]
 fn reconnection_strategy_should_retry_within_limit() {
-    let s = ReconnectionStrategy::new(
-        5,
-        Duration::from_millis(100),
-        Duration::from_millis(5000),
-    );
+    let s = ReconnectionStrategy::new(5, Duration::from_millis(100), Duration::from_millis(5000));
     assert!(s.should_retry(5));
     assert!(!s.should_retry(6));
 }
@@ -386,10 +381,7 @@ fn backoff_caps_at_max_delay() {
 
 #[test]
 fn adapter_error_all_variants_format_without_panic() {
-    let errors = vec![
-        AdapterError::NotConnected,
-        AdapterError::ReconnectExhausted,
-    ];
+    let errors = vec![AdapterError::NotConnected, AdapterError::ReconnectExhausted];
     for e in errors {
         let _ = format!("{}", e);
         let _ = format!("{:?}", e);

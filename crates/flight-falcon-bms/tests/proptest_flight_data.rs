@@ -9,7 +9,7 @@
 //! - Normalisation is idempotent on clamped values
 //! - Throttle normalisation monotonicity on valid inputs
 
-use bytemuck::{bytes_of, try_from_bytes, Zeroable};
+use bytemuck::{Zeroable, bytes_of, try_from_bytes};
 use flight_falcon_bms::FlightData;
 use proptest::prelude::*;
 
@@ -53,7 +53,10 @@ fn arb_flight_data() -> impl Strategy<Value = FlightData> {
         finite_f32(), // rpm
     );
     (group_a, group_b).prop_map(
-        |((x, y, z, x_dot, y_dot, z_dot, alpha, beta, gamma), (pitch, roll, yaw, mach, cas, alt, throttle, rpm))| {
+        |(
+            (x, y, z, x_dot, y_dot, z_dot, alpha, beta, gamma),
+            (pitch, roll, yaw, mach, cas, alt, throttle, rpm),
+        )| {
             let mut fd = FlightData::zeroed();
             fd.x = x;
             fd.y = y;

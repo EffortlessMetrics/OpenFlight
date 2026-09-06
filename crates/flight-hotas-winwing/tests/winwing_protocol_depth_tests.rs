@@ -7,17 +7,15 @@
 //! LED/backlight control, and profile validation for all WinWing products
 //! including Orion HOTAS, FCU, EFIS, and MCP panels.
 
-use flight_hotas_winwing::input::{
-    self, RUDDER_REPORT_LEN, STICK_REPORT_LEN, THROTTLE_REPORT_LEN,
-};
+use flight_hotas_winwing::WINWING_VID;
+use flight_hotas_winwing::input::{self, RUDDER_REPORT_LEN, STICK_REPORT_LEN, THROTTLE_REPORT_LEN};
 use flight_hotas_winwing::orion2_stick;
 use flight_hotas_winwing::orion2_throttle;
 use flight_hotas_winwing::profiles::{self, DeviceProfile};
 use flight_hotas_winwing::protocol::{
-    self, BacklightSubCommand, CommandCategory, DetentName, DisplaySubCommand, FeatureReportFrame,
-    FEATURE_REPORT_ID, MAX_FRAME_LEN, MAX_PAYLOAD_LEN, MIN_FRAME_LEN, ProtocolError,
+    self, BacklightSubCommand, CommandCategory, DetentName, DisplaySubCommand, FEATURE_REPORT_ID,
+    FeatureReportFrame, MAX_FRAME_LEN, MAX_PAYLOAD_LEN, MIN_FRAME_LEN, ProtocolError,
 };
-use flight_hotas_winwing::WINWING_VID;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // § 1 — HOTAS report format (8 tests)
@@ -38,10 +36,16 @@ mod hotas_report_format {
         report[3..5].copy_from_slice(&16384i16.to_le_bytes());
 
         let state = input::parse_stick_report(&report).unwrap();
-        assert!(state.axes.roll < -0.45 && state.axes.roll > -0.55,
-            "half-left roll should be ~-0.5, got {}", state.axes.roll);
-        assert!(state.axes.pitch > 0.45 && state.axes.pitch < 0.55,
-            "half-forward pitch should be ~0.5, got {}", state.axes.pitch);
+        assert!(
+            state.axes.roll < -0.45 && state.axes.roll > -0.55,
+            "half-left roll should be ~-0.5, got {}",
+            state.axes.roll
+        );
+        assert!(
+            state.axes.pitch > 0.45 && state.axes.pitch < 0.55,
+            "half-forward pitch should be ~0.5, got {}",
+            state.axes.pitch
+        );
     }
 
     // ── Throttle axis format ─────────────────────────────────────────────
@@ -56,10 +60,16 @@ mod hotas_report_format {
         report[3..5].copy_from_slice(&49152u16.to_le_bytes());
 
         let state = input::parse_throttle_report(&report).unwrap();
-        assert!((state.axes.throttle_left - 0.5).abs() < 0.01,
-            "midpoint throttle should be ~0.5, got {}", state.axes.throttle_left);
-        assert!((state.axes.throttle_right - 0.75).abs() < 0.01,
-            "75% throttle should be ~0.75, got {}", state.axes.throttle_right);
+        assert!(
+            (state.axes.throttle_left - 0.5).abs() < 0.01,
+            "midpoint throttle should be ~0.5, got {}",
+            state.axes.throttle_left
+        );
+        assert!(
+            (state.axes.throttle_right - 0.75).abs() < 0.01,
+            "75% throttle should be ~0.75, got {}",
+            state.axes.throttle_right
+        );
     }
 
     // ── Button byte mapping ──────────────────────────────────────────────
@@ -75,7 +85,10 @@ mod hotas_report_format {
 
         let state = input::parse_throttle_report(&report).unwrap();
         assert!(state.buttons.is_pressed(50), "button 50 should be pressed");
-        assert!(!state.buttons.is_pressed(49), "button 49 should not be pressed");
+        assert!(
+            !state.buttons.is_pressed(49),
+            "button 49 should not be pressed"
+        );
     }
 
     // ── Encoder data ─────────────────────────────────────────────────────
@@ -85,10 +98,10 @@ mod hotas_report_format {
         // Orion 2 throttle: 5 encoder bytes at offsets 19–23, interpreted as i8 deltas.
         let mut report = [0u8; orion2_throttle::MIN_REPORT_BYTES];
         report[0] = 0x01;
-        report[19] = 3u8;           // encoder 0: +3 CW
-        report[20] = (-2i8) as u8;  // encoder 1: -2 CCW
-        report[21] = 0;             // encoder 2: no movement
-        report[22] = 127u8;         // encoder 3: max CW
+        report[19] = 3u8; // encoder 0: +3 CW
+        report[20] = (-2i8) as u8; // encoder 1: -2 CCW
+        report[21] = 0; // encoder 2: no movement
+        report[22] = 127u8; // encoder 3: max CW
         report[23] = (-128i8) as u8; // encoder 4: max CCW
 
         let state = orion2_throttle::parse_orion2_throttle_report(&report).unwrap();
@@ -106,7 +119,10 @@ mod hotas_report_format {
         // LED/backlight commands use the proprietary feature report protocol.
         let frame = protocol::build_backlight_single_command(0x01, 0, 128).unwrap();
         let bytes = frame.as_bytes();
-        assert_eq!(bytes[0], FEATURE_REPORT_ID, "LED commands use feature report ID 0xF0");
+        assert_eq!(
+            bytes[0], FEATURE_REPORT_ID,
+            "LED commands use feature report ID 0xF0"
+        );
         assert_eq!(bytes[1], CommandCategory::Backlight as u8);
         assert_eq!(bytes[2], BacklightSubCommand::SetSingle as u8);
     }
@@ -149,10 +165,10 @@ mod hotas_report_format {
         // Verify the complete 12-byte layout: ID + roll(2) + pitch(2) + buttons(4) + hatA(1) + hatB(1) + reserved(1)
         let mut r = [0u8; orion2_stick::MIN_REPORT_BYTES];
         r[0] = 0x02;
-        r[1..3].copy_from_slice(&i16::MAX.to_le_bytes());   // full right roll
-        r[3..5].copy_from_slice(&i16::MIN.to_le_bytes());   // full aft pitch
+        r[1..3].copy_from_slice(&i16::MAX.to_le_bytes()); // full right roll
+        r[3..5].copy_from_slice(&i16::MIN.to_le_bytes()); // full aft pitch
         r[5..9].copy_from_slice(&0x000F_FFFFu32.to_le_bytes()); // all 20 buttons
-        r[9] = 0x00;  // HAT A = North
+        r[9] = 0x00; // HAT A = North
         r[10] = 0x04; // HAT B = South
 
         let s = orion2_stick::parse_orion2_stick_report(&r).unwrap();
@@ -274,8 +290,8 @@ mod panel_knobs {
         // Throttle encoders report signed i8 deltas per tick.
         let mut report = [0u8; orion2_throttle::MIN_REPORT_BYTES];
         report[0] = 0x01;
-        report[19] = 5u8;           // ENC1: +5 CW
-        report[20] = (-4i8) as u8;  // ENC2: -4 CCW
+        report[19] = 5u8; // ENC1: +5 CW
+        report[20] = (-4i8) as u8; // ENC2: -4 CCW
 
         let state = orion2_throttle::parse_orion2_throttle_report(&report).unwrap();
         assert!(state.buttons.encoders[0] > 0, "CW should be positive");
@@ -290,12 +306,16 @@ mod panel_knobs {
     fn push_pull_knob_encoder_has_push_button() {
         // FCU and throttle encoders all have push buttons.
         let throttle = profiles::orion2_throttle_profile();
-        assert!(throttle.encoders.iter().all(|e| e.has_push),
-            "all throttle encoders should have push buttons");
+        assert!(
+            throttle.encoders.iter().all(|e| e.has_push),
+            "all throttle encoders should have push buttons"
+        );
 
         let fcu = profiles::fcu_panel_profile();
-        assert!(fcu.encoders.iter().all(|e| e.has_push),
-            "all FCU encoders should have push buttons");
+        assert!(
+            fcu.encoders.iter().all(|e| e.has_push),
+            "all FCU encoders should have push buttons"
+        );
     }
 
     // ── Detent positions ─────────────────────────────────────────────────
@@ -306,16 +326,26 @@ mod panel_knobs {
         let idle_pos = 1000u16.to_le_bytes();
         let ab_pos = 62000u16.to_le_bytes();
         let payload = [
-            0, 0, idle_pos[0], idle_pos[1], 0,  // left idle
-            0, 1, ab_pos[0], ab_pos[1], 0,       // left afterburner
+            0,
+            0,
+            idle_pos[0],
+            idle_pos[1],
+            0, // left idle
+            0,
+            1,
+            ab_pos[0],
+            ab_pos[1],
+            0, // left afterburner
         ];
 
         let report = protocol::parse_detent_response(&payload).unwrap();
         assert_eq!(report.positions.len(), 2);
         assert_eq!(report.positions[0].name, DetentName::Idle);
         assert_eq!(report.positions[1].name, DetentName::Afterburner);
-        assert!(report.positions[0].normalised < report.positions[1].normalised,
-            "idle position should be below afterburner");
+        assert!(
+            report.positions[0].normalised < report.positions[1].normalised,
+            "idle position should be below afterburner"
+        );
     }
 
     // ── Acceleration (encoder delta magnitude) ───────────────────────────
@@ -333,8 +363,10 @@ mod panel_knobs {
 
         let slow = orion2_throttle::parse_orion2_throttle_report(&slow_report).unwrap();
         let fast = orion2_throttle::parse_orion2_throttle_report(&fast_report).unwrap();
-        assert!(fast.buttons.encoders[0].abs() > slow.buttons.encoders[0].abs(),
-            "fast rotation should yield larger delta magnitude");
+        assert!(
+            fast.buttons.encoders[0].abs() > slow.buttons.encoders[0].abs(),
+            "fast rotation should yield larger delta magnitude"
+        );
     }
 
     // ── Wrap-around (i8 min/max boundaries) ──────────────────────────────
@@ -344,8 +376,8 @@ mod panel_knobs {
         // Encoder deltas are i8: verify boundary values parse correctly.
         let mut report = [0u8; orion2_throttle::MIN_REPORT_BYTES];
         report[0] = 0x01;
-        report[19] = 127u8;         // i8::MAX
-        report[20] = 128u8;         // wraps to i8::MIN (-128)
+        report[19] = 127u8; // i8::MAX
+        report[20] = 128u8; // wraps to i8::MIN (-128)
 
         let state = orion2_throttle::parse_orion2_throttle_report(&report).unwrap();
         assert_eq!(state.buttons.encoders[0], i8::MAX);
@@ -360,8 +392,8 @@ mod panel_knobs {
         let frame = protocol::build_detent_set_command(1, 2, 45000).unwrap();
         let parsed = protocol::parse_feature_report(frame.as_bytes()).unwrap();
         assert_eq!(parsed.category, CommandCategory::Detent);
-        assert_eq!(parsed.payload[0], 1);  // right lever
-        assert_eq!(parsed.payload[1], 2);  // custom detent #2
+        assert_eq!(parsed.payload[0], 1); // right lever
+        assert_eq!(parsed.payload[1], 2); // custom detent #2
         let pos = u16::from_le_bytes([parsed.payload[2], parsed.payload[3]]);
         assert_eq!(pos, 45000);
     }
@@ -399,8 +431,10 @@ mod led_control {
         for intensity in [0u8, 64, 128, 192, 255] {
             let frame = protocol::build_backlight_single_command(0x01, 0, intensity).unwrap();
             let parsed = protocol::parse_feature_report(frame.as_bytes()).unwrap();
-            assert_eq!(parsed.payload[2], intensity,
-                "intensity {intensity} should round-trip exactly");
+            assert_eq!(
+                parsed.payload[2], intensity,
+                "intensity {intensity} should round-trip exactly"
+            );
         }
     }
 
@@ -409,16 +443,14 @@ mod led_control {
     #[test]
     fn led_rgb_colour_channels() {
         // Verify per-button RGB control with distinct channels.
-        let frame = protocol::build_backlight_single_rgb_command(
-            0x01, 3, 255, 0, 128
-        ).unwrap();
+        let frame = protocol::build_backlight_single_rgb_command(0x01, 3, 255, 0, 128).unwrap();
         let parsed = protocol::parse_feature_report(frame.as_bytes()).unwrap();
         assert_eq!(parsed.sub_command, BacklightSubCommand::SetSingleRgb as u8);
         assert_eq!(parsed.payload[0], 0x01); // panel_id
-        assert_eq!(parsed.payload[1], 3);    // button_index
-        assert_eq!(parsed.payload[2], 255);  // R
-        assert_eq!(parsed.payload[3], 0);    // G
-        assert_eq!(parsed.payload[4], 128);  // B
+        assert_eq!(parsed.payload[1], 3); // button_index
+        assert_eq!(parsed.payload[2], 255); // R
+        assert_eq!(parsed.payload[3], 0); // G
+        assert_eq!(parsed.payload[4], 128); // B
     }
 
     // ── Pattern: blink/steady via all-LEDs command ───────────────────────
@@ -475,7 +507,11 @@ mod profile_tests {
         assert!(disp_names.contains(&"ALT"));
         assert!(disp_names.contains(&"VS/FPA"));
         // FCU has annunciator LEDs
-        assert!(fcu.displays.iter().any(|d| d.display_type == "led-annunciator"));
+        assert!(
+            fcu.displays
+                .iter()
+                .any(|d| d.display_type == "led-annunciator")
+        );
     }
 
     // ── Custom bindings (button groups match button count) ───────────────
@@ -484,17 +520,11 @@ mod profile_tests {
     fn custom_bindings_button_groups_consistent() {
         // For every profile, button_groups.sum(count) == button_count.
         for profile in profiles::all_profiles() {
-            let sum: usize = profile
-                .button_groups
-                .iter()
-                .map(|g| g.count as usize)
-                .sum();
+            let sum: usize = profile.button_groups.iter().map(|g| g.count as usize).sum();
             assert_eq!(
-                sum,
-                profile.button_count as usize,
+                sum, profile.button_count as usize,
                 "{}: button groups sum ({sum}) != button_count ({})",
-                profile.name,
-                profile.button_count
+                profile.name, profile.button_count
             );
         }
     }
@@ -509,15 +539,29 @@ mod profile_tests {
             .filter(|p| !p.displays.is_empty())
             .collect();
 
-        assert!(!panels_with_displays.is_empty(), "at least one panel should have displays");
+        assert!(
+            !panels_with_displays.is_empty(),
+            "at least one panel should have displays"
+        );
         for profile in &panels_with_displays {
             for display in &profile.displays {
-                assert!(display.width > 0,
-                    "{}: display '{}' has zero width", profile.name, display.name);
-                assert!(!display.name.is_empty(),
-                    "{}: display has empty name", profile.name);
-                assert!(!display.display_type.is_empty(),
-                    "{}: display '{}' has empty type", profile.name, display.name);
+                assert!(
+                    display.width > 0,
+                    "{}: display '{}' has zero width",
+                    profile.name,
+                    display.name
+                );
+                assert!(
+                    !display.name.is_empty(),
+                    "{}: display has empty name",
+                    profile.name
+                );
+                assert!(
+                    !display.display_type.is_empty(),
+                    "{}: display '{}' has empty type",
+                    profile.name,
+                    display.name
+                );
             }
         }
     }
@@ -540,9 +584,12 @@ mod profile_tests {
 
         for profile in &backlit {
             assert!(profile.backlight_led_count > 0);
-            assert!(profiles::profile_by_pid(profile.pid).is_some(),
+            assert!(
+                profiles::profile_by_pid(profile.pid).is_some(),
                 "backlit panel {} (PID 0x{:04X}) should be findable by PID",
-                profile.name, profile.pid);
+                profile.name,
+                profile.pid
+            );
         }
     }
 
@@ -556,7 +603,10 @@ mod profile_tests {
         // EFIS has BARO encoder with push, ND_RANGE, ND_MODE
         assert_eq!(efis.encoders.len(), 3);
         let baro_enc = efis.encoders.iter().find(|e| e.name == "BARO").unwrap();
-        assert!(baro_enc.has_push, "BARO encoder should have push (STD toggle)");
+        assert!(
+            baro_enc.has_push,
+            "BARO encoder should have push (STD toggle)"
+        );
         // EFIS has BARO display and annunciators
         assert_eq!(efis.displays.len(), 2);
         let baro_disp = efis.displays.iter().find(|d| d.name == "BARO").unwrap();
@@ -589,8 +639,12 @@ mod protocol_wire_format {
         for &b in &bytes[1..total - 1] {
             expected_cksum ^= b;
         }
-        assert_eq!(bytes[total - 1], expected_cksum,
-            "checksum mismatch: expected 0x{expected_cksum:02X}, got 0x{:02X}", bytes[total - 1]);
+        assert_eq!(
+            bytes[total - 1],
+            expected_cksum,
+            "checksum mismatch: expected 0x{expected_cksum:02X}, got 0x{:02X}",
+            bytes[total - 1]
+        );
     }
 
     #[test]
@@ -609,15 +663,18 @@ mod protocol_wire_format {
         assert_eq!(min.len(), MIN_FRAME_LEN);
 
         // Max payload → MAX_FRAME_LEN
-        let max = FeatureReportFrame::new(
-            CommandCategory::DeviceInfo, 0x01, &[0u8; MAX_PAYLOAD_LEN]
-        ).unwrap();
+        let max =
+            FeatureReportFrame::new(CommandCategory::DeviceInfo, 0x01, &[0u8; MAX_PAYLOAD_LEN])
+                .unwrap();
         assert_eq!(max.len(), MAX_FRAME_LEN);
 
         // Over max → error
         let err = FeatureReportFrame::new(
-            CommandCategory::DeviceInfo, 0x01, &[0u8; MAX_PAYLOAD_LEN + 1]
-        ).unwrap_err();
+            CommandCategory::DeviceInfo,
+            0x01,
+            &[0u8; MAX_PAYLOAD_LEN + 1],
+        )
+        .unwrap_err();
         assert!(matches!(err, ProtocolError::PayloadTooLarge { .. }));
     }
 
@@ -626,9 +683,18 @@ mod protocol_wire_format {
         // Smoke test: every category + sub-command builds a valid frame.
         let tests: Vec<(CommandCategory, u8)> = vec![
             (CommandCategory::Display, DisplaySubCommand::WriteText as u8),
-            (CommandCategory::Display, DisplaySubCommand::SetBrightness as u8),
-            (CommandCategory::Backlight, BacklightSubCommand::SetSingle as u8),
-            (CommandCategory::Backlight, BacklightSubCommand::SetAllRgb as u8),
+            (
+                CommandCategory::Display,
+                DisplaySubCommand::SetBrightness as u8,
+            ),
+            (
+                CommandCategory::Backlight,
+                BacklightSubCommand::SetSingle as u8,
+            ),
+            (
+                CommandCategory::Backlight,
+                BacklightSubCommand::SetAllRgb as u8,
+            ),
             (CommandCategory::Detent, 0x01),
             (CommandCategory::DeviceInfo, 0x01),
         ];

@@ -223,10 +223,7 @@ mod status_command {
         let out = cli(&["--json", "status"]);
         let json = extract_json(&stdout(&out));
         let version = json["data"]["cli_version"].as_str().unwrap();
-        assert!(
-            !version.is_empty(),
-            "cli_version should not be empty"
-        );
+        assert!(!version.is_empty(), "cli_version should not be empty");
         // Should be semver
         let parts: Vec<&str> = version.split('.').collect();
         assert_eq!(parts.len(), 3, "cli_version should be semver: {}", version);
@@ -285,11 +282,7 @@ mod device_commands {
     fn list_fails_gracefully_without_daemon() {
         let out = cli(&["devices", "list"]);
         assert!(!out.status.success());
-        assert_ne!(
-            out.status.code(),
-            Some(101),
-            "must not panic"
-        );
+        assert_ne!(out.status.code(), Some(101), "must not panic");
     }
 
     #[test]
@@ -356,7 +349,13 @@ mod device_commands {
     #[test]
     fn test_subcommand_parses_with_options() {
         let out = cli(&[
-            "devices", "test", "dev-1", "--interval-ms", "50", "--count", "5",
+            "devices",
+            "test",
+            "dev-1",
+            "--interval-ms",
+            "50",
+            "--count",
+            "5",
         ]);
         // Should parse correctly — daemon error is expected
         assert_ne!(out.status.code(), Some(2));
@@ -681,12 +680,7 @@ mod property_tests {
     fn all_commands_never_panic() {
         for args in COMMANDS {
             let out = cli(args);
-            assert_ne!(
-                out.status.code(),
-                Some(101),
-                "command {:?} panicked",
-                args
-            );
+            assert_ne!(out.status.code(), Some(101), "command {:?} panicked", args);
         }
     }
 
@@ -769,7 +763,11 @@ mod property_tests {
         ];
         for args in error_cmds {
             let out = cli(args);
-            assert!(!out.status.success(), "{:?} should fail without daemon", args);
+            assert!(
+                !out.status.success(),
+                "{:?} should fail without daemon",
+                args
+            );
             let text = stderr(&out);
             let _ = extract_json(&text); // panics if invalid JSON
         }

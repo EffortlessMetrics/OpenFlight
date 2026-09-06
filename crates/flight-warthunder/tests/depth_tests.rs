@@ -315,8 +315,8 @@ fn state_extraction_altitude_reference_points() {
     let a = adapter();
     let test_cases: &[(f32, f32)] = &[
         (0.0, 0.0),
-        (304.8, 1000.0),   // ~1000 ft
-        (1000.0, 3280.84), // standard
+        (304.8, 1000.0),    // ~1000 ft
+        (1000.0, 3280.84),  // standard
         (10668.0, 35000.0), // cruise altitude
     ];
     for &(meters, expected_ft) in test_cases {

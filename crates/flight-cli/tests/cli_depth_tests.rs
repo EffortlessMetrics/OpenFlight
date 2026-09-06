@@ -75,11 +75,7 @@ fn parse_device_list_subcommand_accepted() {
 fn parse_diag_health_subcommand_accepted() {
     let out = cli(&["diag", "health"]);
     assert!(!out.status.success());
-    assert_ne!(
-        out.status.code(),
-        Some(101),
-        "should not panic"
-    );
+    assert_ne!(out.status.code(), Some(101), "should not panic");
 }
 
 #[test]
@@ -143,7 +139,10 @@ fn json_list_output_is_array() {
     let stdout = String::from_utf8(out.stdout).unwrap();
     let json = extract_json(&stdout);
     assert_eq!(json["success"], true);
-    assert!(json["data"].is_array(), "profile list data must be an array");
+    assert!(
+        json["data"].is_array(),
+        "profile list data must be an array"
+    );
 }
 
 #[test]
@@ -225,10 +224,7 @@ fn error_connection_failure_message_in_json() {
     let stderr = String::from_utf8(out.stderr).unwrap();
     let json = extract_json(&stderr);
     let err_msg = json["error"].as_str().unwrap();
-    assert!(
-        !err_msg.is_empty(),
-        "error message should not be empty"
-    );
+    assert!(!err_msg.is_empty(), "error message should not be empty");
 }
 
 #[test]

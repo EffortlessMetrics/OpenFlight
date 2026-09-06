@@ -19,9 +19,15 @@ pub struct FlightInput {
 impl Default for FlightInput {
     fn default() -> Self {
         Self {
-            roll: 2048, pitch: 2048, rudder: 2048,
-            tl: 0, tr: 0, trim: 2048,
-            buttons: 0, hat: 15, toggles: 0,
+            roll: 2048,
+            pitch: 2048,
+            rudder: 2048,
+            tl: 0,
+            tr: 0,
+            trim: 2048,
+            buttons: 0,
+            hat: 15,
+            toggles: 0,
         }
     }
 }
@@ -41,8 +47,12 @@ pub fn build_flight(input: &FlightInput) -> [u8; 20] {
 }
 
 pub fn make_flightstick(
-    x: u16, y: u16, twist: u16,
-    throttle: u8, buttons: u16, hat: u8,
+    x: u16,
+    y: u16,
+    twist: u16,
+    throttle: u8,
+    buttons: u16,
+    hat: u8,
 ) -> [u8; 12] {
     let mut b = [0u8; 12];
     b[0..2].copy_from_slice(&x.to_le_bytes());

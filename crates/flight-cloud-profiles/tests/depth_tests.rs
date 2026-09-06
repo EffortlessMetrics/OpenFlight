@@ -9,9 +9,10 @@
 
 use chrono::{TimeZone as _, Utc};
 use flight_cloud_profiles::{
-    CloudProfile, CloudProfileError,
-    cache::{CacheEntry, CACHE_TTL_SECS, ProfileCache},
-    models::{Page, ProfileSortOrder, PublishMeta, VoteDirection, VoteResult, ListFilter},
+    ClientConfig, CloudProfile, CloudProfileError, DEFAULT_API_BASE_URL, DEFAULT_PAGE_SIZE,
+    DEFAULT_TIMEOUT_SECS, ProfileListing,
+    cache::{CACHE_TTL_SECS, CacheEntry, ProfileCache},
+    models::{ListFilter, Page, ProfileSortOrder, PublishMeta, VoteDirection, VoteResult},
     sanitize::{sanitize_for_upload, validate_for_publish},
     storage::{CloudBackend, FileSystemBackend, MockCloudBackend, ProfileMetadata},
     sync::{
@@ -19,7 +20,6 @@ use flight_cloud_profiles::{
         SyncEngine, SyncPlan,
     },
     versioning::{ProfileVersion, VersionHistory, compute_version_hash},
-    ProfileListing, ClientConfig, DEFAULT_API_BASE_URL, DEFAULT_TIMEOUT_SECS, DEFAULT_PAGE_SIZE,
 };
 use flight_profile::{AircraftId, AxisConfig, PROFILE_SCHEMA_VERSION, Profile};
 use proptest::prelude::*;
@@ -143,12 +143,7 @@ fn make_cloud_profile(id: &str) -> CloudProfile {
     }
 }
 
-fn make_listing(
-    id: &str,
-    upvotes: u32,
-    downvotes: u32,
-    download_count: u64,
-) -> ProfileListing {
+fn make_listing(id: &str, upvotes: u32, downvotes: u32, download_count: u64) -> ProfileListing {
     ProfileListing {
         id: id.to_string(),
         title: format!("Profile {id}"),
@@ -342,10 +337,7 @@ async fn serialization_upload_download_preserves_profile_data() {
 #[test]
 fn serialization_page_wrapper_round_trip() {
     let page: Page<ProfileListing> = Page {
-        items: vec![
-            make_listing("a", 10, 1, 100),
-            make_listing("b", 20, 2, 200),
-        ],
+        items: vec![make_listing("a", 10, 1, 100), make_listing("b", 20, 2, 200)],
         page: 2,
         per_page: 25,
         total: 52,
@@ -828,7 +820,12 @@ fn version_diff_aggregates_intermediate_changes() {
     let mut history = VersionHistory::new();
     history.push(make_version_full("v1", 100, "a", &["created"]));
     history.push(make_version_full("v2", 200, "b", &["added pitch"]));
-    history.push(make_version_full("v3", 300, "a", &["adjusted roll", "fixed yaw"]));
+    history.push(make_version_full(
+        "v3",
+        300,
+        "a",
+        &["adjusted roll", "fixed yaw"],
+    ));
     history.push(make_version_full("v4", 400, "c", &["final tune"]));
 
     let diff = history.diff("v1", "v4").unwrap();
@@ -1536,7 +1533,10 @@ fn list_filter_serde_round_trip() {
 fn sort_order_display_all_variants() {
     assert_eq!(ProfileSortOrder::TopRated.to_string(), "top_rated");
     assert_eq!(ProfileSortOrder::Newest.to_string(), "newest");
-    assert_eq!(ProfileSortOrder::MostDownloaded.to_string(), "most_downloaded");
+    assert_eq!(
+        ProfileSortOrder::MostDownloaded.to_string(),
+        "most_downloaded"
+    );
 }
 
 #[test]

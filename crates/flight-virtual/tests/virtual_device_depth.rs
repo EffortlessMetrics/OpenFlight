@@ -12,8 +12,8 @@ use flight_virtual::loopback::{HidReport, LoopbackHid};
 use flight_virtual::mapper::{
     AxisMapping, AxisTransform, ButtonMapping, ButtonMode, HatMapping, VirtualDeviceMapper,
 };
-use flight_virtual::vjoy::{VJoyDevice, VJOY_MAX_AXES, VJOY_MAX_BUTTONS, VJOY_MAX_HATS};
 use flight_virtual::uinput::{UInputCapabilities, UInputDevice};
+use flight_virtual::vjoy::{VJOY_MAX_AXES, VJOY_MAX_BUTTONS, VJOY_MAX_HATS, VJoyDevice};
 use flight_virtual::{VirtualDeviceManager, VirtualDeviceManagerError};
 
 use flight_device_common::DeviceManager;
@@ -178,10 +178,7 @@ fn test_uinput_axis_mapping_covers_full_range() {
     for &v in &[-1.0f32, -0.5, 0.0, 0.5, 1.0] {
         dev.set_axis(0, v).unwrap();
         let readback = dev.get_axis(0).unwrap();
-        assert!(
-            (readback - v).abs() < 0.01,
-            "wrote {v}, read {readback}"
-        );
+        assert!((readback - v).abs() < 0.01, "wrote {v}, read {readback}");
     }
 }
 
@@ -657,19 +654,13 @@ fn test_safety_device_limit_enforcement_out_of_range() {
 fn test_safety_double_acquire_double_release() {
     let mut vjoy = VJoyDevice::new(1);
     vjoy.acquire().unwrap();
-    assert_eq!(
-        vjoy.acquire(),
-        Err(VirtualBackendError::AlreadyAcquired(1))
-    );
+    assert_eq!(vjoy.acquire(), Err(VirtualBackendError::AlreadyAcquired(1)));
     vjoy.release().unwrap();
     assert_eq!(vjoy.release(), Err(VirtualBackendError::NotAcquired(1)));
 
     let mut mock = MockBackend::joystick();
     mock.acquire().unwrap();
-    assert_eq!(
-        mock.acquire(),
-        Err(VirtualBackendError::AlreadyAcquired(0))
-    );
+    assert_eq!(mock.acquire(), Err(VirtualBackendError::AlreadyAcquired(0)));
     mock.release().unwrap();
     assert_eq!(mock.release(), Err(VirtualBackendError::NotAcquired(0)));
 }

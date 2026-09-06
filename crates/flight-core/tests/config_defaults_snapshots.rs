@@ -7,8 +7,8 @@
 //! that downstream code or users depend on.  Run `cargo insta review` to
 //! accept new or changed snapshots.
 
-use flight_core::error::FlightError;
 use flight_core::WatchdogConfig;
+use flight_core::error::FlightError;
 
 // ── WatchdogConfig defaults ──────────────────────────────────────────────────
 
@@ -27,7 +27,11 @@ fn snapshot_flight_error_display_catalog() {
         FlightError::Hardware("USB stall on endpoint 3".into()).to_string(),
         FlightError::Writer("output channel closed".into()).to_string(),
         FlightError::RulesValidation("unknown operator '~~'".into()).to_string(),
-        FlightError::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "file gone")).to_string(),
+        FlightError::Io(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "file gone",
+        ))
+        .to_string(),
     ];
     insta::assert_debug_snapshot!("flight_error_display_catalog", errors);
 }

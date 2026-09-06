@@ -518,7 +518,9 @@ fn verify_public_api() -> Result<bool> {
             }
 
             if format_error && all_passed {
-                println!("  ⚠️  Rustdoc JSON format mismatch — upgrade cargo-public-api or pin a compatible nightly");
+                println!(
+                    "  ⚠️  Rustdoc JSON format mismatch — upgrade cargo-public-api or pin a compatible nightly"
+                );
                 Ok(false)
             } else if all_passed {
                 Ok(true)

@@ -23,7 +23,7 @@ use flight_ipc::proto::*;
 use flight_ipc::server::IpcServer;
 use flight_ipc::subscriptions::*;
 use flight_ipc::transport::{RetryPolicy, TransportConfig};
-use flight_ipc::{ClientConfig, ServerConfig, PROTOCOL_VERSION};
+use flight_ipc::{ClientConfig, PROTOCOL_VERSION, ServerConfig};
 use prost::Message;
 
 // ===========================================================================
@@ -159,7 +159,10 @@ fn msg_proto3_default_values_roundtrip() {
     let mut buf = Vec::new();
     req.encode(&mut buf).unwrap();
     // Proto3: default values omit from wire
-    assert!(buf.is_empty(), "all-default message should encode to 0 bytes");
+    assert!(
+        buf.is_empty(),
+        "all-default message should encode to 0 bytes"
+    );
     let decoded = ListDevicesRequest::decode(buf.as_slice()).unwrap();
     assert!(!decoded.include_disconnected);
     assert!(decoded.filter_types.is_empty());
@@ -403,9 +406,10 @@ async fn lifecycle_negotiate_features_returns_intersection() {
     assert!(resp.success);
     assert_eq!(resp.server_version, PROTOCOL_VERSION);
     // Client default features include device-management
-    assert!(resp
-        .enabled_features
-        .contains(&"device-management".to_string()));
+    assert!(
+        resp.enabled_features
+            .contains(&"device-management".to_string())
+    );
     handle.shutdown().await.unwrap();
 }
 
@@ -611,9 +615,7 @@ async fn stream_ends_on_server_shutdown() {
     match result {
         Ok(None) => {} // stream closed cleanly
         Err(_) => {}   // no message received within timeout — acceptable
-        Ok(Some(msg)) => panic!(
-            "expected no messages after shutdown, but received: {msg:?}"
-        ),
+        Ok(Some(msg)) => panic!("expected no messages after shutdown, but received: {msg:?}"),
     }
 }
 
@@ -751,9 +753,12 @@ async fn error_connection_to_nonexistent_server() {
         health_check_interval: Duration::ZERO,
         ..TransportConfig::default()
     };
-    let result =
-        IpcClient::connect_with_transport(&format!("http://127.0.0.1:{port}"), ClientConfig::default(), tc)
-            .await;
+    let result = IpcClient::connect_with_transport(
+        &format!("http://127.0.0.1:{port}"),
+        ClientConfig::default(),
+        tc,
+    )
+    .await;
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(

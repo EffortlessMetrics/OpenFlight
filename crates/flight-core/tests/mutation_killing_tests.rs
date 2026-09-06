@@ -3,7 +3,9 @@
 //! Each test asserts specific values so that any mutant changing a constant,
 //! swapping an operator, or altering a threshold is caught.
 
-use flight_core::circuit_breaker::{CallResult, CircuitBreaker, CircuitBreakerConfig, CircuitState};
+use flight_core::circuit_breaker::{
+    CallResult, CircuitBreaker, CircuitBreakerConfig, CircuitState,
+};
 use flight_core::error_catalog::{ErrorCatalog, ErrorCategory};
 use flight_core::units::{angles, conversions};
 use std::time::Duration;
@@ -108,12 +110,20 @@ fn circuit_breaker_state_transitions_exact() {
     // 2 failures: still Closed (threshold is 3)
     cb.record_failure();
     cb.record_failure();
-    assert_eq!(cb.state(), CircuitState::Closed, "must stay Closed after 2 failures");
+    assert_eq!(
+        cb.state(),
+        CircuitState::Closed,
+        "must stay Closed after 2 failures"
+    );
     assert_eq!(cb.failure_count(), 2);
 
     // 3rd failure: must transition to Open
     cb.record_failure();
-    assert_eq!(cb.state(), CircuitState::Open, "must be Open after 3 failures");
+    assert_eq!(
+        cb.state(),
+        CircuitState::Open,
+        "must be Open after 3 failures"
+    );
     assert_eq!(cb.failure_count(), 3);
 
     // Calls must be rejected while Open

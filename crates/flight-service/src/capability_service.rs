@@ -201,7 +201,10 @@ impl std::fmt::Debug for ClampCounter {
             .field("clamp_events", &self.clamp_events())
             .field("last_clamp_timestamp", &self.last_clamp_timestamp())
             .field("min_clamped_value", &self.min_clamped_value())
-            .field("max_original_value_before_clamp", &self.max_original_value_before_clamp())
+            .field(
+                "max_original_value_before_clamp",
+                &self.max_original_value_before_clamp(),
+            )
             .finish()
     }
 }
@@ -1447,9 +1450,7 @@ mod tests {
     fn counter_overflow_wraps_gracefully() {
         let counter = ClampCounter::new();
         // Simulate near-overflow by writing a high value directly
-        counter
-            .clamp_events
-            .store(u64::MAX - 1, Ordering::Relaxed);
+        counter.clamp_events.store(u64::MAX - 1, Ordering::Relaxed);
         assert_eq!(counter.clamp_events(), u64::MAX - 1);
 
         // One more event

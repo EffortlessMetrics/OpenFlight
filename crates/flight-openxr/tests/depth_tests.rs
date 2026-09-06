@@ -10,7 +10,9 @@
 use std::f32::consts::PI;
 
 use approx::assert_relative_eq;
-use flight_openxr::{HeadPose, MockRuntime, OpenXrAdapter, OpenXrError, OpenXrRuntime, SessionState};
+use flight_openxr::{
+    HeadPose, MockRuntime, OpenXrAdapter, OpenXrError, OpenXrRuntime, SessionState,
+};
 use proptest::prelude::*;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -334,10 +336,7 @@ fn mock_runtime_wraps_around() {
 #[test]
 fn session_lost_preserves_last_good_pose() {
     let good = pose(1.5, 0.0, -0.3, 0.7, 0.0, 0.0);
-    let rt = SequenceRuntime::new(vec![
-        Ok(good),
-        Err(OpenXrError::SessionLost),
-    ]);
+    let rt = SequenceRuntime::new(vec![Ok(good), Err(OpenXrError::SessionLost)]);
     let mut adapter = OpenXrAdapter::new(rt);
     adapter.initialize().unwrap();
 
@@ -452,13 +451,27 @@ fn mock_runtime_index_advances() {
 
 #[test]
 fn extreme_positive_position_is_finite() {
-    let p = pose(f32::MAX / 2.0, f32::MAX / 2.0, f32::MAX / 2.0, 0.0, 0.0, 0.0);
+    let p = pose(
+        f32::MAX / 2.0,
+        f32::MAX / 2.0,
+        f32::MAX / 2.0,
+        0.0,
+        0.0,
+        0.0,
+    );
     assert!(p.is_finite());
 }
 
 #[test]
 fn extreme_negative_position_is_finite() {
-    let p = pose(f32::MIN / 2.0, f32::MIN / 2.0, f32::MIN / 2.0, 0.0, 0.0, 0.0);
+    let p = pose(
+        f32::MIN / 2.0,
+        f32::MIN / 2.0,
+        f32::MIN / 2.0,
+        0.0,
+        0.0,
+        0.0,
+    );
     assert!(p.is_finite());
 }
 
@@ -486,10 +499,7 @@ fn negative_zero_is_finite() {
 #[test]
 fn sequence_runtime_good_then_error() {
     let good = pose(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    let mut rt = SequenceRuntime::new(vec![
-        Ok(good),
-        Err(OpenXrError::PoseUnavailable),
-    ]);
+    let mut rt = SequenceRuntime::new(vec![Ok(good), Err(OpenXrError::PoseUnavailable)]);
     OpenXrRuntime::initialize(&mut rt).unwrap();
     assert_eq!(rt.poll_pose().unwrap(), good);
     assert!(rt.poll_pose().is_err());
@@ -514,10 +524,7 @@ fn sequence_runtime_empty_returns_pose_unavailable() {
 #[test]
 fn adapter_error_preserves_state_across_multiple_polls() {
     let good = pose(3.0, 0.0, -1.0, 0.5, 0.0, 0.0);
-    let rt = SequenceRuntime::new(vec![
-        Ok(good),
-        Err(OpenXrError::SessionLost),
-    ]);
+    let rt = SequenceRuntime::new(vec![Ok(good), Err(OpenXrError::SessionLost)]);
     let mut adapter = OpenXrAdapter::new(rt);
     adapter.initialize().unwrap();
     let _ = adapter.poll(); // good pose
@@ -534,7 +541,9 @@ fn adapter_error_preserves_state_across_multiple_polls() {
 
 #[test]
 fn rapid_polling_returns_sequential_poses() {
-    let poses: Vec<_> = (0..100).map(|i| simple_pose(i as f32 * 0.01, 0.0)).collect();
+    let poses: Vec<_> = (0..100)
+        .map(|i| simple_pose(i as f32 * 0.01, 0.0))
+        .collect();
     let mut adapter = make_running_adapter(poses);
     let mut last_x = -1.0f32;
     for _ in 0..100 {
@@ -577,7 +586,10 @@ fn wrap_around_cycle_is_deterministic() {
 
 #[test]
 fn session_state_debug() {
-    assert_eq!(format!("{:?}", SessionState::Uninitialized), "Uninitialized");
+    assert_eq!(
+        format!("{:?}", SessionState::Uninitialized),
+        "Uninitialized"
+    );
     assert_eq!(format!("{:?}", SessionState::Initializing), "Initializing");
     assert_eq!(format!("{:?}", SessionState::Ready), "Ready");
     assert_eq!(format!("{:?}", SessionState::Running), "Running");

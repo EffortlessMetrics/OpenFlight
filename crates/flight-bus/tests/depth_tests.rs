@@ -7,8 +7,8 @@
 
 use flight_bus::publisher::{BusPublisher, SubscriptionConfig};
 use flight_bus::routing::{
-    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, RoutePattern,
-    SourceType, MAX_ROUTES,
+    BusEvent, EventFilter, EventKind, EventPayload, EventPriority, EventRouter, MAX_ROUTES,
+    RoutePattern, SourceType,
 };
 use flight_bus::snapshot::BusSnapshot;
 use flight_bus::types::{AircraftId, SimId};
@@ -29,7 +29,14 @@ fn make_event(
     timestamp_us: u64,
     payload: EventPayload,
 ) -> BusEvent {
-    BusEvent::new(source_type, source_id, kind, priority, timestamp_us, payload)
+    BusEvent::new(
+        source_type,
+        source_id,
+        kind,
+        priority,
+        timestamp_us,
+        payload,
+    )
 }
 
 fn axis_event(source_id: u32, value: f64, timestamp_us: u64) -> BusEvent {
@@ -39,10 +46,7 @@ fn axis_event(source_id: u32, value: f64, timestamp_us: u64) -> BusEvent {
         EventKind::AxisUpdate,
         EventPriority::Normal,
         timestamp_us,
-        EventPayload::Axis {
-            axis_id: 0,
-            value,
-        },
+        EventPayload::Axis { axis_id: 0, value },
     )
 }
 
@@ -314,9 +318,7 @@ mod message_ordering {
     #[test]
     fn bus_publisher_fifo_ordering() {
         let mut publisher = make_publisher();
-        let mut sub = publisher
-            .subscribe(SubscriptionConfig::default())
-            .unwrap();
+        let mut sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
 
         let sims = [SimId::Msfs, SimId::XPlane, SimId::Dcs];
         for (i, &sim) in sims.iter().enumerate() {
@@ -631,13 +633,8 @@ mod lifecycle {
         let mut publisher = make_publisher();
         let mut ids = HashSet::new();
         for _ in 0..10 {
-            let sub = publisher
-                .subscribe(SubscriptionConfig::default())
-                .unwrap();
-            assert!(
-                ids.insert(sub.id),
-                "duplicate subscriber id"
-            );
+            let sub = publisher.subscribe(SubscriptionConfig::default()).unwrap();
+            assert!(ids.insert(sub.id), "duplicate subscriber id");
         }
     }
 
@@ -786,10 +783,7 @@ mod event_types {
             },
         );
         match evt.payload {
-            EventPayload::Button {
-                button_id,
-                pressed,
-            } => {
+            EventPayload::Button { button_id, pressed } => {
                 assert_eq!(button_id, 7);
                 assert!(pressed);
             }

@@ -5,7 +5,7 @@
 //! serialization, and edge-case handling.
 
 use flight_ac7_protocol::{
-    Ac7Controls, Ac7ProtocolError, Ac7State, Ac7TelemetryPacket, AC7_TELEMETRY_SCHEMA_V1,
+    AC7_TELEMETRY_SCHEMA_V1, Ac7Controls, Ac7ProtocolError, Ac7State, Ac7TelemetryPacket,
 };
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,8 @@ fn ignores_unknown_fields() {
 
 #[test]
 fn from_json_slice_and_str_equivalent() {
-    let json = r#"{"schema":"flight.ac7.telemetry/1","aircraft":"F-22A","state":{"altitude_m":5000.0}}"#;
+    let json =
+        r#"{"schema":"flight.ac7.telemetry/1","aircraft":"F-22A","state":{"altitude_m":5000.0}}"#;
     let from_str = Ac7TelemetryPacket::from_json_str(json).unwrap();
     let from_slice = Ac7TelemetryPacket::from_json_slice(json.as_bytes()).unwrap();
     assert_eq!(from_str, from_slice);
@@ -131,24 +132,26 @@ fn rejects_bare_array() {
 
 #[test]
 fn rejects_truncated_json() {
-    let err = Ac7TelemetryPacket::from_json_str(r#"{"schema":"flight.ac7.telemetry/1""#)
-        .unwrap_err();
+    let err =
+        Ac7TelemetryPacket::from_json_str(r#"{"schema":"flight.ac7.telemetry/1""#).unwrap_err();
     assert!(matches!(err, Ac7ProtocolError::InvalidJson(_)));
 }
 
 #[test]
 fn rejects_wrong_type_for_timestamp() {
-    let err =
-        Ac7TelemetryPacket::from_json_str(r#"{"schema":"flight.ac7.telemetry/1","timestamp_ms":"not_a_number"}"#)
-            .unwrap_err();
+    let err = Ac7TelemetryPacket::from_json_str(
+        r#"{"schema":"flight.ac7.telemetry/1","timestamp_ms":"not_a_number"}"#,
+    )
+    .unwrap_err();
     assert!(matches!(err, Ac7ProtocolError::InvalidJson(_)));
 }
 
 #[test]
 fn rejects_negative_timestamp() {
-    let err =
-        Ac7TelemetryPacket::from_json_str(r#"{"schema":"flight.ac7.telemetry/1","timestamp_ms":-1}"#)
-            .unwrap_err();
+    let err = Ac7TelemetryPacket::from_json_str(
+        r#"{"schema":"flight.ac7.telemetry/1","timestamp_ms":-1}"#,
+    )
+    .unwrap_err();
     assert!(matches!(err, Ac7ProtocolError::InvalidJson(_)));
 }
 
@@ -219,7 +222,13 @@ fn rejects_altitude_just_beyond_bounds() {
         };
         let err = pkt.validate().unwrap_err();
         assert!(
-            matches!(err, Ac7ProtocolError::OutOfRange { field: "state.altitude_m", .. }),
+            matches!(
+                err,
+                Ac7ProtocolError::OutOfRange {
+                    field: "state.altitude_m",
+                    ..
+                }
+            ),
             "altitude {alt} should be rejected"
         );
     }
@@ -250,7 +259,10 @@ fn rejects_speed_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.speed_mps", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.speed_mps",
+            ..
+        }
     ));
 }
 
@@ -265,7 +277,10 @@ fn rejects_negative_ground_speed() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.ground_speed_mps", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.ground_speed_mps",
+            ..
+        }
     ));
 }
 
@@ -279,7 +294,10 @@ fn accepts_boundary_vertical_speed() {
             },
             ..Default::default()
         };
-        assert!(pkt.validate().is_ok(), "vertical speed {vs} should be valid");
+        assert!(
+            pkt.validate().is_ok(),
+            "vertical speed {vs} should be valid"
+        );
     }
 }
 
@@ -294,7 +312,10 @@ fn rejects_vertical_speed_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.vertical_speed_mps", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.vertical_speed_mps",
+            ..
+        }
     ));
 }
 
@@ -323,7 +344,10 @@ fn rejects_heading_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.heading_deg", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.heading_deg",
+            ..
+        }
     ));
 }
 
@@ -353,7 +377,10 @@ fn rejects_pitch_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.pitch_deg", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.pitch_deg",
+            ..
+        }
     ));
 }
 
@@ -368,7 +395,10 @@ fn rejects_roll_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.roll_deg", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.roll_deg",
+            ..
+        }
     ));
 }
 
@@ -397,7 +427,10 @@ fn rejects_g_force_beyond_bounds() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.g_force", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.g_force",
+            ..
+        }
     ));
 }
 
@@ -426,7 +459,10 @@ fn rejects_health_norm_negative() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.health_norm", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.health_norm",
+            ..
+        }
     ));
 }
 
@@ -441,7 +477,10 @@ fn rejects_health_norm_above_one() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "state.health_norm", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "state.health_norm",
+            ..
+        }
     ));
 }
 
@@ -475,7 +514,10 @@ fn rejects_pitch_below_neg_one() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "controls.pitch", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "controls.pitch",
+            ..
+        }
     ));
 }
 
@@ -490,7 +532,10 @@ fn rejects_roll_above_one() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "controls.roll", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "controls.roll",
+            ..
+        }
     ));
 }
 
@@ -505,7 +550,10 @@ fn rejects_yaw_out_of_range() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "controls.yaw", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "controls.yaw",
+            ..
+        }
     ));
 }
 
@@ -520,7 +568,10 @@ fn rejects_brake_negative() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "controls.brake", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "controls.brake",
+            ..
+        }
     ));
 }
 
@@ -535,7 +586,10 @@ fn rejects_throttle_above_one() {
     };
     assert!(matches!(
         pkt.validate().unwrap_err(),
-        Ac7ProtocolError::OutOfRange { field: "controls.throttle", .. }
+        Ac7ProtocolError::OutOfRange {
+            field: "controls.throttle",
+            ..
+        }
     ));
 }
 

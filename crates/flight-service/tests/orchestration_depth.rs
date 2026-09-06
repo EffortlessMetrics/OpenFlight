@@ -9,17 +9,11 @@
 use std::time::Duration;
 
 use flight_service::{
-    BootSequence, DeviceEvent, AdapterEvent, OrchestratorError,
-    ServiceConfig, ServiceOrchestrator,
-    SubsystemHealth,
-    FlightServiceConfig,
-    SafeModeConfig,
+    AdapterEvent, BootSequence, DeviceEvent, FlightServiceConfig, OrchestratorError,
+    SafeModeConfig, ServiceConfig, ServiceOrchestrator, SubsystemHealth,
 };
 
-use flight_service::config_validator::{
-    ConfigValidator, PortRangeCheck,
-    RequiredFieldCheck,
-};
+use flight_service::config_validator::{ConfigValidator, PortRangeCheck, RequiredFieldCheck};
 use flight_service::config_watcher::{ChangeType, ConfigWatcher};
 use flight_service::degradation_manager::{DegradationLevel, DegradationManager};
 use flight_service::diagnostic_bundle::{
@@ -30,9 +24,7 @@ use flight_service::graceful_drain::{DrainCoordinator, DrainResult};
 use flight_service::health_http::{HealthEndpointState, HealthStatus};
 use flight_service::instance_lock::InstanceLock;
 use flight_service::metrics_server::PrometheusMetrics;
-use flight_service::shutdown_coordinator::{
-    ComponentShutdownOutcome, ShutdownCoordinator,
-};
+use flight_service::shutdown_coordinator::{ComponentShutdownOutcome, ShutdownCoordinator};
 use flight_service::startup_sequence::StartupSequence;
 use flight_service::task_supervisor::TaskSupervisor;
 
@@ -60,11 +52,7 @@ fn lifecycle_start_running_shutdown_sequence() {
 fn lifecycle_graceful_shutdown_with_timeout() {
     let timeout_ms = 3_000u64;
     let mut coord = ShutdownCoordinator::new(timeout_ms);
-    coord.add_phase(
-        "network",
-        vec!["grpc".into(), "http".into()],
-        1_000,
-    );
+    coord.add_phase("network", vec!["grpc".into(), "http".into()], 1_000);
     coord.add_phase("core", vec!["axis".into(), "bus".into()], 1_000);
 
     coord.set_handler(Box::new(|_name, _timeout| ComponentShutdownOutcome::Ok));
@@ -536,10 +524,7 @@ fn cli_health_check() {
 
     let adapters = status.subsystems.get("adapters").unwrap();
     assert_eq!(adapters.error_count, 1);
-    assert_eq!(
-        adapters.last_error.as_deref(),
-        Some("MSFS disconnected")
-    );
+    assert_eq!(adapters.last_error.as_deref(), Some("MSFS disconnected"));
 }
 
 // ===========================================================================
@@ -561,7 +546,10 @@ fn bonus_subsystem_restart() {
 
     orch.restart_subsystem("bus").unwrap();
     assert!(orch.subsystem("bus").unwrap().is_running());
-    assert_eq!(orch.subsystem("bus").unwrap().health(), SubsystemHealth::Healthy);
+    assert_eq!(
+        orch.subsystem("bus").unwrap().health(),
+        SubsystemHealth::Healthy
+    );
 }
 
 /// B-3: Config validator — port range check passes for valid port.

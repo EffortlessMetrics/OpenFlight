@@ -187,7 +187,10 @@ fn device_id_collision_avoidance_different_paths() {
 fn device_id_collision_avoidance_different_serials() {
     let a = DeviceId::new(0x06A3, 0x0762, Some("SN1".into()), "/dev/hidraw0");
     let b = DeviceId::new(0x06A3, 0x0762, Some("SN2".into()), "/dev/hidraw0");
-    assert_ne!(a, b, "same vid:pid+path but different serials should not collide");
+    assert_ne!(
+        a, b,
+        "same vid:pid+path but different serials should not collide"
+    );
 }
 
 #[test]
@@ -271,9 +274,7 @@ fn health_clone_equality() {
 #[test]
 fn health_variants_not_equal() {
     let a = DeviceHealth::Healthy;
-    let b = DeviceHealth::Failed {
-        error: "e".into(),
-    };
+    let b = DeviceHealth::Failed { error: "e".into() };
     assert_ne!(a, b);
 }
 

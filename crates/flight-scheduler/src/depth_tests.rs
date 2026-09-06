@@ -7,11 +7,11 @@
 //! jitter control, shutdown semantics, and diagnostics.
 
 use super::*;
-use crate::budget::{InlineTickBudget, TickBudget, MAX_PHASES};
-use crate::executor::{TickExecutor, MAX_TASKS};
+use crate::budget::{InlineTickBudget, MAX_PHASES, TickBudget};
+use crate::executor::{MAX_TASKS, TickExecutor};
 use crate::jitter::JitterTracker;
 use crate::metrics::{JitterMetrics, TimingValidator};
-use crate::mmcss::{MmcssHandle, MockMmcssBackend, MmcssPriority};
+use crate::mmcss::{MmcssHandle, MmcssPriority, MockMmcssBackend};
 use crate::platform::{
     Platform, PlatformRtError, RtPriority, detect_platform, is_rt_available,
     request_rt_priority_mmcss, request_rt_priority_noop, request_rt_priority_rtkit,
@@ -20,8 +20,8 @@ use crate::pll::{JitterStats as PllJitterStats, PhaseLockLoop, Pll};
 use crate::ring::SpscRing;
 use crate::rtkit::{MockRtkitBackend, RtkitHandle};
 use crate::timer::{FallbackTimer, HighResTimer, MockTimer, SystemTimer, TimerStats};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -159,8 +159,8 @@ fn tick_timing_cumulative_drift_correction() {
 /// transition the PLL into locked state.
 #[test]
 fn tick_timing_pll_lock_detection() {
-    let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
-        .with_lock_detection(50_000.0, 200_000.0, 10);
+    let mut pll =
+        PhaseLockLoop::new(0.1, 0.001, 4_000_000.0).with_lock_detection(50_000.0, 200_000.0, 10);
     assert!(!pll.locked());
     // Feed small errors below the lock threshold
     for _ in 0..50 {
@@ -410,7 +410,11 @@ fn jitter_histogram_uniform_zero_stddev() {
     }
     assert_eq!(t.min_ns(), 42_000);
     assert_eq!(t.max_ns(), 42_000);
-    assert!(t.stddev_ns() < 1.0, "stddev should be ~0, got {}", t.stddev_ns());
+    assert!(
+        t.stddev_ns() < 1.0,
+        "stddev should be ~0, got {}",
+        t.stddev_ns()
+    );
 }
 
 /// TimerStats histogram correctly identifies the 0.5 ms quality gate
@@ -654,8 +658,8 @@ fn diagnostics_timing_histogram() {
 /// transition to unlocked.
 #[test]
 fn pll_unlock_after_spike() {
-    let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
-        .with_lock_detection(50_000.0, 200_000.0, 5);
+    let mut pll =
+        PhaseLockLoop::new(0.1, 0.001, 4_000_000.0).with_lock_detection(50_000.0, 200_000.0, 5);
 
     // Lock the PLL
     for _ in 0..20 {
@@ -667,7 +671,10 @@ fn pll_unlock_after_spike() {
     for _ in 0..20 {
         pll.tick(500_000.0); // 500 µs — above 200 µs unlock threshold
     }
-    assert!(!pll.locked(), "PLL should unlock after sustained large errors");
+    assert!(
+        !pll.locked(),
+        "PLL should unlock after sustained large errors"
+    );
 }
 
 /// The InlineTickBudget Copy trait works correctly — mutations to the
@@ -898,8 +905,8 @@ fn pll_update_period_interface() {
 /// PhaseLockLoop reset clears lock state, tick count, and integral.
 #[test]
 fn pll_phase_lock_loop_reset() {
-    let mut pll = PhaseLockLoop::new(0.1, 0.001, 4_000_000.0)
-        .with_lock_detection(50_000.0, 200_000.0, 5);
+    let mut pll =
+        PhaseLockLoop::new(0.1, 0.001, 4_000_000.0).with_lock_detection(50_000.0, 200_000.0, 5);
     // Lock it
     for _ in 0..20 {
         pll.tick(100.0);
@@ -1003,5 +1010,9 @@ fn pll_jitter_stats_uniform_zero_stddev() {
     }
     assert_eq!(js.count(), 100);
     assert!((js.mean() - 42_000.0).abs() < 0.01);
-    assert!(js.stddev() < 1.0, "stddev should be ~0 for uniform data, got {}", js.stddev());
+    assert!(
+        js.stddev() < 1.0,
+        "stddev should be ~0 for uniform data, got {}",
+        js.stddev()
+    );
 }

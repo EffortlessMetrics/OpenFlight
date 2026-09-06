@@ -11,20 +11,18 @@
 //! 5. Telemetry conversion (unit helpers, NaN/Inf filtering, safe defaults)
 //! 6. Integration scenarios (full pipeline, reconnect, graceful degradation)
 
-use flight_dcs_export::control_injection::{fa18c, f16c, a10c, f14b, ah64d};
-use flight_dcs_export::{
-    AircraftCategory, AxesProfile,
-    DcsAdapterEvent, DcsAdapterState, DcsAdapterStateMachine, DcsTransitionError,
-    DcsControlCommand, DcsControlInjector, DcsActionType,
-    DcsFlightData,
-    lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
-};
 use flight_dcs_export::aircraft_db;
-use flight_dcs_export::aircraft_detection::{classify_fidelity, ModuleFidelity};
+use flight_dcs_export::aircraft_detection::{ModuleFidelity, classify_fidelity};
+use flight_dcs_export::control_injection::{a10c, ah64d, f14b, f16c, fa18c};
 use flight_dcs_export::protocol::{
-    parse_export_line, parse_indicator_value, parse_telemetry_batch,
-    parse_position_data, parse_multi_value, parse_device_arg_block,
-    parse_instrument_block, parse_aircraft_type, dcs_to_ned, m_to_ft, ms_to_knots, rad_to_deg,
+    dcs_to_ned, m_to_ft, ms_to_knots, parse_aircraft_type, parse_device_arg_block,
+    parse_export_line, parse_indicator_value, parse_instrument_block, parse_multi_value,
+    parse_position_data, parse_telemetry_batch, rad_to_deg,
+};
+use flight_dcs_export::{
+    AircraftCategory, AxesProfile, DcsActionType, DcsAdapterEvent, DcsAdapterState,
+    DcsAdapterStateMachine, DcsControlCommand, DcsControlInjector, DcsFlightData,
+    DcsTransitionError, lookup_aircraft_axis, parse_wire_command, parse_wire_payload,
 };
 
 // ============================================================================
@@ -90,10 +88,8 @@ mod protocol_parsing {
 
     #[test]
     fn header_only_no_crash() {
-        let pkt = parse_telemetry_batch(
-            "HEADER:timestamp=1.0,model_time=1.0,aircraft=Test\n",
-        )
-        .unwrap();
+        let pkt =
+            parse_telemetry_batch("HEADER:timestamp=1.0,model_time=1.0,aircraft=Test\n").unwrap();
         assert!(pkt.indicators.is_empty());
     }
 
@@ -206,8 +202,7 @@ mod protocol_parsing {
 
     #[test]
     fn position_data_with_negative_lat_lon() {
-        let (lat, lon, alt) =
-            parse_position_data("{lat=-34.0,lon=-58.0,alt=25.0}").unwrap();
+        let (lat, lon, alt) = parse_position_data("{lat=-34.0,lon=-58.0,alt=25.0}").unwrap();
         assert!((lat - (-34.0)).abs() < 1e-10);
         assert!((lon - (-58.0)).abs() < 1e-10);
         assert!((alt - 25.0).abs() < 1e-10);
@@ -215,8 +210,7 @@ mod protocol_parsing {
 
     #[test]
     fn position_data_zero_altitude() {
-        let (_, _, alt) =
-            parse_position_data("{lat=0.0,lon=0.0,alt=0.0}").unwrap();
+        let (_, _, alt) = parse_position_data("{lat=0.0,lon=0.0,alt=0.0}").unwrap();
         assert!(alt.abs() < 1e-10);
     }
 
@@ -245,7 +239,10 @@ mod protocol_parsing {
 
     #[test]
     fn parse_aircraft_type_strips_copilot_suffix() {
-        assert_eq!(parse_aircraft_type("AH-64D_BLK_II_copilot"), "AH-64D_BLK_II");
+        assert_eq!(
+            parse_aircraft_type("AH-64D_BLK_II_copilot"),
+            "AH-64D_BLK_II"
+        );
     }
 
     #[test]
@@ -344,7 +341,10 @@ mod aircraft_database {
 
     #[test]
     fn all_dcs_names_are_unique() {
-        let names: Vec<_> = aircraft_db::all_aircraft().iter().map(|a| a.dcs_name).collect();
+        let names: Vec<_> = aircraft_db::all_aircraft()
+            .iter()
+            .map(|a| a.dcs_name)
+            .collect();
         let mut sorted = names.clone();
         sorted.sort();
         sorted.dedup();
@@ -355,7 +355,11 @@ mod aircraft_database {
     fn all_entries_have_non_empty_names() {
         for a in aircraft_db::all_aircraft() {
             assert!(!a.dcs_name.is_empty(), "empty dcs_name");
-            assert!(!a.display_name.is_empty(), "empty display_name for {}", a.dcs_name);
+            assert!(
+                !a.display_name.is_empty(),
+                "empty display_name for {}",
+                a.dcs_name
+            );
         }
     }
 
@@ -364,21 +368,65 @@ mod aircraft_database {
     #[test]
     fn lookup_modern_jets() {
         let jets = [
-            ("F-16C_50", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("FA-18C_hornet", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("A-10C_2", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("F-14B", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("F-15ESE", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("JF-17", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("AJS37", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("M-2000C", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("AV8BNA", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("F-5E-3", AircraftCategory::FixedWing, AxesProfile::StandardJet),
-            ("MiG-21Bis", AircraftCategory::FixedWing, AxesProfile::StandardJet),
+            (
+                "F-16C_50",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "FA-18C_hornet",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "A-10C_2",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "F-14B",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "F-15ESE",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "JF-17",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "AJS37",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "M-2000C",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "AV8BNA",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "F-5E-3",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
+            (
+                "MiG-21Bis",
+                AircraftCategory::FixedWing,
+                AxesProfile::StandardJet,
+            ),
         ];
         for (name, cat, axes) in &jets {
-            let info = aircraft_db::lookup(name)
-                .unwrap_or_else(|| panic!("missing aircraft: {name}"));
+            let info =
+                aircraft_db::lookup(name).unwrap_or_else(|| panic!("missing aircraft: {name}"));
             assert_eq!(info.category, *cat, "{name}: wrong category");
             assert_eq!(info.axes_config, *axes, "{name}: wrong axes");
         }
@@ -407,8 +455,7 @@ mod aircraft_database {
             ("OH58D", AxesProfile::HelicopterCollective),
         ];
         for (name, axes) in &helis {
-            let info = aircraft_db::lookup(name)
-                .unwrap_or_else(|| panic!("missing heli: {name}"));
+            let info = aircraft_db::lookup(name).unwrap_or_else(|| panic!("missing heli: {name}"));
             assert_eq!(info.category, AircraftCategory::Helicopter, "{name}");
             assert_eq!(info.axes_config, *axes, "{name}");
         }
@@ -426,8 +473,8 @@ mod aircraft_database {
             ("I-16", AxesProfile::Warbird4Axis),
         ];
         for (name, axes) in &warbirds {
-            let info = aircraft_db::lookup(name)
-                .unwrap_or_else(|| panic!("missing warbird: {name}"));
+            let info =
+                aircraft_db::lookup(name).unwrap_or_else(|| panic!("missing warbird: {name}"));
             assert_eq!(info.category, AircraftCategory::WarBird, "{name}");
             assert_eq!(info.axes_config, *axes, "{name}");
         }
@@ -495,10 +542,7 @@ mod aircraft_database {
             AircraftCategory::TransportCargo,
         ] {
             let results = aircraft_db::by_category(cat);
-            assert!(
-                !results.is_empty(),
-                "category {cat} has no aircraft"
-            );
+            assert!(!results.is_empty(), "category {cat} has no aircraft");
             for a in &results {
                 assert_eq!(a.category, cat);
             }
@@ -551,13 +595,19 @@ mod aircraft_database {
         assert_eq!(AircraftCategory::Helicopter.to_string(), "Helicopter");
         assert_eq!(AircraftCategory::TrainerJet.to_string(), "Trainer Jet");
         assert_eq!(AircraftCategory::WarBird.to_string(), "Warbird");
-        assert_eq!(AircraftCategory::TransportCargo.to_string(), "Transport/Cargo");
+        assert_eq!(
+            AircraftCategory::TransportCargo.to_string(),
+            "Transport/Cargo"
+        );
     }
 
     #[test]
     fn axes_profile_display_all_variants() {
         assert_eq!(AxesProfile::StandardJet.to_string(), "Standard Jet");
-        assert_eq!(AxesProfile::HelicopterCollective.to_string(), "Helicopter Collective");
+        assert_eq!(
+            AxesProfile::HelicopterCollective.to_string(),
+            "Helicopter Collective"
+        );
         assert_eq!(AxesProfile::YokeThrottle.to_string(), "Yoke + Throttle");
         assert_eq!(AxesProfile::Warbird4Axis.to_string(), "Warbird 4-Axis");
     }
@@ -1417,7 +1467,12 @@ mod integration_scenarios {
         assert!((pkt.flight_data.engine_rpm_percent[0] - 94.5).abs() < 1e-9);
         assert!((pkt.flight_data.engine_rpm_percent[1] - 95.0).abs() < 1e-9);
         assert_eq!(pkt.flight_data.gear_position.len(), 3);
-        assert!(pkt.flight_data.gear_position.iter().all(|&p| p.abs() < 1e-9));
+        assert!(
+            pkt.flight_data
+                .gear_position
+                .iter()
+                .all(|&p| p.abs() < 1e-9)
+        );
 
         // Verify aircraft DB lookup
         let aircraft = aircraft_db::lookup(&pkt.aircraft_name).unwrap();
@@ -1468,16 +1523,12 @@ mod integration_scenarios {
         let aircraft = ["F-16C_50", "FA-18C_hornet", "A-10C_2", "Ka-50_3"];
 
         for name in &aircraft {
-            let batch = format!(
-                "HEADER:timestamp=1.0,model_time=1.0,aircraft={name}\naltitude_m=5000.0"
-            );
+            let batch =
+                format!("HEADER:timestamp=1.0,model_time=1.0,aircraft={name}\naltitude_m=5000.0");
             let pkt = parse_telemetry_batch(&batch).unwrap();
             assert_eq!(pkt.aircraft_name, *name);
             // DB lookup succeeds for all known aircraft
-            assert!(
-                aircraft_db::lookup(name).is_some(),
-                "DB missing {name}"
-            );
+            assert!(aircraft_db::lookup(name).is_some(), "DB missing {name}");
         }
     }
 

@@ -67,7 +67,11 @@ fn subscriber_receives_published_message_value() {
         },
     );
     let matches2 = router.route_event(&sim_event);
-    assert_eq!(matches2.len(), 0, "simulator event must not match device route");
+    assert_eq!(
+        matches2.len(),
+        0,
+        "simulator event must not match device route"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -91,8 +95,16 @@ fn message_ordering_preserved() {
     let matches = router.route_event(&event);
 
     assert_eq!(matches.len(), 2, "both routes must match");
-    assert_eq!(matches.get(0), Some(10), "first match must be destination 10");
-    assert_eq!(matches.get(1), Some(20), "second match must be destination 20");
+    assert_eq!(
+        matches.get(0),
+        Some(10),
+        "first match must be destination 10"
+    );
+    assert_eq!(
+        matches.get(1),
+        Some(20),
+        "second match must be destination 20"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +142,11 @@ fn queue_full_drops_not_silently_lost() {
     // Event 3: events_in_window is 2, 2 < 2.0 is false → rejected
     let e3 = device_axis_event(1, 0.3, ts + 200);
     let m3 = router.route_event(&e3);
-    assert_eq!(m3.len(), 0, "third event exceeds rate limit and must be dropped");
+    assert_eq!(
+        m3.len(),
+        0,
+        "third event exceeds rate limit and must be dropped"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -158,7 +174,11 @@ fn unsubscribe_stops_delivery() {
     // Remove the route
     let removed = router.remove_route(route_id);
     assert!(removed, "remove_route must return true for existing route");
-    assert_eq!(router.route_count(), 0, "route count must be 0 after removal");
+    assert_eq!(
+        router.route_count(),
+        0,
+        "route count must be 0 after removal"
+    );
 
     // Same event must no longer match
     let event2 = device_axis_event(1, 0.6, 2000);
@@ -194,12 +214,22 @@ fn topic_filtering_correctness() {
     let m_axis = router.route_event(&axis_ev);
     assert_eq!(m_axis.len(), 1, "only axis route should match axis event");
     assert!(m_axis.contains(1), "destination 1 must match AxisUpdate");
-    assert!(!m_axis.contains(2), "destination 2 must NOT match AxisUpdate");
+    assert!(
+        !m_axis.contains(2),
+        "destination 2 must NOT match AxisUpdate"
+    );
 
     // ButtonPress event: must match route B (dest 2), not route A (dest 1)
     let btn_ev = device_button_event(1, true, 2000);
     let m_btn = router.route_event(&btn_ev);
-    assert_eq!(m_btn.len(), 1, "only button route should match button event");
+    assert_eq!(
+        m_btn.len(),
+        1,
+        "only button route should match button event"
+    );
     assert!(m_btn.contains(2), "destination 2 must match ButtonPress");
-    assert!(!m_btn.contains(1), "destination 1 must NOT match ButtonPress");
+    assert!(
+        !m_btn.contains(1),
+        "destination 1 must NOT match ButtonPress"
+    );
 }

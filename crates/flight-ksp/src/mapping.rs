@@ -109,14 +109,26 @@ pub fn apply_telemetry(snapshot: &mut BusSnapshot, raw: &KspRawTelemetry) {
     // ── Environment ──────────────────────────────────────────────────────────
     let altitude_ft = (raw.altitude_m * M_TO_FEET) as f32;
     snapshot.environment = Environment {
-        altitude: if altitude_ft.is_finite() { altitude_ft } else { 0.0 },
+        altitude: if altitude_ft.is_finite() {
+            altitude_ft
+        } else {
+            0.0
+        },
         ..Environment::default()
     };
 
     // ── Navigation ───────────────────────────────────────────────────────────
     snapshot.navigation = Navigation {
-        latitude: if raw.latitude_deg.is_finite() { raw.latitude_deg } else { 0.0 },
-        longitude: if raw.longitude_deg.is_finite() { raw.longitude_deg } else { 0.0 },
+        latitude: if raw.latitude_deg.is_finite() {
+            raw.latitude_deg
+        } else {
+            0.0
+        },
+        longitude: if raw.longitude_deg.is_finite() {
+            raw.longitude_deg
+        } else {
+            0.0
+        },
         ..Navigation::default()
     };
 

@@ -134,7 +134,10 @@ fn yaw_has_tighter_range_than_pitch() {
     let angle = consts::FRAC_PI_4;
     let p = with(|fd| fd.pitch = angle).pitch_normalized();
     let y = with(|fd| fd.yaw = angle).yaw_normalized();
-    assert!(y > p, "yaw normalised ({y}) must exceed pitch normalised ({p})");
+    assert!(
+        y > p,
+        "yaw normalised ({y}) must exceed pitch normalised ({p})"
+    );
 }
 
 // ── Roll edge cases (mirroring pitch coverage) ──────────────────────────────
@@ -449,9 +452,21 @@ fn negative_zero_throttle_normalises_to_zero() {
 #[test]
 fn very_small_positive_angles_normalise_near_zero() {
     let tiny = 1e-30_f32;
-    assert_relative_eq!(with(|fd| fd.pitch = tiny).pitch_normalized(), 0.0, epsilon = 1e-6);
-    assert_relative_eq!(with(|fd| fd.roll = tiny).roll_normalized(), 0.0, epsilon = 1e-6);
-    assert_relative_eq!(with(|fd| fd.yaw = tiny).yaw_normalized(), 0.0, epsilon = 1e-6);
+    assert_relative_eq!(
+        with(|fd| fd.pitch = tiny).pitch_normalized(),
+        0.0,
+        epsilon = 1e-6
+    );
+    assert_relative_eq!(
+        with(|fd| fd.roll = tiny).roll_normalized(),
+        0.0,
+        epsilon = 1e-6
+    );
+    assert_relative_eq!(
+        with(|fd| fd.yaw = tiny).yaw_normalized(),
+        0.0,
+        epsilon = 1e-6
+    );
 }
 
 // ── Error type ergonomics ───────────────────────────────────────────────────
@@ -602,9 +617,9 @@ fn negative_saturation_for_all_angle_normalisations() {
 #[test]
 fn realistic_cruise_data_normalisations() {
     let fd = with(|fd| {
-        fd.pitch = 0.05;  // ~3° nose up
-        fd.roll = 0.0;    // wings level
-        fd.yaw = 0.0;     // no sideslip
+        fd.pitch = 0.05; // ~3° nose up
+        fd.roll = 0.0; // wings level
+        fd.yaw = 0.0; // no sideslip
         fd.throttle = 0.7; // cruise power
         fd.mach = 0.82;
         fd.cas = 280.0;
@@ -612,7 +627,10 @@ fn realistic_cruise_data_normalisations() {
     });
 
     let pn = fd.pitch_normalized();
-    assert!(pn > 0.0 && pn < 0.1, "cruise pitch should be small positive: {pn}");
+    assert!(
+        pn > 0.0 && pn < 0.1,
+        "cruise pitch should be small positive: {pn}"
+    );
     assert_relative_eq!(fd.roll_normalized(), 0.0, epsilon = 1e-6);
     assert_relative_eq!(fd.throttle_normalized(), 0.7, epsilon = 1e-6);
 }
@@ -620,9 +638,9 @@ fn realistic_cruise_data_normalisations() {
 #[test]
 fn realistic_steep_turn_normalisations() {
     let fd = with(|fd| {
-        fd.pitch = 0.1;                  // slight nose up
-        fd.roll = consts::FRAC_PI_4;     // 45° bank
-        fd.yaw = 0.02;                   // slight coordination
+        fd.pitch = 0.1; // slight nose up
+        fd.roll = consts::FRAC_PI_4; // 45° bank
+        fd.yaw = 0.02; // slight coordination
         fd.throttle = 0.85;
     });
 

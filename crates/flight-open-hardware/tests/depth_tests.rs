@@ -10,7 +10,9 @@
 use flight_open_hardware::firmware_version::{FIRMWARE_REPORT_ID, FirmwareVersionReport};
 use flight_open_hardware::input_report::{INPUT_REPORT_ID, INPUT_REPORT_LEN, InputReport};
 use flight_open_hardware::led_report::{LED_REPORT_ID, LED_REPORT_LEN, LedReport, led_flags};
-use flight_open_hardware::output_report::{FFB_REPORT_ID, FFB_REPORT_LEN, FfbMode, FfbOutputReport};
+use flight_open_hardware::output_report::{
+    FFB_REPORT_ID, FFB_REPORT_LEN, FfbMode, FfbOutputReport,
+};
 use flight_open_hardware::{PRODUCT_ID, VENDOR_ID};
 
 use proptest::prelude::*;
@@ -31,7 +33,12 @@ fn usb_product_id_is_openflight() {
 
 #[test]
 fn report_ids_are_distinct() {
-    let ids = [INPUT_REPORT_ID, FFB_REPORT_ID, LED_REPORT_ID, FIRMWARE_REPORT_ID];
+    let ids = [
+        INPUT_REPORT_ID,
+        FFB_REPORT_ID,
+        LED_REPORT_ID,
+        FIRMWARE_REPORT_ID,
+    ];
     for i in 0..ids.len() {
         for j in (i + 1)..ids.len() {
             assert_ne!(ids[i], ids[j], "report IDs must be unique");

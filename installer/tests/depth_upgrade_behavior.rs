@@ -267,7 +267,11 @@ fn sim_integration_files_updated_on_upgrade() {
             .to_string_lossy()
             .contains("99-flight-hub.rules")
         {
-            fs::write(&src, "SUBSYSTEM==\"hidraw\", MODE=\"0660\", GROUP=\"input\" # v2\n").unwrap();
+            fs::write(
+                &src,
+                "SUBSYSTEM==\"hidraw\", MODE=\"0660\", GROUP=\"input\" # v2\n",
+            )
+            .unwrap();
         } else {
             fs::write(&src, format!("v2-{}", entry.source.display())).unwrap();
         }
@@ -345,8 +349,5 @@ fn linux_systemd_unit_updated_on_upgrade() {
     tx2.commit().unwrap();
 
     let content = fs::read_to_string(&unit).unwrap();
-    assert!(
-        content.contains("v2"),
-        "systemd unit must be updated to v2"
-    );
+    assert!(content.contains("v2"), "systemd unit must be updated to v2");
 }

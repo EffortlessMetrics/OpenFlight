@@ -6,12 +6,11 @@
 //! Covers: session lifecycle, state persistence, serialization,
 //! file management, recovery, and property-based testing.
 
-use flight_session::migration::{self, MigrationError, StateVersion, CURRENT_VERSION};
+use flight_session::migration::{self, CURRENT_VERSION, MigrationError, StateVersion};
 use flight_session::recovery::RecoveryManager;
 use flight_session::state_persistence::StatePersistence;
 use flight_session::store::{
-    CalibrationData, SessionState, SessionStore, ShutdownInfo, ShutdownReason,
-    WindowPosition,
+    CalibrationData, SessionState, SessionStore, ShutdownInfo, ShutdownReason, WindowPosition,
 };
 use proptest::prelude::*;
 use serde_json::json;
@@ -129,10 +128,7 @@ fn lifecycle_list_sessions_via_snapshots() {
     for i in 0..5 {
         let snap = sp.restore_by_index(i).unwrap();
         let expected = format!("profile-{i}");
-        assert_eq!(
-            snap.active_profile.as_deref(),
-            Some(expected.as_str())
-        );
+        assert_eq!(snap.active_profile.as_deref(), Some(expected.as_str()));
     }
 }
 

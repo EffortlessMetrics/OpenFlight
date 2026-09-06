@@ -8,12 +8,13 @@
 
 use std::collections::HashMap;
 
+use flight_streamdeck::AppVersion;
 use flight_streamdeck::actions::{
     ActionBehavior, ActionCategory, ActionRegistry, ActionTemplate, builtin_templates,
 };
 use flight_streamdeck::api::{
-    ApiResponse, EventSubscriptionResponse, ProfileListResponse, StreamDeckApi,
-    TelemetryResponse, VersionCheckRequest, VersionCheckResponse,
+    ApiResponse, EventSubscriptionResponse, ProfileListResponse, StreamDeckApi, TelemetryResponse,
+    VersionCheckRequest, VersionCheckResponse,
 };
 use flight_streamdeck::compatibility::{
     CompatibilityMatrix, CompatibilityStatus, VersionCompatibility, VersionRange,
@@ -25,7 +26,6 @@ use flight_streamdeck::layout::{KeySlot, NavTarget, Page, PageLayout, ProfileLay
 use flight_streamdeck::profiles::{AircraftType, ProfileManager, SampleProfiles};
 use flight_streamdeck::render::{IconRenderer, IconStyle, IconTheme, KeyIcon};
 use flight_streamdeck::server::ServerConfig;
-use flight_streamdeck::AppVersion;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  1. BUTTON RENDERING (6 tests)
@@ -205,8 +205,7 @@ fn page_count_for_mini_with_many_actions() {
         .collect();
 
     // Mini: 6 keys, 5 usable per page. 21 actions → ceil(21/5) = 5 pages.
-    let layout =
-        ProfileLayout::build(AircraftType::GA, StreamDeckModel::Mini, &templates).unwrap();
+    let layout = ProfileLayout::build(AircraftType::GA, StreamDeckModel::Mini, &templates).unwrap();
     assert!(
         layout.page_count() > 1,
         "Mini should need multiple pages for all actions"
@@ -368,10 +367,7 @@ fn device_all_models_unique_properties() {
     let mut names = std::collections::HashSet::new();
     for m in models {
         assert!(pids.insert(m.product_id()), "duplicate PID for {m:?}");
-        assert!(
-            names.insert(m.display_name()),
-            "duplicate name for {m:?}"
-        );
+        assert!(names.insert(m.display_name()), "duplicate name for {m:?}");
     }
     // All share the same vendor ID
     assert_eq!(StreamDeckModel::vendor_id(), 0x0FD9);
@@ -543,10 +539,7 @@ fn profile_helo_phase_of_flight() {
 fn profile_descriptions_and_layouts() {
     for aircraft in SampleProfiles::get_aircraft_types() {
         let desc = SampleProfiles::get_aircraft_description(aircraft);
-        assert!(
-            !desc.is_empty(),
-            "{aircraft:?} must have a description"
-        );
+        assert!(!desc.is_empty(), "{aircraft:?} must have a description");
         let layout = SampleProfiles::get_recommended_layout(aircraft);
         assert!(
             layout.contains("grid"),
@@ -812,8 +805,7 @@ fn page_key_at_multiple_keys() {
 fn profile_layout_empty_templates_has_root_page() {
     let empty: HashMap<String, ActionTemplate> = HashMap::new();
     for aircraft in [AircraftType::GA, AircraftType::Airbus, AircraftType::Helo] {
-        let layout =
-            ProfileLayout::build(aircraft, StreamDeckModel::Original, &empty).unwrap();
+        let layout = ProfileLayout::build(aircraft, StreamDeckModel::Original, &empty).unwrap();
         assert_eq!(
             layout.page_count(),
             1,
@@ -924,7 +916,10 @@ fn error_version_parse_invalid_formats() {
 #[test]
 fn error_device_manager_unknown_device() {
     let mut mgr = DeviceManager::new();
-    assert!(mgr.set_brightness("ghost", Brightness::new(50).unwrap()).is_err());
+    assert!(
+        mgr.set_brightness("ghost", Brightness::new(50).unwrap())
+            .is_err()
+    );
     assert!(mgr.get_device("ghost").is_none());
     assert!(mgr.get_brightness("ghost").is_none());
     assert!(mgr.get_lcd_strip_info("ghost").is_err());

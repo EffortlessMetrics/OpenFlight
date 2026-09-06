@@ -14,11 +14,11 @@ mod tests {
         self, LcdDisplay, MultiPanelLedMask, MultiPanelProtocol, encode_segment, led_bits,
     };
     use flight_panels_saitek::radio_panel::{
-        RadioDisplay, RadioPanelProtocol, RADIO_PANEL_OUTPUT_BYTES,
+        RADIO_PANEL_OUTPUT_BYTES, RadioDisplay, RadioPanelProtocol,
     };
     use flight_panels_saitek::switch_panel::{
-        GearLedColor, SwitchPanelGearLeds, SwitchPanelProtocol, gear_led_bits,
-        SWITCH_PANEL_OUTPUT_BYTES,
+        GearLedColor, SWITCH_PANEL_OUTPUT_BYTES, SwitchPanelGearLeds, SwitchPanelProtocol,
+        gear_led_bits,
     };
     use proptest::prelude::*;
     use std::collections::HashMap;
@@ -203,7 +203,9 @@ mod tests {
         telemetry.insert("aoa".to_string(), 5.0);
         let actions = evaluator.evaluate(&compiled, &telemetry);
         assert!(
-            actions.iter().any(|a| matches!(a, Action::LedOn { target } if target == "GEAR_GREEN")),
+            actions
+                .iter()
+                .any(|a| matches!(a, Action::LedOn { target } if target == "GEAR_GREEN")),
             "should produce GEAR_GREEN on action, got: {:?}",
             actions
         );
@@ -212,7 +214,9 @@ mod tests {
         telemetry.insert("gear_down".to_string(), 0.0);
         let actions = evaluator.evaluate(&compiled, &telemetry);
         assert!(
-            actions.iter().any(|a| matches!(a, Action::LedOff { target } if target == "GEAR_GREEN")),
+            actions
+                .iter()
+                .any(|a| matches!(a, Action::LedOff { target } if target == "GEAR_GREEN")),
             "should produce GEAR_GREEN off action, got: {:?}",
             actions
         );
@@ -221,7 +225,9 @@ mod tests {
         telemetry.insert("aoa".to_string(), 16.0);
         let actions = evaluator.evaluate(&compiled, &telemetry);
         assert!(
-            actions.iter().any(|a| matches!(a, Action::LedBlink { target, .. } if target == "indexer")),
+            actions
+                .iter()
+                .any(|a| matches!(a, Action::LedBlink { target, .. } if target == "indexer")),
             "should produce indexer blink action, got: {:?}",
             actions
         );
@@ -291,28 +297,26 @@ mod tests {
         led_ctrl.set_min_interval(Duration::ZERO);
 
         // Trigger fault indication
-        let fault_actions = vec![
-            Action::LedOn {
-                target: "MASTER_WARNING".to_string(),
-            },
-        ];
+        let fault_actions = vec![Action::LedOn {
+            target: "MASTER_WARNING".to_string(),
+        }];
         led_ctrl.execute_actions(&fault_actions).unwrap();
 
-        let fault_state = led_ctrl.get_led_state(&led::LedTarget::Panel("MASTER_WARNING".to_string()));
+        let fault_state =
+            led_ctrl.get_led_state(&led::LedTarget::Panel("MASTER_WARNING".to_string()));
         assert!(
             fault_state.is_some_and(|s| s.on),
             "MASTER_WARNING should be on after fault"
         );
 
         // Clear fault
-        let clear_actions = vec![
-            Action::LedOff {
-                target: "MASTER_WARNING".to_string(),
-            },
-        ];
+        let clear_actions = vec![Action::LedOff {
+            target: "MASTER_WARNING".to_string(),
+        }];
         led_ctrl.execute_actions(&clear_actions).unwrap();
 
-        let fault_state = led_ctrl.get_led_state(&led::LedTarget::Panel("MASTER_WARNING".to_string()));
+        let fault_state =
+            led_ctrl.get_led_state(&led::LedTarget::Panel("MASTER_WARNING".to_string()));
         assert!(
             fault_state.is_some_and(|s| !s.on),
             "MASTER_WARNING should be off after clear"
@@ -395,7 +399,10 @@ mod tests {
         // All bits set — should parse without panicking
         let data = [0x00u8, 0xFF, 0xFF];
         let events = proto.parse_input(&data).unwrap();
-        assert!(!events.is_empty(), "all-bits-set report should produce events");
+        assert!(
+            !events.is_empty(),
+            "all-bits-set report should produce events"
+        );
     }
 
     #[test]

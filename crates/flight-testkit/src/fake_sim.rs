@@ -214,10 +214,7 @@ mod tests {
 
     #[test]
     fn with_telemetry_starts_connected() {
-        let sim = FakeSimBackend::with_telemetry(
-            "X-Plane",
-            vec![TelemetrySnapshot::on_ramp()],
-        );
+        let sim = FakeSimBackend::with_telemetry("X-Plane", vec![TelemetrySnapshot::on_ramp()]);
         assert_eq!(sim.state(), SimConnectionState::Connected);
     }
 
@@ -236,10 +233,7 @@ mod tests {
 
     #[test]
     fn poll_returns_none_when_disconnected() {
-        let mut sim = FakeSimBackend::with_telemetry(
-            "MSFS",
-            vec![TelemetrySnapshot::on_ramp()],
-        );
+        let mut sim = FakeSimBackend::with_telemetry("MSFS", vec![TelemetrySnapshot::on_ramp()]);
         sim.disconnect();
         assert!(sim.poll().is_none());
     }
@@ -263,10 +257,7 @@ mod tests {
 
     #[test]
     fn reconnect_resets_position() {
-        let mut sim = FakeSimBackend::with_telemetry(
-            "MSFS",
-            vec![TelemetrySnapshot::on_ramp()],
-        );
+        let mut sim = FakeSimBackend::with_telemetry("MSFS", vec![TelemetrySnapshot::on_ramp()]);
         sim.poll();
         assert!(sim.poll().is_none());
         sim.reconnect();
@@ -297,10 +288,7 @@ mod tests {
 
     #[test]
     fn reset_clears_state() {
-        let mut sim = FakeSimBackend::with_telemetry(
-            "MSFS",
-            vec![TelemetrySnapshot::on_ramp()],
-        );
+        let mut sim = FakeSimBackend::with_telemetry("MSFS", vec![TelemetrySnapshot::on_ramp()]);
         sim.poll();
         sim.send_command("CMD");
         sim.reset();

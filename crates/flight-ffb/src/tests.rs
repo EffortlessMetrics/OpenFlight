@@ -1056,10 +1056,13 @@ mod trim_correctness_tests {
     /// Test complete validation suite integration
     #[test]
     fn test_validation_suite_integration() {
-        let mut validation_suite = TrimValidationSuite::with_time_source(TrimValidationConfig {
-            max_test_duration: Duration::from_secs(2),
-            ..TrimValidationConfig::default()
-        }, Arc::new(FakeTimeSource::new()));
+        let mut validation_suite = TrimValidationSuite::with_time_source(
+            TrimValidationConfig {
+                max_test_duration: Duration::from_secs(2),
+                ..TrimValidationConfig::default()
+            },
+            Arc::new(FakeTimeSource::new()),
+        );
         let results = validation_suite.run_complete_validation();
 
         assert!(
@@ -1098,7 +1101,8 @@ mod trim_correctness_tests {
         };
 
         let mut engine =
-            FfbEngine::with_time_source(config, std::sync::Arc::new(FakeTimeSource::new())).unwrap();
+            FfbEngine::with_time_source(config, std::sync::Arc::new(FakeTimeSource::new()))
+                .unwrap();
 
         // Set device capabilities
         let capabilities = DeviceCapabilities {

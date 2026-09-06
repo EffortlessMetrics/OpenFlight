@@ -200,10 +200,7 @@ impl PoseFilter {
         } else {
             1.0 // Non-finite defaults to pass-through (no smoothing)
         };
-        Self {
-            alpha,
-            state: None,
-        }
+        Self { alpha, state: None }
     }
 
     /// Return the current smoothing factor.
@@ -337,10 +334,7 @@ mod tests {
     }
 
     fn assert_f32_eq(a: f32, b: f32, eps: f32) {
-        assert!(
-            (a - b).abs() < eps,
-            "expected {a} ≈ {b} (eps = {eps})"
-        );
+        assert!((a - b).abs() < eps, "expected {a} ≈ {b} (eps = {eps})");
     }
 
     // ── Packet parsing ────────────────────────────────────────────────────────
@@ -508,14 +502,7 @@ mod tests {
 
     #[test]
     fn parse_all_nan() {
-        let data = build_packet(
-            f64::NAN,
-            f64::NAN,
-            f64::NAN,
-            f64::NAN,
-            f64::NAN,
-            f64::NAN,
-        );
+        let data = build_packet(f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN, f64::NAN);
         assert_eq!(parse_packet(&data), Err(TrackIrError::NonFiniteValue));
     }
 
@@ -541,10 +528,20 @@ mod tests {
     #[test]
     fn normalize_yaw_full_range() {
         let pos = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 180.0, pitch: 0.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 180.0,
+            pitch: 0.0,
+            roll: 0.0,
         });
         let neg = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: -180.0, pitch: 0.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: -180.0,
+            pitch: 0.0,
+            roll: 0.0,
         });
         assert_f32_eq(pos.yaw, 1.0, 1e-6);
         assert_f32_eq(neg.yaw, -1.0, 1e-6);
@@ -553,10 +550,20 @@ mod tests {
     #[test]
     fn normalize_pitch_full_range() {
         let pos = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 90.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 90.0,
+            roll: 0.0,
         });
         let neg = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: -90.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: -90.0,
+            roll: 0.0,
         });
         assert_f32_eq(pos.pitch, 1.0, 1e-6);
         assert_f32_eq(neg.pitch, -1.0, 1e-6);
@@ -565,10 +572,20 @@ mod tests {
     #[test]
     fn normalize_roll_full_range() {
         let pos = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 180.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 180.0,
         });
         let neg = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: -180.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: -180.0,
         });
         assert_f32_eq(pos.roll, 1.0, 1e-6);
         assert_f32_eq(neg.roll, -1.0, 1e-6);
@@ -577,7 +594,12 @@ mod tests {
     #[test]
     fn normalize_translation_full_range() {
         let pose = normalize_pose(TrackIrPacket {
-            x: 100.0, y: -100.0, z: 50.0, yaw: 0.0, pitch: 0.0, roll: 0.0,
+            x: 100.0,
+            y: -100.0,
+            z: 50.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
         });
         assert_f32_eq(pose.x, 1.0, 1e-6);
         assert_f32_eq(pose.y, -1.0, 1e-6);
@@ -587,7 +609,12 @@ mod tests {
     #[test]
     fn normalize_mid_range_values() {
         let pose = normalize_pose(TrackIrPacket {
-            x: 25.0, y: -50.0, z: 75.0, yaw: 45.0, pitch: -22.5, roll: 90.0,
+            x: 25.0,
+            y: -50.0,
+            z: 75.0,
+            yaw: 45.0,
+            pitch: -22.5,
+            roll: 90.0,
         });
         assert_f32_eq(pose.x, 0.25, 1e-6);
         assert_f32_eq(pose.y, -0.5, 1e-6);
@@ -600,10 +627,20 @@ mod tests {
     #[test]
     fn normalize_symmetry() {
         let pos = normalize_pose(TrackIrPacket {
-            x: 50.0, y: 50.0, z: 50.0, yaw: 90.0, pitch: 45.0, roll: 90.0,
+            x: 50.0,
+            y: 50.0,
+            z: 50.0,
+            yaw: 90.0,
+            pitch: 45.0,
+            roll: 90.0,
         });
         let neg = normalize_pose(TrackIrPacket {
-            x: -50.0, y: -50.0, z: -50.0, yaw: -90.0, pitch: -45.0, roll: -90.0,
+            x: -50.0,
+            y: -50.0,
+            z: -50.0,
+            yaw: -90.0,
+            pitch: -45.0,
+            roll: -90.0,
         });
         assert_f32_eq(pos.x, -neg.x, 1e-6);
         assert_f32_eq(pos.y, -neg.y, 1e-6);
@@ -616,7 +653,12 @@ mod tests {
     #[test]
     fn normalize_zero_packet() {
         let pose = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
         });
         assert_eq!(pose.x, 0.0);
         assert_eq!(pose.y, 0.0);
@@ -630,7 +672,12 @@ mod tests {
     fn normalize_each_axis_isolated() {
         // Only x non-zero
         let p = normalize_pose(TrackIrPacket {
-            x: 100.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0,
+            x: 100.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
         });
         assert_f32_eq(p.x, 1.0, 1e-6);
         assert_eq!(p.y, 0.0);
@@ -641,7 +688,12 @@ mod tests {
 
         // Only pitch non-zero
         let p2 = normalize_pose(TrackIrPacket {
-            x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 45.0, roll: 0.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 45.0,
+            roll: 0.0,
         });
         assert_eq!(p2.x, 0.0);
         assert_f32_eq(p2.pitch, 0.5, 1e-6);
@@ -650,8 +702,12 @@ mod tests {
     #[test]
     fn normalize_clamping_extreme_values() {
         let pose = normalize_pose(TrackIrPacket {
-            x: 9999.0, y: -9999.0, z: 9999.0,
-            yaw: 720.0, pitch: 720.0, roll: -720.0,
+            x: 9999.0,
+            y: -9999.0,
+            z: 9999.0,
+            yaw: 720.0,
+            pitch: 720.0,
+            roll: -720.0,
         });
         assert_eq!(pose.x, 1.0);
         assert_eq!(pose.y, -1.0);
@@ -664,8 +720,12 @@ mod tests {
     #[test]
     fn normalize_just_outside_boundary() {
         let pose = normalize_pose(TrackIrPacket {
-            x: 100.001, y: -100.001, z: 0.0,
-            yaw: 180.001, pitch: 90.001, roll: 0.0,
+            x: 100.001,
+            y: -100.001,
+            z: 0.0,
+            yaw: 180.001,
+            pitch: 90.001,
+            roll: 0.0,
         });
         assert_eq!(pose.x, 1.0);
         assert_eq!(pose.y, -1.0);
@@ -689,7 +749,12 @@ mod tests {
     #[test]
     fn head_pose_clone_eq() {
         let pose = HeadPose {
-            x: 0.1, y: 0.2, z: 0.3, yaw: 0.4, pitch: 0.5, roll: 0.6,
+            x: 0.1,
+            y: 0.2,
+            z: 0.3,
+            yaw: 0.4,
+            pitch: 0.5,
+            roll: 0.6,
         };
         let cloned = pose;
         assert_eq!(pose, cloned);
@@ -901,7 +966,14 @@ mod tests {
     #[test]
     fn filter_passthrough_alpha_one() {
         let mut filter = PoseFilter::new(1.0);
-        let p = HeadPose { x: 0.5, y: -0.3, z: 0.1, yaw: 0.8, pitch: -0.2, roll: 0.6 };
+        let p = HeadPose {
+            x: 0.5,
+            y: -0.3,
+            z: 0.1,
+            yaw: 0.8,
+            pitch: -0.2,
+            roll: 0.6,
+        };
         let out = filter.apply(p);
         assert_eq!(out, p);
     }
@@ -909,7 +981,14 @@ mod tests {
     #[test]
     fn filter_first_sample_always_passthrough() {
         let mut filter = PoseFilter::new(0.1);
-        let p = HeadPose { x: 0.5, y: -0.3, z: 0.1, yaw: 0.8, pitch: -0.2, roll: 0.6 };
+        let p = HeadPose {
+            x: 0.5,
+            y: -0.3,
+            z: 0.1,
+            yaw: 0.8,
+            pitch: -0.2,
+            roll: 0.6,
+        };
         let out = filter.apply(p);
         // First sample passes through regardless of alpha.
         assert_eq!(out, p);
@@ -918,8 +997,22 @@ mod tests {
     #[test]
     fn filter_zero_alpha_holds_first_value() {
         let mut filter = PoseFilter::new(0.0);
-        let p1 = HeadPose { x: 0.5, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
-        let p2 = HeadPose { x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
+        let p1 = HeadPose {
+            x: 0.5,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
+        let p2 = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
 
         let _ = filter.apply(p1);
         let out = filter.apply(p2);
@@ -930,8 +1023,22 @@ mod tests {
     #[test]
     fn filter_half_alpha_blends() {
         let mut filter = PoseFilter::new(0.5);
-        let p1 = HeadPose { x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
-        let p2 = HeadPose { x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
+        let p1 = HeadPose {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
+        let p2 = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
 
         let _ = filter.apply(p1);
         let out = filter.apply(p2);
@@ -942,7 +1049,14 @@ mod tests {
     #[test]
     fn filter_convergence_over_many_samples() {
         let mut filter = PoseFilter::new(0.3);
-        let target = HeadPose { x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
+        let target = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
 
         // Start with zero
         let zero = HeadPose::default();
@@ -960,7 +1074,14 @@ mod tests {
     fn filter_step_response_monotonic() {
         let mut filter = PoseFilter::new(0.2);
         let zero = HeadPose::default();
-        let step = HeadPose { x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
+        let step = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
 
         let _ = filter.apply(zero);
 
@@ -975,8 +1096,22 @@ mod tests {
     #[test]
     fn filter_all_axes_smoothed_independently() {
         let mut filter = PoseFilter::new(0.5);
-        let p1 = HeadPose { x: 0.0, y: 1.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 1.0 };
-        let p2 = HeadPose { x: 1.0, y: 0.0, z: 1.0, yaw: 1.0, pitch: 1.0, roll: 0.0 };
+        let p1 = HeadPose {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 1.0,
+        };
+        let p2 = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 1.0,
+            yaw: 1.0,
+            pitch: 1.0,
+            roll: 0.0,
+        };
 
         let _ = filter.apply(p1);
         let out = filter.apply(p2);
@@ -992,8 +1127,22 @@ mod tests {
     #[test]
     fn filter_reset_clears_state() {
         let mut filter = PoseFilter::new(0.5);
-        let p1 = HeadPose { x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
-        let p2 = HeadPose { x: 0.0, y: 0.0, z: 0.0, yaw: 0.0, pitch: 0.0, roll: 0.0 };
+        let p1 = HeadPose {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
+        let p2 = HeadPose {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            yaw: 0.0,
+            pitch: 0.0,
+            roll: 0.0,
+        };
 
         let _ = filter.apply(p1);
         filter.reset();
@@ -1079,7 +1228,12 @@ mod tests {
     #[test]
     fn trackir_packet_clone_eq() {
         let pkt = TrackIrPacket {
-            x: 1.0, y: 2.0, z: 3.0, yaw: 4.0, pitch: 5.0, roll: 6.0,
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+            yaw: 4.0,
+            pitch: 5.0,
+            roll: 6.0,
         };
         let cloned = pkt.clone();
         assert_eq!(pkt, cloned);
@@ -1088,7 +1242,12 @@ mod tests {
     #[test]
     fn trackir_packet_debug_output() {
         let pkt = TrackIrPacket {
-            x: 1.0, y: 2.0, z: 3.0, yaw: 4.0, pitch: 5.0, roll: 6.0,
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+            yaw: 4.0,
+            pitch: 5.0,
+            roll: 6.0,
         };
         let debug = format!("{pkt:?}");
         assert!(debug.contains("TrackIrPacket"));

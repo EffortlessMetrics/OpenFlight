@@ -486,7 +486,11 @@ impl MessageFrame {
     fn compute_checksum(&self) -> u16 {
         let plen = self.payload_len as usize;
         // Safety: clamp to MAX_PAYLOAD to prevent OOB if payload_len is invalid.
-        let plen = if plen > MAX_PAYLOAD { MAX_PAYLOAD } else { plen };
+        let plen = if plen > MAX_PAYLOAD {
+            MAX_PAYLOAD
+        } else {
+            plen
+        };
         let total = FRAME_HEADER_SIZE + plen;
         let mut buf = [0u8; FRAME_HEADER_SIZE + MAX_PAYLOAD];
         buf[0..2].copy_from_slice(&self.frame_id.to_le_bytes());

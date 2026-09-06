@@ -223,9 +223,7 @@ mod tests {
     #[test]
     fn jitter_p99_pass() {
         // Jitter samples: all within 0–400µs, so p99 < 500µs.
-        let samples: Vec<Duration> = (0..100)
-            .map(|i| Duration::from_micros(i % 50))
-            .collect();
+        let samples: Vec<Duration> = (0..100).map(|i| Duration::from_micros(i % 50)).collect();
         assert_jitter_p99(&samples, Duration::from_micros(500));
     }
 

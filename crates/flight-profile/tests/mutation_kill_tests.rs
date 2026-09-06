@@ -4,8 +4,8 @@
 // and return value mutations.
 
 use flight_profile::{
-    merge_axis_configs, AxisConfig, CapabilityContext, CapabilityMode, CurvePoint, DetentZone,
-    FilterConfig, Profile, PROFILE_SCHEMA_VERSION,
+    AxisConfig, CapabilityContext, CapabilityMode, CurvePoint, DetentZone, FilterConfig,
+    PROFILE_SCHEMA_VERSION, Profile, merge_axis_configs,
 };
 use std::collections::HashMap;
 
@@ -92,7 +92,10 @@ fn deadzone_negative_rejected() {
 fn expo_at_exact_max_accepted() {
     let mut p = minimal_profile();
     p.axes.insert("pitch".to_string(), axis_with_expo(1.0));
-    assert!(p.validate().is_ok(), "expo=1.0 must be accepted in Full mode");
+    assert!(
+        p.validate().is_ok(),
+        "expo=1.0 must be accepted in Full mode"
+    );
 }
 
 #[test]
@@ -262,11 +265,23 @@ fn filter_alpha_boundaries() {
     assert!(p.validate().is_ok(), "alpha=0.0 must be accepted");
 
     // alpha = 1.0 valid
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().alpha = 1.0;
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .alpha = 1.0;
     assert!(p.validate().is_ok(), "alpha=1.0 must be accepted");
 
     // alpha = 1.01 invalid
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().alpha = 1.01;
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .alpha = 1.01;
     assert!(p.validate().is_err(), "alpha=1.01 must be rejected");
 }
 
@@ -289,10 +304,22 @@ fn filter_spike_threshold_boundaries() {
         "spike_threshold=0.0 must be rejected (must be > 0)"
     );
 
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().spike_threshold = Some(1.0);
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .spike_threshold = Some(1.0);
     assert!(p.validate().is_ok(), "spike_threshold=1.0 must be accepted");
 
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().spike_threshold = Some(1.01);
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .spike_threshold = Some(1.01);
     assert!(
         p.validate().is_err(),
         "spike_threshold=1.01 must be rejected"
@@ -313,22 +340,34 @@ fn filter_max_spike_count_boundaries() {
             ..axis_with_expo(0.0)
         },
     );
-    assert!(
-        p.validate().is_err(),
-        "max_spike_count=0 must be rejected"
-    );
+    assert!(p.validate().is_err(), "max_spike_count=0 must be rejected");
 
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().max_spike_count = Some(1);
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .max_spike_count = Some(1);
     assert!(p.validate().is_ok(), "max_spike_count=1 must be accepted");
 
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().max_spike_count = Some(10);
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .max_spike_count = Some(10);
     assert!(p.validate().is_ok(), "max_spike_count=10 must be accepted");
 
-    p.axes.get_mut("pitch").unwrap().filter.as_mut().unwrap().max_spike_count = Some(11);
-    assert!(
-        p.validate().is_err(),
-        "max_spike_count=11 must be rejected"
-    );
+    p.axes
+        .get_mut("pitch")
+        .unwrap()
+        .filter
+        .as_mut()
+        .unwrap()
+        .max_spike_count = Some(11);
+    assert!(p.validate().is_err(), "max_spike_count=11 must be rejected");
 }
 
 // ── Curve monotonicity validation ────────────────────────────────────────
@@ -341,10 +380,22 @@ fn curve_with_duplicate_input_rejected() {
         "pitch".to_string(),
         AxisConfig {
             curve: Some(vec![
-                CurvePoint { input: 0.0, output: 0.0 },
-                CurvePoint { input: 0.5, output: 0.5 },
-                CurvePoint { input: 0.5, output: 0.7 },
-                CurvePoint { input: 1.0, output: 1.0 },
+                CurvePoint {
+                    input: 0.0,
+                    output: 0.0,
+                },
+                CurvePoint {
+                    input: 0.5,
+                    output: 0.5,
+                },
+                CurvePoint {
+                    input: 0.5,
+                    output: 0.7,
+                },
+                CurvePoint {
+                    input: 1.0,
+                    output: 1.0,
+                },
             ]),
             ..axis_with_expo(0.0)
         },
@@ -374,8 +425,7 @@ fn curve_with_single_point_rejected() {
 fn merge_override_values_applied() {
     // Catches mutation where merge returns self.clone() instead of merged
     let mut base = minimal_profile();
-    base.axes
-        .insert("pitch".to_string(), axis_with_expo(0.2));
+    base.axes.insert("pitch".to_string(), axis_with_expo(0.2));
 
     let mut override_p = minimal_profile();
     override_p
@@ -384,11 +434,7 @@ fn merge_override_values_applied() {
 
     let merged = base.merge_with(&override_p).unwrap();
     let pitch = merged.axes.get("pitch").unwrap();
-    assert_eq!(
-        pitch.expo,
-        Some(0.8),
-        "override expo must win in merge"
-    );
+    assert_eq!(pitch.expo, Some(0.8), "override expo must win in merge");
 }
 
 #[test]
@@ -408,7 +454,11 @@ fn merge_base_preserved_when_override_absent() {
 
     let merged = base.merge_with(&override_p).unwrap();
     let pitch = merged.axes.get("pitch").unwrap();
-    assert_eq!(pitch.deadzone, Some(0.05), "base deadzone must be preserved");
+    assert_eq!(
+        pitch.deadzone,
+        Some(0.05),
+        "base deadzone must be preserved"
+    );
     assert_eq!(pitch.expo, Some(0.3), "base expo must be preserved");
 }
 
@@ -492,5 +542,9 @@ fn merge_sim_and_aircraft_override() {
     override_p.sim = Some("xplane".to_string());
 
     let merged = base.merge_with(&override_p).unwrap();
-    assert_eq!(merged.sim, Some("xplane".to_string()), "override sim must win");
+    assert_eq!(
+        merged.sim,
+        Some("xplane".to_string()),
+        "override sim must win"
+    );
 }

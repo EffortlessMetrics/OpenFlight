@@ -324,7 +324,11 @@ fn profile_watcher_detects_toml_files() {
     std::fs::write(&file, "key = 'value'").unwrap();
 
     let events = watcher.poll();
-    assert!(events.iter().any(|e| e.kind == FileChangeKind::Created && e.path == file));
+    assert!(
+        events
+            .iter()
+            .any(|e| e.kind == FileChangeKind::Created && e.path == file)
+    );
 }
 
 #[test]
@@ -378,7 +382,11 @@ fn reload_notifier_default_is_empty() {
 fn error_catalog_all_entries_have_non_empty_fields() {
     for info in ErrorCatalog::all() {
         assert!(!info.code.is_empty(), "code should not be empty");
-        assert!(!info.message.is_empty(), "message should not be empty for {}", info.code);
+        assert!(
+            !info.message.is_empty(),
+            "message should not be empty for {}",
+            info.code
+        );
         assert!(
             !info.description.is_empty(),
             "description should not be empty for {}",

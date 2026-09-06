@@ -539,9 +539,7 @@ fn full_session_sequence() {
     assert_eq!(adapter.current_system(), "Alpha Centauri");
 
     // 8. RefuelAll
-    adapter.apply_journal_event(&JournalEvent::RefuelAll {
-        amount: Some(24.0),
-    });
+    adapter.apply_journal_event(&JournalEvent::RefuelAll { amount: Some(24.0) });
     assert_eq!(adapter.current_system(), "Alpha Centauri");
 }
 

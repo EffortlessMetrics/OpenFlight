@@ -134,7 +134,15 @@ pub enum F16IcpParseError {
 mod tests {
     use super::*;
 
-    fn make_report(b0: u8, b1: u8, b2: u8, b3: u8, enc0: i8, enc1: i8, rocker: u8) -> [u8; MIN_REPORT_BYTES] {
+    fn make_report(
+        b0: u8,
+        b1: u8,
+        b2: u8,
+        b3: u8,
+        enc0: i8,
+        enc1: i8,
+        rocker: u8,
+    ) -> [u8; MIN_REPORT_BYTES] {
         [REPORT_ID, b0, b1, b2, b3, enc0 as u8, enc1 as u8, rocker]
     }
 

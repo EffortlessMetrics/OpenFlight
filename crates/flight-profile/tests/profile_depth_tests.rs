@@ -7,8 +7,8 @@
 //! Depth tests across 6 categories.
 
 use flight_profile::{
-    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PofOverrides, Profile,
-    PROFILE_SCHEMA_VERSION, merge_axis_configs,
+    AircraftId, AxisConfig, CurvePoint, DetentZone, FilterConfig, PROFILE_SCHEMA_VERSION,
+    PofOverrides, Profile, merge_axis_configs,
     profile_migration::{MigrationError, MigrationRegistry},
 };
 use proptest::prelude::*;
@@ -77,10 +77,7 @@ fn sim_profile() -> Profile {
 fn aircraft_profile() -> Profile {
     let mut axes = HashMap::new();
     axes.insert("pitch".to_string(), axis(None, Some(0.4)));
-    axes.insert(
-        "rudder".to_string(),
-        axis(Some(0.02), Some(0.1)),
-    );
+    axes.insert("rudder".to_string(), axis(Some(0.02), Some(0.1)));
     Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: Some("msfs".to_string()),
@@ -163,24 +160,36 @@ fn schema_type_validation_deadzone_string_rejected() {
 #[test]
 fn schema_range_deadzone_upper_boundary_valid() {
     let mut axes = HashMap::new();
-    axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.5),
-        ..empty_axis()
-    });
+    axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.5),
+            ..empty_axis()
+        },
+    );
     let p = profile_with_axes(axes);
-    assert!(p.validate().is_ok(), "deadzone at MAX_DEADZONE must be valid");
+    assert!(
+        p.validate().is_ok(),
+        "deadzone at MAX_DEADZONE must be valid"
+    );
 }
 
 /// Range constraint: deadzone just above upper boundary is rejected.
 #[test]
 fn schema_range_deadzone_above_upper_boundary_rejected() {
     let mut axes = HashMap::new();
-    axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.501),
-        ..empty_axis()
-    });
+    axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.501),
+            ..empty_axis()
+        },
+    );
     let p = profile_with_axes(axes);
-    assert!(p.validate().is_err(), "deadzone above MAX_DEADZONE must be rejected");
+    assert!(
+        p.validate().is_err(),
+        "deadzone above MAX_DEADZONE must be rejected"
+    );
 }
 
 /// Enum-like validation: schema version string must match exactly.
@@ -197,15 +206,21 @@ fn schema_enum_version_string_wrong_format_rejected() {
 #[test]
 fn schema_nested_pof_invalid_axis_rejected() {
     let mut pof_axes = HashMap::new();
-    pof_axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.9), // exceeds MAX_DEADZONE
-        ..empty_axis()
-    });
+    pof_axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.9), // exceeds MAX_DEADZONE
+            ..empty_axis()
+        },
+    );
     let mut pof = HashMap::new();
-    pof.insert("climb".to_string(), PofOverrides {
-        axes: Some(pof_axes),
-        hysteresis: None,
-    });
+    pof.insert(
+        "climb".to_string(),
+        PofOverrides {
+            axes: Some(pof_axes),
+            hysteresis: None,
+        },
+    );
     let p = Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: None,
@@ -213,20 +228,34 @@ fn schema_nested_pof_invalid_axis_rejected() {
         axes: HashMap::new(),
         pof_overrides: Some(pof),
     };
-    assert!(p.validate().is_err(), "invalid axis in PoF must fail validation");
+    assert!(
+        p.validate().is_err(),
+        "invalid axis in PoF must fail validation"
+    );
 }
 
 /// Array validation: detents array with valid entries passes.
 #[test]
 fn schema_array_valid_detents_accepted() {
     let mut axes = HashMap::new();
-    axes.insert("throttle".to_string(), AxisConfig {
-        detents: vec![
-            DetentZone { position: 0.0, width: 0.1, role: "idle".to_string() },
-            DetentZone { position: 0.5, width: 0.05, role: "half".to_string() },
-        ],
-        ..empty_axis()
-    });
+    axes.insert(
+        "throttle".to_string(),
+        AxisConfig {
+            detents: vec![
+                DetentZone {
+                    position: 0.0,
+                    width: 0.1,
+                    role: "idle".to_string(),
+                },
+                DetentZone {
+                    position: 0.5,
+                    width: 0.05,
+                    role: "half".to_string(),
+                },
+            ],
+            ..empty_axis()
+        },
+    );
     let p = profile_with_axes(axes);
     assert!(p.validate().is_ok());
 }
@@ -257,14 +286,21 @@ fn cascade_full_chain_global_sim_aircraft_phase() {
     assert_eq!(pitch.deadzone, Some(0.01), "phase deadzone should win");
     // Expo: aircraft set 0.4, phase has None → aircraft's 0.4 should persist
     // BUT phase also explicitly sets expo=None, so aircraft's expo=0.4 persists via merge
-    assert_eq!(pitch.expo, Some(0.4), "aircraft expo persists through phase merge");
+    assert_eq!(
+        pitch.expo,
+        Some(0.4),
+        "aircraft expo persists through phase merge"
+    );
 
     // Roll comes from global only
     let roll = merged.axes.get("roll").unwrap();
     assert_eq!(roll.deadzone, Some(0.05));
 
     // Rudder comes from aircraft only
-    assert!(merged.axes.contains_key("rudder"), "aircraft-added axis survives cascade");
+    assert!(
+        merged.axes.contains_key("rudder"),
+        "aircraft-added axis survives cascade"
+    );
 
     // PoF overrides from phase profile must be present
     assert!(merged.pof_overrides.is_some());
@@ -278,7 +314,11 @@ fn cascade_sim_overrides_global() {
     let merged = g.merge_with(&s).unwrap();
     let pitch = merged.axes.get("pitch").unwrap();
     assert_eq!(pitch.deadzone, Some(0.03), "sim deadzone overrides global");
-    assert_eq!(pitch.expo, Some(0.2), "global expo preserved when sim doesn't set it");
+    assert_eq!(
+        pitch.expo,
+        Some(0.2),
+        "global expo preserved when sim doesn't set it"
+    );
 }
 
 /// Partial profiles: override with only some fields set preserves base fields.
@@ -309,7 +349,10 @@ fn cascade_empty_level_passthrough() {
         pof_overrides: None,
     };
     let merged = base.merge_with(&empty).unwrap();
-    assert_eq!(merged.axes, base.axes, "empty override must not change axes");
+    assert_eq!(
+        merged.axes, base.axes,
+        "empty override must not change axes"
+    );
     assert_eq!(merged.sim, base.sim, "empty override must not change sim");
 }
 
@@ -321,9 +364,16 @@ fn cascade_missing_sim_level() {
     let merged = g.merge_with(&a).unwrap();
     let pitch = merged.axes.get("pitch").unwrap();
     // Aircraft sets expo=0.4, global set deadzone=0.05
-    assert_eq!(pitch.expo, Some(0.4), "aircraft expo applied directly over global");
+    assert_eq!(
+        pitch.expo,
+        Some(0.4),
+        "aircraft expo applied directly over global"
+    );
     assert_eq!(pitch.deadzone, Some(0.05), "global deadzone preserved");
-    assert!(merged.axes.contains_key("rudder"), "aircraft rudder axis added");
+    assert!(
+        merged.axes.contains_key("rudder"),
+        "aircraft rudder axis added"
+    );
 }
 
 /// Cascade order matters: A then B ≠ B then A when both set the same field.
@@ -340,11 +390,18 @@ fn cascade_order_matters() {
     let ab = a.merge_with(&b).unwrap();
     let ba = b.merge_with(&a).unwrap();
 
-    assert_eq!(ab.axes["pitch"].deadzone, Some(0.09), "B wins when applied second");
-    assert_eq!(ba.axes["pitch"].deadzone, Some(0.01), "A wins when applied second");
-    assert_ne!(
+    assert_eq!(
         ab.axes["pitch"].deadzone,
+        Some(0.09),
+        "B wins when applied second"
+    );
+    assert_eq!(
         ba.axes["pitch"].deadzone,
+        Some(0.01),
+        "A wins when applied second"
+    );
+    assert_ne!(
+        ab.axes["pitch"].deadzone, ba.axes["pitch"].deadzone,
         "order must matter"
     );
 }
@@ -366,8 +423,14 @@ fn merge_with_axis_field_level_override() {
             role: "idle".to_string(),
         }],
         curve: Some(vec![
-            CurvePoint { input: 0.0, output: 0.0 },
-            CurvePoint { input: 1.0, output: 1.0 },
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 1.0,
+                output: 1.0,
+            },
         ]),
         filter: Some(FilterConfig {
             alpha: 0.3,
@@ -388,7 +451,11 @@ fn merge_with_axis_field_level_override() {
     assert_eq!(merged.deadzone, Some(0.05), "overridden deadzone");
     assert_eq!(merged.expo, Some(0.2), "base expo preserved");
     assert_eq!(merged.slew_rate, Some(1.5), "base slew_rate preserved");
-    assert_eq!(merged.detents.len(), 1, "base detents preserved when override is empty");
+    assert_eq!(
+        merged.detents.len(),
+        1,
+        "base detents preserved when override is empty"
+    );
     assert!(merged.curve.is_some(), "base curve preserved");
     assert!(merged.filter.is_some(), "base filter preserved");
 }
@@ -429,59 +496,92 @@ fn merge_with_deadzone_override() {
 fn merge_with_curve_override() {
     let base = AxisConfig {
         curve: Some(vec![
-            CurvePoint { input: 0.0, output: 0.0 },
-            CurvePoint { input: 1.0, output: 1.0 },
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 1.0,
+                output: 1.0,
+            },
         ]),
         ..empty_axis()
     };
     let over = AxisConfig {
         curve: Some(vec![
-            CurvePoint { input: 0.0, output: 0.0 },
-            CurvePoint { input: 0.5, output: 0.3 },
-            CurvePoint { input: 1.0, output: 1.0 },
+            CurvePoint {
+                input: 0.0,
+                output: 0.0,
+            },
+            CurvePoint {
+                input: 0.5,
+                output: 0.3,
+            },
+            CurvePoint {
+                input: 1.0,
+                output: 1.0,
+            },
         ]),
         ..empty_axis()
     };
     let merged = merge_axis_configs(&base, &over);
-    assert_eq!(merged.curve.as_ref().unwrap().len(), 3, "override curve replaces base");
+    assert_eq!(
+        merged.curve.as_ref().unwrap().len(),
+        3,
+        "override curve replaces base"
+    );
 }
 
 /// Conflicting scalar values: override always wins.
 #[test]
 fn merge_with_conflicting_values_override_wins() {
     let mut base_axes = HashMap::new();
-    base_axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.03),
-        expo: Some(0.2),
-        slew_rate: Some(1.0),
-        ..empty_axis()
-    });
+    base_axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.2),
+            slew_rate: Some(1.0),
+            ..empty_axis()
+        },
+    );
     let base = Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: Some("msfs".to_string()),
-        aircraft: Some(AircraftId { icao: "C172".to_string() }),
+        aircraft: Some(AircraftId {
+            icao: "C172".to_string(),
+        }),
         axes: base_axes,
         pof_overrides: None,
     };
 
     let mut over_axes = HashMap::new();
-    over_axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.09),
-        expo: Some(0.8),
-        slew_rate: Some(50.0),
-        ..empty_axis()
-    });
+    over_axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.09),
+            expo: Some(0.8),
+            slew_rate: Some(50.0),
+            ..empty_axis()
+        },
+    );
     let over = Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: Some("xplane".to_string()),
-        aircraft: Some(AircraftId { icao: "A320".to_string() }),
+        aircraft: Some(AircraftId {
+            icao: "A320".to_string(),
+        }),
         axes: over_axes,
         pof_overrides: None,
     };
 
     let merged = base.merge_with(&over).unwrap();
     assert_eq!(merged.sim, Some("xplane".to_string()), "sim overridden");
-    assert_eq!(merged.aircraft.as_ref().unwrap().icao, "A320", "aircraft overridden");
+    assert_eq!(
+        merged.aircraft.as_ref().unwrap().icao,
+        "A320",
+        "aircraft overridden"
+    );
     let pitch = &merged.axes["pitch"];
     assert_eq!(pitch.deadzone, Some(0.09));
     assert_eq!(pitch.expo, Some(0.8));
@@ -542,7 +642,11 @@ fn migration_v2_to_v3_renames_and_adds_fields() {
 
     let pitch = &v3["axes"]["pitch"];
     assert!(pitch.get("expo").is_none(), "expo must be removed");
-    assert_eq!(pitch["exponential"], json!(0.2), "expo renamed to exponential");
+    assert_eq!(
+        pitch["exponential"],
+        json!(0.2),
+        "expo renamed to exponential"
+    );
     assert_eq!(pitch["response_curve_type"], json!("default"));
     assert_eq!(v3["schema_version"], json!("v3"));
 }
@@ -566,14 +670,23 @@ fn migration_unknown_version_rejected() {
     let reg = MigrationRegistry::new();
 
     let result_from = reg.migrate(sample_v1(), "v0", "v2");
-    assert!(matches!(result_from, Err(MigrationError::UnsupportedVersion(_))));
+    assert!(matches!(
+        result_from,
+        Err(MigrationError::UnsupportedVersion(_))
+    ));
 
     let result_to = reg.migrate(sample_v1(), "v1", "v99");
-    assert!(matches!(result_to, Err(MigrationError::UnsupportedVersion(_))));
+    assert!(matches!(
+        result_to,
+        Err(MigrationError::UnsupportedVersion(_))
+    ));
 
     // Reverse direction (downgrade) also fails
     let result_reverse = reg.migrate(sample_v1(), "v3", "v1");
-    assert!(matches!(result_reverse, Err(MigrationError::UnsupportedVersion(_))));
+    assert!(matches!(
+        result_reverse,
+        Err(MigrationError::UnsupportedVersion(_))
+    ));
 }
 
 /// Backward compatibility: extra fields in the source are preserved through migration.
@@ -591,8 +704,16 @@ fn migration_preserves_extra_fields() {
     let reg = MigrationRegistry::new();
     let result = reg.migrate(input, "v1", "v3").unwrap();
     assert_eq!(result["sim"], json!("msfs"), "sim preserved");
-    assert_eq!(result["aircraft"]["icao"], json!("C172"), "aircraft preserved");
-    assert_eq!(result["custom_metadata"]["author"], json!("test"), "extra fields preserved");
+    assert_eq!(
+        result["aircraft"]["icao"],
+        json!("C172"),
+        "aircraft preserved"
+    );
+    assert_eq!(
+        result["custom_metadata"]["author"],
+        json!("test"),
+        "extra fields preserved"
+    );
 }
 
 // =============================================================================
@@ -603,18 +724,23 @@ fn migration_preserves_extra_fields() {
 #[test]
 fn serialization_toml_roundtrip() {
     let mut axes = HashMap::new();
-    axes.insert("pitch".to_string(), AxisConfig {
-        deadzone: Some(0.03),
-        expo: Some(0.2),
-        slew_rate: Some(1.5),
-        detents: vec![],
-        curve: None,
-        filter: None,
-    });
+    axes.insert(
+        "pitch".to_string(),
+        AxisConfig {
+            deadzone: Some(0.03),
+            expo: Some(0.2),
+            slew_rate: Some(1.5),
+            detents: vec![],
+            curve: None,
+            filter: None,
+        },
+    );
     let profile = Profile {
         schema: PROFILE_SCHEMA_VERSION.to_string(),
         sim: Some("msfs".to_string()),
-        aircraft: Some(AircraftId { icao: "C172".to_string() }),
+        aircraft: Some(AircraftId {
+            icao: "C172".to_string(),
+        }),
         axes,
         pof_overrides: None,
     };
@@ -660,8 +786,16 @@ fn serialization_format_detection() {
             .or_else(|| serde_yaml::from_str(input).ok())
     }
 
-    assert_eq!(detect_and_parse(&json_str), Some(profile.clone()), "JSON detected");
-    assert_eq!(detect_and_parse(&toml_str), Some(profile.clone()), "TOML detected");
+    assert_eq!(
+        detect_and_parse(&json_str),
+        Some(profile.clone()),
+        "JSON detected"
+    );
+    assert_eq!(
+        detect_and_parse(&toml_str),
+        Some(profile.clone()),
+        "TOML detected"
+    );
     assert_eq!(detect_and_parse(&yaml_str), Some(profile), "YAML detected");
 }
 
